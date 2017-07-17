@@ -95,6 +95,7 @@ public class RobolectricTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -103,16 +104,13 @@ public class RobolectricTestDescription
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       Preconditions.checkArgument(
-          !params
-              .getBuildTarget()
-              .getFlavors()
-              .contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
-      BuildTarget testTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+          !buildTarget.getFlavors().contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
+      BuildTarget testTarget = HasJavaAbi.getLibraryTarget(buildTarget);
       BuildRule testRule = resolver.requireRule(testTarget);
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
+          buildTarget,
           ruleFinder,
           projectFilesystem,
           params,
@@ -120,11 +118,11 @@ public class RobolectricTestDescription
     }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(templateOptions, buildTarget, projectFilesystem, resolver, args);
 
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
-            params.getBuildTarget(),
+            buildTarget,
             projectFilesystem,
             params.withExtraDeps(resolver.getAllRules(args.getExportedDeps())),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
@@ -151,6 +149,7 @@ public class RobolectricTestDescription
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
+            buildTarget,
             projectFilesystem,
             params,
             args.getUseCxxLibraries(),
@@ -160,32 +159,32 @@ public class RobolectricTestDescription
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildRuleParams testsLibraryParams =
-        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildTarget testLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary.builder(
                     targetGraph,
+                    testLibraryBuildTarget,
                     projectFilesystem,
-                    testsLibraryParams,
+                    params,
                     resolver,
                     cellRoots,
                     javaBuckConfig)
                 .setArgs(args)
                 .setJavacOptions(javacOptions)
                 .setJavacOptionsAmender(new BootClasspathAppender())
-                .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName())
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());
 
     Function<String, Arg> toMacroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
 
     return new RobolectricTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
-        ruleFinder,
         testsLibrary,
         args.getLabels(),
         args.getContacts(),

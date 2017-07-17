@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
@@ -43,6 +44,7 @@ public class JsonConcatenate extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private Path output;
 
   public JsonConcatenate(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedSet<Path> inputs,
@@ -50,7 +52,7 @@ public class JsonConcatenate extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       String stepDescription,
       String outputDirectoryPrefix,
       String outputName) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.inputs = inputs;
     this.outputDirectory =
         BuildTargets.getGenPath(

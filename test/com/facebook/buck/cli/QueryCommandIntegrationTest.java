@@ -31,12 +31,14 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Splitter;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -743,5 +745,41 @@ public class QueryCommandIntegrationTest {
             workspace.resolve("cell1"), "query", "owner(../cell2/foo/foo.txt)");
     result.assertSuccess();
     assertEquals("cell2//foo:test", result.getStdout().trim());
+  }
+
+  @Test
+  public void testMultipleOwnersCrossingPackageBoundaryWithException() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "project.package_boundary_exceptions=owners_violating_package_boundary",
+            "owner(owners_violating_package_boundary/inner/Source.java)");
+    result.assertSuccess();
+    assertThat(
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout()),
+        Matchers.containsInAnyOrder(
+            "//owners_violating_package_boundary:lib",
+            "//owners_violating_package_boundary/inner:lib"));
+  }
+
+  @Test
+  public void testMultipleOwnersCrossingPackageBoundaryWithoutException() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "project.package_boundary_exceptions=",
+            "owner(owners_violating_package_boundary/inner/Source.java)");
+    result.assertSuccess();
+    assertThat(
+        Splitter.on("\n").omitEmptyStrings().trimResults().splitToList(result.getStdout()),
+        Matchers.containsInAnyOrder("//owners_violating_package_boundary/inner:lib"));
   }
 }

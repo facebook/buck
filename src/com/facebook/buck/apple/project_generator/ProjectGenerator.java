@@ -105,6 +105,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
@@ -313,7 +314,7 @@ public class ProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.defaultPathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -1497,7 +1498,7 @@ public class ProjectGenerator {
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       try {
         return ImmutableSortedMap.copyOf(
             CxxDescriptionEnhancer.parseExportedHeaders(
@@ -1527,7 +1528,7 @@ public class ProjectGenerator {
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       try {
         return ImmutableSortedMap.copyOf(
             CxxDescriptionEnhancer.parseHeaders(
@@ -2663,7 +2664,7 @@ public class ProjectGenerator {
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       Path output = pathResolver.getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(

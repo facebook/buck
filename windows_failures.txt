@@ -37,3 +37,4 @@
 !com.facebook.buck.step.fs.SymCopyStepTest#testSymCopyStep
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
+!com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetectorTest

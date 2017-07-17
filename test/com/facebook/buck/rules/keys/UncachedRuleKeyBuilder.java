@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -72,11 +72,11 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
   }
 
   @Override
-  protected UncachedRuleKeyBuilder setAppendableRuleKey(RuleKeyAppendable appendable) {
+  protected UncachedRuleKeyBuilder setAddsToRuleKey(AddsToRuleKey appendable) {
     RuleKeyBuilder<HashCode> subKeyBuilder = subKeySupplier.get();
-    appendable.appendToRuleKey(subKeyBuilder);
+    AlterRuleKeys.amendKey(subKeyBuilder, appendable);
     RuleKey subKey = subKeyBuilder.build(RuleKey::new);
-    setAppendableRuleKey(subKey);
+    setAddsToRuleKey(subKey);
     return this;
   }
 

@@ -23,8 +23,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
@@ -36,16 +34,14 @@ public class JavaBinaryDescriptionTest {
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     FakeJavaLibrary transitiveLibrary =
         resolver.addToIndex(
-            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_lib"), pathResolver));
+            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_lib")));
     FakeJavaLibrary firstOrderLibrary =
         resolver.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:first_order_lib"),
-                pathResolver,
                 ImmutableSortedSet.of(transitiveLibrary)));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

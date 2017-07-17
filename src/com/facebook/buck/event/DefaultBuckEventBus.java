@@ -19,6 +19,7 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -137,7 +138,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
         executorService.shutdownNow();
       }
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
     }
   }
 

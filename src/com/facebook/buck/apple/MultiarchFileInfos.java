@@ -122,6 +122,7 @@ public class MultiarchFileInfos {
    * <p>Invariant: thinRules contain all the thin rules listed in info.getThinTargets().
    */
   public static BuildRule requireMultiarchRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -145,12 +146,13 @@ public class MultiarchFileInfos {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     MultiarchFile multiarchFile =
         new MultiarchFile(
+            buildTarget,
             projectFilesystem,
             params.withoutDeclaredDeps().withExtraDeps(thinRules),
             ruleFinder,
             info.getRepresentativePlatform().getLipo(),
             inputs,
-            BuildTargets.getGenPath(projectFilesystem, params.getBuildTarget(), "%s"));
+            BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"));
     resolver.addToIndex(multiarchFile);
     return multiarchFile;
   }

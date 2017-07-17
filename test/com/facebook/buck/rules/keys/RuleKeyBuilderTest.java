@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.PathSourcePath;
@@ -213,11 +215,11 @@ public class RuleKeyBuilderTest {
   private RuleKeyBuilder<HashCode> newBuilder() {
     Map<BuildTarget, BuildRule> ruleMap = ImmutableMap.of(TARGET_1, RULE_1, TARGET_2, RULE_2);
     Map<BuildRule, RuleKey> ruleKeyMap = ImmutableMap.of(RULE_1, RULE_KEY_1, RULE_2, RULE_KEY_2);
-    Map<RuleKeyAppendable, RuleKey> appendableKeys =
+    Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
     BuildRuleResolver ruleResolver = new FakeBuildRuleResolver(ruleMap);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
@@ -240,11 +242,11 @@ public class RuleKeyBuilderTest {
       }
 
       @Override
-      public RuleKeyBuilder<HashCode> setAppendableRuleKey(RuleKeyAppendable appendable) {
+      public RuleKeyBuilder<HashCode> setAddsToRuleKey(AddsToRuleKey appendable) {
         if (appendable == IGNORED_APPENDABLE) {
           return this;
         }
-        return setAppendableRuleKey(appendableKeys.get(appendable));
+        return setAddsToRuleKey(appendableKeys.get(appendable));
       }
 
       @Override

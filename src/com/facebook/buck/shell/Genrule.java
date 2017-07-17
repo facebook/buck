@@ -137,6 +137,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Boolean isWorkerGenrule;
 
   protected Genrule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       List<SourcePath> srcs,
@@ -145,20 +146,19 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Arg> cmdExe,
       Optional<String> type,
       String out) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.srcs = ImmutableList.copyOf(srcs);
     this.cmd = cmd;
     this.bash = bash;
     this.cmdExe = cmdExe;
 
     this.out = out;
-    BuildTarget target = params.getBuildTarget();
-    this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s");
+    this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
-          params.getBuildTarget(), out);
+          buildTarget, out);
     }
 
     this.pathToTmpDirectory =

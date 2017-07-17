@@ -42,12 +42,16 @@ public class PregeneratedCodeWriter {
   }
 
   public void write(IJProjectCleaner cleaner) throws IOException {
-    if (projectConfig.isAutogenerateAndroidFacetSourcesEnabled()) {
-      return;
+    if (!projectConfig.isAutogenerateAndroidFacetSourcesEnabled()) {
+      for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
+        writeClassesGeneratedByIdea(module, cleaner);
+      }
     }
 
-    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      writeClassesGeneratedByIdea(module, cleaner);
+    if (projectConfig.isGeneratingAndroidManifestEnabled()) {
+      for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
+        writeAndroidManifest(module, cleaner);
+      }
     }
   }
 
@@ -76,6 +80,24 @@ public class PregeneratedCodeWriter {
         androidFacet.get(), cleaner, packageName.get(), "Manifest", null);
   }
 
+  private void writeAndroidManifest(IjModule module, IJProjectCleaner cleaner) throws IOException {
+    Optional<IjModuleAndroidFacet> androidFacet = module.getAndroidFacet();
+    if (!androidFacet.isPresent()) {
+      return;
+    }
+
+    Optional<String> packageName = androidFacet.get().getPackageName();
+    if (!packageName.isPresent()) {
+      return;
+    }
+
+    if (androidFacet.get().getManifestPaths().size() == 1) {
+      return;
+    }
+
+    writeAndroidManifestToFile(androidFacet.get(), cleaner, packageName.get());
+  }
+
   private void writeGeneratedByIdeaClassToFile(
       IjModuleAndroidFacet androidFacet,
       IJProjectCleaner cleaner,
@@ -91,11 +113,30 @@ public class PregeneratedCodeWriter {
             .add("className", className)
             .add("content", content);
 
+    writeTemplateToFile(androidFacet, cleaner, className + ".java", packageName, contents);
+  }
+
+  private void writeAndroidManifestToFile(
+      IjModuleAndroidFacet androidFacet, IJProjectCleaner cleaner, String packageName)
+      throws IOException {
+
+    ST contents = StringTemplateFile.ANDROID_MANIFEST.getST().add("package", packageName);
+
+    writeTemplateToFile(androidFacet, cleaner, "AndroidManifest.xml", packageName, contents);
+  }
+
+  private void writeTemplateToFile(
+      IjModuleAndroidFacet androidFacet,
+      IJProjectCleaner cleaner,
+      String filename,
+      String packageName,
+      ST contents)
+      throws IOException {
     Path fileToWrite =
         androidFacet
             .getGeneratedSourcePath()
             .resolve(packageName.replace('.', '/'))
-            .resolve(className + ".java");
+            .resolve(filename);
 
     cleaner.doNotDelete(fileToWrite);
 

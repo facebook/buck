@@ -24,6 +24,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -153,7 +154,7 @@ public class StringWithMacrosArgTest {
   @Test
   public void appendToCommandLine() throws NoSuchBuildTargetException {
     SourcePathRuleFinder pathFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(pathFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(pathFinder);
 
     BuildRule rule1 =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule1"))

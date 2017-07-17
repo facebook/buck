@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
@@ -39,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -63,6 +65,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -115,6 +118,7 @@ public class HaskellLibraryDescription
   }
 
   private HaskellCompileRule requireCompileRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -127,6 +131,7 @@ public class HaskellLibraryDescription
       boolean hsProfile)
       throws NoSuchBuildTargetException {
     return HaskellDescriptionUtils.requireCompileRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
@@ -137,16 +142,10 @@ public class HaskellLibraryDescription
         depType,
         hsProfile,
         Optional.empty(),
-        Optional.of(getPackageInfo(params.getBuildTarget())),
+        Optional.of(getPackageInfo(buildTarget)),
         args.getCompilerFlags(),
         HaskellSources.from(
-            params.getBuildTarget(),
-            resolver,
-            pathResolver,
-            ruleFinder,
-            cxxPlatform,
-            "srcs",
-            args.getSrcs()));
+            buildTarget, resolver, pathResolver, ruleFinder, cxxPlatform, "srcs", args.getSrcs()));
   }
 
   private Archive createStaticLibrary(
@@ -164,6 +163,7 @@ public class HaskellLibraryDescription
       throws NoSuchBuildTargetException {
     HaskellCompileRule compileRule =
         requireCompileRule(
+            target,
             projectFilesystem,
             baseParams,
             resolver,
@@ -341,6 +341,7 @@ public class HaskellLibraryDescription
     ImmutableSortedSet<SourcePath> objects;
     HaskellCompileRule compileRule =
         requireCompileRule(
+            target,
             projectFilesystem,
             baseParams,
             resolver,
@@ -355,6 +356,7 @@ public class HaskellLibraryDescription
     if (hsProfile) {
       HaskellCompileRule profiledCompileRule =
           requireCompileRule(
+              target,
               projectFilesystem,
               baseParams,
               resolver,
@@ -460,6 +462,7 @@ public class HaskellLibraryDescription
       throws NoSuchBuildTargetException {
     HaskellCompileRule compileRule =
         requireCompileRule(
+            target,
             projectFilesystem,
             baseParams,
             resolver,
@@ -470,6 +473,12 @@ public class HaskellLibraryDescription
             deps,
             Linker.LinkableDepType.SHARED,
             false);
+
+    String name =
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            Optional.empty(), target.withFlavors(), cxxPlatform);
+    Path outputPath = BuildTargets.getGenPath(projectFilesystem, target, "%s").resolve(name);
+
     return HaskellDescriptionUtils.createLinkRule(
         target,
         projectFilesystem,
@@ -483,6 +492,8 @@ public class HaskellLibraryDescription
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
         Linker.LinkableDepType.SHARED,
+        outputPath,
+        Optional.of(name),
         false);
   }
 
@@ -525,6 +536,7 @@ public class HaskellLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -532,9 +544,8 @@ public class HaskellLibraryDescription
       final HaskellLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    final BuildTarget buildTarget = params.getBuildTarget();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
@@ -547,9 +558,7 @@ public class HaskellLibraryDescription
 
       // Get the base build, without any flavors referring to the library type or platform.
       BuildTarget baseTarget =
-          params
-              .getBuildTarget()
-              .withoutFlavors(Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()));
+          buildTarget.withoutFlavors(Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()));
 
       ImmutableSet<BuildRule> deps = allDeps.get(resolver, cxxPlatform.get());
 
@@ -607,11 +616,10 @@ public class HaskellLibraryDescription
       }
 
       throw new IllegalStateException(
-          String.format(
-              "%s: unexpected type `%s`", params.getBuildTarget(), type.get().getValue()));
+          String.format("%s: unexpected type `%s`", buildTarget, type.get().getValue()));
     }
 
-    return new HaskellLibrary(projectFilesystem, params) {
+    return new HaskellLibrary(buildTarget, projectFilesystem, params) {
 
       @Override
       public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {

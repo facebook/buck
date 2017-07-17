@@ -16,15 +16,15 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.util.HumanReadableException;
 
 public final class JavacOptionsFactory {
   public static JavacOptions create(
       JavacOptions defaultOptions,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       BuildRuleResolver resolver,
       JvmLibraryArg jvmLibraryArg) {
     if ((jvmLibraryArg.getSource().isPresent() || jvmLibraryArg.getTarget().isPresent())
@@ -56,14 +56,9 @@ public final class JavacOptionsFactory {
 
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
-    builder.addAllClassesToRemoveFromJar(jvmLibraryArg.getRemoveClasses());
-
     AnnotationProcessingParams annotationParams =
         jvmLibraryArg.buildAnnotationProcessingParams(
-            params.getBuildTarget(),
-            projectFilesystem,
-            resolver,
-            defaultOptions.getSafeAnnotationProcessors());
+            buildTarget, projectFilesystem, resolver, defaultOptions.getSafeAnnotationProcessors());
     builder.setAnnotationProcessingParams(annotationParams);
 
     return builder.build();

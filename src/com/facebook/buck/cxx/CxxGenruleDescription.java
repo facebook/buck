@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -262,23 +263,25 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxGenruleDescriptionArg args)
       throws NoSuchBuildTargetException {
-    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
+    Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
+          buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()),
           projectFilesystem,
-          params.withAppendedFlavor(cxxPlatform.get().getFlavor()),
+          params,
           resolver,
           cellRoots,
           args);
     }
-    return new CxxGenrule(projectFilesystem, params, resolver, args.getOut());
+    return new CxxGenrule(buildTarget, projectFilesystem, params, resolver, args.getOut());
   }
 
   @Override
@@ -419,7 +422,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     public String expandFrom(
         BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
       return shquoteJoin(tool.getCommandPrefix(pathResolver));
     }
 
@@ -609,7 +613,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     protected String expand(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules, Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
       PreprocessorFlags ppFlags = getPreprocessorFlags(getCxxPreprocessorInput(rules));
       Preprocessor preprocessor =
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver);
@@ -709,7 +714,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           symlinkTree =
               resolver.addToIndex(
                   CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                      new SourcePathRuleFinder(resolver),
                       buildTarget,
                       filesystem,
                       cxxPlatform,
@@ -809,7 +813,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return shquoteJoin(
           com.facebook.buck.rules.args.Arg.stringify(
               getLinkerArgs(resolver, rules, filter),
-              new SourcePathResolver(new SourcePathRuleFinder(resolver))));
+              DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))));
     }
 
     @Override

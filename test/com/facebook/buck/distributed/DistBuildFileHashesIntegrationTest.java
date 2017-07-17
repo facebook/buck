@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -208,21 +209,20 @@ public class DistBuildFileHashesIntegrationTest {
             BuckEventBusForTests.newInstance(), true, false, targetGraph, KEY_SEED);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     allCaches.add(
         DefaultFileHashCache.createDefaultFileHashCache(
-            rootCell.getFilesystem(), FileHashCacheMode.PREFIX_TREE));
+            rootCell.getFilesystem(), FileHashCacheMode.DEFAULT));
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
       allCaches.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              cell.getFilesystem(), FileHashCacheMode.PREFIX_TREE));
+              cell.getFilesystem(), FileHashCacheMode.DEFAULT));
     }
-    allCaches.addAll(
-        DefaultFileHashCache.createOsRootDirectoriesCaches(FileHashCacheMode.PREFIX_TREE));
+    allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches(FileHashCacheMode.DEFAULT));
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
 
     return new DistBuildFileHashes(

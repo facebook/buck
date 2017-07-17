@@ -30,7 +30,6 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
@@ -96,7 +95,7 @@ public class CxxPlatformUtils {
       FlavorDomain.of("C/C++ Platform", DEFAULT_PLATFORM);
 
   public static CxxPlatform build(CxxBuckConfig config) {
-    return DefaultCxxPlatforms.build(Platform.detect(), new FakeProjectFilesystem(), config);
+    return DefaultCxxPlatforms.build(Platform.detect(), config);
   }
 
   private static CxxPlatform getDefaultPlatform(Path root)
@@ -110,8 +109,7 @@ public class CxxPlatformUtils {
             Platform.detect(),
             ImmutableMap.of(),
             new DefaultCellPathResolver(root, rawConfig));
-    return DefaultCxxPlatforms.build(
-        Platform.detect(), new ProjectFilesystem(root), new CxxBuckConfig(buckConfig));
+    return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 
   public static CxxPreprocessables.HeaderMode getHeaderModeForDefaultPlatform(Path root)

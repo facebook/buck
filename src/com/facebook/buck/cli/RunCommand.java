@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.Channels;
 import java.util.ArrayList;
@@ -102,9 +104,11 @@ public final class RunCommand extends AbstractCommand {
     // Make sure the target is built.
     BuildCommand buildCommand =
         new BuildCommand(ImmutableList.of(getTarget(params.getBuckConfig())));
-    int exitCode = buildCommand.runWithoutHelp(params);
-    if (exitCode != 0) {
-      return exitCode;
+    try (Closeable contextCloser = buildCommand.prepareExecutionContext(params)) {
+      int exitCode = buildCommand.runWithoutHelp(params);
+      if (exitCode != 0) {
+        return exitCode;
+      }
     }
 
     String targetName = getTarget(params.getBuckConfig());
@@ -144,7 +148,7 @@ public final class RunCommand extends AbstractCommand {
     // or some other process that is meant to "run forever," then it's pretty common to do:
     // `buck run`, test server, hit ctrl-C, edit server code, repeat. This should not wedge buckd.
     SourcePathResolver resolver =
-        new SourcePathResolver(new SourcePathRuleFinder(build.getRuleResolver()));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
     Tool executable = binaryBuildRule.getExecutableCommand();
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     ProcessExecutorParams processExecutorParams =

@@ -19,6 +19,7 @@ package com.facebook.buck.util.versioncontrol;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.Threads;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Optional;
@@ -119,13 +120,13 @@ public class VersionControlStatsGenerator {
                     } catch (InterruptedException e) {
                       LOG.warn(
                           e, "Failed to generate VC stats due to being interrupted. Skipping..");
-                      Thread.currentThread().interrupt(); // Re-set interrupt flag
+                      Threads.interruptCurrentThread(); // Re-set interrupt flag
                     }
                   });
             }
           } catch (InterruptedException e) {
             LOG.warn(e, "Failed to generate VC stats due to being interrupted. Skipping..");
-            Thread.currentThread().interrupt(); // Re-set interrupt flag
+            Threads.interruptCurrentThread(); // Re-set interrupt flag
           }
         });
   }

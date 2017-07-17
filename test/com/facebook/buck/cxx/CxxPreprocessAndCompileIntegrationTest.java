@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
@@ -62,13 +63,14 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Parameterized.Parameter(0)
   public boolean sandboxSource;
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths("cxx_pp_and_compile");
+  @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("cxx_pp_and_compiler_long_pwd");
 
   private ProjectWorkspace workspace;
 
-  @Before
-  public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "step_test", tmp);
+  private ProjectWorkspace setupWorkspace(TemporaryPaths tmp) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "step_test", tmp);
     workspace.setUp();
     workspace.writeContentsToPath(
         "[cxx]\n"
@@ -83,6 +85,12 @@ public class CxxPreprocessAndCompileIntegrationTest {
             + "[build]\n"
             + "  depfiles = enabled\n",
         ".buckconfig");
+    return workspace;
+  }
+
+  @Before
+  public void setUp() throws IOException {
+    workspace = setupWorkspace(tmp);
   }
 
   @Test
@@ -93,6 +101,17 @@ public class CxxPreprocessAndCompileIntegrationTest {
     Path lib = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
+
+    // ...
+    ProjectWorkspace longPwdWorkspace = setupWorkspace(tmp_long_pwd);
+    ProjectFilesystem longPwdFilesystem = new FakeProjectFilesystem();
+    longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    Path longPwdLib =
+        longPwdWorkspace.getPath(
+            BuildTargets.getGenPath(longPwdFilesystem, target, "%s/libsimple.a"));
+    String longPwdContents =
+        Files.asByteSource(longPwdLib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
+    assertEquals(contents, longPwdContents);
   }
 
   @Test

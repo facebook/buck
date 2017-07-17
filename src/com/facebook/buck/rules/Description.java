@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -73,6 +74,7 @@ public interface Description<T> {
    * com.facebook.buck.model.BuildTarget} referred to in the {@code params} contains the {@link
    * Flavor} to create.
    *
+   * @param buildTarget
    * @param projectFilesystem
    * @param resolver For querying for build rules by their targets.
    * @param cellRoots The roots of known cells.
@@ -81,6 +83,7 @@ public interface Description<T> {
    */
   BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,

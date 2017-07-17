@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -39,12 +40,13 @@ public class PrebuiltPythonLibraryDescription
   @Override
   public PrebuiltPythonLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       PrebuiltPythonLibraryDescriptionArg args) {
-    return new PrebuiltPythonLibrary(projectFilesystem, params, args.getBinarySrc());
+    return new PrebuiltPythonLibrary(buildTarget, projectFilesystem, params, args.getBinarySrc());
   }
 
   @BuckStyleImmutable

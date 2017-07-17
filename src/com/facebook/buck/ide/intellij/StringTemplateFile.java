@@ -31,6 +31,7 @@ import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
 
 enum StringTemplateFile {
+  ANDROID_MANIFEST("AndroidManifest.st"),
   MODULE_TEMPLATE("ij-module.st"),
   MODULE_INDEX_TEMPLATE("ij-module-index.st"),
   MISC_TEMPLATE("ij-misc.st"),
@@ -50,7 +51,7 @@ enum StringTemplateFile {
   }
 
   public ST getST() throws IOException {
-    URL templateUrl = Resources.getResource(StringTemplateFile.class, fileName);
+    URL templateUrl = Resources.getResource(StringTemplateFile.class, "templates/" + fileName);
     String template = Resources.toString(templateUrl, StandardCharsets.UTF_8);
     return new ST(template, DELIMITER, DELIMITER);
   }

@@ -50,9 +50,10 @@ public class BuildFileFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
-    Set<QueryTarget> argumentSet = args.get(0).getExpression().eval(env);
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
+    Set<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     return env.getBuildFiles(argumentSet);
   }
 }

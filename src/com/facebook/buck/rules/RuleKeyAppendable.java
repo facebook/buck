@@ -16,8 +16,14 @@
 
 package com.facebook.buck.rules;
 
-// TODO(t6430785): Delete this class once we can use reflection for all rulekeys
-public interface RuleKeyAppendable {
+/**
+ * Deprecated. Implement {@link AddsToRuleKey} instead, and use {@link AddToRuleKey} annotations on
+ * fields to indicate which ones should be part of the rule key.
+ *
+ * <p>TODO(t6430785): Delete this class once no more usages exist
+ */
+@Deprecated
+public interface RuleKeyAppendable extends AddsToRuleKey {
 
   void appendToRuleKey(RuleKeyObjectSink sink);
 }

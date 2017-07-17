@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -38,7 +38,7 @@ public class PatternsMatcher {
     hasPatterns = rawPatterns.iterator().hasNext();
   }
 
-  public PatternsMatcher(Set<Pattern> compiledPatterns) {
+  public PatternsMatcher(ImmutableSet<Pattern> compiledPatterns) {
     patterns = compiledPatterns;
     hasPatterns = !compiledPatterns.isEmpty();
   }
@@ -50,6 +50,22 @@ public class PatternsMatcher {
     }
     for (Pattern pattern : patterns) {
       if (pattern.matcher(string).matches()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @return true if a substring of the given string matches some of the patterns or there are no
+   *     patterns
+   */
+  public boolean substringMatches(final String string) {
+    if (!hasPatterns()) {
+      return true;
+    }
+    for (Pattern pattern : patterns) {
+      if (pattern.matcher(string).find()) {
         return true;
       }
     }

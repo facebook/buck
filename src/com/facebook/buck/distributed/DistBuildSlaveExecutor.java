@@ -24,6 +24,7 @@ import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -37,7 +38,7 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -50,6 +51,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -61,7 +63,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -86,8 +87,9 @@ public class DistBuildSlaveExecutor {
     this.args = args;
   }
 
-  public int buildAndReturnExitCode() throws IOException, InterruptedException {
-    createBuildEngineDelegate();
+  public int buildAndReturnExitCode(DistBuildSlaveTimingStatsTracker tracker)
+      throws IOException, InterruptedException {
+    createBuildEngineDelegate(tracker);
     LocalBuilder localBuilder = new LocalBuilderImpl();
 
     DistBuildModeRunner runner = null;
@@ -168,13 +170,17 @@ public class DistBuildSlaveExecutor {
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver()
-      throws IOException, InterruptedException {
+  private ActionGraphAndResolver createActionGraphAndResolver(
+      DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
-    createTargetGraph();
 
+    tracker.startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
+    createTargetGraph();
+    tracker.stopTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
+
+    tracker.startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     actionGraphAndResolver =
         Preconditions.checkNotNull(
             args.getActionGraphCache()
@@ -184,22 +190,25 @@ public class DistBuildSlaveExecutor {
                     /* skipActionGraphCache */ false,
                     Preconditions.checkNotNull(targetGraph),
                     args.getCacheKeySeed()));
+    tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
-      throws IOException, InterruptedException {
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate(
+      DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
 
+    tracker.startTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
     StackedFileHashCaches caches = createStackedFileHashesAndPreload();
-    createActionGraphAndResolver();
+    tracker.stopTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
+    createActionGraphAndResolver(tracker);
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(Preconditions.checkNotNull(actionGraphAndResolver).getResolver());
     cachingBuildEngineDelegate =
         new DistBuildCachingEngineDelegate(
-            new SourcePathResolver(ruleFinder),
+            DefaultSourcePathResolver.from(ruleFinder),
             ruleFinder,
             caches.remoteStateCache,
             caches.materializingCache);
@@ -313,6 +322,14 @@ public class DistBuildSlaveExecutor {
         throws IOException, InterruptedException {
       // TODO(ruibm): Fix this to work with Android.
       MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
+      final ConcurrencyLimit concurrencyLimit =
+          new ConcurrencyLimit(
+              4,
+              distBuildConfig.getResourceAllocationFairness(),
+              4,
+              distBuildConfig.getDefaultResourceAmounts(),
+              distBuildConfig.getMaximumResourceAmounts().withCpu(4));
+      final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
       try (CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   Preconditions.checkNotNull(cachingBuildEngineDelegate),
@@ -335,37 +352,40 @@ public class DistBuildSlaveExecutor {
                       engineConfig.getBuildInputRuleKeyFileSizeLimit(),
                       new DefaultRuleKeyCache<>()),
                   distBuildConfig.getFileHashCacheMode());
+          //TODO(shivanker): Supply the target device, adb options, and target device options to work with Android.
+          ExecutionContext executionContext =
+              ExecutionContext.builder()
+                  .setConsole(args.getConsole())
+                  .setAndroidPlatformTargetSupplier(getAndroidPlatformTargetSupplier(args))
+                  .setTargetDevice(Optional.empty())
+                  .setDefaultTestTimeoutMillis(1000)
+                  .setCodeCoverageEnabled(false)
+                  .setInclNoLocationClassesEnabled(false)
+                  .setDebugEnabled(false)
+                  .setRuleKeyDiagnosticsMode(distBuildConfig.getRuleKeyDiagnosticsMode())
+                  .setShouldReportAbsolutePaths(false)
+                  .setBuckEventBus(args.getBuckEventBus())
+                  .setPlatform(args.getPlatform())
+                  .setJavaPackageFinder(
+                      distBuildConfig
+                          .getView(JavaBuckConfig.class)
+                          .createDefaultJavaPackageFinder())
+                  .setConcurrencyLimit(concurrencyLimit)
+                  .setPersistentWorkerPools(Optional.empty())
+                  .setExecutors(args.getExecutors())
+                  .setCellPathResolver(args.getRootCell().getCellPathResolver())
+                  .setBuildCellRootPath(args.getRootCell().getRoot())
+                  .setProcessExecutor(processExecutor)
+                  .build();
           Build build =
               new Build(
                   Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
                   args.getRootCell(),
-                  Optional.empty(),
-                  getAndroidPlatformTargetSupplier(args),
                   buildEngine,
                   args.getArtifactCache(),
                   distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
-                  args.getConsole(),
-                  /* defaultTestTimeoutMillis */ 1000,
-                  /* isCodeCoverageEnabled */ false,
-                  /* isInclNoLocationClassesEnabled */ false,
-                  /* isDebugEnabled */ false,
-                  /* shouldReportAbsolutePaths */ false,
-                  distBuildConfig.getRuleKeyDiagnosticsMode(),
-                  args.getBuckEventBus(),
-                  args.getPlatform(),
-                  ImmutableMap.of(),
                   args.getClock(),
-                  new ConcurrencyLimit(
-                      4,
-                      distBuildConfig.getResourceAllocationFairness(),
-                      4,
-                      distBuildConfig.getDefaultResourceAmounts(),
-                      distBuildConfig.getMaximumResourceAmounts().withCpu(4)),
-                  Optional.empty(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  new DefaultProcessExecutor(args.getConsole()),
-                  args.getExecutors())) {
+                  executionContext)) {
 
         return build.executeAndPrintFailuresToEventBus(
             fullyQualifiedNameToBuildTarget(targetsToBuild),

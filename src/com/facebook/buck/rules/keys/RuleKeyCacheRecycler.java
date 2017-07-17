@@ -85,13 +85,17 @@ public class RuleKeyCacheRecycler<V> {
       LOG.verbose(
           "invalidating path \"%s\" from filesystem at \"%s\" due to event (%s)",
           path, filesystem.getRootPath(), event);
-      cache.invalidateInputs(
-          // As inputs to rule keys can be directories, make sure we also invalidate any
-          // directories containing this path.
-          IntStream.range(1, path.getNameCount() + 1)
-              .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
-              .collect(MoreCollectors.toImmutableList()));
+      invalidatePath(filesystem, path);
     }
+  }
+
+  public void invalidatePath(ProjectFilesystem filesystem, Path path) {
+    cache.invalidateInputs(
+        // As inputs to rule keys can be directories, make sure we also invalidate any
+        // directories containing this path.
+        IntStream.range(1, path.getNameCount() + 1)
+            .mapToObj(end -> RuleKeyInput.of(filesystem, path.subpath(0, end)))
+            .collect(MoreCollectors.toImmutableList()));
   }
 
   @Subscribe

@@ -34,6 +34,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -249,11 +250,11 @@ public class CompilationDatabaseIntegrationTest {
         ImmutableList.of(
             "-isysroot",
             sdkRoot.toString(),
-            "-iquote",
-            tmpRoot.toString(),
             "-arch",
             "x86_64",
-            "'-mios-simulator-version-min=8.0'");
+            "'-mios-simulator-version-min=8.0'",
+            "-iquote",
+            tmpRoot.toString());
 
     List<String> commandArgs = new ArrayList<>();
     commandArgs.add(clang);
@@ -288,10 +289,6 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("." + Strings.repeat("/", 399));
     commandArgs.add("-x");
     commandArgs.add(language);
-    commandArgs.add("'-fdebug-prefix-map=" + tmpRoot + "=.'");
-    commandArgs.add("'-fdebug-prefix-map=" + xcodeDeveloperDir + "=APPLE_DEVELOPER_DIR'");
-    commandArgs.add("'-fdebug-prefix-map=" + platformDir + "=APPLE_PLATFORM_DIR'");
-    commandArgs.add("'-fdebug-prefix-map=" + sdkRoot + "=APPLE_SDKROOT'");
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");
@@ -299,6 +296,10 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add(source);
     commandArgs.add("-o");
     commandArgs.add(output);
-    assertThat(ImmutableList.copyOf(entry.getCommand().split(" ")), equalTo(commandArgs));
+    assertThat(
+        RichStream.from(entry.getCommand().split(" "))
+            .filter(c -> !c.contains("-fdebug-prefix-map"))
+            .toImmutableList(),
+        equalTo(commandArgs));
   }
 }

@@ -47,6 +47,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -578,7 +579,7 @@ public class InterCellIntegrationTest {
     NdkCxxPlatform platform =
         AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

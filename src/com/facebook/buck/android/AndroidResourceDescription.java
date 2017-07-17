@@ -93,17 +93,18 @@ public class AndroidResourceDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidResourceDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(ruleFinder, projectFilesystem, params, args.getRes(), "res");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getRes(), "res");
     } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(ruleFinder, projectFilesystem, params, args.getAssets(), "assets");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getAssets(), "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
@@ -116,7 +117,7 @@ public class AndroidResourceDescription
             .findFirst();
     if (invalidDep.isPresent()) {
       throw new HumanReadableException(
-          params.getBuildTarget()
+          buildTarget
               + " (android_resource): dependency "
               + invalidDep.get().getBuildTarget()
               + " ("
@@ -130,23 +131,23 @@ public class AndroidResourceDescription
     // we have to resort to some hackery to make sure things work correctly.
     Pair<Optional<SymlinkTree>, Optional<SourcePath>> resInputs =
         collectInputSourcePaths(
-            resolver, params.getBuildTarget(), RESOURCES_SYMLINK_TREE_FLAVOR, args.getRes());
+            resolver, buildTarget, RESOURCES_SYMLINK_TREE_FLAVOR, args.getRes());
     Pair<Optional<SymlinkTree>, Optional<SourcePath>> assetsInputs =
         collectInputSourcePaths(
-            resolver, params.getBuildTarget(), ASSETS_SYMLINK_TREE_FLAVOR, args.getAssets());
+            resolver, buildTarget, ASSETS_SYMLINK_TREE_FLAVOR, args.getAssets());
 
     if (flavors.contains(AAPT2_COMPILE_FLAVOR)) {
       Optional<SourcePath> resDir = resInputs.getSecond();
       Preconditions.checkArgument(
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
-          params.getBuildTarget());
+          buildTarget);
       params =
           params
               .withDeclaredDeps(
                   ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())))
               .withoutExtraDeps();
-      return new Aapt2Compile(projectFilesystem, params, resDir.get());
+      return new Aapt2Compile(buildTarget, projectFilesystem, params, resDir.get());
     }
 
     params =
@@ -162,6 +163,7 @@ public class AndroidResourceDescription
                     .orElse(ImmutableSet.of())));
 
     return new AndroidResource(
+        buildTarget,
         projectFilesystem,
         // We only propagate other AndroidResource rule dependencies, as these are
         // the only deps which should control whether we need to re-run the aapt_package
@@ -182,9 +184,8 @@ public class AndroidResourceDescription
   }
 
   private SymlinkTree createSymlinkTree(
-      SourcePathRuleFinder ruleFinder,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
       String outputDirName) {
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
@@ -210,10 +211,8 @@ public class AndroidResourceDescription
       }
     }
     Path symlinkTreeRoot =
-        BuildTargets.getGenPath(projectFilesystem, params.getBuildTarget(), "%s")
-            .resolve(outputDirName);
-    return new SymlinkTree(
-        params.getBuildTarget(), projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
+    return new SymlinkTree(buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(

@@ -25,10 +25,7 @@ import com.facebook.buck.util.autosparse.AbstractAutoSparseFactory;
 import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.autosparse.AutoSparseProjectFilesystemDelegate;
 import com.facebook.buck.util.autosparse.AutoSparseState;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
-import com.facebook.eden.thrift.EdenError;
-import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -47,18 +44,15 @@ public final class ProjectFilesystemDelegateFactory {
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
       Path root, String hgCmd, AutoSparseConfig autoSparseConfig) throws InterruptedException {
-    Optional<EdenClient> client = tryToCreateEdenClient();
+    Optional<EdenClient> client = EdenClient.tryToCreateEdenClient(root);
 
     if (client.isPresent()) {
-      try {
-        EdenMount mount = client.get().getMountFor(root);
-        if (mount != null) {
-          return new EdenProjectFilesystemDelegate(mount);
-        }
-      } catch (TException | EdenError e) {
-        // If Eden is running but root is not a mount point, Eden getMountFor() should just return
-        // null rather than throw an error.
-        LOG.error(e, "Failed to find Eden client for %s.", root);
+      Optional<EdenMount> mount = client.get().getMountFor(root);
+      if (mount.isPresent()) {
+        LOG.debug("Created eden mount for %s: %s", root, mount.get());
+        return new EdenProjectFilesystemDelegate(mount.get());
+      } else {
+        LOG.error("Failed to find Eden client for %s.", root);
       }
     }
 
@@ -80,14 +74,5 @@ public final class ProjectFilesystemDelegateFactory {
 
     // No Eden or Mercurial info available, use the default
     return new DefaultProjectFilesystemDelegate(root);
-  }
-
-  /** @return {@link Optional#empty()} if there is no instance of Eden running. */
-  private static Optional<EdenClient> tryToCreateEdenClient() {
-    if (Platform.detect() != Platform.WINDOWS) {
-      return EdenClient.newInstance();
-    } else {
-      return Optional.empty();
-    }
   }
 }

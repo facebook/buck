@@ -70,13 +70,14 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 
-    Set<QueryTarget> fromSet = from.eval(env);
-    Set<QueryTarget> toSet = to.eval(env);
+    Set<QueryTarget> fromSet = evaluator.eval(from, env);
+    Set<QueryTarget> toSet = evaluator.eval(to, env);
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;

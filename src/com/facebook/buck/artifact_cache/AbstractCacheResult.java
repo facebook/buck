@@ -36,6 +36,7 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   private static final CacheResult IGNORED_RESULT =
       CacheResult.of(
@@ -44,10 +45,12 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
+          Optional.empty(),
           Optional.empty());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
           CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
+          Optional.empty(),
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),
@@ -80,6 +83,10 @@ abstract class AbstractCacheResult {
   @Value.Parameter
   @JsonProperty("artifactSizeBytes")
   protected abstract Optional<Long> artifactSizeBytes();
+
+  @Value.Parameter
+  @JsonProperty("twoLevelContentHashKey")
+  protected abstract Optional<String> twoLevelContentHashKey();
 
   public String getCacheSource() {
     Preconditions.checkState(
@@ -121,7 +128,8 @@ abstract class AbstractCacheResult {
         Optional.of(cacheMode),
         Optional.empty(),
         Optional.of(metadata),
-        Optional.of(artifactSize));
+        Optional.of(artifactSize),
+        Optional.empty());
   }
 
   public static CacheResult hit(String cacheSource, ArtifactCacheMode cacheMode) {
@@ -131,6 +139,7 @@ abstract class AbstractCacheResult {
         Optional.of(cacheMode),
         Optional.empty(),
         Optional.of(ImmutableMap.of()),
+        Optional.empty(),
         Optional.empty());
   }
 
@@ -141,6 +150,7 @@ abstract class AbstractCacheResult {
         Optional.of(cacheSource),
         Optional.of(cacheMode),
         Optional.of(cacheError),
+        Optional.empty(),
         Optional.empty(),
         Optional.empty());
   }
@@ -170,6 +180,7 @@ abstract class AbstractCacheResult {
             rest.isEmpty()
                 ? Optional.empty()
                 : Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),

@@ -17,11 +17,9 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -29,7 +27,7 @@ import org.immutables.value.Value;
 abstract class AbstractDirectToJarOutputSettings {
   public abstract Path getDirectToJarOutputPath();
 
-  public abstract ImmutableSet<Pattern> getClassesToRemoveFromJar();
+  public abstract RemoveClassesPatternsMatcher getClassesToRemoveFromJar();
 
   public abstract ImmutableSortedSet<Path> getEntriesToJar();
 

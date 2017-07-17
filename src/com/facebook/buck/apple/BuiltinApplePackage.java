@@ -51,9 +51,11 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final BuildRule bundle;
 
   public BuiltinApplePackage(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRule bundle) {
-    super(projectFilesystem, params);
-    BuildTarget buildTarget = params.getBuildTarget();
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRule bundle) {
+    super(buildTarget, projectFilesystem, params);
     // TODO(markwang): This will be different for Mac apps.
     this.pathToOutputFile = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");
     this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");

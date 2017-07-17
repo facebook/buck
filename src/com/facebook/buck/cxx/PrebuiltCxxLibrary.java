@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.google.common.collect.ImmutableList;
@@ -24,8 +25,9 @@ import com.google.common.collect.ImmutableList;
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
 
-  PrebuiltCxxLibrary(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-    super(projectFilesystem, params);
+  PrebuiltCxxLibrary(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 
   public abstract ImmutableList<String> getExportedLinkerFlags(CxxPlatform cxxPlatform);

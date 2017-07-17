@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +47,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
   @AddToRuleKey private final boolean legacyOutputPath;
 
   public PythonBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps,
@@ -55,7 +57,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableSet<String> preloadLibraries,
       String pexExtension,
       boolean legacyOutputPath) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.originalDeclaredDeps = originalDeclaredDeps;
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
@@ -106,7 +108,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget);
   }
 }

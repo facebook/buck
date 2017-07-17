@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -106,7 +107,7 @@ public class GenruleTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     createSampleJavaBinaryRule(ruleResolver);
 
     // From the Python object, create a GenruleBuildRuleFactory to create a Genrule.Builder
@@ -341,7 +342,7 @@ public class GenruleTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     Genrule genrule = createGenruleBuilderThatUsesWorkerMacro(ruleResolver).build(ruleResolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -445,7 +446,8 @@ public class GenruleTest {
   public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(filesystem.getRootPath());
@@ -505,7 +507,8 @@ public class GenruleTest {
   public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     AndroidPlatformTarget android = EasyMock.createNiceMock(AndroidPlatformTarget.class);
     Path sdkDir = Paths.get("/opt/users/android_sdk");
     Path ndkDir = Paths.get("/opt/users/android_ndk");
@@ -543,7 +546,8 @@ public class GenruleTest {
   public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target)
@@ -563,7 +567,7 @@ public class GenruleTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(
-            new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
     String bash = "rm -rf /usr";
     String cmdExe = "rmdir /s /q C:\\Windows";
     String cmd = "echo \"Hello\"";
@@ -676,7 +680,7 @@ public class GenruleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, new DummyFileHashCache(), pathResolver, ruleFinder);
 
@@ -711,7 +715,7 @@ public class GenruleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
@@ -723,13 +727,13 @@ public class GenruleTest {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey originalRuleKey = ruleKeyFactory.build(rule);
@@ -747,17 +751,17 @@ public class GenruleTest {
         .build(resolver);
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey unchangedRuleKey = ruleKeyFactory.build(rule);
@@ -769,7 +773,7 @@ public class GenruleTest {
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("dep.out")
@@ -781,7 +785,7 @@ public class GenruleTest {
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
@@ -800,7 +804,7 @@ public class GenruleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
@@ -812,13 +816,13 @@ public class GenruleTest {
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey originalRuleKey = defaultRuleKeyFactory.build(rule);
@@ -840,17 +844,17 @@ public class GenruleTest {
         .build(resolver, filesystem);
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey unchangedRuleKey = defaultRuleKeyFactory.build(rule);
@@ -869,11 +873,11 @@ public class GenruleTest {
         "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
@@ -892,7 +896,7 @@ public class GenruleTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
             .addSrc(Paths.get("source.java"))
@@ -904,13 +908,13 @@ public class GenruleTest {
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey originalRuleKey = defaultRuleKeyFactory.build(rule);
@@ -928,17 +932,17 @@ public class GenruleTest {
         .build(resolver, filesystem);
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey unchangedRuleKey = defaultRuleKeyFactory.build(rule);
@@ -957,11 +961,11 @@ public class GenruleTest {
         "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(resolver);
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     inputBasedRuleKeyFactory =
         new InputBasedRuleKeyFactory(
             0,
-            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE),
+            StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT),
             pathResolver,
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);

@@ -40,6 +40,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,7 +58,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -116,7 +117,11 @@ import javax.annotation.Nullable;
  * </pre>
  */
 public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, HasInstallableApk {
+    implements SupportsInputBasedRuleKey,
+        HasClasspathEntries,
+        HasRuntimeDeps,
+        HasInstallableApk,
+        HasInstallHelpers {
 
   /**
    * The filename of the solidly compressed libraries if compressAssetLibraries is set to true. This
@@ -251,6 +256,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePath abiPath;
 
   AndroidBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -286,7 +292,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<String> dxMaxHeapSize,
       boolean isCacheable) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
@@ -314,7 +320,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Joiner.on(":")
             .join(FluentIterable.from(rulesToExcludeFromDex).transform(BuildRule::toString));
     this.enhancementResult = enhancementResult;
-    this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget(), getProjectFilesystem());
+    this.primaryDexPath = getPrimaryDexPath(buildTarget, getProjectFilesystem());
     this.reorderClassesIntraDex = reorderClassesIntraDex;
     this.dexReorderToolFile = dexReorderToolFile;
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;
@@ -440,6 +446,12 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setManifestPath(getManifestPath())
         .setExopackageInfo(getExopackageInfo())
         .build();
+  }
+
+  @Override
+  public Stream<BuildTarget> getInstallHelpers() {
+    return Stream.of(
+        getBuildTarget().withFlavors(AndroidBinaryInstallGraphEnhancer.INSTALL_FLAVOR));
   }
 
   @Override
@@ -1558,8 +1570,11 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return JavaLibraryClasspathProvider.getClasspathDeps(
-        ImmutableSet.copyOf(
-            ruleFinder.filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
+        enhancementResult
+            .getClasspathEntriesToDex()
+            .stream()
+            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Override
@@ -1574,7 +1589,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<Stream<BuildTarget>> deps = Stream.builder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
         && enhancementResult.getCopyNativeLibraries().isPresent()) {
@@ -1588,15 +1603,14 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       deps.add(
-          OptionalCompat.asSet(enhancementResult.getPreDexMerge())
-              .stream()
-              .map(BuildRule::getBuildTarget));
+          Optionals.toStream(enhancementResult.getPreDexMerge()).map(BuildRule::getBuildTarget));
     }
     if (ExopackageMode.enabledForResources(exopackageModes)) {
       deps.add(
-          ruleFinder
-              .filterBuildRuleInputs(enhancementResult.getExoResources())
+          enhancementResult
+              .getExoResources()
               .stream()
+              .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
               .map(BuildRule::getBuildTarget));
     }
     return deps.build().reduce(Stream.empty(), Stream::concat);

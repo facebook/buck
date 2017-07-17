@@ -20,7 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 /** Build a shared library interface from an ELF shared library. */
-class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
+class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsInputBasedRuleKey {
 
   // We only care about sections relevant to dynamic linking.
@@ -54,12 +54,13 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final SourcePath input;
 
   private ElfSharedLibraryInterface(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Tool objcopy,
       SourcePath input) {
-    super(projectFilesystem, buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.pathResolver = resolver;
     this.objcopy = objcopy;
     this.input = input;
@@ -73,9 +74,9 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithResolver
       Tool objcopy,
       SourcePath input) {
     return new ElfSharedLibraryInterface(
+        target,
         projectFilesystem,
         new BuildRuleParams(
-            target,
             () ->
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(objcopy.getDeps(ruleFinder))

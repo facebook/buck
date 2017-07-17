@@ -114,20 +114,20 @@ public class TargetNodeFactory {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
-    return new TargetNode<>(
+    return TargetNode.of(
+        buildTarget,
         this,
         rawInputsHashCode,
         description,
         constructorArg,
         filesystem,
-        buildTarget,
+        pathsBuilder.build(),
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
         targetGraphOnlyDepsBuilder.build(),
+        cellRoots,
         visibilityPatterns,
         withinViewPatterns,
-        pathsBuilder.build(),
-        cellRoots,
         Optional.empty());
   }
 

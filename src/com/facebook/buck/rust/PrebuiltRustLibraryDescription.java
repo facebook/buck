@@ -20,11 +20,13 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -49,6 +51,7 @@ public class PrebuiltRustLibraryDescription
   @Override
   public PrebuiltRustLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -56,9 +59,9 @@ public class PrebuiltRustLibraryDescription
       PrebuiltRustLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     final SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
-    return new PrebuiltRustLibrary(projectFilesystem, params, pathResolver) {
+    return new PrebuiltRustLibrary(buildTarget, projectFilesystem, params) {
 
       @Override
       protected SourcePath getRlib() {
@@ -72,7 +75,7 @@ public class PrebuiltRustLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType) {
         return new RustLibraryArg(
-            getResolver(), args.getCrate(), args.getRlib(), direct, getBuildDeps());
+            pathResolver, args.getCrate(), args.getRlib(), direct, getBuildDeps());
       }
 
       @Override

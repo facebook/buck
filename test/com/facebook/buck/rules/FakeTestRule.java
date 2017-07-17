@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
-public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestRule {
+public class FakeTestRule extends AbstractBuildRuleWithDeclaredAndExtraDeps implements TestRule {
 
   private final ImmutableSet<String> labels;
   private final Optional<Path> pathToTestOutputDirectory;
@@ -39,26 +39,23 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   private final Callable<TestResults> interpretedTestResults;
 
   public FakeTestRule(
-      ImmutableSet<String> labels,
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
+      ImmutableSet<String> labels, BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
     this(
+        target,
         new FakeProjectFilesystem(),
-        TestBuildRuleParams.create(target).withDeclaredDeps(deps),
-        resolver,
+        TestBuildRuleParams.create().withDeclaredDeps(deps),
         labels);
   }
 
   public FakeTestRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSet<String> labels) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
-        resolver,
         labels,
         Optional.empty(),
         false, // runTestSeparately
@@ -69,15 +66,15 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
   }
 
   public FakeTestRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
       ImmutableSet<String> labels,
       Optional<Path> pathToTestOutputDirectory,
       boolean runTestSeparately,
       ImmutableList<Step> testSteps,
       Callable<TestResults> interpretedTestResults) {
-    super(projectFilesystem, buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.labels = labels;
     this.pathToTestOutputDirectory = pathToTestOutputDirectory;
     this.runTestSeparately = runTestSeparately;
@@ -108,7 +105,9 @@ public class FakeTestRule extends AbstractBuildRuleWithResolver implements TestR
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext, boolean isUsingTestSelectors) {
+      ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return interpretedTestResults;
   }
 

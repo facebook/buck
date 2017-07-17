@@ -93,7 +93,7 @@ public class DistBuildState {
   }
 
   public static DistBuildState load(
-      Optional<BuckConfig> localBuckConfig, // e.g. the slave's .buckconfig
+      BuckConfig localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
@@ -121,9 +121,7 @@ public class DistBuildState {
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig =
           createBuckConfigFromRawConfigAndEnv(
-              config,
-              projectFilesystem,
-              ImmutableMap.copyOf(remoteCell.getConfig().getUserEnvironment()));
+              config, projectFilesystem, ImmutableMap.copyOf(localBuckConfig.getEnvironment()));
 
       Optional<String> cellName =
           remoteCell.getCanonicalName().isEmpty()
@@ -146,7 +144,7 @@ public class DistBuildState {
   }
 
   public static Config createConfigFromRemoteAndOverride(
-      BuildJobStateBuckConfig remoteBuckConfig, Optional<BuckConfig> overrideBuckConfig) {
+      BuildJobStateBuckConfig remoteBuckConfig, BuckConfig overrideBuckConfig) {
 
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig =
         ImmutableMap.copyOf(
@@ -163,9 +161,7 @@ public class DistBuildState {
     RawConfig.Builder rawConfigBuilder = RawConfig.builder();
     rawConfigBuilder.putAll(rawConfig);
 
-    if (overrideBuckConfig.isPresent()) {
-      rawConfigBuilder.putAll(overrideBuckConfig.get().getConfig().getRawConfig());
-    }
+    rawConfigBuilder.putAll(overrideBuckConfig.getConfig().getRawConfig());
     return new Config(rawConfigBuilder.build());
   }
 

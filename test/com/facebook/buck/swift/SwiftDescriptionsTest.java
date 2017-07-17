@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -39,7 +40,8 @@ public class SwiftDescriptionsTest {
   public void testPopulateSwiftLibraryDescriptionArg() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     SwiftLibraryDescriptionArg.Builder outputBuilder =

@@ -21,6 +21,7 @@ import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -85,11 +86,14 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   DexProducedFromJavaLibrary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, JavaLibrary javaLibrary) {
-    super(projectFilesystem, params);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      JavaLibrary javaLibrary) {
+    super(buildTarget, projectFilesystem, params);
     this.javaLibrary = javaLibrary;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   @Override

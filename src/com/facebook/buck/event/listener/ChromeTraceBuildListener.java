@@ -52,6 +52,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
@@ -222,7 +223,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           LOG.warn("Failed to log buck trace %s.  Trace might be corrupt", tracePath);
         }
       } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
       }
 
       jsonGenerator.writeEndArray();

@@ -54,6 +54,7 @@ public class DepsFunctionTest {
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     assertThat(
         DEPS_FUNCTION.eval(
+            new NoopQueryEvaluator(),
             queryEnvironment,
             ImmutableList.of(
                 QueryEnvironment.Argument.of(
@@ -80,6 +81,7 @@ public class DepsFunctionTest {
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     assertThat(
         DEPS_FUNCTION.eval(
+            new NoopQueryEvaluator(),
             queryEnvironment,
             ImmutableList.of(
                 QueryEnvironment.Argument.of(

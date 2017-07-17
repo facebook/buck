@@ -138,37 +138,30 @@ public class CxxTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget inputBuildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams inputParams,
+      BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final CxxTestDescriptionArg args)
       throws NoSuchBuildTargetException {
-    Optional<StripStyle> flavoredStripStyle =
-        StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
+    Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(inputBuildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
-        LinkerMapMode.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
-    inputParams =
-        inputParams.withBuildTarget(
-            CxxStrip.removeStripStyleFlavorInTarget(
-                inputParams.getBuildTarget(), flavoredStripStyle));
-    inputParams =
-        inputParams.withBuildTarget(
-            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
-                inputParams.getBuildTarget(), flavoredLinkerMapMode));
-    final BuildRuleParams params = inputParams;
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(inputBuildTarget);
+    inputBuildTarget =
+        CxxStrip.removeStripStyleFlavorInTarget(inputBuildTarget, flavoredStripStyle);
+    inputBuildTarget =
+        LinkerMapMode.removeLinkerMapModeFlavorInTarget(inputBuildTarget, flavoredLinkerMapMode);
+    final BuildTarget buildTarget = inputBuildTarget;
 
-    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
+    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
               targetGraph,
-              params.getBuildTarget().withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
+              buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
               resolver,
               cellRoots,
@@ -179,31 +172,28 @@ public class CxxTestDescription
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
-          params.getBuildTarget(), projectFilesystem, cxxLinkAndCompileRules.compileRules);
+          buildTarget, projectFilesystem, cxxLinkAndCompileRules.compileRules);
     }
 
-    if (params
-        .getBuildTarget()
-        .getFlavors()
-        .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          cxxPlatforms.getValue(params.getBuildTarget()).isPresent()
-              ? params.getBuildTarget()
-              : params.getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()),
+          cxxPlatforms.getValue(buildTarget).isPresent()
+              ? buildTarget
+              : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor()),
           projectFilesystem,
           resolver);
     }
 
-    if (params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
+    if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          resolver, args, cxxPlatform, params.getBuildTarget(), projectFilesystem);
+          resolver, args, cxxPlatform, buildTarget, projectFilesystem);
     }
 
     // Generate the link rule that builds the test binary.
     final CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             targetGraph,
-            params.getBuildTarget(),
+            buildTarget,
             projectFilesystem,
             resolver,
             cellRoots,
@@ -216,18 +206,14 @@ public class CxxTestDescription
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
+    BuildTarget testBuildTarget =
+        CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
+    testBuildTarget =
+        LinkerMapMode.restoreLinkerMapModeFlavorInTarget(testBuildTarget, flavoredLinkerMapMode);
     BuildRuleParams testParams =
         params
             .withDeclaredDeps(cxxLinkAndCompileRules.deps)
             .copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
-    testParams =
-        testParams.withBuildTarget(
-            CxxStrip.restoreStripStyleFlavorInTarget(
-                testParams.getBuildTarget(), flavoredStripStyle));
-    testParams =
-        testParams.withBuildTarget(
-            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
-                testParams.getBuildTarget(), flavoredLinkerMapMode));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, String> testEnv =
@@ -235,7 +221,7 @@ public class CxxTestDescription
             Maps.transformValues(
                 args.getEnv(),
                 CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                    params.getBuildTarget(), cellRoots, resolver)));
+                    buildTarget, cellRoots, resolver)));
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<String>> testArgs =
@@ -244,7 +230,7 @@ public class CxxTestDescription
                 .stream()
                 .map(
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                            params.getBuildTarget(), cellRoots, resolver)
+                            buildTarget, cellRoots, resolver)
                         ::apply)
                 .collect(MoreCollectors.toImmutableList());
 
@@ -263,10 +249,9 @@ public class CxxTestDescription
             try {
               deps.addAll(
                   CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
-                      params.getBuildTarget(), cellRoots, resolver, part));
+                      buildTarget, cellRoots, resolver, part));
             } catch (MacroException e) {
-              throw new HumanReadableException(
-                  e, "%s: %s", params.getBuildTarget(), e.getMessage());
+              throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
             }
           }
 
@@ -281,9 +266,9 @@ public class CxxTestDescription
         {
           test =
               new CxxGtestTest(
+                  testBuildTarget,
                   projectFilesystem,
                   testParams,
-                  ruleFinder,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,
@@ -304,9 +289,9 @@ public class CxxTestDescription
         {
           test =
               new CxxBoostTest(
+                  testBuildTarget,
                   projectFilesystem,
                   testParams,
-                  ruleFinder,
                   cxxLinkAndCompileRules.getBinaryRule(),
                   cxxLinkAndCompileRules.executable,
                   testEnv,

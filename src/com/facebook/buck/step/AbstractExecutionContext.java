@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
@@ -74,10 +75,7 @@ abstract class AbstractExecutionContext implements Closeable {
   abstract Optional<TargetDevice> getTargetDevice();
 
   @Value.Parameter
-  abstract Optional<TargetDeviceOptions> getTargetDeviceOptions();
-
-  @Value.Parameter
-  abstract Optional<AdbOptions> getAdbOptions();
+  abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
 
   /**
    * Worker process pools that are persisted across buck invocations inside buck daemon. If buck is

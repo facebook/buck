@@ -18,6 +18,7 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -48,6 +49,7 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableList<DIncludes> includes;
 
   public DCompileBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool compiler,
@@ -55,7 +57,7 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String name,
       ImmutableSortedSet<SourcePath> sources,
       ImmutableList<DIncludes> includes) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.compilerFlags = compilerFlags;
     this.name = name;

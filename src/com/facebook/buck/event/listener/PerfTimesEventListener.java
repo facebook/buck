@@ -55,7 +55,7 @@ public class PerfTimesEventListener implements BuckEventListener {
   public PerfTimesEventListener(BuckEventBus eventBus, ExecutionEnvironment executionEnvironment) {
     this.eventBus = eventBus;
     perfTimesStatsBuilder.setPythonTimeMs(
-        Long.valueOf(executionEnvironment.getenv("BUCK_PYTHON_SPACE_INIT_TIME", "0")));
+        executionEnvironment.getenv("BUCK_PYTHON_SPACE_INIT_TIME").map(Long::valueOf).orElse(0L));
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
 

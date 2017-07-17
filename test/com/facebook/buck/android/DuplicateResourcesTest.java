@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -251,7 +252,8 @@ public class DuplicateResourcesTest {
             targetGraph);
 
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(actionGraphAndResolver.getResolver()));
+        DefaultSourcePathResolver.from(
+            new SourcePathRuleFinder(actionGraphAndResolver.getResolver()));
 
     ImmutableSet<ImmutableList<Step>> ruleSteps =
         RichStream.from(actionGraphAndResolver.getActionGraph().getNodes())

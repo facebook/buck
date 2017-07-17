@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
@@ -36,14 +37,15 @@ import java.util.Optional;
 
 public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  protected final AndroidPackageableCollection packageableCollection;
+  protected final AndroidAppModularityGraphEnhancementResult result;
 
   AndroidAppModularity(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      AndroidPackageableCollection packageableCollection) {
-    super(projectFilesystem, params);
-    this.packageableCollection = packageableCollection;
+      AndroidAppModularityGraphEnhancementResult result) {
+    super(buildTarget, projectFilesystem, params);
+    this.result = result;
   }
 
   @Override
@@ -64,7 +66,8 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();
     additionalDexStoreToJarPathMapBuilder.putAll(
-        packageableCollection
+        result
+            .getPackageableCollection()
             .getModuleMappedClasspathEntriesToDex()
             .entries()
             .stream()

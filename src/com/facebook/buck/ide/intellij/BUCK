@@ -6,13 +6,7 @@ java_immutables_library(
             "projectview/**",
         ],
     ),
-    resources = [
-        "GeneratedByIdeaClass.st",
-        "ij-library.st",
-        "ij-misc.st",
-        "ij-module.st",
-        "ij-module-index.st",
-    ],
+    resources = glob(["templates/*.st"]),
     tests = [
         "//test/com/facebook/buck/ide/intellij:intellij",
     ],

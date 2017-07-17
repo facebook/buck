@@ -40,7 +40,9 @@ import org.immutables.value.Value;
 abstract class AbstractDistBuildExecutorArgs {
   public abstract DistBuildState getState();
 
-  public abstract Cell getRootCell();
+  public Cell getRootCell() {
+    return getState().getRootCell();
+  }
 
   public abstract Parser getParser();
 

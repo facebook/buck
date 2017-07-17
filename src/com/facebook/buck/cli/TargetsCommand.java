@@ -39,6 +39,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -831,7 +832,7 @@ public class TargetsCommand extends AbstractCommand {
                 new DefaultRuleKeyFactory(
                     new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
                     params.getFileHashCache(),
-                    new SourcePathResolver(ruleFinder),
+                    DefaultSourcePathResolver.from(ruleFinder),
                     ruleFinder));
       }
     }
@@ -850,7 +851,7 @@ public class TargetsCommand extends AbstractCommand {
         }
         if (isShowOutput() || isShowFullOutput()) {
           getUserFacingOutputPath(
-                  new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver.get())),
+                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver.get())),
                   rule,
                   params.getBuckConfig().getBuckOutCompatLink())
               .map(

@@ -128,10 +128,26 @@ public class AndroidNdkHelper {
       }
     }
 
-    public Symbols getSymbols(Path apkPath, String libName)
+    public Symbols getDynamicSymbols(Path apkPath, String libName)
         throws IOException, InterruptedException {
       Path lib = unpack(apkPath, libName);
-      return Symbols.getSymbols(executor, objdump, resolver, lib);
+      return Symbols.getDynamicSymbols(executor, objdump, resolver, lib);
+    }
+
+    public Symbols getNormalSymbols(Path apkPath, String libName)
+        throws IOException, InterruptedException {
+      Path lib = unpack(apkPath, libName);
+      return Symbols.getNormalSymbols(executor, objdump, resolver, lib);
+    }
+
+    public Symbols getDynamicSymbolsFromFile(Path sharedObject)
+        throws IOException, InterruptedException {
+      return Symbols.getDynamicSymbols(executor, objdump, resolver, sharedObject);
+    }
+
+    public Symbols getNormalSymbolsFromFile(Path sharedObject)
+        throws IOException, InterruptedException {
+      return Symbols.getNormalSymbols(executor, objdump, resolver, sharedObject);
     }
 
     public Symbols getXzsSymbols(Path apkPath, String libName, String xzsName, String metadataName)
@@ -155,13 +171,13 @@ public class AndroidNdkHelper {
           Files.copy(xzInput, lib, StandardCopyOption.REPLACE_EXISTING);
         }
       }
-      return Symbols.getSymbols(executor, objdump, resolver, lib);
+      return Symbols.getDynamicSymbols(executor, objdump, resolver, lib);
     }
 
     public SymbolsAndDtNeeded getSymbolsAndDtNeeded(Path apkPath, String libName)
         throws IOException, InterruptedException {
       Path lib = unpack(apkPath, libName);
-      Symbols symbols = Symbols.getSymbols(executor, objdump, resolver, lib);
+      Symbols symbols = Symbols.getDynamicSymbols(executor, objdump, resolver, lib);
       ImmutableSet<String> dtNeeded = Symbols.getDtNeeded(executor, objdump, resolver, lib);
       return new SymbolsAndDtNeeded(symbols, dtNeeded);
     }

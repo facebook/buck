@@ -42,9 +42,10 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
   private final ImmutableSortedSet<BuildRule> bytecodeLinkDeps;
 
   public OcamlStaticLibrary(
+      BuildTarget buildTarget,
+      BuildTarget compileBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleParams compileParams,
       ImmutableList<String> linkerFlags,
       ImmutableList<? extends SourcePath> objFiles,
       OcamlBuildContext ocamlContext,
@@ -52,7 +53,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
       ImmutableSortedSet<BuildRule> nativeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeCompileDeps,
       ImmutableSortedSet<BuildRule> bytecodeLinkDeps) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.linkerFlags = linkerFlags;
     this.objFiles = objFiles;
     this.ocamlContext = ocamlContext;
@@ -60,8 +61,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
     this.nativeCompileDeps = nativeCompileDeps;
     this.bytecodeCompileDeps = bytecodeCompileDeps;
     this.bytecodeLinkDeps = bytecodeLinkDeps;
-    staticLibraryTarget =
-        OcamlRuleBuilder.createStaticLibraryBuildTarget(compileParams.getBuildTarget());
+    staticLibraryTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(compileBuildTarget);
   }
 
   private NativeLinkableInput getLinkableInput(boolean isBytecode) {

@@ -41,11 +41,11 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -131,6 +131,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final AtomicReference<String> rDotJavaPackage;
 
   public AndroidResource(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -146,6 +147,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)));
@@ -165,7 +167,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.hasWhitelistedStrings = hasWhitelistedStrings;
     this.resourceUnion = resourceUnion;
 
-    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
     this.pathToTextSymbolsDir =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
     this.pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
@@ -194,6 +195,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AndroidResource(
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -206,6 +208,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         ruleFinder,
@@ -222,6 +225,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public AndroidResource(
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -236,6 +240,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled) {
     this(
+        buildTarget,
         projectFilesystem,
         buildRuleParams,
         ruleFinder,
@@ -247,11 +252,11 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         assetsSrcs,
         manifestFile,
         () ->
-            FluentIterable.from(buildRuleParams.getBuildDeps())
+            RichStream.from(buildRuleParams.getBuildDeps())
                 .filter(HasAndroidResourceDeps.class)
                 .filter(input -> input.getRes() != null)
-                .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
-                .toSortedSet(Ordering.natural()),
+                .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
+                .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion,
         isGrayscaleImageProcessingEnabled);

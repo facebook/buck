@@ -24,10 +24,8 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.CaseFormat;
@@ -178,16 +176,15 @@ public class CxxPreprocessables {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      HeaderMode headerMode,
-      SourcePathRuleFinder ruleFinder) {
+      HeaderMode headerMode) {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
-        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links, ruleFinder);
+        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
       case HEADER_MAP_ONLY:
-        return new DirectHeaderMap(target, filesystem, root, links, ruleFinder);
+        return new DirectHeaderMap(target, filesystem, root, links);
       default:
       case SYMLINK_TREE_ONLY:
-        return new HeaderSymlinkTree(target, filesystem, root, links, ruleFinder);
+        return new HeaderSymlinkTree(target, filesystem, root, links);
     }
   }
 
@@ -224,7 +221,7 @@ public class CxxPreprocessables {
 
   /** Builds a {@link CxxPreprocessorInput} for a rule. */
   public static CxxPreprocessorInput getCxxPreprocessorInput(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver ruleResolver,
       boolean hasHeaderSymlinkTree,
       CxxPlatform platform,
@@ -236,7 +233,7 @@ public class CxxPreprocessables {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     if (hasHeaderSymlinkTree) {
       addHeaderSymlinkTree(
-          builder, params.getBuildTarget(), ruleResolver, platform, headerVisibility, includeType);
+          builder, buildTarget, ruleResolver, platform, headerVisibility, includeType);
     }
     return builder
         .putAllPreprocessorFlags(

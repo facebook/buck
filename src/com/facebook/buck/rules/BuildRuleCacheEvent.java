@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
+import com.facebook.buck.util.Scope;
 
 /** Base class for events about build rules. */
 public abstract class BuildRuleCacheEvent extends AbstractBuckEvent

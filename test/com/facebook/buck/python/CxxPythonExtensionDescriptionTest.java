@@ -42,6 +42,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -274,7 +275,8 @@ public class CxxPythonExtensionDescriptionTest {
             python2Builder.build(), python3Builder.build(), builder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     python2Builder.build(resolver, filesystem, targetGraph);
     python3Builder.build(resolver, filesystem, targetGraph);
@@ -369,7 +371,8 @@ public class CxxPythonExtensionDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxPythonExtension rule = builder.build(resolver);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =
@@ -489,7 +492,9 @@ public class CxxPythonExtensionDescriptionTest {
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(resolver);
     assertThat(
-        cxxPythonExtension.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        cxxPythonExtension
+            .getRuntimeDeps(new SourcePathRuleFinder(resolver))
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(cxxBinary.getBuildTarget()));
   }
 

@@ -38,6 +38,7 @@ java_library(
         "//src/com/facebook/buck/log:appendablelogrecord",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
         "//third-party/java/junit:junit",
     ],

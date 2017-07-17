@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.exopackage.AndroidDevice;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -48,10 +50,11 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -84,6 +87,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final Optional<Long> testRuleTimeoutMs;
 
   protected AndroidInstrumentationTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       HasInstallableApk apk,
@@ -91,12 +95,40 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Set<String> contacts,
       JavaRuntimeLauncher javaRuntimeLauncher,
       Optional<Long> testRuleTimeoutMs) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+  }
+
+  private static AndroidDevice getSingleDevice(AndroidDevicesHelper adbHelper)
+      throws InterruptedException {
+    List<AndroidDevice> devices = adbHelper.getDevices(true);
+    if (devices.isEmpty()) {
+      throw new HumanReadableException("Expecting one android device/emulator to be attached.");
+    } else if (devices.size() > 1) {
+      throw new HumanReadableException(
+          "Running android instrumentation tests with multiple devices is not supported.");
+    }
+    return devices.get(0);
+  }
+
+  private static String tryToExtractInstrumentationTestRunnerFromManifest(
+      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+
+    if (!Files.isRegularFile(pathToManifest)) {
+      throw new HumanReadableException(
+          "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
+    }
+
+    try {
+      return DefaultAndroidManifestReader.forPath(pathToManifest).getInstrumentationTestRunner();
+    } catch (IOException e) {
+      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
+    }
   }
 
   @Override
@@ -120,13 +152,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       TestRunningOptions options,
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
-    Preconditions.checkArgument(executionContext.getAdbOptions().isPresent());
-
-    if (executionContext.getAdbOptions().get().isMultiInstallModeEnabled()) {
-      throw new HumanReadableException(
-          "Running android instrumentation tests with multiple devices is not supported.");
-    }
-
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Path pathToTestOutput = getPathToTestOutputDirectory();
@@ -142,10 +167,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
               ((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
 
-    AdbHelper adb = AdbHelper.get(executionContext, true);
-    IDevice device;
+    AndroidDevicesHelper adb = executionContext.getAndroidDevicesHelper().get();
+    AndroidDevice device;
     try {
-      device = adb.getSingleDevice();
+      device = getSingleDevice(adb);
     } catch (InterruptedException e) {
       throw new HumanReadableException("Unable to get connected device.");
     }
@@ -191,7 +216,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     String packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
     String testRunner =
-        AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(pathResolver, apk.getApkInfo());
+        tryToExtractInstrumentationTestRunnerFromManifest(pathResolver, apk.getApkInfo());
 
     String ddmlib = getPathForResourceJar("ddmlib.jar");
     String kxml2 = getPathForResourceJar("kxml2.jar");
@@ -252,13 +277,15 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context, final boolean isUsingTestSelectors) {
+      final ExecutionContext context,
+      SourcePathResolver pathResolver,
+      final boolean isUsingTestSelectors) {
     return () -> {
       final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-      IDevice device;
-      AdbHelper adbHelper = AdbHelper.get(context, true);
+      AndroidDevice device;
+      AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
       try {
-        device = adbHelper.getSingleDevice();
+        device = getSingleDevice(adbHelper);
       } catch (InterruptedException e) {
         device = null;
       }
@@ -336,7 +363,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildTarget> builder = Stream.builder();
     builder.add(apk.getBuildTarget());
 

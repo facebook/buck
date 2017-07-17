@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -43,11 +44,12 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final AndroidResource androidResource;
 
   public JsBundleAndroid(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       JsBundleOutputs delegate,
       AndroidResource androidResource) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.delegate = delegate;
     this.androidResource = androidResource;
   }

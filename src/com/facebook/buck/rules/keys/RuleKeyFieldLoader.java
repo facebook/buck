@@ -21,19 +21,14 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableCollection;
 import java.nio.file.Path;
 
 public class RuleKeyFieldLoader {
 
   private final int seed;
-  private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>> cache;
 
   public RuleKeyFieldLoader(int seed) {
     this.seed = seed;
-    this.cache = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
   }
 
   public void setFields(RuleKeyObjectSink builder, BuildRule buildRule, RuleKeyType ruleKeyType) {
@@ -58,8 +53,6 @@ public class RuleKeyFieldLoader {
     // error out if we see the `RuleKeyAppendable` being used improperly.
     Preconditions.checkArgument(!(builder instanceof RuleKeyAppendable));
 
-    for (AlterRuleKey alterRuleKey : cache.getUnchecked(buildRule.getClass())) {
-      alterRuleKey.amendKey(builder, buildRule);
-    }
+    AlterRuleKeys.amendKey(builder, buildRule);
   }
 }

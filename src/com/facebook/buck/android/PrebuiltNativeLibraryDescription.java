@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -46,6 +47,7 @@ public class PrebuiltNativeLibraryDescription
   @Override
   public PrebuiltNativeLibrary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -62,7 +64,12 @@ public class PrebuiltNativeLibraryDescription
     }
 
     return new PrebuiltNativeLibrary(
-        projectFilesystem, params, args.getNativeLibs(), args.getIsAsset(), librarySources);
+        buildTarget,
+        projectFilesystem,
+        params,
+        args.getNativeLibs(),
+        args.getIsAsset(),
+        librarySources);
   }
 
   @BuckStyleImmutable

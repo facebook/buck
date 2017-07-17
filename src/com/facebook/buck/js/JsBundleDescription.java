@@ -39,7 +39,6 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -88,6 +87,7 @@ public class JsBundleDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -95,20 +95,18 @@ public class JsBundleDescription
       JsBundleDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    final ImmutableSortedSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    final ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {
-      BuildTarget bundleTarget = params.getBuildTarget().withoutFlavors(JsFlavors.SOURCE_MAP);
+      BuildTarget bundleTarget = buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP);
       resolver.requireRule(bundleTarget);
       JsBundleOutputs bundleOutputs = resolver.getRuleWithType(bundleTarget, JsBundleOutputs.class);
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
       return new ExportFile(
+          buildTarget,
           projectFilesystem,
           JsUtil.copyParamsWithDependencies(params),
-          ruleFinder,
-          new SourcePathResolver(ruleFinder),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToSourceMap());
@@ -121,8 +119,7 @@ public class JsBundleDescription
     if (flavors.contains(JsFlavors.ANDROID)
         && !flavors.contains(JsFlavors.FORCE_JS_BUNDLE)
         && !flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
-      return createAndroidRule(
-          params.getBuildTarget(), projectFilesystem, resolver, args.getAndroidPackage());
+      return createAndroidRule(buildTarget, projectFilesystem, resolver, args.getAndroidPackage());
     }
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
@@ -132,7 +129,7 @@ public class JsBundleDescription
 
     final Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     ImmutableSortedSet<JsLibrary> libraryDeps =
-        new TransitiveLibraryDependencies(params.getBuildTarget(), targetGraph, resolver)
+        new TransitiveLibraryDependencies(buildTarget, targetGraph, resolver)
             .collect(args.getDeps());
 
     BuildRuleParams paramsWithLibraries = params.copyAppendingExtraDeps(libraryDeps);
@@ -148,6 +145,7 @@ public class JsBundleDescription
     // all dependencies between files that go into the final bundle
     if (flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       return new JsDependenciesFile(
+          buildTarget,
           projectFilesystem,
           paramsWithLibraries,
           libraries,
@@ -156,6 +154,7 @@ public class JsBundleDescription
     }
 
     return new JsBundle(
+        buildTarget,
         projectFilesystem,
         paramsWithLibraries,
         libraries,
@@ -202,9 +201,9 @@ public class JsBundleDescription
     final BuildRule resource = resolver.requireRule(resourceTarget);
 
     return new JsBundleAndroid(
+        buildTarget,
         projectFilesystem,
         new BuildRuleParams(
-            buildTarget,
             () -> ImmutableSortedSet.of(),
             () -> ImmutableSortedSet.of(jsBundle, resource),
             ImmutableSortedSet.of()),
@@ -222,16 +221,17 @@ public class JsBundleDescription
 
     BuildRuleParams params =
         new BuildRuleParams(
-            buildTarget,
             () -> ImmutableSortedSet.of(),
             () -> ImmutableSortedSet.of(jsBundle),
             ImmutableSortedSet.of());
 
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      return new Aapt2Compile(projectFilesystem, params, jsBundle.getSourcePathToResources());
+      return new Aapt2Compile(
+          buildTarget, projectFilesystem, params, jsBundle.getSourcePathToResources());
     }
 
     return new AndroidResource(
+        buildTarget,
         projectFilesystem,
         params,
         new SourcePathRuleFinder(resolver),

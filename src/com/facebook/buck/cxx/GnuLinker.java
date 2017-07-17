@@ -143,9 +143,9 @@ public class GnuLinker implements Linker {
     UndefinedSymbolsLinkerScript rule =
         ruleResolver.addToIndex(
             new UndefinedSymbolsLinkerScript(
+                target,
                 projectFilesystem,
                 baseParams
-                    .withBuildTarget(target)
                     .withDeclaredDeps(
                         ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles)))
                     .withoutExtraDeps(),
@@ -194,10 +194,11 @@ public class GnuLinker implements Linker {
     @AddToRuleKey private final Iterable<? extends SourcePath> symbolFiles;
 
     public UndefinedSymbolsLinkerScript(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         Iterable<? extends SourcePath> symbolFiles) {
-      super(projectFilesystem, buildRuleParams);
+      super(buildTarget, projectFilesystem, buildRuleParams);
       this.symbolFiles = symbolFiles;
     }
 

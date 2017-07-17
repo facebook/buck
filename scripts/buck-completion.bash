@@ -421,7 +421,7 @@ function _buck_completion_add_target_names() {
   local pattern="^ *name *= *[\'\"]\([^\'\"]*\)[\'\"] *, *$"
   local target_names
   if [[ -n "${BUCK_COMPLETION_HARDTARGETRESOLUTION-}" || -n "${BUCK_COMPLETION_USE_BUCK}" ]]; then
-    target_names=( $(_buck_completion_buck_output audit rules "$buck_file" 2>/dev/null | sed -n -e "s/$pattern/\\1/ p") )
+    target_names=( $(buck audit rules "$buck_file" 2>/dev/null | sed -n -e "s/$pattern/\\1/ p") )
   else
     target_names=( $(grep --color=none "$pattern" "$buck_file" | sed -n -e "s/$pattern/\\1/ p") )
   fi
@@ -436,21 +436,6 @@ function _buck_completion_add_target_names() {
       $log "    not adding '$name' because it does not have prefix '$name_prefix'"
     fi
   done
-}
-
-function _buck_completion_buck_output() {
-    local nobuckcheck="$root/.nobuckcheck"
-    local preexisting=$([[ -e "$nobuckcheck" ]] && echo "$nobuckcheck")
-    touch "$nobuckcheck"
-
-    $(type -P buck) "$@" 2>/dev/null
-
-    if [[ -z "$preexisting" ]]; then
-      $log "REMOVING '$nobuckcheck' because it did not exist before."
-      rm "$nobuckcheck" &>/dev/null
-    else
-      $log "LEAVING '$nobuckcheck' because it existed before."
-    fi
 }
 
 function _buck_completion_get_root() {

@@ -25,11 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
@@ -43,18 +38,14 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClasses() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(new FakeProjectFilesystem(), params, javaLibrary);
+        new DexProducedFromJavaLibrary(
+            buildTarget, new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutput(
@@ -74,18 +65,14 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
-    SourcePathResolver resolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(new FakeProjectFilesystem(), params, javaLibrary);
+        new DexProducedFromJavaLibrary(
+            buildTarget, new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutput(

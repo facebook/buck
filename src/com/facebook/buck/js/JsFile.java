@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -43,11 +44,12 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final WorkerTool worker;
 
   public JsFile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<String> extraArgs,
       WorkerTool worker) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.extraArgs = extraArgs;
     this.worker = worker;
   }
@@ -85,6 +87,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @AddToRuleKey private final Optional<String> virtualPath;
 
     JsFileDev(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         SourcePath src,
@@ -92,7 +95,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         Optional<Path> virtualPath,
         Optional<String> extraArgs,
         WorkerTool worker) {
-      super(projectFilesystem, params, extraArgs, worker);
+      super(buildTarget, projectFilesystem, params, extraArgs, worker);
       this.src = src;
       this.subPath = subPath;
       this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
@@ -128,12 +131,13 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @AddToRuleKey private final SourcePath devFile;
 
     JsFileRelease(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         SourcePath devFile,
         Optional<String> extraArgs,
         WorkerTool worker) {
-      super(projectFilesystem, buildRuleParams, extraArgs, worker);
+      super(buildTarget, projectFilesystem, buildRuleParams, extraArgs, worker);
       this.devFile = devFile;
     }
 

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -101,6 +102,7 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -111,7 +113,8 @@ public class OcamlRuleBuilder {
       final ImmutableList<String> linkerFlags,
       boolean buildNativePlugin)
       throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     boolean noYaccOrLexSources =
         FluentIterable.from(srcs)
             .transform(OcamlSource::getSource)
@@ -127,6 +130,7 @@ public class OcamlRuleBuilder {
     if (noYaccOrLexSources && noGeneratedSources) {
       return createFineGrainedBuildRule(
           ocamlBuckConfig,
+          buildTarget,
           projectFilesystem,
           params,
           resolver,
@@ -139,6 +143,7 @@ public class OcamlRuleBuilder {
     } else {
       return createBulkBuildRule(
           ocamlBuckConfig,
+          buildTarget,
           projectFilesystem,
           params,
           resolver,
@@ -188,6 +193,7 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createBulkBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -205,7 +211,7 @@ public class OcamlRuleBuilder {
                     .filter(CxxPreprocessorDep.class::isInstance)));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(params.getBuildDeps())
@@ -249,12 +255,10 @@ public class OcamlRuleBuilder {
 
     ImmutableSortedSet<BuildRule> allDeps = allDepsBuilder.build();
 
-    BuildTarget buildTarget =
+    BuildTarget compileBuildTarget =
         isLibrary
-            ? createStaticLibraryBuildTarget(params.getBuildTarget())
-            : createOcamlLinkTarget(params.getBuildTarget());
-    final BuildRuleParams compileParams =
-        params.withBuildTarget(buildTarget).withDeclaredDeps(allDeps).withoutExtraDeps();
+            ? createStaticLibraryBuildTarget(buildTarget)
+            : createOcamlLinkTarget(buildTarget);
 
     ImmutableList.Builder<Arg> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
@@ -281,7 +285,7 @@ public class OcamlRuleBuilder {
             .setNativeLinkableInput(nativeLinkableInput)
             .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
-            .setBuildTarget(buildTarget.getUnflavoredBuildTarget())
+            .setBuildTarget(compileBuildTarget.getUnflavoredBuildTarget())
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
             .setInput(getInput(srcs))
@@ -293,8 +297,9 @@ public class OcamlRuleBuilder {
 
     final OcamlBuild ocamlLibraryBuild =
         new OcamlBuild(
+            compileBuildTarget,
             projectFilesystem,
-            compileParams,
+            params.withDeclaredDeps(allDeps).withoutExtraDeps(),
             ocamlContext,
             ocamlBuckConfig.getCCompiler().resolve(resolver),
             ocamlBuckConfig.getCxxCompiler().resolve(resolver),
@@ -303,6 +308,8 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
+          buildTarget,
+          compileBuildTarget,
           projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
@@ -310,15 +317,13 @@ public class OcamlRuleBuilder {
                       .addAll(params.getDeclaredDeps().get())
                       .add(ocamlLibraryBuild)
                       .build())),
-          compileParams,
           linkerFlags,
           FluentIterable.from(srcs)
               .transform(OcamlSource::getSource)
               .transform(pathResolver::getAbsolutePath)
               .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
               .transform(ocamlContext::getCOutput)
-              .transform(
-                  input -> new ExplicitBuildTargetSourcePath(compileParams.getBuildTarget(), input))
+              .transform(input -> new ExplicitBuildTargetSourcePath(compileBuildTarget, input))
               .toList(),
           ocamlContext,
           ocamlLibraryBuild,
@@ -327,6 +332,7 @@ public class OcamlRuleBuilder {
           ImmutableSortedSet.of(ocamlLibraryBuild));
     } else {
       return new OcamlBinary(
+          buildTarget,
           projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
@@ -340,6 +346,7 @@ public class OcamlRuleBuilder {
 
   public static BuildRule createFineGrainedBuildRule(
       OcamlBuckConfig ocamlBuckConfig,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -358,7 +365,7 @@ public class OcamlRuleBuilder {
                     .filter(CxxPreprocessorDep.class::isInstance)));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(params.getBuildDeps())
@@ -376,14 +383,13 @@ public class OcamlRuleBuilder {
     ImmutableList<OcamlLibrary> ocamlInput =
         OcamlUtil.getTransitiveOcamlInput(params.getBuildDeps());
 
-    BuildTarget buildTarget =
+    BuildTarget compileBuildTarget =
         isLibrary
-            ? createStaticLibraryBuildTarget(params.getBuildTarget())
-            : createOcamlLinkTarget(params.getBuildTarget());
+            ? createStaticLibraryBuildTarget(buildTarget)
+            : createOcamlLinkTarget(buildTarget);
 
     final BuildRuleParams compileParams =
         params
-            .withBuildTarget(buildTarget)
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)))
@@ -431,7 +437,7 @@ public class OcamlRuleBuilder {
             .setNativeLinkableInput(nativeLinkableInput)
             .setBytecodeLinkableInput(bytecodeLinkableInput)
             .setCLinkableInput(cLinkableInput)
-            .setBuildTarget(buildTarget.getUnflavoredBuildTarget())
+            .setBuildTarget(compileBuildTarget.getUnflavoredBuildTarget())
             .setLibrary(isLibrary)
             .setCxxPreprocessorInput(cxxPreprocessorInputFromDeps)
             .setInput(getInput(srcs))
@@ -448,6 +454,7 @@ public class OcamlRuleBuilder {
 
     OcamlBuildRulesGenerator generator =
         new OcamlBuildRulesGenerator(
+            compileBuildTarget,
             projectFilesystem,
             compileParams,
             pathResolver,
@@ -465,6 +472,8 @@ public class OcamlRuleBuilder {
 
     if (isLibrary) {
       return new OcamlStaticLibrary(
+          buildTarget,
+          compileBuildTarget,
           projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(
@@ -472,7 +481,6 @@ public class OcamlRuleBuilder {
                       .addAll(params.getDeclaredDeps().get())
                       .addAll(result.getRules())
                       .build())),
-          compileParams,
           linkerFlags,
           result.getObjectFiles(),
           ocamlContext,
@@ -485,6 +493,7 @@ public class OcamlRuleBuilder {
               .build());
     } else {
       return new OcamlBinary(
+          buildTarget,
           projectFilesystem,
           params.withDeclaredDeps(
               Suppliers.ofInstance(

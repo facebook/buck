@@ -19,12 +19,15 @@ package com.facebook.buck.intellij.ideabuck.configurations;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.testframework.JavaTestLocator;
 import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.sm.SMCustomMessagesParsing;
 import com.intellij.execution.testframework.sm.runner.OutputToGeneralTestEventsConverter;
 import com.intellij.execution.testframework.sm.runner.SMTRunnerConsoleProperties;
+import com.intellij.execution.testframework.sm.runner.SMTestLocator;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BuckTestConsoleProperties extends SMTRunnerConsoleProperties
     implements SMCustomMessagesParsing {
@@ -46,5 +49,11 @@ public class BuckTestConsoleProperties extends SMTRunnerConsoleProperties
       @NotNull String testFrameworkName, @NotNull TestConsoleProperties consoleProperties) {
     return new BuckToGeneralTestEventsConverter(
         testFrameworkName, consoleProperties, mHandler, getProject());
+  }
+
+  @Nullable
+  @Override
+  public SMTestLocator getTestLocator() {
+    return new JavaTestLocator();
   }
 }

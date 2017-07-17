@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -77,6 +78,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final Linkage linkage;
 
   SwiftLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -86,7 +88,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<FrameworkPath> libraries,
       Optional<Pattern> supportedPlatformsRegex,
       Linkage linkage) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
     this.frameworks = frameworks;
@@ -247,7 +249,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary

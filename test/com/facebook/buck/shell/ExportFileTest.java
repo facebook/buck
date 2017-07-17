@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -75,9 +76,9 @@ public class ExportFileTest {
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    ExportFile exportFile =
-        ExportFileBuilder.newExportFileBuilder(target).build(resolver, projectFilesystem);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    ExportFile exportFile = new ExportFileBuilder(target).build(resolver, projectFilesystem);
 
     List<Step> steps =
         exportFile.getBuildSteps(
@@ -105,11 +106,10 @@ public class ExportFileTest {
   public void shouldSetOutToNameParamValueIfSrcIsSet() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ExportFile exportFile =
-        ExportFileBuilder.newExportFileBuilder(target)
-            .setOut("fish")
-            .build(resolver, projectFilesystem);
+        new ExportFileBuilder(target).setOut("fish").build(resolver, projectFilesystem);
 
     List<Step> steps =
         exportFile.getBuildSteps(
@@ -137,9 +137,10 @@ public class ExportFileTest {
   public void shouldSetOutAndSrcAndNameParametersSeparately() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ExportFile exportFile =
-        ExportFileBuilder.newExportFileBuilder(target)
+        new ExportFileBuilder(target)
             .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
             .setOut("fish")
             .build(resolver, projectFilesystem);
@@ -166,13 +167,12 @@ public class ExportFileTest {
   @Test
   public void shouldSetInputsFromSourcePaths() throws Exception {
     ExportFileBuilder builder =
-        ExportFileBuilder.newExportFileBuilder(target)
-            .setSrc(new FakeSourcePath("chips"))
-            .setOut("cake");
+        new ExportFileBuilder(target).setSrc(new FakeSourcePath("chips")).setOut("cake");
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     ExportFile exportFile = builder.build(resolver, projectFilesystem);
 
@@ -182,11 +182,10 @@ public class ExportFileTest {
 
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     FakeBuildRule rule =
-        resolver.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//example:one"), pathResolver));
+        resolver.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
 
     builder.setSrc(new DefaultBuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = builder.build(resolver, projectFilesystem);
@@ -195,7 +194,7 @@ public class ExportFileTest {
 
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     builder.setSrc(null);
     exportFile = builder.build(resolver, projectFilesystem);
@@ -207,7 +206,7 @@ public class ExportFileTest {
   @Test
   public void getOutputName() throws Exception {
     ExportFile exportFile =
-        ExportFileBuilder.newExportFileBuilder(target)
+        new ExportFileBuilder(target)
             .setOut("cake")
             .build(
                 new BuildRuleResolver(
@@ -227,19 +226,19 @@ public class ExportFileTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.PREFIX_TREE)));
+                    filesystem, FileHashCacheMode.DEFAULT)));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
     ExportFileBuilder builder =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
             .setSrc(new PathSourcePath(filesystem, temp));
 
     ExportFile rule =
@@ -262,12 +261,12 @@ public class ExportFileTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.PREFIX_TREE)));
+                    filesystem, FileHashCacheMode.DEFAULT)));
     ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    resolver = new SourcePathResolver(ruleFinder);
+    resolver = DefaultSourcePathResolver.from(ruleFinder);
     ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
@@ -278,10 +277,11 @@ public class ExportFileTest {
   public void referenceModeUsesUnderlyingSourcePath() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     SourcePath src = new FakeSourcePath(projectFilesystem, "source");
     ExportFile exportFile =
-        ExportFileBuilder.newExportFileBuilder(target)
+        new ExportFileBuilder(target)
             .setMode(ExportFileDescription.Mode.REFERENCE)
             .setSrc(src)
             .build(resolver, projectFilesystem);
@@ -298,7 +298,7 @@ public class ExportFileTest {
     SourcePath src = new FakeSourcePath(differentFilesystem, "source");
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("must use `COPY` mode"));
-    ExportFileBuilder.newExportFileBuilder(target)
+    new ExportFileBuilder(target)
         .setMode(ExportFileDescription.Mode.REFERENCE)
         .setSrc(src)
         .build(resolver, projectFilesystem);
@@ -310,7 +310,7 @@ public class ExportFileTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("must not set `out`"));
-    ExportFileBuilder.newExportFileBuilder(target)
+    new ExportFileBuilder(target)
         .setOut("out")
         .setMode(ExportFileDescription.Mode.REFERENCE)
         .build(resolver, projectFilesystem);

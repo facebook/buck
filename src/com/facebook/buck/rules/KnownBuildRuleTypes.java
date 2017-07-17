@@ -328,8 +328,7 @@ public class KnownBuildRuleTypes {
           appleCxxPlatform.getCxxPlatform().getFlavor(), appleCxxPlatform.getCxxPlatform());
     }
 
-    CxxPlatform defaultHostCxxPlatform =
-        DefaultCxxPlatforms.build(platform, filesystem, cxxBuckConfig);
+    CxxPlatform defaultHostCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
     cxxSystemPlatformsBuilder.put(defaultHostCxxPlatform.getFlavor(), defaultHostCxxPlatform);
     ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatformsMap = cxxSystemPlatformsBuilder.build();
 

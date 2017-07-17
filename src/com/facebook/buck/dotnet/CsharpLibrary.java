@@ -18,6 +18,7 @@ package com.facebook.buck.dotnet;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -50,6 +51,7 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final FrameworkVersion version;
 
   protected CsharpLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String dllName,
@@ -57,7 +59,7 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<Either<BuildRule, String>> refs,
       ImmutableMap<String, SourcePath> resources,
       FrameworkVersion version) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
 
     Preconditions.checkArgument(dllName.endsWith(".dll"));
 
@@ -66,8 +68,7 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.resources = resources;
     this.version = version;
 
-    this.output =
-        BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s/" + dllName);
+    this.output = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + dllName);
   }
 
   @Override

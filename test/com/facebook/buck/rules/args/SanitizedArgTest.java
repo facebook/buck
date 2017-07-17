@@ -19,6 +19,7 @@ package com.facebook.buck.rules.args;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -45,12 +46,12 @@ public class SanitizedArgTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    projectFilesystem, FileHashCacheMode.PREFIX_TREE)));
+                    projectFilesystem, FileHashCacheMode.DEFAULT)));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     return new UncachedRuleKeyBuilder(
         ruleFinder,
         resolver,
@@ -61,7 +62,7 @@ public class SanitizedArgTest {
   @Test
   public void stringify() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

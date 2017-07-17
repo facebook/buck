@@ -376,6 +376,20 @@ struct MultiGetBuildSlaveEventsResponse {
   1: optional list<BuildSlaveEventsRange> responses;
 }
 
+struct RuleKeyLogEntry {
+  1: optional string ruleKey;
+  2: optional bool wasStored;
+  3: optional i64 lastStoredTimestampMillis;
+}
+
+struct FetchRuleKeyLogsRequest {
+  1: optional list<string> ruleKeys;
+}
+
+struct FetchRuleKeyLogsResponse {
+  1: optional list<RuleKeyLogEntry> ruleKeyLogs;
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -402,6 +416,7 @@ enum FrontendRequestType {
   APPEND_BUILD_SLAVE_EVENTS = 19,
   MULTI_GET_BUILD_SLAVE_EVENTS = 20,
   SET_BUILD_MODE = 21,
+  FETCH_RULE_KEY_LOGS = 22,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -427,6 +442,7 @@ struct FrontendRequest {
   19: optional FetchBuildSlaveStatusRequest fetchBuildSlaveStatusRequest;
   20: optional AppendBuildSlaveEventsRequest appendBuildSlaveEventsRequest;
   21: optional MultiGetBuildSlaveEventsRequest multiGetBuildSlaveEventsRequest;
+  22: optional FetchRuleKeyLogsRequest fetchRuleKeyLogsRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -452,6 +468,7 @@ struct FrontendResponse {
   24: optional AppendBuildSlaveEventsResponse appendBuildSlaveEventsResponse;
   25: optional MultiGetBuildSlaveEventsResponse
     multiGetBuildSlaveEventsResponse;
+  26: optional FetchRuleKeyLogsResponse fetchRuleKeyLogsResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

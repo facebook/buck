@@ -148,11 +148,14 @@ public class BuildRuleResolverTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AtomicInteger supplierInvoked = new AtomicInteger(0);
-    BuildRule buildRule = emptyBuildRuleWithTarget(target);
+    BuildRule buildRule =
+        new NoopBuildRuleWithDeclaredAndExtraDeps(
+            target, new FakeProjectFilesystem(), TestBuildRuleParams.create());
     BuildRule returnedBuildRule =
         resolver.computeIfAbsent(
             target,
-            () -> {
+            passedTarget -> {
+              assertEquals(passedTarget, target);
               supplierInvoked.incrementAndGet();
               return buildRule;
             });
@@ -162,18 +165,12 @@ public class BuildRuleResolverTest {
     returnedBuildRule =
         resolver.computeIfAbsent(
             target,
-            () -> {
+            passedTarget -> {
+              assertEquals(passedTarget, target);
               supplierInvoked.incrementAndGet();
               return buildRule;
             });
     assertEquals("supplier is not called again", supplierInvoked.get(), 1);
     assertSame("recorded rule is still returned", returnedBuildRule, buildRule);
-  }
-
-  private static BuildRule emptyBuildRuleWithTarget(BuildTarget target) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(
-        new FakeProjectFilesystem(),
-        new BuildRuleParams(
-            target, ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()));
   }
 }

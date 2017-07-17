@@ -86,8 +86,24 @@ public class Symbols {
         m.group("name"), "*UND*".equals(m.group("section")), "gu!".contains(m.group("global")));
   }
 
-  public static Symbols getSymbols(
+  public static Symbols getDynamicSymbols(
       ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
+      throws IOException, InterruptedException {
+    return getSymbols(executor, objdump, resolver, lib, "-T");
+  }
+
+  public static Symbols getNormalSymbols(
+      ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
+      throws IOException, InterruptedException {
+    return getSymbols(executor, objdump, resolver, lib, "-t");
+  }
+
+  private static Symbols getSymbols(
+      ProcessExecutor executor,
+      Tool objdump,
+      SourcePathResolver resolver,
+      Path lib,
+      String symbolFlag)
       throws IOException, InterruptedException {
     final ImmutableSet.Builder<String> undefined = ImmutableSet.builder();
     final ImmutableSet.Builder<String> global = ImmutableSet.builder();
@@ -98,7 +114,7 @@ public class Symbols {
         objdump,
         resolver,
         lib,
-        ImmutableList.of("-T"),
+        ImmutableList.of(symbolFlag),
         new LineProcessor<Void>() {
           @Override
           public boolean processLine(String line) throws IOException {

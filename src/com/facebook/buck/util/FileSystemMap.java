@@ -181,11 +181,13 @@ public class FileSystemMap<T> {
       stack.push(root);
       Entry<T> entry = root;
       // Walk the tree to fetch the node requested by the path, or the closest intermediate node.
+      boolean partial = false;
       for (Path p : path) {
         entry = entry.subLevels.get(p);
         // We're trying to remove a path that doesn't exist, no point in going deeper.
         // Break and proceed to remove whatever path we found so far.
         if (entry == null) {
+          partial = true;
           break;
         }
         stack.push(entry);
@@ -203,8 +205,18 @@ public class FileSystemMap<T> {
         path = path.subpath(0, stack.size() - 1);
         Entry<T> leaf = stack.pop();
         // If we reached the leaf, then remove the leaf and everything below it (if any).
-        removeSubtreeFromMap(leaf);
-        stack.peek().subLevels.remove(path.getFileName());
+        if (partial) {
+          map.remove(leaf.key);
+          if (leaf.size() == 0 && path != null && !stack.empty()) {
+            stack.peek().subLevels.remove(path.getFileName());
+          } else {
+            leaf.set(null);
+          }
+        } else {
+          removeSubtreeFromMap(leaf);
+          stack.peek().subLevels.remove(path.getFileName());
+        }
+
         // Plus, check everything above in order to remove unused stumps.
         while (!stack.empty()) {
           // This will never throw NPE because if it does, then the stack was empty at the beginning
@@ -213,9 +225,7 @@ public class FileSystemMap<T> {
           Entry<T> current = stack.pop();
 
           // Remove only if it's a cached entry.
-          if (current.value != null) {
-            map.remove(current.key);
-          }
+          map.remove(current.key);
 
           if (current.size() == 0 && path != null && !stack.empty()) {
             stack.peek().subLevels.remove(path.getFileName());
@@ -230,10 +240,7 @@ public class FileSystemMap<T> {
   // DFS traversal to remove all child nodes from the given node.
   // Must be called while owning a write lock.
   private void removeSubtreeFromMap(Entry<T> leaf) {
-    if (leaf.value != null && leaf.key != null) {
-      map.remove(leaf.key);
-    }
-
+    map.remove(leaf.key);
     leaf.subLevels.values().forEach(this::removeSubtreeFromMap);
   }
 
@@ -253,6 +260,11 @@ public class FileSystemMap<T> {
    */
   public T get(Path path) throws IOException {
     Entry<T> maybe = map.get(path);
+    // get() and remove() shouldn't overlap, but for performance reason (to hold the root lock for
+    // less time), we opted for allowing overlap provided that *the entry creation is atomic*.
+    // That is, the entry creation is guaranteed to not overlap with anything else, but the entry
+    // filling is not: this is because the caller of the get() will still need to get a value,
+    // even if the entry is removed meanwhile.
     if (maybe == null) {
       synchronized (root) {
         maybe = map.computeIfAbsent(path, this::putEntry);

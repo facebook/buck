@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
+import com.google.common.base.Throwables;
 import com.sun.jna.NativeLibrary;
 import com.sun.jna.Platform;
 import com.zaxxer.nuprocess.NuProcess;
@@ -27,6 +29,8 @@ import java.io.IOException;
  * the class object's monitor lock to make sure children inherit the correct signal handler set.
  */
 public class BgProcessKiller {
+
+  private static final Logger LOG = Logger.get(BgProcessKiller.class);
 
   private static boolean initialized;
   private static boolean armed;
@@ -84,7 +88,12 @@ public class BgProcessKiller {
 
   private static void checkArmedStatus() {
     if (armed) {
-      throw new BuckIsDyingException("process creation blocked due to pending nailgun exit");
+      BuckIsDyingException e =
+          new BuckIsDyingException("process creation blocked due to pending nailgun exit");
+      LOG.info(
+          "BuckIsDyingException: process creation blocked due to pending nailgun exit at:"
+              + Throwables.getStackTraceAsString(e));
+      throw e;
     }
   }
 

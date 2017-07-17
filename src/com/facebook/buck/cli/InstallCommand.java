@@ -17,7 +17,11 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
+import com.facebook.buck.android.AndroidBinary;
+import com.facebook.buck.android.AndroidInstallConfig;
 import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
@@ -40,11 +44,16 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasInstallHelpers;
+import com.facebook.buck.rules.InstallTrigger;
+import com.facebook.buck.rules.NoopInstallable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -66,9 +75,12 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Closer;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,6 +107,8 @@ public class InstallCommand extends BuildCommand {
   @VisibleForTesting static final String INSTALL_VIA_SD_SHORT_ARG = "-S";
   @VisibleForTesting static final String ACTIVITY_LONG_ARG = "--activity";
   @VisibleForTesting static final String ACTIVITY_SHORT_ARG = "-a";
+  @VisibleForTesting static final String PROCESS_LONG_ARG = "--process";
+  @VisibleForTesting static final String PROCESS_SHORT_ARG = "-p";
   @VisibleForTesting static final String UNINSTALL_LONG_ARG = "--uninstall";
   @VisibleForTesting static final String UNINSTALL_SHORT_ARG = "-u";
 
@@ -150,6 +164,15 @@ public class InstallCommand extends BuildCommand {
   @Nullable
   private String activity = null;
 
+  @Option(
+    name = PROCESS_LONG_ARG,
+    aliases = {PROCESS_SHORT_ARG},
+    metaVar = "<pkg:process>",
+    usage = "Process to kill after install e.g. com.facebook.katana[:proc1]. Implies -r."
+  )
+  @Nullable
+  private String process = null;
+
   public AdbOptions adbOptions(BuckConfig buckConfig) {
     return adbOptions.getAdbOptions(buckConfig);
   }
@@ -167,7 +190,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   public boolean shouldStartActivity() {
-    return (activity != null) || run;
+    return (activity != null) || (process != null) || run;
   }
 
   public boolean shouldInstallViaSd() {
@@ -187,7 +210,8 @@ public class InstallCommand extends BuildCommand {
     }
 
     try (CommandThreadManager pool =
-        new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
+        TriggerCloseable triggerCloseable = new TriggerCloseable(params)) {
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {
@@ -218,6 +242,31 @@ public class InstallCommand extends BuildCommand {
     return exitCode;
   }
 
+  @Override
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(BuildRuleResolver resolver) {
+    ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
+    builder.addAll(super.getAdditionalTargetsToBuild(resolver));
+    for (BuildTarget target : getBuildTargets()) {
+      BuildRule rule = resolver.getRule(target);
+      if (rule instanceof HasInstallHelpers) {
+        // An install command never explicitly "requires" the install flavor. This ensures that the
+        // install flavor is always present in the action graph regardless of if it's an install or
+        // a build. That ensures that the target graph and action graph are the same between install
+        // and build commands.
+        ((HasInstallHelpers) rule)
+            .getInstallHelpers()
+            .forEach(
+                helper -> {
+                  Preconditions.checkState(
+                      resolver.getRuleOptional(helper).isPresent(),
+                      "Install of %s failed because some install helpers were not available.");
+                  builder.add(helper);
+                });
+      }
+    }
+    return builder.build();
+  }
+
   private int install(CommandRunnerParams params)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
 
@@ -228,19 +277,11 @@ public class InstallCommand extends BuildCommand {
 
       BuildRule buildRule = build.getRuleResolver().requireRule(buildTarget);
       SourcePathResolver pathResolver =
-          new SourcePathResolver(new SourcePathRuleFinder(build.getRuleResolver()));
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getRuleResolver()));
 
       if (buildRule instanceof HasInstallableApk) {
-        ExecutionContext executionContext =
-            ExecutionContext.builder()
-                .from(build.getExecutionContext())
-                .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
-                .setTargetDeviceOptions(Optional.of(targetDeviceOptions()))
-                .setExecutors(params.getExecutors())
-                .setCellPathResolver(params.getCell().getCellPathResolver())
-                .build();
         exitCode =
-            installApk(params, (HasInstallableApk) buildRule, executionContext, pathResolver);
+            installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver, params);
         if (exitCode != 0) {
           return exitCode;
         }
@@ -267,7 +308,7 @@ public class InstallCommand extends BuildCommand {
         if (exitCode != 0) {
           return exitCode;
         }
-      } else {
+      } else if (!(buildRule instanceof NoopInstallable)) {
         params
             .getBuckEventBus()
             .post(
@@ -282,14 +323,28 @@ public class InstallCommand extends BuildCommand {
     return exitCode;
   }
 
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setAndroidDevicesHelper(
+            AndroidDevicesHelperFactory.get(
+                this::getExecutionContext,
+                params.getBuckConfig(),
+                adbOptions(params.getBuckConfig()),
+                targetDeviceOptions()));
+  }
+
   private ImmutableSet<String> getInstallHelperTargets(
       CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
+    // TODO(cjhopman): This shouldn't be doing parsing outside of the normal parse stage.
+    // The first step to that would be to move the Apple install helpers to be deps available from
+    // getInstallHelpers() call on the installed target. Then those helpers should be available
+    // without needing to explicitly request them here.
     for (int index = 0; index < getArguments().size(); index++) {
-
       // TODO(markwang): Cache argument parsing
       TargetNodeSpec spec =
           parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()).get(index);
@@ -304,7 +359,7 @@ public class InstallCommand extends BuildCommand {
                           getEnableParserProfiling(),
                           executor,
                           ImmutableList.of(spec),
-                          SpeculativeParsing.of(false),
+                          PerBuildState.SpeculativeParsing.DISABLED,
                           parserConfig.getDefaultFlavorsMode()))
               .transformAndConcat(Functions.identity())
               .first()
@@ -344,25 +399,57 @@ public class InstallCommand extends BuildCommand {
   }
 
   private int installApk(
-      CommandRunnerParams params,
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver)
+      SourcePathResolver pathResolver,
+      CommandRunnerParams params)
       throws IOException, InterruptedException {
-    final AdbHelper adbHelper =
-        AdbHelper.get(executionContext, params.getBuckConfig().getRestartAdbOnFailure());
+    final AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
 
-    // Uninstall the app first, if requested.
-    if (shouldUninstallFirst()) {
-      String packageName =
-          AdbHelper.tryToExtractPackageNameFromManifest(
-              pathResolver, hasInstallableApk.getApkInfo());
-      adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
-      // Perhaps the app wasn't installed to begin with, shouldn't stop us.
+    boolean concurrentInstallEnabled = false;
+    // concurrentInstall is currently only implemented for AndroidBinary (and not subclasses).
+    if (hasInstallableApk.getClass().equals(AndroidBinary.class)
+        && new AndroidInstallConfig(params.getBuckConfig())
+            .getConcurrentInstallEnabled(Optional.of(params.getBuckEventBus()))) {
+      concurrentInstallEnabled = true;
     }
 
-    if (!adbHelper.installApk(pathResolver, hasInstallableApk, shouldInstallViaSd(), false)) {
-      return 1;
+    if (!concurrentInstallEnabled) {
+      // Uninstall the app first, if requested.
+      if (shouldUninstallFirst()) {
+        String packageName =
+            AdbHelper.tryToExtractPackageNameFromManifest(
+                pathResolver, hasInstallableApk.getApkInfo());
+        adbHelper.uninstallApp(packageName, uninstallOptions().shouldKeepUserData());
+        // Perhaps the app wasn't installed to begin with, shouldn't stop us.
+      }
+
+      if (!adbHelper.installApk(
+          pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
+        return 1;
+      }
+    } else if (shouldUninstallFirst()) {
+      // TODO(cjhopman): Figure out how to support this (maybe write some options to the trigger
+      // file).
+      params
+          .getConsole()
+          .printErrorText("concurrent_install does not support uninstalling (-u/--uninstall)");
+    } else {
+      // Send some of the normal events and messages so that the user receives similar messages/UI
+      // as in non-concurrent install.
+      // TODO(cjhopman): Figure out what to do about killing a process.
+      InstallEvent.Started started = InstallEvent.started(hasInstallableApk.getBuildTarget());
+      params.getBuckEventBus().post(started);
+      adbHelper.adbCall("concurrent install", (device) -> true, false);
+      InstallEvent.Finished finished =
+          InstallEvent.finished(
+              started,
+              true,
+              Optional.empty(),
+              Optional.of(
+                  AdbHelper.tryToExtractPackageNameFromManifest(
+                      pathResolver, hasInstallableApk.getApkInfo())));
+      params.getBuckEventBus().post(finished);
     }
 
     // We've installed the application successfully.
@@ -880,5 +967,54 @@ public class InstallCommand extends BuildCommand {
   @Override
   public boolean isReadOnly() {
     return false;
+  }
+
+  private static class TriggerCloseable implements Closeable {
+    private final Cell root;
+    private final CommandRunnerParams params;
+    private final Closer closer;
+
+    TriggerCloseable(CommandRunnerParams params) throws IOException {
+      this.params = params;
+      this.root = params.getCell();
+      this.closer = Closer.create();
+      for (Cell cell : root.getAllCells()) {
+        invalidateTrigger(cell);
+        closer.register(
+            () -> {
+              invalidateTrigger(cell);
+              Files.deleteIfExists(getAbsoluteTriggerPath(cell));
+            });
+        Path absoluteTriggerPath = getAbsoluteTriggerPath(cell);
+        cell.getFilesystem().createParentDirs(absoluteTriggerPath);
+        Files.write(
+            absoluteTriggerPath, params.getBuckEventBus().getBuildId().toString().getBytes());
+      }
+    }
+
+    @Override
+    public void close() throws IOException {
+      closer.close();
+    }
+
+    // TODO(cjhopman): This is a bit of a hack to properly invalidate all cached data. It would be
+    // nice if there were a more elegant way to do this.
+    private void invalidateTrigger(Cell cell) {
+      // This is necessary to invalidate all rulekeys that transitively depend on the trigger.
+      params
+          .getDefaultRuleKeyFactoryCacheRecycler()
+          .ifPresent(
+              recycler -> recycler.invalidatePath(cell.getFilesystem(), getTriggerPath(cell)));
+      // This invalidates the cached file hash in the filehashcache.
+      params.getFileHashCache().invalidate(getAbsoluteTriggerPath(cell));
+    }
+
+    private static Path getTriggerPath(Cell cell) {
+      return InstallTrigger.getTriggerPath(cell.getFilesystem());
+    }
+
+    private static Path getAbsoluteTriggerPath(Cell cell) {
+      return cell.getFilesystem().resolve(getTriggerPath(cell));
+    }
   }
 }

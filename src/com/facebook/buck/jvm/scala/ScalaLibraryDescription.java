@@ -33,7 +33,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +61,7 @@ public class ScalaLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
@@ -69,10 +70,16 @@ public class ScalaLibraryDescription
       throws NoSuchBuildTargetException {
     ScalaLibraryBuilder scalaLibraryBuilder =
         new ScalaLibraryBuilder(
-                targetGraph, projectFilesystem, rawParams, resolver, cellRoots, scalaBuckConfig)
+                targetGraph,
+                buildTarget,
+                projectFilesystem,
+                rawParams,
+                resolver,
+                cellRoots,
+                scalaBuckConfig)
             .setArgs(args);
 
-    return HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())
+    return HasJavaAbi.isAbiTarget(buildTarget)
         ? scalaLibraryBuilder.buildAbi()
         : scalaLibraryBuilder.build();
   }
@@ -86,8 +93,8 @@ public class ScalaLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder
         .add(scalaBuckConfig.getScalaLibraryTarget())
-        .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()));
+        .addAll(scalaBuckConfig.getCompilerPlugins());
+    Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
   }
 
   // Note: scala does not have a exported_deps because scala needs the transitive closure of

@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.thrift.CASContainsRequest;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
+import com.facebook.buck.distributed.thrift.FetchRuleKeyLogsRequest;
 import com.facebook.buck.distributed.thrift.FetchSourceFilesRequest;
 import com.facebook.buck.distributed.thrift.FetchSourceFilesResponse;
 import com.facebook.buck.distributed.thrift.FileInfo;
@@ -47,6 +48,7 @@ import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.PathInfo;
+import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
@@ -65,6 +67,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -76,6 +79,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -609,6 +613,22 @@ public class DistBuildService implements Closeable {
         response.getFetchBuildSlaveStatusResponse().getBuildSlaveStatus(),
         status);
     return Optional.of(status);
+  }
+
+  public List<RuleKeyLogEntry> fetchRuleKeyLogs(Collection<String> ruleKeys) throws IOException {
+    FetchRuleKeyLogsRequest request = new FetchRuleKeyLogsRequest();
+    request.setRuleKeys(Lists.newArrayList(ruleKeys));
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.FETCH_RULE_KEY_LOGS);
+    frontendRequest.setFetchRuleKeyLogsRequest(request);
+
+    FrontendResponse response = makeRequestChecked(frontendRequest);
+
+    Preconditions.checkState(response.isSetFetchRuleKeyLogsResponse());
+    Preconditions.checkState(response.getFetchRuleKeyLogsResponse().isSetRuleKeyLogs());
+
+    return response.getFetchRuleKeyLogsResponse().getRuleKeyLogs();
   }
 
   @Override

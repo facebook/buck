@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -86,6 +87,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   public CxxLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -104,7 +106,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean canBeAsset,
       boolean propagateLinkables,
       boolean reexportAllHeaderDependencies) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.deps = deps;
     this.exportedDeps = exportedDeps;
@@ -374,7 +376,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary

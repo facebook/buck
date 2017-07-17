@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/modules/aggregate_multiple_manifests_with_package/modules_aggregate_multiple_manifests_with_package.iml" filepath="$PROJECT_DIR$/modules/aggregate_multiple_manifests_with_package/modules_aggregate_multiple_manifests_with_package.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/aggregate_multiple_manifests_without_package/modules_aggregate_multiple_manifests_without_package.iml" filepath="$PROJECT_DIR$/modules/aggregate_multiple_manifests_without_package/modules_aggregate_multiple_manifests_without_package.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/aggregate_one_manifest/modules_aggregate_one_manifest.iml" filepath="$PROJECT_DIR$/modules/aggregate_one_manifest/modules_aggregate_one_manifest.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/android_res1/modules_android_res1.iml" filepath="$PROJECT_DIR$/modules/android_res1/modules_android_res1.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/android_res2/modules_android_res2.iml" filepath="$PROJECT_DIR$/modules/android_res2/modules_android_res2.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/android_res_custom_package/modules_android_res_custom_package.iml" filepath="$PROJECT_DIR$/modules/android_res_custom_package/modules_android_res_custom_package.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
+    </modules>
+  </component>
+</project>

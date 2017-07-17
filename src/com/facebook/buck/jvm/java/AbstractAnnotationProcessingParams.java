@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -30,7 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -119,13 +117,6 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
     }
   }
 
-  private Path getGeneratedSrcFolder() {
-    ProjectFilesystem filesystem = getProjectFilesystem();
-    Preconditions.checkNotNull(filesystem);
-    return BuildTargets.getAnnotationPath(
-        filesystem, Preconditions.checkNotNull(getOwnerTarget()), "__%s_gen__");
-  }
-
   public boolean isEmpty() {
     return getModernProcessors().isEmpty()
         && getLegacyProcessors().isEmpty()
@@ -171,14 +162,5 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
   @Value.Default
   protected boolean getProcessOnly() {
     return false;
-  }
-
-  @Nullable
-  public Path getGeneratedSourceFolderName() {
-    if ((getOwnerTarget() != null) && !isEmpty()) {
-      return getGeneratedSrcFolder();
-    } else {
-      return null;
-    }
   }
 }

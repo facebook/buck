@@ -34,7 +34,7 @@ import com.google.common.collect.Ordering;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -44,8 +44,8 @@ import javax.annotation.Nullable;
 public class BuildRuleResolver {
 
   @FunctionalInterface
-  public interface BuildRuleSupplier {
-    BuildRule get() throws NoSuchBuildTargetException;
+  public interface BuildRuleFunction {
+    BuildRule apply(BuildTarget target) throws NoSuchBuildTargetException;
   }
 
   private final TargetGraph targetGraph;
@@ -136,17 +136,17 @@ public class BuildRuleResolver {
    * with the target, compute the rule using the given supplier and update the mapping.
    *
    * @param target target with which the BuildRule is associated.
-   * @param ruleSupplier supplier to compute the rule.
+   * @param mappingFunction function to compute the rule.
    * @return the current value associated with the rule
    * @throws NoSuchBuildTargetException if the supplier does so.
    */
-  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleSupplier ruleSupplier)
+  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleFunction mappingFunction)
       throws NoSuchBuildTargetException {
     BuildRule rule = buildRuleIndex.get(target);
     if (rule != null) {
       return rule;
     }
-    rule = ruleSupplier.get();
+    rule = mappingFunction.apply(target);
     Preconditions.checkState(
         // TODO(jakubzika): This should hold for flavored build targets as well.
         rule.getBuildTarget().getUnflavoredBuildTarget().equals(target.getUnflavoredBuildTarget()),
@@ -167,9 +167,10 @@ public class BuildRuleResolver {
     return rule;
   }
 
-  public BuildRule computeIfAbsent(BuildTarget target, Supplier<BuildRule> ruleSupplier) {
+  public BuildRule computeIfAbsent(
+      BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
     try {
-      return computeIfAbsentThrowing(target, ruleSupplier::get);
+      return computeIfAbsentThrowing(target, mappingFunction::apply);
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException("Supplier should not throw NoSuchBuildTargetException.", e);
     }
@@ -183,7 +184,7 @@ public class BuildRuleResolver {
   public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
     return computeIfAbsentThrowing(
         target,
-        () -> {
+        (ignored) -> {
           TargetNode<?, ?> node = targetGraph.get(target);
           BuildRule rule = buildRuleGenerator.transform(targetGraph, this, node);
           Preconditions.checkState(

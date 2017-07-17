@@ -43,6 +43,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -59,6 +60,7 @@ public class CsharpLibraryDescription implements Description<CsharpLibraryDescri
     }
 
     return new CsharpLibrary(
+        buildTarget,
         projectFilesystem,
         params,
         args.getDllName(),

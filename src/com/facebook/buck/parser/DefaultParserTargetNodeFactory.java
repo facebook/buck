@@ -219,7 +219,9 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         throw new HumanReadableException(
             "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find "
                 + "the owning rule that references '%s', and use a reference to that rule instead "
-                + "of referencing the desired file directly.",
+                + "of referencing the desired file directly. "
+                + "This may be due to a bug in buckd's caching. "
+                + "Running `buck kill` and trying again might resolve it.",
             path, target, ancestor.get(), path);
       }
     }

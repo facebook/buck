@@ -26,6 +26,7 @@ import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.timing.ClockDuration;
+import com.facebook.buck.util.Scope;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;

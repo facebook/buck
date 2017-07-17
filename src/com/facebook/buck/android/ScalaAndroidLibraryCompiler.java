@@ -25,7 +25,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import javax.annotation.Nullable;
 
@@ -72,7 +72,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
     extraDepsBuilder
         .add(scalaBuckConfig.getScalaLibraryTarget())
-        .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()));
+        .addAll(scalaBuckConfig.getCompilerPlugins());
+    Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
   }
 }

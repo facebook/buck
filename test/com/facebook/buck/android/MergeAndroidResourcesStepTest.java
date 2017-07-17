@@ -34,6 +34,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -309,7 +310,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res =
         AndroidResourceRuleBuilder.newBuilder()
@@ -374,7 +375,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource resource =
         AndroidResourceRuleBuilder.newBuilder()
@@ -457,7 +458,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource resource =
         AndroidResourceRuleBuilder.newBuilder()
@@ -529,7 +530,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
@@ -587,7 +588,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
@@ -636,7 +637,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
@@ -675,7 +676,7 @@ public class MergeAndroidResourcesStepTest {
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);

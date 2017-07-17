@@ -118,6 +118,9 @@ public class IjProjectBuckConfig {
                 .getInteger(
                     INTELLIJ_BUCK_CONFIG_SECTION, "android_resource_module_aggregation_limit")
                 .orElse(Integer.MAX_VALUE))
+        .setGeneratingAndroidManifestEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_android_manifest", false))
         .build();
   }
 

@@ -56,6 +56,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
@@ -149,8 +150,10 @@ public class ProjectWorkspace {
   private final Path templatePath;
   private final Path destPath;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
+  @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
   private static class ProjectFilesystemAndConfig {
+
     private final ProjectFilesystem projectFilesystem;
     private final Config config;
 
@@ -541,7 +544,10 @@ public class ProjectWorkspace {
     envBuilder.putAll(environmentOverrides);
     ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
-    Main main = new Main(stdout, stderr, stdin);
+    Main main =
+        knownBuildRuleTypesFactoryFactory == null
+            ? new Main(stdout, stderr, stdin)
+            : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
     int exitCode;
     try {
       exitCode =
@@ -557,7 +563,7 @@ public class ProjectWorkspace {
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
     }
 
     return new ProcessResult(
@@ -644,6 +650,11 @@ public class ProjectWorkspace {
 
   public void disableThreadLimitOverride() throws IOException {
     removeBuckConfigLocalOption("build", "threads");
+  }
+
+  public void setKnownBuildRuleTypesFactoryFactory(
+      @Nullable Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory) {
+    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
   }
 
   public void copyFile(String source, String dest) throws IOException {

@@ -33,6 +33,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
@@ -44,7 +45,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -100,7 +101,6 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
   private Optional<Long> testRuleTimeoutMs;
-  private final SourcePathRuleFinder ruleFinder;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
@@ -170,6 +170,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String platformName,
       Optional<String> defaultDestinationSpecifier,
       Optional<ImmutableMap<String, String>> destinationSpecifier,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleBundle testBundle,
@@ -183,9 +184,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String testLogLevel,
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
-      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
-      SourcePathRuleFinder ruleFinder) {
-    super(projectFilesystem, params);
+      Optional<Either<SourcePath, String>> snapshotReferenceImagesPath) {
+    super(buildTarget, projectFilesystem, params);
     this.xctool = xctool;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.useXctest = useXctest;
@@ -199,7 +199,6 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
-    this.ruleFinder = ruleFinder;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.empty();
@@ -387,7 +386,9 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext executionContext, boolean isUsingTestSelectors) {
+      final ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       List<TestCaseSummary> testCaseSummaries;
       if (xctoolStdoutReader.isPresent()) {
@@ -454,12 +455,11 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
-        Stream.concat(Stream.of(testBundle), OptionalCompat.asSet(testHostApp).stream())
+        Stream.concat(Stream.of(testBundle), Optionals.toStream(testHostApp))
             .map(BuildRule::getBuildTarget),
-        OptionalCompat.asSet(xctool)
-            .stream()
+        Optionals.toStream(xctool)
             .map(ruleFinder::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));

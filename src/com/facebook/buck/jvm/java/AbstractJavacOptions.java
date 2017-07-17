@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -104,8 +103,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   public abstract List<String> getExtraArguments();
 
-  public abstract Set<Pattern> getClassesToRemoveFromJar();
-
   protected abstract Optional<String> getBootclasspath();
 
   protected abstract Map<String, String> getSourceToBootclasspath();
@@ -171,13 +168,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     // Add annotation processors.
     AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
     if (!annotationProcessingParams.isEmpty()) {
-      // Specify where to generate sources so IntelliJ can pick them up.
-      Path generateTo = annotationProcessingParams.getGeneratedSourceFolderName();
-      if (generateTo != null) {
-        //noinspection ConstantConditions
-        optionsConsumer.addOptionValue("s", filesystem.resolve(generateTo).toString());
-      }
-
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
           annotationProcessingParams.getAnnotationProcessors(filesystem, pathResolver);
 
@@ -248,9 +238,5 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     JavacOptions.Builder builder = JavacOptions.builder();
 
     return builder.from(options);
-  }
-
-  public final Optional<Path> getGeneratedSourceFolderName() {
-    return Optional.ofNullable(getAnnotationProcessingParams().getGeneratedSourceFolderName());
   }
 }

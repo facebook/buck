@@ -65,6 +65,7 @@ public class MavenUberJarTest {
     MavenUberJar buildRule =
         MavenUberJar.create(
             javaLibrary,
+            javaTarget,
             new FakeProjectFilesystem(),
             javaLibraryBuilder.createBuildRuleParams(resolver),
             Optional.of("com.facebook.buck.jvm.java:java:jar:42"),

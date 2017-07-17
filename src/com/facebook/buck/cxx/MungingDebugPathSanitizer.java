@@ -22,24 +22,21 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ByteBufferReplacer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import javax.annotation.Nonnull;
 
 /**
  * This sanitizer works by munging the compiler output to replace paths. Currently, this just
@@ -50,17 +47,11 @@ import javax.annotation.Nonnull;
 public class MungingDebugPathSanitizer extends DebugPathSanitizer {
 
   private static final DebugSectionFinder DEBUG_SECTION_FINDER = new DebugSectionFinder();
-  protected final ImmutableBiMap<Path, Path> other;
-  private final LoadingCache<Path, ImmutableBiMap<Path, Path>> pathCache =
-      CacheBuilder.newBuilder()
-          .softValues()
-          .build(
-              new CacheLoader<Path, ImmutableBiMap<Path, Path>>() {
-                @Override
-                public ImmutableBiMap<Path, Path> load(@Nonnull Path key) {
-                  return getAllPathsWork(key);
-                }
-              });
+
+  private final Path compilationDirectory;
+  private final int pathSize;
+  private final char separator;
+  private final ImmutableBiMap<Path, String> other;
 
   /**
    * @param pathSize fix paths to this size for in-place replacements.
@@ -68,9 +59,20 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    * @param compilationDirectory the desired path to replace the actual compilation directory with.
    */
   public MungingDebugPathSanitizer(
-      int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, Path> other) {
-    super(separator, pathSize, compilationDirectory);
+      int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, String> other) {
+    this.compilationDirectory = compilationDirectory;
+    this.pathSize = pathSize;
+    this.separator = separator;
     this.other = other;
+  }
+
+  @Override
+  public String getCompilationDirectory() {
+    return getExpandedPath(compilationDirectory);
+  }
+
+  private String getExpandedPath(Path path) {
+    return getPaddedDir(path.toString(), pathSize, separator);
   }
 
   @Override
@@ -91,11 +93,6 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
         "PWD", shouldSanitize ? getExpandedPath(workingDir) : workingDir.toString());
   }
 
-  @Override
-  ImmutableList<String> getCompilationFlags() {
-    return ImmutableList.of();
-  }
-
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   @Override
@@ -107,7 +104,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    * @return a {@link ByteBufferReplacer} suitable for replacing {@code workingDir} with {@code
    *     compilationDirectory}.
    */
-  protected ByteBufferReplacer getCompilationDirectoryReplacer(Path workingDir) {
+  private ByteBufferReplacer getCompilationDirectoryReplacer(Path workingDir) {
     return new ByteBufferReplacer(
         ImmutableMap.of(
             getExpandedPath(workingDir).getBytes(Charsets.US_ASCII),
@@ -145,23 +142,13 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  protected ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir) {
+  protected Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
     if (!workingDir.isPresent()) {
-      return other;
+      return other.entrySet();
     }
-
-    try {
-      return pathCache.get(workingDir.get());
-    } catch (ExecutionException e) {
-      Logger.get(DebugPathSanitizer.class).error("Problem loading paths into cache", e);
-      return getAllPathsWork(workingDir.get());
-    }
-  }
-
-  private ImmutableBiMap<Path, Path> getAllPathsWork(Path workingDir) {
-    ImmutableBiMap.Builder<Path, Path> builder = ImmutableBiMap.builder();
-    builder.put(workingDir, compilationDirectory);
-    builder.putAll(other);
-    return builder.build();
+    return Iterables.concat(
+        other.entrySet(),
+        ImmutableList.of(
+            new AbstractMap.SimpleEntry<>(workingDir.get(), compilationDirectory.toString())));
   }
 }

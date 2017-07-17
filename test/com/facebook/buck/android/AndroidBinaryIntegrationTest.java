@@ -22,6 +22,7 @@ import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,6 +39,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FilesystemBuildInfoStore;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -472,21 +474,21 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     }
   }
 
-  @Test
-  public void testNativeLibraryMerging() throws IOException, InterruptedException {
+  private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Path tmpDir = tmpFolder.newFolder("merging_tmp");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
+    Path tmpDir = tmpFolder.newFolder("symbols_tmp");
+    return new SymbolGetter(
+        new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);
+  }
+
+  @Test
+  public void testNativeLibraryMerging() throws IOException, InterruptedException {
+    SymbolGetter syms = getSymbolGetter();
     SymbolsAndDtNeeded info;
 
     workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
@@ -634,35 +636,23 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Path tmpDir = tmpFolder.newFolder("xdso");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
+    SymbolGetter syms = getSymbolGetter();
     Symbols sym;
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
     assertTrue(sym.undefined.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromTopi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.global.contains("_Z10midFromTopi"));
     assertTrue(sym.undefined.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.global.contains("_Z10botFromTopi"));
     assertTrue(sym.global.contains("_Z10botFromMidi"));
     assertFalse(sym.all.contains("_Z6unusedi"));
@@ -670,31 +660,19 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     // Run some verification on the same apk with native_relinker disabled.
     apkPath = workspace.buildAndReturnOutput("//apps/sample:app_no_xdso_dce");
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
 
-    sym = syms.getSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
   }
 
   @Test
   public void testNativeRelinkerModular() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(workspace, filesystem);
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Path tmpDir = tmpFolder.newFolder("xdso");
-    SymbolGetter syms =
-        new SymbolGetter(
-            new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
-            platform.getObjdump(),
-            pathResolver);
+    SymbolGetter syms = getSymbolGetter();
     Symbols sym;
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce_modular");
@@ -1390,5 +1368,35 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
             matchCount, contents),
         1,
         matchCount);
+  }
+
+  @Test
+  public void testUnstrippedNativeLibraries() throws IOException, InterruptedException {
+    workspace.enableDirCache();
+    String app = "//apps/sample:app_with_static_symbols";
+    String usnl = app + "#unstripped_native_libraries";
+    ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(app, usnl);
+
+    SymbolGetter syms = getSymbolGetter();
+    Symbols strippedSyms =
+        syms.getNormalSymbols(outputs.get(app), "lib/x86/libnative_cxx_symbols.so");
+    assertThat(strippedSyms.all, Matchers.empty());
+
+    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckBuild(usnl);
+
+    String unstrippedPath = null;
+    for (String line : filesystem.readLines(workspace.buildAndReturnOutput(usnl))) {
+      if (line.matches(".*x86.*cxx_symbols.*")) {
+        unstrippedPath = line.trim();
+      }
+    }
+    if (unstrippedPath == null) {
+      Assert.fail("Couldn't find path to our x86 library.");
+    }
+
+    Symbols unstrippedSyms = syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath));
+    assertThat(unstrippedSyms.global, hasItem("get_value"));
+    assertThat(unstrippedSyms.all, hasItem("supply_value"));
   }
 }

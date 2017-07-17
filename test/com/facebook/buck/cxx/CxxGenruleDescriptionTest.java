@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -34,7 +35,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.OptionalMatchers;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.NaiveVersionSelector;
 import com.facebook.buck.versions.TargetNodeTranslator;
@@ -95,7 +96,8 @@ public class CxxGenruleDescriptionTest {
           TargetGraphFactory.newInstance(bBuilder.build(), aBuilder.build(), builder.build());
       BuildRuleResolver resolver =
           new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
       bBuilder.build(resolver);
       aBuilder.build(resolver);
       Genrule genrule = (Genrule) builder.build(resolver);
@@ -124,7 +126,8 @@ public class CxxGenruleDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule genrule = (Genrule) builder.build(resolver);
     assertThat(
         Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
@@ -148,7 +151,8 @@ public class CxxGenruleDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Genrule genrule = (Genrule) builder.build(resolver);
     for (String expected : ImmutableList.of("-asflag", "-cflag", "-cxxflag")) {
       assertThat(
@@ -246,7 +250,8 @@ public class CxxGenruleDescriptionTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxGenrule dep = (CxxGenrule) resolver.requireRule(depBuilder.getTarget());
     CxxGenrule rule = (CxxGenrule) resolver.requireRule(builder.getTarget());
     Genrule genrule =
@@ -255,7 +260,7 @@ public class CxxGenruleDescriptionTest {
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))
                 .orElseThrow(AssertionError::new);
     assertThat(
-        Arg.stringify(OptionalCompat.asSet(genrule.getCmd()), pathResolver),
+        Arg.stringify(Optionals.toStream(genrule.getCmd()).toOnceIterable(), pathResolver),
         Matchers.contains(
             pathResolver
                 .getAbsolutePath(dep.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM))

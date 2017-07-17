@@ -52,10 +52,6 @@ Buck's tests use JUnit and are under the test subdirectory. Here are some exampl
 
 To find out more about testing options refer to an article about [test](https://buckbuild.com/command/test.html) command.
 
-### Building Other Projects With a Development Version of Buck
-
-While you are developing Buck, you should create a `.nobuckcheck` file in the root of the project where you are using Buck. Read the articles on `.nobuckcheck` and `.buckversion` for more details.
-
 ### Using the Eclipse IDE
 
 Buck contains the Eclipse project configuration files `.classpath` and `.project` so that Buck can be imported directly into Eclipse as a Java project. The project is configured such that when you save your code, Eclipse automatically overwrites the `.class` files where Buck expects them (assuming you have Build Automatically enabled in Eclipse).

@@ -18,6 +18,7 @@ package com.facebook.buck.worker;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.util.Threads;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
@@ -156,7 +157,7 @@ public class WorkerProcessPoolTest {
     final WorkerProcess process = pool.borrowWorkerProcess();
     process.ensureLaunchAndHandshake();
 
-    Thread.currentThread().interrupt();
+    Threads.interruptCurrentThread();
     pool.returnWorkerProcess(process);
     assertThat(Thread.interrupted(), Matchers.is(true));
 
@@ -164,7 +165,7 @@ public class WorkerProcessPoolTest {
     process2.ensureLaunchAndHandshake();
     assertThat(process2, Matchers.is(process));
 
-    Thread.currentThread().interrupt();
+    Threads.interruptCurrentThread();
     pool.destroyWorkerProcess(process2);
     assertThat(Thread.interrupted(), Matchers.is(true));
   }

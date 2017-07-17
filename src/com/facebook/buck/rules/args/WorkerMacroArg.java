@@ -22,6 +22,7 @@ import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -81,7 +82,8 @@ public class WorkerMacroArg extends MacroArg {
               buildTarget, unexpanded, target));
     }
     this.workerTool = (WorkerTool) workerTool;
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Tool exe = this.workerTool.getTool();
     startupCommand = exe.getCommandPrefix(pathResolver);
     startupEnvironment = exe.getEnvironment(pathResolver);

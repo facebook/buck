@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
@@ -64,6 +65,7 @@ import java.util.Set;
  */
 public class NativeRelinker {
   private final BuildRuleParams buildRuleParams;
+  private final BuildTarget buildTarget;
   private final SourcePathResolver resolver;
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibs;
@@ -74,6 +76,7 @@ public class NativeRelinker {
   private final ImmutableList<RelinkerRule> rules;
 
   public NativeRelinker(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -82,6 +85,7 @@ public class NativeRelinker {
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibs,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets) {
+    this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(
@@ -223,13 +227,7 @@ public class NativeRelinker {
       TargetCpuType cpuType, SourcePath source, ImmutableList<RelinkerRule> relinkerDeps) {
     Function<RelinkerRule, SourcePath> getSymbolsNeeded = RelinkerRule::getSymbolsNeededPath;
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
-    BuildRuleParams relinkerParams =
-        buildRuleParams
-            .withAppendedFlavor(InternalFlavor.of("xdso-dce"))
-            .withAppendedFlavor(
-                InternalFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
-            .withAppendedFlavor(InternalFlavor.of(Flavor.replaceInvalidCharacters(libname)))
-            .copyAppendingExtraDeps(relinkerDeps);
+    BuildRuleParams relinkerParams = buildRuleParams.copyAppendingExtraDeps(relinkerDeps);
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
@@ -240,6 +238,10 @@ public class NativeRelinker {
     }
 
     return new RelinkerRule(
+        buildTarget.withAppendedFlavors(
+            InternalFlavor.of("xdso-dce"),
+            InternalFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())),
+            InternalFlavor.of(Flavor.replaceInvalidCharacters(libname))),
         projectFilesystem,
         relinkerParams,
         resolver,

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -102,6 +103,7 @@ abstract class GoDescriptors {
   }
 
   static GoCompile createGoCompileRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -114,12 +116,11 @@ abstract class GoDescriptors {
       Iterable<BuildTarget> deps)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    Preconditions.checkState(params.getBuildTarget().getFlavors().contains(platform.getFlavor()));
+    Preconditions.checkState(buildTarget.getFlavors().contains(platform.getFlavor()));
 
-    ImmutableSet<GoLinkable> linkables =
-        requireGoLinkables(params.getBuildTarget(), resolver, platform, deps);
+    ImmutableSet<GoLinkable> linkables = requireGoLinkables(buildTarget, resolver, platform, deps);
 
     ImmutableList.Builder<BuildRule> linkableDepsBuilder = ImmutableList.builder();
     for (GoLinkable linkable : linkables) {
@@ -127,16 +128,14 @@ abstract class GoDescriptors {
     }
     ImmutableList<BuildRule> linkableDeps = linkableDepsBuilder.build();
 
-    BuildTarget target = createSymlinkTreeTarget(params.getBuildTarget());
-    SymlinkTree symlinkTree =
-        makeSymlinkTree(
-            projectFilesystem, params.withBuildTarget(target), pathResolver, ruleFinder, linkables);
+    BuildTarget target = createSymlinkTreeTarget(buildTarget);
+    SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, pathResolver, linkables);
     resolver.addToIndex(symlinkTree);
 
-    LOG.verbose(
-        "Symlink tree for compiling %s: %s", params.getBuildTarget(), symlinkTree.getLinks());
+    LOG.verbose("Symlink tree for compiling %s: %s", buildTarget, symlinkTree.getLinks());
 
     return new GoCompile(
+        buildTarget,
         projectFilesystem,
         params
             .copyAppendingExtraDeps(linkableDeps)
@@ -145,7 +144,7 @@ abstract class GoDescriptors {
         packageName,
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
-            params.getBuildTarget().getBasePath(),
+            buildTarget.getBasePath(),
             FluentIterable.from(linkables)
                 .transformAndConcat(
                     new Function<GoLinkable, ImmutableSet<Path>>() {
@@ -192,6 +191,7 @@ abstract class GoDescriptors {
   }
 
   static GoBinary createGoBinaryRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -203,13 +203,12 @@ abstract class GoDescriptors {
       GoPlatform platform)
       throws NoSuchBuildTargetException {
     BuildTarget libraryTarget =
-        params
-            .getBuildTarget()
-            .withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
+        buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
     GoCompile library =
         GoDescriptors.createGoCompileRule(
+            libraryTarget,
             projectFilesystem,
-            params.withBuildTarget(libraryTarget),
+            params,
             resolver,
             goBuckConfig,
             Paths.get("main"),
@@ -222,16 +221,15 @@ abstract class GoDescriptors {
     resolver.addToIndex(library);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    BuildTarget target = createTransitiveSymlinkTreeTarget(params.getBuildTarget());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    BuildTarget target = createTransitiveSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree =
         makeSymlinkTree(
+            target,
             projectFilesystem,
-            params.withBuildTarget(target),
             pathResolver,
-            ruleFinder,
             requireTransitiveGoLinkables(
-                params.getBuildTarget(),
+                buildTarget,
                 resolver,
                 platform,
                 FluentIterable.from(params.getDeclaredDeps().get())
@@ -239,9 +237,10 @@ abstract class GoDescriptors {
                 /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 
-    LOG.verbose("Symlink tree for linking of %s: %s", params.getBuildTarget(), symlinkTree);
+    LOG.verbose("Symlink tree for linking of %s: %s", buildTarget, symlinkTree);
 
     return new GoBinary(
+        buildTarget,
         projectFilesystem,
         params
             .withDeclaredDeps(
@@ -261,6 +260,7 @@ abstract class GoDescriptors {
 
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
+      BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams sourceParams,
       BuildRuleResolver resolver)
@@ -273,36 +273,29 @@ abstract class GoDescriptors {
 
     // TODO(mikekap): Make a single test main gen, rather than one per test. The generator itself
     // doesn't vary per test.
-    BuildTarget generatorTarget =
-        sourceParams.getBuildTarget().withFlavors(InternalFlavor.of("make-test-main-gen"));
     BuildRule generator =
         resolver.computeIfAbsentThrowing(
-            generatorTarget,
-            () -> {
-              BuildTarget generatorSourceTarget =
-                  sourceParams
-                      .getBuildTarget()
-                      .withAppendedFlavors(InternalFlavor.of("test-main-gen-source"));
+            sourceBuildTarget.withFlavors(InternalFlavor.of("make-test-main-gen")),
+            generatorTarget -> {
               WriteFile writeFile =
                   (WriteFile)
                       resolver.computeIfAbsent(
-                          generatorSourceTarget,
-                          () ->
+                          sourceBuildTarget.withAppendedFlavors(
+                              InternalFlavor.of("test-main-gen-source")),
+                          generatorSourceTarget ->
                               new WriteFile(
+                                  generatorSourceTarget,
                                   projectFilesystem,
-                                  sourceParams
-                                      .withBuildTarget(generatorSourceTarget)
-                                      .withoutDeclaredDeps()
-                                      .withoutExtraDeps(),
+                                  sourceParams.withoutDeclaredDeps().withoutExtraDeps(),
                                   extractTestMainGenerator(),
                                   BuildTargets.getGenPath(
                                       projectFilesystem, generatorSourceTarget, "%s/main.go"),
                                   /* executable */ false));
 
               return createGoBinaryRule(
+                  generatorTarget,
                   projectFilesystem,
                   sourceParams
-                      .withBuildTarget(generatorTarget)
                       .withoutDeclaredDeps()
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   resolver,
@@ -368,10 +361,9 @@ abstract class GoDescriptors {
   }
 
   private static SymlinkTree makeSymlinkTree(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       ImmutableSet<GoLinkable> linkables) {
     ImmutableMap.Builder<Path, SourcePath> treeMapBuilder = ImmutableMap.builder();
     for (GoLinkable linkable : linkables) {
@@ -389,13 +381,12 @@ abstract class GoDescriptors {
       throw new HumanReadableException(
           ex,
           "Multiple go targets have the same package name when compiling %s",
-          params.getBuildTarget().getFullyQualifiedName());
+          buildTarget.getFullyQualifiedName());
     }
 
-    Path root =
-        BuildTargets.getScratchPath(projectFilesystem, params.getBuildTarget(), "__%s__tree");
+    Path root = BuildTargets.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree(params.getBuildTarget(), projectFilesystem, root, treeMap, ruleFinder);
+    return new SymlinkTree(buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**

@@ -15,12 +15,10 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -31,39 +29,32 @@ import java.util.stream.StreamSupport;
 
 /** Encapsulates all the logic to sanitize debug paths in native code. */
 public abstract class DebugPathSanitizer {
-  protected final int pathSize;
-  protected final char separator;
-  protected final Path compilationDirectory;
-
-  public DebugPathSanitizer(char separator, int pathSize, Path compilationDirectory) {
-    this.separator = separator;
-    this.pathSize = pathSize;
-    this.compilationDirectory = compilationDirectory;
-  }
 
   /**
    * @return the given path as a string, expanded using {@code separator} to fulfill the required
    *     {@code pathSize}.
    */
-  protected String getExpandedPath(Path path) {
+  public static String getPaddedDir(String path, int size, char pad) {
     Preconditions.checkArgument(
-        path.toString().length() <= pathSize,
+        path.length() <= size,
         String.format(
             "Path is too long to sanitize:\n'%s' is %d characters long, limit is %d.",
-            path, path.toString().length(), pathSize));
-    return Strings.padEnd(path.toString(), pathSize, separator);
+            path, path.length(), size));
+    return Strings.padEnd(path, size, pad);
   }
 
   abstract ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize);
 
-  abstract ImmutableList<String> getCompilationFlags();
-
-  protected abstract ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir);
-
-  public String getCompilationDirectory() {
-    return getExpandedPath(compilationDirectory);
+  @SuppressWarnings("unused")
+  ImmutableList<String> getCompilationFlags(
+      Compiler compiler, Path workingDir, ImmutableMap<Path, Path> prefixMap) {
+    return ImmutableList.of();
   }
+
+  protected abstract Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir);
+
+  public abstract String getCompilationDirectory();
 
   public Function<String, String> sanitize(final Optional<Path> workingDir) {
     return input -> DebugPathSanitizer.this.sanitize(workingDir, input);
@@ -81,8 +72,8 @@ public abstract class DebugPathSanitizer {
    * @return a string with all matching paths replaced with their sanitized versions.
    */
   public String sanitize(Optional<Path> workingDir, String contents) {
-    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
-      String replacement = entry.getValue().toString();
+    for (Map.Entry<Path, String> entry : getAllPaths(workingDir)) {
+      String replacement = entry.getValue();
       String pathToReplace = entry.getKey().toString();
       if (contents.contains(pathToReplace)) {
         // String.replace creates a number of objects, and creates a fair
@@ -94,24 +85,7 @@ public abstract class DebugPathSanitizer {
     return contents;
   }
 
-  public String restore(Optional<Path> workingDir, String contents) {
-    for (Map.Entry<Path, Path> entry : getAllPaths(workingDir).entrySet()) {
-      contents = contents.replace(getExpandedPath(entry.getValue()), entry.getKey().toString());
-    }
-    return contents;
-  }
-
   // Construct the replacer, giving the expanded current directory and the desired directory.
   // We use ASCII, since all the relevant debug standards we care about (e.g. DWARF) use it.
   abstract void restoreCompilationDirectory(Path path, Path workingDir) throws IOException;
-
-  /**
-   * Offensive check for cross-cell builds: return a new sanitizer with the provided
-   * ProjectFilesystem
-   */
-  @SuppressWarnings("unused")
-  public DebugPathSanitizer withProjectFilesystem(ProjectFilesystem projectFilesystem) {
-    // Do nothing by default.  Only one subclass uses this right now.
-    return this;
-  }
 }

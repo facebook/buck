@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -108,10 +109,9 @@ public class DirectHeaderMapTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    buildRule =
-        new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+    buildRule = new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links);
     ruleResolver.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -152,24 +152,20 @@ public class DirectHeaderMapTest {
     }
     DirectHeaderMap modifiedBuildRule =
         new DirectHeaderMap(
-            buildTarget,
-            projectFilesystem,
-            symlinkTreeRoot,
-            modifiedLinksBuilder.build(),
-            ruleFinder);
+            buildTarget, projectFilesystem, symlinkTreeRoot, modifiedLinksBuilder.build());
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.PREFIX_TREE)));
+                    new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT)));
     RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(buildRule);
     RuleKey key2 =
         new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(modifiedBuildRule);
@@ -188,11 +184,11 @@ public class DirectHeaderMapTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(buildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.PREFIX_TREE);
+            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
     RuleKey defaultKey1 =

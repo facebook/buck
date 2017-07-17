@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -33,8 +34,11 @@ public class PrebuiltPythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final SourcePath binarySrc;
 
   public PrebuiltPythonLibrary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, SourcePath binarySrc) {
-    super(projectFilesystem, params);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePath binarySrc) {
+    super(buildTarget, projectFilesystem, params);
     this.binarySrc = binarySrc;
   }
 

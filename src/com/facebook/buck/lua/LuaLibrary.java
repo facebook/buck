@@ -17,12 +17,14 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 
 public abstract class LuaLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements LuaPackageable {
-  public LuaLibrary(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-    super(projectFilesystem, params);
+  public LuaLibrary(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 }

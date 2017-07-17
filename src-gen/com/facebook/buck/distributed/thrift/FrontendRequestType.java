@@ -31,7 +31,8 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
   FETCH_BUILD_SLAVE_STATUS(18),
   APPEND_BUILD_SLAVE_EVENTS(19),
   MULTI_GET_BUILD_SLAVE_EVENTS(20),
-  SET_BUILD_MODE(21);
+  SET_BUILD_MODE(21),
+  FETCH_RULE_KEY_LOGS(22);
 
   private final int value;
 
@@ -92,6 +93,8 @@ public enum FrontendRequestType implements org.apache.thrift.TEnum {
         return MULTI_GET_BUILD_SLAVE_EVENTS;
       case 21:
         return SET_BUILD_MODE;
+      case 22:
+        return FETCH_RULE_KEY_LOGS;
       default:
         return null;
     }

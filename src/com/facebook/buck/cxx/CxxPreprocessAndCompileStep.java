@@ -90,7 +90,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.inputType = inputType;
     this.command = command;
     this.headerPathNormalizer = headerPathNormalizer;
-    this.sanitizer = sanitizer.withProjectFilesystem(filesystem);
+    this.sanitizer = sanitizer;
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
     this.compiler = compiler;
@@ -152,7 +152,9 @@ public class CxxPreprocessAndCompileStep implements Step {
                     : Optional.<ImmutableList<String>>empty())
                 .orElseGet(ImmutableList::of))
         .addAll(compiler.languageArgs(inputLanguage))
-        .addAll(sanitizer.getCompilationFlags())
+        .addAll(
+            sanitizer.getCompilationFlags(
+                compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
         .add("-c")
         .addAll(
             depFile

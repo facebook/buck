@@ -81,8 +81,9 @@ public class ApplePackageDescriptionTest {
     BuildRule rule =
         description.createBuildRule(
             graph,
+            packageBuildTarget,
             projectFilesystem,
-            TestBuildRuleParams.create(packageBuildTarget),
+            TestBuildRuleParams.create(),
             resolver,
             TestCellBuilder.createCellRoots(projectFilesystem),
             arg);
@@ -102,7 +103,7 @@ public class ApplePackageDescriptionTest {
     BuildTarget exportFileBuildTarget = BuildTargetFactory.newInstance("//foo:exportfile");
     TargetGraph graph =
         TargetGraphFactory.newInstance(
-            ExportFileBuilder.newExportFileBuilder(exportFileBuildTarget).build(),
+            new ExportFileBuilder(exportFileBuildTarget).build(),
             AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
             AppleBundleBuilder.createBuilder(bundleBuildTarget)
                 .setBinary(binaryBuildTarget)
@@ -122,7 +123,7 @@ public class ApplePackageDescriptionTest {
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(packageBuildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
@@ -134,6 +135,7 @@ public class ApplePackageDescriptionTest {
     BuildRule rule =
         description.createBuildRule(
             graph,
+            packageBuildTarget,
             projectFilesystem,
             params,
             resolver,

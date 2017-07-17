@@ -39,6 +39,7 @@ public class TestCellBuilder {
   private AndroidDirectoryResolver androidDirectoryResolver;
   private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
+  private KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
@@ -66,6 +67,12 @@ public class TestCellBuilder {
     return this;
   }
 
+  public TestCellBuilder setKnownBuildRuleTypesFactory(
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
+    this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
+    return this;
+  }
+
   public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
@@ -75,7 +82,9 @@ public class TestCellBuilder {
             : buckConfig;
 
     KnownBuildRuleTypesFactory typesFactory =
-        new KnownBuildRuleTypesFactory(executor, androidDirectoryResolver);
+        knownBuildRuleTypesFactory == null
+            ? new KnownBuildRuleTypesFactory(executor, androidDirectoryResolver)
+            : knownBuildRuleTypesFactory;
 
     return CellProvider.createForLocalBuild(filesystem, watchman, config, cellConfig, typesFactory)
         .getCellByPath(filesystem.getRootPath());

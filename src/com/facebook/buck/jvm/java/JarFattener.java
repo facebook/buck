@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -69,7 +69,6 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
@@ -78,16 +77,15 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
 
   public JarFattener(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       Javac javac,
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
-    super(projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
+    super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
@@ -192,11 +190,12 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         javaSourceFilePaths.build(),
         getBuildTarget(),
         context.getSourcePathResolver(),
-        ruleFinder,
         getProjectFilesystem(),
         /* classpathEntries */ ImmutableSortedSet.of(),
         fatJarDir,
         /* workingDir */ Optional.empty(),
+        Optional.of(
+            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
         pathToSrcsList,
         NoOpClassUsageFileWriter.instance(),
         steps,

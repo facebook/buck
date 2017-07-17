@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -64,7 +65,7 @@ public class VerifyCachesCommand extends AbstractCommand {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     contents.forEach(e -> resolver.addToIndex(e.getKey()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(fieldLoader, fileHashCache, pathResolver, ruleFinder);
     stdOut.println(String.format("Examining %d build rule keys.", contents.size()));

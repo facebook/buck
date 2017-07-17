@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -57,21 +58,24 @@ public class AppleDebuggableBinary extends AbstractBuildRuleWithDeclaredAndExtra
   @AddToRuleKey private final SourcePath binarySourcePath;
 
   public AppleDebuggableBinary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams, BuildRule binaryRule) {
-    super(projectFilesystem, buildRuleParams);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      BuildRule binaryRule) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.binaryRule = binaryRule;
     this.binarySourcePath = Preconditions.checkNotNull(binaryRule.getSourcePathToOutput());
-    performChecks(buildRuleParams, binaryRule);
+    performChecks(buildTarget, binaryRule);
   }
 
-  private void performChecks(BuildRuleParams buildRuleParams, BuildRule cxxStrip) {
+  private void performChecks(BuildTarget buildTarget, BuildRule cxxStrip) {
     Preconditions.checkArgument(
-        buildRuleParams.getBuildTarget().getFlavors().contains(RULE_FLAVOR),
+        buildTarget.getFlavors().contains(RULE_FLAVOR),
         "Rule %s should contain flavor %s",
         this,
         RULE_FLAVOR);
     Preconditions.checkArgument(
-        AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildRuleParams.getBuildTarget().getFlavors()),
+        AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "Rule %s should contain some of AppleDebugFormat flavors",
         this);
     Preconditions.checkArgument(
@@ -148,7 +152,7 @@ public class AppleDebuggableBinary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
   }
 }

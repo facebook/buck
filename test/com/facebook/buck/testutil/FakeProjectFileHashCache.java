@@ -25,6 +25,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /** FileHashCache that is populated with a fixed set of entries. */
 public class FakeProjectFileHashCache implements ProjectFileHashCache {
@@ -88,6 +89,11 @@ public class FakeProjectFileHashCache implements ProjectFileHashCache {
   @Override
   public long getSize(Path path) throws IOException {
     throw new NoSuchFileException(path.toString());
+  }
+
+  @Override
+  public Optional<HashCode> getIfPresent(Path path) {
+    return Optional.ofNullable(pathsToHashes.get(path));
   }
 
   @Override

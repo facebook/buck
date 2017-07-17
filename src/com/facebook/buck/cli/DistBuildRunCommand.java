@@ -20,6 +20,8 @@ import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
+import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -34,7 +36,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +44,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
@@ -85,6 +85,9 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
 
+  private final DistBuildSlaveTimingStatsTracker timeStatsTracker =
+      new DistBuildSlaveTimingStatsTracker();
+
   @Override
   public boolean isReadOnly() {
     return false;
@@ -97,7 +100,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    timeStatsTracker.startTimer(SlaveEvents.TOTAL_RUNTIME);
     Console console = params.getConsole();
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       if (slaveEventListener != null) {
@@ -105,8 +108,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       }
 
       try {
+        timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_STATE_FETCH_TIME);
         Pair<BuildJobState, String> jobStateAndBuildName =
             getBuildJobStateAndBuildName(params.getCell().getFilesystem(), console, service);
+        timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_FETCH_TIME);
+
         BuildJobState jobState = jobStateAndBuildName.getFirst();
         String buildName = jobStateAndBuildName.getSecond();
 
@@ -119,12 +125,14 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
         // Load up the remote build state from the client. Client-side .buckconfig is overlayed
         // with Stampede build slave .buckconfig.
+        timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
         DistBuildState state =
             DistBuildState.load(
-                Optional.of(params.getBuckConfig()),
+                params.getBuckConfig(),
                 jobState,
                 params.getCell(),
                 params.getKnownBuildRuleTypesFactory());
+        timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 
         try (CommandThreadManager pool =
             new CommandThreadManager(
@@ -140,19 +148,24 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   getStampedeIdOptional(),
                   getGlobalCacheDirOptional(),
                   fileMaterializationStatsTracker);
-          int returnCode = distBuildExecutor.buildAndReturnExitCode();
+
+          int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
+          timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
+
           if (slaveEventListener != null) {
+            slaveEventListener.setRemoteBuckConfig(state.getRootCell().getBuckConfig());
             slaveEventListener.publishBuildSlaveFinishedEvent(params.getBuckEventBus(), returnCode);
           }
+
           if (returnCode == 0) {
             console.printSuccess(
                 String.format(
                     "Successfully ran distributed build [%s] in [%d millis].",
-                    buildName, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
+                    buildName, timeStatsTracker.getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME)));
           } else {
             console.printErrorText(
                 "Failed distributed build [%s] in [%d millis].",
-                buildName, stopwatch.elapsed(TimeUnit.MILLISECONDS));
+                buildName, timeStatsTracker.getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
           }
           return returnCode;
         }
@@ -238,6 +251,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               getStampedeId(),
               runId,
               new DefaultClock(),
+              timeStatsTracker,
               fileMaterializationStatsTracker,
               networkScheduler);
     }

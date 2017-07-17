@@ -362,7 +362,7 @@ public class WatchmanWatcher {
       LOG.warn(e, message);
       // Events may have been lost, signal overflow.
       postWatchEvent(WatchmanOverflowEvent.of(cellPath, message));
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
       throw e;
     } catch (IOException e) {
       String message = "I/O error talking to Watchman";

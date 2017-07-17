@@ -34,7 +34,7 @@ public class ForwardingBuildTargetSourcePathTest {
   public void setUp() {
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
   }
 
   @Test
@@ -51,7 +51,7 @@ public class ForwardingBuildTargetSourcePathTest {
   @Test
   public void forwardsToDefaultBuildTargetSourcePath() {
     BuildTarget target = BuildTargetFactory.newInstance("//package:name");
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile("foo/bar");
     resolver.addToIndex(rule);
     ForwardingBuildTargetSourcePath sourcePath =
@@ -63,7 +63,7 @@ public class ForwardingBuildTargetSourcePathTest {
   @Test
   public void forwardsToExplicitBuildTargetSourcePath() {
     BuildTarget target = BuildTargetFactory.newInstance("//package:name");
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target);
     resolver.addToIndex(rule);
     Path relativePath = Paths.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
@@ -76,11 +76,11 @@ public class ForwardingBuildTargetSourcePathTest {
   @Test
   public void chains() {
     BuildTarget target1 = BuildTargetFactory.newInstance("//package:name");
-    FakeBuildRule rule1 = new FakeBuildRule(target1, pathResolver);
+    FakeBuildRule rule1 = new FakeBuildRule(target1);
     resolver.addToIndex(rule1);
 
     BuildTarget target2 = BuildTargetFactory.newInstance("//package2:name2");
-    FakeBuildRule rule2 = new FakeBuildRule(target2, pathResolver);
+    FakeBuildRule rule2 = new FakeBuildRule(target2);
     resolver.addToIndex(rule2);
 
     Path relativePath = Paths.get("foo/bar");

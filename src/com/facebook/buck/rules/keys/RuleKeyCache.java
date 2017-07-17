@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +44,7 @@ public interface RuleKeyCache<V> {
    * @return the rule key value for the given {@code appendable}, either serving it form cache or by
    *     running the given function.
    */
-  V get(RuleKeyAppendable appendable, Function<? super RuleKeyAppendable, RuleKeyResult<V>> create);
+  V get(AddsToRuleKey appendable, Function<? super AddsToRuleKey, RuleKeyResult<V>> create);
 
   /** @return the contents of the {@link RuleKeyCache}. */
   default ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {

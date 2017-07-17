@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.annotations.VisibleForTesting;
@@ -68,8 +67,8 @@ class StringifyAlterRuleKey implements AlterRuleKey {
   }
 
   @Override
-  public void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
-    Object val = valueExtractor.getValue(rule);
+  public void amendKey(RuleKeyObjectSink sink, Object addsToRuleKey) {
+    Object val = valueExtractor.getValue(addsToRuleKey);
     String stringVal = (val == null) ? null : String.valueOf(val);
     sink.setReflectively(valueExtractor.getName(), stringVal);
 

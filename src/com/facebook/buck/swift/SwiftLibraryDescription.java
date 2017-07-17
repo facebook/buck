@@ -39,12 +39,14 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
@@ -143,6 +145,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -151,13 +154,10 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       throws NoSuchBuildTargetException {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
-        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params =
-        params.withBuildTarget(
-            LinkerMapMode.removeLinkerMapModeFlavorInTarget(
-                params.getBuildTarget(), flavoredLinkerMapMode));
-
-    final BuildTarget buildTarget = params.getBuildTarget();
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
+    buildTarget =
+        LinkerMapMode.removeLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
+    final UnflavoredBuildTarget unflavoredBuildTarget = buildTarget.getUnflavoredBuildTarget();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -174,7 +174,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
                     !input
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
-                        .equals(buildTarget.getUnflavoredBuildTarget()))
+                        .equals(unflavoredBuildTarget))
             .collect(MoreCollectors.toImmutableSortedSet());
     params = params.withExtraDeps(filteredExtraDeps);
 
@@ -189,22 +189,21 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       // extract them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
       if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
-        Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
+        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
         flavors.remove(type.get().getKey());
         BuildTarget target =
-            BuildTarget.builder(params.getBuildTarget().getUnflavoredBuildTarget())
+            BuildTarget.builder(buildTarget.getUnflavoredBuildTarget())
                 .addAllFlavors(flavors)
                 .build();
         if (flavoredLinkerMapMode.isPresent()) {
           target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
         }
-        BuildRuleParams typeParams = params.withBuildTarget(target);
 
         switch (type.get().getValue()) {
           case SHARED:
             return createSharedLibraryBuildRule(
                 projectFilesystem,
-                typeParams,
+                params,
                 resolver,
                 target,
                 swiftPlatform.get(),
@@ -265,9 +264,11 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       Preprocessor preprocessor = cxxPlatform.getCpp().resolve(resolver);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
+      final BuildTarget buildTargetCopy = buildTarget;
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
+          buildTarget,
           projectFilesystem,
           params.copyAppendingExtraDeps(
               () ->
@@ -287,7 +288,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
               .map(
                   f ->
                       CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTarget, cellRoots, resolver, cxxPlatform, f))
+                          buildTargetCopy, cellRoots, resolver, cxxPlatform, f))
               .toImmutableList(),
           args.getEnableObjcInterop(),
           args.getBridgingHeader(),
@@ -296,11 +297,10 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     }
 
     // Otherwise, we return the generic placeholder of this library.
-    params =
-        params.withBuildTarget(
-            LinkerMapMode.restoreLinkerMapModeFlavorInTarget(
-                params.getBuildTarget(), flavoredLinkerMapMode));
+    buildTarget =
+        LinkerMapMode.restoreLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
     return new SwiftLibrary(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
@@ -323,7 +323,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
@@ -375,17 +375,18 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
   public Optional<BuildRule> createCompanionBuildRule(
       final TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxLibraryDescription.CommonArg args)
       throws NoSuchBuildTargetException {
-    BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
-                  new SourcePathResolver(new SourcePathRuleFinder(resolver)), args.getSrcs())
+                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
+                  args.getSrcs())
               .isEmpty();
       return hasSwiftSource
           ? Optional.of(
@@ -395,7 +396,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
 
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
         delegateArgsBuilder,
         args,
         buildTarget);
@@ -404,7 +405,13 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       return Optional.of(
           resolver.addToIndex(
               createBuildRule(
-                  targetGraph, projectFilesystem, params, resolver, cellRoots, delegateArgs)));
+                  targetGraph,
+                  buildTarget,
+                  projectFilesystem,
+                  params,
+                  resolver,
+                  cellRoots,
+                  delegateArgs)));
     } else {
       return Optional.empty();
     }

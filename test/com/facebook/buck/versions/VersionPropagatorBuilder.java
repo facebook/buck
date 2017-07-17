@@ -106,6 +106,7 @@ public class VersionPropagatorBuilder
     @Override
     public BuildRule createBuildRule(
         TargetGraph targetGraph,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver resolver,

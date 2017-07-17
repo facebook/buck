@@ -48,6 +48,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -156,6 +157,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean cacheable;
 
   AppleBundle(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -178,7 +180,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
       boolean cacheable) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
     this.productName = productName;
@@ -975,7 +977,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     if (binary.get() instanceof ProvidesLinkedBinaryDeps) {
       List<BuildRule> linkDeps = new ArrayList<>();
       linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getCompileDeps());

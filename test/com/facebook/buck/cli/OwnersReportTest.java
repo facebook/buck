@@ -33,8 +33,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -66,13 +64,13 @@ public class OwnersReportTest {
     @Override
     public BuildRule createBuildRule(
         TargetGraph targetGraph,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeRuleDescriptionArg args) {
-      return new FakeBuildRule(
-          projectFilesystem, params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+      return new FakeBuildRule(buildTarget, projectFilesystem, params);
     }
 
     @BuckStyleImmutable

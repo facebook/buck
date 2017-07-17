@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -50,13 +51,14 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final JarContentsSupplier outputPathContentsSupplier;
 
   public CompareAbis(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath classAbi,
       SourcePath sourceAbi,
       JavaBuckConfig.SourceAbiVerificationMode verificationMode) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.classAbi = classAbi;
     this.sourceAbi = sourceAbi;
     this.verificationMode = verificationMode;

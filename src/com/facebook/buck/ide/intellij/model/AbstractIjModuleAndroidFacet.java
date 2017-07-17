@@ -18,6 +18,9 @@ package com.facebook.buck.ide.intellij.model;
 
 import com.facebook.buck.ide.intellij.lang.android.AndroidProjectType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -30,8 +33,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjModuleAndroidFacet {
-  /** @return path to the AndroidManifest.xml file. */
-  public abstract Optional<Path> getManifestPath();
+  /** @return set of paths to all AndroidManifest.xml files. */
+  public abstract ImmutableSet<Path> getManifestPaths();
 
   /** @return paths to resources (usually stuff under the res/ folder). */
   public abstract Set<Path> getResourcePaths();
@@ -62,4 +65,37 @@ abstract class AbstractIjModuleAndroidFacet {
   public abstract boolean autogenerateSources();
 
   public abstract Path getGeneratedSourcePath();
+
+  /**
+   * AndroidManifest.xml can be generated when package name is known. Also, it's not generated when
+   * there is exactly one manifest from targets (this manifest will be used in IntelliJ project).
+   */
+  @Value.Lazy
+  public boolean hasValidAndroidManifest() {
+    ImmutableSet<Path> androidManifestPaths = getManifestPaths();
+    Optional<String> packageName = getPackageName();
+
+    // This is guaranteed during target parsing and creation
+    Preconditions.checkState(packageName.isPresent() || !androidManifestPaths.isEmpty());
+
+    return androidManifestPaths.size() == 1
+        || (!packageName.isPresent() && androidManifestPaths.size() > 1);
+  }
+
+  @Value.Lazy
+  public Path getAndroidManifestPath() {
+    Path androidManifestPath;
+    if (hasValidAndroidManifest()) {
+      Optional<String> packageName = getPackageName();
+      Preconditions.checkState(packageName.isPresent());
+      androidManifestPath =
+          getGeneratedSourcePath()
+              .resolve(packageName.get().replace('.', File.separatorChar))
+              .resolve("AndroidManifest.xml");
+
+    } else {
+      androidManifestPath = getManifestPaths().iterator().next();
+    }
+    return androidManifestPath;
+  }
 }

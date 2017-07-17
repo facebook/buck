@@ -41,5 +41,5 @@ public interface ExecutionEnvironment {
   Optional<String> getWifiSsid();
 
   /** Gets the environment variable indicated by the specified key. */
-  String getenv(String key, String defaultValue);
+  Optional<String> getenv(String key);
 }

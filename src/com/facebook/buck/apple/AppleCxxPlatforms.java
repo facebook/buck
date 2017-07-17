@@ -181,7 +181,6 @@ public class AppleCxxPlatforms {
     // TODO(beng): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
-    cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
     cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
@@ -315,22 +314,23 @@ public class AppleCxxPlatforms {
             Flavor.replaceInvalidCharacters(targetSdk.getName() + "-" + targetArchitecture),
             String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
 
-    ImmutableBiMap.Builder<Path, Path> sanitizerPaths = ImmutableBiMap.builder();
-    sanitizerPaths.put(sdkPaths.getSdkPath(), Paths.get("APPLE_SDKROOT"));
-    sanitizerPaths.put(sdkPaths.getPlatformPath(), Paths.get("APPLE_PLATFORM_DIR"));
+    ImmutableBiMap.Builder<Path, String> sanitizerPaths = ImmutableBiMap.builder();
+    sanitizerPaths.put(sdkPaths.getSdkPath(), "APPLE_SDKROOT");
+    sanitizerPaths.put(sdkPaths.getPlatformPath(), "APPLE_PLATFORM_DIR");
     if (sdkPaths.getDeveloperPath().isPresent()) {
-      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
+      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), "APPLE_DEVELOPER_DIR");
     }
+
+    // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote
+    // include path, and also force it to be sanitized by all user rule keys.
+    sanitizerPaths.put(filesystem.getRootPath(), ".");
+    cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
 
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(
-            config.getDebugPathSanitizerLimit(),
-            File.separatorChar,
-            Paths.get("."),
-            sanitizerPaths.build(),
-            filesystem.getRootPath().toAbsolutePath(),
-            CxxToolProvider.Type.CLANG,
-            filesystem);
+            DebugPathSanitizer.getPaddedDir(
+                ".", config.getDebugPathSanitizerLimit(), File.separatorChar),
+            sanitizerPaths.build());
     DebugPathSanitizer assemblerDebugPathSanitizer =
         new MungingDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(),

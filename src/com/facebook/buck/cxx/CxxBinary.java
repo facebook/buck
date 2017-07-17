@@ -48,9 +48,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ProvidesLinkedBinaryDeps,
         SupportsInputBasedRuleKey {
 
-  private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;
   private final Tool executable;
@@ -59,20 +57,18 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildTarget platformlessTarget;
 
   public CxxBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       BuildRule linkRule,
       Tool executable,
       Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests,
       BuildTarget platformlessTarget) {
-    super(projectFilesystem, params);
-    this.params = params;
+    super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
-    this.ruleFinder = ruleFinder;
     this.cxxPlatform = cxxPlatform;
     this.linkRule = linkRule;
     this.executable = executable;
@@ -94,7 +90,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         this,
         linkRule);
     Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR),
+        !getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR),
         "CxxBinary (%s) build target should not contain CxxStrip rule flavor %s. Otherwise "
             + "it may be not possible to distinguish CxxBinary (%s) and link rule (%s) in graph.",
         this,
@@ -104,7 +100,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Preconditions.checkArgument(
         this.platformlessTarget
             .getUnflavoredBuildTarget()
-            .equals(this.params.getBuildTarget().getUnflavoredBuildTarget()));
+            .equals(getBuildTarget().getUnflavoredBuildTarget()));
   }
 
   @Override
@@ -137,7 +133,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
     return CxxPreprocessables.getCxxPreprocessorInput(
-        params.withBuildTarget(platformlessTarget),
+        platformlessTarget,
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,
@@ -168,7 +164,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(getDeclaredDeps().stream(), executable.getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);
   }

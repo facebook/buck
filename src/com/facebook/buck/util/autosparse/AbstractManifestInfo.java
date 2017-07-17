@@ -34,11 +34,9 @@ public abstract class AbstractManifestInfo {
     LINK,
   }
 
-  public abstract String getHash();
-
   abstract EnumSet<FileFlags> getFlags();
 
-  public static ManifestInfo of(String hash, String flagsString) {
+  public static ManifestInfo of(String flagsString) {
     EnumSet<FileFlags> flags = EnumSet.noneOf(FileFlags.class);
     if (flagsString.contains("x")) {
       flags.add(FileFlags.EXECUTABLE);
@@ -46,7 +44,7 @@ public abstract class AbstractManifestInfo {
     if (flagsString.contains("l")) {
       flags.add(FileFlags.LINK);
     }
-    return ManifestInfo.of(hash, flags);
+    return ManifestInfo.of(flags);
   }
 
   @Value.Lazy

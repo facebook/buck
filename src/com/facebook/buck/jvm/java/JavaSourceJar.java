@@ -53,15 +53,16 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<String> mavenCoords;
 
   public JavaSourceJar(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> sources,
       Optional<String> mavenCoords) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.sources = sources;
-    BuildTarget target = params.getBuildTarget();
-    this.output = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s" + Javac.SRC_JAR);
-    this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), target, "%s-srcs");
+    this.output =
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s" + Javac.SRC_JAR);
+    this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "%s-srcs");
     this.mavenCoords = mavenCoords;
   }
 

@@ -32,7 +32,6 @@ import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.WatchmanOverflowEvent;
 import com.facebook.buck.util.WatchmanPathEvent;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
@@ -463,8 +462,9 @@ public class DaemonicParserState {
     // Find the closest ancestor package for the input path.  We'll definitely need to invalidate
     // that.
     Optional<Path> packageBuildFile = buildFiles.getBasePathOfAncestorTarget(path);
-    packageBuildFiles.addAll(
-        OptionalCompat.asSet(packageBuildFile.map(cell.getFilesystem()::resolve)));
+    if (packageBuildFile.isPresent()) {
+      packageBuildFiles.add(cell.getFilesystem().resolve(packageBuildFile.get()));
+    }
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file
@@ -472,7 +472,9 @@ public class DaemonicParserState {
       while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
         packageBuildFile =
             buildFiles.getBasePathOfAncestorTarget(packageBuildFile.get().getParent());
-        packageBuildFiles.addAll(OptionalCompat.asSet(packageBuildFile));
+        if (packageBuildFile.isPresent()) {
+          packageBuildFiles.add(packageBuildFile.get());
+        }
       }
     }
 

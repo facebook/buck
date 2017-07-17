@@ -36,6 +36,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -133,7 +134,8 @@ public class MultiarchFileTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule multiarchRule = nodeBuilderFactory.getNodeBuilder(target).build(resolver, filesystem);
 

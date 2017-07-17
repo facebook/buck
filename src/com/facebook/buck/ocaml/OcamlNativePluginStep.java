@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -86,7 +85,7 @@ public class OcamlNativePluginStep extends ShellStep {
       cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, stdlib.get());
     }
 
-    return cmd.addAll(OptionalCompat.asSet(Optional.of("-shared")))
+    return cmd.add("-shared")
         .add("-o", output.toString())
         .addAll(flags)
         .addAll(ocamlInput)

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -44,12 +45,13 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
   @Override
   public NoopBuildRuleWithDeclaredAndExtraDeps createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleAssetCatalogDescriptionArg args) {
-    return new NoopBuildRuleWithDeclaredAndExtraDeps(projectFilesystem, params);
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
   }
 
   public enum Optimization {

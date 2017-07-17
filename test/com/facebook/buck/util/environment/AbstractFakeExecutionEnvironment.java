@@ -49,17 +49,7 @@ abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment 
   public abstract Map<String, String> getEnvironment();
 
   @Override
-  public String getenv(String key, String defaultValue) {
-    return getWithDefault(getEnvironment(), key, defaultValue);
-  }
-
-  private static String getWithDefault(
-      Map<String, String> values, String key, String defaultValue) {
-    String result = values.get(key);
-    if (result != null) {
-      return result;
-    } else {
-      return defaultValue;
-    }
+  public Optional<String> getenv(String key) {
+    return Optional.ofNullable(getEnvironment().get(key));
   }
 }

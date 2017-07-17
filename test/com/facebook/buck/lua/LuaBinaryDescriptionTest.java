@@ -39,6 +39,7 @@ import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -101,7 +102,8 @@ public class LuaBinaryDescriptionTest {
   public void extensionOverride() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
@@ -309,7 +311,9 @@ public class LuaBinaryDescriptionTest {
     pythonLibraryBuilder.build(resolver, filesystem, targetGraph);
     LuaBinary luaBinary = luaBinaryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
-        luaBinary.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        luaBinary
+            .getRuntimeDeps(new SourcePathRuleFinder(resolver))
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }
 

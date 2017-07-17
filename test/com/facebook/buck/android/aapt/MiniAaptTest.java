@@ -29,6 +29,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -38,18 +39,15 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.hamcrest.core.IsEqual;
-import org.hamcrest.junit.ExpectedException;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
-
 import javax.xml.xpath.XPathExpressionException;
+import org.hamcrest.core.IsEqual;
+import org.hamcrest.junit.ExpectedException;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class MiniAaptTest {
 
@@ -70,13 +68,12 @@ public class MiniAaptTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final SourcePathResolver resolver =
-      new SourcePathResolver(
+      DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
               new BuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testFindingResourceIdsInXml()
@@ -191,18 +188,18 @@ public class MiniAaptTest {
     ImmutableList<String> lines =
         ImmutableList.<String>builder()
             .add(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-                    "<resources>\n" +
-                    "    <attr name=\"justAttr\"/>\n" +
-                    "    <declare-styleable name=\"MyLayout\">\n" +
-                    "        <attr name=\"myAttr\"/>\n" +
-                    "        <attr name=\"myAttr2\"/>\n" +
-                    "    </declare-styleable>\n" +
-                    "    <declare-styleable name=\"MyLayout_Layout\">\n" +
-                    "        <attr name=\"android:text\"/>\n" +
-                    "        <attr name=\"android:color\"/>\n" +
-                    "    </declare-styleable>\n" +
-                    "</resources>")
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                    + "<resources>\n"
+                    + "    <attr name=\"justAttr\"/>\n"
+                    + "    <declare-styleable name=\"MyLayout\">\n"
+                    + "        <attr name=\"myAttr\"/>\n"
+                    + "        <attr name=\"myAttr2\"/>\n"
+                    + "    </declare-styleable>\n"
+                    + "    <declare-styleable name=\"MyLayout_Layout\">\n"
+                    + "        <attr name=\"android:text\"/>\n"
+                    + "        <attr name=\"android:color\"/>\n"
+                    + "    </declare-styleable>\n"
+                    + "</resources>")
             .build();
 
     filesystem.writeLinesToPath(lines, Paths.get("values.xml"));

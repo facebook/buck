@@ -30,7 +30,9 @@ public class SQLiteUtils {
    */
   public static void initialize() {
     try {
-      SQLiteJDBCLoader.initialize();
+      if (!SQLiteJDBCLoader.initialize()) {
+        throw new RuntimeException("sqlite-jdbc initialization failed");
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

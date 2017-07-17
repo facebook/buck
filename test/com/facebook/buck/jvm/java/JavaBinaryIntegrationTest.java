@@ -149,7 +149,10 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
             "META-INF/", "META-INF/MANIFEST.MF", "com/", "com/example/", "com/example/B.class");
     ImmutableSet<String> blacklistedEntries =
         ImmutableSet.of(
-            "com/example/A.class", "com/example/A$C.class", "com/example/Alligator.class");
+            "com/example/A.class",
+            "com/example/A$C.class",
+            "com/example/Alligator.class",
+            "com/example/A.txt");
     assertEquals(
         "com.example.Alligator, com.example.A and any inner classes should be removed.",
         commonEntries,

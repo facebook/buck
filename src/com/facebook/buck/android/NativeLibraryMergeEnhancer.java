@@ -40,7 +40,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -116,8 +115,8 @@ class NativeLibraryMergeEnhancer {
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
@@ -152,7 +151,7 @@ class NativeLibraryMergeEnhancer {
 
     final ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
-        makeConstituentMap(buildRuleParams, mergeMap, allLinkables, linkableAssetSet);
+        makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetSet);
 
     ImmutableSortedMap.Builder<String, String> sonameMapBuilder = ImmutableSortedMap.naturalOrder();
     ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder =
@@ -174,7 +173,7 @@ class NativeLibraryMergeEnhancer {
     builder.setSharedObjectTargets(finalSonameTargetsBuilder.build());
 
     Iterable<MergedNativeLibraryConstituents> orderedConstituents =
-        getOrderedMergedConstituents(buildRuleParams, linkableMembership);
+        getOrderedMergedConstituents(buildTarget, linkableMembership);
 
     Optional<NativeLinkable> glueLinkable = Optional.empty();
     if (nativeLibraryMergeGlue.isPresent()) {
@@ -184,7 +183,7 @@ class NativeLibraryMergeEnhancer {
             "Native library merge glue "
                 + rule.getBuildTarget()
                 + " for application "
-                + buildRuleParams.getBuildTarget()
+                + buildTarget
                 + " is not linkable.");
       }
       glueLinkable = Optional.of(((NativeLinkable) rule));
@@ -196,7 +195,7 @@ class NativeLibraryMergeEnhancer {
             ruleResolver,
             pathResolver,
             ruleFinder,
-            buildRuleParams.getBuildTarget(),
+            buildTarget,
             projectFilesystem,
             glueLinkable,
             nativeLibraryMergeLocalizedSymbols.map(ImmutableSortedSet::copyOf),
@@ -254,7 +253,7 @@ class NativeLibraryMergeEnhancer {
   }
 
   private static Map<NativeLinkable, MergedNativeLibraryConstituents> makeConstituentMap(
-      BuildRuleParams buildRuleParams,
+      BuildTarget buildTarget,
       Map<String, List<Pattern>> mergeMap,
       Iterable<NativeLinkable> allLinkables,
       ImmutableSet<NativeLinkable> linkableAssetSet) {
@@ -289,10 +288,7 @@ class NativeLibraryMergeEnhancer {
           throw new RuntimeException(
               String.format(
                   "When processing %s, attempted to merge %s into both %s and %s",
-                  buildRuleParams.getBuildTarget(),
-                  linkable,
-                  linkableMembership.get(linkable),
-                  constituents));
+                  buildTarget, linkable, linkableMembership.get(linkable), constituents));
         }
         linkableMembership.put(linkable, constituents);
 
@@ -307,7 +303,7 @@ class NativeLibraryMergeEnhancer {
         sb.append(
             String.format(
                 "When processing %s, merged lib '%s' contains both asset and non-asset libraries.\n",
-                buildRuleParams.getBuildTarget(), constituents));
+                buildTarget, constituents));
         for (NativeLinkable linkable : constituents.getLinkables()) {
           sb.append(
               String.format(
@@ -359,7 +355,7 @@ class NativeLibraryMergeEnhancer {
 
   /** Topo-sort the constituents objects so we can process deps first. */
   private static Iterable<MergedNativeLibraryConstituents> getOrderedMergedConstituents(
-      BuildRuleParams buildRuleParams,
+      BuildTarget buildTarget,
       final Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
     MutableDirectedGraph<MergedNativeLibraryConstituents> graph = new MutableDirectedGraph<>();
     for (MergedNativeLibraryConstituents constituents : linkableMembership.values()) {
@@ -412,7 +408,7 @@ class NativeLibraryMergeEnhancer {
       cycleString.append(" ]");
       throw new RuntimeException(
           "Dependency cycle detected when merging native libs for "
-              + buildRuleParams.getBuildTarget()
+              + buildTarget
               + ": "
               + cycleString);
     }
@@ -873,7 +869,8 @@ class NativeLibraryMergeEnhancer {
 
       ImmutableMap<String, SourcePath> originalSharedLibraries =
           constituents.getLinkables().iterator().next().getSharedLibraries(cxxPlatform);
-      if (canUseOriginal || originalSharedLibraries.isEmpty()) {
+      if (canUseOriginal
+          || (!constituents.isActuallyMerged() && originalSharedLibraries.isEmpty())) {
         return originalSharedLibraries;
       }
 

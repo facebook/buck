@@ -1,2 +1,4 @@
 [project]
-    ide = intellij
+  ide = intellij
+[intellij]
+  default_android_manifest_path = manifest/AndroidManifest.xml

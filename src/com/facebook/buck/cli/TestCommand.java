@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
@@ -31,11 +32,11 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -47,6 +48,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
@@ -534,19 +536,11 @@ public class TestCommand extends BuildCommand {
                     params.getBuckConfig(),
                     actionGraphAndResolver.getResolver(),
                     params.getCell(),
-                    params.getAndroidPlatformTargetSupplier(),
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
                     params.getConsole(),
-                    params.getBuckEventBus(),
-                    getTargetDeviceOptional(),
-                    params.getPersistentWorkerPools(),
-                    params.getPlatform(),
-                    params.getEnvironment(),
                     params.getClock(),
-                    Optional.of(getAdbOptions(params.getBuckConfig())),
-                    Optional.of(getTargetDeviceOptions()),
-                    params.getExecutors())) {
+                    getExecutionContext())) {
 
           // Build all of the test rules.
           int exitCode =
@@ -576,7 +570,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.builder()
                   .setSourcePathResolver(
-                      new SourcePathResolver(
+                      DefaultSourcePathResolver.from(
                           new SourcePathRuleFinder(actionGraphAndResolver.getResolver())))
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
@@ -595,6 +589,18 @@ public class TestCommand extends BuildCommand {
         }
       }
     }
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setTargetDevice(getTargetDeviceOptional())
+        .setAndroidDevicesHelper(
+            AndroidDevicesHelperFactory.get(
+                this::getExecutionContext,
+                params.getBuckConfig(),
+                getAdbOptions(params.getBuckConfig()),
+                getTargetDeviceOptions()));
   }
 
   @Override

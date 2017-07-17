@@ -59,13 +59,13 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     // via a SourcePath.
     BuildRuleParams params =
         new BuildRuleParams(
-            targetNode.getBuildTarget(),
             Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
             Suppliers.ofInstance(ruleResolver.requireAllRules(extraDeps)),
             ruleResolver.requireAllRules(targetGraphOnlyDeps));
 
     return description.createBuildRule(
         targetGraph,
+        targetNode.getBuildTarget(),
         targetNode.getFilesystem(),
         params,
         ruleResolver,

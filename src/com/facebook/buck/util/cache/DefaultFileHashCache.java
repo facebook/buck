@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -58,7 +59,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           try {
             return getHashCodeAndFileType(path);
           } catch (IOException e) {
-            throw new RuntimeException(e.getCause());
+            throw new RuntimeException(e);
           }
         };
 
@@ -67,7 +68,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           try {
             return getPathSize(path);
           } catch (IOException e) {
-            throw new RuntimeException(e.getCause());
+            throw new RuntimeException(e);
           }
         };
     switch (fileHashCacheMode) {
@@ -209,6 +210,14 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     Preconditions.checkArgument(!relativePath.isAbsolute());
     checkNotIgnored(relativePath);
     return fileHashCacheEngine.getSize(relativePath);
+  }
+
+  @Override
+  public Optional<HashCode> getIfPresent(Path relativePath) {
+    Preconditions.checkArgument(!relativePath.isAbsolute());
+    checkNotIgnored(relativePath);
+    return Optional.ofNullable(fileHashCacheEngine.getIfPresent(relativePath))
+        .map(HashCodeAndFileType::getHashCode);
   }
 
   @Override

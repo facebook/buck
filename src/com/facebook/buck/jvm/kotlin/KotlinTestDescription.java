@@ -39,8 +39,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
@@ -93,46 +91,45 @@ public class KotlinTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       KotlinTestDescriptionArg args)
       throws NoSuchBuildTargetException {
-    BuildRuleParams testsLibraryParams =
-        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildTarget testsLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(templateJavacOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(
+            templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new KotlinLibraryBuilder(
                 targetGraph,
+                testsLibraryBuildTarget,
                 projectFilesystem,
-                testsLibraryParams,
+                params,
                 resolver,
                 cellRoots,
                 kotlinBuckConfig,
                 javaBuckConfig)
             .setArgs(args)
-            .setJavacOptions(javacOptions)
-            .setGeneratedSourceFolder(javacOptions.getGeneratedSourceFolderName());
+            .setJavacOptions(javacOptions);
 
-    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
     DefaultJavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-
     Function<String, Arg> toMacroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
     return new JavaTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
-        pathResolver,
         testsLibrary,
         ImmutableSet.of(Either.ofRight(kotlinBuckConfig.getPathToStdlibJar())),
         args.getLabels(),

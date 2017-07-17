@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -73,6 +74,7 @@ public class DBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -81,15 +83,14 @@ public class DBinaryDescription
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     SymlinkTree sourceTree =
         buildRuleResolver.addToIndex(
             DDescriptionUtils.createSourceSymlinkTree(
-                DDescriptionUtils.getSymlinkTreeTarget(params.getBuildTarget()),
+                DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
+                buildTarget,
                 projectFilesystem,
-                params,
-                ruleFinder,
                 pathResolver,
                 args.getSrcs()));
 
@@ -97,8 +98,9 @@ public class DBinaryDescription
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
+            buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
-            params.withAppendedFlavor(BINARY_FLAVOR),
+            params,
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,
@@ -119,9 +121,9 @@ public class DBinaryDescription
     // Return a BinaryBuildRule implementation, so that this works
     // with buck run etc.
     return new DBinary(
+        buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(nativeLinkable)),
-        ruleFinder,
         executableBuilder.build(),
         nativeLinkable.getSourcePathToOutput());
   }

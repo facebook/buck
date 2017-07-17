@@ -46,7 +46,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -110,6 +110,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final Preprocessor preprocessor;
 
   private HaskellCompileRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool compiler,
@@ -126,7 +127,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
       Preprocessor preprocessor) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.haskellVersion = haskellVersion;
     this.flags = flags;
@@ -179,8 +180,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                             .iterator())
                     .build());
     return new HaskellCompileRule(
+        target,
         projectFilesystem,
-        baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
+        baseParams.withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
         haskellVersion,
         flags,
@@ -313,7 +315,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
           .add("-no-link")
           .addAll(extraArgs)
           .addAll(
-              MoreIterables.zipAndConcat(Iterables.cycle("-main-is"), OptionalCompat.asSet(main)))
+              MoreIterables.zipAndConcat(
+                  Iterables.cycle("-main-is"), Optionals.toStream(main).toOnceIterable()))
           .addAll(getPackageNameArgs())
           .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
           .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())

@@ -26,12 +26,8 @@ public class ExportFileBuilder
     extends AbstractNodeBuilder<
         ExportFileDescriptionArg.Builder, ExportFileDescriptionArg, ExportFileDescription,
         ExportFile> {
-  private ExportFileBuilder(BuildTarget target) {
+  public ExportFileBuilder(BuildTarget target) {
     super(new ExportFileDescription(), target);
-  }
-
-  public static ExportFileBuilder newExportFileBuilder(BuildTarget target) {
-    return new ExportFileBuilder(target);
   }
 
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {

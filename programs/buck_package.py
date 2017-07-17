@@ -63,6 +63,9 @@ class BuckPackage(BuckTool):
             return fake_buck_version
         return self._package_info['version']
 
+    def _get_buck_version_timestamp(self):
+        return self._package_info['timestamp']
+
     def _get_resource_dir(self):
         if self._use_buckd:
             base_dir = self._buck_project.buckd_dir

@@ -19,6 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -52,6 +53,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   private final Path output;
 
   public GoBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Optional<Linker> cxxLinker,
@@ -60,7 +62,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       Tool linker,
       ImmutableList<String> linkerFlags,
       GoPlatform platform) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.cxxLinker = cxxLinker;
     this.linker = linker;
     this.linkTree = linkTree;
@@ -68,9 +70,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     this.platform = platform;
     this.output =
         BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            params.getBuildTarget(),
-            "%s/" + params.getBuildTarget().getShortName());
+            getProjectFilesystem(), buildTarget, "%s/" + buildTarget.getShortName());
     this.linkerFlags = linkerFlags;
   }
 

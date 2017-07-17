@@ -18,6 +18,7 @@ package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -41,19 +42,17 @@ public class MergeAndroidResourceSources extends AbstractBuildRuleWithDeclaredAn
   @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public MergeAndroidResourceSources(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableCollection<SourcePath> directories) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.originalDirectories = directories;
     this.destinationDirectory =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__merged_resources_%s__");
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__merged_resources_%s__");
     this.tempDirectory =
         BuildTargets.getScratchPath(
-            getProjectFilesystem(),
-            buildRuleParams.getBuildTarget(),
-            "__merged_resources_%s_tmp__");
+            getProjectFilesystem(), buildTarget, "__merged_resources_%s_tmp__");
   }
 
   @Override

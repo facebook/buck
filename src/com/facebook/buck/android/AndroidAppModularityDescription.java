@@ -26,6 +26,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
@@ -45,27 +46,25 @@ public class AndroidAppModularityDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidAppModularityDescriptionArg args)
       throws NoSuchBuildTargetException {
-    BuildTarget target = params.getBuildTarget();
-
     APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(Optional.of(args.getApplicationModuleConfigs()), targetGraph, target);
-    AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            params.getBuildTarget(),
-            /*buildTargetsToExcludeFromDex*/ ImmutableSet.of(),
-            /*resourcesToExclude*/ ImmutableSet.of(),
-            apkModuleGraph);
-    collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(params.getBuildDeps()));
-    AndroidPackageableCollection packageableCollection = collector.build();
+        new APKModuleGraph(
+            Optional.of(args.getApplicationModuleConfigs()), targetGraph, buildTarget);
 
-    return new AndroidAppModularity(projectFilesystem, params, packageableCollection);
+    AndroidAppModularityGraphEnhancer graphEnhancer =
+        new AndroidAppModularityGraphEnhancer(
+            buildTarget, params, resolver, args.getNoDx(), apkModuleGraph);
+
+    AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    return new AndroidAppModularity(
+        buildTarget, projectFilesystem, params.withExtraDeps(result.getFinalDeps()), result);
   }
 
   @BuckStyleImmutable
@@ -74,5 +73,8 @@ public class AndroidAppModularityDescription
       extends CommonDescriptionArg, HasDeclaredDeps {
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+
+    @Hint(isDep = false)
+    ImmutableSet<BuildTarget> getNoDx();
   }
 }

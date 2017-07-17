@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -60,6 +61,7 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private boolean thinLto;
 
   public CxxLink(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Linker linker,
@@ -69,7 +71,7 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<RuleScheduleInfo> ruleScheduleInfo,
       boolean cacheable,
       boolean thinLto) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.linker = linker;
     this.output = output;
     this.args = args;
@@ -77,13 +79,13 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.cacheable = cacheable;
     this.thinLto = thinLto;
-    performChecks(params);
+    performChecks(buildTarget);
   }
 
-  private void performChecks(BuildRuleParams params) {
+  private void performChecks(BuildTarget buildTarget) {
     Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR)
-            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
+            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "CxxLink should not be created with CxxStrip flavors");
   }
 

@@ -73,11 +73,9 @@ import java.util.stream.Stream;
  */
 public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
-  private Optional<BuildRuleResolver> resolver;
-  private Optional<TargetGraph> targetGraph;
-  private CellPathResolver cellNames;
-  private final BuildTargetPatternParser<BuildTargetPattern> context;
-  private Set<BuildTarget> declaredDeps;
+  private final Optional<BuildRuleResolver> resolver;
+  private final Optional<TargetGraph> targetGraph;
+  private final QueryEnvironment.TargetEvaluator targetEvaluator;
 
   public GraphEnhancementQueryEnvironment(
       Optional<BuildRuleResolver> resolver,
@@ -87,27 +85,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
       Set<BuildTarget> declaredDeps) {
     this.resolver = resolver;
     this.targetGraph = targetGraph;
-    this.cellNames = cellNames;
-    this.context = context;
-    this.declaredDeps = declaredDeps;
+    this.targetEvaluator = new TargetEvaluator(cellNames, context, declaredDeps);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern) throws QueryException {
-    if ("$declared_deps".equals(pattern)
-        || "$declared".equals(pattern)
-        || "first_order_deps()".equals(pattern)) {
-      return declaredDeps
-          .stream()
-          .map(QueryBuildTarget::of)
-          .collect(MoreCollectors.toImmutableSet());
-    }
-    try {
-      BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(pattern, context, cellNames);
-      return ImmutableSet.<QueryTarget>of(QueryBuildTarget.of(buildTarget));
-    } catch (BuildTargetParseException e) {
-      throw new QueryException(e, "Unable to parse pattern %s", pattern);
-    }
+  public QueryEnvironment.TargetEvaluator getTargetEvaluator() {
+    return targetEvaluator;
   }
 
   @Override
@@ -231,5 +214,43 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   @Override
   public Iterable<QueryFunction> getFunctions() {
     return QUERY_FUNCTIONS;
+  }
+
+  private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
+    private final CellPathResolver cellNames;
+    private final BuildTargetPatternParser<BuildTargetPattern> context;
+    private final ImmutableSet<BuildTarget> declaredDeps;
+
+    private TargetEvaluator(
+        CellPathResolver cellNames,
+        BuildTargetPatternParser<BuildTargetPattern> context,
+        Set<BuildTarget> declaredDeps) {
+      this.cellNames = cellNames;
+      this.context = context;
+      this.declaredDeps = ImmutableSet.copyOf(declaredDeps);
+    }
+
+    @Override
+    public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
+      if ("$declared_deps".equals(target)
+          || "$declared".equals(target)
+          || "first_order_deps()".equals(target)) {
+        return declaredDeps
+            .stream()
+            .map(QueryBuildTarget::of)
+            .collect(MoreCollectors.toImmutableSet());
+      }
+      try {
+        BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(target, context, cellNames);
+        return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
+      } catch (BuildTargetParseException e) {
+        throw new QueryException(e, "Unable to parse pattern %s", target);
+      }
+    }
+
+    @Override
+    public Type getType() {
+      return Type.IMMEDIATE;
+    }
   }
 }

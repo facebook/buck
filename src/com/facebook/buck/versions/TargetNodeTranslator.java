@@ -309,10 +309,10 @@ public abstract class TargetNodeTranslator {
     Optional<A> constructorArg = translateConstructorArg(cellPathResolver, pattern, node);
     Optional<ImmutableSet<BuildTarget>> declaredDeps =
         translateSet(cellPathResolver, pattern, node.getDeclaredDeps());
-    Optional<ImmutableSet<BuildTarget>> extraDeps =
-        translateSet(cellPathResolver, pattern, node.getExtraDeps());
-    Optional<ImmutableSet<BuildTarget>> targetGraphOnlyDeps =
-        translateSet(cellPathResolver, pattern, node.getTargetGraphOnlyDeps());
+    Optional<ImmutableSortedSet<BuildTarget>> extraDeps =
+        translateSortedSet(cellPathResolver, pattern, node.getExtraDeps());
+    Optional<ImmutableSortedSet<BuildTarget>> targetGraphOnlyDeps =
+        translateSortedSet(cellPathResolver, pattern, node.getTargetGraphOnlyDeps());
 
     Optional<ImmutableMap<BuildTarget, Version>> newSelectedVersions =
         getSelectedVersions(node.getBuildTarget());
@@ -333,12 +333,11 @@ public abstract class TargetNodeTranslator {
     }
 
     return Optional.of(
-        node.withTargetConstructorArgDepsAndSelectedVerisons(
-            target.orElse(node.getBuildTarget()),
-            constructorArg.orElse(node.getConstructorArg()),
-            declaredDeps.orElse(node.getDeclaredDeps()),
-            extraDeps.orElse(node.getExtraDeps()),
-            targetGraphOnlyDeps.orElse(node.getTargetGraphOnlyDeps()),
-            selectedVersions.orElse(oldSelectedVersions)));
+        node.withBuildTarget(target.orElse(node.getBuildTarget()))
+            .withConstructorArg(constructorArg.orElse(node.getConstructorArg()))
+            .withDeclaredDeps(declaredDeps.orElse(node.getDeclaredDeps()))
+            .withExtraDeps(extraDeps.orElse(node.getExtraDeps()))
+            .withTargetGraphOnlyDeps(targetGraphOnlyDeps.orElse(node.getTargetGraphOnlyDeps()))
+            .withSelectedVersions(selectedVersions.orElse(oldSelectedVersions)));
   }
 }

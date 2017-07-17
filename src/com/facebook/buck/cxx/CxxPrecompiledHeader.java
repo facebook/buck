@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -101,6 +102,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       CacheBuilder.newBuilder().weakKeys().weakValues().build();
 
   public CxxPrecompiledHeader(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Path output,
@@ -110,7 +112,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     Preconditions.checkArgument(
         !inputType.isAssembly(), "Asm files do not use precompiled headers.");
     this.preprocessorDelegate = preprocessorDelegate;
@@ -184,12 +186,12 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     return preprocessorDelegate.getCoveredByDepFilePredicate();
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
     return (SourcePath path) -> false;
   }
 

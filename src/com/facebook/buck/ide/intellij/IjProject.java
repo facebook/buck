@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndTargets;
@@ -56,7 +57,7 @@ public class IjProject {
     this.javaFileParser = javaFileParser;
     this.buildRuleResolver = buildRuleResolver;
     this.ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    this.sourcePathResolver = new SourcePathResolver(this.ruleFinder);
+    this.sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
   }
@@ -84,7 +85,6 @@ public class IjProject {
             sourcePathResolver,
             ruleFinder,
             projectFilesystem,
-            projectConfig,
             requiredBuildTargets);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(projectFilesystem, moduleFactoryResolver, projectConfig);

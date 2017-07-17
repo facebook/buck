@@ -22,13 +22,14 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -57,8 +58,10 @@ abstract class AbstractFrameworkPath
   @Value.Parameter
   public abstract Optional<SourcePath> getSourcePath();
 
-  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getSourcePath()));
+  public Iterator<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return Optionals.toStream(getSourcePath())
+        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+        .iterator();
   }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {

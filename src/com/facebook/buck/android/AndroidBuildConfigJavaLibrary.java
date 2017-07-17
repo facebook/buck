@@ -19,18 +19,20 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -45,6 +47,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   private final AndroidBuildConfig androidBuildConfig;
 
   AndroidBuildConfigJavaLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
@@ -54,34 +57,36 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       ZipArchiveDependencySupplier abiClasspath,
       AndroidBuildConfig androidBuildConfig) {
     super(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
-        ruleFinder,
-        /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
-        /* resources */ ImmutableSortedSet.of(),
-        javacOptions.getGeneratedSourceFolderName(),
+        new JarBuildStepsFactory(
+            projectFilesystem,
+            ruleFinder,
+            new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
+            /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
+            /* resources */ ImmutableSortedSet.of(),
+            /* resourcesRoot */ Optional.empty(),
+            /* manifest file */ Optional.empty(),
+            /* postprocessClassesCommands */ ImmutableList.of(),
+            abiClasspath,
+            /* trackClassUsage */ javacOptions.trackClassUsage(),
+            /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
+                androidBuildConfig.getSourcePathToOutput()),
+            /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY),
         /* proguardConfig */ Optional.empty(),
-        /* postprocessClassesCommands */ ImmutableList.of(),
         /* declaredDeps */ params.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
-        /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
-            androidBuildConfig.getSourcePathToOutput()),
-        abiClasspath,
-        HasJavaAbi.getClassAbiJar(params.getBuildTarget()),
-        /* trackClassUsage */ javacOptions.trackClassUsage(),
-        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.empty(),
-        /* manifest file */ Optional.empty(),
+        HasJavaAbi.getClassAbiJar(buildTarget),
         /* mavenCoords */ Optional.empty(),
-        /* tests */ ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ ImmutableSet.of());
+        /* tests */ ImmutableSortedSet.of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),
         "%s must depend on the AndroidBuildConfig whose output is in this rule's srcs.",
-        params.getBuildTarget());
+        buildTarget);
   }
 
   /**

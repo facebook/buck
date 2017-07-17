@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
@@ -86,7 +87,7 @@ public class CxxBinaryDescription
       CxxBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
@@ -124,6 +125,7 @@ public class CxxBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -132,7 +134,7 @@ public class CxxBinaryDescription
       throws NoSuchBuildTargetException {
     return createBuildRule(
         targetGraph,
-        params.getBuildTarget(),
+        buildTarget,
         projectFilesystem,
         params.getExtraDeps(),
         resolver,
@@ -251,9 +253,9 @@ public class CxxBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxBinary cxxBinary =
         new CxxBinary(
+            target,
             projectFilesystem,
             new BuildRuleParams(
-                target,
                 () -> cxxLinkAndCompileRules.deps,
                 () ->
                     ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -262,7 +264,6 @@ public class CxxBinaryDescription
                         .build(),
                 ImmutableSortedSet.of()),
             resolver,
-            ruleFinder,
             cxxPlatform,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,

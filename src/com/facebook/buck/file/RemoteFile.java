@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -57,6 +58,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Type type;
 
   public RemoteFile(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Downloader downloader,
@@ -64,14 +66,14 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       HashCode sha1,
       String out,
       Type type) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
 
     this.uri = uri;
     this.sha1 = sha1;
     this.downloader = downloader;
     this.type = type;
 
-    output = BuildTargets.getGenPath(getProjectFilesystem(), params.getBuildTarget(), "%s/" + out);
+    output = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + out);
   }
 
   @Override

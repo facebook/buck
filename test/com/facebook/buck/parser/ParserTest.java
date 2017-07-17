@@ -158,7 +158,12 @@ public class ParserTest {
       throws InterruptedException, BuildFileParseException {
     try (PerBuildState state =
         new PerBuildState(
-            parser, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
+            parser,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.DISABLED)) {
       return Parser.getRawTargetNodes(state, cell, buildFile);
     }
   }
@@ -1540,10 +1545,11 @@ public class ParserTest {
     BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
-    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+    TargetGraph oldGraph =
+        parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
 
-    DaemonicParserState permState = parser.getPermState();
-    RemoteDaemonicParserState remote = permState.serialiseDaemonicParserState();
+    // Serialise target graph information.
+    RemoteDaemonicParserState remote = parser.storeParserState();
 
     assertTrue(remote.isSetCachedIncludes());
     assertEquals(remote.cachedIncludes.size(), 1);
@@ -1561,10 +1567,32 @@ public class ParserTest {
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BroadcastEventListener broadcastEventListener = new BroadcastEventListener();
-    DaemonicParserState rawParserState =
-        new DaemonicParserState(broadcastEventListener, typeCoercerFactory, this.threads);
-    rawParserState.restoreState(remote, cell);
-    assertNotNull(rawParserState);
+    // Reset parser to square one.
+    parser =
+        new Parser(
+            broadcastEventListener,
+            cell.getBuckConfig().getView(ParserConfig.class),
+            typeCoercerFactory,
+            new ConstructorArgMarshaller(typeCoercerFactory));
+    // Restore state.
+    parser.restoreParserState(remote, cell);
+    // Try to use the restored target graph.
+    TargetGraph newGraph =
+        parser
+            .buildTargetGraphForTargetNodeSpecs(
+                eventBus,
+                cell,
+                false,
+                executorService,
+                ImmutableList.of(
+                    BuildTargetSpec.of(
+                        BuildTarget.of(
+                            UnflavoredBuildTarget.of(
+                                cell.getRoot(), cell.getCanonicalName(), "//foo", "lib")),
+                        BuildFileSpec.of(Paths.get("foo"), false, cell.getRoot()))),
+                ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
+            .getTargetGraph();
+    assertEquals(oldGraph, newGraph);
   }
 
   @Test
@@ -1668,7 +1696,7 @@ public class ParserTest {
                 BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-        SpeculativeParsing.of(true),
+        PerBuildState.SpeculativeParsing.ENABLED,
         ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
   }
 
@@ -1695,7 +1723,7 @@ public class ParserTest {
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-            SpeculativeParsing.of(true),
+            PerBuildState.SpeculativeParsing.ENABLED,
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
@@ -1710,7 +1738,7 @@ public class ParserTest {
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))),
-            SpeculativeParsing.of(true),
+            PerBuildState.SpeculativeParsing.ENABLED,
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }

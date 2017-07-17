@@ -5,6 +5,8 @@ set -eux
 # because otherwise Travis thinks our logs are too long.
 export TERM=dumb
 
+ant
+
 # Use Buck to build first because its output is more
 # conducive to diagnosing failed builds than Ant's is.
 ./bin/buck build buck || { cat buck-out/log/ant.log; exit 1; }

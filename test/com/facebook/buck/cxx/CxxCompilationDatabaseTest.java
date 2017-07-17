@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -69,8 +70,8 @@ public class CxxCompilationDatabaseTest {
 
     BuildRuleResolver testBuildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver testSourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(testBuildRuleResolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(testBuildRuleResolver);
+    SourcePathResolver testSourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -109,11 +110,12 @@ public class CxxCompilationDatabaseTest {
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
     BuildRuleParams compileBuildRuleParams =
-        TestBuildRuleParams.create(compileTarget)
+        TestBuildRuleParams.create()
             .withDeclaredDeps(ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
     rules.add(
         testBuildRuleResolver.addToIndex(
             CxxPreprocessAndCompile.preprocessAndCompile(
+                compileTarget,
                 filesystem,
                 compileBuildRuleParams,
                 new PreprocessorDelegate(
@@ -154,7 +156,7 @@ public class CxxCompilationDatabaseTest {
     testBuildRuleResolver.addToIndex(compilationDatabase);
 
     assertThat(
-        compilationDatabase.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        compilationDatabase.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
         Matchers.contains(
             exportedSymlinkTree.getBuildTarget(), privateSymlinkTree.getBuildTarget()));
 

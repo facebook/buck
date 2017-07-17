@@ -21,10 +21,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -42,7 +42,7 @@ public class PythonUtilTest {
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.toModuleMap(
             target,
-            new SourcePathResolver(
+            DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
                     new BuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))),

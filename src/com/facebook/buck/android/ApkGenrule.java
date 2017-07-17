@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -56,6 +57,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
   private final boolean isCacheable;
 
   ApkGenrule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -67,6 +69,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
       SourcePath apk,
       boolean isCacheable) {
     super(
+        buildTarget,
         projectFilesystem,
         params,
         srcs,
@@ -74,7 +77,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk {
         bash,
         cmdExe,
         type,
-        /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk");
+        /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk");
 
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;

@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
@@ -74,7 +75,6 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   // Extra time to wait for the process to exit on top of the test timeout
   private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
 
-  private final SourcePathRuleFinder ruleFinder;
   private final GoBinary testMain;
 
   private final ImmutableSet<String> labels;
@@ -84,17 +84,16 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
 
   public GoTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
       GoBinary testMain,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources) {
-    super(projectFilesystem, buildRuleParams);
-    this.ruleFinder = ruleFinder;
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.testMain = testMain;
     this.labels = labels;
     this.contacts = contacts;
@@ -235,7 +234,9 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext, boolean isUsingTestSelectors) {
+      ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
           getBuildTarget(),
@@ -284,7 +285,7 @@ public class GoTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         Stream.of((testMain.getBuildTarget())),
         resources

@@ -19,6 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -34,10 +35,11 @@ public class AndroidReactNativeLibrary extends AbstractBuildRuleWithDeclaredAndE
   private final ReactNativeBundle bundle;
 
   protected AndroidReactNativeLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ReactNativeBundle bundle) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.bundle = bundle;
   }
 

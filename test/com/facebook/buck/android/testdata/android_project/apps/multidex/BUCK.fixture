@@ -244,6 +244,7 @@ android_app_modularity(
     '//java/com/sample/small:small_with_no_resource_deps',
     '//res/com/sample/base:base',
   ],
+  no_dx = [],
 )
 
 android_app_modularity(
@@ -258,4 +259,5 @@ android_app_modularity(
     '//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps',
     '//res/com/sample/base:base',
   ],
+  no_dx = [],
 )

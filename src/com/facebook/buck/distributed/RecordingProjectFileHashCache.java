@@ -132,6 +132,11 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     return delegate.getSize(path);
   }
 
+  @Override
+  public Optional<HashCode> getIfPresent(Path path) {
+    throw new UnsupportedOperationException();
+  }
+
   private static void checkIsRelative(Path path) {
     Preconditions.checkArgument(
         !path.isAbsolute(), "Path must be relative. Found [%s] instead.", path);

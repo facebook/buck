@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -114,6 +115,7 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ResourcesFilter(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableList<SourcePath> resDirectories,
@@ -122,13 +124,13 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesStep.ResourceFilter resourceFilter,
       Optional<Arg> postFilterResourcesCmd) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.postFilterResourcesCmd = postFilterResourcesCmd;
   }
 

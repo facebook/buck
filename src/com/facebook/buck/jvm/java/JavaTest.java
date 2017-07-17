@@ -27,7 +27,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -41,6 +41,7 @@ import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -88,7 +89,7 @@ import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class JavaTest extends AbstractBuildRuleWithResolver
+public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule,
         HasClasspathEntries,
         HasRuntimeDeps,
@@ -144,9 +145,9 @@ public class JavaTest extends AbstractBuildRuleWithResolver
   @AddToRuleKey private final ForkMode forkMode;
 
   public JavaTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       JavaLibrary compiledTestsLibrary,
       ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries,
       Set<String> labels,
@@ -162,7 +163,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel) {
-    super(projectFilesystem, params, resolver);
+    super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
 
     for (Either<SourcePath, Path> path : additionalClasspathEntries) {
@@ -384,12 +385,14 @@ public class JavaTest extends AbstractBuildRuleWithResolver
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context, final boolean isUsingTestSelectors) {
+      final ExecutionContext context,
+      SourcePathResolver pathResolver,
+      final boolean isUsingTestSelectors) {
     final ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
       // were run by its deps. In this case, return an empty TestResults.
-      Set<String> testClassNames = getClassNamesForSources(getResolver());
+      Set<String> testClassNames = getClassNamesForSources(pathResolver);
       if (testClassNames.isEmpty()) {
         return TestResults.of(
             getBuildTarget(),
@@ -600,7 +603,7 @@ public class JavaTest extends AbstractBuildRuleWithResolver
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
             // By the end of the build, all the transitive Java library dependencies *must* be
             // available on disk, so signal this requirement via the {@link HasRuntimeDeps}

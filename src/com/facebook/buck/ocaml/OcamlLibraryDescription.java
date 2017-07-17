@@ -63,6 +63,7 @@ public class OcamlLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -74,7 +75,7 @@ public class OcamlLibraryDescription
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();
     flags.addAll(
         OcamlDescriptionEnhancer.toStringWithMacrosArgs(
-            params.getBuildTarget(), cellRoots, resolver, args.getCompilerFlags()));
+            buildTarget, cellRoots, resolver, args.getCompilerFlags()));
     if (ocamlBuckConfig.getWarningsFlags().isPresent() || args.getWarningsFlags().isPresent()) {
       flags.addAll(
           StringArg.from(
@@ -88,6 +89,7 @@ public class OcamlLibraryDescription
 
     return OcamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
+        buildTarget,
         projectFilesystem,
         params,
         resolver,

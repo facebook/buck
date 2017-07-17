@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
@@ -71,10 +72,10 @@ public class CxxLinkTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of(
@@ -90,6 +91,7 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
+                    target,
                     projectFilesystem,
                     params,
                     DEFAULT_LINKER,
@@ -106,6 +108,7 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
+                    target,
                     projectFilesystem,
                     params,
                     new GnuLinker(new HashedFileTool(Paths.get("different"))),
@@ -123,6 +126,7 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
+                    target,
                     projectFilesystem,
                     params,
                     DEFAULT_LINKER,
@@ -140,6 +144,7 @@ public class CxxLinkTest {
         new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
             .build(
                 new CxxLink(
+                    target,
                     projectFilesystem,
                     params,
                     DEFAULT_LINKER,
@@ -158,10 +163,10 @@ public class CxxLinkTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
@@ -182,13 +187,13 @@ public class CxxLinkTest {
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("something"), Paths.get("A")));
+            ImmutableBiMap.of(Paths.get("something"), "A"));
     DebugPathSanitizer sanitizer2 =
         new MungingDebugPathSanitizer(
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
+            ImmutableBiMap.of(Paths.get("different"), "A"));
 
     // Generate a rule with a path we need to sanitize to a consistent value.
     ImmutableList<Arg> args1 =
@@ -198,6 +203,7 @@ public class CxxLinkTest {
     RuleKey ruleKey1 =
         ruleKeyFactory.build(
             new CxxLink(
+                target,
                 projectFilesystem,
                 params,
                 DEFAULT_LINKER,
@@ -217,6 +223,7 @@ public class CxxLinkTest {
     RuleKey ruleKey2 =
         ruleKeyFactory.build(
             new CxxLink(
+                target,
                 projectFilesystem,
                 params,
                 DEFAULT_LINKER,

@@ -16,12 +16,11 @@
 
 package com.facebook.buck.android.support.exopackage;
 
-import java.lang.reflect.Constructor;
-
 import android.annotation.TargetApi;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Configuration;
+import java.lang.reflect.Constructor;
 
 /**
  * A base class for implementing an Application that delegates to an {@link ApplicationLike}
@@ -40,21 +39,19 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
 
   /**
    * @param exopackageFlags Bitmask used to determine which exopackage feature is enabled in the
-   * current build. This should usually be {@code BuildConfig.EXOPACKAGE_FLAGS}.
+   *     current build. This should usually be {@code BuildConfig.EXOPACKAGE_FLAGS}.
    */
   protected ExopackageApplication(int exopackageFlags) {
     this(DefaultApplicationLike.class.getName(), exopackageFlags);
   }
 
   /**
-   * @param delegateClassName The fully-qualified name of the {@link ApplicationLike} class
-   * that will act as the delegate for application lifecycle callbacks.
+   * @param delegateClassName The fully-qualified name of the {@link ApplicationLike} class that
+   *     will act as the delegate for application lifecycle callbacks.
    * @param exopackageFlags Bitmask used to determine which exopackage feature is enabled in the
-   * current build. This should usually be {@code BuildConfig.EXOPACKAGE_FLAGS}.
+   *     current build. This should usually be {@code BuildConfig.EXOPACKAGE_FLAGS}.
    */
-  protected ExopackageApplication(
-      String delegateClassName,
-      int exopackageFlags) {
+  protected ExopackageApplication(String delegateClassName, int exopackageFlags) {
     this.delegateClassName = delegateClassName;
     this.exopackageFlags = exopackageFlags;
   }
@@ -105,12 +102,9 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
    * called but before the delegate is created. Implementors should be very careful what they do
    * here since {@link android.app.Application#onCreate} will not have yet been called.
    */
-  protected void onBaseContextAttached() {
-  }
+  protected void onBaseContextAttached() {}
 
-  /**
-   * @return the delegate, or {@code null} if not set up.
-   */
+  /** @return the delegate, or {@code null} if not set up. */
   // @Nullable  - Don't want to force a reference to that annotation in the primary dex.
   public final T getDelegateIfPresent() {
     return delegate;
@@ -126,6 +120,9 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
   @Override
   public final void onCreate() {
     super.onCreate();
+    if (isExopackageEnabledForResources()) {
+      ResourcesLoader.onAppCreated(this);
+    }
     ensureDelegate();
     delegate.onCreate();
   }

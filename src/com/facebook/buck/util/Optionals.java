@@ -20,7 +20,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class Optionals {
 
@@ -74,11 +73,11 @@ public class Optionals {
    * // Yields a stream of 2 elements, [1, 2]
    * }</pre>
    */
-  public static <T> Stream<T> toStream(Optional<T> optional) {
+  public static <T> RichStream<T> toStream(Optional<T> optional) {
     if (optional.isPresent()) {
-      return Stream.of(optional.get());
+      return RichStream.of(optional.get());
     } else {
-      return Stream.empty();
+      return RichStream.empty();
     }
   }
 

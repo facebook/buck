@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -28,12 +29,12 @@ import org.immutables.value.Value;
  *
  * @see com.facebook.buck.cli.InstallCommand
  */
-public interface HasInstallableApk extends BuildRule {
-
+public interface HasInstallableApk {
   ApkInfo getApkInfo();
 
-  @Override
-  SourcePath getSourcePathToOutput();
+  BuildTarget getBuildTarget();
+
+  ProjectFilesystem getProjectFilesystem();
 
   @Value.Immutable
   @BuckStyleImmutable

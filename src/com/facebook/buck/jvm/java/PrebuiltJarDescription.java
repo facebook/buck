@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -58,6 +59,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -66,15 +68,16 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(), ruleFinder, projectFilesystem, params, args.getBinaryJar());
+          buildTarget, ruleFinder, projectFilesystem, params, args.getBinaryJar());
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildRule prebuilt =
         new PrebuiltJar(
+            buildTarget,
             projectFilesystem,
             params,
             pathResolver,
@@ -85,13 +88,11 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
             args.getMavenCoords(),
             args.getProvided());
 
-    params.getBuildTarget().checkUnflavored();
+    buildTarget.checkUnflavored();
+    BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =
-        params
-            .withAppendedFlavor(JavaLibrary.GWT_MODULE_FLAVOR)
-            .withDeclaredDeps(ImmutableSortedSet.of(prebuilt))
-            .withoutExtraDeps();
-    BuildRule gwtModule = createGwtModule(projectFilesystem, gwtParams, args);
+        params.withDeclaredDeps(ImmutableSortedSet.of(prebuilt)).withoutExtraDeps();
+    BuildRule gwtModule = createGwtModule(gwtTarget, projectFilesystem, gwtParams, args);
     resolver.addToIndex(gwtModule);
 
     return prebuilt;
@@ -99,7 +100,10 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
   @VisibleForTesting
   static BuildRule createGwtModule(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, PrebuiltJarDescriptionArg arg) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      PrebuiltJarDescriptionArg arg) {
     // Because a PrebuiltJar rarely requires any building whatsoever (it could if the source_jar
     // is a BuildTargetSourcePath), we make the PrebuiltJar a dependency of the GWT module. If this
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
@@ -118,15 +122,17 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
       private final Path output;
 
       protected ExistingOuputs(
-          ProjectFilesystem projectFilesystem, BuildRuleParams params, SourcePath source) {
-        super(projectFilesystem, params);
+          BuildTarget buildTarget,
+          ProjectFilesystem projectFilesystem,
+          BuildRuleParams params,
+          SourcePath source) {
+        super(buildTarget, projectFilesystem, params);
         this.source = source;
-        BuildTarget target = params.getBuildTarget();
         this.output =
             BuildTargets.getGenPath(
                 getProjectFilesystem(),
-                target,
-                String.format("%s/%%s-gwt.jar", target.getShortName()));
+                buildTarget,
+                String.format("%s/%%s-gwt.jar", buildTarget.getShortName()));
       }
 
       @Override
@@ -155,7 +161,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
       }
     }
-    return new ExistingOuputs(projectFilesystem, params, input);
+    return new ExistingOuputs(buildTarget, projectFilesystem, params, input);
   }
 
   @BuckStyleImmutable

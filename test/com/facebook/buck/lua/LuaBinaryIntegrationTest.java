@@ -35,11 +35,10 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -112,9 +111,7 @@ public class LuaBinaryIntegrationTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxPlatform cxxPlatform =
         DefaultCxxPlatforms.build(
-            Platform.detect(),
-            new FakeProjectFilesystem(),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()));
+            Platform.detect(), new CxxBuckConfig(FakeBuckConfig.builder().build()));
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -124,7 +121,7 @@ public class LuaBinaryIntegrationTest {
                             .getCc()
                             .resolve(resolver)
                             .getCommandPrefix(
-                                new SourcePathResolver(new SourcePathRuleFinder(resolver))))
+                                DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))))
                     .add("-includelua.h", "-E", "-")
                     .build())
             .setRedirectInput(ProcessBuilder.Redirect.PIPE)

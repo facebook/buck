@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -79,6 +80,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path sourceMapOutputPath;
 
   protected ReactNativeBundle(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams ruleParams,
       SourcePath entryPath,
@@ -91,7 +93,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> packagerFlags,
       Tool jsPackager,
       ReactNativePlatform platform) {
-    super(projectFilesystem, ruleParams);
+    super(buildTarget, projectFilesystem, ruleParams);
     this.entryPath = entryPath;
     this.srcs = srcs;
     this.isUnbundle = isUnbundle;
@@ -102,7 +104,6 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.packagerFlags = packagerFlags;
     this.jsPackager = jsPackager;
     this.platform = platform;
-    BuildTarget buildTarget = ruleParams.getBuildTarget();
     this.jsOutputDir = getPathToJSBundleDir(buildTarget, getProjectFilesystem());
     this.resource = getPathToResources(buildTarget, getProjectFilesystem());
     this.sourceMapOutputPath = getPathToSourceMap(buildTarget, getProjectFilesystem());
@@ -224,13 +225,13 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     // note, sorted set is intentionally converted to a hash set to achieve constant time look-up
     return ImmutableSet.copyOf(srcs)::contains;
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
     return (SourcePath path) -> false;
   }
 

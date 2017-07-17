@@ -19,6 +19,7 @@ package com.facebook.buck.util.network;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.util.Threads;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class BlockingHttpEndpointTest {
         Thread.sleep(delayPeriodMillis);
       } catch (InterruptedException e) {
         e.printStackTrace();
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
       }
       return new ByteArrayInputStream(new byte[0]);
     }

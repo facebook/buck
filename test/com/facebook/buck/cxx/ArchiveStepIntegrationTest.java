@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -63,7 +64,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -116,7 +117,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -158,7 +159,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -205,7 +206,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

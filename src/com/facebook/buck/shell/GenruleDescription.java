@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -33,6 +34,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
 
   @Override
   protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -42,6 +44,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     if (!args.getExecutable().orElse(false)) {
       return new Genrule(
+          buildTarget,
           projectFilesystem,
           params,
           args.getSrcs(),
@@ -52,6 +55,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getOut());
     } else {
       return new GenruleBinary(
+          buildTarget,
           projectFilesystem,
           params,
           args.getSrcs(),

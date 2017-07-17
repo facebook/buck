@@ -18,10 +18,10 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -80,9 +80,9 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   }
 
   private <HASH> Builder<HASH> newPopulatedBuilder(
-      RuleKeyAppendable appendable, RuleKeyHasher<HASH> hasher) {
+      AddsToRuleKey appendable, RuleKeyHasher<HASH> hasher) {
     Builder<HASH> builder = new Builder<>(hasher);
-    appendable.appendToRuleKey(builder);
+    AlterRuleKeys.amendKey(builder, appendable);
     return builder;
   }
 
@@ -106,7 +106,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
                 .buildResult(RuleKey::new));
   }
 
-  private RuleKey buildAppendableKey(RuleKeyAppendable appendable) {
+  private RuleKey buildAppendableKey(AddsToRuleKey appendable) {
     return ruleKeyCache.get(
         appendable,
         app ->
@@ -124,7 +124,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
 
   @Override
   public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
-      RuleKeyAppendable appendable, RuleKeyHasher<DIAG_KEY> hasher) {
+      AddsToRuleKey appendable, RuleKeyHasher<DIAG_KEY> hasher) {
     return RuleKeyDiagnostics.Result.of(
         buildAppendableKey(appendable), // real rule key
         newPopulatedBuilder(appendable, hasher).buildResult(Function.identity()));
@@ -165,10 +165,10 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
     }
 
     @Override
-    protected RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable) {
-      // Record the `RuleKeyAppendable` as an immediate dep.
+    protected RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable) {
+      // Record the `AddsToRuleKey` as an immediate dep.
       deps.add(appendable);
-      return setAppendableRuleKey(DefaultRuleKeyFactory.this.buildAppendableKey(appendable));
+      return setAddsToRuleKey(DefaultRuleKeyFactory.this.buildAppendableKey(appendable));
     }
 
     @Override

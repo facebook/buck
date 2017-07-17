@@ -26,7 +26,6 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -44,20 +43,16 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
 
   public FakeJavaLibrary(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
-      ImmutableSortedSet<BuildRule> deps) {
-    super(target, filesystem, resolver, deps.toArray(new BuildRule[deps.size()]));
+      BuildTarget target, ProjectFilesystem filesystem, ImmutableSortedSet<BuildRule> deps) {
+    super(target, filesystem, deps.toArray(new BuildRule[deps.size()]));
   }
 
-  public FakeJavaLibrary(
-      BuildTarget target, SourcePathResolver resolver, ImmutableSortedSet<BuildRule> deps) {
-    super(target, resolver, deps);
+  public FakeJavaLibrary(BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
+    super(target, deps);
   }
 
-  public FakeJavaLibrary(BuildTarget target, SourcePathResolver resolver) {
-    super(target, resolver);
+  public FakeJavaLibrary(BuildTarget target) {
+    super(target);
   }
 
   @Override

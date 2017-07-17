@@ -23,9 +23,10 @@ import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithResolver;
+import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -59,7 +60,8 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideScheduleRule {
+class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements OverrideScheduleRule {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
   @AddToRuleKey private final NdkCxxPlatforms.TargetCpuType cpuType;
@@ -73,6 +75,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   private final SourcePathResolver pathResolver;
 
   public RelinkerRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
@@ -84,7 +87,8 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
       SourcePath baseLibSourcePath,
       @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs) {
-    super(projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs), resolver);
+    super(
+        buildTarget, projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs));
     this.pathResolver = resolver;
     this.cpuType = cpuType;
     this.objdump = objdump;
@@ -131,12 +135,11 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
   }
 
   public SourcePath getLibFileSourcePath() {
-    return new ExplicitBuildTargetSourcePath(buildRuleParams.getBuildTarget(), getLibFilePath());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
   }
 
   public SourcePath getSymbolsNeededPath() {
-    return new ExplicitBuildTargetSourcePath(
-        buildRuleParams.getBuildTarget(), getSymbolsNeededOutPath());
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getSymbolsNeededOutPath());
   }
 
   @Override
@@ -153,10 +156,11 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
       relinkerSteps.addAll(
           new CxxLink(
+                  getBuildTarget()
+                      .withAppendedFlavors(InternalFlavor.of("cxx-link"))
+                      .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                   getProjectFilesystem(),
-                  buildRuleParams
-                      .withAppendedFlavor(InternalFlavor.of("cxx-link"))
-                      .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
+                  buildRuleParams,
                   linker,
                   getLibFilePath(),
                   args,
@@ -240,7 +244,7 @@ class RelinkerRule extends AbstractBuildRuleWithResolver implements OverrideSche
 
   private Symbols getSymbols(ProcessExecutor executor, Path path)
       throws IOException, InterruptedException {
-    return Symbols.getSymbols(executor, objdump, pathResolver, absolutify(path));
+    return Symbols.getDynamicSymbols(executor, objdump, pathResolver, absolutify(path));
   }
 
   private Path getRelativeVersionFilePath() {

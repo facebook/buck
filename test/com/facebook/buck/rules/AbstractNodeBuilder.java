@@ -117,7 +117,7 @@ public abstract class AbstractNodeBuilder<
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
-                targetGraph, filesystem, params, resolver, cellRoots, builtArg);
+                targetGraph, target, filesystem, params, resolver, cellRoots, builtArg);
     resolver.addToIndex(rule);
     return rule;
   }
@@ -131,28 +131,21 @@ public abstract class AbstractNodeBuilder<
       TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
       TArg populatedArg = getPopulatedArg();
       TargetNode<TArg, TDescription> node =
-          factory.create(
-              // This hash will do in a pinch.
-              hash,
-              description,
-              populatedArg,
-              filesystem,
-              target,
-              getDepsFromArg(populatedArg),
-              ImmutableSet.of(
-                  VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
-              ImmutableSet.of(),
-              cellRoots);
-      if (selectedVersions.isPresent()) {
-        node =
-            node.withTargetConstructorArgDepsAndSelectedVerisons(
-                node.getBuildTarget(),
-                node.getConstructorArg(),
-                node.getDeclaredDeps(),
-                node.getExtraDeps(),
-                node.getTargetGraphOnlyDeps(),
-                selectedVersions);
-      }
+          factory
+              .create(
+                  // This hash will do in a pinch.
+                  hash,
+                  description,
+                  populatedArg,
+                  filesystem,
+                  target,
+                  getDepsFromArg(populatedArg),
+                  ImmutableSet.of(
+                      VISIBILITY_PATTERN_PARSER.parse(
+                          null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
+                  ImmutableSet.of(),
+                  cellRoots)
+              .withSelectedVersions(selectedVersions);
       return node;
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
@@ -161,7 +154,7 @@ public abstract class AbstractNodeBuilder<
 
   public BuildRuleParams createBuildRuleParams(BuildRuleResolver resolver) {
     TargetNode<?, ?> node = build();
-    return TestBuildRuleParams.create(target)
+    return TestBuildRuleParams.create()
         .withDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))
         .withExtraDeps(resolver.getAllRules(node.getExtraDeps()));
   }

@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -94,7 +95,8 @@ public class PublisherTest {
         TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
@@ -153,7 +155,8 @@ public class PublisherTest {
             transitiveDepNode, depNode, publishableANode, publishableBNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
@@ -218,7 +221,8 @@ public class PublisherTest {
             transitiveDepNode, dep1Node, dep2Node, publishableANode, publishableBNode);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);

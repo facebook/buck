@@ -242,6 +242,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testProjectWthPackageBoundaryException() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_package_boundary_exception", "//project2:lib");
+  }
+
+  @Test
   public void testProjectWithProjectRoot() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
         "project_with_project_root",
@@ -251,6 +256,11 @@ public class ProjectIntegrationTest {
         "--intellij-module-group-name",
         "",
         "//project1/lib:lib");
+  }
+
+  @Test
+  public void testGeneratingAndroidManifest() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("generate_android_manifest");
   }
 
   @Test

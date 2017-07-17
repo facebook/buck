@@ -18,6 +18,7 @@ package com.facebook.buck.zip;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -43,11 +44,12 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
 
   public Zip(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String outputName,
       ImmutableSortedSet<SourcePath> sources) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.name = outputName;
     this.sources = sources;
   }
