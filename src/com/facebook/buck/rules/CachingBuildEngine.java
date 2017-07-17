@@ -354,20 +354,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final BuildableContext buildableContext,
       final CacheResult cacheResult)
       throws StepFailedException, InterruptedException {
-    if (!shouldKeepGoing(buildContext)) {
-      Preconditions.checkNotNull(firstFailure);
-      return Optional.of(BuildResult.canceled(rule, firstFailure));
-    }
-    try (Scope scope =
-        BuildRuleEvent.resumeSuspendScope(
-            buildContext.getEventBus(),
-            rule,
-            buildRuleDurationTracker,
-            ruleKeyFactories.getDefaultRuleKeyFactory())) {
-      executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
-      return Optional.of(
-          BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
-    }
+    return new BuildRuleSteps(rule, buildContext, executionContext, buildableContext, cacheResult)
+        .run();
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -1562,55 +1550,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return cacheResult;
   }
 
-  /**
-   * Execute the commands for this build rule. Requires all dependent rules are already built
-   * successfully.
-   */
-  private void executeCommandsNowThatDepsAreBuilt(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      BuildableContext buildableContext)
-      throws InterruptedException, StepFailedException {
-
-    LOG.debug("Building locally: %s", rule);
-    // Attempt to get an approximation of how long it takes to actually run the command.
-    @SuppressWarnings("PMD.PrematureDeclaration")
-    long start = System.nanoTime();
-
-    buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-    cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-
-    // Get and run all of the commands.
-    List<? extends Step> steps =
-        rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
-
-    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
-    for (Step step : steps) {
-      stepRunner.runStepForBuildTarget(
-          executionContext.withProcessExecutor(
-              new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(),
-                  ImmutableMap.of(
-                      BUILD_RULE_TYPE_CONTEXT_KEY,
-                      rule.getType(),
-                      STEP_TYPE_CONTEXT_KEY,
-                      StepType.BUILD_STEP.toString()))),
-          step,
-          optionalTarget);
-
-      // Check for interruptions that may have been ignored by step.
-      if (Thread.interrupted()) {
-        Threads.interruptCurrentThread();
-        throw new InterruptedException();
-      }
-    }
-
-    long end = System.nanoTime();
-    LOG.debug(
-        "Build completed: %s %s (%dns)", rule.getType(), rule.getFullyQualifiedName(), end - start);
-  }
-
   private void executePostBuildSteps(
       BuildRule rule, Iterable<Step> postBuildSteps, ExecutionContext context)
       throws InterruptedException, StepFailedException {
@@ -2119,5 +2058,90 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           return function.call();
         },
         MoreExecutors.directExecutor());
+  }
+
+  /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
+  private class BuildRuleSteps {
+    private final BuildRule rule;
+    private final BuildEngineBuildContext buildContext;
+    private final ExecutionContext executionContext;
+    private final BuildableContext buildableContext;
+    private final CacheResult cacheResult;
+
+    public BuildRuleSteps(
+        BuildRule rule,
+        BuildEngineBuildContext buildContext,
+        ExecutionContext executionContext,
+        BuildableContext buildableContext,
+        CacheResult cacheResult) {
+      this.rule = rule;
+      this.buildContext = buildContext;
+      this.executionContext = executionContext;
+      this.buildableContext = buildableContext;
+      this.cacheResult = cacheResult;
+    }
+
+    public Optional<BuildResult> run() throws InterruptedException, StepFailedException {
+      if (!shouldKeepGoing(buildContext)) {
+        Preconditions.checkNotNull(firstFailure);
+        return Optional.of(BuildResult.canceled(rule, firstFailure));
+      }
+      try (Scope scope =
+          BuildRuleEvent.resumeSuspendScope(
+              buildContext.getEventBus(),
+              rule,
+              buildRuleDurationTracker,
+              ruleKeyFactories.getDefaultRuleKeyFactory())) {
+        executeCommandsNowThatDepsAreBuilt();
+        return Optional.of(
+            BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
+      }
+    }
+
+    /**
+     * Execute the commands for this build rule. Requires all dependent rules are already built
+     * successfully.
+     */
+    private void executeCommandsNowThatDepsAreBuilt()
+        throws InterruptedException, StepFailedException {
+
+      LOG.debug("Building locally: %s", rule);
+      // Attempt to get an approximation of how long it takes to actually run the command.
+      @SuppressWarnings("PMD.PrematureDeclaration")
+      long start = System.nanoTime();
+
+      buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+      cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+
+      // Get and run all of the commands.
+      List<? extends Step> steps =
+          rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+
+      Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
+      for (Step step : steps) {
+        stepRunner.runStepForBuildTarget(
+            executionContext.withProcessExecutor(
+                new ContextualProcessExecutor(
+                    executionContext.getProcessExecutor(),
+                    ImmutableMap.of(
+                        BUILD_RULE_TYPE_CONTEXT_KEY,
+                        rule.getType(),
+                        STEP_TYPE_CONTEXT_KEY,
+                        StepType.BUILD_STEP.toString()))),
+            step,
+            optionalTarget);
+
+        // Check for interruptions that may have been ignored by step.
+        if (Thread.interrupted()) {
+          Thread.currentThread().interrupt();
+          throw new InterruptedException();
+        }
+      }
+
+      long end = System.nanoTime();
+      LOG.debug(
+          "Build completed: %s %s (%dns)",
+          rule.getType(), rule.getFullyQualifiedName(), end - start);
+    }
   }
 }
