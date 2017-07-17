@@ -47,4 +47,6 @@ abstract class AbstractBuildSlaveFinishedStatus {
   abstract FileMaterializationStats getFileMaterializationStats();
 
   abstract BuckConfig getRemoteBuckConfig();
+
+  abstract DistBuildSlaveTimingStats getTimingStats();
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -86,8 +87,9 @@ public class DistBuildSlaveExecutor {
     this.args = args;
   }
 
-  public int buildAndReturnExitCode() throws IOException, InterruptedException {
-    createBuildEngineDelegate();
+  public int buildAndReturnExitCode(DistBuildSlaveTimingStatsTracker tracker)
+      throws IOException, InterruptedException {
+    createBuildEngineDelegate(tracker);
     LocalBuilder localBuilder = new LocalBuilderImpl();
 
     DistBuildModeRunner runner = null;
@@ -168,13 +170,17 @@ public class DistBuildSlaveExecutor {
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver()
-      throws IOException, InterruptedException {
+  private ActionGraphAndResolver createActionGraphAndResolver(
+      DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
-    createTargetGraph();
 
+    tracker.startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
+    createTargetGraph();
+    tracker.stopTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
+
+    tracker.startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     actionGraphAndResolver =
         Preconditions.checkNotNull(
             args.getActionGraphCache()
@@ -184,17 +190,20 @@ public class DistBuildSlaveExecutor {
                     /* skipActionGraphCache */ false,
                     Preconditions.checkNotNull(targetGraph),
                     args.getCacheKeySeed()));
+    tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
-      throws IOException, InterruptedException {
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate(
+      DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
 
+    tracker.startTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
     StackedFileHashCaches caches = createStackedFileHashesAndPreload();
-    createActionGraphAndResolver();
+    tracker.stopTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
+    createActionGraphAndResolver(tracker);
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(Preconditions.checkNotNull(actionGraphAndResolver).getResolver());
     cachingBuildEngineDelegate =
