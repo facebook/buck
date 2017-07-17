@@ -32,25 +32,20 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -96,19 +91,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   private static final Path METADATA_DIR = Paths.get("META-INF");
 
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
-
-  @AddToRuleKey(stringify = true)
-  private final Optional<Path> resourcesRoot;
-
-  @AddToRuleKey private final Optional<SourcePath> manifestFile;
+  @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final Optional<String> mavenCoords;
-  private final Optional<Path> outputJar;
   private final JarContentsSupplier outputJarContentsSupplier;
   @Nullable private final BuildTarget abiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
-  @AddToRuleKey private final ImmutableList<String> postprocessClassesCommands;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
@@ -121,25 +108,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
-  private final boolean trackClassUsage;
-  private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
-
-  @AddToRuleKey
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ZipArchiveDependencySupplier abiClasspath;
-
-  @Nullable private Path depFileRelativePath;
-
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final Optional<Path> generatedSourceFolder;
-
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  @AddToRuleKey
-  private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
-
-  private final SourcePathRuleFinder ruleFinder;
-  @AddToRuleKey private final CompileToJarStepFactory compileStepFactory;
 
   public static DefaultJavaLibraryBuilder builder(
       TargetGraph targetGraph,
@@ -169,28 +140,17 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      Set<? extends SourcePath> srcs,
-      Set<? extends SourcePath> resources,
+      JarBuildStepsFactory jarBuildStepsFactory,
       Optional<Path> generatedSourceFolder,
       Optional<SourcePath> proguardConfig,
-      ImmutableList<String> postprocessClassesCommands,
       SortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
-      ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-      ZipArchiveDependencySupplier abiClasspath,
       @Nullable BuildTarget abiJar,
-      boolean trackClassUsage,
-      CompileToJarStepFactory compileStepFactory,
-      Optional<Path> resourcesRoot,
-      Optional<SourcePath> manifestFile,
       Optional<String> mavenCoords,
-      ImmutableSortedSet<BuildTarget> tests,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      ImmutableSortedSet<BuildTarget> tests) {
     super(buildTarget, projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
-    this.compileStepFactory = compileStepFactory;
+    this.jarBuildStepsFactory = jarBuildStepsFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
     // and so only make sense for java library types.
@@ -207,29 +167,13 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       }
     }
 
-    this.srcs = ImmutableSortedSet.copyOf(srcs);
-    this.resources = ImmutableSortedSet.copyOf(resources);
     this.proguardConfig = proguardConfig;
-    this.postprocessClassesCommands = postprocessClassesCommands;
     this.fullJarDeclaredDeps = fullJarDeclaredDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
-    this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
-    this.resourcesRoot = resourcesRoot;
-    this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
 
-    this.trackClassUsage = trackClassUsage;
-    if (this.trackClassUsage) {
-      depFileRelativePath = getUsedClassesFilePath(buildTarget, projectFilesystem);
-    }
-    this.abiClasspath = abiClasspath;
-    if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
-      this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
-    } else {
-      this.outputJar = Optional.empty();
-    }
     this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.abiJar = abiJar;
 
@@ -251,7 +195,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.generatedSourceFolder = generatedSourceFolder;
-    this.classesToRemoveFromJar = classesToRemoveFromJar;
   }
 
   public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -259,7 +202,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
-    return outputJar.map(input -> new ExplicitBuildTargetSourcePath(getBuildTarget(), input));
+    return Optional.ofNullable(jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget()));
   }
 
   static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -267,10 +210,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
         String.format(
             "%s/%s.jar",
             getOutputJarDirPath(target, filesystem), target.getShortNameAndFlavorPostfix()));
-  }
-
-  static Path getUsedClassesFilePath(BuildTarget target, ProjectFilesystem filesystem) {
-    return getOutputJarDirPath(target, filesystem).resolve("used-classes.json");
   }
 
   /**
@@ -283,17 +222,17 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
-    return srcs;
+    return jarBuildStepsFactory.getSources();
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getSources() {
-    return srcs;
+    return jarBuildStepsFactory.getSources();
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getResources() {
-    return resources;
+    return jarBuildStepsFactory.getResources();
   }
 
   @Override
@@ -336,8 +275,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
     return outputClasspathEntriesSupplier.get();
   }
 
+  @VisibleForTesting
   public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-    return compileTimeClasspathSourcePaths;
+    return jarBuildStepsFactory.getCompileTimeClasspathSourcePaths();
   }
 
   @Override
@@ -357,32 +297,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    BuildTarget buildTarget = this.getBuildTarget();
-    ProjectFilesystem projectFilesystem = this.getProjectFilesystem();
-    JavaLibraryRules.addCompileToJarSteps(
-        buildTarget,
-        projectFilesystem,
-        context,
-        buildableContext,
-        outputJar,
-        ruleFinder,
-        srcs,
-        resources,
-        postprocessClassesCommands,
-        compileTimeClasspathSourcePaths,
-        trackClassUsage,
-        depFileRelativePath,
-        compileStepFactory,
-        resourcesRoot,
-        manifestFile,
-        classesToRemoveFromJar,
-        steps);
-
-    JavaLibraryRules.addAccumulateClassNamesStep(
-        buildTarget, projectFilesystem, getSourcePathToOutput(), buildableContext, context, steps);
-
-    return steps.build();
+    return jarBuildStepsFactory.getBuildStepsForLibraryJar(
+        context, buildableContext, getBuildTarget());
   }
 
   @Override
@@ -417,7 +333,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Override
   @Nullable
   public SourcePath getSourcePathToOutput() {
-    return outputJar.map(o -> new ExplicitBuildTargetSourcePath(getBuildTarget(), o)).orElse(null);
+    return jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget());
   }
 
   @Override
@@ -446,14 +362,12 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public boolean useDependencyFileRuleKeys() {
-    return !getJavaSrcs().isEmpty() && trackClassUsage;
+    return jarBuildStepsFactory.useDependencyFileRuleKeys();
   }
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    // a hash set is intentionally used to achieve constant time look-up
-    return abiClasspath.getArchiveMembers(pathResolver).collect(MoreCollectors.toImmutableSet())
-        ::contains;
+    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver);
   }
 
   @Override
@@ -475,30 +389,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Override
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
-    Preconditions.checkState(useDependencyFileRuleKeys());
-    return DefaultClassUsageFileReader.loadFromFile(
-        getProjectFilesystem(),
-        cellPathResolver,
-        getProjectFilesystem()
-            .getPathForRelativePath(Preconditions.checkNotNull(depFileRelativePath)),
-        getDepOutputPathToAbiSourcePath(context.getSourcePathResolver()));
-  }
-
-  private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(
-      SourcePathResolver pathResolver) {
-    ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
-    for (SourcePath sourcePath : compileTimeClasspathSourcePaths) {
-      BuildRule rule = ruleFinder.getRule(sourcePath).get();
-      Path path = pathResolver.getAbsolutePath(sourcePath);
-      if (rule instanceof HasJavaAbi) {
-        if (((HasJavaAbi) rule).getAbiJar().isPresent()) {
-          BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
-          pathToSourcePathMapBuilder.put(path, new DefaultBuildTargetSourcePath(buildTarget));
-        }
-      } else if (rule instanceof CalculateAbi) {
-        pathToSourcePathMapBuilder.put(path, sourcePath);
-      }
-    }
-    return pathToSourcePathMapBuilder.build();
+    return jarBuildStepsFactory.getInputsAfterBuildingLocally(
+        context, cellPathResolver, getBuildTarget());
   }
 }

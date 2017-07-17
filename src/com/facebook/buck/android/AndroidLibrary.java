@@ -22,11 +22,10 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
-import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.DependencyMode;
@@ -50,9 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
@@ -94,49 +90,30 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      Set<? extends SourcePath> srcs,
-      Set<? extends SourcePath> resources,
+      JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
-      ImmutableList<String> postprocessClassesCommands,
       SortedSet<BuildRule> fullJarDeclaredDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
-      ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-      ZipArchiveDependencySupplier abiClasspath,
       @Nullable BuildTarget abiJar,
       JavacOptions javacOptions,
-      boolean trackClassUsage,
-      CompileToJarStepFactory compileStepFactory,
-      Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      ImmutableSortedSet<BuildTarget> tests,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      ImmutableSortedSet<BuildTarget> tests) {
     super(
         buildTarget,
         projectFilesystem,
         params,
         resolver,
-        ruleFinder,
-        srcs,
-        resources,
+        jarBuildStepsFactory,
         javacOptions.getGeneratedSourceFolderName(),
         proguardConfig,
-        postprocessClassesCommands,
         fullJarDeclaredDeps,
         fullJarExportedDeps,
         fullJarProvidedDeps,
-        compileTimeClasspathSourcePaths,
-        abiClasspath,
         abiJar,
-        trackClassUsage,
-        compileStepFactory,
-        resourcesRoot,
-        Optional.empty(),
         mavenCoords,
-        tests,
-        classesToRemoveFromJar);
+        tests);
     this.manifestFile = manifestFile;
   }
 
@@ -234,24 +211,32 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             projectFilesystem,
             getFinalParams(),
             sourcePathResolver,
-            ruleFinder,
-            srcs,
-            resources,
+            getJarBuildStepsFactory(),
             proguardConfig,
-            postprocessClassesCommands,
             getFinalFullJarDeclaredDeps(),
             fullJarExportedDeps,
             fullJarProvidedDeps,
-            getFinalCompileTimeClasspathSourcePaths(),
-            getAbiClasspath(),
             getAbiJar(),
             Preconditions.checkNotNull(javacOptions),
-            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),
-            getCompileStepFactory(),
-            resourcesRoot,
             mavenCoords,
             androidManifest,
-            tests,
+            tests);
+      }
+
+      @Override
+      protected JarBuildStepsFactory buildJarBuildStepsFactory() throws NoSuchBuildTargetException {
+        return new JarBuildStepsFactory(
+            projectFilesystem,
+            ruleFinder,
+            getCompileStepFactory(),
+            srcs,
+            resources,
+            resourcesRoot,
+            Optional.empty(), // ManifestFile for androidLibrary is something else
+            postprocessClassesCommands,
+            getAbiClasspath(),
+            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),
+            getFinalCompileTimeClasspathSourcePaths(),
             classesToRemoveFromJar);
       }
 

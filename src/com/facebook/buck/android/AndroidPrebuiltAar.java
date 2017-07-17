@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
@@ -63,30 +64,34 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         androidLibraryParams.copyAppendingExtraDeps(
             ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
-        ruleFinder,
-        /* srcs */ ImmutableSortedSet.of(),
-        /* resources */ ImmutableSortedSet.of(),
+        new JarBuildStepsFactory(
+            projectFilesystem,
+            ruleFinder,
+            compileStepFactory,
+            /* srcs */ ImmutableSortedSet.of(),
+            /* resources */ ImmutableSortedSet.of(),
+            /* resourcesRoot */ Optional.empty(),
+            /* manifestFile */ Optional.empty(), // Manifest means something else for Android rules
+            /* postprocessClassesCommands */ ImmutableList.of(),
+            abiClasspath,
+            /* trackClassUsage */ false,
+            /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
+                prebuiltJar.getSourcePathToOutput()),
+            RemoveClassesPatternsMatcher.EMPTY),
         Optional.of(proguardConfig),
-        /* postprocessClassesCommands */ ImmutableList.of(),
         /* declaredDeps */ androidLibraryParams.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
             .addAll(exportedDeps)
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
-        /* compileTimeClasspathDeps */ ImmutableSortedSet.of(prebuiltJar.getSourcePathToOutput()),
-        abiClasspath,
         HasJavaAbi.getClassAbiJar(androidLibraryBuildTarget),
         javacOptions,
-        /* trackClassUsage */ false,
-        compileStepFactory,
-        /* resourcesRoot */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
         Optional.of(
             new ExplicitBuildTargetSourcePath(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* tests */ ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY);
+        /* tests */ ImmutableSortedSet.of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

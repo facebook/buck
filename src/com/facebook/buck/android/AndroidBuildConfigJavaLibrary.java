@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -60,26 +61,28 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         projectFilesystem,
         params.copyAppendingExtraDeps(ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver,
-        ruleFinder,
-        /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
-        /* resources */ ImmutableSortedSet.of(),
+        new JarBuildStepsFactory(
+            projectFilesystem,
+            ruleFinder,
+            new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
+            /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
+            /* resources */ ImmutableSortedSet.of(),
+            /* resourcesRoot */ Optional.empty(),
+            /* manifest file */ Optional.empty(),
+            /* postprocessClassesCommands */ ImmutableList.of(),
+            abiClasspath,
+            /* trackClassUsage */ javacOptions.trackClassUsage(),
+            /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
+                androidBuildConfig.getSourcePathToOutput()),
+            /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY),
         javacOptions.getGeneratedSourceFolderName(),
         /* proguardConfig */ Optional.empty(),
-        /* postprocessClassesCommands */ ImmutableList.of(),
         /* declaredDeps */ params.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
-        /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
-            androidBuildConfig.getSourcePathToOutput()),
-        abiClasspath,
         HasJavaAbi.getClassAbiJar(buildTarget),
-        /* trackClassUsage */ javacOptions.trackClassUsage(),
-        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.empty(),
-        /* manifest file */ Optional.empty(),
         /* mavenCoords */ Optional.empty(),
-        /* tests */ ImmutableSortedSet.of(),
-        /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY);
+        /* tests */ ImmutableSortedSet.of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),

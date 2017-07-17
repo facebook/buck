@@ -255,25 +255,15 @@ public class DefaultJavaLibraryBuilder {
           projectFilesystem,
           getFinalParams(),
           sourcePathResolver,
-          ruleFinder,
-          srcs,
-          resources,
+          getJarBuildStepsFactory(),
           generatedSourceFolder,
           proguardConfig,
-          postprocessClassesCommands,
           getFinalFullJarDeclaredDeps(),
           fullJarExportedDeps,
           fullJarProvidedDeps,
-          getFinalCompileTimeClasspathSourcePaths(),
-          getAbiClasspath(),
           getAbiJar(),
-          trackClassUsage,
-          getCompileStepFactory(),
-          resourcesRoot,
-          manifestFile,
           mavenCoords,
-          tests,
-          classesToRemoveFromJar);
+          tests);
     }
 
     protected BuildRule buildAbi() throws NoSuchBuildTargetException {
@@ -520,7 +510,8 @@ public class DefaultJavaLibraryBuilder {
           getJavac(), Preconditions.checkNotNull(javacOptions), javacOptionsAmender);
     }
 
-    private JarBuildStepsFactory getJarBuildStepsFactory() throws NoSuchBuildTargetException {
+    protected final JarBuildStepsFactory getJarBuildStepsFactory()
+        throws NoSuchBuildTargetException {
       if (jarBuildStepsFactory == null) {
         jarBuildStepsFactory = buildJarBuildStepsFactory();
       }
@@ -536,7 +527,9 @@ public class DefaultJavaLibraryBuilder {
           resources,
           resourcesRoot,
           manifestFile,
+          postprocessClassesCommands,
           getAbiClasspath(),
+          trackClassUsage,
           getFinalCompileTimeClasspathSourcePaths(),
           classesToRemoveFromJar);
     }
