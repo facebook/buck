@@ -16,6 +16,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatus;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildService;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.timing.Clock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
@@ -81,6 +83,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   protected final FileMaterializationStatsTracker fileMaterializationStatsTracker;
 
   private volatile @Nullable DistBuildService distBuildService;
+
+  private @Nullable BuckConfig remoteBuckConfig;
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
@@ -159,6 +163,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   private BuildSlaveFinishedStatus createBuildSlaveFinishedStatus(int exitCode) {
     return BuildSlaveFinishedStatus.builder()
+        .setRemoteBuckConfig(
+            Preconditions.checkNotNull(remoteBuckConfig, "Remote BuckConfig was not set."))
         .setStampedeId(stampedeId)
         .setRunId(runId)
         .setTotalRulesCount(ruleCount)
@@ -209,6 +215,10 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private void sendServerUpdates() {
     sendStatusToFrontend();
     sendConsoleEventsToFrontend();
+  }
+
+  public void setRemoteBuckConfig(BuckConfig buckConfig) {
+    this.remoteBuckConfig = buckConfig;
   }
 
   public void publishBuildSlaveFinishedEvent(BuckEventBus eventBus, int exitCode) {

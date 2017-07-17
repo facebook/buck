@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -44,4 +45,6 @@ abstract class AbstractBuildSlaveFinishedStatus {
   abstract CacheRateStats getCacheRateStats();
 
   abstract FileMaterializationStats getFileMaterializationStats();
+
+  abstract BuckConfig getRemoteBuckConfig();
 }

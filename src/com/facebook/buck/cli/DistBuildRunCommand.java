@@ -142,6 +142,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   fileMaterializationStatsTracker);
           int returnCode = distBuildExecutor.buildAndReturnExitCode();
           if (slaveEventListener != null) {
+            slaveEventListener.setRemoteBuckConfig(state.getRootCell().getBuckConfig());
             slaveEventListener.publishBuildSlaveFinishedEvent(params.getBuckEventBus(), returnCode);
           }
           if (returnCode == 0) {
