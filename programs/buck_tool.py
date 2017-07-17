@@ -2,6 +2,7 @@ from __future__ import print_function
 import errno
 import glob
 import json
+import logging
 import os
 import platform
 import shlex
@@ -198,9 +199,30 @@ class BuckTool(object):
         env['BUCK_TTY'] = str(int(sys.stdin.isatty()))
         return env
 
+    def _setup_log(self):
+        # Set log level of the messages to show.
+        logger = logging.getLogger()
+        level_name = os.environ.get('BUCK_WRAPPER_LOG_LEVEL', 'INFO')
+        level_name_to_level = {
+            'CRITICAL': logging.CRITICAL,
+            'ERROR': logging.ERROR,
+            'WARNING': logging.WARNING,
+            'INFO': logging.INFO,
+            'DEBUG': logging.DEBUG,
+            'NOTSET': logging.NOTSET,
+        }
+        level = level_name_to_level.get(level_name.upper(), logging.INFO)
+        logger.setLevel(level)
+        # Set formatter for log messages.
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(message)s')
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._setup_log()
                 if self._command_line.command == "clean" and \
                         not self._command_line.is_help():
                     self.kill_buckd()
@@ -418,7 +440,7 @@ class BuckTool(object):
         with Tracing('BuckTool.kill_buckd'):
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
             if transport_exists(buckd_transport_file_path):
-                print("Shutting down nailgun server...", file=sys.stderr)
+                logging.debug("Shutting down buck daemon.")
                 try:
                     with NailgunConnection(self._buck_project.get_buckd_transport_address(),
                                            cwd=self._buck_project.root) as c:
@@ -542,7 +564,7 @@ def setup_watchman_watch():
             # FileSystemWatcher will take too long to process events.
             raise BuckToolException(message)
 
-        print("Using watchman.", file=sys.stderr)
+        logging.debug("Using watchman.")
 
 
 def transport_exists(path):
