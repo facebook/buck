@@ -246,6 +246,7 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
     @Nullable private ZipArchiveDependencySupplier abiClasspath;
     @Nullable private CompileToJarStepFactory compileStepFactory;
+    @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
     @Nullable private BuildTarget abiJar;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
@@ -349,20 +350,8 @@ public class DefaultJavaLibraryBuilder {
     private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
       BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialBuildTarget);
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
-      JavacToJarStepFactory compileStepFactory = (JavacToJarStepFactory) getCompileStepFactory();
       return new CalculateAbiFromSource(
-          abiTarget,
-          projectFilesystem,
-          getFinalParams(),
-          ruleFinder,
-          srcs,
-          resources,
-          getFinalCompileTimeClasspathSourcePaths(),
-          getAbiClasspath(),
-          compileStepFactory,
-          resourcesRoot,
-          manifestFile,
-          classesToRemoveFromJar);
+          abiTarget, projectFilesystem, getFinalParams(), ruleFinder, getJarBuildStepsFactory());
     }
 
     private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
@@ -529,6 +518,27 @@ public class DefaultJavaLibraryBuilder {
     protected CompileToJarStepFactory buildCompileStepFactory() {
       return new JavacToJarStepFactory(
           getJavac(), Preconditions.checkNotNull(javacOptions), javacOptionsAmender);
+    }
+
+    private JarBuildStepsFactory getJarBuildStepsFactory() throws NoSuchBuildTargetException {
+      if (jarBuildStepsFactory == null) {
+        jarBuildStepsFactory = buildJarBuildStepsFactory();
+      }
+      return jarBuildStepsFactory;
+    }
+
+    protected JarBuildStepsFactory buildJarBuildStepsFactory() throws NoSuchBuildTargetException {
+      return new JarBuildStepsFactory(
+          projectFilesystem,
+          ruleFinder,
+          getCompileStepFactory(),
+          srcs,
+          resources,
+          resourcesRoot,
+          manifestFile,
+          getAbiClasspath(),
+          getFinalCompileTimeClasspathSourcePaths(),
+          classesToRemoveFromJar);
     }
   }
 
