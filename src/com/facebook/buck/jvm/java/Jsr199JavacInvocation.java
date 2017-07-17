@@ -376,7 +376,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         .setManifestFile(
             context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
-        .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass);
+        .setRemoveEntryPredicate(
+            context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar()
+                ::shouldRemoveClass);
   }
 
   @Override

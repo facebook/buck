@@ -32,6 +32,30 @@ java_library(
     ],
 )
 
+java_library(
+    name = "main-stripped",
+    srcs = [
+        "Main.java",
+    ],
+    deps = [
+        ":lib-stripped",
+    ],
+)
+
+java_library(
+    name = "lib-stripped",
+    srcs = [
+        "Lib.java",
+    ],
+    plugins = [
+        ":ap",
+    ],
+    remove_classes = [
+      "com.example.buck.Test",
+      "^com.example.buck$" # This line should not result in anything getting removed
+      ],
+)
+
 java_annotation_processor(
     name = "ap",
     deps = [
