@@ -36,12 +36,14 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
@@ -57,7 +59,11 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Nullable @AddToRuleKey private final SourcePath metaInfDirectory;
 
-  @AddToRuleKey private final RemoveClassesPatternsMatcher blacklist;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @AddToRuleKey
+  private final ImmutableSet<Pattern> blacklist;
+
+  private final PatternsMatcher blacklistPatternsMatcher;
 
   private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
   private final ImmutableSet<SourcePath> transitiveClasspaths;
@@ -73,7 +79,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
       @Nullable Path metaInfDirectory,
-      RemoveClassesPatternsMatcher blacklist,
+      ImmutableSet<Pattern> blacklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
       ImmutableSet<SourcePath> transitiveClasspaths,
       boolean cache) {
@@ -87,6 +93,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ? new PathSourcePath(getProjectFilesystem(), metaInfDirectory)
             : null;
     this.blacklist = blacklist;
+    blacklistPatternsMatcher = new PatternsMatcher(blacklist);
     this.transitiveClasspathDeps = transitiveClasspathDeps;
     this.transitiveClasspaths = transitiveClasspaths;
     this.cache = cache;
@@ -143,7 +150,9 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             mainClass,
             manifestPath,
             mergeManifests,
-            blacklist::shouldRemoveClass);
+            entry ->
+                blacklistPatternsMatcher.hasPatterns()
+                    && blacklistPatternsMatcher.substringMatches(entry.getName()));
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
