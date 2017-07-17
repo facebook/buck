@@ -143,7 +143,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             mainClass,
             manifestPath,
             mergeManifests,
-            blacklist);
+            blacklist::shouldRemoveClass);
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
