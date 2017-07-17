@@ -22,11 +22,19 @@ import com.facebook.buck.ide.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.CoreArg> {
 
@@ -45,7 +53,33 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
   @Override
   public void apply(
       TargetNode<JavaLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
-    addDepsAndSources(target, true /* wantsPackagePrefix */, context);
+
+    Optional<Path> resourcesRoot = target.getConstructorArg().getResourcesRoot();
+    // If there is no resources_root, then we use the java src_roots option from .buckconfig, so
+    // the default folders generated should work. On the other hand, if there is a resources_root,
+    // then for resources under this root, we need to create java-resource folders with the
+    // correct relativeOutputPath set.
+    Predicate<Map.Entry<Path, Path>> folderInputIndexFilter = null;
+    if (resourcesRoot.isPresent()) {
+      ImmutableSet<Path> resources = target.getConstructorArg().getResources().stream()
+          .map(sourcePath -> (sourcePath instanceof PathSourcePath)
+              ? ((PathSourcePath) sourcePath).getRelativePath()
+              : null)
+          .filter(Objects::nonNull)
+          .filter(path -> path.startsWith(resourcesRoot.get()))
+          .collect(MoreCollectors.toImmutableSet());
+
+      folderInputIndexFilter = entry -> !resources.contains(entry.getValue());
+
+      addSourceFolders(
+          JavaResourceFolder.getFactoryWithResourcesRoot(resourcesRoot.get()),
+          getSourceFoldersToInputsIndex(resources),
+          true /* wantsPackagePrefix */,
+          context);
+    }
+
+    addDepsAndSourcesWithFolderInputIndexFilter(
+        target, true /* wantsPackagePrefix */, context, folderInputIndexFilter);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
   }
