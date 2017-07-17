@@ -347,15 +347,18 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return rulesList;
   }
 
-  private Optional<BuildResult> buildLocally(
+  private ListenableFuture<Optional<BuildResult>> buildLocally(
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final BuildableContext buildableContext,
-      final CacheResult cacheResult)
+      final CacheResult cacheResult,
+      final ListeningExecutorService service)
       throws StepFailedException, InterruptedException {
-    return new BuildRuleSteps(rule, buildContext, executionContext, buildableContext, cacheResult)
-        .run();
+    BuildRuleSteps buildRuleSteps =
+        new BuildRuleSteps(rule, buildContext, executionContext, buildableContext, cacheResult);
+    service.execute(buildRuleSteps);
+    return buildRuleSteps.getFuture();
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -567,18 +570,16 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildContext,
             buildResultFuture,
             () ->
-                service
-                    // This needs to adjust the default amounts even in the non-resource-aware scheduling
-                    // case so that RuleScheduleInfo works correctly.
-                    .withDefaultAmounts(getRuleResourceAmounts(rule))
-                    .submit(
-                        () ->
-                            buildLocally(
-                                rule,
-                                buildContext,
-                                executionContext,
-                                buildableContext,
-                                Preconditions.checkNotNull(rulekeyCacheResult.get()))));
+                buildLocally(
+                    rule,
+                    buildContext,
+                    executionContext,
+                    buildableContext,
+                    Preconditions.checkNotNull(rulekeyCacheResult.get()),
+                    service
+                        // This needs to adjust the default amounts even in the non-resource-aware scheduling
+                        // case so that RuleScheduleInfo works correctly.
+                        .withDefaultAmounts(getRuleResourceAmounts(rule))));
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
@@ -2061,12 +2062,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
-  private class BuildRuleSteps {
+  private class BuildRuleSteps implements Runnable {
     private final BuildRule rule;
     private final BuildEngineBuildContext buildContext;
     private final ExecutionContext executionContext;
     private final BuildableContext buildableContext;
     private final CacheResult cacheResult;
+    private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
 
     public BuildRuleSteps(
         BuildRule rule,
@@ -2081,20 +2083,31 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       this.cacheResult = cacheResult;
     }
 
-    public Optional<BuildResult> run() throws InterruptedException, StepFailedException {
-      if (!shouldKeepGoing(buildContext)) {
-        Preconditions.checkNotNull(firstFailure);
-        return Optional.of(BuildResult.canceled(rule, firstFailure));
-      }
-      try (Scope scope =
-          BuildRuleEvent.resumeSuspendScope(
-              buildContext.getEventBus(),
-              rule,
-              buildRuleDurationTracker,
-              ruleKeyFactories.getDefaultRuleKeyFactory())) {
-        executeCommandsNowThatDepsAreBuilt();
-        return Optional.of(
-            BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
+    public SettableFuture<Optional<BuildResult>> getFuture() {
+      return future;
+    }
+
+    @Override
+    public void run() {
+      try {
+        if (!shouldKeepGoing(buildContext)) {
+          Preconditions.checkNotNull(firstFailure);
+          future.set(Optional.of(BuildResult.canceled(rule, firstFailure)));
+          return;
+        }
+        try (Scope scope =
+            BuildRuleEvent.resumeSuspendScope(
+                buildContext.getEventBus(),
+                rule,
+                buildRuleDurationTracker,
+                ruleKeyFactories.getDefaultRuleKeyFactory())) {
+          executeCommandsNowThatDepsAreBuilt();
+          future.set(
+              Optional.of(
+                  BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult)));
+        }
+      } catch (Throwable t) {
+        future.setException(t);
       }
     }
 
