@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ZipArchiveDependencySupplier;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -110,7 +111,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     super(
         buildTarget,
         projectFilesystem,
@@ -134,7 +136,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         Optional.empty(),
         mavenCoords,
         tests,
-        javacOptions.getClassesToRemoveFromJar());
+        classesToRemoveFromJar);
     this.manifestFile = manifestFile;
   }
 
@@ -249,7 +251,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             resourcesRoot,
             mavenCoords,
             androidManifest,
-            tests);
+            tests,
+            classesToRemoveFromJar);
       }
 
       protected DummyRDotJava buildDummyRDotJava() {

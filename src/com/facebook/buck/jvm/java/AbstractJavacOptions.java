@@ -103,11 +103,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   public abstract List<String> getExtraArguments();
 
-  @Value.Default
-  public RemoveClassesPatternsMatcher getClassesToRemoveFromJar() {
-    return RemoveClassesPatternsMatcher.EMPTY;
-  }
-
   protected abstract Optional<String> getBootclasspath();
 
   protected abstract Map<String, String> getSourceToBootclasspath();
