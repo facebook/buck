@@ -347,15 +347,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return rulesList;
   }
 
-  private BuildResult buildLocally(
+  private Optional<BuildResult> buildLocally(
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final BuildableContext buildableContext,
       final CacheResult cacheResult)
       throws StepFailedException, InterruptedException {
-    executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
-    return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
+    if (!shouldKeepGoing(buildContext)) {
+      Preconditions.checkNotNull(firstFailure);
+      return Optional.of(BuildResult.canceled(rule, firstFailure));
+    }
+    try (Scope scope =
+        BuildRuleEvent.resumeSuspendScope(
+            buildContext.getEventBus(),
+            rule,
+            buildRuleDurationTracker,
+            ruleKeyFactories.getDefaultRuleKeyFactory())) {
+      executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
+      return Optional.of(
+          BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult));
+    }
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -572,26 +584,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     // case so that RuleScheduleInfo works correctly.
                     .withDefaultAmounts(getRuleResourceAmounts(rule))
                     .submit(
-                        () -> {
-                          if (!shouldKeepGoing(buildContext)) {
-                            Preconditions.checkNotNull(firstFailure);
-                            return Optional.of(BuildResult.canceled(rule, firstFailure));
-                          }
-                          try (Scope scope =
-                              BuildRuleEvent.resumeSuspendScope(
-                                  buildContext.getEventBus(),
-                                  rule,
-                                  buildRuleDurationTracker,
-                                  ruleKeyFactories.getDefaultRuleKeyFactory())) {
-                            return Optional.of(
-                                buildLocally(
-                                    rule,
-                                    buildContext,
-                                    executionContext,
-                                    buildableContext,
-                                    Preconditions.checkNotNull(rulekeyCacheResult.get())));
-                          }
-                        }));
+                        () ->
+                            buildLocally(
+                                rule,
+                                buildContext,
+                                executionContext,
+                                buildableContext,
+                                Preconditions.checkNotNull(rulekeyCacheResult.get()))));
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
