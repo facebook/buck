@@ -35,6 +35,8 @@ public class PatternsMatcherTest {
 
     assertTrue(patternsMatcher.matches("pattern"));
     assertTrue(patternsMatcher.matches("test_pattern"));
+    assertTrue(patternsMatcher.substringMatches("pattern"));
+    assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
 
   @Test
@@ -45,10 +47,24 @@ public class PatternsMatcherTest {
   }
 
   @Test
+  public void testSubstringMatchesPrefix() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("test"));
+
+    assertTrue(patternsMatcher.substringMatches("test_pattern"));
+  }
+
+  @Test
   public void testDoesNotMatchSuffix() {
     PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("pattern"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
+  }
+
+  @Test
+  public void testSubstringMatchesSuffix() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("pattern"));
+
+    assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
 
   @Test
@@ -59,11 +75,19 @@ public class PatternsMatcherTest {
   }
 
   @Test
+  public void testSubstringMatchesInfix() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("_"));
+
+    assertTrue(patternsMatcher.substringMatches("test_pattern"));
+  }
+
+  @Test
   public void testDoesNotMatchPattern() {
     PatternsMatcher patternsMatcher =
         new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
 
     assertFalse(patternsMatcher.matches("wrong_pattern"));
+    assertFalse(patternsMatcher.substringMatches("wrong_pat"));
   }
 
   @Test

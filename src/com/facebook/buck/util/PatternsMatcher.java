@@ -56,6 +56,22 @@ public class PatternsMatcher {
     return false;
   }
 
+  /**
+   * @return true if a substring of the given string matches some of the patterns or there are no
+   *     patterns
+   */
+  public boolean substringMatches(final String string) {
+    if (!hasPatterns()) {
+      return true;
+    }
+    for (Pattern pattern : patterns) {
+      if (pattern.matcher(string).find()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** @return true if there is at least one pattern */
   public boolean hasPatterns() {
     return hasPatterns;
