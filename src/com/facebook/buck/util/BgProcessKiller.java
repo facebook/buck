@@ -23,6 +23,7 @@ import com.sun.jna.Platform;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 import java.io.IOException;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Safely kill background processes on nailgun client exit. All process creation must synchronize on
@@ -32,10 +33,13 @@ public class BgProcessKiller {
 
   private static final Logger LOG = Logger.get(BgProcessKiller.class);
 
+  @GuardedBy("BgProcessKiller.class")
   private static boolean initialized;
+
+  @GuardedBy("BgProcessKiller.class")
   private static boolean armed;
 
-  public static void init() {
+  public static synchronized void init() {
     NativeLibrary libcLibrary = NativeLibrary.getInstance(Platform.C_LIBRARY_NAME);
 
     // We kill subprocesses by sending SIGHUP to our process group; we want our subprocesses to die
