@@ -374,7 +374,7 @@ public class IjSourceRootSimplifier {
 
       IjFolder mergedFolder =
           firstChildFolder
-          .getFactoryWithSameResourcesRoot()
+          .getFactoryWithSameResourcesRootAndType()
           .create(currentPath,
               false,
               childrenToMerge

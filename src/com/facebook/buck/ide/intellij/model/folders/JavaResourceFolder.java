@@ -25,19 +25,18 @@ import java.util.Optional;
 public class JavaResourceFolder extends InclusiveFolder {
 
   private Path resourcesRoot;
+  private ResourceFolderType folderType;
 
-  JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs) {
-    this(path, inputs, null);
-  }
-
-  public JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
+  public JavaResourceFolder(
+      Path path,
+      ImmutableSortedSet<Path> inputs,
+      Path resourcesRoot,
+      ResourceFolderType folderType) {
     super(path, false, inputs);
     Preconditions.checkNotNull(resourcesRoot);
+    Preconditions.checkNotNull(folderType);
     this.resourcesRoot = resourcesRoot;
-  }
-
-  public JavaResourceFolder(Path path) {
-    super(path);
+    this.folderType = folderType;
   }
 
   public Optional<Path> getRelativeOutputPath() {
@@ -52,33 +51,42 @@ public class JavaResourceFolder extends InclusiveFolder {
     return resourcesRoot;
   }
 
-  @Override
-  protected IJFolderFactory getFactory() {
-    return getFactoryWithResourcesRoot(resourcesRoot);
+  public ResourceFolderType getFolderType() {
+    return folderType;
   }
 
-  public IJFolderFactory getFactoryWithSameResourcesRoot() {
+  @Override
+  protected IJFolderFactory getFactory() {
+    return getFactoryWithResourcesRootAndType(resourcesRoot, folderType);
+  }
+
+  public IJFolderFactory getFactoryWithSameResourcesRootAndType() {
     return getFactory();
   }
 
-  public static final IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
-    return ((path, wantsPrefix, inputs) -> new JavaResourceFolder(path, inputs, resourcesRoot));
+  public static final IJFolderFactory getFactoryWithResourcesRootAndType(
+      Path resourcesRoot, ResourceFolderType folderType) {
+    return ((path, wantsPrefix, inputs) ->
+        new JavaResourceFolder(path, inputs, resourcesRoot, folderType));
   }
 
   @Override
   public boolean canMergeWith(IjFolder other) {
     return super.canMergeWith(other)
-        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot);
+        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot)
+        && Objects.equals(folderType, ((JavaResourceFolder) other).folderType);
   }
 
   @Override
   public boolean equals(Object other) {
-    return super.equals(other) &&
-        Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot);
+    return super.equals(other)
+        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot)
+        && Objects.equals(folderType, ((JavaResourceFolder) other).folderType);
   }
 
   @Override
   public int hashCode() {
-    return super.hashCode() ^ Objects.hashCode(resourcesRoot);
+    return super.hashCode() ^ Objects.hashCode(resourcesRoot) ^ Objects.hashCode(folderType);
   }
+
 }

@@ -20,10 +20,15 @@ import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.CoreArg> {
 
@@ -41,7 +46,17 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
 
   @Override
   public void apply(TargetNode<JavaTestDescription.CoreArg, ?> target, ModuleBuildContext context) {
-    addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
+    Optional<Path> resourcesRoot = target.getConstructorArg().getResourcesRoot();
+    Predicate<Map.Entry<Path, Path>> folderInputIndexFilter = null;
+    if (resourcesRoot.isPresent()) {
+      folderInputIndexFilter = addResourcesAndGetFilter(
+          ResourceFolderType.JAVA_TEST_RESOURCE,
+          target.getConstructorArg().getResources(),
+          resourcesRoot.get(),
+          context);
+    }
+    addDepsAndTestSourcesWithFolderInputIndexFilter(
+        target, true /* wantsPackagePrefix */, context, folderInputIndexFilter);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 

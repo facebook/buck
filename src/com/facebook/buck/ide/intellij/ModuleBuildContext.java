@@ -21,6 +21,8 @@ import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.model.BuildTarget;
@@ -150,8 +152,9 @@ public class ModuleBuildContext {
 
   /**
    * Merges the two folders according to the following rules:
-   * - Folders of the same type merge normally
-   * - A folder that contains both regular and test sources should become a source folder
+   * - Folders of the same type merge normally.
+   * - A resource folder and a test resource folder should become a regular resource folder.
+   * - A folder that contains both regular and test sources should become a source folder.
    * - A folder that contains any kind of source and any kind of resource will not work correctly if
    *   the resources_root is different from the src_root, since buck allows individual files to be
    *   marked as sources/resources, but IntelliJ's granularity is only at the folder level. Thus,
@@ -167,6 +170,18 @@ public class ModuleBuildContext {
     }
 
     Preconditions.checkArgument(from.getClass() == to.getClass());
+
+    // Both resource folders but one is a test resource and one is a regular resource.
+    if (from.getClass().equals(JavaResourceFolder.class)
+        && !((JavaResourceFolder)from).getFolderType()
+        .equals(((JavaResourceFolder)to).getFolderType())) {
+      return new JavaResourceFolder(
+          to.getPath(),
+          IjFolder.combineInputs(from, to),
+          ((JavaResourceFolder) to).getResourcesRoot(),
+          ResourceFolderType.JAVA_RESOURCE
+      );
+    }
 
     return from.merge(to);
   }

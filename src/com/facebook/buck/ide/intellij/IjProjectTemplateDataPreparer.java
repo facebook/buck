@@ -532,6 +532,9 @@ public class IjProjectTemplateDataPreparer {
       Path relativeOutputPath = (folder instanceof JavaResourceFolder)
           ? ((JavaResourceFolder) folder).getRelativeOutputPath().orElse(null)
           : null;
+      ResourceFolderType resourceFolderType = (folder instanceof JavaResourceFolder)
+          ? ((JavaResourceFolder) folder).getFolderType()
+          : ResourceFolderType.JAVA_RESOURCE;
       return IjSourceFolder.builder()
           .setType(folder.getIjName())
           .setUrl(
@@ -540,7 +543,7 @@ public class IjProjectTemplateDataPreparer {
           .setIsTestSource(folder instanceof TestFolder)
           .setIsResourceFolder(
               (folder instanceof AndroidResourceFolder) || (folder instanceof JavaResourceFolder))
-          .setResourceFolderType(ResourceFolderType.JAVA_RESOURCE)
+          .setResourceFolderType(resourceFolderType)
           .setRelativeOutputPath(relativeOutputPath)
           .setPackagePrefix(packagePrefix)
           .build();

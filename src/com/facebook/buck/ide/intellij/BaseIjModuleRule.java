@@ -22,6 +22,8 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -29,6 +31,8 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
@@ -149,16 +153,56 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         context,
         folderInputIndexFilter);
   }
+
   protected void addDepsAndSources(
       TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
     addDepsAndFolder(
         SourceFolder.FACTORY, DependencyType.PROD, targetNode, wantsPackagePrefix, context);
   }
 
+  protected void addDepsAndTestSourcesWithFolderInputIndexFilter(
+      TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context,
+      @Nullable Predicate<? super Map.Entry<Path, Path>> folderInputIndexFilter) {
+    addDepsAndFolderWithFolderInputIndexFilter(
+        TestFolder.FACTORY,
+        DependencyType.TEST,
+        targetNode,
+        wantsPackagePrefix,
+        context,
+        folderInputIndexFilter);
+  }
+
   protected void addDepsAndTestSources(
       TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
     addDepsAndFolder(
         TestFolder.FACTORY, DependencyType.TEST, targetNode, wantsPackagePrefix, context);
+  }
+
+  // If there is no resources_root, then we use the java src_roots option from .buckconfig, so
+  // the default folders generated should work. On the other hand, if there is a resources_root,
+  // then for resources under this root, we need to create java-resource folders with the
+  // correct relativeOutputPath set. We also return a filter that removes the resources that we've
+  // added.
+  protected Predicate<Map.Entry<Path, Path>> addResourcesAndGetFilter(
+      ResourceFolderType resourceFolderType,
+      Collection<SourcePath> resources,
+      Path resourcesRoot,
+      ModuleBuildContext context) {
+    ImmutableSet<Path> resourcePaths = resources.stream()
+        .map(sourcePath -> (sourcePath instanceof PathSourcePath)
+            ? ((PathSourcePath) sourcePath).getRelativePath()
+            : null)
+        .filter(Objects::nonNull)
+        .filter(path -> path.startsWith(resourcesRoot))
+        .collect(MoreCollectors.toImmutableSet());
+
+    addSourceFolders(
+        JavaResourceFolder.getFactoryWithResourcesRootAndType(resourcesRoot, resourceFolderType),
+        getSourceFoldersToInputsIndex(resourcePaths),
+        true /* wantsPackagePrefix */,
+        context);
+
+    return entry -> !resourcePaths.contains(entry.getValue());
   }
 
   private void addDeps(
