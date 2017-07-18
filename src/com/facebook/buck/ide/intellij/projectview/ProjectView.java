@@ -123,13 +123,15 @@ public class ProjectView {
   /** {@code Sets.union(buildTargets, allTargets)} */
   private final Set<BuildTarget> allTargets = new HashSet<>();
 
-  private final String repository = new File("").getAbsolutePath();
+  private final String repository;
 
   private ProjectView(
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
       ActionGraphAndResolver actionGraph) {
+    repository = projectViewParameters.getPath().toString();
+
     this.stdErr = projectViewParameters.getStdErr();
     this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
     this.dryRun = projectViewParameters.isDryRun();
