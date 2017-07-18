@@ -127,7 +127,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder left = buildJavaResourceFolder("res/left", "res");
     IjFolder right = buildJavaResourceFolder("res/right", "res");
     assertThat(
-        simplifier.simplify(0, ImmutableSet.of(left, right)),
+        simplifier.simplify(0, ImmutableSet.of(left, right), Paths.get(""), ImmutableSet.of()).values(),
         Matchers.contains(buildJavaResourceFolder("res", "res"))
     );
   }
@@ -243,7 +243,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder left = buildJavaResourceFolder("res/test/left", "res/test");
     IjFolder right = buildJavaResourceFolder("res/test/right", "res");
     assertThat(
-        simplifier.simplify(0, ImmutableSet.of(left, right)),
+        simplifier.simplify(0, ImmutableSet.of(left, right), Paths.get(""), ImmutableSet.of()).values(),
         Matchers.containsInAnyOrder(left, right)
     );
   }
@@ -362,7 +362,7 @@ public class IjSourceRootSimplifierTest {
     IjFolder right = buildJavaResourceFolder("res/test/right", "res");
 
     assertThat(
-        simplifier.simplify(0, ImmutableSet.of(parent, left, right)),
+        simplifier.simplify(0, ImmutableSet.of(parent, left, right), Paths.get(""), ImmutableSet.of()).values(),
         Matchers.containsInAnyOrder(parent, right)
     );
   }
