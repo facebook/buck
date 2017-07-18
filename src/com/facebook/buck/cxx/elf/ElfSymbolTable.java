@@ -106,6 +106,10 @@ public class ElfSymbolTable {
       }
     }
 
+    public Entry withSize(long size) {
+      return new Entry(st_name, st_info, st_other, st_shndx, st_value, size);
+    }
+
     public static class Info {
 
       // CHECKSTYLE.OFF: MemberName

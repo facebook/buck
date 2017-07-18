@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.elf.ElfDynamicSection;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -140,7 +141,13 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
                 /* versymSection */ Optional.empty(),
                 /* allowMissing */ true,
                 /* scrubUndefinedSymbols */ false))
-        .add(ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output))
+        .add(
+            ElfDynamicSectionScrubberStep.of(
+                getProjectFilesystem(),
+                output,
+                /* whitelistedTags */ ImmutableSet.of(
+                    ElfDynamicSection.DTag.DT_NEEDED, ElfDynamicSection.DTag.DT_SONAME),
+                /* removeScrubbedTags */ false))
         .build();
   }
 
