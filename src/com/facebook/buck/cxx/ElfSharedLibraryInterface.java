@@ -148,6 +148,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
                 /* whitelistedTags */ ImmutableSet.of(
                     ElfDynamicSection.DTag.DT_NEEDED, ElfDynamicSection.DTag.DT_SONAME),
                 /* removeScrubbedTags */ false))
+        .add(ElfScrubFileHeaderStep.of(getProjectFilesystem(), output))
         .build();
   }
 
