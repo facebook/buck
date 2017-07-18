@@ -109,12 +109,20 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())))
         .add(
-            ElfExtractSectionsStep.of(
-                getProjectFilesystem(),
+            new ElfExtractSectionsStep(
                 objcopy.getCommandPrefix(context.getSourcePathResolver()),
-                context.getSourcePathResolver().getAbsolutePath(input),
+                SECTIONS,
+                context.getSourcePathResolver().getFilesystem(input),
+                context.getSourcePathResolver().getRelativePath(input),
+                getProjectFilesystem(),
+                output))
+        .add(
+            ElfCompactSectionsStep.of(
+                objcopy.getCommandPrefix(context.getSourcePathResolver()),
+                getProjectFilesystem(),
                 output,
-                SECTIONS))
+                getProjectFilesystem(),
+                output))
         .add(ElfClearProgramHeadersStep.of(getProjectFilesystem(), output))
         .add(
             ElfSymbolTableScrubberStep.of(

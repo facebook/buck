@@ -26,15 +26,15 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import org.immutables.value.Value;
 
 /**
@@ -42,24 +42,32 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractElfExtractSectionsStep implements Step {
+abstract class AbstractElfCompactSectionsStep implements Step {
 
-  abstract ProjectFilesystem getFilesystem();
+  private static final long SHF_ALLOC = 0x2L;
 
   abstract ImmutableList<String> getObjcopyPrefix();
 
+  abstract ProjectFilesystem getInputFilesystem();
+
   abstract Path getInput();
+
+  abstract ProjectFilesystem getOutputFilesystem();
 
   abstract Path getOutput();
 
-  abstract ImmutableSet<String> getSections();
+  @Value.Check
+  void check() {
+    Preconditions.checkState(!getInput().isAbsolute());
+    Preconditions.checkState(!getOutput().isAbsolute());
+  }
 
   // We want to compact the sections into the new ELF file, so find out the new addresses of each
   // section.
   private ImmutableMap<String, Long> getNewSectionAddresses() throws IOException {
     ImmutableMap.Builder<String, Long> addresses = ImmutableMap.builder();
     try (FileChannel channel =
-        FileChannel.open(getFilesystem().resolve(getInput()), StandardOpenOption.READ)) {
+        FileChannel.open(getInputFilesystem().resolve(getInput()), StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
 
@@ -68,9 +76,7 @@ abstract class AbstractElfExtractSectionsStep implements Step {
       for (int index = 0; index < elf.getNumberOfSections(); index++) {
         ElfSection section = elf.getSectionByIndex(index);
         String name = elf.getSectionName(section.header);
-        // If this is a target section, assign it the current address, then increment the next
-        // address by this sections size.
-        if (getSections().contains(name)) {
+        if ((section.header.sh_flags & SHF_ALLOC) != 0) {
           addresses.put(name, end);
           end += section.header.sh_size;
         }
@@ -82,18 +88,14 @@ abstract class AbstractElfExtractSectionsStep implements Step {
   private ImmutableList<String> getObjcopyCommand(ImmutableMap<String, Long> addresses) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(getObjcopyPrefix());
-    for (String section : getSections()) {
-      Long address = addresses.get(section);
-      if (address != null) {
-        args.add(
-            "--only-section",
-            section,
-            "--change-section-address",
-            String.format("%s=0x%x", section, address));
-      }
+    args.add("--no-change-warnings");
+    for (Map.Entry<String, Long> ent : addresses.entrySet()) {
+      String section = ent.getKey();
+      long address = ent.getValue();
+      args.add("--change-section-address", String.format("%s=0x%x", section, address));
     }
-    args.add(getInput().toString());
-    args.add(getOutput().toString());
+    args.add(getInputFilesystem().resolve(getInput()).toString());
+    args.add(getOutputFilesystem().resolve(getOutput()).toString());
     return args.build();
   }
 
@@ -103,7 +105,7 @@ abstract class AbstractElfExtractSectionsStep implements Step {
     ImmutableMap<String, Long> addresses = getNewSectionAddresses();
     Step objcopy =
         new DefaultShellStep(
-            getFilesystem().getRootPath(),
+            getOutputFilesystem().getRootPath(),
             /* args */ getObjcopyCommand(addresses),
             /* env */ ImmutableMap.of());
     return objcopy.execute(context);
@@ -111,12 +113,11 @@ abstract class AbstractElfExtractSectionsStep implements Step {
 
   @Override
   public final String getShortName() {
-    return "scrub_symbol_table";
+    return "elf_compact_sections";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format(
-        "Extract sections %s from %s", Joiner.on(", ").join(getSections()), getInput());
+    return String.format("Compact ELF sections in %s", getInputFilesystem().resolve(getInput()));
   }
 }
