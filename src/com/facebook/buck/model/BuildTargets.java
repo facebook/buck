@@ -101,17 +101,6 @@ public class BuildTargets {
         .resolve(String.format(format, target.getShortNameAndFlavorPostfix()));
   }
 
-  /**
-   * Takes the {@link BuildTarget} for {@code hasBuildTarget} and derives a new {@link BuildTarget}
-   * from it with the specified flavor.
-   *
-   * @throws IllegalArgumentException if the original {@link BuildTarget} already has a flavor.
-   */
-  public static BuildTarget createFlavoredBuildTarget(
-      UnflavoredBuildTarget buildTarget, Flavor flavor) {
-    return BuildTarget.builder(buildTarget).addFlavors(flavor).build();
-  }
-
   public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
     return input -> {
       ImmutableSet<Flavor> flavorSet =

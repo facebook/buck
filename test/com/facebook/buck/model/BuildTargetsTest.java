@@ -32,15 +32,6 @@ public class BuildTargetsTest {
 
   private static final Path ROOT = Paths.get("/opt/src/buck");
 
-  @Test
-  public void testCreateFlavoredBuildTarget() {
-    BuildTarget fooBar = BuildTarget.builder(ROOT, "//foo", "bar").build();
-    BuildTarget fooBarBaz =
-        BuildTargets.createFlavoredBuildTarget(fooBar.checkUnflavored(), InternalFlavor.of("baz"));
-    assertTrue(fooBarBaz.isFlavored());
-    assertEquals("//foo:bar#baz", fooBarBaz.getFullyQualifiedName());
-  }
-
   @Test(expected = IllegalStateException.class)
   public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz =
