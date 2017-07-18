@@ -24,6 +24,7 @@ import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -52,14 +53,23 @@ public class TestRunConfigurationProducer extends RunConfigurationProducer<TestC
       return false;
     }
 
-    String name = Optional.ofNullable(psiClass.getName()).orElse("");
+    PsiMethod method = PsiTreeUtil.getParentOfType(location, PsiMethod.class);
+    String name;
+    Optional<String> testSelector;
+    if (method != null && TestConfigurationUtil.isTestMethod(method)) {
+      testSelector = Optional.of(psiClass.getQualifiedName() + "#" + method.getName());
+      name = method.getName();
+    } else {
+      testSelector = Optional.ofNullable(psiClass.getQualifiedName());
+      name = Optional.ofNullable(psiClass.getName()).orElse("");
+    }
 
     BuckBuildManager buildManager = BuckBuildManager.getInstance(context.getProject());
     final CompletableFuture<Boolean> success = new CompletableFuture<>();
     BuckCommandHandler handler = TestConfigurationUtil.getTestConfigurationDataHandler(
         config,
         name,
-        Optional.ofNullable(psiClass.getQualifiedName()),
+        testSelector,
         context.getProject(),
         file.getVirtualFile(),
         context.getProject().getProjectFile(),

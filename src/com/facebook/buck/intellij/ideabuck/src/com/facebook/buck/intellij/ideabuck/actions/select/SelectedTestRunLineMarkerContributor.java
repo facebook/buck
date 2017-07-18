@@ -15,12 +15,10 @@
  */
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
-import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
+import com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationUtil;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiKeyword;
@@ -30,11 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 /** Class denoting the lines that can create buck test configurations. */
 public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContributor {
-
-  private static final String[] TEST_ANNOTATIONS = {
-    "org.junit.Test", "org.testng.annotations.Test"
-  };
-
   @Nullable
   @Override
   public Info getInfo(PsiElement psiElement) {
@@ -43,7 +36,7 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
       if (parent instanceof PsiClass) {
         PsiClass psiClass = (PsiClass) parent;
         for (PsiMethod method : psiClass.getAllMethods()) {
-          if (isTestMethod(method)) {
+          if (TestConfigurationUtil.isTestMethod(method)) {
             return createInfo(psiElement);
           }
         }
@@ -51,7 +44,7 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
     }
     if (psiElement instanceof PsiTypeParameterList) {
       PsiElement parent = psiElement.getParent();
-      if (parent instanceof PsiMethod && isTestMethod((PsiMethod) parent)) {
+      if (parent instanceof PsiMethod && TestConfigurationUtil.isTestMethod((PsiMethod) parent)) {
         return createInfo(psiElement);
       }
     }
@@ -83,34 +76,5 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
             IconLoader.getIcon("/icons/actions/Debug.png"),
             true,
             parent));
-  }
-
-  /**
-   * Check that a method is annotated @Test.
-   *
-   * @param method a {@link PsiMethod} to check.
-   * @return {@code true} if the method has the junit Test annotation. {@code false} otherwise.
-   */
-  private boolean isTestMethod(PsiMethod method) {
-    if (method.getContext() == null) {
-      return false;
-    }
-    if (method.getContext().getContainingFile() == null) {
-      return false;
-    }
-    VirtualFile buckFile =
-        BuckFileUtil.getBuckFile(method.getContext().getContainingFile().getVirtualFile());
-    if (buckFile == null) {
-      return false;
-    }
-    PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
-    for (PsiAnnotation annotation : annotations) {
-      for (String testAnnotation : TEST_ANNOTATIONS) {
-        if (testAnnotation.equals(annotation.getQualifiedName())) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 }

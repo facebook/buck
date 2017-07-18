@@ -18,15 +18,23 @@ package com.facebook.buck.intellij.ideabuck.configurations;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
+import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.google.common.base.Function;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiMethod;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class TestConfigurationUtil {
+final public class TestConfigurationUtil {
+
+  private static final String[] TEST_ANNOTATIONS = {
+      "org.junit.Test", "org.testng.annotations.Test"
+  };
+
   /**
    * Create handler that fills out test configuration using buck query on current file.
    *
@@ -75,7 +83,36 @@ public class TestConfigurationUtil {
               }
             }
         );
-    handler.command().addParameter("kind('java_test', owner(" + containingFile.getPath() + ")");
+    handler.command().addParameter("kind('java_test', owner(" + containingFile.getPath() + "))");
     return handler;
+  }
+
+  /**
+   * Check that a method is annotated @Test.
+   *
+   * @param method a {@link PsiMethod} to check.
+   * @return {@code true} if the method has the junit Test annotation. {@code false} otherwise.
+   */
+  public static boolean isTestMethod(PsiMethod method) {
+    if (method.getContext() == null) {
+      return false;
+    }
+    if (method.getContext().getContainingFile() == null) {
+      return false;
+    }
+    VirtualFile buckFile =
+        BuckFileUtil.getBuckFile(method.getContext().getContainingFile().getVirtualFile());
+    if (buckFile == null) {
+      return false;
+    }
+    PsiAnnotation[] annotations = method.getModifierList().getAnnotations();
+    for (PsiAnnotation annotation : annotations) {
+      for (String testAnnotation : TEST_ANNOTATIONS) {
+        if (testAnnotation.equals(annotation.getQualifiedName())) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 }
