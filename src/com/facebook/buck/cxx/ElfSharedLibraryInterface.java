@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /** Build a shared library interface from an ELF shared library. */
 class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -117,10 +118,20 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add(ElfClearProgramHeadersStep.of(getProjectFilesystem(), output))
         .add(
             ElfSymbolTableScrubberStep.of(
-                getProjectFilesystem(), output, /* section */ ".dynsym", /* allowMissing */ false))
+                getProjectFilesystem(),
+                output,
+                /* section */ ".dynsym",
+                /* versymSection */ Optional.empty(),
+                /* allowMissing */ false,
+                /* scrubUndefinedSymbols */ false))
         .add(
             ElfSymbolTableScrubberStep.of(
-                getProjectFilesystem(), output, /* section */ ".symtab", /* allowMissing */ true))
+                getProjectFilesystem(),
+                output,
+                /* section */ ".symtab",
+                /* versymSection */ Optional.empty(),
+                /* allowMissing */ true,
+                /* scrubUndefinedSymbols */ false))
         .add(ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output))
         .build();
   }
