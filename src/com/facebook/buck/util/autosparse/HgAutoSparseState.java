@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util.autosparse;
 
+import static com.google.common.collect.Sets.union;
+
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
@@ -62,8 +64,8 @@ public class HgAutoSparseState implements AutoSparseState {
   private final HgCmdLineInterface hgCmdLine;
   private final String revisionId;
   private final Set<Path> hgSparseSeen;
-  private final Set<Path> ignoredPaths;
 
+  private Set<Path> ignoredPaths;
   private ManifestTrie hgManifest;
   private boolean hgManifestLoaded;
 
@@ -90,6 +92,11 @@ public class HgAutoSparseState implements AutoSparseState {
   @Override
   public String getRevisionId() {
     return revisionId;
+  }
+
+  @Override
+  public void updateConfig(AutoSparseConfig config) {
+    ignoredPaths = union(ignoredPaths, config.ignoredPaths());
   }
 
   @Override
