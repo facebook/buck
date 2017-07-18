@@ -89,6 +89,7 @@ public class DistBuildClientExecutorTest {
   private DistBuildClientStatsTracker distBuildClientStatsTracker;
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
+  private static final String BUILD_LABEL = "unit_test";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -98,7 +99,7 @@ public class DistBuildClientExecutorTest {
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
     buildJobState = createMinimalFakeBuildJobState();
-    distBuildClientStatsTracker = new DistBuildClientStatsTracker();
+    distBuildClientStatsTracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     distBuildCellIndexer = new DistBuildCellIndexer(new TestCellBuilder().build());
     distBuildClientExecutor =
         new DistBuildClientExecutor(

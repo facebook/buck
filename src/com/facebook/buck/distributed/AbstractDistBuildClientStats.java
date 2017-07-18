@@ -26,6 +26,8 @@ abstract class AbstractDistBuildClientStats {
 
   abstract boolean buckClientError();
 
+  abstract String buildLabel();
+
   abstract Optional<String> buckClientErrorMessage();
 
   abstract boolean performedLocalBuild();

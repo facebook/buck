@@ -57,6 +57,9 @@ public class DistBuildConfig {
   private static final String TENANT_ID = "tenant_id";
   private static final String DEFAULT_TENANT_ID = "";
 
+  private static final String BUILD_LABEL = "build_label";
+  private static final String DEFAULT_BUILD_LABEL = "";
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -130,6 +133,10 @@ public class DistBuildConfig {
 
   public String getTenantId() {
     return buckConfig.getValue(STAMPEDE_SECTION, TENANT_ID).orElse(DEFAULT_TENANT_ID);
+  }
+
+  public String getBuildLabel() {
+    return buckConfig.getValue(STAMPEDE_SECTION, BUILD_LABEL).orElse(DEFAULT_BUILD_LABEL);
   }
 
   /**

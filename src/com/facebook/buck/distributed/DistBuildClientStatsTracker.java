@@ -59,6 +59,12 @@ public class DistBuildClientStatsTracker {
 
   private volatile Optional<String> buckClientErrorMessage = Optional.empty();
 
+  private final String buildLabel;
+
+  public DistBuildClientStatsTracker(String buildLabel) {
+    this.buildLabel = buildLabel;
+  }
+
   private void generateStatsPreconditionChecksNoException() {
     // Unless there was an exception, we expect all the following fields to be present.
     Preconditions.checkArgument(
@@ -120,7 +126,8 @@ public class DistBuildClientStatsTracker {
         DistBuildClientStats.builder()
             .setStampedeId(stampedeId.get())
             .setPerformedLocalBuild(performedLocalBuild)
-            .setBuckClientError(buckClientError);
+            .setBuckClientError(buckClientError)
+            .setBuildLabel(buildLabel);
 
     builder.setDistributedBuildExitCode(distributedBuildExitCode);
     builder.setLocalFallbackBuildEnabled(isLocalFallbackBuildEnabled);
