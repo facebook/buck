@@ -950,8 +950,10 @@ class NativeLibraryMergeEnhancer {
 
             void fixSection(Elf elf, String sectionName, String stringSectionName)
                 throws IOException {
-              ElfSection section = elf.getMandatorySectionByName(linkOutput, sectionName);
-              ElfSection strings = elf.getMandatorySectionByName(linkOutput, stringSectionName);
+              ElfSection section =
+                  elf.getMandatorySectionByName(linkOutput, sectionName).getSection();
+              ElfSection strings =
+                  elf.getMandatorySectionByName(linkOutput, stringSectionName).getSection();
               ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
 
               ImmutableList.Builder<ElfSymbolTable.Entry> fixedEntries = ImmutableList.builder();

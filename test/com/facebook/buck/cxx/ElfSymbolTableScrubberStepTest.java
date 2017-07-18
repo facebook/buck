@@ -63,7 +63,7 @@ public class ElfSymbolTableScrubberStepTest {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
       ElfSection section =
-          elf.getSectionByName(SECTION).orElseThrow(AssertionError::new).getSecond();
+          elf.getSectionByName(SECTION).orElseThrow(AssertionError::new).getSection();
       ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
       Set<Long> addresses = new HashSet<>();
       table.entries.forEach(

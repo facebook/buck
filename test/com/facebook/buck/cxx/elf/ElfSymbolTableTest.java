@@ -74,7 +74,7 @@ public class ElfSymbolTableTest {
       Elf elf = new Elf(buffer);
       return ElfSymbolTable.parse(
           elf.header.ei_class,
-          elf.getSectionByName(".symtab").orElseThrow(RuntimeException::new).getSecond().body);
+          elf.getSectionByName(".symtab").orElseThrow(RuntimeException::new).getSection().body);
     }
   }
 }

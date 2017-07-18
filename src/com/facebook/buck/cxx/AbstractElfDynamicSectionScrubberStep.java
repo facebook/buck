@@ -64,7 +64,7 @@ abstract class AbstractElfDynamicSectionScrubberStep implements Step {
             StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
-      ElfSection section = elf.getMandatorySectionByName(getPath(), SECTION);
+      ElfSection section = elf.getMandatorySectionByName(getPath(), SECTION).getSection();
       for (ByteBuffer body = section.body; body.hasRemaining(); ) {
         ElfDynamicSection.DTag dTag =
             ElfDynamicSection.DTag.valueOf(

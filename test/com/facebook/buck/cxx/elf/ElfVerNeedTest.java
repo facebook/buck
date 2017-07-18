@@ -46,10 +46,10 @@ public class ElfVerNeedTest {
     try (FileChannel channel = FileChannel.open(workspace.resolve("libfoo.so"))) {
       MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
-      ElfSection stringTable = elf.getSectionByName(".dynstr").get().getSecond();
+      ElfSection stringTable = elf.getSectionByName(".dynstr").get().getSection();
       ElfVerNeed verNeed =
           ElfVerNeed.parse(
-              elf.header.ei_class, elf.getSectionByName(".gnu.version_r").get().getSecond().body);
+              elf.header.ei_class, elf.getSectionByName(".gnu.version_r").get().getSection().body);
       assertThat(verNeed.entries, Matchers.hasSize(1));
       assertThat(
           stringTable.lookupString(verNeed.entries.get(0).getFirst().vn_file),

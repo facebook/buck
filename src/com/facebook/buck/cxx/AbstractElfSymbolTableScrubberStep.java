@@ -20,9 +20,9 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
 import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.elf.ElfSymbolTable;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -102,7 +102,8 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       Elf elf = new Elf(buffer);
 
       // Locate the symbol table section.
-      Optional<ElfSection> section = elf.getSectionByName(getSection()).map(Pair::getSecond);
+      Optional<ElfSection> section =
+          elf.getSectionByName(getSection()).map(ElfSectionLookupResult::getSection);
       if (!section.isPresent()) {
         if (isAllowMissing()) {
           return StepExecutionResult.SUCCESS;
