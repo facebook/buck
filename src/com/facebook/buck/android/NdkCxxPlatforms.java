@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.PreprocessorProvider;
+import com.facebook.buck.cxx.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -607,11 +608,13 @@ public class NdkCxxPlatforms {
         .setStaticLibraryExtension("a")
         .setObjectFileExtension("o")
         .setSharedLibraryInterfaceFactory(
-            config.shouldUseSharedLibraryInterfaces()
+            config.getSharedLibraryInterfaces() != SharedLibraryInterfaceFactory.Type.DISABLED
                 ? Optional.of(
                     ElfSharedLibraryInterfaceFactory.of(
                         new ConstantToolProvider(
-                            getGccTool(toolchainPaths, "objcopy", version, executableFinder))))
+                            getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
+                        config.getSharedLibraryInterfaces()
+                            == SharedLibraryInterfaceFactory.Type.DEFINED_ONLY))
                 : Optional.empty())
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());

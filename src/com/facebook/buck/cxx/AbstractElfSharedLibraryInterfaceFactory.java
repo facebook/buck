@@ -33,6 +33,8 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
 
   abstract ToolProvider getObjcopy();
 
+  abstract boolean isRemoveUndefinedSymbols();
+
   @Override
   public final BuildRule createSharedInterfaceLibrary(
       BuildTarget target,
@@ -47,7 +49,8 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
         pathResolver,
         ruleFinder,
         getObjcopy().resolve(resolver),
-        library);
+        library,
+        isRemoveUndefinedSymbols());
   }
 
   @Override

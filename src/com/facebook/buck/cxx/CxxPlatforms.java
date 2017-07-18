@@ -51,12 +51,15 @@ public class CxxPlatforms {
   private static Optional<SharedLibraryInterfaceFactory> getSharedLibraryInterfaceFactory(
       CxxBuckConfig config, Platform platform) {
     Optional<SharedLibraryInterfaceFactory> sharedLibraryInterfaceFactory = Optional.empty();
-    if (config.shouldUseSharedLibraryInterfaces()) {
+    SharedLibraryInterfaceFactory.Type type = config.getSharedLibraryInterfaces();
+    if (type != SharedLibraryInterfaceFactory.Type.DISABLED) {
       switch (platform) {
         case LINUX:
           sharedLibraryInterfaceFactory =
               Optional.of(
-                  ElfSharedLibraryInterfaceFactory.of(config.getToolProvider("objcopy").get()));
+                  ElfSharedLibraryInterfaceFactory.of(
+                      config.getToolProvider("objcopy").get(),
+                      type == SharedLibraryInterfaceFactory.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
         default:

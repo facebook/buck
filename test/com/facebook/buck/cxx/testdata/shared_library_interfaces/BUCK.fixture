@@ -1,6 +1,16 @@
 cxx_library(
+  name = 'dep',
+  srcs = [
+    'dep.cpp',
+  ],
+)
+
+cxx_library(
   name = 'cxx_library',
   srcs = ['library.cpp'],
+  exported_deps = [
+    ':dep',
+  ],
 )
 
 platform = read_config('cxx', 'platform')
@@ -21,6 +31,9 @@ prebuilt_cxx_library(
   supports_shared_library_interface = True,
   lib_dir = '$(location :gen_prebuilt_cxx_library)',
   include_dirs = [],
+  exported_deps = [
+    ':dep',
+  ],
 )
 
 for library in ('cxx_library', 'prebuilt_cxx_library'):
