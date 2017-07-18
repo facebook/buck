@@ -313,9 +313,7 @@ public class AppleTestDescription
     if (appleConfig.getXctoolZipTarget().isPresent()) {
       final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
       BuildTarget unzipXctoolTarget =
-          BuildTarget.builder(xctoolZipBuildRule.getBuildTarget())
-              .addFlavors(UNZIP_XCTOOL_FLAVOR)
-              .build();
+          xctoolZipBuildRule.getBuildTarget().withAppendedFlavors(UNZIP_XCTOOL_FLAVOR);
       final Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {

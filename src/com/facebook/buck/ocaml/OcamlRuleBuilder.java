@@ -92,12 +92,12 @@ public class OcamlRuleBuilder {
 
   @VisibleForTesting
   protected static BuildTarget createStaticLibraryBuildTarget(BuildTarget target) {
-    return BuildTarget.builder(target).addFlavors(OCAML_STATIC_FLAVOR).build();
+    return target.withAppendedFlavors(OCAML_STATIC_FLAVOR);
   }
 
   @VisibleForTesting
   protected static BuildTarget createOcamlLinkTarget(BuildTarget target) {
-    return BuildTarget.builder(target).addFlavors(OCAML_LINK_BINARY_FLAVOR).build();
+    return target.withAppendedFlavors(OCAML_LINK_BINARY_FLAVOR);
   }
 
   public static BuildRule createBuildRule(

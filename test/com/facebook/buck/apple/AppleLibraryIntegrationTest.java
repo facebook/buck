@@ -269,9 +269,7 @@ public class AppleLibraryIntegrationTest {
         workspace.getPath(
             BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
@@ -306,9 +304,7 @@ public class AppleLibraryIntegrationTest {
         workspace.getPath(
             BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve("TestLibrary.framework"));
     assertThat(Files.exists(frameworkPath), is(true));
@@ -344,9 +340,7 @@ public class AppleLibraryIntegrationTest {
         workspace.getPath(
             BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve("TestLibrary.framework"));
     Path libraryPath = frameworkPath.resolve("TestLibrary");

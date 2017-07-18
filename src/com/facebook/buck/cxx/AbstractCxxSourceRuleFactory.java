@@ -214,9 +214,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @VisibleForTesting
   BuildTarget createAggregatedPreprocessDepsBuildTarget() {
-    return BuildTarget.builder(getBaseBuildTarget())
-        .addFlavors(getCxxPlatform().getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR)
-        .build();
+    return getBaseBuildTarget()
+        .withAppendedFlavors(getCxxPlatform().getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR);
   }
 
   private String getOutputName(String name) {

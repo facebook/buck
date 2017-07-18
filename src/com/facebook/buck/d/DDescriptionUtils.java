@@ -71,11 +71,9 @@ abstract class DDescriptionUtils {
    */
   public static BuildTarget createBuildTargetForFile(
       BuildTarget existingTarget, String flavorPrefix, String fileName, CxxPlatform cxxPlatform) {
-    return BuildTarget.builder(existingTarget)
-        .addFlavors(
-            cxxPlatform.getFlavor(),
-            InternalFlavor.of(flavorPrefix + Flavor.replaceInvalidCharacters(fileName)))
-        .build();
+    return existingTarget.withAppendedFlavors(
+        cxxPlatform.getFlavor(),
+        InternalFlavor.of(flavorPrefix + Flavor.replaceInvalidCharacters(fileName)));
   }
 
   /**
@@ -164,7 +162,7 @@ abstract class DDescriptionUtils {
   }
 
   public static BuildTarget getSymlinkTreeTarget(BuildTarget baseTarget) {
-    return BuildTarget.builder(baseTarget).addFlavors(SOURCE_LINK_TREE).build();
+    return baseTarget.withAppendedFlavors(SOURCE_LINK_TREE);
   }
 
   public static SymlinkTree createSourceSymlinkTree(

@@ -236,10 +236,7 @@ public class AppleBundleDescription
           targetsWithoutPlatformFlavors
               .filter(BuildTargets.containsFlavor(WATCH))
               .transform(
-                  input ->
-                      BuildTarget.builder(input.withoutFlavors(WATCH))
-                          .addFlavors(actualWatchFlavor)
-                          .build());
+                  input -> input.withoutFlavors(WATCH).withAppendedFlavors(actualWatchFlavor));
 
       targetsWithoutPlatformFlavors =
           targetsWithoutPlatformFlavors.filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));

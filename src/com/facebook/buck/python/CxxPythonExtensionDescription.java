@@ -114,9 +114,7 @@ public class CxxPythonExtensionDescription
   static BuildTarget getExtensionTarget(
       BuildTarget target, Flavor pythonPlatform, Flavor platform) {
     return CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-        BuildTarget.builder(target).addFlavors(pythonPlatform).build(),
-        platform,
-        Linker.LinkType.SHARED);
+        target.withAppendedFlavors(pythonPlatform), platform, Linker.LinkType.SHARED);
   }
 
   @VisibleForTesting

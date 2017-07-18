@@ -68,14 +68,12 @@ public class SwiftTestIOSIntegrationTest {
             .getPath(
                 BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(
-                            InternalFlavor.of("iphonesimulator-x86_64"),
-                            InternalFlavor.of("apple-test-bundle"),
-                            AppleDebugFormat.DWARF.getFlavor(),
-                            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
-                            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(
+                        InternalFlavor.of("iphonesimulator-x86_64"),
+                        InternalFlavor.of("apple-test-bundle"),
+                        AppleDebugFormat.DWARF.getFlavor(),
+                        LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s/MixedTest.xctest"))
             .resolve("MixedTest");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));

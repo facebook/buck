@@ -83,9 +83,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
   @Override
   public SourcePath build() {
     BuildTarget templateTarget =
-        BuildTarget.builder(getBaseTarget())
-            .addFlavors(InternalFlavor.of("starter-template"))
-            .build();
+        getBaseTarget().withAppendedFlavors(InternalFlavor.of("starter-template"));
     WriteFile templateRule =
         getRuleResolver()
             .addToIndex(

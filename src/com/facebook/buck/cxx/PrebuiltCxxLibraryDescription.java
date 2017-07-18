@@ -399,7 +399,7 @@ public class PrebuiltCxxLibraryDescription
 
     // Otherwise, we need to build it from the static lib.
     BuildTarget sharedTarget =
-        BuildTarget.builder(buildTarget).addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR).build();
+        buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
 
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath =

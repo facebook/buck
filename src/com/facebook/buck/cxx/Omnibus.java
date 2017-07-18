@@ -67,9 +67,8 @@ public class Omnibus {
   }
 
   private static BuildTarget getRootTarget(BuildTarget base, BuildTarget root) {
-    return BuildTarget.builder(base)
-        .addFlavors(InternalFlavor.of(Flavor.replaceInvalidCharacters(root.toString())))
-        .build();
+    return base.withAppendedFlavors(
+        InternalFlavor.of(Flavor.replaceInvalidCharacters(root.toString())));
   }
 
   private static BuildTarget getDummyRootTarget(BuildTarget root) {

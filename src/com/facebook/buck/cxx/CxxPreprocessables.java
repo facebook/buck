@@ -202,11 +202,9 @@ public class CxxPreprocessables {
       throws NoSuchBuildTargetException {
     BuildRule rule =
         ruleResolver.requireRule(
-            BuildTarget.builder(target)
-                .addFlavors(
-                    platform.getFlavor(),
-                    CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility))
-                .build());
+            target.withAppendedFlavors(
+                platform.getFlavor(),
+                CxxDescriptionEnhancer.getHeaderSymlinkTreeFlavor(headerVisibility)));
     Preconditions.checkState(
         rule instanceof HeaderSymlinkTree,
         "Attempt to add %s of type %s and class %s to %s",

@@ -400,11 +400,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
       String sharedLibrarySoName = entry.getKey().getSoName();
       BuildTarget targetForStripRule =
-          BuildTarget.builder(baseBuildTarget)
-              .addFlavors(InternalFlavor.of("android-strip"))
-              .addFlavors(InternalFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)))
-              .addFlavors(InternalFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())))
-              .build();
+          baseBuildTarget.withAppendedFlavors(
+              InternalFlavor.of("android-strip"),
+              InternalFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)),
+              InternalFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())));
 
       Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(targetForStripRule);
       StripLinkable stripLinkable;

@@ -94,7 +94,7 @@ public class CxxLuaExtensionDescription
   }
 
   private BuildTarget getExtensionTarget(BuildTarget target, Flavor platform) {
-    return BuildTarget.builder(target).addFlavors(platform).build();
+    return target.withAppendedFlavors(platform);
   }
 
   private Path getExtensionPath(
@@ -302,8 +302,7 @@ public class CxxLuaExtensionDescription
       @Override
       public SourcePath getExtension(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
         BuildRule rule =
-            resolver.requireRule(
-                BuildTarget.builder(getBuildTarget()).addFlavors(cxxPlatform.getFlavor()).build());
+            resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
         return Preconditions.checkNotNull(rule.getSourcePathToOutput());
       }
 

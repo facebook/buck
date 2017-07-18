@@ -117,14 +117,12 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     BuildRule rule =
         getRuleResolver()
             .computeIfAbsent(
-                BuildTarget.builder(getBaseTarget())
-                    .addFlavors(InternalFlavor.of("native-starter-cxx-source"))
-                    .build(),
+                getBaseTarget().withAppendedFlavors(InternalFlavor.of("native-starter-cxx-source")),
                 target -> {
                   BuildTarget templateTarget =
-                      BuildTarget.builder(getBaseTarget())
-                          .addFlavors(InternalFlavor.of("native-starter-cxx-source-template"))
-                          .build();
+                      getBaseTarget()
+                          .withAppendedFlavors(
+                              InternalFlavor.of("native-starter-cxx-source-template"));
                   WriteFile templateRule =
                       getRuleResolver()
                           .addToIndex(
