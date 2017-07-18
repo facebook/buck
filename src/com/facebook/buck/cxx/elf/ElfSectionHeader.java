@@ -156,6 +156,11 @@ public class ElfSectionHeader {
     SHT_SHLIB(10),
     SHT_DYNSYM(11),
 
+    // GNU-specific types.
+    SHT_GNU_VERNEED(0x6ffffffe),
+    SHT_GNU_VERDEF(0x6ffffffd),
+    SHT_GNU_VERSYM(0x6fffffff),
+
     // Represents one of the user/processor specific values.
     SHT_UNKNOWN(0xffffffff),
     ;
