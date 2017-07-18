@@ -391,7 +391,10 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder, moduleGraph, filesystemForExcludesTest, IjTestProjectConfig.create());
+            javaPackageFinder,
+            moduleGraph,
+            filesystemForExcludesTest,
+            IjTestProjectConfig.create());
 
     assertEquals(
         ImmutableSet.of(Paths.get("java/com/src/foo")),

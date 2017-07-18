@@ -516,14 +516,10 @@ public class IjProjectTemplateDataPreparer {
     // The compiler output path is relative to the project root
     Optional<Path> compilerOutputPath = module.getCompilerOutputPath();
     if (compilerOutputPath.isPresent()) {
-      Path rootModulePath = Paths.get(projectConfig.getProjectRoot());
-      Path moduleToRootPath = moduleBasePath.relativize(rootModulePath);
-      Path moduleRelativecompilerOutputPath = Paths.get(
-          moduleToRootPath.toString(), compilerOutputPath.get().toString());
-
+      Path relativeCompilerOutputPath = moduleBasePath.relativize(compilerOutputPath.get());
       androidProperties.put(
           "compiler_output_path",
-          "/" + MorePaths.pathWithUnixSeparators(moduleRelativecompilerOutputPath));
+          "/" + MorePaths.pathWithUnixSeparators(relativeCompilerOutputPath));
     }
   }
 
