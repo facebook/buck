@@ -22,12 +22,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.zip.JarBuilder;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
+import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
 
 /** Creates a JAR file from a collection of directories/ZIP/JAR files. */
@@ -54,7 +54,7 @@ public class JarDirectoryStep implements Step {
   private final boolean hashEntries;
 
   /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
-  private final ImmutableSet<Pattern> blacklist;
+  private final Predicate<ZipEntry> removeEntryPredicate;
 
   public JarDirectoryStep(
       ProjectFilesystem filesystem,
@@ -62,14 +62,7 @@ public class JarDirectoryStep implements Step {
       ImmutableSortedSet<Path> entriesToJar,
       @Nullable String mainClass,
       @Nullable Path manifestFile) {
-    this(
-        filesystem,
-        pathToOutputFile,
-        entriesToJar,
-        mainClass,
-        manifestFile,
-        true,
-        ImmutableSet.of());
+    this(filesystem, pathToOutputFile, entriesToJar, mainClass, manifestFile, true, entry -> false);
   }
 
   public JarDirectoryStep(
@@ -79,7 +72,7 @@ public class JarDirectoryStep implements Step {
       @Nullable String mainClass,
       @Nullable Path manifestFile,
       boolean mergeManifests,
-      ImmutableSet<Pattern> blacklist) {
+      Predicate<ZipEntry> removeEntryPredicate) {
     this(
         filesystem,
         pathToOutputFile,
@@ -88,7 +81,7 @@ public class JarDirectoryStep implements Step {
         manifestFile,
         mergeManifests,
         false,
-        blacklist);
+        removeEntryPredicate);
   }
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
@@ -113,7 +106,7 @@ public class JarDirectoryStep implements Step {
       @Nullable Path manifestFile,
       boolean mergeManifests,
       boolean hashEntries,
-      ImmutableSet<Pattern> blacklist) {
+      Predicate<ZipEntry> removeEntryPredicate) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
     this.entriesToJar = entriesToJar;
@@ -121,7 +114,7 @@ public class JarDirectoryStep implements Step {
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
     this.hashEntries = hashEntries;
-    this.blacklist = blacklist;
+    this.removeEntryPredicate = removeEntryPredicate;
   }
 
   private String getJarArgs() {
@@ -161,7 +154,7 @@ public class JarDirectoryStep implements Step {
             .setManifestFile(manifestFile != null ? filesystem.resolve(manifestFile) : null)
             .setShouldMergeManifests(mergeManifests)
             .setShouldHashEntries(hashEntries)
-            .setEntryPatternBlacklist(blacklist)
+            .setRemoveEntryPredicate(removeEntryPredicate)
             .createJarFile(filesystem.resolve(pathToOutputFile)));
   }
 }

@@ -181,7 +181,6 @@ public class AppleCxxPlatforms {
     // TODO(beng): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
     cflagsBuilder.add("-isysroot", sdkPaths.getSdkPath().toString());
-    cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
     cflagsBuilder.add("-arch", targetArchitecture);
     cflagsBuilder.add(targetSdk.getApplePlatform().getMinVersionFlagPrefix() + minVersion);
 
@@ -322,12 +321,16 @@ public class AppleCxxPlatforms {
       sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), "APPLE_DEVELOPER_DIR");
     }
 
+    // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote
+    // include path, and also force it to be sanitized by all user rule keys.
+    sanitizerPaths.put(filesystem.getRootPath(), ".");
+    cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
+
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(
             DebugPathSanitizer.getPaddedDir(
                 ".", config.getDebugPathSanitizerLimit(), File.separatorChar),
-            sanitizerPaths.build(),
-            CxxToolProvider.Type.CLANG);
+            sanitizerPaths.build());
     DebugPathSanitizer assemblerDebugPathSanitizer =
         new MungingDebugPathSanitizer(
             config.getDebugPathSanitizerLimit(),

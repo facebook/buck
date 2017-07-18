@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.function.Predicate;
@@ -40,8 +41,10 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * unconditionally in the rule key. Inputs that *are* in this list should be included in the rule
    * key if and only if they are actually being used for the rule. I.e. if they are present in the
    * dep-file listed by {@link #getInputsAfterBuildingLocally(BuildContext, CellPathResolver)}.
+   *
+   * @param pathResolver
    */
-  Predicate<SourcePath> getCoveredByDepFilePredicate();
+  Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver);
 
   /**
    * Returns a predicate that can tell whether the existence of a given path may be of interest to
@@ -56,8 +59,10 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * present in the dep-file produced in the previous build, and yet if we run a local build now the
    * compiler may decide to use it. For that reason rule key needs to reflect existence of all such
    * files and change when a such a file gets added or removed.
+   *
+   * @param pathResolver
    */
-  Predicate<SourcePath> getExistenceOfInterestPredicate();
+  Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver);
 
   /**
    * Returns a list of source paths that were actually used for the rule. This list comes from the

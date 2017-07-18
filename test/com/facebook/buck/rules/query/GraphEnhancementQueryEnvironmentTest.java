@@ -33,8 +33,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -138,21 +136,17 @@ public class GraphEnhancementQueryEnvironmentTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode);
     BuildRuleResolver realResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(realResolver));
 
     FakeJavaLibrary bottomRule =
-        realResolver.addToIndex(new FakeJavaLibrary(bottomNode.getBuildTarget(), pathResolver));
+        realResolver.addToIndex(new FakeJavaLibrary(bottomNode.getBuildTarget()));
     bottomRule.setOutputFile("bottom.jar");
     FakeJavaLibrary sublibRule =
         realResolver.addToIndex(
-            new FakeJavaLibrary(
-                sublibNode.getBuildTarget(), pathResolver, ImmutableSortedSet.of(bottomRule)));
+            new FakeJavaLibrary(sublibNode.getBuildTarget(), ImmutableSortedSet.of(bottomRule)));
     sublibRule.setOutputFile("sublib.jar");
     FakeJavaLibrary libRule =
         realResolver.addToIndex(
-            new FakeJavaLibrary(
-                libNode.getBuildTarget(), pathResolver, ImmutableSortedSet.of(sublibRule)));
+            new FakeJavaLibrary(libNode.getBuildTarget(), ImmutableSortedSet.of(sublibRule)));
     libRule.setOutputFile("lib.jar");
 
     return new GraphEnhancementQueryEnvironment(

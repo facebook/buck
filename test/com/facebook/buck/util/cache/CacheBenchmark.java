@@ -44,7 +44,7 @@ public class CacheBenchmark {
   @Before
   public void setUpTest() throws Exception {
     setUpBenchmark();
-    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.PREFIX_TREE);
+    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT);
   }
 
   private static String generateRandomString() {
@@ -93,7 +93,7 @@ public class CacheBenchmark {
             HashCode hashCode = Hashing.sha1().newHasher().putBytes(leaf.getBytes()).hash();
             cache.set(Paths.get(leaf), hashCode);
           } catch (IOException e) {
-            throw new RuntimeException(e.getCause());
+            throw new RuntimeException(e);
           }
         });
   }

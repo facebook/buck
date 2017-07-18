@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
 
 /** A rule key factory that provides diagnostic facilities. */
 public interface RuleKeyFactoryWithDiagnostics<RULE_KEY> extends RuleKeyFactory<RULE_KEY> {
@@ -45,5 +45,5 @@ public interface RuleKeyFactoryWithDiagnostics<RULE_KEY> extends RuleKeyFactory<
       BuildRule buildRule, RuleKeyHasher<DIAG_KEY> hasher);
 
   <DIAG_KEY> RuleKeyDiagnostics.Result<RULE_KEY, DIAG_KEY> buildForDiagnostics(
-      RuleKeyAppendable appendable, RuleKeyHasher<DIAG_KEY> hasher);
+      AddsToRuleKey appendable, RuleKeyHasher<DIAG_KEY> hasher);
 }

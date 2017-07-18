@@ -158,7 +158,12 @@ public class ParserTest {
       throws InterruptedException, BuildFileParseException {
     try (PerBuildState state =
         new PerBuildState(
-            parser, eventBus, executor, cell, enableProfiling, SpeculativeParsing.of(false))) {
+            parser,
+            eventBus,
+            executor,
+            cell,
+            enableProfiling,
+            PerBuildState.SpeculativeParsing.DISABLED)) {
       return Parser.getRawTargetNodes(state, cell, buildFile);
     }
   }
@@ -1691,7 +1696,7 @@ public class ParserTest {
                 BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-        SpeculativeParsing.of(true),
+        PerBuildState.SpeculativeParsing.ENABLED,
         ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
   }
 
@@ -1718,7 +1723,7 @@ public class ParserTest {
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))),
-            SpeculativeParsing.of(true),
+            PerBuildState.SpeculativeParsing.ENABLED,
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
@@ -1733,7 +1738,7 @@ public class ParserTest {
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))),
-            SpeculativeParsing.of(true),
+            PerBuildState.SpeculativeParsing.ENABLED,
             ParserConfig.ApplyDefaultFlavorsMode.ENABLED);
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }

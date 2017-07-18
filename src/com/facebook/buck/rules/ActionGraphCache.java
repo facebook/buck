@@ -199,7 +199,7 @@ public class ActionGraphCache {
       BuildRuleResolver buildRuleResolver,
       RuleKeyFieldLoader fieldLoader) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
         new ContentAgnosticRuleKeyFactory(fieldLoader, pathResolver, ruleFinder);
 

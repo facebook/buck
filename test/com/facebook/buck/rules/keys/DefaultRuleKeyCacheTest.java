@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -132,7 +133,10 @@ public class DefaultRuleKeyCacheTest {
   private static class TestRule extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
     private TestRule() {
-      super(new FakeProjectFilesystem(), TestBuildRuleParams.create("//:rule"));
+      super(
+          BuildTargetFactory.newInstance("//:rule"),
+          new FakeProjectFilesystem(),
+          TestBuildRuleParams.create());
     }
   }
 }

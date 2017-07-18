@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -69,7 +70,8 @@ public class RemoteFileTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RemoteFile remoteFile =
         new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
@@ -564,9 +566,11 @@ public class RemoteFileTest {
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toAbsolutePath());
 
-    BuildRuleParams params = TestBuildRuleParams.create("//cake:walk");
+    BuildTarget target = BuildTargetFactory.newInstance("//cake:walk");
+    BuildRuleParams params = TestBuildRuleParams.create();
     RemoteFile remoteFile =
         new RemoteFile(
+            target,
             filesystem,
             params,
             downloader,
@@ -577,7 +581,8 @@ public class RemoteFileTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     resolver.addToIndex(remoteFile);
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(

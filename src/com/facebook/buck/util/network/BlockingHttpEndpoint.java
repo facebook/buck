@@ -16,6 +16,7 @@
 package com.facebook.buck.util.network;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -131,7 +132,7 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
                     requestService.toString()));
       }
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
     }
   }
 }

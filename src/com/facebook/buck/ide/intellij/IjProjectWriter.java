@@ -56,9 +56,9 @@ public class IjProjectWriter {
 
     ImmutableList.Builder<ContentRoot> contentRootBuilder = ImmutableList.builder();
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      ContentRoot contentRoot = projectDataPreparer.getContentRoot(module);
-      contentRootBuilder.add(contentRoot);
-      Path generatedModuleFile = writeModule(module, contentRoot);
+      ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
+      contentRootBuilder.addAll(contentRoots);
+      Path generatedModuleFile = writeModule(module, contentRoots);
       cleaner.doNotDelete(generatedModuleFile);
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
@@ -73,12 +73,13 @@ public class IjProjectWriter {
     cleaner.doNotDelete(workspaceFile);
   }
 
-  private Path writeModule(IjModule module, ContentRoot contentRoot) throws IOException {
+  private Path writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
+      throws IOException {
     Path path = module.getModuleImlFilePath();
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
 
-    moduleContents.add("contentRoot", contentRoot);
+    moduleContents.add("contentRoots", contentRoots);
     moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
     moduleContents.add(
         "generatedSourceFolders", projectDataPreparer.getGeneratedSourceFolders(module));

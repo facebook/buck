@@ -67,10 +67,11 @@ public class LabelsFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
     String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-    Set<QueryTarget> inputs = args.get(1).getExpression().eval(env);
+    Set<QueryTarget> inputs = evaluator.eval(args.get(1).getExpression(), env);
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget input : inputs) {
       result.addAll(env.getTargetsInAttribute(input, label));

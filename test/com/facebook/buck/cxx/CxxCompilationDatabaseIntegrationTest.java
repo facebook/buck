@@ -46,8 +46,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -138,6 +141,14 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget compilationTarget =
         target.withFlavors(
             InternalFlavor.of("default"), InternalFlavor.of("compile-" + sanitize("foo.cpp.o")));
+    Map<String, String> prefixMap = new TreeMap<>(Comparator.comparingInt(String::length));
+    prefixMap.put(rootPath.toString(), ".");
+    if (Platform.detect() == Platform.MACOS) {
+      prefixMap.put(libraryExportedHeaderSymlinkTreeFolder + "/", "");
+      if (sandboxSources) {
+        prefixMap.put("buck-out/gen/binary_with_dep#default,sandbox/", "");
+      }
+    }
     assertHasEntry(
         fileToEntry,
         path,
@@ -151,7 +162,12 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
-            .add("-fdebug-prefix-map=" + rootPath + "=.")
+            .addAll(
+                prefixMap
+                    .entrySet()
+                    .stream()
+                    .map(e -> String.format("-fdebug-prefix-map=%s=%s", e.getKey(), e.getValue()))
+                    .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
             .add("-MD")
@@ -206,6 +222,15 @@ public class CxxCompilationDatabaseIntegrationTest {
         target.withFlavors(
             InternalFlavor.of("default"),
             InternalFlavor.of("compile-pic-" + sanitize("bar.cpp.o")));
+    Map<String, String> prefixMap = new TreeMap<>(Comparator.comparingInt(String::length));
+    prefixMap.put(rootPath.toString(), ".");
+    if (Platform.detect() == Platform.MACOS) {
+      prefixMap.put(headerSymlinkTreeFolder + "/", "");
+      prefixMap.put(exportedHeaderSymlinkTreeFolder + "/", "");
+      if (sandboxSources) {
+        prefixMap.put("buck-out/gen/library_with_header#default,sandbox/", "");
+      }
+    }
     assertHasEntry(
         fileToEntry,
         path,
@@ -221,7 +246,12 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
-            .add("-fdebug-prefix-map=" + rootPath + "=.")
+            .addAll(
+                prefixMap
+                    .entrySet()
+                    .stream()
+                    .map(e -> String.format("-fdebug-prefix-map=%s=%s", e.getKey(), e.getValue()))
+                    .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
             .add("-MD")
@@ -273,6 +303,10 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
+            .addAll(
+                sandboxSources && Platform.detect() == Platform.MACOS
+                    ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
+                    : ImmutableList.of())
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
@@ -327,6 +361,10 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
+            .addAll(
+                sandboxSources && Platform.detect() == Platform.MACOS
+                    ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
+                    : ImmutableList.of())
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")

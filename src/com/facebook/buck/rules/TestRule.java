@@ -91,7 +91,9 @@ public interface TestRule extends BuildRule {
       TestReportingCallback testReportingCallback);
 
   Callable<TestResults> interpretTestResults(
-      ExecutionContext executionContext, boolean isUsingTestSelectors);
+      ExecutionContext executionContext,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors);
 
   /** @return The set of labels for this build rule. */
   ImmutableSet<String> getLabels();

@@ -45,6 +45,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ddmlib/ddmlib-25.2.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error-prone-annotations-2.0.15-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.16.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildInfoStore;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.Threads;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileVisitResult;
@@ -128,7 +129,7 @@ public class MetadataChecker {
     try {
       checkAndCleanIfNeededInner(rootCell);
     } catch (ClosedByInterruptException e) {
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
     }
   }
 }

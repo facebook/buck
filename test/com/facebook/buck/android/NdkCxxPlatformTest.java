@@ -46,6 +46,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -96,7 +97,7 @@ public class NdkCxxPlatformTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
@@ -125,13 +126,13 @@ public class NdkCxxPlatformTest {
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
           rule =
-              cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
+              cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
                   source,
                   CxxSource.of(CxxSource.Type.CXX, new FakeSourcePath(source), ImmutableList.of()));
           break;
         case COMPILE:
           rule =
-              cxxSourceRuleFactory.createCompileBuildRule(
+              cxxSourceRuleFactory.requireCompileBuildRule(
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
@@ -153,7 +154,7 @@ public class NdkCxxPlatformTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,

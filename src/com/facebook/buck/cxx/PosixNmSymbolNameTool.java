@@ -77,9 +77,9 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     UndefinedSymbolsFile rule =
         ruleResolver.addToIndex(
             new UndefinedSymbolsFile(
+                target,
                 projectFilesystem,
                 baseParams
-                    .withBuildTarget(target)
                     .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(nm.getDeps(ruleFinder))
@@ -98,11 +98,12 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     @AddToRuleKey private final Iterable<? extends SourcePath> inputs;
 
     public UndefinedSymbolsFile(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         Tool nm,
         Iterable<? extends SourcePath> inputs) {
-      super(projectFilesystem, buildRuleParams);
+      super(buildTarget, projectFilesystem, buildRuleParams);
       this.nm = nm;
       this.inputs = inputs;
     }

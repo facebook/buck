@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -47,6 +48,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescriptionA
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -60,17 +62,18 @@ public class RemoteFileDescription implements Description<RemoteFileDescriptionA
           e,
           "%s when parsing sha1 of %s",
           e.getMessage(),
-          params.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName());
+          buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName());
     }
 
-    String out = args.getOut().orElse(params.getBuildTarget().getShortNameAndFlavorPostfix());
+    String out = args.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
 
     RemoteFile.Type type = args.getType().orElse(RemoteFile.Type.DATA);
     if (type == RemoteFile.Type.EXECUTABLE) {
       return new RemoteFileBinary(
-          projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
+          buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
     }
-    return new RemoteFile(projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
+    return new RemoteFile(
+        buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
   }
 
   @BuckStyleImmutable

@@ -18,10 +18,13 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -44,13 +47,15 @@ public class CxxBinaryTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    BuildRuleParams linkParams = TestBuildRuleParams.create("//:link");
+    BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
+    BuildRuleParams linkParams = TestBuildRuleParams.create();
     Path bin = Paths.get("path/to/exectuable");
     CxxLink cxxLink =
         ruleResolver.addToIndex(
             new CxxLink(
+                linkTarget,
                 new FakeProjectFilesystem(),
                 linkParams,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
@@ -60,14 +65,15 @@ public class CxxBinaryTest {
                 Optional.empty(),
                 /* cacheable */ true,
                 /* thinLto */ false));
-    BuildRuleParams params = TestBuildRuleParams.create("//:target");
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams params = TestBuildRuleParams.create();
     CxxBinary binary =
         ruleResolver.addToIndex(
             new CxxBinary(
+                target,
                 new FakeProjectFilesystem(),
                 params.copyAppendingExtraDeps(ImmutableSortedSet.<BuildRule>of(cxxLink)),
                 ruleResolver,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 cxxLink,
                 new CommandTool.Builder()
@@ -75,7 +81,7 @@ public class CxxBinaryTest {
                     .build(),
                 ImmutableSortedSet.of(),
                 ImmutableList.of(),
-                params.getBuildTarget()));
+                target));
     ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }

@@ -42,12 +42,14 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   public FakeDepFileBuildRule(BuildTarget target) {
-    this(new FakeProjectFilesystem(), TestBuildRuleParams.create(target));
+    this(target, new FakeProjectFilesystem(), TestBuildRuleParams.create());
   }
 
   public FakeDepFileBuildRule(
-      ProjectFilesystem projectFilesystem, BuildRuleParams buildRuleParams) {
-    super(projectFilesystem, buildRuleParams);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
   }
 
   public FakeDepFileBuildRule setOutputPath(Path outputPath) {
@@ -87,12 +89,12 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
     return coveredPredicate;
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
     return interestingPredicate;
   }
 

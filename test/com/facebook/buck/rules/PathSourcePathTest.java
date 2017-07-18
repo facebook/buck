@@ -33,7 +33,7 @@ public class PathSourcePathTest {
     PathSourcePath path = new PathSourcePath(projectFilesystem, Paths.get("cheese"));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

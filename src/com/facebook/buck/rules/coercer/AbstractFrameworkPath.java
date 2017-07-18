@@ -29,6 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -57,8 +58,10 @@ abstract class AbstractFrameworkPath
   @Value.Parameter
   public abstract Optional<SourcePath> getSourcePath();
 
-  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(Optionals.toStream(getSourcePath()));
+  public Iterator<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return Optionals.toStream(getSourcePath())
+        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+        .iterator();
   }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {

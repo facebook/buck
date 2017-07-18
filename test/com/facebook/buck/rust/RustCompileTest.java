@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -222,8 +223,9 @@ public class RustCompileTest {
     private FakeRustCompileRule(
         BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
       super(
+          target,
           new FakeProjectFilesystem(),
-          TestBuildRuleParams.create(target),
+          TestBuildRuleParams.create(),
           String.format("lib%s.rlib", target),
           fakeTool(),
           fakeLinker(),
@@ -246,7 +248,7 @@ public class RustCompileTest {
               new BuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
 
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
       Optional<SourcePath> root =
           RustCompileUtils.getCrateRoot(

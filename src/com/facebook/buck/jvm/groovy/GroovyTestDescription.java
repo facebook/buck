@@ -37,8 +37,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
@@ -88,6 +86,7 @@ public class GroovyTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -95,36 +94,33 @@ public class GroovyTestDescription
       GroovyTestDescriptionArg args)
       throws NoSuchBuildTargetException {
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultJavacOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(
+            defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
-    BuildRuleParams testsLibraryParams =
-        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         new DefaultGroovyLibraryBuilder(
                 targetGraph,
+                buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
-                testsLibraryParams,
+                params,
                 resolver,
                 cellRoots,
                 javacOptions,
                 groovyBuckConfig)
-            .setArgs(args)
-            .setGeneratedSourceFolder(defaultJavacOptions.getGeneratedSourceFolderName());
+            .setArgs(args);
 
-    if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
     JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
 
     Function<String, Arg> toMacroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
     return new JavaTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
-        pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
         args.getLabels(),

@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -47,9 +46,7 @@ public class BuildTargetMacroExpanderTest {
     final List<BuildTarget> found = new ArrayList<>();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    FakeBuildRule rule = new FakeBuildRule("//something:manifest", sourcePathResolver);
+    FakeBuildRule rule = new FakeBuildRule("//something:manifest");
     resolver.addToIndex(rule);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTargetMacroExpander<?> macroExpander =

@@ -113,12 +113,12 @@ public class CxxLinkableEnhancer {
                 .append(linker.getDeps(ruleFinder))
                 .toSortedSet(Ordering.natural());
     return new CxxLink(
+        target,
         projectFilesystem,
         // Construct our link build rule params.  The important part here is combining the build
         // rules that construct our object file inputs and also the deps that build our
         // dependencies.
-        new BuildRuleParams(
-            target, declaredDeps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of()),
+        new BuildRuleParams(declaredDeps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of()),
         linker,
         output,
         allArgs,

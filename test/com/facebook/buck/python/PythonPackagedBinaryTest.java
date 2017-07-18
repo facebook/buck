@@ -21,8 +21,11 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
@@ -68,11 +71,14 @@ public class PythonPackagedBinaryTest {
       throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+
     // The top-level python binary that lists the above libraries as deps.
     PythonBinary binary =
         PythonPackagedBinary.from(
+            target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create("//:bin"),
+            TestBuildRuleParams.create(),
             ruleFinder,
             PythonTestUtils.PYTHON_PLATFORM,
             PEX,
@@ -104,7 +110,7 @@ public class PythonPackagedBinaryTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Create two different sources, which we'll swap in as different modules.
     Path main = tmpDir.newFile().toPath();

@@ -53,7 +53,8 @@ public final class AppleBuildRules {
               AppleBinaryDescription.class,
               AppleBundleDescription.class,
               AppleTestDescription.class,
-              HalideLibraryDescription.class);
+              HalideLibraryDescription.class,
+              SwiftLibraryDescription.class);
 
   private static final ImmutableSet<Class<? extends BuildRule>> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.of(AppleTest.class);
@@ -160,8 +161,7 @@ public final class AppleBuildRules {
           }
 
           // Stop traversal for rules outside the specific set.
-          if (!isXcodeTargetDescription(node.getDescription())
-              || SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
+          if (!isXcodeTargetDescription(node.getDescription())) {
             return Collections.emptyIterator();
           }
 

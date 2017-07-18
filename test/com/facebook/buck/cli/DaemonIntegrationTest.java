@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
@@ -128,7 +129,11 @@ public class DaemonIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             TestContext.createHeartBeatStream(intervalMillis),
             timeoutMillis)) {
-      context.addClientListener(Thread.currentThread()::interrupt);
+      Thread thread = Thread.currentThread();
+      context.addClientListener(
+          () -> {
+            Threads.interruptThread(thread);
+          });
       Thread.sleep(1000);
       fail("Should have been interrupted.");
     }

@@ -66,6 +66,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -111,6 +112,8 @@ public class ProjectFilesystem {
 
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
+
+  private static final Path EDEN_MAGIC_PATH_ELEMENT = Paths.get(".eden");
 
   @VisibleForTesting static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
@@ -483,6 +486,13 @@ public class ProjectFilesystem {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
               throws IOException {
+            // TODO(mbolin): We should not have hardcoded logic for Eden here. Instead, we should
+            // properly handle cyclic symlinks in a general way.
+            // Failure to perform this check will result in a java.nio.file.FileSystemLoopException
+            // in Eden.
+            if (EDEN_MAGIC_PATH_ELEMENT.equals(dir.getFileName())) {
+              return FileVisitResult.SKIP_SUBTREE;
+            }
             return fileVisitor.preVisitDirectory(relativize(dir), attrs);
           }
 

@@ -16,11 +16,14 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
@@ -292,5 +295,64 @@ public class MorePaths {
    */
   public static Path dropInternalCaches(Path p) {
     return p.getFileSystem().getPath(p.toString());
+  }
+
+  public static int commonSuffixLength(Path a, Path b) {
+    int count = 0;
+    while (count < a.getNameCount() && count < b.getNameCount()) {
+      if (!a.getName(a.getNameCount() - count - 1)
+          .equals(b.getName(b.getNameCount() - count - 1))) {
+        break;
+      }
+      count++;
+    }
+    return count;
+  }
+
+  public static Pair<Path, Path> stripCommonSuffix(Path a, Path b) {
+    int count = commonSuffixLength(a, b);
+    return new Pair<>(
+        count == a.getNameCount()
+            ? a.getFileSystem().getPath("")
+            : a.subpath(0, a.getNameCount() - count),
+        count == b.getNameCount()
+            ? b.getFileSystem().getPath("")
+            : b.subpath(0, b.getNameCount() - count));
+  }
+
+  private static int getCommonPrefixLength(Iterable<Path> paths) {
+    Optional<Integer> minSize =
+        RichStream.from(paths).map(Path::getNameCount).min(Integer::compareTo);
+    int count;
+    for (count = 0; count < minSize.orElse(0); count++) {
+      Path prev = null;
+      for (Path path : paths) {
+        if (prev != null && !prev.getName(count).equals(path.getName(count))) {
+          return count;
+        }
+        prev = path;
+      }
+    }
+    return count;
+  }
+
+  public static Optional<Pair<Path, ImmutableList<Path>>> splitOnCommonPrefix(
+      Iterable<Path> paths) {
+    int commonPrefix = getCommonPrefixLength(paths);
+    return RichStream.from(paths)
+        .findFirst()
+        .map(
+            firstPath ->
+                new Pair<>(
+                    commonPrefix == 0
+                        ? firstPath.getFileSystem().getPath("")
+                        : firstPath.subpath(0, commonPrefix),
+                    RichStream.from(paths)
+                        .map(
+                            p ->
+                                commonPrefix == p.getNameCount()
+                                    ? p.getFileSystem().getPath("")
+                                    : p.subpath(commonPrefix, p.getNameCount()))
+                        .toImmutableList()));
   }
 }

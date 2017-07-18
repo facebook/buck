@@ -20,5 +20,5 @@ import com.facebook.buck.model.BuildTarget;
 import java.util.stream.Stream;
 
 public interface HasInstallHelpers {
-  Stream<BuildTarget> getHelpers();
+  Stream<BuildTarget> getInstallHelpers();
 }

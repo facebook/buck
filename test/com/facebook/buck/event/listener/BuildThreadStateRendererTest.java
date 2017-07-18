@@ -27,13 +27,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.timing.ClockDuration;
@@ -55,11 +50,6 @@ public class BuildThreadStateRendererTest {
   private static final Ansi ANSI = Ansi.withoutTty();
   private static final Function<Long, String> FORMAT_TIME_FUNCTION =
       timeMs -> String.format(Locale.US, "%.1fs", timeMs / 1000.0);
-  private static final SourcePathResolver PATH_RESOLVER =
-      new SourcePathResolver(
-          new SourcePathRuleFinder(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   private static final BuildTarget TARGET1 = BuildTargetFactory.newInstance("//:target1");
   private static final BuildTarget TARGET2 = BuildTargetFactory.newInstance("//:target2");
   private static final BuildTarget TARGET3 = BuildTargetFactory.newInstance("//:target3");
@@ -154,7 +144,7 @@ public class BuildThreadStateRendererTest {
   }
 
   private static BuildRule createFakeRule(BuildTarget target) {
-    return new FakeBuildRule(target, PATH_RESOLVER, ImmutableSortedSet.of());
+    return new FakeBuildRule(target, ImmutableSortedSet.of());
   }
 
   private static Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>

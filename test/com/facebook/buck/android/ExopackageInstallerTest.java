@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.PackageInfo;
-import com.facebook.buck.android.exopackage.RealExopackageDevice;
+import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +56,7 @@ public class ExopackageInstallerTest {
             + "    versionName=8.0.0.0.23\r\n"
             + "";
     Optional<PackageInfo> optionalInfo =
-        RealExopackageDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
+        RealAndroidDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertTrue(optionalInfo.isPresent());
     PackageInfo info = optionalInfo.get();
@@ -82,7 +82,7 @@ public class ExopackageInstallerTest {
             + "    versionName=3\r\n"
             + "";
     Optional<PackageInfo> optionalInfo =
-        RealExopackageDevice.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
+        RealAndroidDevice.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
 
     assertTrue(optionalInfo.isPresent());
     PackageInfo info = optionalInfo.get();
@@ -106,22 +106,22 @@ public class ExopackageInstallerTest {
             + "    versionName=8.0.0.0.23\r\n"
             + "";
     Optional<PackageInfo> optionalInfo =
-        RealExopackageDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
+        RealAndroidDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertFalse(optionalInfo.isPresent());
   }
 
   @Test
   public void testChunkArgs() {
-    assertEquals(ImmutableList.of(), RealExopackageDevice.chunkArgs(ImmutableList.of(), 8));
+    assertEquals(ImmutableList.of(), RealAndroidDevice.chunkArgs(ImmutableList.of(), 8));
 
     assertEquals(
         ImmutableList.of(ImmutableList.of("abcd", "efg")),
-        RealExopackageDevice.chunkArgs(ImmutableList.of("abcd", "efg"), 8));
+        RealAndroidDevice.chunkArgs(ImmutableList.of("abcd", "efg"), 8));
 
     assertEquals(
         ImmutableList.of(ImmutableList.of("abcd", "efg"), ImmutableList.of("hijkl")),
-        RealExopackageDevice.chunkArgs(ImmutableList.of("abcd", "efg", "hijkl"), 8));
+        RealAndroidDevice.chunkArgs(ImmutableList.of("abcd", "efg", "hijkl"), 8));
   }
 
   @Test

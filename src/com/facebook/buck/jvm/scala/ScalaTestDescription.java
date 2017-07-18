@@ -36,7 +36,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -88,6 +87,7 @@ public class ScalaTestDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
@@ -97,6 +97,7 @@ public class ScalaTestDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
+            buildTarget,
             projectFilesystem,
             rawParams,
             args.getUseCxxLibraries(),
@@ -105,27 +106,32 @@ public class ScalaTestDescription
             ruleFinder,
             cxxPlatform);
     BuildRuleParams params = cxxLibraryEnhancement.updatedParams;
-    BuildRuleParams javaLibraryParams =
-        params.withAppendedFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    BuildTarget javaLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
     ScalaLibraryBuilder scalaLibraryBuilder =
         new ScalaLibraryBuilder(
-                targetGraph, projectFilesystem, javaLibraryParams, resolver, cellRoots, config)
+                targetGraph,
+                javaLibraryBuildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                cellRoots,
+                config)
             .setArgs(args);
 
-    if (HasJavaAbi.isAbiTarget(rawParams.getBuildTarget())) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return scalaLibraryBuilder.buildAbi();
     }
 
     Function<String, Arg> toMacroArgFunction =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
     JavaLibrary testsLibrary = resolver.addToIndex(scalaLibraryBuilder.build());
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JavaTest(
+        buildTarget,
         projectFilesystem,
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
-        pathResolver,
         testsLibrary,
         /* additionalClasspathEntries */ ImmutableSet.of(),
         args.getLabels(),

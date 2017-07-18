@@ -36,5 +36,5 @@ import java.util.stream.Stream;
  * the future.
  */
 public interface HasRuntimeDeps extends BuildRule {
-  Stream<BuildTarget> getRuntimeDeps();
+  Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder);
 }

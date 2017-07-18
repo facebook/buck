@@ -31,11 +31,11 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -93,6 +93,7 @@ public class PrebuiltAppleFrameworkDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -100,10 +101,11 @@ public class PrebuiltAppleFrameworkDescription
       final PrebuiltAppleFrameworkDescriptionArg args)
       throws NoSuchBuildTargetException {
     return new PrebuiltAppleFramework(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
-        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),

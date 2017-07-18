@@ -82,11 +82,13 @@ public class AndroidBinaryDescriptionTest {
   public void turkishCaseRulesDoNotCrashConstructor() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:keystore");
     Keystore keystore =
         ruleResolver.addToIndex(
             new Keystore(
+                buildTarget,
                 new FakeProjectFilesystem(),
-                TestBuildRuleParams.create("//:keystore"),
+                TestBuildRuleParams.create(),
                 new FakeSourcePath("store"),
                 new FakeSourcePath("properties")));
     Locale originalLocale = Locale.getDefault();

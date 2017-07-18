@@ -21,6 +21,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -37,7 +38,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -66,20 +66,10 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             BuildTargetPatternParser.forBaseName(target.getBaseName()),
             ImmutableSet.of());
     try {
-      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env.getFunctions());
-      HashSet<String> targetLiterals = new HashSet<>();
-      parsedExp.collectTargetPatterns(targetLiterals);
-      return targetLiterals
+      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
+      return parsedExp
+          .getTargets(env)
           .stream()
-          .flatMap(
-              pattern -> {
-                try {
-                  return env.getTargetsMatchingPattern(pattern).stream();
-                } catch (QueryException e) {
-                  throw new HumanReadableException(
-                      e, "Error parsing target expression %s for target %s", pattern, target);
-                }
-              })
           .map(
               queryTarget -> {
                 Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
@@ -109,13 +99,11 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             PerfEventId.of("resolve_query_macro"),
             "target",
             target.toString())) {
-      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env.getFunctions());
-      Set<QueryTarget> queryTargets = parsedExp.eval(env);
+      QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
+      Set<QueryTarget> queryTargets = new NoopQueryEvaluator().eval(parsedExp, env);
       return queryTargets.stream();
     } catch (QueryException e) {
       throw new MacroException("Error parsing/executing query from macro", e);
-    } catch (InterruptedException e) {
-      throw new MacroException("Error executing query", e);
     }
   }
 

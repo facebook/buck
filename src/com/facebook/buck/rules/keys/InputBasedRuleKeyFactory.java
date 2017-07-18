@@ -19,11 +19,11 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -82,9 +82,9 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return builder.buildResult(RuleKey::new);
   }
 
-  private Result<RuleKey> calculateRuleKeyAppendableKey(RuleKeyAppendable appendable) {
+  private Result<RuleKey> calculateRuleKeyAppendableKey(AddsToRuleKey appendable) {
     Builder<HashCode> subKeyBuilder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
-    appendable.appendToRuleKey(subKeyBuilder);
+    AlterRuleKeys.amendKey(subKeyBuilder, appendable);
     return subKeyBuilder.buildResult(RuleKey::new);
   }
 
@@ -98,7 +98,7 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     }
   }
 
-  private Result<RuleKey> buildAppendableKey(RuleKeyAppendable appendable) {
+  private Result<RuleKey> buildAppendableKey(AddsToRuleKey appendable) {
     return ruleKeyCache.get(appendable, this::calculateRuleKeyAppendableKey);
   }
 
@@ -159,10 +159,10 @@ public final class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     }
 
     @Override
-    protected Builder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable) {
+    protected Builder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable) {
       Result<RuleKey> result = InputBasedRuleKeyFactory.this.buildAppendableKey(appendable);
       deps.add(result.getDeps());
-      setAppendableRuleKey(result.getRuleKey());
+      setAddsToRuleKey(result.getRuleKey());
       return this;
     }
 

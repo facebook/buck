@@ -52,17 +52,14 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
   private final ImmutableSortedMap<Path, SourcePath> links;
   private final BuildTarget target;
   private final ProjectFilesystem filesystem;
-  private final SourcePathRuleFinder ruleFinder;
 
   public SymlinkTree(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      final ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder) {
+      final ImmutableMap<Path, SourcePath> links) {
     this.target = target;
     this.filesystem = filesystem;
-    this.ruleFinder = ruleFinder;
 
     Preconditions.checkState(
         !root.isAbsolute(), "Expected symlink tree root to be relative: %s", root);
@@ -231,7 +228,7 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return links
         .values()
         .stream()

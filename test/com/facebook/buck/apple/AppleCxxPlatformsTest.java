@@ -50,6 +50,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -188,7 +189,8 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -284,7 +286,8 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -377,7 +380,7 @@ public class AppleCxxPlatformsTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -748,7 +751,7 @@ public class AppleCxxPlatformsTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
@@ -778,7 +781,7 @@ public class AppleCxxPlatformsTest {
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
           rule =
-              cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
+              cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
@@ -787,7 +790,7 @@ public class AppleCxxPlatformsTest {
           break;
         case COMPILE:
           rule =
-              cxxSourceRuleFactory.createCompileBuildRule(
+              cxxSourceRuleFactory.requireCompileBuildRule(
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
@@ -808,7 +811,7 @@ public class AppleCxxPlatformsTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,

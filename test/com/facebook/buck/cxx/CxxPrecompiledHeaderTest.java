@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -45,7 +46,7 @@ public class CxxPrecompiledHeaderTest {
   @Test
   public void generatesPchStepShouldUseCorrectLang() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Preprocessor preprocessorSupportingPch =
@@ -57,9 +58,10 @@ public class CxxPrecompiledHeaderTest {
         };
     Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
     SourcePathResolver sourcePathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
+            target,
             new FakeProjectFilesystem(),
             params,
             Paths.get("dir/foo.hash1.hash2.gch"),

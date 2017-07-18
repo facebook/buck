@@ -95,17 +95,16 @@ public class JavaTestRuleTest {
   public void transitiveLibraryDependenciesAreRuntimeDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     FakeJavaLibrary transitiveDep =
         resolver.addToIndex(
-            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_dep"), pathResolver));
+            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:transitive_dep")));
 
     FakeJavaLibrary firstOrderDep =
         resolver.addToIndex(
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:first_order_dep"),
-                pathResolver,
                 ImmutableSortedSet.of(transitiveDep)));
 
     JavaTest rule =
@@ -115,7 +114,7 @@ public class JavaTestRuleTest {
             .build(resolver);
 
     assertThat(
-        rule.getRuntimeDeps().collect(MoreCollectors.toImmutableSet()),
+        rule.getRuntimeDeps(ruleFinder).collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItems(
             rule.getCompiledTestsLibrary().getBuildTarget(),
             firstOrderDep.getBuildTarget(),

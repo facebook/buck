@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -45,7 +46,7 @@ public class RuleUtilsTest {
                 new FakeSourcePath("Group2/blech.m"), ImmutableList.of("-fobjc-arc")));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -130,7 +131,7 @@ public class RuleUtilsTest {
             GroupedSource.ofPrivateHeader(new FakeSourcePath("File.h")));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -169,7 +170,7 @@ public class RuleUtilsTest {
                     GroupedSource.ofPrivateHeader(new FakeSourcePath("Lib/Foo/File2.h")))));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -193,7 +194,7 @@ public class RuleUtilsTest {
         ImmutableList.of(GroupedSource.ofPrivateHeader(new FakeSourcePath("Lib/Foo/File1.h")));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -214,7 +215,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of();
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -301,7 +302,7 @@ public class RuleUtilsTest {
             GroupedSource.ofPrivateHeader(new FakeSourcePath("File.h")));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -357,7 +358,7 @@ public class RuleUtilsTest {
                                 new FakeSourcePath("Lib/Foo/File2.h")))))));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -383,7 +384,7 @@ public class RuleUtilsTest {
         ImmutableList.of(GroupedSource.ofPrivateHeader(new FakeSourcePath("File1.h")));
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -406,7 +407,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> expected = ImmutableList.of();
 
     SourcePathResolver resolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));

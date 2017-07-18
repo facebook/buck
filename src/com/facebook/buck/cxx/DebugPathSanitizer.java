@@ -47,7 +47,8 @@ public abstract class DebugPathSanitizer {
       Path workingDir, boolean shouldSanitize);
 
   @SuppressWarnings("unused")
-  ImmutableList<String> getCompilationFlags(Path workingDir) {
+  ImmutableList<String> getCompilationFlags(
+      Compiler compiler, Path workingDir, ImmutableMap<Path, Path> prefixMap) {
     return ImmutableList.of();
   }
 

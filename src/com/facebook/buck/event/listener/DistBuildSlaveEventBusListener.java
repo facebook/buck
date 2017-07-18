@@ -16,9 +16,11 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatus;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
@@ -34,6 +36,7 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.timing.Clock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
@@ -68,30 +71,35 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   @GuardedBy("consoleEventsLock")
   private final List<BuildSlaveConsoleEvent> consoleEvents = new LinkedList<>();
 
-  protected final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
+  private final CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
 
-  protected volatile int ruleCount = 0;
-  protected final AtomicInteger buildRulesStartedCount = new AtomicInteger(0);
-  protected final AtomicInteger buildRulesFinishedCount = new AtomicInteger(0);
-  protected final AtomicInteger buildRulesSuccessCount = new AtomicInteger(0);
-  protected final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
+  private volatile int ruleCount = 0;
+  private final AtomicInteger buildRulesStartedCount = new AtomicInteger(0);
+  private final AtomicInteger buildRulesFinishedCount = new AtomicInteger(0);
+  private final AtomicInteger buildRulesSuccessCount = new AtomicInteger(0);
+  private final AtomicInteger buildRulesFailureCount = new AtomicInteger(0);
 
-  protected final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
+  private final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
-  protected final FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private final DistBuildSlaveTimingStatsTracker slaveStatsTracker;
 
   private volatile @Nullable DistBuildService distBuildService;
+
+  private @Nullable BuckConfig remoteBuckConfig;
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
       RunId runId,
       Clock clock,
+      DistBuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService networkScheduler) {
     this(
         stampedeId,
         runId,
         clock,
+        slaveStatsTracker,
         fileMaterializationStatsTracker,
         networkScheduler,
         DEFAULT_SERVER_UPDATE_PERIOD_MILLIS);
@@ -101,12 +109,14 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       StampedeId stampedeId,
       RunId runId,
       Clock clock,
+      DistBuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService networkScheduler,
       long serverUpdatePeriodMillis) {
     this.stampedeId = stampedeId;
     this.runId = runId;
     this.clock = clock;
+    this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
 
     scheduledServerUpdates =
@@ -159,6 +169,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   private BuildSlaveFinishedStatus createBuildSlaveFinishedStatus(int exitCode) {
     return BuildSlaveFinishedStatus.builder()
+        .setRemoteBuckConfig(
+            Preconditions.checkNotNull(remoteBuckConfig, "Remote BuckConfig was not set."))
         .setStampedeId(stampedeId)
         .setRunId(runId)
         .setTotalRulesCount(ruleCount)
@@ -168,6 +180,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
         .setRulesFailureCount(buildRulesFailureCount.get())
         .setCacheRateStats(cacheRateStatsKeeper.getSerializableStats())
         .setFileMaterializationStats(fileMaterializationStatsTracker.getFileMaterializationStats())
+        .setTimingStats(slaveStatsTracker.generateStats())
         .setExitCode(exitCode)
         .build();
   }
@@ -209,6 +222,10 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private void sendServerUpdates() {
     sendStatusToFrontend();
     sendConsoleEventsToFrontend();
+  }
+
+  public void setRemoteBuckConfig(BuckConfig buckConfig) {
+    this.remoteBuckConfig = buckConfig;
   }
 
   public void publishBuildSlaveFinishedEvent(BuckEventBus eventBus, int exitCode) {

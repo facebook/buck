@@ -230,12 +230,24 @@
     </javac>
   </target>
 
+  <path id="testrunner.classpath">
+    <fileset refid="testrunner.jars" />
+  </path>
+
+  <fileset dir="${third-party.dir}/java" id="testrunner.jars">
+    <include name="ddmlib/ddmlib-25.2.0.jar" />
+    <include name="guava/guava-20.0.jar" />
+    <include name="jsr/jsr305.jar" />
+    <include name="junit/junit-4.12.jar" />
+    <include name="testng/testng-6.8.jar" />
+  </fileset>
+
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
            includes="com/facebook/buck/log/AppendableLogRecord.java,com/facebook/buck/testrunner/**,com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/jvm/java/runner/**"
            destdir="${testrunner.classes.dir}"
-           classpathref="junit"
+           classpathref="testrunner.classpath"
            debug="on"
            includeAntRuntime="no"
            >
@@ -504,26 +516,6 @@
         executable="./run-all-tests">
       <env key="PATH" path="${env.PATH}:${dx.etc.dir}"/>
     </exec>
-  </target>
-
-  <target name="jar" depends="buck-jar, report-generator-jar"/>
-
-  <target name="buck-jar"
-          depends="compile"
-          description="build buck.jar"
-          >
-
-    <jar destfile="${build.dir}/buck.jar" update="true">
-      <zipfileset refid="buck.jars" />
-      <zipfileset refid="third-party.jars" />
-      <fileset dir="${src.dir}"
-               excludes="**/*.java, **/BUCK"
-               />
-      <fileset dir="${classes.dir}" />
-      <manifest>
-        <attribute name="Main-Class" value="com.facebook.buck.cli.Main" />
-      </manifest>
-    </jar>
   </target>
 
   <target name="report-generator-jar" depends="compile">
@@ -912,5 +904,5 @@
   <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, compile-tests, lint"/>
-  <target name="all" depends="jar, test, javadoc" />
+  <target name="all" depends="default, test, javadoc" />
 </project>

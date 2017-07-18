@@ -81,24 +81,26 @@ public class AndroidLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
+    if (buildTarget.getFlavors().contains(JavaLibrary.SRC_JAR)) {
+      return new JavaSourceJar(
+          buildTarget, projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
     }
 
-    boolean hasDummyRDotJavaFlavor =
-        params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
+    boolean hasDummyRDotJavaFlavor = buildTarget.getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
     AndroidLibrary.Builder defaultJavaLibraryBuilder =
         (AndroidLibrary.Builder)
             AndroidLibrary.builder(
                     targetGraph,
+                    buildTarget,
                     projectFilesystem,
                     params,
                     resolver,
@@ -113,7 +115,7 @@ public class AndroidLibraryDescription
 
     if (hasDummyRDotJavaFlavor) {
       return defaultJavaLibraryBuilder.buildDummyRDotJava();
-    } else if (HasJavaAbi.isAbiTarget(params.getBuildTarget())) {
+    } else if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();
     }
     return defaultJavaLibraryBuilder.build();

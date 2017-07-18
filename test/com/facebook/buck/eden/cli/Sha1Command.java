@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -41,15 +40,9 @@ public class Sha1Command implements Command {
   @Argument private List<String> paths = new ArrayList<>();
 
   @Override
-  public int run() throws EdenError, IOException, TException {
-    Optional<EdenClient> client = EdenClient.newInstance();
-    if (!client.isPresent()) {
-      System.err.println("Could not connect to Eden");
-      return 1;
-    }
-
+  public int run(EdenClient client) throws EdenError, IOException, TException {
     Path mountPoint = Paths.get(this.mountPoint);
-    EdenMount mount = client.get().getMountFor(mountPoint);
+    EdenMount mount = client.getMountFor(mountPoint).get();
 
     for (String path : paths) {
       Path entry = mountPoint.relativize(Paths.get(path));

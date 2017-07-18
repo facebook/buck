@@ -28,8 +28,8 @@ import com.facebook.thrift.transport.TTransport;
 import com.facebook.thrift.transport.TTransportException;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -64,13 +64,18 @@ public final class EdenClient {
         });
   }
 
-  public static Optional<EdenClient> newInstance() {
-    // The default path for the Eden socket is ~/local/.eden/socket.
-    Path socketFile = Paths.get(System.getProperty("user.home"), "local/.eden/socket");
-    return newInstance(socketFile);
+  public static Optional<EdenClient> tryToCreateEdenClient(Path directoryInEdenFsMount) {
+    Path socketSymlink = directoryInEdenFsMount.resolve(".eden/socket");
+    Path socketFile;
+    try {
+      socketFile = Files.readSymbolicLink(socketSymlink);
+    } catch (IOException e) {
+      return Optional.empty();
+    }
+    return newInstanceFromSocket(socketFile);
   }
 
-  private static Optional<EdenClient> newInstance(final Path socketFile) {
+  public static Optional<EdenClient> newInstanceFromSocket(final Path socketFile) {
     ThreadLocal<EdenService.Client> clientFactory =
         new ThreadLocal<EdenService.Client>() {
           /**
@@ -109,16 +114,15 @@ public final class EdenClient {
   }
 
   /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
-  @Nullable
-  public EdenMount getMountFor(Path projectRoot) throws EdenError, TException {
-    for (MountInfo info : getMountInfos()) {
-      // Note that we cannot use Paths.get() here because that will break unit tests where we mix
-      // java.nio.file.Path and Jimfs Path objects.
-      Path mountPoint = projectRoot.getFileSystem().getPath(info.mountPoint);
-      if (projectRoot.startsWith(mountPoint)) {
-        return new EdenMount(clientFactory, mountPoint, projectRoot);
-      }
+  public Optional<EdenMount> getMountFor(Path projectRoot) {
+    Path rootSymlink = projectRoot.resolve(".eden/root");
+    Path rootOfEdenMount;
+    try {
+      rootOfEdenMount = Files.readSymbolicLink(rootSymlink);
+    } catch (IOException e) {
+      return Optional.empty();
     }
-    return null;
+
+    return Optional.of(new EdenMount(clientFactory, rootOfEdenMount, projectRoot));
   }
 }

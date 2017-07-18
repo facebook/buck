@@ -19,10 +19,12 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -72,17 +74,18 @@ public class JavaBinaryTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     BuildRule libraryRule = ruleResolver.requireRule(libraryNode.getBuildTarget());
 
+    BuildTarget target = BuildTargetFactory.newInstance("//java/com/facebook/base:Main");
     BuildRuleParams params =
-        TestBuildRuleParams.create(BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-            .withDeclaredDeps(ImmutableSortedSet.of(libraryRule));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(libraryRule));
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary =
         ruleResolver.addToIndex(
             new JavaBinary(
+                target,
                 new FakeProjectFilesystem(),
                 params,
                 new ExternalJavaRuntimeLauncher("/foobar/java"),

@@ -82,6 +82,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   /** @param modules The GWT modules to build with the GWT compiler. */
   GwtBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedSet<String> modules,
@@ -94,8 +95,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       boolean strict,
       List<String> experimentalArgs,
       ImmutableSortedSet<SourcePath> gwtModuleJars) {
-    super(projectFilesystem, buildRuleParams);
-    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.outputFile =
         BuildTargets.getGenPath(
             projectFilesystem,

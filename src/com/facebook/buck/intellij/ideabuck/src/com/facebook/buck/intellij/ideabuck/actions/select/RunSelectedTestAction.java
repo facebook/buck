@@ -46,8 +46,8 @@ import javax.annotation.Nullable;
 import javax.swing.*;
 
 /**
- * Abstract class collecting common logic for running and debugging buck tests from the editor.
- * This includes logic to handle creating, running and debugging test configurations in the intellij ide.
+ * Abstract class collecting common logic for running and debugging buck tests from the editor. This
+ * includes logic to handle creating, running and debugging test configurations in the intellij ide.
  */
 public class RunSelectedTestAction extends AnAction {
 
@@ -114,13 +114,7 @@ public class RunSelectedTestAction extends AnAction {
         testSelectors = Optional.of(psiClass.getQualifiedName());
       }
     }
-    createTestConfigurationFromContext(
-        name,
-        testSelectors,
-        project,
-        virtualFile,
-        buckFile,
-        debug);
+    createTestConfigurationFromContext(name, testSelectors, project, virtualFile, buckFile, debug);
   }
 
   /**
@@ -128,7 +122,8 @@ public class RunSelectedTestAction extends AnAction {
    *
    * @param name a {@link String} representing the name of the configuration.
    * @param testSelectors a {@link String} representing optional testSelectors for filtering.
-   * @param project {@link Project} then intellij project corresponding the the file or module under test.
+   * @param project {@link Project} then intellij project corresponding the the file or module under
+   *     test.
    * @param containingFile {@link VirtualFile} the file that containing the impacted tests.
    * @param buckFile {@link VirtualFile} the file representing the buck File.
    * @param debug a {@link boolean} used to signify run or debug.
@@ -177,12 +172,10 @@ public class RunSelectedTestAction extends AnAction {
               return;
             }
             executor = ExecutorRegistry.getInstance().getRegisteredExecutors()[0];
+            ProgramRunnerUtil.executeConfiguration(
+                project, runnerAndConfigurationSettingsResult, executor);
           }
-          ProgramRunnerUtil.executeConfiguration(
-              project,
-              runnerAndConfigurationSettingsResult,
-              executor);
         }
-    });
+      });
   }
 }

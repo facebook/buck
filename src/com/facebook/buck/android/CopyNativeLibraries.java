@@ -22,6 +22,7 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -72,6 +73,7 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final String moduleName;
 
   protected CopyNativeLibraries(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSet<SourcePath> nativeLibDirectories,
@@ -79,7 +81,7 @@ public class CopyNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDe
       ImmutableSet<StrippedObjectDescription> stripLibAssetRules,
       ImmutableSet<TargetCpuType> cpuFilters,
       String moduleName) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.nativeLibDirectories = nativeLibDirectories;
     this.stripLibRules = stripLibRules;
     this.stripLibAssetRules = stripLibAssetRules;

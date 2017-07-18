@@ -49,11 +49,9 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
 import com.intellij.ui.treeStructure.Tree;
-
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
 import javax.swing.JComponent;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -62,6 +60,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
   private static final String OUTPUT_WINDOW_CONTENT_ID = "BuckOutputWindowContent";
   public static final String TOOL_WINDOW_ID = "Buck";
+  public static final String RUN_TOOL_WINDOW_ID = "Run";
   private static final String BUILD_OUTPUT_PANEL = "BuckBuildOutputPanel";
 
   public static void updateBuckToolWindowTitle(Project project) {
@@ -86,6 +85,14 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
   }
 
   public static void showToolWindow(final Project project) {
+    showToolWindow(project, TOOL_WINDOW_ID);
+  }
+
+  public static void showRunToolWindow(final Project project) {
+    showToolWindow(project, RUN_TOOL_WINDOW_ID);
+  }
+
+  public static void showToolWindow(final Project project, String tooWindowId) {
     ApplicationManager.getApplication()
         .getInvokator()
         .invokeLater(
@@ -93,7 +100,7 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
               @Override
               public void run() {
                 ToolWindow toolWindow =
-                    ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
+                    ToolWindowManager.getInstance(project).getToolWindow(tooWindowId);
                 if (toolWindow != null) {
                   toolWindow.activate(null, false);
                 }
@@ -106,7 +113,15 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
   }
 
   public static boolean isToolWindowVisible(Project project) {
-    ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
+    return isToolWindowVisible(project, TOOL_WINDOW_ID);
+  }
+
+  public static boolean isRunToolWindowVisible(Project project) {
+    return isToolWindowVisible(project, RUN_TOOL_WINDOW_ID);
+  }
+
+  public static boolean isToolWindowVisible(Project project, String toolWindowId) {
+    ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow(toolWindowId);
 
     return toolWindow == null || toolWindow.isVisible();
   }
@@ -206,12 +221,14 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
   }
 
   private JComponent createBuildInfoPanel(Project project) {
-    Tree result = new Tree(BuckUIManager.getInstance(project).getTreeModel()) {
-      @Override
-      public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return 5;
-      }
-    };
+    Tree result =
+        new Tree(BuckUIManager.getInstance(project).getTreeModel()) {
+          @Override
+          public int getScrollableUnitIncrement(
+              Rectangle visibleRect, int orientation, int direction) {
+            return 5;
+          }
+        };
     result.addMouseListener(
         new MouseListener() {
           @Override

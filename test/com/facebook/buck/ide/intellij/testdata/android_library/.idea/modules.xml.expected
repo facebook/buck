@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/lib/lib.iml" filepath="$PROJECT_DIR$/lib/lib.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/lib_with_non_default_manifest/lib_with_non_default_manifest.iml" filepath="$PROJECT_DIR$/lib_with_non_default_manifest/lib_with_non_default_manifest.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/lib_without_manifest/lib_without_manifest.iml" filepath="$PROJECT_DIR$/lib_without_manifest/lib_without_manifest.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
     </modules>
   </component>

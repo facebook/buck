@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -47,7 +49,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -71,7 +72,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   private final JarContentsSupplier outputJarContentsSupplier;
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey CompileToJarStepFactory compileStepFactory;
   @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
@@ -83,6 +83,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<SourcePath> abiInputs;
 
   public DummyRDotJava(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -93,6 +94,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> finalRName,
       boolean useOldStyleableFormat) {
     this(
+        buildTarget,
         projectFilesystem,
         params,
         ruleFinder,
@@ -106,6 +108,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private DummyRDotJava(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -117,10 +120,10 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
     super(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
-    this.ruleFinder = ruleFinder;
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
         androidResourceDeps
@@ -245,10 +248,11 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
         javaSourceFilePaths,
         getBuildTarget(),
         context.getSourcePathResolver(),
-        ruleFinder,
         getProjectFilesystem(),
         /* declared classpath */ ImmutableSortedSet.of(),
         rDotJavaClassesFolder,
+        Optional.of(
+            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
         Optional.empty(),
         pathToSrcsList,
         NoOpClassUsageFileWriter.instance(),
@@ -265,7 +269,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
             /* manifestFile */ null,
             /* mergeManifests */ true,
             /* hashEntries */ true,
-            /* blacklist */ ImmutableSet.of()));
+            /* removeEntriesPredicate */ RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));

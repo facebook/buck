@@ -17,15 +17,18 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class HeaderPathNormalizer {
 
@@ -43,17 +46,23 @@ public class HeaderPathNormalizer {
    */
   private final ImmutableMap<Path, SourcePath> normalized;
 
+  /** Minimal mappings to translate paths used during compilation to their real locations. */
+  private final ImmutableMap<Path, Path> prefixMap;
+
   protected HeaderPathNormalizer(
       SourcePathResolver pathResolver,
       ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> normalized) {
+      ImmutableMap<Path, SourcePath> normalized,
+      ImmutableMap<Path, Path> prefixMap) {
     this.pathResolver = pathResolver;
     this.headers = headers;
     this.normalized = normalized;
+    this.prefixMap = prefixMap;
   }
 
   public static HeaderPathNormalizer empty(SourcePathResolver pathResolver) {
-    return new HeaderPathNormalizer(pathResolver, ImmutableMap.of(), ImmutableMap.of());
+    return new HeaderPathNormalizer(
+        pathResolver, ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
   }
 
   private static <T> Optional<Map.Entry<Path, T>> pathLookup(Path path, Map<Path, T> map) {
@@ -87,12 +96,21 @@ public class HeaderPathNormalizer {
     return path.get().getValue();
   }
 
+  /**
+   * @return a map of replacement prefix paths to convert unnormalized paths to their original
+   *     locations.
+   */
+  public ImmutableMap<Path, Path> getPrefixMap() {
+    return prefixMap;
+  }
+
   public static class Builder {
 
     private final SourcePathResolver pathResolver;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
     private final Map<Path, SourcePath> normalized = new LinkedHashMap<>();
+    private final Map<Path, Path> prefixMap = new LinkedHashMap<>();
 
     public Builder(SourcePathResolver pathResolver) {
       this.pathResolver = pathResolver;
@@ -117,10 +135,38 @@ public class HeaderPathNormalizer {
     }
 
     public Builder addSymlinkTree(SourcePath root, ImmutableMap<Path, SourcePath> headerMap) {
+
+      // Add the headers from the symlink tree.
       Path rootPath = pathResolver.getAbsolutePath(root);
       for (Map.Entry<Path, SourcePath> entry : headerMap.entrySet()) {
         addHeader(entry.getValue(), rootPath.resolve(entry.getKey()));
       }
+
+      // If the headers behind the symlink tree match their real paths, other than a different
+      // prefix, add a prefix mapping compilation can use to translate paths to their real
+      // locations.
+      //
+      // TODO(agallagher): Ideally we'd also handle cases when headers behind symlink trees don't
+      // match their true layout.
+      Optional<Pair<Path, ImmutableList<Path>>> keys =
+          MorePaths.splitOnCommonPrefix(headerMap.keySet());
+      Optional<Pair<Path, ImmutableList<Path>>> vals =
+          MorePaths.splitOnCommonPrefix(
+              headerMap
+                  .values()
+                  .stream()
+                  .map(pathResolver::getRelativePath)
+                  .collect(Collectors.toList()));
+      if (keys.isPresent()
+          && vals.isPresent()
+          && keys.get().getSecond().equals(vals.get().getSecond())) {
+        Pair<Path, Path> stripped =
+            MorePaths.stripCommonSuffix(
+                pathResolver.getRelativePath(root).resolve(keys.get().getFirst()),
+                vals.get().getFirst());
+        prefixMap.put(stripped.getFirst(), stripped.getSecond());
+      }
+
       return this;
     }
 
@@ -153,7 +199,10 @@ public class HeaderPathNormalizer {
 
     public HeaderPathNormalizer build() {
       return new HeaderPathNormalizer(
-          pathResolver, ImmutableMap.copyOf(headers), ImmutableMap.copyOf(normalized));
+          pathResolver,
+          ImmutableMap.copyOf(headers),
+          ImmutableMap.copyOf(normalized),
+          ImmutableMap.copyOf(prefixMap));
     }
   }
 }

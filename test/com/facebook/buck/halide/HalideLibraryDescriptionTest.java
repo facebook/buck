@@ -35,6 +35,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -168,7 +169,8 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     HalideCompile compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
     ImmutableList<Step> buildSteps =
@@ -211,7 +213,8 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     HalideCompile compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
     ImmutableList<Step> buildSteps =

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
@@ -55,12 +56,13 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
   private final JarContentsSupplier abiJarContentsSupplier;
 
   public CalculateAbiFromClasses(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       SourcePath binaryJar,
       boolean sourceAbiCompatible) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.binaryJar = binaryJar;
     this.sourceAbiCompatible = sourceAbiCompatible;
     this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
@@ -84,12 +86,12 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
       SourcePath library,
       boolean sourceAbiCompatible) {
     return new CalculateAbiFromClasses(
+        target,
         projectFilesystem,
         libraryParams
-            .withBuildTarget(target)
             .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library)))
             .withoutExtraDeps(),
-        new SourcePathResolver(ruleFinder),
+        DefaultSourcePathResolver.from(ruleFinder),
         library,
         sourceAbiCompatible);
   }

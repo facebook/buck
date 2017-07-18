@@ -136,6 +136,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -190,6 +191,14 @@ import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
 
 public final class Main {
+
+  /**
+   * Force JNA to be initialized early to avoid deadlock race condition.
+   *
+   * <p>See: https://github.com/java-native-access/jna/issues/652
+   */
+  @SuppressWarnings("unused")
+  public static final int JNA_POINTER_SIZE = Pointer.SIZE;
 
   /** Trying again won't help. */
   public static final int FAIL_EXIT_CODE = 1;
@@ -297,17 +306,38 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
+  public interface KnownBuildRuleTypesFactoryFactory {
+    KnownBuildRuleTypesFactory create(
+        ProcessExecutor processExecutor, AndroidDirectoryResolver androidDirectoryResolver);
+  }
+
+  private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
+
   static {
     MacIpv6BugWorkaround.apply();
   }
 
+  /**
+   * This constructor allows integration tests to add/remove/modify known build rules (aka
+   * descriptions).
+   */
   @VisibleForTesting
-  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
+  public Main(
+      PrintStream stdOut,
+      PrintStream stdErr,
+      InputStream stdIn,
+      KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
+    this.knownBuildRuleTypesFactoryFactory = knownBuildRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
+  }
+
+  @VisibleForTesting
+  public Main(PrintStream stdOut, PrintStream stdErr, InputStream stdIn) {
+    this(stdOut, stdErr, stdIn, KnownBuildRuleTypesFactory::new);
   }
 
   /* Define all error handling surrounding main command */
@@ -568,7 +598,7 @@ public final class Main {
               context, parserConfig, projectWatchList, clientEnvironment, console, clock)) {
 
         KnownBuildRuleTypesFactory factory =
-            new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver);
+            knownBuildRuleTypesFactoryFactory.create(processExecutor, androidDirectoryResolver);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
@@ -1211,7 +1241,9 @@ public final class Main {
     context.addClientListener(
         () -> {
           if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
-            LOG.info("killing background processes on client disconnection");
+            LOG.info(
+                "BuckIsDyingException: killing background processes on client disconnection"
+                    + Throwables.getStackTraceAsString(new Throwable()));
             // Process no longer wants work done on its behalf.
             BgProcessKiller.killBgProcesses();
           }

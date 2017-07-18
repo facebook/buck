@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
@@ -110,13 +111,13 @@ public class JavaLibrarySymbolsFinderTest {
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
     final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andAnswer(
             () -> {
               SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
               if (input instanceof ExplicitBuildTargetSourcePath) {
-                return Optional.of(new FakeBuildRule(fakeBuildTarget, pathResolver));
+                return Optional.of(new FakeBuildRule(fakeBuildTarget));
               } else {
                 return Optional.empty();
               }
@@ -128,7 +129,7 @@ public class JavaLibrarySymbolsFinderTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    projectFilesystem, FileHashCacheMode.PREFIX_TREE)));
+                    projectFilesystem, FileHashCacheMode.DEFAULT)));
     final DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =

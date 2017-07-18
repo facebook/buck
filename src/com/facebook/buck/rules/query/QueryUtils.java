@@ -21,6 +21,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -29,10 +30,9 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.Threads;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -67,8 +67,8 @@ public final class QueryUtils {
             PerfEventId.of("resolve_dep_query"),
             "target",
             target.toString())) {
-      QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env.getFunctions());
-      Set<QueryTarget> queryTargets = parsedExp.eval(env);
+      QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
+      Set<QueryTarget> queryTargets = new NoopQueryEvaluator().eval(parsedExp, env);
       return queryTargets
           .stream()
           .map(
@@ -77,10 +77,10 @@ public final class QueryUtils {
                 return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
               });
     } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        Threads.interruptCurrentThread();
+      }
       throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException("Error executing query from deps for " + target, e);
     }
   }
 
@@ -92,19 +92,10 @@ public final class QueryUtils {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(), Optional.empty(), cellPathResolver, parserPattern, ImmutableSet.of());
-    QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env.getFunctions());
-    List<String> targetLiterals = new ArrayList<>();
-    parsedExp.collectTargetPatterns(targetLiterals);
-    return targetLiterals
+    QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
+    return parsedExp
+        .getTargets(env)
         .stream()
-        .flatMap(
-            pattern -> {
-              try {
-                return env.getTargetsMatchingPattern(pattern).stream();
-              } catch (Exception e) {
-                throw new RuntimeException("Error parsing target expression", e);
-              }
-            })
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

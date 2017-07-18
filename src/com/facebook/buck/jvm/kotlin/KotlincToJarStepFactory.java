@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
@@ -72,10 +71,10 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ClassUsageFileWriter usedClassesFileWriter,
@@ -114,7 +113,6 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
               javaSourceFiles,
               invokingRule,
               resolver,
-              ruleFinder,
               filesystem,
               // We need to add the kotlin class files to the classpath. (outputDirectory).
               ImmutableSortedSet.<Path>naturalOrder()
@@ -125,6 +123,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
                   .addAll(declaredClasspathEntries)
                   .build(),
               outputDirectory,
+              generatedCodeDirectory,
               workingDirectory,
               pathToSrcsList,
               usedClassesFileWriter,

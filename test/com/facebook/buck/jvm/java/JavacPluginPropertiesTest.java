@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
@@ -34,17 +33,13 @@ public class JavacPluginPropertiesTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     FakeJavaLibrary dep =
-        resolver.addToIndex(
-            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep"), pathResolver));
+        resolver.addToIndex(new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep")));
     FakeJavaLibrary processor =
         resolver.addToIndex(
             new FakeJavaLibrary(
-                BuildTargetFactory.newInstance("//:processor"),
-                pathResolver,
-                ImmutableSortedSet.of(dep)));
+                BuildTargetFactory.newInstance("//:processor"), ImmutableSortedSet.of(dep)));
 
     JavacPluginProperties props =
         JavacPluginProperties.builder()

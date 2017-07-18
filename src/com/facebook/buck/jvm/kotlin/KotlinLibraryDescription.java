@@ -77,6 +77,7 @@ public class KotlinLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -84,17 +85,17 @@ public class KotlinLibraryDescription
       KotlinLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    BuildTarget target = params.getBuildTarget();
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
-    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
-
+    BuildTarget buildTargetWithMavenFlavor = null;
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      buildTargetWithMavenFlavor = buildTarget;
       paramsWithMavenFlavor = params;
 
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
-      params = params.withoutFlavor(JavaLibrary.MAVEN_JAR);
+      buildTarget = buildTarget.withoutFlavors(JavaLibrary.MAVEN_JAR);
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
@@ -103,9 +104,11 @@ public class KotlinLibraryDescription
               .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(projectFilesystem, params, args.getSrcs(), mavenCoords);
+        return new JavaSourceJar(
+            buildTarget, projectFilesystem, params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
+            buildTargetWithMavenFlavor,
             projectFilesystem,
             Preconditions.checkNotNull(paramsWithMavenFlavor),
             args.getSrcs(),
@@ -114,11 +117,12 @@ public class KotlinLibraryDescription
       }
     }
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultOptions, projectFilesystem, params, resolver, args);
+        JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
     KotlinLibraryBuilder defaultKotlinLibraryBuilder =
         new KotlinLibraryBuilder(
                 targetGraph,
+                buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -130,7 +134,7 @@ public class KotlinLibraryDescription
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
-    if (HasJavaAbi.isAbiTarget(target)) {
+    if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultKotlinLibraryBuilder.buildAbi();
     }
 
@@ -142,6 +146,7 @@ public class KotlinLibraryDescription
       resolver.addToIndex(defaultKotlinLibrary);
       return MavenUberJar.create(
           defaultKotlinLibrary,
+          buildTargetWithMavenFlavor,
           projectFilesystem,
           Preconditions.checkNotNull(paramsWithMavenFlavor),
           args.getMavenCoords(),

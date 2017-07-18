@@ -485,6 +485,11 @@ def parse_args():
         '--report_duplicate',
         action='store_true',
         help='whether to report already reported causes')
+    parser.add_argument(
+        '--max-differences-to-report',
+        type=int,
+        default=100,
+        help='Maximum number of differences to report before giving up.')
 
     # Print full help message if we're invoked with no arguments (otherwise
     # you get the shortened 1 line 'usage' message.
@@ -517,7 +522,12 @@ def main():
     if (check_for_absolute_paths(keys_right)):
         return
     keys_tuple_to_diff = find_keys_for_target(keys_left, keys_right, args.build_target)
-    diff_keys_recursively(keys_left, keys_right, keys_tuple_to_diff, not args.report_duplicate)
+    diff_keys_recursively(
+        keys_left,
+        keys_right,
+        keys_tuple_to_diff,
+        not args.report_duplicate,
+        args.max_differences_to_report)
 
 if __name__ == '__main__':
     main()

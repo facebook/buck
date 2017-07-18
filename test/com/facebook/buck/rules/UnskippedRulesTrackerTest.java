@@ -43,8 +43,6 @@ import org.junit.Test;
 
 public class UnskippedRulesTrackerTest {
 
-  private SourcePathResolver sourcePathResolver;
-
   private UnskippedRulesTracker unskippedRulesTracker;
   private BuckEventBus eventBus;
   private BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
@@ -62,8 +60,6 @@ public class UnskippedRulesTrackerTest {
   public void setUp() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    sourcePathResolver = new SourcePathResolver(ruleFinder);
     RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);
     eventBus = new DefaultBuckEventBus(new FakeClock(1), new BuildId());
@@ -204,22 +200,18 @@ public class UnskippedRulesTrackerTest {
   }
 
   private BuildRule createRule(String buildTarget) {
-    return new FakeBuildRule(
-        BuildTargetFactory.newInstance(buildTarget), sourcePathResolver, ImmutableSortedSet.of());
+    return new FakeBuildRule(BuildTargetFactory.newInstance(buildTarget), ImmutableSortedSet.of());
   }
 
   private BuildRule createRule(String buildTarget, ImmutableSet<BuildRule> deps) {
     return new FakeBuildRule(
-        BuildTargetFactory.newInstance(buildTarget),
-        sourcePathResolver,
-        ImmutableSortedSet.copyOf(deps));
+        BuildTargetFactory.newInstance(buildTarget), ImmutableSortedSet.copyOf(deps));
   }
 
   private BuildRule createRule(
       String buildTarget, ImmutableSet<BuildRule> deps, ImmutableSet<BuildRule> runtimeDeps) {
     return new FakeBuildRuleWithRuntimeDeps(
         BuildTargetFactory.newInstance(buildTarget),
-        sourcePathResolver,
         ImmutableSortedSet.copyOf(deps),
         ImmutableSortedSet.copyOf(runtimeDeps));
   }
@@ -231,15 +223,14 @@ public class UnskippedRulesTrackerTest {
 
     public FakeBuildRuleWithRuntimeDeps(
         BuildTarget target,
-        SourcePathResolver resolver,
         ImmutableSortedSet<BuildRule> deps,
         ImmutableSortedSet<BuildRule> runtimeDeps) {
-      super(target, resolver, deps);
+      super(target, deps);
       this.runtimeDeps = runtimeDeps;
     }
 
     @Override
-    public Stream<BuildTarget> getRuntimeDeps() {
+    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
       return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
   }

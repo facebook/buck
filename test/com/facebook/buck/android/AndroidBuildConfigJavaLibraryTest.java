@@ -41,11 +41,12 @@ public class AndroidBuildConfigJavaLibraryTest {
   @Test
   public void testAddToCollector() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
+            buildTarget,
             new FakeProjectFilesystem(),
             params,
             "com.example.buck",
@@ -70,13 +71,15 @@ public class AndroidBuildConfigJavaLibraryTest {
 
   @Test
   public void testBuildConfigHasCorrectProperties() throws NoSuchBuildTargetException {
-    BuildRuleParams params = TestBuildRuleParams.create("//foo:bar");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = TestBuildRuleParams.create();
     BuildConfigFields fields =
         BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
+            buildTarget,
             new FakeProjectFilesystem(),
             params,
             "com.example.buck",

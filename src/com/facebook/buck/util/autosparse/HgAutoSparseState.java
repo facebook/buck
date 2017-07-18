@@ -190,7 +190,8 @@ public class HgAutoSparseState implements AutoSparseState {
     hgSparseSeen.add(relativePath);
   }
 
-  private void loadHgManifest() throws VersionControlCommandFailedException, InterruptedException {
+  private synchronized void loadHgManifest()
+      throws VersionControlCommandFailedException, InterruptedException {
     if (!hgManifestLoaded) {
       // Cache manifest data
       try (InputStream is = new FileInputStream(hgCmdLine.extractRawManifest());

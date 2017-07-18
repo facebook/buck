@@ -32,14 +32,12 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFactory {
@@ -69,6 +67,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
+      Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
@@ -80,17 +79,17 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
-      ImmutableSet<Pattern> classesToRemoveFromJar) {
+      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
 
     createCompileStep(
         context,
         sourceFilePaths,
         invokingRule,
         resolver,
-        ruleFinder,
         filesystem,
         declaredClasspathEntries,
         outputDirectory,
+        generatedCodeDirectory,
         workingDirectory,
         pathToSrcsList,
         usedClassesFileWriter,
@@ -122,7 +121,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       Path outputDirectory,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
-      ImmutableSet<Pattern> classesToRemoveFromJar,
+      RemoveClassesPatternsMatcher classesToRemoveFromJar,
       Path outputJar,
       ImmutableList.Builder<Step> steps) {
     steps.add(
@@ -133,7 +132,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
             mainClass.orElse(null),
             manifestFile.orElse(null),
             true,
-            classesToRemoveFromJar));
+            classesToRemoveFromJar::shouldRemoveClass));
   }
 
   /**

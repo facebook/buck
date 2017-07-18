@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -68,10 +67,9 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder,
       Path headerMapPath,
       boolean shouldCreateModule) {
-    super(target, filesystem, root, links, ruleFinder);
+    super(target, filesystem, root, links);
     this.headerMapPath = headerMapPath;
     this.shouldCreateModule = shouldCreateModule;
   }
@@ -80,13 +78,12 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder) {
+      ImmutableMap<Path, SourcePath> links) {
     Path headerMapPath = getPath(filesystem, target);
     boolean shouldCreateModule =
         target.getFlavors().contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     return new HeaderSymlinkTreeWithHeaderMap(
-        target, filesystem, root, links, ruleFinder, headerMapPath, shouldCreateModule);
+        target, filesystem, root, links, headerMapPath, shouldCreateModule);
   }
 
   @Override

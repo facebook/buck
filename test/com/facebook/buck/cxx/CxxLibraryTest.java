@@ -29,8 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -51,13 +49,8 @@ public class CxxLibraryTest {
 
   @Test
   public void cxxLibraryInterfaces() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -69,18 +62,17 @@ public class CxxLibraryTest {
         BuildTargetFactory.newInstance("//:privatesymlink");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule archive =
-        new FakeBuildRule("//:archive", pathResolver).setOutputFile("libarchive.a");
+    final BuildRule archive = new FakeBuildRule("//:archive").setOutputFile("libarchive.a");
 
     // Setup some dummy values for the library archive info.
-    final BuildRule sharedLibrary =
-        new FakeBuildRule("//:shared", pathResolver).setOutputFile("libshared.so");
+    final BuildRule sharedLibrary = new FakeBuildRule("//:shared").setOutputFile("libshared.so");
     final Path sharedLibraryOutput = Paths.get("output/path/lib.so");
     final String sharedLibrarySoname = "lib.so";
 
     // Construct a CxxLibrary object to test.
     FakeCxxLibrary cxxLibrary =
         new FakeCxxLibrary(
+            target,
             new FakeProjectFilesystem(),
             params,
             publicHeaderTarget,
@@ -156,21 +148,17 @@ public class CxxLibraryTest {
   public void headerOnlyExports() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(target);
+    BuildRuleParams params = TestBuildRuleParams.create();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     BuildTarget staticPicLibraryTarget =
-        params
-            .getBuildTarget()
-            .withAppendedFlavors(cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+        target.withAppendedFlavors(
+            cxxPlatform.getFlavor(), CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
     ruleResolver.addToIndex(
-        new FakeBuildRule(
-            projectFilesystem, TestBuildRuleParams.create(staticPicLibraryTarget), pathResolver));
+        new FakeBuildRule(staticPicLibraryTarget, projectFilesystem, TestBuildRuleParams.create()));
 
     FrameworkPath frameworkPath =
         FrameworkPath.ofSourcePath(
@@ -179,6 +167,7 @@ public class CxxLibraryTest {
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary =
         new CxxLibrary(
+            target,
             projectFilesystem,
             params,
             ruleResolver,

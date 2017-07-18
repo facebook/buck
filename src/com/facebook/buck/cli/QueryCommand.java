@@ -21,7 +21,6 @@ import com.facebook.buck.graph.Dot;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
-import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -125,7 +124,7 @@ public class QueryCommand extends AbstractCommand {
                 pool.getExecutor(),
                 params.getCell(),
                 getEnableParserProfiling(),
-                SpeculativeParsing.of(true))) {
+                PerBuildState.SpeculativeParsing.ENABLED)) {
       ListeningExecutorService executor = pool.getExecutor();
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
@@ -192,7 +191,7 @@ public class QueryCommand extends AbstractCommand {
     Set<String> targetLiterals = new LinkedHashSet<>();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      QueryExpression expr = QueryExpression.parse(query, env.getFunctions());
+      QueryExpression expr = QueryExpression.parse(query, env);
       expr.collectTargetPatterns(targetLiterals);
     }
     env.preloadTargetPatterns(targetLiterals);

@@ -57,7 +57,6 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
           System.getProperty(
               "buck.path_to_sh_binary_template", "src/com/facebook/buck/shell/sh_binary_template"));
 
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final SourcePath main;
   @AddToRuleKey private final ImmutableSet<SourcePath> resources;
 
@@ -65,22 +64,20 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
 
   protected ShBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
-    super(projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
+    super(buildTarget, projectFilesystem, params);
     this.main = main;
     this.resources = resources;
 
-    BuildTarget target = params.getBuildTarget();
     this.output =
         BuildTargets.getGenPath(
             getProjectFilesystem(),
-            target,
-            String.format("__%%s__/%s.sh", target.getShortNameAndFlavorPostfix()));
+            buildTarget,
+            String.format("__%%s__/%s.sh", buildTarget.getShortNameAndFlavorPostfix()));
   }
 
   @Override
@@ -142,7 +139,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // If the script is generated from another build rule, it needs to be available on disk
   // for this rule to be usable.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(resources.stream(), Stream.of(main))
         .map(ruleFinder::filterBuildRuleInputs)
         .flatMap(ImmutableSet::stream)

@@ -46,27 +46,25 @@ public class AndroidAppModularityDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidAppModularityDescriptionArg args)
       throws NoSuchBuildTargetException {
-    BuildTarget target = params.getBuildTarget();
-
     APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(Optional.of(args.getApplicationModuleConfigs()), targetGraph, target);
-    AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            params.getBuildTarget(),
-            args.getNoDx(),
-            /*resourcesToExclude*/ ImmutableSet.of(),
-            apkModuleGraph);
-    collector.addPackageables(
-        AndroidPackageableCollector.getPackageableRules(params.getBuildDeps()));
-    AndroidPackageableCollection packageableCollection = collector.build();
+        new APKModuleGraph(
+            Optional.of(args.getApplicationModuleConfigs()), targetGraph, buildTarget);
 
-    return new AndroidAppModularity(projectFilesystem, params, packageableCollection);
+    AndroidAppModularityGraphEnhancer graphEnhancer =
+        new AndroidAppModularityGraphEnhancer(
+            buildTarget, params, resolver, args.getNoDx(), apkModuleGraph);
+
+    AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
+
+    return new AndroidAppModularity(
+        buildTarget, projectFilesystem, params.withExtraDeps(result.getFinalDeps()), result);
   }
 
   @BuckStyleImmutable

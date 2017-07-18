@@ -90,4 +90,6 @@ abstract class AbstractIjProjectConfig {
   public abstract ImmutableSet<String> getIgnoredTargetLabels();
 
   public abstract int getAggregationLimitForAndroidResourceModule();
+
+  public abstract boolean isGeneratingAndroidManifestEnabled();
 }

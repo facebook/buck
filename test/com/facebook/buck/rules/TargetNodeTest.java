@@ -149,13 +149,13 @@ public class TargetNodeTest {
     @Override
     public BuildRule createBuildRule(
         TargetGraph targetGraph,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         ExampleDescriptionArg args) {
-      return new FakeBuildRule(
-          projectFilesystem, params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
+      return new FakeBuildRule(buildTarget, projectFilesystem, params);
     }
   }
 

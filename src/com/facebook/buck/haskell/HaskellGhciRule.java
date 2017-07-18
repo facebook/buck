@@ -100,6 +100,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   Path ghciCpp;
 
   private HaskellGhciRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
@@ -120,7 +121,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path ghciCxx,
       Path ghciCc,
       Path ghciCpp) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.buildRuleResolver = buildRuleResolver;
     this.srcs = srcs;
     this.compilerFlags = compilerFlags;
@@ -157,6 +158,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public static HaskellGhciRule from(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -198,6 +200,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     extraDeps.addAll(ruleFinder.filterBuildRuleInputs(solibs.values()));
 
     return new HaskellGhciRule(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(extraDeps.build()),
         resolver,

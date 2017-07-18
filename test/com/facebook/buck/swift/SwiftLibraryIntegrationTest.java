@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -69,7 +70,7 @@ public class SwiftLibraryIntegrationTest {
     resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 
   @Test
@@ -85,28 +86,29 @@ public class SwiftLibraryIntegrationTest {
 
     HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            symlinkTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+            symlinkTarget, projectFilesystem, symlinkTreeRoot, links);
     resolver.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
-    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
+    BuildRuleParams libParams = TestBuildRuleParams.create();
     FakeCxxLibrary depRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             symlinkTarget,
             BuildTargetFactory.newInstance("//:privateheader"),
             BuildTargetFactory.newInstance("//:privatesymlink"),
-            new FakeBuildRule("//:archive", pathResolver),
-            new FakeBuildRule("//:shared", pathResolver),
+            new FakeBuildRule("//:archive"),
+            new FakeBuildRule("//:shared"),
             Paths.get("output/path/lib.so"),
             "lib.so",
             ImmutableSortedSet.of());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildRuleParams params =
-        TestBuildRuleParams.create(buildTarget).withDeclaredDeps(ImmutableSortedSet.of(depRule));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(depRule));
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
 
@@ -114,6 +116,7 @@ public class SwiftLibraryIntegrationTest {
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraph.EMPTY,
+                buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -133,13 +136,14 @@ public class SwiftLibraryIntegrationTest {
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create(swiftCompileTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
 
     SwiftLibraryDescriptionArg args = createDummySwiftArg();
     SwiftCompile buildRule =
         (SwiftCompile)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraph.EMPTY,
+                swiftCompileTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -172,13 +176,13 @@ public class SwiftLibraryIntegrationTest {
             pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));
 
-    BuildTarget linkTarget = buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     CxxLink linkRule =
         (CxxLink)
             FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
                 TargetGraphFactory.newInstance(FakeTargetNodeBuilder.build(buildRule)),
+                buildTarget.withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
                 projectFilesystem,
-                params.withBuildTarget(linkTarget),
+                params,
                 resolver,
                 TestCellBuilder.createCellRoots(projectFilesystem),
                 args);

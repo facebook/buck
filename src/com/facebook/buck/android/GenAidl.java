@@ -68,14 +68,14 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path genPath;
 
   GenAidl(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
-    BuildTarget buildTarget = params.getBuildTarget();
     this.genPath = BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s");
     this.output =
         genPath.resolve(

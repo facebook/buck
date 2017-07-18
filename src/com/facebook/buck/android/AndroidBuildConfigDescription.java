@@ -33,13 +33,13 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,6 +67,7 @@ public class AndroidBuildConfigDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -74,11 +75,11 @@ public class AndroidBuildConfigDescription
       AndroidBuildConfigDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    if (HasJavaAbi.isClassAbiTarget(params.getBuildTarget())) {
-      BuildTarget configTarget = HasJavaAbi.getLibraryTarget(params.getBuildTarget());
+    if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
+      BuildTarget configTarget = HasJavaAbi.getLibraryTarget(buildTarget);
       BuildRule configRule = resolver.requireRule(configTarget);
       return CalculateAbiFromClasses.of(
-          params.getBuildTarget(),
+          buildTarget,
           ruleFinder,
           projectFilesystem,
           params,
@@ -86,6 +87,7 @@ public class AndroidBuildConfigDescription
     }
 
     return createBuildRule(
+        buildTarget,
         projectFilesystem,
         params,
         args.getPackage(),
@@ -106,6 +108,7 @@ public class AndroidBuildConfigDescription
    *     {@link BuildRuleResolver}.
    */
   static AndroidBuildConfigJavaLibrary createBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String javaPackage,
@@ -133,31 +136,29 @@ public class AndroidBuildConfigDescription
     // This fixes the issue, but deviates from the common pattern where a build rule has at most
     // one flavored version of itself for a given flavor.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget buildConfigBuildTarget;
-    if (!params.getBuildTarget().isFlavored()) {
+    if (!buildTarget.isFlavored()) {
       // android_build_config() case.
       Preconditions.checkArgument(!useConstantExpressions);
-      buildConfigBuildTarget = params.getBuildTarget().withFlavors(GEN_JAVA_FLAVOR);
+      buildConfigBuildTarget = buildTarget.withFlavors(GEN_JAVA_FLAVOR);
     } else {
       // android_binary() graph enhancement case.
       Preconditions.checkArgument(useConstantExpressions);
       buildConfigBuildTarget =
-          params
-              .getBuildTarget()
-              .withFlavors(
-                  InternalFlavor.of(
-                      GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
+          buildTarget.withFlavors(
+              InternalFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
     }
 
     // Create one build rule to generate BuildConfig.java.
-    BuildRuleParams buildConfigParams =
-        params
-            .withBuildTarget(buildConfigBuildTarget)
-            .copyAppendingExtraDeps(
-                ruleFinder.filterBuildRuleInputs(Optionals.toStream(valuesFile)));
+    BuildRuleParams buildConfigParams = params;
+    Optional<BuildRule> valuesFileRule = valuesFile.flatMap(ruleFinder::getRule);
+    if (valuesFileRule.isPresent()) {
+      buildConfigParams = buildConfigParams.copyAppendingExtraDeps(valuesFileRule.get());
+    }
     AndroidBuildConfig androidBuildConfig =
         new AndroidBuildConfig(
+            buildConfigBuildTarget,
             projectFilesystem,
             buildConfigParams,
             javaPackage,
@@ -170,6 +171,7 @@ public class AndroidBuildConfigDescription
     BuildRuleParams javaLibraryParams =
         params.withDeclaredDeps(ImmutableSortedSet.of(androidBuildConfig)).withoutExtraDeps();
     return new AndroidBuildConfigJavaLibrary(
+        buildTarget,
         projectFilesystem,
         javaLibraryParams,
         pathResolver,

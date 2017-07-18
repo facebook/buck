@@ -16,11 +16,14 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.log.Logger;
+import com.google.common.base.Throwables;
 import com.sun.jna.NativeLibrary;
 import com.sun.jna.Platform;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 import java.io.IOException;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Safely kill background processes on nailgun client exit. All process creation must synchronize on
@@ -28,10 +31,15 @@ import java.io.IOException;
  */
 public class BgProcessKiller {
 
+  private static final Logger LOG = Logger.get(BgProcessKiller.class);
+
+  @GuardedBy("BgProcessKiller.class")
   private static boolean initialized;
+
+  @GuardedBy("BgProcessKiller.class")
   private static boolean armed;
 
-  public static void init() {
+  public static synchronized void init() {
     NativeLibrary libcLibrary = NativeLibrary.getInstance(Platform.C_LIBRARY_NAME);
 
     // We kill subprocesses by sending SIGHUP to our process group; we want our subprocesses to die
@@ -84,7 +92,12 @@ public class BgProcessKiller {
 
   private static void checkArmedStatus() {
     if (armed) {
-      throw new BuckIsDyingException("process creation blocked due to pending nailgun exit");
+      BuckIsDyingException e =
+          new BuckIsDyingException("process creation blocked due to pending nailgun exit");
+      LOG.info(
+          "BuckIsDyingException: process creation blocked due to pending nailgun exit at:"
+              + Throwables.getStackTraceAsString(e));
+      throw e;
     }
   }
 

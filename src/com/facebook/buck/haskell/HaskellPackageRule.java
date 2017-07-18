@@ -74,6 +74,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> objects;
 
   public HaskellPackageRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool ghcPkg,
@@ -85,7 +86,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSortedSet<SourcePath> interfaces,
       ImmutableSortedSet<SourcePath> objects) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.ghcPkg = ghcPkg;
     this.haskellVersion = haskellVersion;
     this.depType = depType;
@@ -126,8 +127,9 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                         ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
                     .build());
     return new HaskellPackageRule(
+        target,
         projectFilesystem,
-        baseParams.withBuildTarget(target).withDeclaredDeps(declaredDeps).withoutExtraDeps(),
+        baseParams.withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         ghcPkg,
         haskellVersion,
         depType,

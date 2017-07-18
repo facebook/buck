@@ -55,9 +55,8 @@ import java.util.Collection;
 public abstract class QueryExpression {
 
   /** Scan and parse the specified query expression. */
-  public static QueryExpression parse(
-      String query, Iterable<QueryEnvironment.QueryFunction> functions) throws QueryException {
-    return QueryParser.parse(query, functions);
+  public static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
+    return QueryParser.parse(query, env);
   }
 
   protected QueryExpression() {}
@@ -68,12 +67,14 @@ public abstract class QueryExpression {
    *
    * <p>Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  public abstract ImmutableSet<QueryTarget> eval(QueryEnvironment env)
-      throws QueryException, InterruptedException;
+  abstract ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
+      throws QueryException;
 
   /**
    * Collects all target patterns that are referenced anywhere within this query expression and adds
    * them to the given collection, which must be mutable.
+   *
+   * <p>This is intended to accumulate patterns from multiple expressions for preloading at once.
    */
   public void collectTargetPatterns(Collection<String> literals) {
     traverse(new TargetPatternCollector(literals));
@@ -81,6 +82,13 @@ public abstract class QueryExpression {
 
   /** Accepts and applies the given visitor. */
   public abstract void traverse(Visitor visitor);
+
+  /** Returns a set of all targets referenced from literals within this query expression. */
+  public ImmutableSet<QueryTarget> getTargets(QueryEnvironment env) throws QueryException {
+    QueryTargetCollector collector = new QueryTargetCollector(env);
+    traverse(collector);
+    return collector.getTargets();
+  }
 
   /** Returns this query expression pretty-printed. */
   @Override

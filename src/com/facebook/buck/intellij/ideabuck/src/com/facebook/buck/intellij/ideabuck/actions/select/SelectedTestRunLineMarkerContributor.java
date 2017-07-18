@@ -26,17 +26,13 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiTypeParameterList;
-
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Class denoting the lines that can create buck test configurations.
- */
+/** Class denoting the lines that can create buck test configurations. */
 public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContributor {
 
   private static final String[] TEST_ANNOTATIONS = {
-      "org.junit.Test",
-      "org.testng.annotations.Test"
+    "org.junit.Test", "org.testng.annotations.Test"
   };
 
   @Nullable

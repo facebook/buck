@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
@@ -462,7 +463,7 @@ public class CxxLibraryDescription
         args.getXcodePrivateHeadersSymlinks()
             .orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
@@ -483,11 +484,10 @@ public class CxxLibraryDescription
       CxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        resolver,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, resolver, ruleFinder, pathResolver, Optional.empty(), args),
@@ -505,7 +505,7 @@ public class CxxLibraryDescription
     boolean shouldCreatePublicHeaderSymlinks =
         args.getXcodePublicHeadersSymlinks().orElse(cxxPlatform.getPublicHeadersSymlinksEnabled());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
@@ -535,7 +535,7 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Create rules for compiling the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -611,7 +611,7 @@ public class CxxLibraryDescription
             args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), cxxPlatform));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return createSharedLibrary(
         buildTarget,
         projectFilesystem,
@@ -656,7 +656,7 @@ public class CxxLibraryDescription
                 baseTarget.withAppendedFlavors(cxxPlatform.getFlavor(), Type.SHARED.getFlavor()));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return factory
         .get()
         .createSharedInterfaceLibrary(
@@ -672,6 +672,7 @@ public class CxxLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -679,6 +680,7 @@ public class CxxLibraryDescription
       CxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
@@ -692,6 +694,7 @@ public class CxxLibraryDescription
   }
 
   public BuildRule createBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams metadataRuleParams,
       final BuildRuleResolver resolver,
@@ -704,7 +707,6 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
       throws NoSuchBuildTargetException {
 
-    BuildTarget buildTarget = metadataRuleParams.getBuildTarget();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
@@ -715,7 +717,7 @@ public class CxxLibraryDescription
       // XXX: This needs bundleLoader for tests..
       CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
           requireObjects(
               buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
@@ -854,8 +856,9 @@ public class CxxLibraryDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return new CxxLibrary(
+        buildTarget,
         projectFilesystem,
         metadataRuleParams,
         resolver,

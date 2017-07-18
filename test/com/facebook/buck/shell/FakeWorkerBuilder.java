@@ -56,8 +56,9 @@ public class FakeWorkerBuilder
     private final Tool tool = new FakeTool();
     private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
 
-    public FakeWorkerTool(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-      super(projectFilesystem, params);
+    public FakeWorkerTool(
+        BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      super(buildTarget, projectFilesystem, params);
     }
 
     @Override
@@ -122,13 +123,14 @@ public class FakeWorkerBuilder
     @Override
     public BuildRule createBuildRule(
         TargetGraph targetGraph,
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
         FakeWorkerDescriptionArg args)
         throws NoSuchBuildTargetException {
-      return new FakeWorkerTool(projectFilesystem, params);
+      return new FakeWorkerTool(buildTarget, projectFilesystem, params);
     }
 
     @BuckStyleImmutable

@@ -88,6 +88,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Function<String, String> macroExpander;
 
   protected NdkLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Path makefile,
@@ -97,10 +98,9 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean isAsset,
       Optional<String> ndkVersion,
       Function<String, String> macroExpander) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.isAsset = isAsset;
 
-    BuildTarget buildTarget = params.getBuildTarget();
     this.root = buildTarget.getBasePath();
     this.makefile = Preconditions.checkNotNull(makefile);
     this.makefileContents = makefileContents;

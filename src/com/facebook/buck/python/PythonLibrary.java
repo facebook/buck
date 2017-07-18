@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import java.util.stream.Stream;
 
 public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -33,8 +34,11 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BuildRuleResolver resolver;
 
   PythonLibrary(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
-    super(projectFilesystem, params);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver) {
+    super(buildTarget, projectFilesystem, params);
     this.resolver = resolver;
   }
 
@@ -68,7 +72,7 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getDeclaredDeps().stream().map(BuildRule::getBuildTarget);
   }
 }

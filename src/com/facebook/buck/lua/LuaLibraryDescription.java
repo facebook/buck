@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -49,14 +50,15 @@ public class LuaLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final LuaLibraryDescriptionArg args) {
     final SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(resolver));
-    return new LuaLibrary(projectFilesystem, params) {
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    return new LuaLibrary(buildTarget, projectFilesystem, params) {
 
       @Override
       public Iterable<BuildRule> getLuaPackageDeps(CxxPlatform cxxPlatform) {
@@ -69,10 +71,10 @@ public class LuaLibraryDescription
         return LuaPackageComponents.builder()
             .putAllModules(
                 LuaUtil.toModuleMap(
-                    params.getBuildTarget(),
+                    buildTarget,
                     pathResolver,
                     "srcs",
-                    LuaUtil.getBaseModule(params.getBuildTarget(), args.getBaseModule()),
+                    LuaUtil.getBaseModule(buildTarget, args.getBaseModule()),
                     ImmutableList.of(args.getSrcs())))
             .build();
       }

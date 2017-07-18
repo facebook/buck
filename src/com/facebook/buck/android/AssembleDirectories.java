@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -39,14 +40,14 @@ public class AssembleDirectories extends AbstractBuildRuleWithDeclaredAndExtraDe
   @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public AssembleDirectories(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableCollection<SourcePath> directories) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.originalDirectories = directories;
     this.destinationDirectory =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(), buildRuleParams.getBuildTarget(), "__assembled_%s__");
+        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__assembled_%s__");
   }
 
   @Override

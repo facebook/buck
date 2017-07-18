@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -164,7 +165,7 @@ final class JavaBuildGraphProcessor {
                 .build();
 
         SourcePathResolver pathResolver =
-            new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
         BuildEngineBuildContext buildContext =
             BuildEngineBuildContext.builder()
                 .setBuildContext(

@@ -32,10 +32,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -63,7 +63,7 @@ public class JarBuilder {
   @Nullable private Path manifestFile;
   private boolean shouldMergeManifests;
   private boolean shouldHashEntries;
-  private Iterable<Pattern> blacklist = new ArrayList<>();
+  private Predicate<? super CustomZipEntry> removeEntryPredicate = entry -> false;
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
 
@@ -116,8 +116,9 @@ public class JarBuilder {
     return this;
   }
 
-  public JarBuilder setEntryPatternBlacklist(Iterable<Pattern> blacklist) {
-    this.blacklist = blacklist;
+  public JarBuilder setRemoveEntryPredicate(
+      Predicate<? super CustomZipEntry> removeEntryPredicate) {
+    this.removeEntryPredicate = removeEntryPredicate;
     return this;
   }
 
@@ -215,7 +216,7 @@ public class JarBuilder {
     }
 
     // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-    if (shouldEntryBeRemovedFromJar(entrySupplier)) {
+    if (removeEntryPredicate.test(entrySupplier.getEntry())) {
       return;
     }
 
@@ -268,18 +269,6 @@ public class JarBuilder {
       length = name.lastIndexOf('/', length - 2) + 1;
     }
     return name.substring(0, length);
-  }
-
-  private boolean shouldEntryBeRemovedFromJar(JarEntrySupplier supplier) throws IOException {
-    CustomZipEntry entry = supplier.getEntry();
-    String entryKey = pathToClassName(entry.getName());
-    for (Pattern pattern : blacklist) {
-      if (pattern.matcher(entryKey).find()) {
-        observer.onEntryOmitted(String.valueOf(outputFile), supplier);
-        return true;
-      }
-    }
-    return false;
   }
 
   /**

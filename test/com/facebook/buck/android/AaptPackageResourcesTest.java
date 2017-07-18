@@ -24,6 +24,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -103,9 +104,9 @@ public class AaptPackageResourcesTest {
     resource2 = (AndroidResource) ruleResolver.requireRule(resourceNode2.getBuildTarget());
 
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    pathResolver = new SourcePathResolver(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
-    params = TestBuildRuleParams.create(aaptTarget);
+    params = TestBuildRuleParams.create();
 
     hashCache = new FakeFileHashCache(new HashMap<>());
     createPathSourcePath("res1", "resources1");
@@ -210,11 +211,9 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider =
         new ResourcesFilter(
+            aaptTarget.withFlavors(InternalFlavor.of("filter")),
             filesystem,
-            params
-                .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-                .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
-                .withoutExtraDeps(),
+            params.withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2)).withoutExtraDeps(),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -226,11 +225,9 @@ public class AaptPackageResourcesTest {
 
     args.filteredResourcesProvider =
         new ResourcesFilter(
+            aaptTarget.withFlavors(InternalFlavor.of("filter")),
             filesystem,
-            params
-                .withBuildTarget(params.getBuildTarget().withFlavors(InternalFlavor.of("filter")))
-                .withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2))
-                .withoutExtraDeps(),
+            params.withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2)).withoutExtraDeps(),
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
@@ -263,6 +260,7 @@ public class AaptPackageResourcesTest {
     return new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
         .build(
             new AaptPackageResources(
+                aaptTarget,
                 filesystem,
                 params,
                 ruleFinder,

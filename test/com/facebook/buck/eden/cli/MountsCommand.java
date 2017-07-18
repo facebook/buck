@@ -25,23 +25,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 
 public class MountsCommand implements Command {
   @Override
-  public int run() throws EdenError, IOException, TException {
-    Optional<EdenClient> clientOptional = EdenClient.newInstance();
-    if (!clientOptional.isPresent()) {
-      System.err.println("Could not connect to Eden");
-      return 1;
-    }
-
-    EdenClient client = clientOptional.get();
+  public int run(EdenClient client) throws EdenError, IOException, TException {
     List<MountInfo> mountInfos = client.getMountInfos();
     System.out.printf("Number of mounts: %d\n", mountInfos.size());
     for (MountInfo info : mountInfos) {
       System.out.println(info.mountPoint);
-      EdenMount mount = client.getMountFor(Paths.get(info.mountPoint));
+      EdenMount mount = client.getMountFor(Paths.get(info.mountPoint)).get();
       List<Path> bindMounts = mount.getBindMounts();
       System.out.printf("    Number of bind mounts: %d\n", bindMounts.size());
       for (Path bindMount : bindMounts) {

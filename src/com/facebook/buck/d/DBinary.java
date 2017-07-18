@@ -37,18 +37,16 @@ import java.util.stream.Stream;
 public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
 
-  private final SourcePathRuleFinder ruleFinder;
   private final Tool executable;
   private final SourcePath output;
 
   public DBinary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       Tool executable,
       SourcePath output) {
-    super(projectFilesystem, params);
-    this.ruleFinder = ruleFinder;
+    super(buildTarget, projectFilesystem, params);
     this.executable = executable;
     this.output = output;
   }
@@ -70,7 +68,7 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     // Return the actual executable as a runtime dependency.
     // Without this, the file is not written when we get a cache hit.
     return executable.getDeps(ruleFinder).stream().map(BuildRule::getBuildTarget);

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredDeps;
@@ -303,41 +304,37 @@ public class PrebuiltCxxLibraryDescription
    * @return a {@link HeaderSymlinkTree} for the exported headers of this prebuilt C/C++ library.
    */
   private static HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params.getBuildTarget(),
+        buildTarget,
         projectFilesystem,
         resolver,
         cxxPlatform,
-        parseExportedHeaders(params, resolver, cxxPlatform, args),
+        parseExportedHeaders(buildTarget, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC,
         true);
   }
 
   private static ImmutableMap<Path, SourcePath> parseExportedHeaders(
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyHeaders(
-            params.getBuildTarget(),
-            ruleFinder,
-            pathResolver,
-            "exported_headers",
-            args.getExportedHeaders()));
+            buildTarget, ruleFinder, pathResolver, "exported_headers", args.getExportedHeaders()));
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyPlatformHeaders(
-            params.getBuildTarget(),
+            buildTarget,
             resolver,
             ruleFinder,
             pathResolver,
@@ -347,12 +344,13 @@ public class PrebuiltCxxLibraryDescription
             "exported_platform, headers",
             args.getExportedPlatformHeaders()));
     return CxxPreprocessables.resolveHeaderMap(
-        args.getHeaderNamespace().map(Paths::get).orElse(params.getBuildTarget().getBasePath()),
+        args.getHeaderNamespace().map(Paths::get).orElse(buildTarget.getBasePath()),
         headers.build());
   }
 
   /** @return a {@link CxxLink} rule for a shared library version of this prebuilt C/C++ library. */
   private BuildRule createSharedLibraryBuildRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -363,12 +361,11 @@ public class PrebuiltCxxLibraryDescription
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    BuildTarget target = params.getBuildTarget();
     String soname =
         getSoname(
-            target, cellRoots, ruleResolver, cxxPlatform, args.getSoname(), args.getLibName());
+            buildTarget, cellRoots, ruleResolver, cxxPlatform, args.getSoname(), args.getLibName());
 
     Optional<String> versionSubDir =
         selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()
@@ -379,7 +376,7 @@ public class PrebuiltCxxLibraryDescription
     // Use the static PIC variant, if available.
     SourcePath staticLibraryPath =
         getStaticPicLibraryPath(
-            target,
+            buildTarget,
             cellRoots,
             projectFilesystem,
             ruleResolver,
@@ -390,7 +387,7 @@ public class PrebuiltCxxLibraryDescription
     if (!projectFilesystem.exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
       staticLibraryPath =
           getStaticLibraryPath(
-              target,
+              buildTarget,
               cellRoots,
               projectFilesystem,
               ruleResolver,
@@ -402,9 +399,7 @@ public class PrebuiltCxxLibraryDescription
 
     // Otherwise, we need to build it from the static lib.
     BuildTarget sharedTarget =
-        BuildTarget.builder(params.getBuildTarget())
-            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .build();
+        BuildTarget.builder(buildTarget).addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR).build();
 
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath =
@@ -513,7 +508,7 @@ public class PrebuiltCxxLibraryDescription
     }
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     SourcePath sharedLibrary =
         requireSharedLibrary(
@@ -541,6 +536,7 @@ public class PrebuiltCxxLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
@@ -550,13 +546,11 @@ public class PrebuiltCxxLibraryDescription
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
-    Optional<Map.Entry<Flavor, Type>> type =
-        LIBRARY_TYPE.getFlavorAndValue(params.getBuildTarget());
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform =
-        cxxPlatforms.getFlavorAndValue(params.getBuildTarget());
+    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
 
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
-        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
+        targetGraph.get(buildTarget).getSelectedVersions();
     final Optional<String> versionSubdir =
         selectedVersions.isPresent() && args.getVersionedSubDir().isPresent()
             ? Optional.of(
@@ -569,12 +563,13 @@ public class PrebuiltCxxLibraryDescription
     if (type.isPresent()) {
       Preconditions.checkState(platform.isPresent());
       BuildTarget baseTarget =
-          params.getBuildTarget().withoutFlavors(type.get().getKey(), platform.get().getKey());
+          buildTarget.withoutFlavors(type.get().getKey(), platform.get().getKey());
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
-            projectFilesystem, params, ruleResolver, platform.get().getValue(), args);
+            buildTarget, projectFilesystem, ruleResolver, platform.get().getValue(), args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
+            buildTarget,
             projectFilesystem,
             params,
             ruleResolver,
@@ -602,17 +597,17 @@ public class PrebuiltCxxLibraryDescription
       if (versionSubDirs.size() != 1) {
         throw new HumanReadableException(
             "%s: could not get a single version sub dir: %s, %s, %s",
-            params.getBuildTarget(), args.getVersionedSubDir(), versionSubDirs, selectedVersions);
+            buildTarget, args.getVersionedSubDir(), versionSubDirs, selectedVersions);
       }
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     final boolean headerOnly = args.getHeaderOnly().orElse(false);
     final boolean forceStatic = args.getForceStatic().orElse(false);
-    return new PrebuiltCxxLibrary(projectFilesystem, params) {
+    return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
 
       private final Map<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
           new HashMap<>();
@@ -683,14 +678,13 @@ public class PrebuiltCxxLibraryDescription
             && args.isSupportsSharedLibraryInterface()
             && cxxPlatform.getSharedLibraryInterfaceFactory().isPresent()) {
           BuildTarget target =
-              params
-                  .getBuildTarget()
-                  .withAppendedFlavors(cxxPlatform.getFlavor(), Type.SHARED_INTERFACE.getFlavor());
+              buildTarget.withAppendedFlavors(
+                  cxxPlatform.getFlavor(), Type.SHARED_INTERFACE.getFlavor());
           BuildRule rule = ruleResolver.requireRule(target);
           return Preconditions.checkNotNull(rule.getSourcePathToOutput());
         }
         return PrebuiltCxxLibraryDescription.this.requireSharedLibrary(
-            params.getBuildTarget(),
+            buildTarget,
             ruleResolver,
             pathResolver,
             cellRoots,
@@ -776,7 +770,7 @@ public class PrebuiltCxxLibraryDescription
                 .map(
                     input ->
                         PrebuiltCxxLibraryDescription.getApplicableSourcePath(
-                            params.getBuildTarget(),
+                            buildTarget,
                             cellRoots,
                             projectFilesystem,
                             ruleResolver,
@@ -969,7 +963,7 @@ public class PrebuiltCxxLibraryDescription
             new NativeLinkTarget() {
               @Override
               public BuildTarget getBuildTarget() {
-                return params.getBuildTarget();
+                return buildTarget;
               }
 
               @Override

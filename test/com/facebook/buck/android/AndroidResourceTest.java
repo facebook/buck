@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -97,11 +98,11 @@ public class AndroidResourceTest {
 
     BuildRule androidResource1 = resolver1.requireRule(buildTarget);
     SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(resolver1);
-    SourcePathResolver pathResolver1 = new SourcePathResolver(ruleFinder1);
+    SourcePathResolver pathResolver1 = DefaultSourcePathResolver.from(ruleFinder1);
 
     BuildRule androidResource2 = resolver2.requireRule(buildTarget);
     SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(resolver2);
-    SourcePathResolver pathResolver2 = new SourcePathResolver(ruleFinder2);
+    SourcePathResolver pathResolver2 = DefaultSourcePathResolver.from(ruleFinder2);
 
     RuleKey ruleKey1 =
         new DefaultRuleKeyFactory(0, hashCache, pathResolver1, ruleFinder1).build(androidResource1);
@@ -118,14 +119,15 @@ public class AndroidResourceTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
+            buildTarget,
             projectFilesystem,
             params,
             ruleFinder,
@@ -152,14 +154,15 @@ public class AndroidResourceTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
+            buildTarget,
             projectFilesystem,
             params,
             ruleFinder,
@@ -203,9 +206,9 @@ public class AndroidResourceTest {
         (AndroidResource) resolver.requireRule(resourceNode.getBuildTarget());
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
-        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.PREFIX_TREE);
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     filesystem.writeContentsToPath(
         "something", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original =

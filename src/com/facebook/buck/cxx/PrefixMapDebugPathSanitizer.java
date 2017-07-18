@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -22,8 +23,10 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.AbstractMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * This sanitizer works by depending on the compiler's -fdebug-prefix-map flag to properly ensure
@@ -32,32 +35,12 @@ import java.util.Optional;
 public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   private final String fakeCompilationDirectory;
-  private final boolean isGcc;
-  private final CxxToolProvider.Type cxxType;
-
   private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(
-      String fakeCompilationDirectory,
-      ImmutableBiMap<Path, String> other,
-      CxxToolProvider.Type cxxType) {
+      String fakeCompilationDirectory, ImmutableBiMap<Path, String> other) {
     this.fakeCompilationDirectory = fakeCompilationDirectory;
-    this.isGcc = cxxType == CxxToolProvider.Type.GCC;
-    this.cxxType = cxxType;
-
-    ImmutableBiMap.Builder<Path, String> pathsBuilder = ImmutableBiMap.builder();
-    // As these replacements are processed one at a time, if one is a prefix (or actually is just
-    // contained in) another, it must be processed after that other one. To ensure that we can
-    // process them in the correct order, they are inserted into allPaths in order of length
-    // (longest first). Then, if they are processed in the order in allPaths, prefixes will be
-    // handled correctly.
-    other
-        .entrySet()
-        .stream()
-        .sorted(
-            (left, right) -> right.getKey().toString().length() - left.getKey().toString().length())
-        .forEach(e -> pathsBuilder.put(e.getKey(), e.getValue()));
-    this.other = pathsBuilder.build();
+    this.other = other;
   }
 
   @Override
@@ -77,27 +60,52 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  ImmutableList<String> getCompilationFlags(Path workingDir) {
-    if (cxxType == CxxToolProvider.Type.WINDOWS) {
+  ImmutableList<String> getCompilationFlags(
+      Compiler compiler, Path workingDir, ImmutableMap<Path, Path> prefixMap) {
+    if (compiler instanceof WindowsCompiler) {
       return ImmutableList.of();
     }
+
     ImmutableList.Builder<String> flags = ImmutableList.builder();
-    // Two -fdebug-prefix-map flags will be applied in the reverse order, so reverse allPaths.
-    Iterable<Map.Entry<Path, String>> iter =
-        ImmutableList.copyOf(getAllPaths(Optional.of(workingDir))).reverse();
-    for (Map.Entry<Path, String> mappings : iter) {
-      flags.add(getDebugPrefixMapFlag(mappings.getKey(), mappings.getValue()));
-    }
-    if (isGcc) {
+
+    // As these replacements are processed one at a time, if one is a prefix (or actually is just
+    // contained in) another, it must be processed after that other one. To ensure that we can
+    // process them in the correct order, they are inserted into allPaths in order of length
+    // (shortest first) so that prefixes will be handled correctly.
+    RichStream.<Map.Entry<Path, String>>empty()
+        // GCC has a bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71850) where it won't
+        // properly pass arguments down to subprograms using argsfiles, which can make it prone to
+        // argument list too long errors, so avoid adding `-fdebug-prefix-map` flags for each
+        // `prefixMap` entry.
+        .concat(
+            compiler instanceof GccCompiler
+                ? Stream.empty()
+                : prefixMap
+                    .entrySet()
+                    .stream()
+                    .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().toString())))
+        .concat(RichStream.from(getAllPaths(Optional.of(workingDir))))
+        .sorted(Comparator.comparingInt(entry -> entry.getKey().toString().length()))
+        .map(p -> getDebugPrefixMapFlag(p.getKey(), p.getValue()))
+        .forEach(flags::add);
+
+    if (compiler instanceof GccCompiler) {
       // If we recorded switches in the debug info, the -fdebug-prefix-map values would contain the
       // unsanitized paths.
       flags.add("-gno-record-gcc-switches");
     }
+
     return flags.build();
   }
 
   private String getDebugPrefixMapFlag(Path realPath, String fakePath) {
-    return String.format("-fdebug-prefix-map=%s=%s", realPath, fakePath);
+    String realPathStr = realPath.toString();
+    // If we're replacing the real path with an empty fake path, then also remove the trailing `/`
+    // to prevent forming an absolute path.
+    if (fakePath.isEmpty()) {
+      realPathStr += "/";
+    }
+    return String.format("-fdebug-prefix-map=%s=%s", realPathStr, fakePath);
   }
 
   @Override

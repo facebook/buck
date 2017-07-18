@@ -91,7 +91,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
-import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -106,6 +105,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
@@ -314,7 +314,7 @@ public class ProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.buildRuleResolverForNode = buildRuleResolverForNode;
     this.defaultPathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
@@ -1020,13 +1020,11 @@ public class ProjectGenerator {
       collectBuildScriptDependencies(
           targetGraph.getAll(targetNode.getDeclaredDeps()), preScriptPhases, postScriptPhases);
       if (isFocusedOnTarget) {
-        mutator.setPreBuildRunScriptPhasesFromTargetNodes(
-            preScriptPhases.build(), buildRuleResolverForNode);
+        mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
         if (copyFilesPhases.isPresent()) {
           mutator.setCopyFilesPhases(copyFilesPhases.get());
         }
-        mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-            postScriptPhases.build(), buildRuleResolverForNode);
+        mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
       }
     }
 
@@ -1500,7 +1498,7 @@ public class ProjectGenerator {
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       try {
         return ImmutableSortedMap.copyOf(
             CxxDescriptionEnhancer.parseExportedHeaders(
@@ -1530,7 +1528,7 @@ public class ProjectGenerator {
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       try {
         return ImmutableSortedMap.copyOf(
             CxxDescriptionEnhancer.parseHeaders(
@@ -1744,8 +1742,7 @@ public class ProjectGenerator {
       ImmutableList.Builder<TargetNode<?, ?>> preRules,
       ImmutableList.Builder<TargetNode<?, ?>> postRules) {
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription
-          || targetNode.getDescription() instanceof JsBundleDescription) {
+      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription) {
         postRules.add(targetNode);
         requiredBuildTargetsBuilder.add(targetNode.getBuildTarget());
       } else if (targetNode.getDescription() instanceof XcodePostbuildScriptDescription) {
@@ -2667,7 +2664,7 @@ public class ProjectGenerator {
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(node);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       Path output = pathResolver.getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(

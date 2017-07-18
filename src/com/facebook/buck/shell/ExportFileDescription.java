@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
@@ -49,46 +50,44 @@ public class ExportFileDescription
   @Override
   public ExportFile createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ExportFileDescriptionArg args) {
-    BuildTarget target = params.getBuildTarget();
-
     Mode mode = args.getMode().orElse(Mode.COPY);
 
     String name;
     if (args.getOut().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE) {
         throw new HumanReadableException(
-            "%s: must not set `out` for `export_file` when using `REFERENCE` mode",
-            params.getBuildTarget());
+            "%s: must not set `out` for `export_file` when using `REFERENCE` mode", buildTarget);
       }
       name = args.getOut().get();
     } else {
-      name = target.getShortNameAndFlavorPostfix();
+      name = buildTarget.getShortNameAndFlavorPostfix();
     }
 
     SourcePath src;
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
           && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {
         throw new HumanReadableException(
             "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
-            target, args.getSrc().get());
+            buildTarget, args.getSrc().get());
       }
       src = args.getSrc().get();
     } else {
       src =
           new PathSourcePath(
               projectFilesystem,
-              target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
+              buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
     }
 
-    return new ExportFile(projectFilesystem, params, ruleFinder, pathResolver, name, mode, src);
+    return new ExportFile(buildTarget, projectFilesystem, params, name, mode, src);
   }
 
   /** If the src field is absent, add the name field to the list of inputs. */

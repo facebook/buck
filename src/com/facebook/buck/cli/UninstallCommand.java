@@ -18,6 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
@@ -25,6 +27,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -151,22 +154,25 @@ public class UninstallCommand extends AbstractCommand {
     }
     HasInstallableApk hasInstallableApk = (HasInstallableApk) buildRule;
 
-    // We need this in case adb isn't already running.
-    try (ExecutionContext context = createExecutionContext(params)) {
-      final AdbHelper adbHelper =
-          new AdbHelper(
-              adbOptions(params.getBuckConfig()),
-              targetDeviceOptions(),
-              context,
-              params.getBuckConfig().getRestartAdbOnFailure());
+    final AndroidDevicesHelper adbHelper = getExecutionContext().getAndroidDevicesHelper().get();
 
-      // Find application package name from manifest and uninstall from matching devices.
-      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
-      String appId =
-          AdbHelper.tryToExtractPackageNameFromManifest(
-              pathResolver, hasInstallableApk.getApkInfo());
-      return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
-    }
+    // Find application package name from manifest and uninstall from matching devices.
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    String appId =
+        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
+    return adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData()) ? 0 : 1;
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setAndroidDevicesHelper(
+            AndroidDevicesHelperFactory.get(
+                this::getExecutionContext,
+                params.getBuckConfig(),
+                adbOptions(params.getBuckConfig()),
+                targetDeviceOptions()));
   }
 
   @Override

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -146,19 +147,20 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final Path pathToOutputFile;
 
   protected AndroidBuildConfig(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       String javaPackage,
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.javaPackage = javaPackage;
     this.defaultValues = defaultValues;
     this.valuesFile = valuesFile;
     this.useConstantExpressions = useConstantExpressions;
     this.pathToOutputFile =
-        BuildTargets.getGenPath(projectFilesystem, buildRuleParams.getBuildTarget(), "__%s__")
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "__%s__")
             .resolve("BuildConfig.java");
   }
 

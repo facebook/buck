@@ -2,6 +2,7 @@ from __future__ import print_function
 import errno
 import glob
 import json
+import logging
 import os
 import platform
 import shlex
@@ -87,6 +88,9 @@ class CommandLineArgs:
     def is_help(self):
         return self.command is None or "--help" in self.command_options
 
+    def is_version(self):
+        return self.command is None and "--version" in self.buck_options
+
 
 class RestartBuck(Exception):
     pass
@@ -166,6 +170,9 @@ class BuckTool(object):
     def _get_buck_version_uid(self):
         raise NotImplementedError()
 
+    def _get_buck_version_timestamp(self):
+        raise NotImplementedError()
+
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
 
@@ -192,14 +199,39 @@ class BuckTool(object):
         env['BUCK_TTY'] = str(int(sys.stdin.isatty()))
         return env
 
+    def _setup_log(self):
+        # Set log level of the messages to show.
+        logger = logging.getLogger()
+        level_name = os.environ.get('BUCK_WRAPPER_LOG_LEVEL', 'INFO')
+        level_name_to_level = {
+            'CRITICAL': logging.CRITICAL,
+            'ERROR': logging.ERROR,
+            'WARNING': logging.WARNING,
+            'INFO': logging.INFO,
+            'DEBUG': logging.DEBUG,
+            'NOTSET': logging.NOTSET,
+        }
+        level = level_name_to_level.get(level_name.upper(), logging.INFO)
+        logger.setLevel(level)
+        # Set formatter for log messages.
+        console_handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(message)s')
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
+                self._setup_log()
                 if self._command_line.command == "clean" and \
                         not self._command_line.is_help():
                     self.kill_buckd()
 
                 buck_version_uid = self._get_buck_version_uid()
+
+                if self._command_line.is_version():
+                    print("buck version {}".format(buck_version_uid))
+                    return 0
 
                 use_buckd = self._use_buckd
                 if not self._command_line.is_help():
@@ -225,7 +257,7 @@ class BuckTool(object):
                 if use_buckd and self._is_buckd_running():
                     with Tracing('buck', args={'command': sys.argv[1:]}):
                         exit_code = 2
-                        last_diagnostic_time = 0
+                        busy_diagnostic_displayed = False
                         while exit_code == 2:
                             with NailgunConnection(
                                     self._buck_project.get_buckd_transport_address(),
@@ -241,10 +273,13 @@ class BuckTool(object):
                                 if exit_code == 2:
                                     env['BUCK_BUILD_ID'] = str(uuid.uuid4())
                                     now = time.time()
-                                    if now - last_diagnostic_time > DAEMON_BUSY_MESSAGE_SECONDS:
-                                        print('Daemon is busy, waiting for it to become free...',
+                                    if not busy_diagnostic_displayed:
+                                        print("Buck daemon is busy with another command. " +
+                                              "Waiting for it to become free...\n" +
+                                              "You can use 'buck kill' to kill buck " +
+                                              "if you suspect buck is stuck.",
                                               file=sys.stderr)
-                                        last_diagnostic_time = now
+                                        busy_diagnostic_displayed = True
                                     time.sleep(1)
                         return exit_code
 
@@ -400,11 +435,12 @@ class BuckTool(object):
 
             return returncode
 
+
     def kill_buckd(self):
         with Tracing('BuckTool.kill_buckd'):
             buckd_transport_file_path = self._buck_project.get_buckd_transport_file_path()
             if transport_exists(buckd_transport_file_path):
-                print("Shutting down nailgun server...", file=sys.stderr)
+                logging.debug("Shutting down buck daemon.")
                 try:
                     with NailgunConnection(self._buck_project.get_buckd_transport_address(),
                                            cwd=self._buck_project.root) as c:
@@ -528,7 +564,7 @@ def setup_watchman_watch():
             # FileSystemWatcher will take too long to process events.
             raise BuckToolException(message)
 
-        print("Using watchman.", file=sys.stderr)
+        logging.debug("Using watchman.")
 
 
 def transport_exists(path):

@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -57,23 +58,22 @@ public class BuildCommandTest {
   public void setUp() {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+    resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
 
-    FakeBuildRule rule1 =
-        new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule1"), resolver);
+    FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule1"));
     rule1.setOutputFile("buck-out/gen/fake/rule1.txt");
     ruleResolver.addToIndex(rule1);
     ruleToResult.put(
         rule1, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
-    BuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule2"), resolver);
+    BuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule2"));
     BuildResult rule2Failure = BuildResult.failure(rule2, new RuntimeException("some"));
     ruleToResult.put(rule2, Optional.of(rule2Failure));
     ruleResolver.addToIndex(rule2);
 
-    BuildRule rule3 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule3"), resolver);
+    BuildRule rule3 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule3"));
     ruleToResult.put(
         rule3,
         Optional.of(
@@ -81,7 +81,7 @@ public class BuildCommandTest {
                 rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir", ArtifactCacheMode.dir))));
     ruleResolver.addToIndex(rule3);
 
-    BuildRule rule4 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule4"), resolver);
+    BuildRule rule4 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule4"));
     ruleToResult.put(rule4, Optional.empty());
     ruleResolver.addToIndex(rule4);
 

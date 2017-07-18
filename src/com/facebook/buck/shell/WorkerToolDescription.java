@@ -81,6 +81,7 @@ public class WorkerToolDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       final BuildRuleResolver resolver,
@@ -95,7 +96,7 @@ public class WorkerToolDescription
         throw new HumanReadableException(
             "The 'exe' argument of %s, %s, needs to correspond to a "
                 + "binary rule, such as sh_binary().",
-            params.getBuildTarget(), args.getExe().get().getFullyQualifiedName());
+            buildTarget, args.getExe().get().getFullyQualifiedName());
       }
 
       builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
@@ -111,7 +112,7 @@ public class WorkerToolDescription
             .collect(MoreCollectors.toImmutableList()));
 
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
@@ -142,6 +143,7 @@ public class WorkerToolDescription
 
     CommandTool tool = builder.build();
     return new DefaultWorkerTool(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(tool.getDeps(new SourcePathRuleFinder(resolver))),
         tool,

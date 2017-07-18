@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
 public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements CxxPreprocessorDep, NativeLinkable {
 
-  private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
   private final Optional<Pattern> supportedPlatformsRegex;
 
@@ -58,12 +57,12 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
   protected HalideLibrary(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       Optional<Pattern> supportedPlatformsRegex) {
-    super(projectFilesystem, params);
-    this.params = params;
+    super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
   }
@@ -88,7 +87,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       return CxxPreprocessorInput.EMPTY;
     }
     return CxxPreprocessables.getCxxPreprocessorInput(
-        params,
+        getBuildTarget(),
         ruleResolver,
         /* hasHeaderSymlinkTree */ true,
         cxxPlatform,

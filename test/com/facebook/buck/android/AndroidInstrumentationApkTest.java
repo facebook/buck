@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -55,14 +56,13 @@ public class AndroidInstrumentationApkTest {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildTarget javaLibrary1Target = BuildTargetFactory.newInstance("//java/com/example:lib1");
-    final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target, pathResolver);
+    final FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
 
     FakeJavaLibrary javaLibrary2 =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance("//java/com/example:lib2"),
-            pathResolver,
             /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary1)) {
 
           @Override
@@ -73,12 +73,11 @@ public class AndroidInstrumentationApkTest {
         };
 
     BuildTarget javaLibrary3Target = BuildTargetFactory.newInstance("//java/com/example:lib3");
-    final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(javaLibrary3Target, pathResolver);
+    final FakeJavaLibrary javaLibrary3 = new FakeJavaLibrary(javaLibrary3Target);
 
     FakeJavaLibrary javaLibrary4 =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance("//java/com/example:lib4"),
-            pathResolver,
             /* deps */ ImmutableSortedSet.of((BuildRule) javaLibrary3)) {
           @Override
           public ImmutableSet<SourcePath> getTransitiveClasspaths() {
@@ -123,7 +122,7 @@ public class AndroidInstrumentationApkTest {
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params =
-        TestBuildRuleParams.create(buildTarget)
+        TestBuildRuleParams.create()
             .withDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
             .withExtraDeps(ImmutableSortedSet.of(androidBinary));
     AndroidInstrumentationApk androidInstrumentationApk =
@@ -138,6 +137,7 @@ public class AndroidInstrumentationApkTest {
                     new DxConfig(FakeBuckConfig.builder().build()))
                 .createBuildRule(
                     TargetGraph.EMPTY,
+                    buildTarget,
                     projectFilesystem,
                     params,
                     ruleResolver,

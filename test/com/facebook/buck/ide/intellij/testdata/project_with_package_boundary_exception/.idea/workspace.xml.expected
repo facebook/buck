@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><project version="4">
+  <component name="ChangeListManager">
+    <ignored path="$PROJECT_DIR$/buck-out/"/>
+    <ignored path="$PROJECT_DIR$/project1/lib/src/src2/"/>
+    <ignored path="$PROJECT_DIR$/project1/lib2/"/>
+    <ignored path="$PROJECT_DIR$/project3/lib/src/src2/"/>
+    <ignored path="$PROJECT_DIR$/test/"/>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true"/>
+  </component>
+</project>

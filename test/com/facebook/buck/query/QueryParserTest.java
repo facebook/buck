@@ -42,8 +42,13 @@ public class QueryParserTest {
 
   @Before
   public void makeEnvironment() {
+    QueryEnvironment.TargetEvaluator targetEvaluator =
+        createMock(QueryEnvironment.TargetEvaluator.class);
+    expect(targetEvaluator.getType()).andStubReturn(QueryEnvironment.TargetEvaluator.Type.LAZY);
     queryEnvironment = createMock(QueryEnvironment.class);
     expect(queryEnvironment.getFunctions()).andStubReturn(QueryEnvironment.DEFAULT_QUERY_FUNCTIONS);
+    expect(queryEnvironment.getTargetEvaluator()).andReturn(targetEvaluator);
+    replay(targetEvaluator);
     replay(queryEnvironment);
   }
 
@@ -53,7 +58,7 @@ public class QueryParserTest {
     QueryExpression expected = FunctionExpression.of(new DepsFunction(), args);
 
     String query = "deps('//foo:bar')";
-    QueryExpression result = QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryExpression result = QueryParser.parse(query, queryEnvironment);
     assertThat(result, is(equalTo(expected)));
   }
 
@@ -68,7 +73,7 @@ public class QueryParserTest {
         FunctionExpression.of(new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
 
     String query = "testsof(deps(set('//foo:bar' //other:lib)))";
-    QueryExpression result = QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryExpression result = QueryParser.parse(query, queryEnvironment);
     assertThat(result, is(equalTo(testsofExpr)));
   }
 
@@ -77,7 +82,7 @@ public class QueryParserTest {
     String query = "testsof(deps(set('//foo:bar', //other:lib)))";
     thrown.expect(QueryException.class);
     thrown.expectMessage("syntax error at ', //other:lib )'");
-    QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryParser.parse(query, queryEnvironment);
   }
 
   @Test
@@ -85,7 +90,7 @@ public class QueryParserTest {
     String query = "testsof(deps(set('//foo:bar' //other:lib))";
     thrown.expect(QueryException.class);
     thrown.expectMessage("premature end of input");
-    QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryParser.parse(query, queryEnvironment);
   }
 
   @Test
@@ -94,7 +99,7 @@ public class QueryParserTest {
     thrown.expect(QueryException.class);
     thrown.expectMessage(
         "Unexpected token ')' after query expression 'testsof(deps(set(//foo:bar //other:lib)))'");
-    QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryParser.parse(query, queryEnvironment);
   }
 
   @Test
@@ -104,7 +109,7 @@ public class QueryParserTest {
     thrown.expectMessage("rdeps(EXPRESSION, EXPRESSION [, INTEGER ])");
     thrown.expectMessage("https://buckbuild.com/command/query.html#rdeps");
     String query = "rdeps('')";
-    QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryParser.parse(query, queryEnvironment);
   }
 
   @Test
@@ -115,6 +120,6 @@ public class QueryParserTest {
     thrown.expectMessage("deps(EXPRESSION [, INTEGER [, EXPRESSION ] ])");
     thrown.expectMessage("https://buckbuild.com/command/query.html#deps");
     String query = "deps(//foo:bar, //bar:foo)";
-    QueryParser.parse(query, queryEnvironment.getFunctions());
+    QueryParser.parse(query, queryEnvironment);
   }
 }

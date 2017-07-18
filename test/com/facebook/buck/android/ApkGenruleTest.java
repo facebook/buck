@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -125,12 +126,12 @@ public class ApkGenruleTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
     SourcePathResolver pathResolver =
-        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     ApkGenruleDescription description = new ApkGenruleDescription();
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())
-            .setApk(new FakeInstallable(apkTarget, pathResolver).getBuildTarget())
+            .setApk(new FakeInstallable(apkTarget).getBuildTarget())
             .setBash("")
             .setCmd("python signer.py $APK key.properties > $OUT")
             .setCmdExe("")
@@ -142,11 +143,12 @@ public class ApkGenruleTest {
                     new PathSourcePath(
                         projectFilesystem, fileSystem.getPath("src/com/facebook/key.properties"))))
             .build();
-    BuildRuleParams params = TestBuildRuleParams.create(buildTarget);
+    BuildRuleParams params = TestBuildRuleParams.create();
     ApkGenrule apkGenrule =
         (ApkGenrule)
             description.createBuildRule(
                 TargetGraph.EMPTY,
+                buildTarget,
                 projectFilesystem,
                 params,
                 ruleResolver,
@@ -293,8 +295,8 @@ public class ApkGenruleTest {
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
-    public FakeInstallable(BuildTarget buildTarget, SourcePathResolver resolver) {
-      super(buildTarget, resolver);
+    public FakeInstallable(BuildTarget buildTarget) {
+      super(buildTarget);
     }
 
     @Override

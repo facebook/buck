@@ -94,7 +94,7 @@ public class IjProjectDataPreparerTest {
         new IjProjectTemplateDataPreparer(
             javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
-    ContentRoot contentRoot = dataPreparer.getContentRoot(baseModule);
+    ContentRoot contentRoot = dataPreparer.getContentRoots(baseModule).asList().get(0);
     assertEquals("file://$MODULE_DIR$", contentRoot.getUrl());
 
     IjSourceFolder baseSourceFolder = contentRoot.getFolders().iterator().next();

@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -123,6 +125,7 @@ public class HaskellBinaryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -131,12 +134,12 @@ public class HaskellBinaryDescription
       throws NoSuchBuildTargetException {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
-    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
-    Linker.LinkableDepType depType = getLinkStyle(params.getBuildTarget(), args);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    Linker.LinkableDepType depType = getLinkStyle(buildTarget, args);
 
     // The target to use for the link rule.
-    BuildTarget binaryTarget = params.getBuildTarget().withFlavors(InternalFlavor.of("binary"));
+    BuildTarget binaryTarget = buildTarget.withFlavors(InternalFlavor.of("binary"));
 
     // Maintain backwards compatibility to ease upgrade flows.
     if (haskellConfig.shouldUsedOldBinaryOutputLocation().orElse(true)) {
@@ -154,12 +157,7 @@ public class HaskellBinaryDescription
         .ifPresent(
             query ->
                 QueryUtils.resolveDepQuery(
-                        params.getBuildTarget(),
-                        query,
-                        resolver,
-                        cellRoots,
-                        targetGraph,
-                        args.getDeps())
+                        buildTarget, query, resolver, cellRoots, targetGraph, args.getDeps())
                     .filter(NativeLinkable.class::isInstance)
                     .forEach(depsBuilder::add));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
@@ -174,6 +172,11 @@ public class HaskellBinaryDescription
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(new DefaultBuildTargetSourcePath(binaryTarget)));
 
+    Path outputDir = BuildTargets.getGenPath(projectFilesystem, binaryTarget, "%s").getParent();
+    Path outputPath = outputDir.resolve(binaryTarget.getShortName());
+
+    Path absBinaryDir = buildTarget.getCellPath().resolve(outputDir);
+
     // Special handling for dynamically linked binaries.
     if (depType == Linker.LinkableDepType.SHARED) {
 
@@ -181,8 +184,7 @@ public class HaskellBinaryDescription
       SymlinkTree sharedLibraries =
           resolver.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                  ruleFinder,
-                  params.getBuildTarget(),
+                  buildTarget,
                   projectFilesystem,
                   cxxPlatform,
                   deps,
@@ -190,11 +192,6 @@ public class HaskellBinaryDescription
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absBinaryDir =
-          params
-              .getBuildTarget()
-              .getCellPath()
-              .resolve(HaskellLinkRule.getOutputDir(binaryTarget, projectFilesystem));
       linkFlagsBuilder.addAll(
           StringArg.from(
               MoreIterables.zipAndConcat(
@@ -219,12 +216,13 @@ public class HaskellBinaryDescription
                 args.getLinkerFlags(),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        params.getBuildTarget(), cellRoots, resolver, cxxPlatform, f))));
+                        buildTarget, cellRoots, resolver, cxxPlatform, f))));
 
     // Generate the compile rule and add its objects to the link.
     HaskellCompileRule compileRule =
         resolver.addToIndex(
             HaskellDescriptionUtils.requireCompileRule(
+                buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
@@ -242,7 +240,7 @@ public class HaskellBinaryDescription
                 Optional.empty(),
                 args.getCompilerFlags(),
                 HaskellSources.from(
-                    params.getBuildTarget(),
+                    buildTarget,
                     resolver,
                     pathResolver,
                     ruleFinder,
@@ -269,12 +267,14 @@ public class HaskellBinaryDescription
             linkInputs,
             RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
             depType,
+            outputPath,
+            Optional.empty(),
             false);
 
     return new HaskellBinary(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(linkRule),
-        ruleFinder,
         deps,
         executable,
         linkRule.getSourcePathToOutput());

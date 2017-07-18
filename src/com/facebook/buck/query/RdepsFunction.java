@@ -79,9 +79,10 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(QueryEnvironment env, ImmutableList<Argument> args)
-      throws QueryException, InterruptedException {
-    Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env);
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
+    Set<QueryTarget> universeSet = evaluator.eval(args.get(0).getExpression(), env);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
     Predicate<QueryTarget> inUniversePredicate = env.getTransitiveClosure(universeSet)::contains;
 
@@ -89,7 +90,7 @@ public class RdepsFunction implements QueryFunction {
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
     Set<QueryTarget> visited = new LinkedHashSet<>();
-    Set<QueryTarget> argumentSet = args.get(1).getExpression().eval(env);
+    Set<QueryTarget> argumentSet = evaluator.eval(args.get(1).getExpression(), env);
     Collection<QueryTarget> current = argumentSet;
 
     int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;

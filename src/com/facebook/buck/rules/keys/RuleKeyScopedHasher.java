@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.util.Scope;
+
 /**
  * A wrapper of {@link RuleKeyHasher} that provides scoped hashing facilities.
  *
@@ -90,10 +92,5 @@ public class RuleKeyScopedHasher<HASH> {
         hasher.putContainer(container, elementCount);
       }
     }
-  }
-
-  public interface Scope extends AutoCloseable {
-    @Override
-    void close();
   }
 }

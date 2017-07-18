@@ -52,6 +52,7 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",

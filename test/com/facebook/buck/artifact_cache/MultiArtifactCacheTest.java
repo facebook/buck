@@ -283,4 +283,27 @@ public class MultiArtifactCacheTest {
 
     multiArtifactCache.close();
   }
+
+  @Test
+  public void cacheAsyncFetchPushesMetadataToHigherCache() throws Exception {
+    InMemoryArtifactCache cache1 = new InMemoryArtifactCache();
+    InMemoryArtifactCache cache2 = new InMemoryArtifactCache();
+    MultiArtifactCache multiArtifactCache =
+        new MultiArtifactCache(ImmutableList.of(cache1, cache2));
+
+    LazyPath output = LazyPath.ofInstance(tmp.newFile());
+
+    ImmutableMap<String, String> metadata = ImmutableMap.of("hello", "world");
+    cache2.store(
+        ArtifactInfo.builder().addRuleKeys(dummyRuleKey).setMetadata(metadata).build(),
+        new byte[0]);
+    multiArtifactCache.fetchAsync(dummyRuleKey, output).get();
+
+    CacheResult result = cache1.fetch(dummyRuleKey, output);
+    assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));
+    assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.dir)));
+    assertThat(result.getMetadata(), Matchers.equalTo(metadata));
+
+    multiArtifactCache.close();
+  }
 }

@@ -29,6 +29,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
@@ -106,7 +108,7 @@ public class DistBuildFileHashesTest {
       buildRuleResolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-      sourcePathResolver = new SourcePathResolver(ruleFinder);
+      sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       BuckConfig buckConfig = createBuckConfig();
@@ -144,15 +146,15 @@ public class DistBuildFileHashesTest {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
       cacheList.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              projectFilesystem, FileHashCacheMode.PREFIX_TREE));
+              projectFilesystem, FileHashCacheMode.DEFAULT));
       cacheList.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              secondProjectFilesystem, FileHashCacheMode.PREFIX_TREE));
+              secondProjectFilesystem, FileHashCacheMode.DEFAULT));
       for (Path path : javaFs.getRootDirectories()) {
         if (Files.isDirectory(path)) {
           cacheList.add(
               DefaultFileHashCache.createDefaultFileHashCache(
-                  new ProjectFilesystem(path), FileHashCacheMode.PREFIX_TREE));
+                  new ProjectFilesystem(path), FileHashCacheMode.DEFAULT));
         }
       }
       return new StackedFileHashCache(cacheList.build());
@@ -354,10 +356,12 @@ public class DistBuildFileHashesTest {
         jarWriter.writeEntry("Archive.class", new ByteArrayInputStream(archiveMemberData));
       }
 
+      BuildTarget target = BuildTargetFactory.newInstance("//:with_tool");
       resolver.addToIndex(
           new BuildRuleWithToolAndPath(
+              target,
               projectFilesystem,
-              TestBuildRuleParams.create("//:with_tool"),
+              TestBuildRuleParams.create(),
               null,
               ArchiveMemberSourcePath.of(
                   new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));
@@ -469,11 +473,12 @@ public class DistBuildFileHashesTest {
     @AddToRuleKey SourcePath sourcePath;
 
     public BuildRuleWithToolAndPath(
+        BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         Tool tool,
         SourcePath sourcePath) {
-      super(projectFilesystem, params);
+      super(buildTarget, projectFilesystem, params);
       this.tool = tool;
       this.sourcePath = sourcePath;
     }

@@ -80,7 +80,7 @@ compiled .class files and resources of the <code>java_library()</code>
   {param name: 'blacklist' /}
   {param default: '[]' /}
   {param desc}
-  A list of patterns that identify Java packages/symbols to exclude from the final generated JAR
+  A list of patterns that identify files to exclude from the final generated JAR
   file. Example:
 <p>
 {literal}<pre class="prettyprint lang-py">
@@ -88,10 +88,11 @@ java_binary(
   name = 'example',
   blacklist = [
     # Excludes com.example.A and com.example.Alligator,
-    # as well as their inner classes.
+    # as well as their inner classes and any non-class files that happen to match
+    # the pattern
     'com.example.A',
 
-    # Excludes all .class files from org.slf4j.*.
+    # Excludes all files from org/slf4j/**/*.
     'org.slf4j',
   ],
   deps = [

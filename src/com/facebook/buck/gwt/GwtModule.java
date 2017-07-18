@@ -48,18 +48,18 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final SourcePathRuleFinder ruleFinder;
 
   GwtModule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> filesForGwtModule) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
-    BuildTarget target = params.getBuildTarget();
     this.outputFile =
         BuildTargets.getGenPath(
             getProjectFilesystem(),
-            target,
-            "__gwt_module_%s__/" + target.getShortNameAndFlavorPostfix() + ".jar");
+            buildTarget,
+            "__gwt_module_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".jar");
     this.filesForGwtModule = filesForGwtModule;
   }
 

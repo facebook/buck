@@ -58,18 +58,19 @@ public class AppleDsym extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path dsymOutputPath;
 
   public AppleDsym(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool dsymutil,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
       Path dsymOutputPath) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.dsymOutputPath = dsymOutputPath;
-    checkFlavorCorrectness(params.getBuildTarget());
+    checkFlavorCorrectness(buildTarget);
   }
 
   public static Path getDsymOutputPath(BuildTarget target, ProjectFilesystem filesystem) {

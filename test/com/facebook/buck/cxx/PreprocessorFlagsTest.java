@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -99,12 +100,12 @@ public class PreprocessorFlagsTest {
           new SourcePathRuleFinder(
               new BuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache =
           FakeFileHashCache.createFromStrings(
               ImmutableMap.of("different", Strings.repeat("d", 40)));
-      BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
+      BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       DefaultRuleKeyFactory.Builder<HashCode> builder;
       builder =
@@ -134,10 +135,10 @@ public class PreprocessorFlagsTest {
           new SourcePathRuleFinder(
               new BuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-      final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+      final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       final FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
-      final BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
+      final BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       class TestData {
         public RuleKey generate(String prefix) {

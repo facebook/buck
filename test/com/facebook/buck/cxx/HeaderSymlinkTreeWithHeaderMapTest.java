@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -104,12 +105,12 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    resolver = new SourcePathResolver(ruleFinder);
+    resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+            buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   @Test
@@ -161,13 +162,12 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             ImmutableMap.of(
                 Paths.get("different/link"),
                 new PathSourcePath(
-                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            ruleFinder);
+                    projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.PREFIX_TREE);
+            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
         new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
@@ -184,7 +184,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.PREFIX_TREE);
+            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder);

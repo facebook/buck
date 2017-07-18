@@ -46,20 +46,20 @@ import java.util.stream.Stream;
 
 public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasRuntimeDeps, SupportsInputBasedRuleKey {
-  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
 
   protected UnstrippedNativeLibraries(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> inputs) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams
             .withoutExtraDeps()
             .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(inputs))));
-    this.ruleFinder = ruleFinder;
     this.inputs = inputs;
   }
 
@@ -107,10 +107,10 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
-    return ruleFinder
-        .filterBuildRuleInputs(inputs.stream())
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return inputs
         .stream()
+        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
         .map(BuildRule::getBuildTarget);
   }
 }

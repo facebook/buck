@@ -29,6 +29,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -46,12 +47,13 @@ public class DefaultWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BuildOutputInitializer<Data> buildOutputInitializer;
 
   protected DefaultWorkerTool(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams ruleParams,
       Tool tool,
       int maxWorkers,
       boolean isPersistent) {
-    super(projectFilesystem, ruleParams);
+    super(buildTarget, projectFilesystem, ruleParams);
     this.tool = tool;
     this.maxWorkers = maxWorkers;
     this.isPersistent = isPersistent;
@@ -79,7 +81,7 @@ public class DefaultWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 

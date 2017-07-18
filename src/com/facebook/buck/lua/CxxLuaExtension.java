@@ -19,6 +19,7 @@ package com.facebook.buck.lua;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -27,8 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 public abstract class CxxLuaExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements NativeLinkTarget {
 
-  public CxxLuaExtension(ProjectFilesystem projectFilesystem, BuildRuleParams params) {
-    super(projectFilesystem, params);
+  public CxxLuaExtension(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 
   public abstract String getModule(CxxPlatform cxxPlatform);

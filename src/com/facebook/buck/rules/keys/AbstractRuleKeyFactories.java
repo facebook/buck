@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -48,7 +49,7 @@ abstract class AbstractRuleKeyFactories {
       RuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return RuleKeyFactories.of(
         new DefaultRuleKeyFactory(
             fieldLoader, fileHashCache, pathResolver, ruleFinder, defaultRuleKeyFactoryCache),

@@ -52,6 +52,7 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
   private FilteredResourcesProvider resourcesProvider;
 
   GenerateRDotJava(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
@@ -62,6 +63,7 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
     super(
+        buildTarget,
         projectFilesystem,
         buildRuleParams.copyAppendingExtraDeps(
             getAllDeps(ruleFinder, pathToRDotTxtFile, resourceDeps, resourcesProvider)));

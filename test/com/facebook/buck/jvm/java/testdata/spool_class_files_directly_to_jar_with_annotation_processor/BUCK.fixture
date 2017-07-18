@@ -1,14 +1,10 @@
 java_library(
   name = 'a',
   srcs = ['A.java', 'B.java', 'AbstractC.java'],
-  deps = [
-    ':immutables',
-    ':guava',
-    ':jsr305',
-  ],
   plugins = [
     ':processor',
   ],
+  remove_classes = [ 'RemovableD' ],
 )
 
 java_binary(
@@ -19,31 +15,13 @@ java_binary(
 
 java_annotation_processor(
   name = 'processor',
-  processor_class = 'org.immutables.value.internal.$processor$.$Processor',
+  processor_class = 'AnnotationProcessor',
   deps = [
-    ':immutables',
+    ':processor-lib',
   ],
 )
 
-prebuilt_jar(
-  name = 'immutables',
-  binary_jar = 'value-2.4.6.jar',
+java_library(
+  name = 'processor-lib',
+  srcs = [ 'AnnotationProcessor.java' ],
 )
-
-prebuilt_jar(
-  name = 'guava',
-  binary_jar = 'guava-20.0.jar',
-  source_jar = 'guava-20.0-sources.jar',
-)
-
-prebuilt_jar(
-  name = 'jsr305',
-  binary_jar = 'jsr305.jar',
-)
-
-prebuilt_jar(
-  name = 'jsr330',
-  binary_jar = 'javax.inject-1.jar',
-)
-
-

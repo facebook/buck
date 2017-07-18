@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
@@ -110,7 +111,7 @@ public class DirArtifactCacheTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyX =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder).build(inputRuleX);
 
@@ -140,7 +141,7 @@ public class DirArtifactCacheTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyX =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder).build(inputRuleX);
 
@@ -183,7 +184,7 @@ public class DirArtifactCacheTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyX =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder).build(inputRuleX);
 
@@ -240,7 +241,7 @@ public class DirArtifactCacheTest {
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     DefaultRuleKeyFactory fakeRuleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder);
@@ -333,7 +334,7 @@ public class DirArtifactCacheTest {
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     DefaultRuleKeyFactory fakeRuleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder);
@@ -389,7 +390,7 @@ public class DirArtifactCacheTest {
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     DefaultRuleKeyFactory fakeRuleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder);
@@ -596,7 +597,7 @@ public class DirArtifactCacheTest {
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     DefaultRuleKeyFactory fakeRuleKeyFactory =
         new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder);
@@ -746,12 +747,7 @@ public class DirArtifactCacheTest {
     private final SourcePath file;
 
     private BuildRuleForTest(Path file) {
-      super(
-          BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()),
-          new SourcePathResolver(
-              new SourcePathRuleFinder(
-                  new BuildRuleResolver(
-                      TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))));
+      super(BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()));
       // TODO(15468825) - PathSourcePath should be relative!11!!11!1!!!
       this.file = new PathSourcePath(new FakeProjectFilesystem(), file);
     }

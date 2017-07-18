@@ -63,13 +63,14 @@ public class HaskellPrebuiltLibraryDescription
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final HaskellPrebuiltLibraryDescriptionArg args)
       throws NoSuchBuildTargetException {
-    return new PrebuiltHaskellLibrary(projectFilesystem, params) {
+    return new PrebuiltHaskellLibrary(buildTarget, projectFilesystem, params) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
           transitiveCxxPreprocessorInputCache =

@@ -138,19 +138,11 @@ public class FetchCommand extends BuildCommand {
                   params.getBuckConfig(),
                   actionGraphAndResolver.getResolver(),
                   params.getCell(),
-                  params.getAndroidPlatformTargetSupplier(),
                   buildEngine,
                   params.getArtifactCacheFactory().newInstance(),
                   params.getConsole(),
-                  params.getBuckEventBus(),
-                  Optional.empty(),
-                  params.getPersistentWorkerPools(),
-                  params.getPlatform(),
-                  params.getEnvironment(),
                   params.getClock(),
-                  Optional.empty(),
-                  Optional.empty(),
-                  params.getExecutors())) {
+                  getExecutionContext())) {
         exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,

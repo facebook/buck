@@ -81,6 +81,7 @@ public class ShTestDescription
   @Override
   public ShTest createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -88,7 +89,7 @@ public class ShTestDescription
       ShTestDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
-        MacroArg.toMacroArgFunction(MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver);
+        MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
         Stream.concat(
                 Optionals.toStream(args.getTest()).map(SourcePathArg::of),
@@ -97,6 +98,7 @@ public class ShTestDescription
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), toArg));
     return new ShTest(
+        buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(
             () ->
@@ -112,6 +114,7 @@ public class ShTestDescription
         args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.getRunTestSeparately(),
         args.getLabels(),
+        args.getType(),
         args.getContacts());
   }
 
@@ -141,6 +144,8 @@ public class ShTestDescription
     Optional<SourcePath> getTest();
 
     ImmutableList<String> getArgs();
+
+    Optional<String> getType();
 
     @Value.Default
     default boolean getRunTestSeparately() {

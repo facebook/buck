@@ -26,14 +26,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -52,26 +47,21 @@ public class CxxDescriptionEnhancerTest {
 
   @Test
   public void libraryTestIncludesPrivateHeadersOfLibraryUnderTest() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
+    BuildRuleParams libParams = TestBuildRuleParams.create();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
             BuildTargetFactory.newInstance("//:privateheader"),
             BuildTargetFactory.newInstance("//:privatesymlink"),
-            new FakeBuildRule("//:archive", pathResolver),
-            new FakeBuildRule("//:shared", pathResolver),
+            new FakeBuildRule("//:archive"),
+            new FakeBuildRule("//:shared"),
             Paths.get("output/path/lib.so"),
             "lib.so",
             // Ensure the test is listed as a dep of the lib.
@@ -106,44 +96,40 @@ public class CxxDescriptionEnhancerTest {
 
   @Test
   public void libraryTestIncludesPublicHeadersOfDependenciesOfLibraryUnderTest() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
     BuildTarget otherlibTarget = BuildTargetFactory.newInstance("//:otherlib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
 
-    BuildRuleParams otherlibParams = TestBuildRuleParams.create(otherlibTarget);
+    BuildRuleParams otherlibParams = TestBuildRuleParams.create();
     FakeCxxLibrary otherlibRule =
         new FakeCxxLibrary(
+            otherlibTarget,
             new FakeProjectFilesystem(),
             otherlibParams,
             BuildTargetFactory.newInstance("//:otherheader"),
             BuildTargetFactory.newInstance("//:othersymlink"),
             BuildTargetFactory.newInstance("//:otherprivateheader"),
             BuildTargetFactory.newInstance("//:otherprivatesymlink"),
-            new FakeBuildRule("//:archive", pathResolver),
-            new FakeBuildRule("//:shared", pathResolver),
+            new FakeBuildRule("//:archive"),
+            new FakeBuildRule("//:shared"),
             Paths.get("output/path/lib.so"),
             "lib.so",
             // This library has no tests.
             ImmutableSortedSet.of());
 
     BuildRuleParams libParams =
-        TestBuildRuleParams.create(libTarget).withDeclaredDeps(ImmutableSortedSet.of(otherlibRule));
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(otherlibRule));
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
             BuildTargetFactory.newInstance("//:privateheader"),
             BuildTargetFactory.newInstance("//:privatesymlink"),
-            new FakeBuildRule("//:archive", pathResolver),
-            new FakeBuildRule("//:shared", pathResolver),
+            new FakeBuildRule("//:archive"),
+            new FakeBuildRule("//:shared"),
             Paths.get("output/path/lib.so"),
             "lib.so",
             // Ensure the test is listed as a dep of the lib.
@@ -184,25 +170,20 @@ public class CxxDescriptionEnhancerTest {
 
   @Test
   public void nonTestLibraryDepDoesNotIncludePrivateHeadersOfLibrary() throws Exception {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
-    BuildRuleParams libParams = TestBuildRuleParams.create(libTarget);
+    BuildRuleParams libParams = TestBuildRuleParams.create();
     FakeCxxLibrary libRule =
         new FakeCxxLibrary(
+            libTarget,
             new FakeProjectFilesystem(),
             libParams,
             BuildTargetFactory.newInstance("//:header"),
             BuildTargetFactory.newInstance("//:symlink"),
             BuildTargetFactory.newInstance("//:privateheader"),
             BuildTargetFactory.newInstance("//:privatesymlink"),
-            new FakeBuildRule("//:archive", pathResolver),
-            new FakeBuildRule("//:shared", pathResolver),
+            new FakeBuildRule("//:archive"),
+            new FakeBuildRule("//:shared"),
             Paths.get("output/path/lib.so"),
             "lib.so",
             // This library has no tests.

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
@@ -66,6 +67,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final ImmutableList<Arg> args;
   @AddToRuleKey private final ImmutableMap<String, Arg> env;
+  @AddToRuleKey private final Optional<String> type;
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -77,6 +79,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
 
   protected ShTest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -86,8 +89,9 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean runTestSeparately,
       Set<String> labels,
+      Optional<String> type,
       ImmutableSet<String> contacts) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.args = args;
     this.env = env;
@@ -95,6 +99,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.runTestSeparately = runTestSeparately;
     this.labels = ImmutableSet.copyOf(labels);
+    this.type = type;
     this.contacts = contacts;
   }
 
@@ -146,7 +151,9 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context, boolean isUsingTestSelectors) {
+      final ExecutionContext context,
+      SourcePathResolver pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       Optional<String> resultsFileContents =
           getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
@@ -171,7 +178,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   // A shell test has no real build dependencies.  Instead interpret the dependencies as runtime
   // dependencies, as these are always components that the shell test needs available to run.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps() {
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 
@@ -201,7 +208,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
-        .setType("custom")
+        .setType(type.orElse("custom"))
         .addAllCommand(Arg.stringify(args, buildContext.getSourcePathResolver()))
         .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())

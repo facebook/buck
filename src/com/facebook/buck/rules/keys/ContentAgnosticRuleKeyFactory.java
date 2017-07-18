@@ -18,10 +18,10 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -75,9 +75,9 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return builder.build(RuleKey::new);
   }
 
-  private RuleKey calculateAppendableKey(RuleKeyAppendable appendable) {
+  private RuleKey calculateAppendableKey(AddsToRuleKey appendable) {
     Builder<HashCode> subKeyBuilder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
-    appendable.appendToRuleKey(subKeyBuilder);
+    AlterRuleKeys.amendKey(subKeyBuilder, appendable);
     return subKeyBuilder.build(RuleKey::new);
   }
 
@@ -86,7 +86,7 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey);
   }
 
-  private RuleKey buildAppendableKey(RuleKeyAppendable appendable) {
+  private RuleKey buildAppendableKey(AddsToRuleKey appendable) {
     return ruleKeyCache.get(appendable, this::calculateAppendableKey);
   }
 
@@ -102,9 +102,8 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     }
 
     @Override
-    protected RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(RuleKeyAppendable appendable) {
-      return setAppendableRuleKey(
-          ContentAgnosticRuleKeyFactory.this.buildAppendableKey(appendable));
+    protected RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable) {
+      return setAddsToRuleKey(ContentAgnosticRuleKeyFactory.this.buildAppendableKey(appendable));
     }
 
     @Override

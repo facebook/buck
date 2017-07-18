@@ -36,12 +36,7 @@ public class FakeBuildEngineTest {
   @Test
   public void buildRuleFutureHasResult() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
+    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
     FakeBuildEngine fakeEngine =
@@ -67,12 +62,7 @@ public class FakeBuildEngineTest {
   @Test
   public void buildRuleResultIsPresent() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
+    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
     FakeBuildEngine fakeEngine =
@@ -85,12 +75,7 @@ public class FakeBuildEngineTest {
   @Test
   public void buildRuleIsBuilt() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
+    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
     FakeBuildEngine fakeEngine =
@@ -103,12 +88,7 @@ public class FakeBuildEngineTest {
   @Test
   public void unbuiltRuleIsNotBuilt() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
+    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
     FakeBuildEngine fakeEngine =
@@ -122,12 +102,7 @@ public class FakeBuildEngineTest {
   @Test
   public void ruleKeyIsPresent() throws Exception {
     BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget, pathResolver);
+    FakeBuildRule fakeBuildRule = new FakeBuildRule(fakeBuildTarget);
     BuildResult fakeBuildResult =
         BuildResult.success(fakeBuildRule, BUILT_LOCALLY, CacheResult.miss());
     FakeBuildEngine fakeEngine =

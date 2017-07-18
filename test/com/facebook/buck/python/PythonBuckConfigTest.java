@@ -32,6 +32,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -239,7 +240,8 @@ public class PythonBuckConfigTest {
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Path projectDir = Files.createTempDirectory("project");
     Path pexExecuter = Paths.get("pex-exectuter");
     ProjectFilesystem projectFilesystem =
@@ -313,7 +315,7 @@ public class PythonBuckConfigTest {
     assertThat(
         config
             .getPexTool(resolver)
-            .getCommandPrefix(new SourcePathResolver(new SourcePathRuleFinder(resolver))),
+            .getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))),
         hasConsecutiveItems("--hello", "--world"));
   }
 }

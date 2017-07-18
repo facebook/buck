@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -49,7 +50,7 @@ public class CopyResourcesStepTest {
         new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
-    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Files:
     // android/java/BUCK
     // android/java/src/com/facebook/base/data.json
@@ -128,7 +129,7 @@ public class CopyResourcesStepTest {
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(new SourcePathResolver(ruleFinder))
+        FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder))
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath());
     CopyResourcesStep step =
@@ -195,7 +196,7 @@ public class CopyResourcesStepTest {
             new BuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(new SourcePathResolver(ruleFinder))
+        FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder))
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath());
 

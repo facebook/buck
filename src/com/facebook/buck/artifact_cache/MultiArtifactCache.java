@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,29 +58,44 @@ public class MultiArtifactCache implements ArtifactCache {
    */
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    CacheResult cacheResult = CacheResult.miss();
-    ImmutableList.Builder<ArtifactCache> priorCaches = ImmutableList.builder();
+    return Futures.getUnchecked(fetchAsync(ruleKey, output));
+  }
+
+  @Override
+  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    ListenableFuture<CacheResult> cacheResult = Futures.immediateFuture(CacheResult.miss());
+    // This is the list of higher-priority caches that we should write the artifact to.
+    ImmutableList.Builder<ArtifactCache> cachesToFill = ImmutableList.builder();
     for (ArtifactCache artifactCache : artifactCaches) {
-      cacheResult = artifactCache.fetch(ruleKey, output);
-      if (cacheResult.getType().isSuccess()) {
-        break;
-      }
-      if (artifactCache.getCacheReadMode().isWritable()) {
-        priorCaches.add(artifactCache);
-      }
+      cacheResult =
+          Futures.transformAsync(
+              cacheResult,
+              (result) -> {
+                if (result.getType().isSuccess()) {
+                  return Futures.immediateFuture(result);
+                }
+                if (artifactCache.getCacheReadMode().isWritable()) {
+                  cachesToFill.add(artifactCache);
+                }
+                return artifactCache.fetchAsync(ruleKey, output);
+              },
+              MoreExecutors.directExecutor());
     }
-    if (cacheResult.getType().isSuccess()) {
-      // Success; terminate search for a cached artifact, and propagate artifact to caches
-      // earlier in the search order so that subsequent searches terminate earlier.
-      storeToCaches(
-          priorCaches.build(),
-          ArtifactInfo.builder()
-              .addRuleKeys(ruleKey)
-              .setMetadata(cacheResult.getMetadata())
-              .build(),
-          BorrowablePath.notBorrowablePath(output.getUnchecked()));
-    }
-    return cacheResult;
+
+    // Propagate the artifact to previous writable caches.
+    return Futures.transform(
+        cacheResult,
+        (CacheResult result) -> {
+          if (!result.getType().isSuccess()) {
+            return result;
+          }
+          storeToCaches(
+              cachesToFill.build(),
+              ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(result.getMetadata()).build(),
+              BorrowablePath.notBorrowablePath(output.getUnchecked()));
+          return result;
+        },
+        MoreExecutors.directExecutor());
   }
 
   private static ListenableFuture<Void> storeToCaches(

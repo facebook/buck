@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public interface ArtifactCache extends AutoCloseable {
@@ -33,6 +34,10 @@ public interface ArtifactCache extends AutoCloseable {
    *     hit.
    */
   CacheResult fetch(RuleKey ruleKey, LazyPath output);
+
+  default ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    return Futures.immediateFuture(fetch(ruleKey, output));
+  }
 
   /**
    * Store the artifact at path specified by output to cache, such that it can later be fetched

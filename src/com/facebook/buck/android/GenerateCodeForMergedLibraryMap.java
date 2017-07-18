@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -60,12 +61,13 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   private final ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets;
 
   GenerateCodeForMergedLibraryMap(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedMap<String, String> mergeResult,
       ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets,
       BuildRule codeGenerator) {
-    super(projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem, buildRuleParams);
     this.mergeResult = mergeResult;
     this.sharedObjectTargets = sharedObjectTargets;
     this.codeGenerator = codeGenerator;

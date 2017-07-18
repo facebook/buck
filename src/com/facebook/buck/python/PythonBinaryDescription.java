@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasTests;
@@ -99,15 +100,18 @@ public class PythonBinaryDescription
   }
 
   public static SourcePath createEmptyInitModule(
-      ProjectFilesystem projectFilesystem, BuildRuleParams params, BuildRuleResolver resolver) {
-    BuildTarget emptyInitTarget = getEmptyInitTarget(params.getBuildTarget());
-    Path emptyInitPath =
-        BuildTargets.getGenPath(projectFilesystem, params.getBuildTarget(), "%s/__init__.py");
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver) {
+    BuildTarget emptyInitTarget = getEmptyInitTarget(buildTarget);
+    Path emptyInitPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/__init__.py");
     WriteFile rule =
         resolver.addToIndex(
             new WriteFile(
+                emptyInitTarget,
                 projectFilesystem,
-                params.withBuildTarget(emptyInitTarget).withoutDeclaredDeps().withoutExtraDeps(),
+                params.withoutDeclaredDeps().withoutExtraDeps(),
                 "",
                 emptyInitPath,
                 /* executable */ false));
@@ -136,10 +140,10 @@ public class PythonBinaryDescription
   }
 
   private PythonInPlaceBinary createInPlaceBinaryRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -151,15 +155,14 @@ public class PythonBinaryDescription
     if (cxxPlatform.getLd().resolve(resolver) instanceof WindowsLinker) {
       throw new HumanReadableException(
           "%s: cannot build in-place python binaries for Windows (%s)",
-          params.getBuildTarget(), cxxPlatform.getFlavor());
+          buildTarget, cxxPlatform.getFlavor());
     }
 
     // Add in any missing init modules into the python components.
-    SourcePath emptyInit = createEmptyInitModule(projectFilesystem, params, resolver);
+    SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, params, resolver);
     components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
 
-    BuildTarget linkTreeTarget =
-        params.getBuildTarget().withAppendedFlavors(InternalFlavor.of("link-tree"));
+    BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));
     Path linkTreeRoot = BuildTargets.getGenPath(projectFilesystem, linkTreeTarget, "%s");
     SymlinkTree linkTree =
         resolver.addToIndex(
@@ -171,10 +174,10 @@ public class PythonBinaryDescription
                     .putAll(components.getModules())
                     .putAll(components.getResources())
                     .putAll(components.getNativeLibraries())
-                    .build(),
-                ruleFinder));
+                    .build()));
 
     return PythonInPlaceBinary.from(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,
@@ -185,12 +188,12 @@ public class PythonBinaryDescription
         extension.orElse(pythonBuckConfig.getPexExtension()),
         preloadLibraries,
         pythonBuckConfig.legacyOutputPath(),
-        ruleFinder,
         linkTree,
         pythonPlatform.getEnvironment());
   }
 
   PythonBinary createPackageRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -207,10 +210,10 @@ public class PythonBinaryDescription
     switch (packageStyle) {
       case INPLACE:
         return createInPlaceBinaryRule(
+            buildTarget,
             projectFilesystem,
             params,
             resolver,
-            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -220,6 +223,7 @@ public class PythonBinaryDescription
 
       case STANDALONE:
         return PythonPackagedBinary.from(
+            buildTarget,
             projectFilesystem,
             params,
             ruleFinder,
@@ -249,6 +253,7 @@ public class PythonBinaryDescription
   @Override
   public PythonBinary createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -257,26 +262,24 @@ public class PythonBinaryDescription
       throws NoSuchBuildTargetException {
     if (!(args.getMain().isPresent() ^ args.getMainModule().isPresent())) {
       throw new HumanReadableException(
-          "%s: must set exactly one of `main_module` and `main`", params.getBuildTarget());
+          "%s: must set exactly one of `main_module` and `main`", buildTarget);
     }
-    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.getBaseModule());
+    Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
 
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
     if (args.getMain().isPresent()) {
       LOG.warn(
-          "%s: parameter `main` is deprecated, please use `main_module` instead.",
-          params.getBuildTarget());
-      String mainName =
-          pathResolver.getSourcePathName(params.getBuildTarget(), args.getMain().get());
+          "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
+      String mainName = pathResolver.getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
       modules.put(baseModule.resolve(mainName), args.getMain().get());
-      mainModule = PythonUtil.toModuleName(params.getBuildTarget(), main.toString());
+      mainModule = PythonUtil.toModuleName(buildTarget, main.toString());
     } else {
       mainModule = args.getMainModule().get();
     }
@@ -292,15 +295,16 @@ public class PythonBinaryDescription
     // found.
     PythonPlatform pythonPlatform =
         pythonPlatforms
-            .getValue(params.getBuildTarget())
+            .getValue(buildTarget)
             .orElse(
                 pythonPlatforms.getValue(
                     args.getPlatform()
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
-    CxxPlatform cxxPlatform = getCxxPlatform(params.getBuildTarget(), args);
+    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
+            buildTarget,
             projectFilesystem,
             params,
             resolver,
@@ -317,12 +321,13 @@ public class PythonBinaryDescription
                 .stream()
                 .map(
                     MacroArg.toMacroArgFunction(
-                            PythonUtil.MACRO_HANDLER, params.getBuildTarget(), cellRoots, resolver)
+                            PythonUtil.MACRO_HANDLER, buildTarget, cellRoots, resolver)
                         ::apply)
                 .collect(MoreCollectors.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
     return createPackageRule(
+        buildTarget,
         projectFilesystem,
         params,
         resolver,

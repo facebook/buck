@@ -29,12 +29,12 @@ public class ExplicitBuildTargetSourcePathTest {
   @Test
   public void explicitlySetPath() {
     SourcePathResolver pathResolver =
-        new SourcePathResolver(
+        DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
         new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), path);
@@ -44,13 +44,8 @@ public class ExplicitBuildTargetSourcePathTest {
 
   @Test
   public void sameBuildTargetsWithDifferentPathsAreDifferent() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    FakeBuildRule rule = new FakeBuildRule(target, pathResolver);
+    FakeBuildRule rule = new FakeBuildRule(target);
     ExplicitBuildTargetSourcePath path1 =
         new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =

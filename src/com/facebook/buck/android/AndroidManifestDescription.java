@@ -45,6 +45,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
   @Override
   public AndroidManifest createBuildRule(
       TargetGraph targetGraph,
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -72,7 +73,11 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
             .build();
 
     return new AndroidManifest(
-        projectFilesystem, params.withDeclaredDeps(newDeps), args.getSkeleton(), manifestFiles);
+        buildTarget,
+        projectFilesystem,
+        params.withDeclaredDeps(newDeps),
+        args.getSkeleton(),
+        manifestFiles);
   }
 
   @BuckStyleImmutable

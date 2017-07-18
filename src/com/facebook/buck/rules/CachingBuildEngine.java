@@ -23,7 +23,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResult;
 import com.facebook.buck.artifact_cache.RuleKeyCacheResultEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
-import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
@@ -55,6 +54,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -66,7 +67,6 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -130,6 +130,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   private static final String STEP_TYPE_CONTEXT_KEY = "step_type";
+  private final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks;
 
   private static enum StepType {
     BUILD_STEP,
@@ -206,7 +207,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.resolver = resolver;
     this.ruleFinder = new SourcePathRuleFinder(resolver);
-    this.pathResolver = new SourcePathResolver(ruleFinder);
+    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     this.buildInfoStoreManager = buildInfoStoreManager;
 
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
@@ -228,6 +229,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 ruleKeyFactories
                     .getDefaultRuleKeyFactory()
                     .buildForDiagnostics(appendable, new StringRuleKeyHasher()));
+    this.asyncCallbacks = new ConcurrentLinkedQueue<>();
   }
 
   /** This constructor MUST ONLY BE USED FOR TESTS. */
@@ -273,10 +275,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics = RuleKeyDiagnostics.nop();
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
+    this.asyncCallbacks = new ConcurrentLinkedQueue<>();
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    try {
+      Futures.allAsList(asyncCallbacks).get();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   /**
    * We have a lot of places where tasks are submitted into a service implicitly. There is no way to
@@ -321,15 +332,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   // Dispatch and return a future resolving to a list of all results of this rules dependencies.
   private ListenableFuture<List<BuildResult>> getDepResults(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
+      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
     List<ListenableFuture<BuildResult>> depResults =
         new ArrayList<>(SortedSets.sizeEstimate(rule.getBuildDeps()));
     for (BuildRule dep : shuffled(rule.getBuildDeps())) {
-      depResults.add(
-          getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext, asyncCallbacks));
+      depResults.add(getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext));
     }
     return Futures.allAsList(depResults);
   }
@@ -340,15 +347,18 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return rulesList;
   }
 
-  private BuildResult buildLocally(
+  private ListenableFuture<Optional<BuildResult>> buildLocally(
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final BuildableContext buildableContext,
-      final CacheResult cacheResult)
+      final CacheResult cacheResult,
+      final ListeningExecutorService service)
       throws StepFailedException, InterruptedException {
-    executeCommandsNowThatDepsAreBuilt(rule, buildContext, executionContext, buildableContext);
-    return BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult);
+    BuildRuleSteps buildRuleSteps =
+        new BuildRuleSteps(rule, buildContext, executionContext, buildableContext, cacheResult);
+    service.execute(buildRuleSteps);
+    return buildRuleSteps.getFuture();
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -376,7 +386,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     if (manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-      try (BuckEvent.Scope scope =
+      try (Scope scope =
           BuildRuleCacheEvent.startCacheCheckScope(
               context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
         return performManifestBasedCacheFetch(rule, context, buildInfoRecorder, manifestKey.get());
@@ -428,7 +438,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     if (inputRuleKey.isPresent()) {
 
       // Perform the cache fetch.
-      try (BuckEvent.Scope scope =
+      try (Scope scope =
           BuildRuleCacheEvent.startCacheCheckScope(
               context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
         // Input-based rule keys.
@@ -445,8 +455,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final ExecutionContext executionContext,
       final OnDiskBuildInfo onDiskBuildInfo,
       final BuildInfoRecorder buildInfoRecorder,
-      final BuildableContext buildableContext,
-      final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
+      final BuildableContext buildableContext) {
 
     // If we've already seen a failure, exit early.
     if (!buildContext.isKeepGoing() && firstFailure != null) {
@@ -454,7 +463,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // 1. Check if it's already built.
-    try (BuildRuleEvent.Scope scope =
+    try (Scope scope =
         BuildRuleEvent.resumeSuspendScope(
             buildContext.getEventBus(),
             rule,
@@ -496,7 +505,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildResultFuture,
             () ->
                 Futures.transformAsync(
-                    getDepResults(rule, buildContext, executionContext, asyncCallbacks),
+                    getDepResults(rule, buildContext, executionContext),
                     (depResults) -> handleDepsResults(rule, depResults),
                     serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
 
@@ -556,21 +565,21 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // 8. Build the current rule locally, if we have to.
     buildResultFuture =
-        transformBuildResultIfNotPresent(
+        transformBuildResultAsyncIfNotPresent(
             rule,
             buildContext,
             buildResultFuture,
             () ->
-                Optional.of(
-                    buildLocally(
-                        rule,
-                        buildContext,
-                        executionContext,
-                        buildableContext,
-                        Preconditions.checkNotNull(rulekeyCacheResult.get()))),
-            // This needs to adjust the default amounts even in the non-resource-aware scheduling
-            // case so that RuleScheduleInfo works correctly.
-            service.withDefaultAmounts(getRuleResourceAmounts(rule)));
+                buildLocally(
+                    rule,
+                    buildContext,
+                    executionContext,
+                    buildableContext,
+                    Preconditions.checkNotNull(rulekeyCacheResult.get()),
+                    service
+                        // This needs to adjust the default amounts even in the non-resource-aware scheduling
+                        // case so that RuleScheduleInfo works correctly.
+                        .withDefaultAmounts(getRuleResourceAmounts(rule))));
 
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
@@ -684,10 +693,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private ListenableFuture<BuildResult> processBuildRule(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
+      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
     final BuildInfoStore buildInfoStore =
         buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
@@ -712,8 +718,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             executionContext,
             onDiskBuildInfo,
             buildInfoRecorder,
-            buildableContext,
-            asyncCallbacks);
+            buildableContext);
 
     // Check immediately (without posting a new task) for a failure so that we can short-circuit
     // pending work. Use .catchingAsync() instead of .catching() so that we can propagate unchecked
@@ -734,7 +739,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       buildResult =
           MoreFutures.chainExceptions(
-              getDepResults(rule, buildContext, executionContext, asyncCallbacks), buildResult);
+              getDepResults(rule, buildContext, executionContext), buildResult);
     }
 
     buildResult =
@@ -1179,7 +1184,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
                 // Reset interrupted flag once failure has been recorded.
                 if (thrown instanceof InterruptedException) {
-                  Thread.currentThread().interrupt();
+                  Threads.interruptCurrentThread();
                 }
               }
             }));
@@ -1253,8 +1258,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
       final BuildRule rule,
       final BuildEngineBuildContext buildContext,
-      final ExecutionContext executionContext,
-      final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
+      final ExecutionContext executionContext) {
 
     // If the rule is already executing, return its result future from the cache.
     ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
@@ -1268,7 +1272,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     ListenableFuture<BuildResult> result =
         Futures.transformAsync(
             ruleKey,
-            input -> processBuildRule(rule, buildContext, executionContext, asyncCallbacks),
+            input -> processBuildRule(rule, buildContext, executionContext),
             serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
     if (!(rule instanceof HasRuntimeDeps)) {
       results.put(rule.getBuildTarget(), result);
@@ -1276,14 +1280,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps();
+    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
     List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
     ImmutableSet<BuildRule> runtimeDeps =
         resolver.getAllRules(runtimeDepPaths.collect(MoreCollectors.toImmutableSet()));
     for (BuildRule dep : runtimeDeps) {
       runtimeDepResults.add(
-          getBuildRuleResultWithRuntimeDepsUnlocked(
-              dep, buildContext, executionContext, asyncCallbacks));
+          getBuildRuleResultWithRuntimeDepsUnlocked(dep, buildContext, executionContext));
     }
 
     // Create a new combined future, which runs the original rule and all the runtime deps in
@@ -1302,10 +1305,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
+      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
     // If the rule is already executing, return it's result future from the cache without acquiring
     // the lock.
@@ -1316,8 +1316,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     // Otherwise, grab the lock and delegate to the real method,
     synchronized (results) {
-      return getBuildRuleResultWithRuntimeDepsUnlocked(
-          rule, buildContext, executionContext, asyncCallbacks);
+      return getBuildRuleResultWithRuntimeDepsUnlocked(rule, buildContext, executionContext);
     }
   }
 
@@ -1386,7 +1385,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transform(
             depKeys,
             (List<RuleKey> input) -> {
-              try (BuildRuleEvent.Scope scope =
+              try (Scope scope =
                   BuildRuleEvent.ruleKeyCalculationScope(
                       context.getEventBus(),
                       rule,
@@ -1407,20 +1406,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
     // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
     // to make sure we wait for these before calling yielding the final build result.
-    final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks =
-        new ConcurrentLinkedQueue<>();
     registerTopLevelRule(rule, buildContext.getEventBus());
     ListenableFuture<BuildResult> resultFuture =
-        getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, asyncCallbacks);
-    return BuildEngineResult.builder()
-        .setResult(
-            Futures.transformAsync(
-                resultFuture,
-                result ->
-                    Futures.transform(
-                        Futures.allAsList(asyncCallbacks), Functions.constant(result)),
-                serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)))
-        .build();
+        getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext);
+    return BuildEngineResult.builder().setResult(resultFuture).build();
   }
 
   private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
@@ -1562,55 +1551,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return cacheResult;
   }
 
-  /**
-   * Execute the commands for this build rule. Requires all dependent rules are already built
-   * successfully.
-   */
-  private void executeCommandsNowThatDepsAreBuilt(
-      BuildRule rule,
-      BuildEngineBuildContext buildContext,
-      ExecutionContext executionContext,
-      BuildableContext buildableContext)
-      throws InterruptedException, StepFailedException {
-
-    LOG.debug("Building locally: %s", rule);
-    // Attempt to get an approximation of how long it takes to actually run the command.
-    @SuppressWarnings("PMD.PrematureDeclaration")
-    long start = System.nanoTime();
-
-    buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-    cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-
-    // Get and run all of the commands.
-    List<? extends Step> steps =
-        rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
-
-    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
-    for (Step step : steps) {
-      stepRunner.runStepForBuildTarget(
-          executionContext.withProcessExecutor(
-              new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(),
-                  ImmutableMap.of(
-                      BUILD_RULE_TYPE_CONTEXT_KEY,
-                      rule.getType(),
-                      STEP_TYPE_CONTEXT_KEY,
-                      StepType.BUILD_STEP.toString()))),
-          step,
-          optionalTarget);
-
-      // Check for interruptions that may have been ignored by step.
-      if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
-        throw new InterruptedException();
-      }
-    }
-
-    long end = System.nanoTime();
-    LOG.debug(
-        "Build completed: %s %s (%dns)", rule.getType(), rule.getFullyQualifiedName(), end - start);
-  }
-
   private void executePostBuildSteps(
       BuildRule rule, Iterable<Step> postBuildSteps, ExecutionContext context)
       throws InterruptedException, StepFailedException {
@@ -1633,7 +1573,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
         throw new InterruptedException();
       }
     }
@@ -1741,7 +1681,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             .map(MoreFunctions.fromJsonFunction(DependencyFileEntry.class))
             .collect(MoreCollectors.toImmutableList());
 
-    try (BuckEvent.Scope scope =
+    try (Scope scope =
         RuleKeyCalculationEvent.scope(
             context.getEventBus(), RuleKeyCalculationEvent.Type.DEP_FILE)) {
       return Optional.of(
@@ -1844,7 +1784,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuildRule rule, BuckEventBus eventBus)
       throws IOException {
-    try (BuckEvent.Scope scope =
+    try (Scope scope =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.MANIFEST)) {
       return Optional.of(
           ruleKeyFactories
@@ -1946,7 +1886,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private Optional<RuleKey> calculateInputBasedRuleKey(BuildRule rule, BuckEventBus eventBus) {
-    try (BuckEvent.Scope scope =
+    try (Scope scope =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
       return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
     } catch (SizeLimiter.SizeLimitException ex) {
@@ -2054,7 +1994,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private <F, T> AsyncFunction<F, T> ruleAsyncFunction(
       final BuildRule rule, final BuckEventBus eventBus, final AsyncFunction<F, T> delegate) {
     return input -> {
-      try (BuildRuleEvent.Scope event =
+      try (Scope event =
           BuildRuleEvent.resumeSuspendScope(
               eventBus,
               rule,
@@ -2088,7 +2028,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     Preconditions.checkNotNull(firstFailure);
                     return Optional.of(BuildResult.canceled(rule, firstFailure));
                   }
-                  try (BuildRuleEvent.Scope scope =
+                  try (Scope scope =
                       BuildRuleEvent.resumeSuspendScope(
                           context.getEventBus(),
                           rule,
@@ -2119,5 +2059,102 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           return function.call();
         },
         MoreExecutors.directExecutor());
+  }
+
+  /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
+  private class BuildRuleSteps implements Runnable {
+    private final BuildRule rule;
+    private final BuildEngineBuildContext buildContext;
+    private final ExecutionContext executionContext;
+    private final BuildableContext buildableContext;
+    private final CacheResult cacheResult;
+    private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+
+    public BuildRuleSteps(
+        BuildRule rule,
+        BuildEngineBuildContext buildContext,
+        ExecutionContext executionContext,
+        BuildableContext buildableContext,
+        CacheResult cacheResult) {
+      this.rule = rule;
+      this.buildContext = buildContext;
+      this.executionContext = executionContext;
+      this.buildableContext = buildableContext;
+      this.cacheResult = cacheResult;
+    }
+
+    public SettableFuture<Optional<BuildResult>> getFuture() {
+      return future;
+    }
+
+    @Override
+    public void run() {
+      try {
+        if (!shouldKeepGoing(buildContext)) {
+          Preconditions.checkNotNull(firstFailure);
+          future.set(Optional.of(BuildResult.canceled(rule, firstFailure)));
+          return;
+        }
+        try (Scope scope =
+            BuildRuleEvent.resumeSuspendScope(
+                buildContext.getEventBus(),
+                rule,
+                buildRuleDurationTracker,
+                ruleKeyFactories.getDefaultRuleKeyFactory())) {
+          executeCommandsNowThatDepsAreBuilt();
+          future.set(
+              Optional.of(
+                  BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult)));
+        }
+      } catch (Throwable t) {
+        future.setException(t);
+      }
+    }
+
+    /**
+     * Execute the commands for this build rule. Requires all dependent rules are already built
+     * successfully.
+     */
+    private void executeCommandsNowThatDepsAreBuilt()
+        throws InterruptedException, StepFailedException {
+
+      LOG.debug("Building locally: %s", rule);
+      // Attempt to get an approximation of how long it takes to actually run the command.
+      @SuppressWarnings("PMD.PrematureDeclaration")
+      long start = System.nanoTime();
+
+      buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
+      cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+
+      // Get and run all of the commands.
+      List<? extends Step> steps =
+          rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+
+      Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
+      for (Step step : steps) {
+        stepRunner.runStepForBuildTarget(
+            executionContext.withProcessExecutor(
+                new ContextualProcessExecutor(
+                    executionContext.getProcessExecutor(),
+                    ImmutableMap.of(
+                        BUILD_RULE_TYPE_CONTEXT_KEY,
+                        rule.getType(),
+                        STEP_TYPE_CONTEXT_KEY,
+                        StepType.BUILD_STEP.toString()))),
+            step,
+            optionalTarget);
+
+        // Check for interruptions that may have been ignored by step.
+        if (Thread.interrupted()) {
+          Thread.currentThread().interrupt();
+          throw new InterruptedException();
+        }
+      }
+
+      long end = System.nanoTime();
+      LOG.debug(
+          "Build completed: %s %s (%dns)",
+          rule.getType(), rule.getFullyQualifiedName(), end - start);
+    }
   }
 }

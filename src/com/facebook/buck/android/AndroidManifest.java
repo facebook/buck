@@ -73,14 +73,14 @@ public class AndroidManifest extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path pathToOutputFile;
 
   protected AndroidManifest(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePath skeletonFile,
       Set<SourcePath> manifestFiles) {
-    super(projectFilesystem, params);
+    super(buildTarget, projectFilesystem, params);
     this.skeletonFile = skeletonFile;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
-    BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
   }

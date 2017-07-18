@@ -28,6 +28,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
@@ -79,6 +80,7 @@ public class DistBuildSlaveEventBusListenerTest {
   private BuckEventBus eventBus;
   private SettableFakeClock clock = new SettableFakeClock(0, 0);
   private FileMaterializationStatsTracker fileMaterializationStatsTracker;
+  private DistBuildSlaveTimingStatsTracker slaveStatsTracker;
 
   @Before
   public void setUp() {
@@ -89,6 +91,7 @@ public class DistBuildSlaveEventBusListenerTest {
     distBuildServiceMock = EasyMock.createMock(DistBuildService.class);
     eventBus = BuckEventBusForTests.newInstance();
     fileMaterializationStatsTracker = new FileMaterializationStatsTracker();
+    slaveStatsTracker = new DistBuildSlaveTimingStatsTracker();
   }
 
   private void setUpDistBuildSlaveEventBusListener() {
@@ -97,6 +100,7 @@ public class DistBuildSlaveEventBusListenerTest {
             stampedeId,
             runId,
             clock,
+            slaveStatsTracker,
             fileMaterializationStatsTracker,
             Executors.newScheduledThreadPool(1),
             1);

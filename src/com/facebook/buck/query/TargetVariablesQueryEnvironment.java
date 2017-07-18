@@ -38,9 +38,8 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
-      throws QueryException, InterruptedException {
-    return delegate.getTargetsMatchingPattern(pattern);
+  public TargetEvaluator getTargetEvaluator() {
+    return delegate.getTargetEvaluator();
   }
 
   @Override
@@ -65,7 +64,7 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
 
   @Override
   public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth)
-      throws InterruptedException, QueryException {
+      throws QueryException {
     delegate.buildTransitiveClosure(targetNodes, maxDepth);
   }
 

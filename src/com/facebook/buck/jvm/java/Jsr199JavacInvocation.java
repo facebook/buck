@@ -35,7 +35,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -377,7 +376,9 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         .setManifestFile(
             context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
-        .setEntryPatternBlacklist(ImmutableSet.of());
+        .setRemoveEntryPredicate(
+            context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar()
+                ::shouldRemoveClass);
   }
 
   @Override

@@ -70,14 +70,19 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
         resourceDeps.stream().map(HasAndroidResourceDeps::getBuildTarget);
     depsBuilder.addAll(
         BuildRules.toBuildRulesFor(aaptTarget, ruleResolver, resourceTargets::iterator));
-    Stream<SourcePath> resourceDirs = resourceDeps.stream().map(HasAndroidResourceDeps::getRes);
-    depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(resourceDirs));
+    depsBuilder.addAll(
+        resourceDeps
+            .stream()
+            .map(HasAndroidResourceDeps::getRes)
+            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+            .iterator());
     ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
     filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
     return depsBuilder.build();
   }
 
   AaptPackageResources(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
@@ -89,11 +94,12 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     super(
+        buildTarget,
         projectFilesystem,
         params
             .withDeclaredDeps(
                 getAllDeps(
-                    params.getBuildTarget(),
+                    buildTarget,
                     ruleFinder,
                     ruleResolver,
                     manifest,

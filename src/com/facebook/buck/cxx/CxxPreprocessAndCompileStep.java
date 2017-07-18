@@ -152,7 +152,9 @@ public class CxxPreprocessAndCompileStep implements Step {
                     : Optional.<ImmutableList<String>>empty())
                 .orElseGet(ImmutableList::of))
         .addAll(compiler.languageArgs(inputLanguage))
-        .addAll(sanitizer.getCompilationFlags(filesystem.getRootPath()))
+        .addAll(
+            sanitizer.getCompilationFlags(
+                compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
         .add("-c")
         .addAll(
             depFile

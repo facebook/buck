@@ -29,14 +29,11 @@ import java.util.stream.Stream;
 public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
 
-  private final SourcePathRuleFinder ruleFinder;
-
   public BinaryWrapperRule(
+      BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder) {
-    super(projectFilesystem, buildRuleParams);
-    this.ruleFinder = ruleFinder;
+      BuildRuleParams buildRuleParams) {
+    super(buildTarget, projectFilesystem, buildRuleParams);
   }
 
   @Override
@@ -46,7 +43,7 @@ public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAnd
   }
 
   @Override
-  public final Stream<BuildTarget> getRuntimeDeps() {
+  public final Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
             getDeclaredDeps().stream(), getExecutableCommand().getDeps(ruleFinder).stream())
         .map(BuildRule::getBuildTarget);

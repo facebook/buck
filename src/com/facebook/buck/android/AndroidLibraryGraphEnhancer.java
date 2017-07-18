@@ -121,15 +121,14 @@ public class AndroidLibraryGraphEnhancer {
     CompileToJarStepFactory compileToJarStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
     BuildRuleParams dummyRDotJavaParams =
-        compileToJarStepFactory
-            .addInputs(
-                // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
-                // that is used to build it
-                originalBuildRuleParams.withoutDeclaredDeps().withoutExtraDeps(), ruleFinder)
-            .withBuildTarget(dummyRDotJavaBuildTarget);
+        compileToJarStepFactory.addInputs(
+            // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
+            // that is used to build it
+            originalBuildRuleParams.withoutDeclaredDeps().withoutExtraDeps(), ruleFinder);
 
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(
+            dummyRDotJavaBuildTarget,
             projectFilesystem,
             dummyRDotJavaParams,
             ruleFinder,

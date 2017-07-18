@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testrunner;
 
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
@@ -99,7 +100,7 @@ class DelegateRunnerWithTimeout extends Runner {
     try {
       completionSemaphore.acquire();
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
       shutdown();
       return;
     }
@@ -144,7 +145,7 @@ class DelegateRunnerWithTimeout extends Runner {
           completionSemaphore.release();
         }
       } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
         shutdown();
         return;
       }

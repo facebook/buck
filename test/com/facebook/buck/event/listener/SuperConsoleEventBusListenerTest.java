@@ -60,15 +60,10 @@ import com.facebook.buck.rules.BuildRuleCacheEvent;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
@@ -152,19 +147,12 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
-    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, pathResolver, ImmutableSortedSet.of());
-    FakeBuildRule cachedRule =
-        new FakeBuildRule(cachedTarget, pathResolver, ImmutableSortedSet.of());
+    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
+    FakeBuildRule cachedRule = new FakeBuildRule(cachedTarget, ImmutableSortedSet.of());
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
         new ProjectBuildFileParseEvents.Started();
@@ -542,19 +530,12 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
-    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, pathResolver, ImmutableSortedSet.of());
-    FakeBuildRule cachedRule =
-        new FakeBuildRule(cachedTarget, pathResolver, ImmutableSortedSet.of());
+    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
+    FakeBuildRule cachedRule = new FakeBuildRule(cachedTarget, ImmutableSortedSet.of());
 
     ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
     listener.setProgressEstimator(e);
@@ -1018,17 +999,10 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
     Iterable<String> testArgs = Iterables.transform(testTargets, Object::toString);
-    FakeBuildRule testBuildRule =
-        new FakeBuildRule(testTarget, pathResolver, ImmutableSortedSet.of());
+    FakeBuildRule testBuildRule = new FakeBuildRule(testTarget, ImmutableSortedSet.of());
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
         new ProjectBuildFileParseEvents.Started();
@@ -1269,17 +1243,10 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
     Iterable<String> testArgs = Iterables.transform(testTargets, Object::toString);
-    FakeBuildRule testBuildRule =
-        new FakeBuildRule(testTarget, pathResolver, ImmutableSortedSet.of());
+    FakeBuildRule testBuildRule = new FakeBuildRule(testTarget, ImmutableSortedSet.of());
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
         new ProjectBuildFileParseEvents.Started();
@@ -1517,11 +1484,6 @@ public class SuperConsoleEventBusListenerTest {
 
   @Test
   public void testFailingTest() {
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     TestConsole console = new TestConsole();
@@ -1529,8 +1491,7 @@ public class SuperConsoleEventBusListenerTest {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
     Iterable<String> testArgs = Iterables.transform(testTargets, Object::toString);
-    FakeBuildRule testBuildRule =
-        new FakeBuildRule(testTarget, pathResolver, ImmutableSortedSet.of());
+    FakeBuildRule testBuildRule = new FakeBuildRule(testTarget, ImmutableSortedSet.of());
 
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(
@@ -1793,16 +1754,10 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver =
-        new SourcePathResolver(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
-    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, pathResolver, ImmutableSortedSet.of());
+    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
     UUID stepUuid = UUID.randomUUID();

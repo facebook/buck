@@ -83,8 +83,7 @@ public class DefaultCxxPlatforms {
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
-        compilerSanitizer =
-            new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(), CxxToolProvider.Type.GCC);
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
@@ -98,8 +97,7 @@ public class DefaultCxxPlatforms {
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.DARWIN;
         archiver = new BsdArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
-        compilerSanitizer =
-            new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(), CxxToolProvider.Type.CLANG);
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
@@ -121,8 +119,7 @@ public class DefaultCxxPlatforms {
             new WindowsArchiver(
                 new HashedFileTool(
                     getExecutablePath(DEFAULT_WINDOWS_LIB, Paths.get(DEFAULT_WINDOWS_LIB), env)));
-        compilerSanitizer =
-            new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(), CxxToolProvider.Type.WINDOWS);
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.of("exe");
         defaultToolType = Optional.of(CxxToolProvider.Type.WINDOWS);
         ranlibCommand = DEFAULT_WINDOWS_RANLIB;
@@ -137,8 +134,7 @@ public class DefaultCxxPlatforms {
         defaultLinker = defaultCxxFrontend;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new BsdArchiver(new HashedFileTool(getExecutablePath("ar", DEFAULT_AR, env)));
-        compilerSanitizer =
-            new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(), CxxToolProvider.Type.GCC);
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
         binaryExtension = Optional.empty();
         ranlibCommand = DEFAULT_UNIX_RANLIB;
         break;
