@@ -288,22 +288,34 @@ public class ProjectCommand extends BuildCommand {
                     includeTransitiveDependencies,
                     skipBuild || !build);
 
-            IjProjectCommandHelper projectCommandHelper =
-                new IjProjectCommandHelper(
-                    params.getBuckEventBus(),
-                    executor,
-                    params.getBuckConfig(),
-                    params.getActionGraphCache(),
-                    params.getVersionedTargetGraphCache(),
-                    params.getTypeCoercerFactory(),
-                    params.getCell(),
-                    projectConfig,
-                    getEnableParserProfiling(),
-                    (buildTargets, disableCaching) ->
-                        runBuild(params, buildTargets, disableCaching),
-                    arguments -> parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
-                    new ProjectViewParametersImplementation(params));
-            result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
+            ProjectViewParametersImplementation projectView =
+                new ProjectViewParametersImplementation(params);
+            if (projectView.hasViewPath() && !projectView.isValidViewPath()) {
+              projectView
+                  .getStdErr()
+                  .printf(
+                      "\nView directory %s is under the repo directory\n",
+                      projectView.getViewPath());
+              result = 1;
+            } else {
+              IjProjectCommandHelper projectCommandHelper =
+                  new IjProjectCommandHelper(
+                      params.getBuckEventBus(),
+                      executor,
+                      params.getBuckConfig(),
+                      params.getActionGraphCache(),
+                      params.getVersionedTargetGraphCache(),
+                      params.getTypeCoercerFactory(),
+                      params.getCell(),
+                      projectConfig,
+                      getEnableParserProfiling(),
+                      (buildTargets, disableCaching) ->
+                          runBuild(params, buildTargets, disableCaching),
+                      arguments ->
+                          parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
+                      projectView);
+              result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
+            }
             break;
           case XCODE:
             XCodeProjectCommandHelper xcodeProjectCommandHelper =

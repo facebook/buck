@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli.parameter_extractors;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import javax.annotation.Nullable;
 
 /**
@@ -28,4 +30,14 @@ public interface ProjectViewParameters extends ProjectGeneratorParameters {
 
   @Nullable
   String getViewPath();
+
+  default boolean isValidViewPath() {
+    if (!hasViewPath()) {
+      return false;
+    }
+
+    Path view = Paths.get(getViewPath()).toAbsolutePath().normalize();
+
+    return !view.startsWith(getPath());
+  }
 }

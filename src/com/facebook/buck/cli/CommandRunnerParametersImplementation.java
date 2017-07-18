@@ -21,6 +21,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import java.nio.file.Path;
 
 class CommandRunnerParametersImplementation implements CommandRunnerParameters {
 
@@ -53,5 +54,10 @@ class CommandRunnerParametersImplementation implements CommandRunnerParameters {
   @Override
   public Parser getParser() {
     return parameters.getParser();
+  }
+
+  @Override
+  public Path getPath() {
+    return parameters.getCell().getRoot();
   }
 }

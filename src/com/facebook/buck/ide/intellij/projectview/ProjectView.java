@@ -152,11 +152,6 @@ public class ProjectView {
   }
 
   private int run() {
-    if (viewPathIsUnderRepository()) {
-      stderr("\nView directory %s is under the repo directory %s\n", viewPath, repository);
-      return 1;
-    }
-
     getTestTargets();
 
     List<String> inputs = getPrunedInputs();
@@ -179,12 +174,6 @@ public class ProjectView {
     buildAllDirectoriesAndSymlinks();
 
     return 0;
-  }
-
-  private boolean viewPathIsUnderRepository() {
-    Path view = Paths.get(viewPath).toAbsolutePath();
-    Path repo = Paths.get(repository).toAbsolutePath();
-    return view.startsWith(repo);
   }
 
   // region getTestTargets
