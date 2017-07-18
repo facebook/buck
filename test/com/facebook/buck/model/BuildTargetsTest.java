@@ -35,7 +35,7 @@ public class BuildTargetsTest {
   @Test(expected = IllegalStateException.class)
   public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz =
-        BuildTarget.builder(ROOT, "//foo", "bar").addFlavors(InternalFlavor.of("baz")).build();
+        BuildTargetFactory.newInstance(ROOT, "//foo", "bar", InternalFlavor.of("baz"));
     fooBarBaz.checkUnflavored();
   }
 

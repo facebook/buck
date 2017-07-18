@@ -66,7 +66,7 @@ public class AppleBuildRulesTest {
   @Test
   public void testAppleLibraryIsXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libraryTarget).setSrcs(ImmutableSortedSet.of()).build();
     assertTrue(AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
@@ -75,7 +75,7 @@ public class AppleBuildRulesTest {
   @Test
   public void testIosResourceIsNotXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget resourceTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "res").build();
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "res");
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of())
