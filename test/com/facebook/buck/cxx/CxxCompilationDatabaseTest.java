@@ -94,10 +94,7 @@ public class CxxCompilationDatabaseTest {
             true);
     testBuildRuleResolver.addToIndex(exportedSymlinkTree);
 
-    BuildTarget compileTarget =
-        BuildTarget.builder(testBuildTarget.getUnflavoredBuildTarget())
-            .addFlavors(InternalFlavor.of("compile-test.cpp"))
-            .build();
+    BuildTarget compileTarget = testBuildTarget.withFlavors(InternalFlavor.of("compile-test.cpp"));
 
     PreprocessorFlags preprocessorFlags =
         PreprocessorFlags.builder()

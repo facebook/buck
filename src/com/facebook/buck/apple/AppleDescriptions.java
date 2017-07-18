@@ -836,15 +836,15 @@ public class AppleDescriptions {
               .build();
     }
 
-    BuildTarget.Builder buildTargetBuilder =
-        BuildTarget.builder(binary.getUnflavoredBuildTarget()).addAllFlavors(flavors);
+    ImmutableSet.Builder<Flavor> binaryFlavorsBuilder = ImmutableSet.builder();
+    binaryFlavorsBuilder.addAll(flavors);
     if (!(AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent())) {
-      buildTargetBuilder.addAllFlavors(binary.getFlavors());
+      binaryFlavorsBuilder.addAll(binary.getFlavors());
     } else {
-      buildTargetBuilder.addAllFlavors(
+      binaryFlavorsBuilder.addAll(
           Sets.difference(binary.getFlavors(), AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
     }
-    BuildTarget buildTarget = buildTargetBuilder.build();
+    BuildTarget buildTarget = binary.withFlavors(binaryFlavorsBuilder.build());
 
     final TargetNode<?, ?> binaryTargetNode = targetGraph.get(buildTarget);
 

@@ -166,10 +166,9 @@ public class CxxLibraryDescriptionTest {
             .setSrcs(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test_shared.cpp"))));
     BuildTarget sharedHeaderSymlinkTreeTarget =
-        BuildTarget.builder(sharedDepTarget.getUnflavoredBuildTarget())
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        sharedDepTarget.withFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     CxxLibraryBuilder depBuilder =

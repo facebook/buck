@@ -172,11 +172,7 @@ public class CxxBinaryDescription
               Sets.difference(
                   flavors, ImmutableSet.of(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)));
       return createHeaderSymlinkTreeBuildRule(
-          BuildTarget.builder(target.getUnflavoredBuildTarget()).addAllFlavors(flavors).build(),
-          projectFilesystem,
-          resolver,
-          cxxPlatform,
-          args);
+          target.withFlavors(flavors), projectFilesystem, resolver, cxxPlatform, args);
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {

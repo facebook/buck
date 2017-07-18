@@ -191,10 +191,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
         Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
         flavors.remove(type.get().getKey());
-        BuildTarget target =
-            BuildTarget.builder(buildTarget.getUnflavoredBuildTarget())
-                .addAllFlavors(flavors)
-                .build();
+        BuildTarget target = buildTarget.withFlavors(flavors);
         if (flavoredLinkerMapMode.isPresent()) {
           target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
         }

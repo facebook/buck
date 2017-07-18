@@ -112,10 +112,10 @@ public class CxxBinaryDescriptionTest {
       flavors.remove(type.get().getKey());
     }
     BuildTarget target =
-        BuildTarget.builder(libTarget.getUnflavoredBuildTarget())
-            .addAllFlavors(flavors)
-            .addFlavors(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())
-            .build();
+        BuildTarget.of(
+            libTarget.getUnflavoredBuildTarget(),
+            Sets.union(
+                flavors, ImmutableSet.of(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())));
     return new CxxBinaryBuilder(target, cxxBuckConfig).build();
   }
 
