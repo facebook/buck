@@ -70,6 +70,7 @@ java_library(
         ":base",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
+        "//third-party/java/guice:guice",
         "//third-party/java/testng:testng",
     ],
 )

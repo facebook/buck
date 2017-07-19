@@ -18,6 +18,19 @@ package com.facebook.buck.testrunner;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelector;
+import org.testng.IAnnotationTransformer;
+import org.testng.ITestContext;
+import org.testng.ITestListener;
+import org.testng.ITestResult;
+import org.testng.TestNG;
+import org.testng.annotations.Factory;
+import org.testng.annotations.Guice;
+import org.testng.annotations.ITestAnnotation;
+import org.testng.annotations.Test;
+import org.testng.internal.annotations.JDK15AnnotationFinder;
+import org.testng.xml.XmlClass;
+import org.testng.xml.XmlSuite;
+import org.testng.xml.XmlTest;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -27,18 +40,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.testng.IAnnotationTransformer;
-import org.testng.ITestContext;
-import org.testng.ITestListener;
-import org.testng.ITestResult;
-import org.testng.TestNG;
-import org.testng.annotations.Factory;
-import org.testng.annotations.ITestAnnotation;
-import org.testng.annotations.Test;
-import org.testng.internal.annotations.JDK15AnnotationFinder;
-import org.testng.xml.XmlClass;
-import org.testng.xml.XmlSuite;
-import org.testng.xml.XmlTest;
 
 /** Class that runs a set of TestNG tests and writes the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
@@ -107,17 +108,25 @@ public final class TestNGRunner extends BaseRunner {
         || Modifier.isAbstract(klassModifiers)) {
       return false;
     }
-    // Test classes must have a public, no-arg constructor.
+    // Test classes must either have a public, no-arg constructor, or have a constructor that
+    // initializes using dependency injection, via the org.testng.annotations.Guice annotation on
+    // the class and the com.google.inject.Inject or javax.inject.Inject annotation on the constructor.
     boolean foundPublicNoArgConstructor = false;
+    boolean foundInjectedConstructor = false;
+    boolean hasGuiceAnnotation = klass.getAnnotationsByType(Guice.class).length > 0;
     for (Constructor<?> c : klass.getConstructors()) {
       if (Modifier.isPublic(c.getModifiers())) {
-        if (c.getParameterCount() != 0) {
-          return false;
+        if (c.getParameterCount() == 0) {
+          foundPublicNoArgConstructor = true;
         }
-        foundPublicNoArgConstructor = true;
+        if (hasGuiceAnnotation
+            && (c.getAnnotationsByType(com.google.inject.Inject.class).length > 0
+            || c.getAnnotationsByType(javax.inject.Inject.class).length > 0)) {
+          foundInjectedConstructor = true;
+        }
       }
     }
-    if (!foundPublicNoArgConstructor) {
+    if (!foundPublicNoArgConstructor && !foundInjectedConstructor) {
       return false;
     }
     // Test classes must have at least one public test method (or something that generates tests)
