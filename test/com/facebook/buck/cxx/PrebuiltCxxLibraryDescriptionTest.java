@@ -635,10 +635,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
-        BuildTarget.builder(BuildTargetFactory.newInstance("//:lib"))
-            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .addFlavors(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())
-            .build();
+        BuildTargetFactory.newInstance("//:lib")
+            .withAppendedFlavors(
+                CxxDescriptionEnhancer.SHARED_FLAVOR,
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(target)
             .setExportedLinkerFlags(ImmutableList.of("--some-flag"))

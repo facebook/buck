@@ -606,11 +606,10 @@ public class AppleDescriptions {
       for (BuildTarget dep : deps) {
         Optional<FrameworkDependencies> frameworkDependencies =
             resolver.requireMetadata(
-                BuildTarget.builder(dep)
-                    .addFlavors(FRAMEWORK_FLAVOR)
-                    .addFlavors(NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
-                    .build(),
+                dep.withAppendedFlavors(
+                    FRAMEWORK_FLAVOR,
+                    NO_INCLUDE_FRAMEWORKS_FLAVOR,
+                    appleCxxPlatform.getCxxPlatform().getFlavor()),
                 FrameworkDependencies.class);
         if (frameworkDependencies.isPresent()) {
           frameworksBuilder.addAll(frameworkDependencies.get().getSourcePaths());

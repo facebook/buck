@@ -120,7 +120,7 @@ public class ApplePackageDescription
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {
-    return BuildTarget.builder(toTarget).addAllFlavors(fromTarget.getFlavors()).build();
+    return toTarget.withAppendedFlavors(fromTarget.getFlavors());
   }
 
   /** Propagate the packages's flavors to its dependents. */

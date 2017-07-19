@@ -213,15 +213,16 @@ public class CxxDescriptionEnhancer {
   @VisibleForTesting
   public static BuildTarget createHeaderSymlinkTreeTarget(
       BuildTarget target, HeaderVisibility headerVisibility, Flavor... flavors) {
-    return BuildTarget.builder(target)
-        .addFlavors(getHeaderSymlinkTreeFlavor(headerVisibility))
-        .addFlavors(flavors)
-        .build();
+    return target.withAppendedFlavors(
+        ImmutableSet.<Flavor>builder()
+            .add(getHeaderSymlinkTreeFlavor(headerVisibility))
+            .add(flavors)
+            .build());
   }
 
   @VisibleForTesting
   public static BuildTarget createSandboxSymlinkTreeTarget(BuildTarget target, Flavor platform) {
-    return BuildTarget.builder(target).addFlavors(platform).addFlavors(SANDBOX_TREE_FLAVOR).build();
+    return target.withAppendedFlavors(platform, SANDBOX_TREE_FLAVOR);
   }
 
   /** @return the absolute {@link Path} to use for the symlink tree of headers. */
@@ -557,10 +558,8 @@ public class CxxDescriptionEnhancer {
 
   public static BuildTarget createStaticLibraryBuildTarget(
       BuildTarget target, Flavor platform, CxxSourceRuleFactory.PicType pic) {
-    return BuildTarget.builder(target)
-        .addFlavors(platform)
-        .addFlavors(pic == CxxSourceRuleFactory.PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR)
-        .build();
+    return target.withAppendedFlavors(
+        platform, pic == CxxSourceRuleFactory.PicType.PDC ? STATIC_FLAVOR : STATIC_PIC_FLAVOR);
   }
 
   public static BuildTarget createSharedLibraryBuildTarget(
@@ -578,7 +577,7 @@ public class CxxDescriptionEnhancer {
         throw new IllegalStateException(
             "Only SHARED and MACH_O_BUNDLE types expected, got: " + linkType);
     }
-    return BuildTarget.builder(target).addFlavors(platform).addFlavors(linkFlavor).build();
+    return target.withAppendedFlavors(platform, linkFlavor);
   }
 
   public static Path getStaticLibraryPath(
@@ -1106,10 +1105,8 @@ public class CxxDescriptionEnhancer {
     for (BuildTarget dep : args.getDeps()) {
       Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
           resolver.requireMetadata(
-              BuildTarget.builder(dep)
-                  .addFlavors(CxxCompilationDatabase.COMPILATION_DATABASE)
-                  .addFlavors(cxxPlatformFlavor.get())
-                  .build(),
+              dep.withAppendedFlavors(
+                  CxxCompilationDatabase.COMPILATION_DATABASE, cxxPlatformFlavor.get()),
               CxxCompilationDatabaseDependencies.class);
       if (compilationDatabases.isPresent()) {
         sourcePaths.addAll(compilationDatabases.get().getSourcePaths());
@@ -1134,10 +1131,7 @@ public class CxxDescriptionEnhancer {
    */
   public static BuildTarget createSharedLibrarySymlinkTreeTarget(
       BuildTarget target, Flavor platform) {
-    return BuildTarget.builder(target)
-        .addFlavors(SHARED_LIBRARY_SYMLINK_TREE_FLAVOR)
-        .addFlavors(platform)
-        .build();
+    return target.withAppendedFlavors(SHARED_LIBRARY_SYMLINK_TREE_FLAVOR, platform);
   }
 
   /** @return the {@link Path} to use for the symlink tree of headers. */

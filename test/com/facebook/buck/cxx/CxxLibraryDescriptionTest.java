@@ -177,10 +177,9 @@ public class CxxLibraryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget headerSymlinkTreeTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -447,15 +446,12 @@ public class CxxLibraryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget sharedLibraryDepTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .addFlavors(cxxPlatform.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.SHARED_FLAVOR, cxxPlatform.getFlavor());
     BuildTarget headerSymlinkTreeTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

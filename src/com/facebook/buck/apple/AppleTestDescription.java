@@ -431,11 +431,11 @@ public class AppleTestDescription
       throws NoSuchBuildTargetException {
     BuildRule rule =
         resolver.requireRule(
-            BuildTarget.builder(testHostAppBuildTarget)
-                .addAllFlavors(additionalFlavors)
-                .addFlavors(debugFormat.getFlavor())
-                .addFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
-                .build());
+            testHostAppBuildTarget.withAppendedFlavors(
+                ImmutableSet.<Flavor>builder()
+                    .addAll(additionalFlavors)
+                    .add(debugFormat.getFlavor(), StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
+                    .build()));
 
     if (!(rule instanceof AppleBundle)) {
       throw new HumanReadableException(

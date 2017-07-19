@@ -60,9 +60,8 @@ public class CxxCompilationDatabaseTest {
   @Test
   public void testCompilationDatabase() throws Exception {
     BuildTarget testBuildTarget =
-        BuildTarget.builder(BuildTargetFactory.newInstance("//foo:baz"))
-            .addAllFlavors(ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE))
-            .build();
+        BuildTargetFactory.newInstance("//foo:baz")
+            .withAppendedFlavors(ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE));
 
     final String root = "/Users/user/src";
     final Path fakeRoot = Paths.get(root);

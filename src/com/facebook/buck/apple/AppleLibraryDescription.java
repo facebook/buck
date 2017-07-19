@@ -523,11 +523,10 @@ public class AppleLibraryDescription
       for (BuildTarget dep : args.getDeps()) {
         Optional<FrameworkDependencies> frameworks =
             resolver.requireMetadata(
-                BuildTarget.builder(dep)
-                    .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
-                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .addFlavors(cxxPlatformFlavor.get())
-                    .build(),
+                dep.withAppendedFlavors(
+                    AppleDescriptions.FRAMEWORK_FLAVOR,
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+                    cxxPlatformFlavor.get()),
                 FrameworkDependencies.class);
         if (frameworks.isPresent()) {
           sourcePaths.addAll(frameworks.get().getSourcePaths());

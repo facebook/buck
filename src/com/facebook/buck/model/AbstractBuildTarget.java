@@ -142,12 +142,6 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
         UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
   }
 
-  public static BuildTarget.Builder builder(BuildTarget buildTarget) {
-    return BuildTarget.builder()
-        .setUnflavoredBuildTarget(buildTarget.getUnflavoredBuildTarget())
-        .addAllFlavors(buildTarget.getFlavors());
-  }
-
   /** @return {@link #getFullyQualifiedName()} */
   @Override
   public String toString() {

@@ -188,10 +188,7 @@ public class AppleBundleDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget =
-          BuildTarget.builder(buildTarget)
-              .addAllFlavors(ImmutableSet.of(defaultCxxPlatform.getFlavor()))
-              .build();
+      buildTarget = buildTarget.withAppendedFlavors(defaultCxxPlatform.getFlavor());
     }
 
     Optional<MultiarchFileInfo> fatBinaryInfo =

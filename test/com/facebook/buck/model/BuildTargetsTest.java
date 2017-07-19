@@ -62,10 +62,7 @@ public class BuildTargetsTest {
     ImmutableSortedSet<BuildTarget> result =
         BuildTargets.propagateFlavorDomains(
             parent, ImmutableList.of(domain), ImmutableList.of(child));
-    assertEquals(
-        ImmutableSortedSet.of(
-            BuildTarget.builder(child).addFlavors(flavor).addFlavors(flavor2).build()),
-        result);
+    assertEquals(ImmutableSortedSet.of(child.withAppendedFlavors(flavor, flavor2)), result);
   }
 
   @Test

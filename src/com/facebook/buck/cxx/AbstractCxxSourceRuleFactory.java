@@ -252,27 +252,24 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   public BuildTarget createCompileBuildTarget(String name) {
     String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
-    return BuildTarget.builder(getBaseBuildTarget())
-        .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
             InternalFlavor.of(
                 String.format(
                     COMPILE_FLAVOR_PREFIX + "%s%s",
                     getPicType() == PicType.PIC ? "pic-" : "",
-                    outputName)))
-        .build();
+                    outputName)));
   }
 
   public BuildTarget createInferCaptureBuildTarget(String name) {
     String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
-    return BuildTarget.builder(getBaseBuildTarget())
-        .addAllFlavors(getBaseBuildTarget().getFlavors())
-        .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
             InternalFlavor.of(
                 String.format(
-                    "%s-%s", CxxInferEnhancer.INFER_CAPTURE_FLAVOR.toString(), outputName)))
-        .build();
+                    "%s-%s", CxxInferEnhancer.INFER_CAPTURE_FLAVOR.toString(), outputName)));
   }
 
   // Use a "lazy" method here to memoize the sanitizer function.  This is necessary as it's used to

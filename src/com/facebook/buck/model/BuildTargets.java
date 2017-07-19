@@ -149,7 +149,7 @@ public class BuildTargets {
 
     // Now flavor each dependency with the relevant flavors.
     for (BuildTarget dep : deps) {
-      flavoredDeps.add(BuildTarget.builder(dep).addAllFlavors(flavors).build());
+      flavoredDeps.add(dep.withAppendedFlavors(flavors));
     }
 
     return flavoredDeps.build();
