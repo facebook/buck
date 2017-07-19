@@ -17,7 +17,7 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.log.views.JsonViews;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -40,8 +40,8 @@ import org.immutables.value.Value;
   getterVisibility = JsonAutoDetect.Visibility.NONE,
   setterVisibility = JsonAutoDetect.Visibility.NONE
 )
-@BuckStyleImmutable
-@Value.Immutable(prehash = true)
+@BuckStyleTuple
+@Value.Immutable(prehash = true, builder = false)
 abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
