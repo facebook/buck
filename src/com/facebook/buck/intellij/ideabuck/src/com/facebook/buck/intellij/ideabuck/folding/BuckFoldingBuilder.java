@@ -60,12 +60,14 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
         .forEach(
             element -> {
               int offset = element instanceof BuckRuleBlockImpl ? 0 : 1;
-              descriptors.add(
-                  new FoldingDescriptor(
-                      element.getNode(),
-                      new TextRange(
-                          element.getTextRange().getStartOffset() + offset,
-                          element.getTextRange().getEndOffset() - offset)));
+              TextRange elementTextRange = element.getTextRange();
+              TextRange foldingRange =
+                  new TextRange(
+                      elementTextRange.getStartOffset() + offset,
+                      elementTextRange.getEndOffset() - offset);
+              if (foldingRange.getLength() > 0) {
+                descriptors.add(new FoldingDescriptor(element.getNode(), foldingRange));
+              }
             });
 
     return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
