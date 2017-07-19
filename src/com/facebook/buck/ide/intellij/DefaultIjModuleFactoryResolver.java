@@ -128,7 +128,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     Path compilerOutputPath = DefaultJavaLibrary.getClassesDir(buildTarget, projectFilesystem);
-    return Optional.ofNullable(compilerOutputPath);
+    return Optional.of(compilerOutputPath);
   }
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
