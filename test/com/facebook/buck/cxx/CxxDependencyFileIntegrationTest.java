@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,7 +61,6 @@ public class CxxDependencyFileIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    Assume.assumeTrue(!(sandboxSource && buckd));
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "depfiles", tmp);
     workspace.setUp();
     String sandboxSourcesConfig = "  sandbox_sources = " + sandboxSource + "\n";
