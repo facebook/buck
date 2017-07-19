@@ -813,6 +813,7 @@ public class CachingBuildEngineTest {
       }
     }
 
+    @Ignore
     @Test
     public void multipleTopLevelRulesDontBlockEachOther() throws Exception {
       Exchanger<Boolean> exchanger = new Exchanger<>();
