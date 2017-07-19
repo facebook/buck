@@ -43,9 +43,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import javax.annotation.concurrent.GuardedBy;
@@ -60,6 +63,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private static final Logger LOG = Logger.get(DistBuildSlaveEventBusListener.class);
 
   private static final int DEFAULT_SERVER_UPDATE_PERIOD_MILLIS = 500;
+  private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
 
   private final StampedeId stampedeId;
   private final RunId runId;
@@ -133,7 +137,23 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   @Override
   public void close() throws IOException {
-    scheduledServerUpdates.cancel(false);
+    if (scheduledServerUpdates.isCancelled()) {
+      return; // close() has already been called. Cancelling again will fail.
+    }
+
+    boolean cancelled = scheduledServerUpdates.cancel(false);
+
+    if (!cancelled) {
+      // Wait for the timer to shut down.
+      try {
+        scheduledServerUpdates.get(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        LOG.error(e);
+      } catch (CancellationException e) {
+        LOG.info("Failed to call get() on scheduled executor future, as already cancelled.");
+      }
+    }
+
     // Send final updates.
     sendServerUpdates();
   }

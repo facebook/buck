@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.makeThreadSafe;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
@@ -89,6 +90,7 @@ public class DistBuildSlaveEventBusListenerTest {
     stampedeId = new StampedeId();
     stampedeId.setId("this-is-the-big-id");
     distBuildServiceMock = EasyMock.createMock(DistBuildService.class);
+    makeThreadSafe(distBuildServiceMock, true);
     eventBus = BuckEventBusForTests.newInstance();
     fileMaterializationStatsTracker = new FileMaterializationStatsTracker();
     slaveStatsTracker = new DistBuildSlaveTimingStatsTracker();
@@ -158,6 +160,7 @@ public class DistBuildSlaveEventBusListenerTest {
     expectLastCall().anyTimes();
 
     Capture<List<BuildSlaveConsoleEvent>> capturedEventLists = Capture.newInstance(CaptureType.ALL);
+
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(
         eq(stampedeId), eq(runId), capture(capturedEventLists));
     expectLastCall().atLeastOnce();
@@ -170,6 +173,9 @@ public class DistBuildSlaveEventBusListenerTest {
     }
 
     listener.close();
+
+    // Note: Mock is not thread safe when we call verify. All work in other threads should
+    // have stopped.
     verify(distBuildServiceMock);
 
     List<BuildSlaveConsoleEvent> capturedEvents =
