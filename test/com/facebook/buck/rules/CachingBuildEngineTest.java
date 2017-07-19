@@ -3080,6 +3080,7 @@ public class CachingBuildEngineTest {
       super(metadataStorage);
     }
 
+    @Ignore
     @Test
     public void eventsForBuiltLocallyRuleAreOnCorrectThreads() throws Exception {
       // Create a noop simple rule.
@@ -3148,6 +3149,7 @@ public class CachingBuildEngineTest {
           FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
     }
 
+    @Ignore
     @Test
     public void eventsForBuiltLocallyRuleAndDepAreOnCorrectThreads() throws Exception {
       // Create a simple rule and dep.
