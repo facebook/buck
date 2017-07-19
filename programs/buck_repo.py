@@ -12,7 +12,6 @@ import buck_version
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
 RESOURCES = {
-    "abi_processor_classes": "build/abi_processor/classes",
     "android_agent_path": "assets/android/agent.apk",
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",

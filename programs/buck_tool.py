@@ -45,7 +45,6 @@ class Resource(object):
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
     Resource("testrunner_classes"),
-    Resource("abi_processor_classes"),
     Resource("path_to_asm_jar"),
     Resource("logging_config_file"),
     Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
