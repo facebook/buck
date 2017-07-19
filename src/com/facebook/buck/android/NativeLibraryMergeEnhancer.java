@@ -723,17 +723,11 @@ class NativeLibraryMergeEnhancer {
 
       String mergeFlavor = "merge_structure_" + hasher.hash();
 
-      return BuildTarget.builder()
-          .from(initialTarget)
-          .addFlavors(InternalFlavor.of(mergeFlavor))
-          .build();
+      return initialTarget.withAppendedFlavors(InternalFlavor.of(mergeFlavor));
     }
 
     private BuildTarget getBuildTargetForPlatform(CxxPlatform cxxPlatform) {
-      return BuildTarget.builder()
-          .from(getBuildTarget())
-          .addFlavors(cxxPlatform.getFlavor())
-          .build();
+      return getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor());
     }
 
     @Override

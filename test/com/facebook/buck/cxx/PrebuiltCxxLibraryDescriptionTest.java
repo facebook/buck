@@ -102,11 +102,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
   private static ImmutableSet<BuildTarget> getInputRules(BuildRule buildRule) {
     return ImmutableSet.of(
-        BuildTarget.builder()
-            .from(buildRule.getBuildTarget())
-            .addFlavors(CXX_PLATFORM.getFlavor())
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .build());
+        buildRule
+            .getBuildTarget()
+            .withAppendedFlavors(
+                CXX_PLATFORM.getFlavor(),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR));
   }
 
   private static ImmutableSet<Path> getHeaderNames(Iterable<CxxHeaders> includes) {
