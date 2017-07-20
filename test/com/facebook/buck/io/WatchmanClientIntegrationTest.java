@@ -39,6 +39,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -133,6 +134,8 @@ public class WatchmanClientIntegrationTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
+    // watchman tests are currently very flaky on Linux
+    Assume.assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.LINUX)));
     startWatchman();
     Assume.assumeTrue(watchmanProcess != null);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "watchman", tmp);
