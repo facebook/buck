@@ -41,7 +41,7 @@ if os.name == 'nt':
         return result
 
 
-@unittest.skipUnless(os.name == 'posix', 'This test works reliably on posix only')
+@unittest.skip('This test is flaky')
 class TestNailgunConnection(unittest.TestCase):
     def setUp(self):
         self.setUpTransport()
