@@ -2073,6 +2073,16 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'extra_compiler_output_modules_path' /}
+  {param example_value: 'buck-out/extra-intellij-output' /}
+  {param description}
+    This flag decides whether or not extra library modules will be generated for Android library
+    modules and specifies the root location of those extra modules.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}

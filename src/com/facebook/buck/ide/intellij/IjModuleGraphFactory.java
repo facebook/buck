@@ -23,6 +23,7 @@ import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleFactory;
+import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -35,6 +36,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -229,6 +231,7 @@ public final class IjModuleGraphFactory {
     ImmutableMap.Builder<IjProjectElement, ImmutableMap<IjProjectElement, DependencyType>>
         depsBuilder = ImmutableMap.builder();
     final Set<IjLibrary> referencedLibraries = new HashSet<>();
+    Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
     for (final IjModule module : ImmutableSet.copyOf(rulesToModules.values())) {
       Map<IjProjectElement, DependencyType> moduleDeps = new HashMap<>();
@@ -300,6 +303,15 @@ public final class IjModuleGraphFactory {
         moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
       }
 
+      if (extraCompileOutputRootPath.isPresent()
+          && !module.getExtraModuleDependencies().isEmpty()) {
+        IjModule extraModule =
+            createExtraModuleForCompilerOutput(
+                module, projectConfig, projectFilesystem, extraCompileOutputRootPath.get());
+        moduleDeps.put(extraModule, DependencyType.PROD);
+        depsBuilder.put(extraModule, ImmutableMap.of());
+      }
+
       moduleDeps
           .keySet()
           .stream()
@@ -313,6 +325,38 @@ public final class IjModuleGraphFactory {
     referencedLibraries.forEach(library -> depsBuilder.put(library, ImmutableMap.of()));
 
     return new IjModuleGraph(depsBuilder.build());
+  }
+
+  private static IjModule createExtraModuleForCompilerOutput(
+      IjModule module,
+      IjProjectConfig projectConfig,
+      ProjectFilesystem projectFilesystem,
+      Path extraCompileOutputRootPath) {
+    Path projectRootPath = Paths.get(projectConfig.getProjectRoot());
+    Path extraModuleBasePath =
+        Paths.get(projectRootPath.toString(), extraCompileOutputRootPath.toString())
+            .resolve(projectRootPath.relativize(module.getModuleBasePath()));
+
+    Path extraModuleRelativePath = projectRootPath.relativize(extraModuleBasePath.normalize());
+    if (!projectFilesystem.exists(extraModuleRelativePath)) {
+      try {
+        projectFilesystem.mkdirs(extraModuleRelativePath);
+      } catch (IOException e) {
+        throw new AssertionError(
+            "Could not make directories for extra module for compiler output module: "
+                + extraModuleRelativePath.toString());
+      }
+    }
+
+    return IjModule.builder()
+        .setModuleBasePath(extraModuleBasePath)
+        .setTargets(ImmutableSet.of())
+        .addAllFolders(ImmutableSet.of())
+        .putAllDependencies(ImmutableMap.of())
+        .setLanguageLevel(module.getLanguageLevel())
+        .setModuleType(IjModuleType.ANDROID_MODULE)
+        .setCompilerOutputPath(module.getExtraModuleDependencies().asList().get(0))
+        .build();
   }
 
   private static boolean isInRootCell(

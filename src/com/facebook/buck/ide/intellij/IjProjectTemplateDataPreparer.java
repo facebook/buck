@@ -363,6 +363,16 @@ public class IjProjectTemplateDataPreparer {
 
     boolean isAndroidFacetPresent = androidFacetOptional.isPresent();
     androidProperties.put("enabled", isAndroidFacetPresent);
+
+    Path basePath = module.getModuleBasePath();
+
+    Optional<Path> extraCompilerOutputPath = projectConfig.getExtraCompilerOutputModulesPath();
+    if (isAndroidFacetPresent
+        || (extraCompilerOutputPath.isPresent()
+            && basePath.toString().contains(extraCompilerOutputPath.get().toString()))) {
+      addAndroidCompilerOutputPath(androidProperties, module, basePath);
+    }
+
     if (!isAndroidFacetPresent) {
       return androidProperties;
     }
@@ -376,8 +386,6 @@ public class IjProjectTemplateDataPreparer {
         "disallow_user_configuration",
         projectConfig.isAggregatingAndroidResourceModulesEnabled()
             && projectConfig.getAggregationMode() != AggregationMode.NONE);
-
-    Path basePath = module.getModuleBasePath();
 
     addAndroidApkPaths(androidProperties, module, basePath, androidFacet);
     addAndroidAssetPaths(androidProperties, module, androidFacet);
