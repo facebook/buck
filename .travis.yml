@@ -8,8 +8,9 @@ env:
   - CI_ACTION=heavy_integration
   - CI_ACTION=ant
 
-# Use Ubuntu 14.04
-dist: trusty
+# Force Ubuntu 12.04 to support old dependencies
+# TODO(ttsugrii): upgrade to trusty once all deps are fixed
+dist: precise
 
 # Enable container-based architecture.
 sudo: false
@@ -22,7 +23,7 @@ addons:
     packages:
       # Travis is on 64bit and there will be a cryptic aapt error w/o these libs.
       # For native code tests, we need some additional libraries if we are in a 64-bit environment.
-      - libgd2
+      - libgd2-xpm
       - libc6:i386
       - libstdc++6:i386
       - zlib1g:i386
