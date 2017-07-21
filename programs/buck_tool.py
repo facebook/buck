@@ -133,7 +133,7 @@ class JvmCrashLogger(object):
         for file in errors:
             with open(file, 'r') as f:
                 message, loglines = self._format_jvm_errors(f)
-                print(loglines, file=sys.stderr)
+                logging.error(loglines)
 
 
 class BuckTool(object):
@@ -244,11 +244,9 @@ class BuckTool(object):
                         if not self._is_buckd_running():
                             self.launch_buckd(buck_version_uid=buck_version_uid)
                     elif use_buckd and not has_watchman:
-                        print("Not using buckd because watchman isn't installed.",
-                              file=sys.stderr)
+                        logging.warning("Not using buckd because watchman isn't installed.")
                     elif not use_buckd:
-                        print("Not using buckd because NO_BUCKD is set.",
-                              file=sys.stderr)
+                        logging.warning("Not using buckd because NO_BUCKD is set.")
 
                 env = self._environ_for_buck()
                 env['BUCK_BUILD_ID'] = build_id
@@ -273,11 +271,10 @@ class BuckTool(object):
                                     env['BUCK_BUILD_ID'] = str(uuid.uuid4())
                                     now = time.time()
                                     if not busy_diagnostic_displayed:
-                                        print("Buck daemon is busy with another command. " +
-                                              "Waiting for it to become free...\n" +
-                                              "You can use 'buck kill' to kill buck " +
-                                              "if you suspect buck is stuck.",
-                                              file=sys.stderr)
+                                        logging.info("Buck daemon is busy with another command. " +
+                                                     "Waiting for it to become free...\n" +
+                                                     "You can use 'buck kill' to kill buck " +
+                                                     "if you suspect buck is stuck.")
                                         busy_diagnostic_displayed = True
                                     time.sleep(1)
                         return exit_code
