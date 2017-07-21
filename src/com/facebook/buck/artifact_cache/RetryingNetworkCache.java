@@ -22,6 +22,7 @@ import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -62,17 +63,19 @@ public class RetryingNetworkCache implements ArtifactCache {
       cacheResult.cacheError().ifPresent(allCacheErrors::add);
       LOG.debug(
           "Failed to fetch %s after %d/%d attempts, exception: %s",
-          ruleKey, retryCount + 1, maxFetchRetries, cacheResult);
+          ruleKey, retryCount + 1, maxFetchRetries, cacheResult.cacheError());
       lastCacheResult = cacheResult;
     }
-    String msg = String.join("\n", allCacheErrors);
-    buckEventBus.post(
-        ConsoleEvent.warning(
-            "Failed to fetch %s over %s after %d attempts.",
-            ruleKey, cacheMode.name(), maxFetchRetries));
     Preconditions.checkNotNull(
         lastCacheResult,
         "One error should have happened, therefore lastCacheResult should be non null.");
+    String msg = String.join("\n", allCacheErrors);
+    if (!msg.contains(NoHealthyServersException.class.getName())) {
+      buckEventBus.post(
+          ConsoleEvent.warning(
+              "Failed to fetch %s over %s after %d attempts.",
+              ruleKey, cacheMode.name(), maxFetchRetries));
+    }
     return CacheResult.builder().from(lastCacheResult).setCacheError(msg).build();
   }
 
