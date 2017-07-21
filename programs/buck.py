@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import logging
 import os
 import sys
 import uuid
 import zipfile
 
+from buck_logging import setup_logging
 from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from pynailgun.ng import NailgunException
@@ -45,6 +47,7 @@ def main(argv):
 
 if __name__ == "__main__":
     try:
+        setup_logging()
         propagate_failure(main(sys.argv))
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
