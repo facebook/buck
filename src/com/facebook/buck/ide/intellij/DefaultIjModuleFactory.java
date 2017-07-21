@@ -105,6 +105,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setLanguageLevel(context.getJavaLanguageLevel())
         .setModuleType(context.getModuleType())
         .setMetaInfDirectory(context.getMetaInfDirectory())
+        .setCompilerOutputPath(context.getCompilerOutputPath())
         .build();
   }
 }
