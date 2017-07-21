@@ -321,28 +321,14 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
       ImmutableSortedSet<BuildRule> nativeLibsRules =
           BuildRules.toBuildRulesFor(originalBuildTarget, ruleResolver, nativeLibsTargets);
-      BuildRuleParams paramsForCopyNativeLibraries =
-          buildRuleParams
-              .withDeclaredDeps(
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(nativeLibsRules)
-                      .addAll(ruleFinder.filterBuildRuleInputs(nativeLibsDirectories))
-                      .addAll(filteredStrippedLibsMap.keySet())
-                      .addAll(filteredStrippedLibsAssetsMap.keySet())
-                      .build())
-              .withoutExtraDeps();
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
-          new CopyNativeLibraries(
-              originalBuildTarget.withAppendedFlavors(
-                  InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName())),
-              projectFilesystem,
-              paramsForCopyNativeLibraries,
-              ImmutableSet.copyOf(nativeLibsDirectories),
-              ImmutableSet.copyOf(filteredStrippedLibsMap.values()),
-              ImmutableSet.copyOf(filteredStrippedLibsAssetsMap.values()),
-              cpuFilters,
-              module.getName()));
+          createCopyNativeLibraries(
+              module,
+              filteredStrippedLibsMap,
+              filteredStrippedLibsAssetsMap,
+              nativeLibsDirectories,
+              nativeLibsRules));
       hasCopyNativeLibraries = true;
     }
     return resultBuilder
@@ -351,6 +337,34 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
                 : Optional.empty())
         .build();
+  }
+
+  private CopyNativeLibraries createCopyNativeLibraries(
+      APKModule module,
+      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap,
+      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap,
+      ImmutableCollection<SourcePath> nativeLibsDirectories,
+      ImmutableSortedSet<BuildRule> nativeLibsRules) {
+    BuildRuleParams paramsForCopyNativeLibraries =
+        buildRuleParams
+            .withDeclaredDeps(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(nativeLibsRules)
+                    .addAll(ruleFinder.filterBuildRuleInputs(nativeLibsDirectories))
+                    .addAll(filteredStrippedLibsMap.keySet())
+                    .addAll(filteredStrippedLibsAssetsMap.keySet())
+                    .build())
+            .withoutExtraDeps();
+    return new CopyNativeLibraries(
+        originalBuildTarget.withAppendedFlavors(
+            InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName())),
+        projectFilesystem,
+        paramsForCopyNativeLibraries,
+        ImmutableSet.copyOf(nativeLibsDirectories),
+        ImmutableSet.copyOf(filteredStrippedLibsMap.values()),
+        ImmutableSet.copyOf(filteredStrippedLibsAssetsMap.values()),
+        cpuFilters,
+        module.getName());
   }
 
   // Note: this method produces rules that will be shared between multiple apps,
