@@ -1,4 +1,5 @@
 from __future__ import print_function
+import logging
 import os
 import sys
 import textwrap
@@ -96,10 +97,9 @@ class BuckRepo(BuckTool):
                         fake_buck_version = fake_buck_version_file.read().strip()
 
             if fake_buck_version:
-                print(textwrap.dedent("""\
-                ::: Faking buck version {}, despite your buck directory not being that version."""
-                      .format(fake_buck_version)),
-                      file=sys.stderr)
+                logging.info(("::: Faking buck version {}, "
+                             "despite your buck directory not being that version.")
+                             .format(fake_buck_version))
                 return fake_buck_version
 
             # First try to get the "clean" buck version.  If it succeeds,

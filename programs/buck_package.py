@@ -3,6 +3,7 @@ import errno
 import contextlib
 import os
 import json
+import logging
 import shutil
 import stat
 import sys
@@ -56,10 +57,9 @@ class BuckPackage(BuckTool):
     def _get_buck_version_uid(self):
         fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
         if fake_buck_version:
-            print(textwrap.dedent("""\
-            ::: Faking buck version {}, despite your buck directory not being that version."""
-                  .format(fake_buck_version)),
-                  file=sys.stderr)
+            logging.info(("::: Faking buck version {}, "
+                          "despite your buck directory not being that version.")
+                         .format(fake_buck_version))
             return fake_buck_version
         return self._package_info['version']
 

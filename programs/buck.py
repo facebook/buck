@@ -52,7 +52,7 @@ if __name__ == "__main__":
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
     except (BuckToolException, NailgunException, NoBuckConfigFoundException) as e:
-        print(str(e), file=sys.stderr)
+        logging.error(str(e))
         sys.exit(1)
     except KeyboardInterrupt:
         # Most shells set exit code to 128 + <Signal Number>
