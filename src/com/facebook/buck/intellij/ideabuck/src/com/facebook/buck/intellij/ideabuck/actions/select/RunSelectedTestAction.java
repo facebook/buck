@@ -43,7 +43,7 @@ import com.intellij.psi.PsiMethod;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.swing.*;
+import javax.swing.Icon;
 
 /**
  * Abstract class collecting common logic for running and debugging buck tests from the editor. This
@@ -135,11 +135,11 @@ public class RunSelectedTestAction extends AnAction {
       VirtualFile containingFile,
       VirtualFile buckFile,
       boolean debug) {
-    BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     TestConfigurationType type = new TestConfigurationType();
     if (type.getConfigurationFactories().length == 0) {
       return;
     }
+    BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
     RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings
         = (RunnerAndConfigurationSettingsImpl)runManager.createRunConfiguration(
