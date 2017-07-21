@@ -43,6 +43,7 @@ public class GroovyLibraryModuleRule extends BaseIjModuleRule<GroovyLibraryDescr
   public void apply(
       TargetNode<GroovyLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
     addDepsAndSources(target, false /* wantsPackagePrefix */, context);
+    context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
   @Override

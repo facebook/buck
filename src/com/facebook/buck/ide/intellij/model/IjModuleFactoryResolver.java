@@ -71,4 +71,10 @@ public interface IjModuleFactoryResolver {
    *     for the given node.
    */
   Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
+
+  /**
+   * @param targetNode node which may specify it's own compiler output path.
+   * @return path to the classes that make up the compiler output.
+   */
+  Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
 }
