@@ -42,7 +42,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -288,23 +287,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     }
 
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
-        generateStripRules(
-            projectFilesystem,
-            buildRuleParams,
-            ruleFinder,
-            ruleResolver,
-            originalBuildTarget,
-            nativePlatforms,
-            nativeLinkableLibs);
+        generateStripRules(nativeLinkableLibs);
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
-        generateStripRules(
-            projectFilesystem,
-            buildRuleParams,
-            ruleFinder,
-            ruleResolver,
-            originalBuildTarget,
-            nativePlatforms,
-            nativeLinkableLibsAssets);
+        generateStripRules(nativeLinkableLibsAssets);
 
     resultBuilder.setUnstrippedLibraries(
         RichStream.from(nativeLinkableLibs.values())
@@ -312,7 +297,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             .toImmutableSortedSet(Ordering.natural()));
 
     for (APKModule module : apkModules) {
-
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap =
           ImmutableMap.copyOf(
               FluentIterable.from(strippedLibsMap.entrySet())
@@ -371,13 +355,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   // Note: this method produces rules that will be shared between multiple apps,
   // so be careful not to let information about this particular app slip into the definitions.
-  private static ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
-      SourcePathRuleFinder ruleFinder,
-      BuildRuleResolver ruleResolver,
-      BuildTarget appRuleTarget,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
+  private ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
       ImmutableMap<AndroidLinkableMetadata, SourcePath> libs) {
     ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
     for (Map.Entry<AndroidLinkableMetadata, SourcePath> entry : libs.entrySet()) {
@@ -391,7 +369,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       // This will be used for stripping the C++ runtime.  We could use something more easily
       // shareable (like just using the app's containing directory, or even the repo root),
       // but stripping the C++ runtime is pretty fast, so just keep the safe old behavior for now.
-      BuildTarget baseBuildTarget = appRuleTarget;
+      BuildTarget baseBuildTarget = originalBuildTarget;
       // But if we're stripping a cxx_library, use that library as the base of the target
       // to allow sharing the rule between all apps that depend on it.
       if (sourcePath instanceof BuildTargetSourcePath) {
@@ -399,36 +377,16 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       }
 
       String sharedLibrarySoName = entry.getKey().getSoName();
-      BuildTarget targetForStripRule =
-          baseBuildTarget.withAppendedFlavors(
-              InternalFlavor.of("android-strip"),
-              InternalFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)),
-              InternalFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())));
-
-      Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(targetForStripRule);
-      StripLinkable stripLinkable;
-      if (previouslyCreated.isPresent()) {
-        stripLinkable = (StripLinkable) previouslyCreated.get();
-      } else {
-        BuildRuleParams paramsForStripLinkable =
-            buildRuleParams
-                .withDeclaredDeps(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
-                        .build())
-                .withoutExtraDeps();
-
-        stripLinkable =
-            new StripLinkable(
-                targetForStripRule,
-                projectFilesystem,
-                paramsForStripLinkable,
-                platform.getCxxPlatform().getStrip(),
-                sourcePath,
-                sharedLibrarySoName);
-
-        ruleResolver.addToIndex(stripLinkable);
-      }
+      StripLinkable stripLinkable =
+          requireStripLinkable(
+              projectFilesystem,
+              ruleFinder,
+              ruleResolver,
+              sourcePath,
+              targetCpuType,
+              platform,
+              baseBuildTarget,
+              sharedLibrarySoName);
       result.put(
           stripLinkable,
           StrippedObjectDescription.builder()
@@ -439,5 +397,35 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               .build());
     }
     return result.build();
+  }
+
+  // Note: this method produces rules that will be shared between multiple apps,
+  // so be careful not to let information about this particular app slip into the definitions.
+  private static StripLinkable requireStripLinkable(
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      BuildRuleResolver ruleResolver,
+      SourcePath sourcePath,
+      NdkCxxPlatforms.TargetCpuType targetCpuType,
+      NdkCxxPlatform platform,
+      BuildTarget baseBuildTarget,
+      String sharedLibrarySoName) {
+    BuildTarget targetForStripRule =
+        baseBuildTarget.withAppendedFlavors(
+            InternalFlavor.of("android-strip"),
+            InternalFlavor.of(Flavor.replaceInvalidCharacters(sharedLibrarySoName)),
+            InternalFlavor.of(Flavor.replaceInvalidCharacters(targetCpuType.name())));
+
+    return (StripLinkable)
+        ruleResolver.computeIfAbsent(
+            targetForStripRule,
+            (buildTarget) ->
+                new StripLinkable(
+                    targetForStripRule,
+                    projectFilesystem,
+                    ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sourcePath)),
+                    platform.getCxxPlatform().getStrip(),
+                    sourcePath,
+                    sharedLibrarySoName));
   }
 }
