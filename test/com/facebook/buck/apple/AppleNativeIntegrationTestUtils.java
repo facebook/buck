@@ -23,6 +23,8 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class AppleNativeIntegrationTestUtils {
@@ -33,7 +35,17 @@ public class AppleNativeIntegrationTestUtils {
       BuckConfig buckConfig) {
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-    return appleConfig.getAppleSdkPaths(executor);
+    Optional<Path> appleDeveloperDirectory =
+        appleConfig.getAppleDeveloperDirectorySupplier(executor).get();
+    try {
+      ImmutableMap<String, AppleToolchain> toolchains =
+          AppleToolchainDiscovery.discoverAppleToolchains(
+              appleDeveloperDirectory, appleConfig.getExtraToolchainPaths());
+      return AppleSdkDiscovery.discoverAppleSdkPaths(
+          appleDeveloperDirectory, appleConfig.getExtraPlatformPaths(), toolchains, appleConfig);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static Optional<AppleSdk> anySdkForPlatform(
