@@ -34,7 +34,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
-import com.facebook.buck.step.fs.LogContentsOfFileStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -44,7 +43,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.logging.Level;
 
 public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
@@ -174,21 +172,6 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(
             new FileScrubberStep(
                 getProjectFilesystem(), output, linker.getScrubbers(cellRoots.build())))
-        .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(argFilePath), Level.FINEST))
-        .add(
-            RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), argFilePath)))
-        .add(new LogContentsOfFileStep(getProjectFilesystem().resolve(fileListPath), Level.FINEST))
-        .add(
-            RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), fileListPath)))
-        .add(
-            RmStep.of(
-                    BuildCellRelativePath.fromCellRelativePath(
-                        context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir))
-                .withRecursive(true))
         .build();
   }
 
