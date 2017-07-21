@@ -39,6 +39,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -48,10 +49,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -211,21 +214,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsBuilder =
         ImmutableMap.builder();
-
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder =
         ImmutableMap.builder();
 
-    // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
-    // We should fix this by assigning a default list of CPU filters in the descriptions, but
-    // until we do, if the set of filters is empty, just build for all available platforms.
-    ImmutableSet<NdkCxxPlatforms.TargetCpuType> filters =
-        cpuFilters.isEmpty() ? nativePlatforms.keySet() : cpuFilters;
-    for (NdkCxxPlatforms.TargetCpuType targetCpuType : filters) {
-      NdkCxxPlatform platform =
-          Preconditions.checkNotNull(
-              nativePlatforms.get(targetCpuType),
-              "Unknown platform type " + targetCpuType.toString());
-
+    for (NdkCxxPlatforms.TargetCpuType targetCpuType :
+        getFilteredPlatforms(nativePlatforms, cpuFilters)) {
+      NdkCxxPlatform platform = nativePlatforms.get(targetCpuType);
       // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
       if (populateMapWithLinkables(
               nativeLinkables, nativeLinkableLibsBuilder, targetCpuType, platform)
@@ -257,7 +251,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibs =
         nativeLinkableLibsBuilder.build();
-
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets =
         nativeLinkableLibsAssetsBuilder.build();
 
@@ -367,8 +360,22 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         module.getName());
   }
 
-  // Note: this method produces rules that will be shared between multiple apps,
-  // so be careful not to let information about this particular app slip into the definitions.
+  private static Iterable<NdkCxxPlatforms.TargetCpuType> getFilteredPlatforms(
+      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters) {
+    // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
+    // We should fix this by assigning a default list of CPU filters in the descriptions, but
+    // until we do, if the set of filters is empty, just build for all available platforms.
+    if (cpuFilters.isEmpty()) {
+      return nativePlatforms.keySet();
+    }
+    Set<NdkCxxPlatforms.TargetCpuType> missing =
+        Sets.difference(cpuFilters, nativePlatforms.keySet());
+    Preconditions.checkState(
+        missing.isEmpty(), "Unknown platform types <" + Joiner.on(",").join(missing) + ">");
+    return cpuFilters;
+  }
+
   private ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
       ImmutableMap<AndroidLinkableMetadata, SourcePath> libs) {
     ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
