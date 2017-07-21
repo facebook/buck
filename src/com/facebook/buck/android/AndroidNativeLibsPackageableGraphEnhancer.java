@@ -342,24 +342,15 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap,
       ImmutableCollection<SourcePath> nativeLibsDirectories,
       ImmutableSortedSet<BuildRule> nativeLibsRules) {
-    BuildRuleParams paramsForCopyNativeLibraries =
-        buildRuleParams
-            .withDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(nativeLibsRules)
-                    .addAll(ruleFinder.filterBuildRuleInputs(nativeLibsDirectories))
-                    .addAll(filteredStrippedLibsMap.keySet())
-                    .addAll(filteredStrippedLibsAssetsMap.keySet())
-                    .build())
-            .withoutExtraDeps();
     return new CopyNativeLibraries(
         originalBuildTarget.withAppendedFlavors(
             InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName())),
         projectFilesystem,
-        paramsForCopyNativeLibraries,
+        ruleFinder,
+        nativeLibsRules,
         ImmutableSet.copyOf(nativeLibsDirectories),
-        ImmutableSet.copyOf(filteredStrippedLibsMap.values()),
-        ImmutableSet.copyOf(filteredStrippedLibsAssetsMap.values()),
+        filteredStrippedLibsMap,
+        filteredStrippedLibsAssetsMap,
         cpuFilters,
         module.getName());
   }
