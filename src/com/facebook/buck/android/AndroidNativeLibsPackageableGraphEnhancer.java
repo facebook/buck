@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -201,8 +200,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         ImmutableMap.builder();
 
     boolean hasCopyNativeLibraries = false;
-    List<NdkCxxPlatform> platformsWithNativeLibs = new ArrayList<>();
-    List<NdkCxxPlatform> platformsWithNativeLibsAssets = new ArrayList<>();
 
     // Make sure we process the root module last so that we know if any of the module contain
     // libraries that depend on a non-system runtime and add it to the root module if needed.
@@ -221,33 +218,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         getFilteredPlatforms(nativePlatforms, cpuFilters)) {
       NdkCxxPlatform platform = nativePlatforms.get(targetCpuType);
       // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
-      if (populateMapWithLinkables(
-              nativeLinkables, nativeLinkableLibsBuilder, targetCpuType, platform)
-          && !platformsWithNativeLibs.contains(platform)) {
-        platformsWithNativeLibs.add(platform);
-      }
-      if (populateMapWithLinkables(
-              nativeLinkablesAssets, nativeLinkableLibsAssetsBuilder, targetCpuType, platform)
-          && !platformsWithNativeLibsAssets.contains(platform)) {
-        platformsWithNativeLibsAssets.add(platform);
-      }
-
-      // If we're using a C/C++ runtime other than the system one, add it to the APK.
-      NdkCxxRuntime cxxRuntime = platform.getCxxRuntime();
-      if ((platformsWithNativeLibs.contains(platform)
-              || platformsWithNativeLibsAssets.contains(platform))
-          && !cxxRuntime.equals(NdkCxxRuntime.SYSTEM)) {
-        AndroidLinkableMetadata runtimeLinkableMetadata =
-            AndroidLinkableMetadata.builder()
-                .setTargetCpuType(targetCpuType)
-                .setSoName(cxxRuntime.getSoname())
-                .setApkModule(apkModuleGraph.getRootAPKModule())
-                .build();
-        nativeLinkableLibsBuilder.put(
-            runtimeLinkableMetadata,
-            new PathSourcePath(projectFilesystem, platform.getCxxSharedRuntimePath().get()));
-      }
+      populateMapWithLinkables(nativeLinkables, nativeLinkableLibsBuilder, targetCpuType, platform);
+      populateMapWithLinkables(
+          nativeLinkablesAssets, nativeLinkableLibsAssetsBuilder, targetCpuType, platform);
     }
+    // Adds a cxxruntime linkable to the nativeLinkableLibsBuilder for every platform that needs it.
+    addCxxRuntimeLinkables(nativeLinkableLibsBuilder, nativeLinkableLibsAssetsBuilder);
 
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibs =
         nativeLinkableLibsBuilder.build();
@@ -330,6 +306,34 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
                 : Optional.empty())
         .build();
+  }
+
+  private void addCxxRuntimeLinkables(
+      ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsBuilder,
+      ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder) {
+    RichStream.from(nativeLinkableLibsBuilder.build().keySet())
+        .concat(RichStream.from(nativeLinkableLibsAssetsBuilder.build().keySet()))
+        .map(AndroidLinkableMetadata::getTargetCpuType)
+        .distinct()
+        .forEach(
+            targetCpuType -> {
+              NdkCxxPlatform platform =
+                  Preconditions.checkNotNull(nativePlatforms.get(targetCpuType));
+              NdkCxxRuntime cxxRuntime = platform.getCxxRuntime();
+              if (cxxRuntime.equals(NdkCxxRuntime.SYSTEM)) {
+                // The system runtime doesn't need to be packaged with apks.
+                return;
+              }
+              AndroidLinkableMetadata runtimeLinkableMetadata =
+                  AndroidLinkableMetadata.builder()
+                      .setTargetCpuType(targetCpuType)
+                      .setSoName(cxxRuntime.getSoname())
+                      .setApkModule(apkModuleGraph.getRootAPKModule())
+                      .build();
+              nativeLinkableLibsBuilder.put(
+                  runtimeLinkableMetadata,
+                  new PathSourcePath(projectFilesystem, platform.getCxxSharedRuntimePath().get()));
+            });
   }
 
   private CopyNativeLibraries createCopyNativeLibraries(
