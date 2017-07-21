@@ -33,19 +33,15 @@ import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 
@@ -178,7 +174,7 @@ public class PythonBuckConfig {
   public PythonEnvironment getPythonEnvironment(
       ProcessExecutor processExecutor, Optional<String> configPath) throws InterruptedException {
     Path pythonPath = Paths.get(getPythonInterpreter(configPath));
-    PythonVersion pythonVersion = getPythonVersion(processExecutor, pythonPath);
+    PythonVersion pythonVersion = PythonVersion.fromInterpreter(processExecutor, pythonPath);
     return new PythonEnvironment(pythonPath, pythonVersion);
   }
 
@@ -237,64 +233,6 @@ public class PythonBuckConfig {
 
   public String getPexExtension() {
     return delegate.getValue(SECTION, "pex_extension").orElse(".pex");
-  }
-
-  private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
-      throws InterruptedException {
-    try {
-      // Taken from pex's interpreter.py.
-      String versionId =
-          "import sys\n"
-              + "\n"
-              + "if hasattr(sys, 'pypy_version_info'):\n"
-              + "  subversion = 'PyPy'\n"
-              + "elif sys.platform.startswith('java'):\n"
-              + "  subversion = 'Jython'\n"
-              + "else:\n"
-              + "  subversion = 'CPython'\n"
-              + "\n"
-              + "print('%s %s %s' % (subversion, sys.version_info[0], "
-              + "sys.version_info[1]))\n";
-
-      ProcessExecutor.Result versionResult =
-          processExecutor.launchAndExecute(
-              ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-").build(),
-              EnumSet.of(
-                  ProcessExecutor.Option.EXPECTING_STD_OUT,
-                  ProcessExecutor.Option.EXPECTING_STD_ERR),
-              Optional.of(versionId),
-              /* timeOutMs */ Optional.empty(),
-              /* timeoutHandler */ Optional.empty());
-      return extractPythonVersion(pythonPath, versionResult);
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e, "Could not run \"%s - < [code]\": %s", pythonPath, e.getMessage());
-    }
-  }
-
-  @VisibleForTesting
-  static PythonVersion extractPythonVersion(Path pythonPath, ProcessExecutor.Result versionResult) {
-    if (versionResult.getExitCode() == 0) {
-      String versionString =
-          CharMatcher.whitespace()
-              .trimFrom(
-                  CharMatcher.whitespace().trimFrom(versionResult.getStderr().get())
-                      + CharMatcher.whitespace()
-                          .trimFrom(versionResult.getStdout().get())
-                          .replaceAll("\u001B\\[[;\\d]*m", ""));
-      String[] versionLines = versionString.split("\\r?\\n");
-
-      String[] compatibilityVersion = versionLines[0].split(" ");
-      if (compatibilityVersion.length != 3) {
-        throw new HumanReadableException(
-            "`%s - < [code]` returned an invalid version string %s", pythonPath, versionString);
-      }
-
-      return PythonVersion.of(
-          compatibilityVersion[0], compatibilityVersion[1] + "." + compatibilityVersion[2]);
-    } else {
-      throw new HumanReadableException(versionResult.getStderr().get());
-    }
   }
 
   public boolean shouldCacheBinaries() {
