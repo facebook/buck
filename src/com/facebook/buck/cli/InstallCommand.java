@@ -454,7 +454,7 @@ public class InstallCommand extends BuildCommand {
     }
 
     // We've installed the application successfully.
-    // Is either of --activity or --run present?
+    // Are any of --activity, --process, or --run present?
     if (shouldStartActivity()) {
       int exitCode =
           adbHelper.startActivity(
