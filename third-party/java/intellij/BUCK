@@ -1,6 +1,7 @@
 java_library(
     name = "intellij-plugin-sdk",
     exported_deps = [
+        ":android",
         ":annotations",
         ":extensions",
         ":idea",
@@ -47,4 +48,9 @@ prebuilt_jar(
 prebuilt_jar(
     name = "jdom",
     binary_jar = "jdom.jar",
+)
+
+prebuilt_jar(
+    name = "android",
+    binary_jar = "android.jar",
 )
