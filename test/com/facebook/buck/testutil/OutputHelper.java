@@ -34,7 +34,7 @@ public class OutputHelper {
    * Regex for matching buck output time format. Based on time format definition from {@link
    * com.facebook.buck.util.TimeFormat}
    */
-  public static final String BUCK_TIME_OUTPUT_FORMAT = "<?\\d+m?s";
+  public static final String BUCK_TIME_OUTPUT_FORMAT = "<?(\\d|\\.)+m?s";
 
   /**
    * Generates a regular expression that should match a buck test output line in following format:
