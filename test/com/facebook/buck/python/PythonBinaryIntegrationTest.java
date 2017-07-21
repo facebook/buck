@@ -142,7 +142,8 @@ public class PythonBinaryIntegrationTest {
     Files.createSymbolicLink(
         link, workspace.getPath(Splitter.on(" ").splitToList(output).get(1)).toAbsolutePath());
     ProcessExecutor.Result result =
-        workspace.runCommand(getPythonBuckConfig().getPythonInterpreter(), link.toString());
+        workspace.runCommand(
+            getPythonBuckConfig().getPythonInterpreter().toString(), link.toString());
     assertThat(
         result.getStdout().orElse("") + result.getStderr().orElse(""),
         result.getExitCode(),

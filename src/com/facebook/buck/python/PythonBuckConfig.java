@@ -34,12 +34,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -84,11 +85,7 @@ public class PythonBuckConfig {
   @VisibleForTesting
   protected PythonPlatform getDefaultPythonPlatform(ProcessExecutor executor)
       throws InterruptedException {
-    return getPythonPlatform(
-        executor,
-        DEFAULT_PYTHON_PLATFORM,
-        delegate.getValue(SECTION, "interpreter"),
-        delegate.getBuildTarget(SECTION, "library"));
+    return getPythonPlatform(executor, SECTION, DEFAULT_PYTHON_PLATFORM);
   }
 
   /**
@@ -108,9 +105,8 @@ public class PythonBuckConfig {
         builder.add(
             getPythonPlatform(
                 processExecutor,
-                InternalFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length())),
-                delegate.getValue(section, "interpreter"),
-                delegate.getBuildTarget(section, "library")));
+                section,
+                InternalFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length()))));
       }
     }
 
@@ -118,17 +114,24 @@ public class PythonBuckConfig {
   }
 
   private PythonPlatform getPythonPlatform(
-      ProcessExecutor processExecutor,
-      Flavor flavor,
-      Optional<String> interpreter,
-      Optional<BuildTarget> library)
-      throws InterruptedException {
-    return PythonPlatform.of(flavor, getPythonEnvironment(processExecutor, interpreter), library);
+      ProcessExecutor processExecutor, String section, Flavor flavor) throws InterruptedException {
+    return PythonPlatform.of(
+        flavor,
+        getPythonEnvironment(processExecutor, section),
+        delegate.getBuildTarget(section, "library"));
   }
 
-  /** @return true if file is executable and not a directory. */
-  private boolean isExecutableFile(File file) {
-    return file.canExecute() && !file.isDirectory();
+  private Path findInterpreter(ImmutableList<String> interpreterNames) {
+    Preconditions.checkArgument(!interpreterNames.isEmpty());
+    for (String interpreterName : interpreterNames) {
+      Optional<Path> python =
+          exeFinder.getOptionalExecutable(Paths.get(interpreterName), delegate.getEnvironment());
+      if (python.isPresent()) {
+        return python.get().toAbsolutePath();
+      }
+    }
+    throw new HumanReadableException(
+        "No python interpreter found (searched %s).", Joiner.on(", ").join(interpreterNames));
   }
 
   /**
@@ -137,51 +140,36 @@ public class PythonBuckConfig {
    *
    * @return The found python interpreter.
    */
-  public String getPythonInterpreter(Optional<String> configPath) {
-    ImmutableList<String> pythonInterpreterNames = PYTHON_INTERPRETER_NAMES;
-    if (configPath.isPresent()) {
-      // Python path in config. Use it or report error if invalid.
-      File python = new File(configPath.get());
-      if (isExecutableFile(python)) {
-        return python.getAbsolutePath();
-      }
-      if (python.isAbsolute()) {
-        throw new HumanReadableException("Not a python executable: " + configPath.get());
-      }
-      pythonInterpreterNames = ImmutableList.of(configPath.get());
+  public Path getPythonInterpreter(Optional<String> config) {
+    if (!config.isPresent()) {
+      return findInterpreter(PYTHON_INTERPRETER_NAMES);
     }
-
-    for (String interpreterName : pythonInterpreterNames) {
-      Optional<Path> python =
-          exeFinder.getOptionalExecutable(Paths.get(interpreterName), delegate.getEnvironment());
-      if (python.isPresent()) {
-        return python.get().toAbsolutePath().toString();
-      }
+    Path configPath = Paths.get(config.get());
+    if (!configPath.isAbsolute()) {
+      return findInterpreter(ImmutableList.of(config.get()));
     }
-
-    if (configPath.isPresent()) {
-      throw new HumanReadableException("Not a python executable: " + configPath.get());
-    } else {
-      throw new HumanReadableException("No python2 or python found.");
-    }
+    return configPath;
   }
 
-  public String getPythonInterpreter() {
-    Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
-    return getPythonInterpreter(configPath);
+  private Path getPythonInterpreter(String section) {
+    return getPythonInterpreter(delegate.getValue(section, "interpreter"));
   }
 
-  public PythonEnvironment getPythonEnvironment(
-      ProcessExecutor processExecutor, Optional<String> configPath) throws InterruptedException {
-    Path pythonPath = Paths.get(getPythonInterpreter(configPath));
-    PythonVersion pythonVersion = PythonVersion.fromInterpreter(processExecutor, pythonPath);
+  /** @return the {@link Path} to the default python interpreter. */
+  public Path getPythonInterpreter() {
+    return getPythonInterpreter(SECTION);
+  }
+
+  private PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor, String section)
+      throws InterruptedException {
+    Path pythonPath = getPythonInterpreter(section);
+    PythonVersion pythonVersion = getVersion(processExecutor, section, pythonPath);
     return new PythonEnvironment(pythonPath, pythonVersion);
   }
 
   public PythonEnvironment getPythonEnvironment(ProcessExecutor processExecutor)
       throws InterruptedException {
-    Optional<String> configPath = delegate.getValue(SECTION, "interpreter");
-    return getPythonEnvironment(processExecutor, configPath);
+    return getPythonEnvironment(processExecutor, SECTION);
   }
 
   public SourcePath getPathToTestMain(ProjectFilesystem filesystem) {
@@ -212,7 +200,7 @@ public class PythonBuckConfig {
     return VersionedTool.builder()
         .setName("pex")
         .setVersion(BuckVersion.getVersion())
-        .setPath(Paths.get(getPythonInterpreter()))
+        .setPath(getPythonInterpreter(SECTION))
         .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
         .build();
   }
@@ -233,6 +221,21 @@ public class PythonBuckConfig {
 
   public String getPexExtension() {
     return delegate.getValue(SECTION, "pex_extension").orElse(".pex");
+  }
+
+  private Optional<PythonVersion> getConfiguredVersion(String section) {
+    return delegate.getValue(section, "version").map(PythonVersion::fromString);
+  }
+
+  private PythonVersion getVersion(ProcessExecutor processExecutor, String section, Path path)
+      throws InterruptedException {
+
+    Optional<PythonVersion> configuredVersion = getConfiguredVersion(section);
+    if (configuredVersion.isPresent()) {
+      return configuredVersion.get();
+    }
+
+    return PythonVersion.fromInterpreter(processExecutor, path);
   }
 
   public boolean shouldCacheBinaries() {

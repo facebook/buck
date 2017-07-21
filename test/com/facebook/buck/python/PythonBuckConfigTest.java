@@ -17,13 +17,10 @@
 package com.facebook.buck.python;
 
 import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
@@ -79,57 +76,8 @@ public class PythonBuckConfigTest {
             new ExecutableFinder());
     assertEquals(
         "Should return path to temp file.",
-        configPythonFile.toAbsolutePath().toString(),
+        configPythonFile.toAbsolutePath(),
         config.getPythonInterpreter());
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenToolsPythonDoesNotExistThenItIsNotUsed() throws IOException {
-    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(ImmutableMap.of("python", ImmutableMap.of("interpreter", invalidPath)))
-                .build(),
-            new ExecutableFinder());
-    config.getPythonInterpreter();
-    fail("Should throw exception as python config is invalid.");
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenToolsPythonIsNonExecutableFileThenItIsNotUsed() throws IOException {
-    assumeThat(
-        "On windows all files are executable.", Platform.detect(), is(not(Platform.WINDOWS)));
-    Path configPythonFile = temporaryFolder.newFile("python");
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of(
-                        "python",
-                        ImmutableMap.of(
-                            "interpreter", configPythonFile.toAbsolutePath().toString())))
-                .build(),
-            new ExecutableFinder());
-    config.getPythonInterpreter();
-    fail("Should throw exception as python config is invalid.");
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void whenToolsPythonIsExecutableDirectoryThenItIsNotUsed() throws IOException {
-    Path configPythonFile = temporaryFolder.newFolder("python");
-    PythonBuckConfig config =
-        new PythonBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(
-                    ImmutableMap.of(
-                        "python",
-                        ImmutableMap.of(
-                            "interpreter", configPythonFile.toAbsolutePath().toString())))
-                .build(),
-            new ExecutableFinder());
-    config.getPythonInterpreter();
-    fail("Should throw exception as python config is invalid.");
   }
 
   @Test
@@ -180,9 +128,7 @@ public class PythonBuckConfigTest {
                 .build(),
             new ExecutableFinder());
     assertEquals(
-        "Should return path to python2.",
-        python2.toAbsolutePath().toString(),
-        config.getPythonInterpreter());
+        "Should return path to python2.", python2.toAbsolutePath(), config.getPythonInterpreter());
   }
 
   @Test(expected = HumanReadableException.class)
@@ -222,9 +168,7 @@ public class PythonBuckConfigTest {
                 .build(),
             new ExecutableFinder());
     assertEquals(
-        "Should return the first path",
-        config.getPythonInterpreter(),
-        pythonA.toAbsolutePath().toString());
+        "Should return the first path", config.getPythonInterpreter(), pythonA.toAbsolutePath());
   }
 
   @Test
