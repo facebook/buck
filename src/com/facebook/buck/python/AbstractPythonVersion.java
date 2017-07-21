@@ -26,11 +26,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractPythonVersion {
+
+  private static final Pattern VERSION_RE = Pattern.compile("(?<name>[^ ]*) (?<version>[^ ]*)");
 
   @Value.Parameter
   public abstract String getInterpreterName();
@@ -43,7 +47,18 @@ abstract class AbstractPythonVersion {
     return getInterpreterName() + " " + getVersionString();
   }
 
-  /** @return a {@link PythonVersion} extract from running the given interpreter. */
+  /** @return parse a {@link PythonVersion} from a version string (e.g. "CPython 2.7"). */
+  public static PythonVersion fromString(String versionStr) {
+    Matcher matcher = VERSION_RE.matcher(versionStr);
+    if (!matcher.matches()) {
+      throw new HumanReadableException(
+          "invalid version string \"%s\", expected `<name> <version>` (e.g. `CPython 2.7`)",
+          versionStr);
+    }
+    return PythonVersion.of(matcher.group("name"), matcher.group("version"));
+  }
+
+  /** @return a {@link PythonVersion} extracted from running the given interpreter. */
   public static PythonVersion fromInterpreter(ProcessExecutor processExecutor, Path pythonPath)
       throws InterruptedException {
     try {
@@ -58,7 +73,7 @@ abstract class AbstractPythonVersion {
               + "else:\n"
               + "  subversion = 'CPython'\n"
               + "\n"
-              + "print('%s %s %s' % (subversion, sys.version_info[0], "
+              + "print('%s %s.%s' % (subversion, sys.version_info[0], "
               + "sys.version_info[1]))\n";
 
       ProcessExecutor.Result versionResult =
@@ -79,26 +94,21 @@ abstract class AbstractPythonVersion {
 
   @VisibleForTesting
   static PythonVersion extractPythonVersion(Path pythonPath, ProcessExecutor.Result versionResult) {
-    if (versionResult.getExitCode() == 0) {
-      String versionString =
-          CharMatcher.whitespace()
-              .trimFrom(
-                  CharMatcher.whitespace().trimFrom(versionResult.getStderr().get())
-                      + CharMatcher.whitespace()
-                          .trimFrom(versionResult.getStdout().get())
-                          .replaceAll("\u001B\\[[;\\d]*m", ""));
-      String[] versionLines = versionString.split("\\r?\\n");
-
-      String[] compatibilityVersion = versionLines[0].split(" ");
-      if (compatibilityVersion.length != 3) {
-        throw new HumanReadableException(
-            "`%s - < [code]` returned an invalid version string %s", pythonPath, versionString);
-      }
-
-      return PythonVersion.of(
-          compatibilityVersion[0], compatibilityVersion[1] + "." + compatibilityVersion[2]);
-    } else {
+    if (versionResult.getExitCode() != 0) {
       throw new HumanReadableException(versionResult.getStderr().get());
+    }
+    String versionString =
+        CharMatcher.whitespace()
+            .trimFrom(
+                CharMatcher.whitespace().trimFrom(versionResult.getStderr().get())
+                    + CharMatcher.whitespace()
+                        .trimFrom(versionResult.getStdout().get())
+                        .replaceAll("\u001B\\[[;\\d]*m", ""));
+    String[] versionLines = versionString.split("\\r?\\n");
+    try {
+      return fromString(versionLines[0]);
+    } catch (HumanReadableException e) {
+      throw new HumanReadableException(e, "`%s - < [code]`: %s", pythonPath, e.getMessage());
     }
   }
 }

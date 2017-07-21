@@ -269,7 +269,7 @@ public class PythonBuckConfigTest {
         config
             .getDefaultPythonPlatform(
                 new FakeProcessExecutor(
-                    Functions.constant(new FakeProcess(0, "CPython 2 7", "")), new TestConsole()))
+                    Functions.constant(new FakeProcess(0, "CPython 2.7", "")), new TestConsole()))
             .getCxxLibrary(),
         Matchers.equalTo(Optional.of(library)));
   }
