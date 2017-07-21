@@ -41,6 +41,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -57,6 +58,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
@@ -260,24 +262,7 @@ public class CxxLibraryDescription
     }
 
     // Create rule to build the object files.
-    return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-        projectFilesystem,
-        buildTarget,
-        ruleResolver,
-        sourcePathResolver,
-        ruleFinder,
-        cxxBuckConfig,
-        cxxPlatform,
-        getPreprocessorInputsForBuildingLibrarySources(
-            ruleResolver,
-            cellRoots,
-            buildTarget,
-            args,
-            cxxPlatform,
-            deps,
-            transitivePreprocessorInputs,
-            headerSymlinkTree,
-            sandboxTree),
+    ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
                 CxxFlags.getLanguageFlagsWithMacros(
@@ -287,13 +272,33 @@ public class CxxLibraryDescription
                     cxxPlatform),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f))),
-        args.getPrefixHeader(),
-        args.getPrecompiledHeader(),
-        CxxDescriptionEnhancer.parseCxxSources(
-            buildTarget, ruleResolver, ruleFinder, sourcePathResolver, cxxPlatform, args),
-        pic,
-        sandboxTree);
+                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f)));
+    return CxxSourceRuleFactory.of(
+            projectFilesystem,
+            buildTarget,
+            ruleResolver,
+            sourcePathResolver,
+            ruleFinder,
+            cxxBuckConfig,
+            cxxPlatform,
+            getPreprocessorInputsForBuildingLibrarySources(
+                ruleResolver,
+                cellRoots,
+                buildTarget,
+                args,
+                cxxPlatform,
+                deps,
+                transitivePreprocessorInputs,
+                headerSymlinkTree,
+                sandboxTree),
+            compilerFlags,
+            args.getPrefixHeader(),
+            args.getPrecompiledHeader(),
+            pic,
+            sandboxTree)
+        .requirePreprocessAndCompileRules(
+            CxxDescriptionEnhancer.parseCxxSources(
+                buildTarget, ruleResolver, ruleFinder, sourcePathResolver, cxxPlatform, args));
   }
 
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(

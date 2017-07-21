@@ -761,8 +761,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return objects.build();
   }
 
-  @VisibleForTesting
-  ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
+  public ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       ImmutableMap<String, CxxSource> sources) {
 
     return sources
@@ -820,42 +819,6 @@ abstract class AbstractCxxSourceRuleFactory {
     return type.isAssembly()
         ? getCxxPlatform().getAssemblerDebugPathSanitizer()
         : getCxxPlatform().getCompilerDebugPathSanitizer();
-  }
-
-  /**
-   * Shorthand to create a {@code CxxSourceRuleFactory} and use it to generate compilation rules.
-   */
-  public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
-      ProjectFilesystem filesystem,
-      BuildTarget baseBuildTarget,
-      BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
-      ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
-      ImmutableMultimap<CxxSource.Type, Arg> compilerFlags,
-      Optional<SourcePath> prefixHeader,
-      Optional<SourcePath> precompiledHeader,
-      ImmutableMap<String, CxxSource> sources,
-      PicType pic,
-      Optional<SymlinkTree> sandboxTree) {
-    CxxSourceRuleFactory factory =
-        CxxSourceRuleFactory.of(
-            filesystem,
-            baseBuildTarget,
-            resolver,
-            pathResolver,
-            ruleFinder,
-            cxxBuckConfig,
-            cxxPlatform,
-            cxxPreprocessorInput,
-            compilerFlags,
-            prefixHeader,
-            precompiledHeader,
-            pic,
-            sandboxTree);
-    return factory.requirePreprocessAndCompileRules(sources);
   }
 
   private BuildRuleParams buildRuleParamsWithAndDeps(SortedSet<BuildRule> deps) {
