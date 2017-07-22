@@ -55,7 +55,7 @@ public class RandomizedTrialTest {
   @Test
   public void testCreatingWithWrongConfiguration() throws Exception {
     try {
-      RandomizedTrial.getGroup("name", BrokenEnum.class, BrokenEnum.GROUP1);
+      RandomizedTrial.getGroup("name", BrokenEnum.class);
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("misconfigured"));
       return;
@@ -84,7 +84,6 @@ public class RandomizedTrialTest {
     MutableEnum.probabilityGroup2 = 1.0 - point;
 
     assertThat(
-        RandomizedTrial.getGroup("name", MutableEnum.class, MutableEnum.GROUP1),
-        Matchers.equalTo(MutableEnum.GROUP2));
+        RandomizedTrial.getGroup("name", MutableEnum.class), Matchers.equalTo(MutableEnum.GROUP2));
   }
 }
