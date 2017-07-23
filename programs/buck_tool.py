@@ -144,6 +144,9 @@ class BuckTool(object):
         self._tmp_dir = platform_path(buck_project.tmp_dir)
         self._stdout_file = os.path.join(self._tmp_dir, "stdout")
         self._stderr_file = os.path.join(self._tmp_dir, "stderr")
+        self._fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
+        if self._fake_buck_version:
+            logging.info("Using fake buck version: {}".format(self._fake_buck_version))
 
         self._pathsep = os.pathsep
         if sys.platform == 'cygwin':

@@ -96,11 +96,8 @@ class BuckRepo(BuckTool):
                     with open(fake_buck_version_file_path) as fake_buck_version_file:
                         fake_buck_version = fake_buck_version_file.read().strip()
 
-            if fake_buck_version:
-                logging.info(("::: Faking buck version {}, "
-                             "despite your buck directory not being that version.")
-                             .format(fake_buck_version))
-                return fake_buck_version
+            if self._fake_buck_version:
+                return self._fake_buck_version
 
             # First try to get the "clean" buck version.  If it succeeds,
             # return it.
