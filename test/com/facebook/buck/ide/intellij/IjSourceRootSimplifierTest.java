@@ -22,6 +22,7 @@ import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -61,7 +62,10 @@ public class IjSourceRootSimplifierTest {
 
   private static IjFolder buildJavaResourceFolder(String path, String resourcesRoot) {
     return new JavaResourceFolder(
-        Paths.get(path), ImmutableSortedSet.of(), Paths.get(resourcesRoot));
+        Paths.get(path),
+        ImmutableSortedSet.of(),
+        Paths.get(resourcesRoot),
+        ResourceFolderType.JAVA_RESOURCE);
   }
 
   private static JavaPackageFinder fakePackageFinder() {
