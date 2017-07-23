@@ -52,7 +52,9 @@ public class ApplePlatforms {
       } catch (FlavorDomainException e) {
         throw new HumanReadableException(
             e,
-            "%s: Apple bundle requires an Apple platform, found '%s'",
+            "%s: Apple bundle requires an Apple platform, found '%s'\n\n"
+                + "A common cause of this error is that the required SDK is missing.\n"
+                + "Please check whether it's installed and retry.",
             target,
             cxxPlatform.getFlavor().getName());
       }
