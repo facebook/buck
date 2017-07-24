@@ -20,6 +20,7 @@ java_immutables_library(
     deps = [
         ":apkmodule",
         "//src/com/facebook/buck/cxx:platform",
+        "//src/com/facebook/buck/cxx/platform:platform",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/jvm/core:classhash",
         "//src/com/facebook/buck/model:model",
@@ -195,6 +196,7 @@ java_immutables_library(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:platform",
         "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/cxx/platform:platform",
         "//src/com/facebook/buck/dalvik:dalvik",
         "//src/com/facebook/buck/dalvik:steps",
         "//src/com/facebook/buck/event:event",
@@ -434,6 +436,7 @@ java_immutables_library(
         "//src/com/facebook/buck/cxx:platform",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/elf:elf",
+        "//src/com/facebook/buck/cxx/platform:platform",
         "//src/com/facebook/buck/dalvik:dalvik",
         "//src/com/facebook/buck/dalvik/firstorder:firstorder",
         "//src/com/facebook/buck/event:event",

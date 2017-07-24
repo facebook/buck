@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;

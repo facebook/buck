@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.ObjectFileCommonModificationDate;
+import com.facebook.buck.cxx.platform.ObjectFileScrubbers;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
