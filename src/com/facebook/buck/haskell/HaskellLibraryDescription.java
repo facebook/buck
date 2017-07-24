@@ -491,6 +491,7 @@ public class HaskellLibraryDescription
         ImmutableList.of(),
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+        ImmutableSet.of(),
         Linker.LinkableDepType.SHARED,
         outputPath,
         Optional.of(name),
