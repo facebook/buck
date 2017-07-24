@@ -121,6 +121,7 @@ public class IjProjectBuckConfig {
         .setGeneratingAndroidManifestEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_android_manifest", false))
+        .setOutputUrl(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "output_url"))
         .build();
   }
 

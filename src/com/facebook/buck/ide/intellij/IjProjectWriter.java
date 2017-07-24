@@ -26,11 +26,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import org.stringtemplate.v4.ST;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.stringtemplate.v4.ST;
 
 /** Writes the serialized representations of IntelliJ project components to disk. */
 public class IjProjectWriter {
@@ -126,6 +126,9 @@ public class IjProjectWriter {
     contents.add("jdk15", getJdk15FromLanguageLevel(languageLevelInIjFormat));
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
+    if (projectConfig.getOutputUrl().isPresent()) {
+      contents.add("outputUrl", projectConfig.getOutputUrl().get());
+    }
 
     StringTemplateFile.writeToFile(
         projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
