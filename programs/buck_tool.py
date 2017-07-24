@@ -9,6 +9,7 @@ import shlex
 import signal
 import subprocess
 import sys
+import tempfile
 import textwrap
 import time
 import traceback
@@ -97,6 +98,20 @@ class RestartBuck(Exception):
 
 class BuckToolException(Exception):
     pass
+
+
+class ExecuteTarget(Exception):
+    def __init__(self, path, argv, envp, cwd):
+        self._path = path
+        self._argv = argv
+        self._envp = envp
+        self._cwd = cwd
+
+    def execve(self):
+        # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+        os.chdir(self._cwd)
+        os.execve(self._path, self._argv, self._envp)
 
 
 class JvmCrashLogger(object):
@@ -201,6 +216,57 @@ class BuckTool(object):
         env['BUCK_TTY'] = str(int(sys.stdin.isatty()))
         return env
 
+    def _run_with_nailgun(self, argv, env):
+        '''
+        Run the command using nailgun.  If the daemon is busy, block until it becomes free.
+        '''
+        exit_code = 2
+        busy_diagnostic_displayed = False
+        while exit_code == 2:
+            with NailgunConnection(
+                    self._buck_project.get_buckd_transport_address(),
+                    cwd=self._buck_project.root) as c:
+                now = int(round(time.time() * 1000))
+                env['BUCK_PYTHON_SPACE_INIT_TIME'] = \
+                    str(now - self._init_timestamp)
+                exit_code = c.send_command(
+                    'com.facebook.buck.cli.Main',
+                    argv,
+                    env=env,
+                    cwd=self._buck_project.root)
+                if exit_code == 2:
+                    env['BUCK_BUILD_ID'] = str(uuid.uuid4())
+                    now = time.time()
+                    if not busy_diagnostic_displayed:
+                        logging.info("Buck daemon is busy with another command. " +
+                                     "Waiting for it to become free...\n" +
+                                     "You can use 'buck kill' to kill buck " +
+                                     "if you suspect buck is stuck.")
+                        busy_diagnostic_displayed = True
+                    time.sleep(1)
+        return exit_code
+
+    def _run_with_buckd(self, env):
+        '''
+        Run the buck command using buckd.  If the command is "run", get the path, args, etc. from
+        the daemon, and raise an exception that tells __main__ to run that binary
+        '''
+        with Tracing('buck', args={'command': sys.argv[1:]}):
+            argv = sys.argv[1:]
+            if len(argv) == 0 or argv[0] != 'run':
+                return self._run_with_nailgun(argv, env)
+            else:
+                with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
+                    # Splice in location of command file to run outside buckd
+                    argv = [argv[0]] + ['--command-args-file', argsfile.name] + argv[1:]
+                    exit_code = self._run_with_nailgun(argv, env)
+                    if exit_code != 0:
+                        # Build failed, so there's nothing to run.  Exit normally.
+                        return exit_code
+                    cmd = json.load(argsfile)
+                    raise ExecuteTarget(cmd['path'], cmd['argv'], cmd['envp'], cmd['cwd'])
+
+
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):
             with JvmCrashLogger(self, self._buck_project.root):
@@ -234,32 +300,7 @@ class BuckTool(object):
                 env['BUCK_BUILD_ID'] = build_id
 
                 if use_buckd and self._is_buckd_running():
-                    with Tracing('buck', args={'command': sys.argv[1:]}):
-                        exit_code = 2
-                        busy_diagnostic_displayed = False
-                        while exit_code == 2:
-                            with NailgunConnection(
-                                    self._buck_project.get_buckd_transport_address(),
-                                    cwd=self._buck_project.root) as c:
-                                now = int(round(time.time() * 1000))
-                                env['BUCK_PYTHON_SPACE_INIT_TIME'] = \
-                                    str(now - self._init_timestamp)
-                                exit_code = c.send_command(
-                                    'com.facebook.buck.cli.Main',
-                                    sys.argv[1:],
-                                    env=env,
-                                    cwd=self._buck_project.root)
-                                if exit_code == 2:
-                                    env['BUCK_BUILD_ID'] = str(uuid.uuid4())
-                                    now = time.time()
-                                    if not busy_diagnostic_displayed:
-                                        logging.info("Buck daemon is busy with another command. " +
-                                                     "Waiting for it to become free...\n" +
-                                                     "You can use 'buck kill' to kill buck " +
-                                                     "if you suspect buck is stuck.")
-                                        busy_diagnostic_displayed = True
-                                    time.sleep(1)
-                        return exit_code
+                    return self._run_with_buckd(env)
 
                 command = ["buck"]
                 extra_default_options = [

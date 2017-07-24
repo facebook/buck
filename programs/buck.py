@@ -7,7 +7,7 @@ import uuid
 import zipfile
 
 from buck_logging import setup_logging
-from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
+from buck_tool import BuckToolException, RestartBuck, ExecuteTarget, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from pynailgun.ng import NailgunException
 from tracing import Tracing
@@ -49,6 +49,8 @@ if __name__ == "__main__":
     try:
         setup_logging()
         propagate_failure(main(sys.argv))
+    except ExecuteTarget as e:
+        e.execve()
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
     except (BuckToolException, NailgunException, NoBuckConfigFoundException) as e:
