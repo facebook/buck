@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
+import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -47,6 +48,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -304,7 +306,14 @@ public class DistBuildClientExecutor {
     }
 
     postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
+    ListenableFuture<?> slaveFinishedStatsFuture =
+        publishBuildSlaveFinishedStatsEvent(finalJob, eventBus, networkExecutorService);
     materializeSlaveLogDirs(finalJob);
+    try {
+      slaveFinishedStatsFuture.get();
+    } catch (ExecutionException e) {
+      LOG.error(e, "Exception while trying to fetch and publish BuildSlaveFinishedStats.");
+    }
 
     if (finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY)) {
       LOG.info("DistBuild was successful!");
@@ -484,6 +493,57 @@ public class DistBuildClientExecutor {
           } catch (IOException e) {
             LOG.error(e, "Encountered error while streaming logs from BuildSlave(s).");
           }
+        });
+  }
+
+  @VisibleForTesting
+  ListenableFuture<?> publishBuildSlaveFinishedStatsEvent(
+      BuildJob job, BuckEventBus eventBus, ListeningExecutorService executor) {
+    if (!job.isSetSlaveInfoByRunId()) {
+      return Futures.immediateFuture(null);
+    }
+
+    final List<ListenableFuture<BuildSlaveFinishedStats>> slaveFinishedStatsFutures =
+        new ArrayList<>(job.getSlaveInfoByRunIdSize());
+    for (Map.Entry<String, BuildSlaveInfo> entry : job.getSlaveInfoByRunId().entrySet()) {
+      String runIdStr = entry.getKey();
+      RunId runId = entry.getValue().getRunId();
+
+      slaveFinishedStatsFutures.add(
+          executor.submit(
+              () -> {
+                Optional<BuildSlaveFinishedStats> finishedStats = Optional.empty();
+
+                try {
+                  finishedStats =
+                      distBuildService.fetchBuildSlaveFinishedStats(job.getStampedeId(), runId);
+                  if (!finishedStats.isPresent()) {
+                    LOG.error(
+                        "BuildSlaveFinishedStats was not set for RunId:[%s] from frontend.",
+                        runIdStr);
+                  }
+                } catch (IOException ex) {
+                  LOG.error(
+                      ex,
+                      "Error fetching BuildSlaveFinishedStats for RunId:[%s] from the frontend.",
+                      runIdStr);
+                }
+
+                return finishedStats.orElse(
+                    // This will set the other fields to null for logging later.
+                    new BuildSlaveFinishedStats()
+                        .setBuildSlaveStatus(
+                            new BuildSlaveStatus()
+                                .setStampedeId(job.getStampedeId())
+                                .setRunId(runId)));
+              }));
+    }
+
+    return Futures.transform(
+        Futures.allAsList(slaveFinishedStatsFutures),
+        statsList -> {
+          eventBus.post(new ClientSideBuildSlaveFinishedStatsEvent(statsList));
+          return null;
         });
   }
 
