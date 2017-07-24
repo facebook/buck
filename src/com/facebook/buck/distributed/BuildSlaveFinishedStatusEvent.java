@@ -16,17 +16,18 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 
 public class BuildSlaveFinishedStatusEvent extends AbstractBuckEvent {
   private final BuckConfig buckConfig;
-  private final BuildSlaveFinishedStatus buildSlaveFinishedStatus;
+  private final BuildSlaveFinishedStats buildSlaveFinishedStats;
 
   public BuildSlaveFinishedStatusEvent(
-      BuildSlaveFinishedStatus buildSlaveFinishedStatus, BuckConfig buckConfig) {
+      BuildSlaveFinishedStats buildSlaveFinishedStats, BuckConfig buckConfig) {
     super(EventKey.unique());
-    this.buildSlaveFinishedStatus = buildSlaveFinishedStatus;
+    this.buildSlaveFinishedStats = buildSlaveFinishedStats;
     this.buckConfig = buckConfig;
   }
 
@@ -40,8 +41,8 @@ public class BuildSlaveFinishedStatusEvent extends AbstractBuckEvent {
     return this.getClass().getName();
   }
 
-  public BuildSlaveFinishedStatus getBuildSlaveFinishedStatus() {
-    return buildSlaveFinishedStatus;
+  public BuildSlaveFinishedStats getBuildSlaveFinishedStats() {
+    return buildSlaveFinishedStats;
   }
 
   public BuckConfig getBuckConfig() {

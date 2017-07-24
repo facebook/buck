@@ -15,48 +15,48 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.FileMaterializationStats;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class FileMaterializationStatsTracker {
-  private AtomicInteger filesMaterializedLocallyCount = new AtomicInteger(0);
-  private AtomicInteger filesMaterializedRemotelyCount = new AtomicInteger(0);
+  private AtomicInteger filesMaterializedFromLocalCacheCount = new AtomicInteger(0);
+  private AtomicInteger filesMaterializedFromCASCount = new AtomicInteger(0);
 
   // Note: this is the total time spent by all threads; multiple threads can be downloading
   // files from the CAS at the same time.
-  private AtomicLong totalTimeSpentMaterializingFilesRemotelyMillis = new AtomicLong(0);
+  private AtomicLong totalTimeSpentMaterializingFilesFromCASMillis = new AtomicLong(0);
 
   public void recordLocalFileMaterialized() {
-    filesMaterializedLocallyCount.incrementAndGet();
+    filesMaterializedFromLocalCacheCount.incrementAndGet();
   }
 
   public void recordRemoteFileMaterialized(long elapsedMillis) {
-    filesMaterializedRemotelyCount.incrementAndGet();
-    totalTimeSpentMaterializingFilesRemotelyMillis.addAndGet(elapsedMillis);
+    filesMaterializedFromCASCount.incrementAndGet();
+    totalTimeSpentMaterializingFilesFromCASMillis.addAndGet(elapsedMillis);
   }
 
-  public int getFilesMaterializedLocallyCount() {
-    return filesMaterializedLocallyCount.get();
+  public int getFilesMaterializedFromLocalCacheCount() {
+    return filesMaterializedFromLocalCacheCount.get();
   }
 
-  public int getFilesMaterializedRemotelyCount() {
-    return filesMaterializedRemotelyCount.get();
+  public int getFilesMaterializedFromCASCount() {
+    return filesMaterializedFromCASCount.get();
   }
 
   public int getTotalFilesMaterializedCount() {
-    return getFilesMaterializedLocallyCount() + getFilesMaterializedRemotelyCount();
+    return getFilesMaterializedFromLocalCacheCount() + getFilesMaterializedFromCASCount();
   }
 
-  public long getTotalTimeSpentMaterializingFilesRemotelyMillis() {
-    return totalTimeSpentMaterializingFilesRemotelyMillis.get();
+  public long getTotalTimeSpentMaterializingFilesFromCASMillis() {
+    return totalTimeSpentMaterializingFilesFromCASMillis.get();
   }
 
   public FileMaterializationStats getFileMaterializationStats() {
-    return FileMaterializationStats.builder()
-        .setFilesMaterializedLocallyCount(getFilesMaterializedLocallyCount())
-        .setFilesMaterializedRemotelyCount(getFilesMaterializedRemotelyCount())
-        .setTotalTimeSpentMaterializingFilesRemotelyMillis(
-            getTotalTimeSpentMaterializingFilesRemotelyMillis())
-        .build();
+    return new FileMaterializationStats()
+        .setTotalFilesMaterializedCount(getTotalFilesMaterializedCount())
+        .setFilesMaterializedFromCASCount(getFilesMaterializedFromCASCount())
+        .setTotalTimeSpentMaterializingFilesFromCASMillis(
+            getTotalTimeSpentMaterializingFilesFromCASMillis());
   }
 }

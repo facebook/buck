@@ -71,3 +71,25 @@ struct BuildSlaveStatus {
 
     30: optional i32 filesMaterializedCount;
 }
+
+struct FileMaterializationStats {
+    1: optional i32 totalFilesMaterializedCount;
+    2: optional i32 filesMaterializedFromCASCount;
+    3: optional i64 totalTimeSpentMaterializingFilesFromCASMillis;
+}
+
+struct BuildSlavePerStageTimingStats {
+    1: optional i64 distBuildStateFetchTimeMillis;
+    2: optional i64 distBuildStateLoadingTimeMillis;
+    3: optional i64 sourceFilePreloadTimeMillis;
+    4: optional i64 targetGraphDeserializationTimeMillis;
+    5: optional i64 actionGraphCreationTimeMillis;
+    6: optional i64 totalBuildtimeMillis;
+}
+
+struct BuildSlaveFinishedStats {
+    1: optional BuildSlaveStatus buildSlaveStatus;
+    2: optional i32 exitCode;
+    3: optional FileMaterializationStats fileMaterializationStats;
+    4: optional BuildSlavePerStageTimingStats buildSlavePerStageTimingStats;
+}

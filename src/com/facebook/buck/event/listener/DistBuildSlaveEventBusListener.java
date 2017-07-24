@@ -17,13 +17,13 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.distributed.BuildSlaveFinishedStatus;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -156,36 +156,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   }
 
   private BuildSlaveStatus createBuildSlaveStatus() {
-    BuildSlaveStatus status = new BuildSlaveStatus();
-    status.setStampedeId(stampedeId);
-    status.setRunId(runId);
-
-    status.setTotalRulesCount(ruleCount);
-    status.setRulesStartedCount(buildRulesStartedCount.get());
-    status.setRulesFinishedCount(buildRulesFinishedCount.get());
-    status.setRulesSuccessCount(buildRulesSuccessCount.get());
-    status.setRulesFailureCount(buildRulesFailureCount.get());
-
-    status.setCacheRateStats(cacheRateStatsKeeper.getSerializableStats());
-    status.setHttpArtifactTotalBytesUploaded(
-        httpCacheUploadStats.getHttpArtifactTotalBytesUploaded());
-    status.setHttpArtifactUploadsScheduledCount(
-        httpCacheUploadStats.getHttpArtifactTotalUploadsScheduledCount());
-    status.setHttpArtifactUploadsOngoingCount(
-        httpCacheUploadStats.getHttpArtifactUploadsOngoingCount());
-    status.setHttpArtifactUploadsSuccessCount(
-        httpCacheUploadStats.getHttpArtifactUploadsSuccessCount());
-    status.setHttpArtifactUploadsFailureCount(
-        httpCacheUploadStats.getHttpArtifactUploadsFailureCount());
-
-    status.setFilesMaterializedCount(
-        fileMaterializationStatsTracker.getTotalFilesMaterializedCount());
-
-    return status;
-  }
-
-  private BuildSlaveFinishedStatus createBuildSlaveFinishedStatus(int exitCode) {
-    return BuildSlaveFinishedStatus.builder()
+    return new BuildSlaveStatus()
         .setStampedeId(stampedeId)
         .setRunId(runId)
         .setTotalRulesCount(ruleCount)
@@ -194,10 +165,25 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
         .setRulesSuccessCount(buildRulesSuccessCount.get())
         .setRulesFailureCount(buildRulesFailureCount.get())
         .setCacheRateStats(cacheRateStatsKeeper.getSerializableStats())
-        .setFileMaterializationStats(fileMaterializationStatsTracker.getFileMaterializationStats())
-        .setTimingStats(slaveStatsTracker.generateStats())
+        .setHttpArtifactTotalBytesUploaded(httpCacheUploadStats.getHttpArtifactTotalBytesUploaded())
+        .setHttpArtifactUploadsScheduledCount(
+            httpCacheUploadStats.getHttpArtifactTotalUploadsScheduledCount())
+        .setHttpArtifactUploadsOngoingCount(
+            httpCacheUploadStats.getHttpArtifactUploadsOngoingCount())
+        .setHttpArtifactUploadsSuccessCount(
+            httpCacheUploadStats.getHttpArtifactUploadsSuccessCount())
+        .setHttpArtifactUploadsFailureCount(
+            httpCacheUploadStats.getHttpArtifactUploadsFailureCount())
+        .setFilesMaterializedCount(
+            fileMaterializationStatsTracker.getTotalFilesMaterializedCount());
+  }
+
+  private BuildSlaveFinishedStats createBuildSlaveFinishedStatus(int exitCode) {
+    return new BuildSlaveFinishedStats()
+        .setBuildSlaveStatus(createBuildSlaveStatus())
         .setExitCode(exitCode)
-        .build();
+        .setFileMaterializationStats(fileMaterializationStatsTracker.getFileMaterializationStats())
+        .setBuildSlavePerStageTimingStats(slaveStatsTracker.generateStats());
   }
 
   private void sendStatusToFrontend() {
