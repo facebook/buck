@@ -34,14 +34,15 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.timing.Clock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -68,6 +70,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private final RunId runId;
   private final Clock clock;
   private final ScheduledFuture<?> scheduledServerUpdates;
+  private final ScheduledExecutorService networkScheduler;
 
   private final Object consoleEventsLock = new Object();
 
@@ -88,6 +91,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private final DistBuildSlaveTimingStatsTracker slaveStatsTracker;
 
   private volatile @Nullable DistBuildService distBuildService;
+  private volatile Optional<Integer> exitCode = Optional.empty();
+  private volatile boolean sentFinishedStatsToServer;
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
@@ -119,6 +124,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     this.clock = clock;
     this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
+    this.networkScheduler = networkScheduler;
 
     scheduledServerUpdates =
         networkScheduler.scheduleAtFixedRate(
@@ -153,6 +159,9 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
     // Send final updates.
     sendServerUpdates();
+    if (exitCode.isPresent()) {
+      sendFinishedStatsToFrontend(createBuildSlaveFinishedStats());
+    }
   }
 
   private BuildSlaveStatus createBuildSlaveStatus() {
@@ -178,12 +187,31 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
             fileMaterializationStatsTracker.getTotalFilesMaterializedCount());
   }
 
-  private BuildSlaveFinishedStats createBuildSlaveFinishedStatus(int exitCode) {
-    return new BuildSlaveFinishedStats()
-        .setBuildSlaveStatus(createBuildSlaveStatus())
-        .setExitCode(exitCode)
-        .setFileMaterializationStats(fileMaterializationStatsTracker.getFileMaterializationStats())
-        .setBuildSlavePerStageTimingStats(slaveStatsTracker.generateStats());
+  private BuildSlaveFinishedStats createBuildSlaveFinishedStats() {
+    BuildSlaveFinishedStats finishedStats =
+        new BuildSlaveFinishedStats()
+            .setBuildSlaveStatus(createBuildSlaveStatus())
+            .setFileMaterializationStats(
+                fileMaterializationStatsTracker.getFileMaterializationStats())
+            .setBuildSlavePerStageTimingStats(slaveStatsTracker.generateStats());
+    Preconditions.checkState(
+        exitCode.isPresent(),
+        "BuildSlaveFinishedStats can only be generated after we are finished building.");
+    finishedStats.setExitCode(exitCode.get());
+    return finishedStats;
+  }
+
+  private synchronized void sendFinishedStatsToFrontend(BuildSlaveFinishedStats finishedStats) {
+    if (distBuildService == null || sentFinishedStatsToServer) {
+      return;
+    }
+
+    try {
+      distBuildService.storeBuildSlaveFinishedStats(stampedeId, runId, finishedStats);
+      sentFinishedStatsToServer = true;
+    } catch (IOException e) {
+      LOG.error(e, "Could not update slave status to frontend.");
+    }
   }
 
   private void sendStatusToFrontend() {
@@ -227,9 +255,11 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   public void publishBuildSlaveFinishedEvent(
       BuckEventBus eventBus, BuckConfig remoteBuckConfig, int exitCode) {
-    eventBus.post(
-        new BuildSlaveFinishedStatusEvent(
-            createBuildSlaveFinishedStatus(exitCode), remoteBuckConfig));
+    this.exitCode = Optional.of(exitCode);
+    BuildSlaveFinishedStats finishedStats = createBuildSlaveFinishedStats();
+    eventBus.post(new BuildSlaveFinishedStatusEvent(finishedStats, remoteBuckConfig));
+    networkScheduler.schedule(
+        () -> sendFinishedStatsToFrontend(finishedStats), 0, TimeUnit.SECONDS);
   }
 
   @Subscribe
