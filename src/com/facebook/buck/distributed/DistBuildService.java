@@ -28,11 +28,13 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
+import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.CASContainsRequest;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildGraphRequest;
+import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.FetchRuleKeyLogsRequest;
 import com.facebook.buck.distributed.thrift.FetchSourceFilesRequest;
@@ -56,6 +58,7 @@ import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
+import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -611,6 +614,43 @@ public class DistBuildService implements Closeable {
     ThriftUtil.deserialize(
         PROTOCOL_FOR_CLIENT_ONLY_STRUCTS,
         response.getFetchBuildSlaveStatusResponse().getBuildSlaveStatus(),
+        status);
+    return Optional.of(status);
+  }
+
+  public void storeBuildSlaveFinishedStats(
+      StampedeId stampedeId, RunId runId, BuildSlaveFinishedStats status) throws IOException {
+    StoreBuildSlaveFinishedStatsRequest request = new StoreBuildSlaveFinishedStatsRequest();
+    request.setStampedeId(stampedeId);
+    request.setRunId(runId);
+    request.setBuildSlaveFinishedStats(
+        ThriftUtil.serialize(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, status));
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.STORE_BUILD_SLAVE_FINISHED_STATS);
+    frontendRequest.setStoreBuildSlaveFinishedStatsRequest(request);
+    makeRequestChecked(frontendRequest);
+  }
+
+  public Optional<BuildSlaveFinishedStats> fetchBuildSlaveFinishedStats(
+      StampedeId stampedeId, RunId runId) throws IOException {
+    FetchBuildSlaveFinishedStatsRequest request = new FetchBuildSlaveFinishedStatsRequest();
+    request.setStampedeId(stampedeId);
+    request.setRunId(runId);
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.FETCH_BUILD_SLAVE_FINISHED_STATS);
+    frontendRequest.setFetchBuildSlaveFinishedStatsRequest(request);
+    FrontendResponse response = makeRequestChecked(frontendRequest);
+
+    Preconditions.checkState(response.isSetFetchBuildSlaveFinishedStatsResponse());
+    if (!response.getFetchBuildSlaveFinishedStatsResponse().isSetBuildSlaveFinishedStats()) {
+      return Optional.empty();
+    }
+
+    BuildSlaveFinishedStats status = new BuildSlaveFinishedStats();
+    ThriftUtil.deserialize(
+        PROTOCOL_FOR_CLIENT_ONLY_STRUCTS,
+        response.getFetchBuildSlaveFinishedStatsResponse().getBuildSlaveFinishedStats(),
         status);
     return Optional.of(status);
   }
