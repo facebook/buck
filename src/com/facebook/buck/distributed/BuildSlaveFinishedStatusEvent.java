@@ -15,15 +15,19 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 
 public class BuildSlaveFinishedStatusEvent extends AbstractBuckEvent {
+  private final BuckConfig buckConfig;
   private final BuildSlaveFinishedStatus buildSlaveFinishedStatus;
 
-  public BuildSlaveFinishedStatusEvent(BuildSlaveFinishedStatus buildSlaveFinishedStatus) {
+  public BuildSlaveFinishedStatusEvent(
+      BuildSlaveFinishedStatus buildSlaveFinishedStatus, BuckConfig buckConfig) {
     super(EventKey.unique());
     this.buildSlaveFinishedStatus = buildSlaveFinishedStatus;
+    this.buckConfig = buckConfig;
   }
 
   @Override
@@ -38,5 +42,9 @@ public class BuildSlaveFinishedStatusEvent extends AbstractBuckEvent {
 
   public BuildSlaveFinishedStatus getBuildSlaveFinishedStatus() {
     return buildSlaveFinishedStatus;
+  }
+
+  public BuckConfig getBuckConfig() {
+    return buckConfig;
   }
 }
