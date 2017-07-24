@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_INDENTATION;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_SECTION_HEADER;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.MODULE_INDENTATION;
+
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -56,14 +57,29 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER + System.lineSeparator() +
-            MODULE_INDENTATION + "dex" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Sample" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Sample2" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Sample3" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/sample/app/MyApplication" + System.lineSeparator() +
-            MODULE_INDENTATION + "small_with_no_resource_deps" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Small" + System.lineSeparator();
+        CLASS_SECTION_HEADER
+            + System.lineSeparator()
+            + MODULE_INDENTATION
+            + "dex"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Sample"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Sample2"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Sample3"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/sample/app/MyApplication"
+            + System.lineSeparator()
+            + MODULE_INDENTATION
+            + "small_with_no_resource_deps"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Small"
+            + System.lineSeparator();
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
@@ -74,15 +90,32 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata-inner-class";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER + System.lineSeparator() +
-            MODULE_INDENTATION + "dex" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Sample" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Sample2" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/Sample3" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/sample/app/MyApplication" + System.lineSeparator() +
-            MODULE_INDENTATION + "small_inner_class_with_no_resource_deps" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/SmallWithInnerClass" + System.lineSeparator() +
-            CLASS_INDENTATION + "com/facebook/sample/SmallWithInnerClass$Inner" + System.lineSeparator();
+        CLASS_SECTION_HEADER
+            + System.lineSeparator()
+            + MODULE_INDENTATION
+            + "dex"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Sample"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Sample2"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/Sample3"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/sample/app/MyApplication"
+            + System.lineSeparator()
+            + MODULE_INDENTATION
+            + "small_inner_class_with_no_resource_deps"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/SmallWithInnerClass"
+            + System.lineSeparator()
+            + CLASS_INDENTATION
+            + "com/facebook/sample/SmallWithInnerClass$Inner"
+            + System.lineSeparator();
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);

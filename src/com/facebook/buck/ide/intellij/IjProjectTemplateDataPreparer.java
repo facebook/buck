@@ -505,13 +505,11 @@ public class IjProjectTemplateDataPreparer {
   }
 
   /**
-   * IntelliJ may not be able to find classes on the compiler output path
-   * if the jar_spool_mode is set to direct_to_jar.
+   * IntelliJ may not be able to find classes on the compiler output path if the jar_spool_mode is
+   * set to direct_to_jar.
    */
   private void addAndroidCompilerOutputPath(
-      Map<String, Object> androidProperties,
-      IjModule module,
-      Path moduleBasePath) {
+      Map<String, Object> androidProperties, IjModule module, Path moduleBasePath) {
     // The compiler output path is relative to the project root
     Optional<Path> compilerOutputPath = module.getCompilerOutputPath();
     if (compilerOutputPath.isPresent()) {

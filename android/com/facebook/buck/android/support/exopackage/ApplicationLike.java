@@ -22,40 +22,30 @@ import android.content.res.Configuration;
 /**
  * This interface is used to delegate calls from main Application object.
  *
- * Implementations of this interface must have a one-argument constructor that takes
- * an argument of type {@link Application}.
+ * <p>Implementations of this interface must have a one-argument constructor that takes an argument
+ * of type {@link Application}.
  */
 public interface ApplicationLike {
 
-  /**
-   * Same as {@link Application#onCreate()}.
-   */
+  /** Same as {@link Application#onCreate()}. */
   void onCreate();
 
-  /**
-   * Same as {@link Application#onLowMemory()}.
-   */
+  /** Same as {@link Application#onLowMemory()}. */
   void onLowMemory();
 
   /**
    * Same as {@link Application#onTrimMemory(int level)}.
+   *
    * @param level
    */
   void onTrimMemory(int level);
 
-  /**
-   * Same as {@link Application#onTerminate()}.
-   */
+  /** Same as {@link Application#onTerminate()}. */
   void onTerminate();
 
-  /**
-   * Same as {@link Application#onConfigurationChanged(Configuration newconfig)}.
-   */
+  /** Same as {@link Application#onConfigurationChanged(Configuration newconfig)}. */
   void onConfigurationChanged(Configuration newConfig);
 
-  /**
-   * Same as {@link Application#getSystemService(String name)}.
-   */
+  /** Same as {@link Application#getSystemService(String name)}. */
   Object getSystemService(String name);
-
 }

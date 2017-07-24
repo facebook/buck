@@ -19,8 +19,7 @@ package com.facebook.buck.android.support.exopackage;
 import java.lang.reflect.Field;
 
 class Reflect {
-  private Reflect() {
-  }
+  private Reflect() {}
 
   static Object getField(Object object, Class<?> clazz, String fieldName)
       throws NoSuchFieldException, IllegalAccessException {
