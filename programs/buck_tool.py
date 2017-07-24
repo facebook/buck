@@ -349,6 +349,8 @@ class BuckTool(object):
                     ngserver_output_path),
                 "-XX:+UseG1GC",
                 "-XX:MaxHeapFreeRatio=40",
+                # See https://www.infoq.com/news/2015/08/JVM-Option-mixed-mode-profiles for details
+                "-XX:+PreserveFramePointer",
             ]
 
             command.extend(self._get_java_args(buck_version_uid, extra_default_options))
