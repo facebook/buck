@@ -65,7 +65,7 @@ public class WindowsLinker implements Linker {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
+  public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
     return ImmutableList.of();
   }
 

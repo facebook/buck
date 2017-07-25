@@ -76,9 +76,9 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
+  public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
     return ImmutableList.of(
-        new OsoSymbolsContentsScrubber(cellRoots), new LcUuidContentsScrubber());
+        new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber());
   }
 
   @Override

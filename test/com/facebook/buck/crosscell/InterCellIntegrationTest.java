@@ -55,7 +55,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -219,7 +218,7 @@ public class InterCellIntegrationTest {
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
 
-    Path firstBinary = primary.buildAndReturnOutput("//:cxxbinary");
+    primary.runBuckBuild("//:cxxbinary");
     ImmutableMap<String, HashCode> firstPrimaryObjectFiles = findObjectFiles(primary);
     ImmutableMap<String, HashCode> firstObjectFiles = findObjectFiles(secondary);
 
@@ -228,13 +227,16 @@ public class InterCellIntegrationTest {
     primary = cells.getFirst();
     secondary = cells.getSecond();
 
-    Path secondBinary = primary.buildAndReturnOutput("//:cxxbinary");
+    primary.runBuckBuild("//:cxxbinary");
     ImmutableMap<String, HashCode> secondPrimaryObjectFiles = findObjectFiles(primary);
     ImmutableMap<String, HashCode> secondObjectFiles = findObjectFiles(secondary);
 
     assertEquals(firstPrimaryObjectFiles, secondPrimaryObjectFiles);
     assertEquals(firstObjectFiles, secondObjectFiles);
-    MoreAsserts.assertContentsEqual(firstBinary, secondBinary);
+
+    // TODO(yiding): The binaries are not identical due to changes to the relative path components.
+    // Relative path from the binary's cell is embedded in order to allow tooling to correctly find
+    // debug symbols.
   }
 
   private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)

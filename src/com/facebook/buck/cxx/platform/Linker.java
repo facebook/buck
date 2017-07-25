@@ -26,8 +26,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
 /**
@@ -36,7 +36,11 @@ import java.nio.file.Path;
  */
 public interface Linker extends Tool {
 
-  ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots);
+  /**
+   * @param cellRootMap Replacement map for cell roots found in paths, to some suitably normalized
+   *     form (such as a relative path from root cell).
+   */
+  ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap);
 
   /**
    * @return the platform-specific way to specify that the library represented by the given argument

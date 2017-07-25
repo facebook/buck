@@ -117,7 +117,7 @@ public class RustCompileTest {
   private static Linker fakeLinker() {
     return new Linker() {
       @Override
-      public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
+      public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
         return null;
       }
 

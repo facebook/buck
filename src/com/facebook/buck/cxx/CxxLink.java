@@ -38,9 +38,11 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -122,10 +124,13 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // in theory not all inputs need to come from build rules, but it probably works in practice.
     // One way that we know would work is exposing every known cell root paths, since the only rules
     // that we built (and therefore need to scrub) will be in one of those roots.
-    ImmutableSet.Builder<Path> cellRoots = ImmutableSet.builder();
-    for (BuildRule dep : getBuildDeps()) {
-      cellRoots.add(dep.getProjectFilesystem().getRootPath());
-    }
+    Path currentRuleCellRoot = getProjectFilesystem().getRootPath();
+    ImmutableMap<Path, Path> cellRootMap =
+        getBuildDeps()
+            .stream()
+            .map(dep -> dep.getProjectFilesystem().getRootPath())
+            .distinct()
+            .collect(MoreCollectors.toImmutableMap(x -> x, currentRuleCellRoot::relativize));
 
     return new ImmutableList.Builder<Step>()
         .add(
@@ -170,9 +175,7 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
                             getProjectFilesystem().resolve(linkOutput),
                             getProjectFilesystem().resolve(output)))
                 .orElse(ImmutableList.of()))
-        .add(
-            new FileScrubberStep(
-                getProjectFilesystem(), output, linker.getScrubbers(cellRoots.build())))
+        .add(new FileScrubberStep(getProjectFilesystem(), output, linker.getScrubbers(cellRootMap)))
         .build();
   }
 
