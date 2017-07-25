@@ -210,11 +210,10 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       // 2) You don't have a build file above this file, which is impossible if it is referenced in
       //    a build file *unless* you happen to be referencing something that is ignored.
       if (!ancestor.isPresent()) {
-        throw new HumanReadableException(
-            "The target '%s' tried to refer '%s'.\n"
-                + "It's not allowed probably because you referred one of the folders containing\n"
-                + "this file in your .buckconfig under `project.ignore`.",
-            target, path);
+        throw new IllegalStateException(
+            String.format(
+                "Target '%s' refers to file '%s', which doesn't belong to any package",
+                target, path));
       }
       if (!ancestor.get().equals(basePath)) {
         Path buckFile = ancestor.get().resolve("BUCK");
