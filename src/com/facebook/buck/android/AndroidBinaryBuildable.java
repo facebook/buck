@@ -30,7 +30,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -53,7 +52,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -130,21 +128,17 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final Optional<String> dxMaxHeapSize;
   @AddToRuleKey private final ImmutableList<SourcePath> proguardConfigs;
   @AddToRuleKey private final boolean isCompressResources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguard;
 
   @AddToRuleKey
   @Nullable
   @SuppressWarnings("unused")
   private final SourcePath abiPath;
 
-  @AddToRuleKey
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private final String ruleNamesToExcludeFromDex;
-
   // Once these fields are properly reflected in the rulekey, we can remove the abiPath (and
   // delete ComputeExopackageDepsAbi).
   private final AndroidGraphEnhancementResult enhancementResult;
   private final Function<String, String> macroExpander;
-  private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
 
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
@@ -211,7 +205,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.reorderClassesIntraDex = reorderClassesIntraDex;
     this.dexReorderToolFile = dexReorderToolFile;
     this.dexReorderDataDumpFile = dexReorderDataDumpFile;
-    this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.enhancementResult = enhancementResult;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
@@ -226,9 +219,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.dxMaxHeapSize = dxMaxHeapSize;
     this.proguardConfigs = proguardConfigs;
     this.isCompressResources = isCompressResources;
-    this.ruleNamesToExcludeFromDex =
-        Joiner.on(":")
-            .join(FluentIterable.from(rulesToExcludeFromDex).transform(BuildRule::toString));
+    this.additionalJarsForProguard =
+        rulesToExcludeFromDex
+            .stream()
+            .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
+            .collect(MoreCollectors.toImmutableSortedSet());
+
     this.abiPath = abiPath;
   }
 
@@ -856,17 +852,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
-
-    for (JavaLibrary buildRule : rulesToExcludeFromDex) {
-      additionalLibraryJarsForProguardBuilder.addAll(
-          buildRule
-              .getImmediateClasspaths()
-              .stream()
-              .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-              .collect(MoreCollectors.toImmutableSet()));
-    }
-
     // Create list of proguard Configs for the app project and its dependencies
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
@@ -903,7 +888,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         optimizationPasses,
         proguardJvmArgs,
         inputOutputEntries,
-        additionalLibraryJarsForProguardBuilder.build(),
+        buildContext.getSourcePathResolver().getAllAbsolutePaths(additionalJarsForProguard),
         proguardConfigDir,
         buildableContext,
         buildContext,
