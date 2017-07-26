@@ -36,11 +36,8 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   private final PreparedStatement updateStmt;
   private final PreparedStatement deleteStmt;
 
-  static {
-    SQLiteUtils.initialize();
-  }
-
   public SQLiteBuildInfoStore(ProjectFilesystem filesystem) throws IOException {
+    SQLiteUtils.initialize();
     String dbPath =
         filesystem
             .getRootPath()

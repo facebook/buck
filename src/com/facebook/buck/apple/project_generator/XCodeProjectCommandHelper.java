@@ -430,7 +430,6 @@ public class XCodeProjectCommandHelper {
                   parserConfig.getDefaultFlavorsMode())
               .stream()
               .flatMap(Collection::stream)
-              .map(target -> target.withoutCell())
               .collect(MoreCollectors.toImmutableSet());
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

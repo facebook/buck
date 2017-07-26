@@ -288,7 +288,7 @@ public class Parser {
             } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
               throw new HumanReadableException(
                   e,
-                  "Couldn't get dependency '%s' of target '%s':\n%s",
+                  "Couldn't get dependency '%s' of target '%s'.\n\n%s",
                   dep,
                   target,
                   e.getMessage());

@@ -197,31 +197,32 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   private NativeLinkableInput getNativeLinkableInput() throws NoSuchBuildTargetException {
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
-        CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            getProjectFilesystem(),
-            getBaseTarget(),
-            getRuleResolver(),
-            getPathResolver(),
-            getRuleFinder(),
-            getCxxBuckConfig(),
-            getCxxPlatform(),
-            ImmutableList.<CxxPreprocessorInput>builder()
-                .add(
-                    CxxPreprocessorInput.builder()
-                        .putAllPreprocessorFlags(
-                            CxxSource.Type.CXX,
-                            getNativeStarterLibrary().isPresent()
-                                ? ImmutableList.of()
-                                : StringArg.from("-DBUILTIN_NATIVE_STARTER"))
-                        .build())
-                .addAll(getTransitiveCxxPreprocessorInput(getCxxPlatform(), nativeStarterDeps))
-                .build(),
-            ImmutableMultimap.of(),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()),
-            CxxSourceRuleFactory.PicType.PDC,
-            Optional.empty());
+        CxxSourceRuleFactory.of(
+                getProjectFilesystem(),
+                getBaseTarget(),
+                getRuleResolver(),
+                getPathResolver(),
+                getRuleFinder(),
+                getCxxBuckConfig(),
+                getCxxPlatform(),
+                ImmutableList.<CxxPreprocessorInput>builder()
+                    .add(
+                        CxxPreprocessorInput.builder()
+                            .putAllPreprocessorFlags(
+                                CxxSource.Type.CXX,
+                                getNativeStarterLibrary().isPresent()
+                                    ? ImmutableList.of()
+                                    : StringArg.from("-DBUILTIN_NATIVE_STARTER"))
+                            .build())
+                    .addAll(getTransitiveCxxPreprocessorInput(getCxxPlatform(), nativeStarterDeps))
+                    .build(),
+                ImmutableMultimap.of(),
+                Optional.empty(),
+                Optional.empty(),
+                CxxSourceRuleFactory.PicType.PDC,
+                Optional.empty())
+            .requirePreprocessAndCompileRules(
+                ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()));
     return NativeLinkableInput.builder()
         .addAllArgs(
             getRelativeNativeLibsDir().isPresent()

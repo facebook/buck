@@ -19,9 +19,7 @@ package com.facebook.buck.android.support.exopackage;
 import android.app.Application;
 import android.content.res.Configuration;
 
-/**
- * Empty implementation of {@link ApplicationLike}.
- */
+/** Empty implementation of {@link ApplicationLike}. */
 public class DefaultApplicationLike implements ApplicationLike {
   public DefaultApplicationLike() {}
 

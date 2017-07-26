@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.file.WriteFile;
@@ -257,6 +258,7 @@ public class HaskellDescriptionUtils {
       ImmutableList<Arg> linkerFlags,
       Iterable<Arg> linkerInputs,
       Iterable<? extends NativeLinkable> deps,
+      ImmutableSet<BuildTarget> linkWholeDeps,
       Linker.LinkableDepType depType,
       Path outputPath,
       Optional<String> soname,
@@ -291,8 +293,14 @@ public class HaskellDescriptionUtils {
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
         NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
-      linkerArgsBuilder.addAll(
-          NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable).getArgs());
+      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+      NativeLinkableInput input =
+          nativeLinkable.getNativeLinkableInput(
+              cxxPlatform,
+              NativeLinkables.getLinkStyle(link, depType),
+              linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
+              ImmutableSet.of());
+      linkerArgsBuilder.addAll(input.getArgs());
     }
 
     // Since we use `-optl` to pass all linker inputs directly to the linker, the haskell linker

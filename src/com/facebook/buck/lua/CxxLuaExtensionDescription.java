@@ -53,6 +53,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
@@ -63,6 +64,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import java.io.File;
@@ -166,31 +168,33 @@ public class CxxLuaExtensionDescription
             .build();
 
     // Generate rule to build the object files.
+    ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
+        ImmutableListMultimap.copyOf(
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlagsWithMacros(
+                    args.getCompilerFlags(),
+                    args.getPlatformCompilerFlags(),
+                    args.getLangCompilerFlags(),
+                    cxxPlatform),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f)));
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
-        CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            projectFilesystem,
-            buildTarget,
-            ruleResolver,
-            pathResolver,
-            ruleFinder,
-            cxxBuckConfig,
-            cxxPlatform,
-            cxxPreprocessorInput,
-            ImmutableListMultimap.copyOf(
-                Multimaps.transformValues(
-                    CxxFlags.getLanguageFlagsWithMacros(
-                        args.getCompilerFlags(),
-                        args.getPlatformCompilerFlags(),
-                        args.getLangCompilerFlags(),
-                        cxxPlatform),
-                    f ->
-                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            buildTarget, cellRoots, ruleResolver, cxxPlatform, f))),
-            args.getPrefixHeader(),
-            args.getPrecompiledHeader(),
-            srcs,
-            CxxSourceRuleFactory.PicType.PIC,
-            sandboxTree);
+        CxxSourceRuleFactory.of(
+                projectFilesystem,
+                buildTarget,
+                ruleResolver,
+                pathResolver,
+                ruleFinder,
+                cxxBuckConfig,
+                cxxPlatform,
+                cxxPreprocessorInput,
+                compilerFlags,
+                args.getPrefixHeader(),
+                args.getPrecompiledHeader(),
+                CxxSourceRuleFactory.PicType.PIC,
+                sandboxTree)
+            .requirePreprocessAndCompileRules(srcs);
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
     CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(

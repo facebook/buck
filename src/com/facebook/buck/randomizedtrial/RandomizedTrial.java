@@ -25,6 +25,7 @@ import com.google.common.hash.Hashing;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
+import java.util.Random;
 
 /**
  * Simple implementation of A/B testing. Each RandomizedTrial selects a group to which buck instance
@@ -50,16 +51,11 @@ public class RandomizedTrial {
    *
    * @param name name of trial.
    * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
-   * @param defaultValue The value that will be used in case if class can't determine the group.
    */
-  public static <T extends Enum<T> & WithProbability> T getGroup(
-      String name, Class<T> enumClass, T defaultValue) {
+  public static <T extends Enum<T> & WithProbability> T getGroup(String name, Class<T> enumClass) {
     EnumSet<T> enumSet = EnumSet.allOf(enumClass);
 
-    double sumOfAllProbabilities = 0;
-    for (T value : enumSet) {
-      sumOfAllProbabilities += value.getProbability();
-    }
+    double sumOfAllProbabilities = enumSet.stream().mapToDouble(x -> x.getProbability()).sum();
     Preconditions.checkArgument(
         sumOfAllProbabilities == 1.0,
         "RandomizedTrial '%s' is misconfigured: sum of probabilities of all groups must be "
@@ -67,49 +63,33 @@ public class RandomizedTrial {
         name,
         sumOfAllProbabilities);
 
-    double point = getPoint(name);
-
-    double groupProbabilityLowPoint = 0.0;
+    final double point = getPoint(name);
+    double remainder = point;
     for (T value : enumSet) {
-      double groupProbabilityHighPoint = groupProbabilityLowPoint + value.getProbability();
-      if (point >= groupProbabilityLowPoint && point < groupProbabilityHighPoint) {
-        LOG.debug("Test %s detected group %s", name, value);
+      remainder -= value.getProbability();
+      if (remainder < 0) {
         return value;
-      } else {
-        groupProbabilityLowPoint = groupProbabilityHighPoint;
       }
     }
 
-    LOG.error(
-        "Test %s was unable to detect group. Point is: %f. Groups: %s. Will use default value: %s",
-        name, point, enumSet, defaultValue);
-    return defaultValue;
+    throw new IllegalStateException(
+        String.format("Test %s was unable to pick a value. point: %f", name, point));
   }
 
   @VisibleForTesting
   static double getPoint(String name) {
-    String key = getKey(name);
-    return getPointForKey(key);
+    return getPointForKey(getKey(name));
   }
 
   /**
-   * This method determines which double number in range of [0.0, 1.0] represents the given key.
-   * Algorithm is: 1. Get SHA of the given key. 2. Get first digit of the SHA and convert it into
-   * number, e.g. D -> 13. 3. Get 2 digits starting at position we got from step 2, e.g. A1. This is
-   * to randomize the resulting value a bit more. 4. Convert these digits into number (A1->161) and
-   * divide it by 255 (161/255=0.631) and return this value.
+   * Return a double uniformly distributed between {@code [0, 1)} derived from the {@code key}.
    *
    * @param key Key which point we are looking for.
-   * @return Value from 0.0 to 1.0.
+   * @return Value from 0.0 (inclusive) to 1.0 (exclusive).
    */
   private static double getPointForKey(String key) {
-    String hash = Hashing.sha384().hashString(key, StandardCharsets.UTF_8).toString();
-    Long position = Long.valueOf(hash.substring(0, 1), 16);
-    Long byteValue =
-        Long.valueOf(hash.substring(position.intValue() * 2, position.intValue() * 2 + 2), 16);
-    double result = byteValue / 255.0;
-    LOG.debug("Point for key '%s' is: %f", key, result);
-    return result;
+    return new Random(Hashing.sha384().hashString(key, StandardCharsets.UTF_8).asLong())
+        .nextDouble();
   }
 
   private static String getKey(String name) {

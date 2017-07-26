@@ -8,6 +8,10 @@ env:
   - CI_ACTION=heavy_integration
   - CI_ACTION=ant
 
+# Force Ubuntu 12.04 to support old dependencies
+# TODO(ttsugrii): upgrade to trusty once all deps are fixed
+dist: precise
+
 # Enable container-based architecture.
 sudo: false
 

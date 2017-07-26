@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -211,7 +212,7 @@ public class APKModuleGraph {
       final Function<String, String> translatorFunction,
       final ProjectFilesystem filesystem)
       throws IOException {
-    final ImmutableMultimap.Builder<APKModule, String> builder = ImmutableMultimap.builder();
+    final ImmutableMultimap.Builder<APKModule, String> builder = ImmutableSetMultimap.builder();
     if (!apkModuleToJarPathMap.isEmpty()) {
       for (final APKModule dexStore : apkModuleToJarPathMap.keySet()) {
         for (Path jarFilePath : apkModuleToJarPathMap.get(dexStore)) {

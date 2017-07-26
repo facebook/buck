@@ -760,7 +760,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             return Futures.immediateFuture(input);
           }
 
-          try (Closeable closeable =
+          try (Scope scope =
               LeafEvents.scope(buildContext.getEventBus(), "finalizing_build_rule")) {
             // We shouldn't see any build fail result at this point.
             BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
@@ -2127,8 +2127,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
       // Get and run all of the commands.
-      List<? extends Step> steps =
-          rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+      List<? extends Step> steps;
+      try (Scope scope = LeafEvents.scope(buildContext.getEventBus(), "get_build_steps")) {
+        steps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+      }
 
       Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
       for (Step step : steps) {

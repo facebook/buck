@@ -391,7 +391,7 @@ public class InterCellIntegrationTest {
     } catch (HumanReadableException expected) {
       assertEquals(
           expected.getMessage(),
-          "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary':\n"
+          "Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary'.\n\n"
               + "Overridden cxx:cc path not found: /does/not/exist");
     }
 

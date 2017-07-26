@@ -149,6 +149,7 @@ import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.hamcrest.core.StringContains;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -812,6 +813,7 @@ public class CachingBuildEngineTest {
       }
     }
 
+    @Ignore
     @Test
     public void multipleTopLevelRulesDontBlockEachOther() throws Exception {
       Exchanger<Boolean> exchanger = new Exchanger<>();

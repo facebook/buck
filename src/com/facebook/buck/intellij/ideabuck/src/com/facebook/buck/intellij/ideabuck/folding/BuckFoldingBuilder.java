@@ -43,9 +43,6 @@ import org.jetbrains.annotations.Nullable;
 /** Folds rules and arrays */
 public class BuckFoldingBuilder extends FoldingBuilderEx {
 
-  /** We fold large arrays by default; this constant defines "large" */
-  private static final int DEFAULT_FOLDING_SIZE = 6;
-
   private final TokenSet arrayElements = TokenSet.create(BuckTypes.ARRAY_ELEMENTS);
   private final TokenSet values = TokenSet.create(BuckTypes.VALUE);
 
@@ -124,26 +121,6 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
 
   @Override
   public boolean isCollapsedByDefault(@NotNull ASTNode astNode) {
-    if (!(astNode instanceof CompositeElement)) {
-      return false;
-    }
-    CompositeElement compositeElement = (CompositeElement) astNode;
-    IElementType type = compositeElement.getElementType();
-
-    if (type.equals(BuckTypes.VALUE_ARRAY)) {
-      return getArrayIsCollapsedByDefault(compositeElement);
-    } else if (type.equals(BuckTypes.RULE_BLOCK)) {
-      return getRuleIsCollapsedByDefault();
-    } else {
-      return false;
-    }
-  }
-
-  private boolean getArrayIsCollapsedByDefault(CompositeElement compositeElement) {
-    return countValues(compositeElement) >= DEFAULT_FOLDING_SIZE;
-  }
-
-  private boolean getRuleIsCollapsedByDefault() {
     return false;
   }
 

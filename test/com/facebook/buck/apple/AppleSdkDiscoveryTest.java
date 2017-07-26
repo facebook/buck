@@ -247,25 +247,57 @@ public class AppleSdkDiscoveryTest {
 
   @Test
   public void shouldIgnoreSdkWithBadSymlink() throws Exception {
-    Path root = temp.newFolder();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sdk-discovery-symlink", temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    Path sdksDir = root.resolve("Platforms/MacOSX.platform/Developer/SDKs");
+    Files.createDirectories(sdksDir);
 
     // Create a dangling symlink
     File toDelete = File.createTempFile("foo", "bar");
-    Path symlink = root.resolve("Platforms/Foo.platform/Developer/NonExistent1.0.sdk");
-    Files.createDirectories(symlink.getParent());
+    Path symlink = sdksDir.resolve("NonExistent1.0.sdk");
     Files.createSymbolicLink(symlink, toDelete.toPath());
     assertTrue(toDelete.delete());
 
+    // Also create a working symlink
+    Path actualSdkPath = root.resolve("MacOSX10.9.sdk");
+    Files.createSymbolicLink(sdksDir.resolve("MacOSX10.9.sdk"), actualSdkPath);
+
     ImmutableMap<String, AppleToolchain> toolchains =
         ImmutableMap.of("com.apple.dt.toolchain.XcodeDefault", getDefaultToolchain(root));
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdks =
+
+    AppleSdk macosx109Sdk =
+        AppleSdk.builder()
+            .setName("macosx10.9")
+            .setVersion("10.9")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .addAllToolchains(toolchains.values())
+            .build();
+    AppleSdkPaths macosx109Paths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(root)
+            .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(actualSdkPath)
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosx109Sdk, macosx109Paths)
+            .put(macosx109Sdk.withName("macosx"), macosx109Paths)
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> discoveredSdks =
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
             FakeBuckConfig.builder().build().getView(AppleConfig.class));
 
-    assertEquals(0, sdks.size());
+    assertThat(discoveredSdks, equalTo(expected));
   }
 
   @Test

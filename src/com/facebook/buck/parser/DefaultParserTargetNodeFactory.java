@@ -211,18 +211,20 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       //    a build file *unless* you happen to be referencing something that is ignored.
       if (!ancestor.isPresent()) {
         throw new HumanReadableException(
-            "'%s' in '%s' crosses a buck package boundary.  This is probably caused by "
-                + "specifying one of the folders in '%s' in your .buckconfig under `project.ignore`.",
-            path, target, path);
+            "The target '%s' tried to refer '%s'.\n"
+                + "It's not allowed probably because you referred one of the folders containing\n"
+                + "this file in your .buckconfig under `project.ignore`.",
+            target, path);
       }
       if (!ancestor.get().equals(basePath)) {
+        Path buckFile = ancestor.get().resolve("BUCK");
         throw new HumanReadableException(
-            "'%s' in '%s' crosses a buck package boundary.  This file is owned by '%s'.  Find "
-                + "the owning rule that references '%s', and use a reference to that rule instead "
-                + "of referencing the desired file directly. "
-                + "This may be due to a bug in buckd's caching. "
-                + "Running `buck kill` and trying again might resolve it.",
-            path, target, ancestor.get(), path);
+            "The target '%s' tried to refer '%s'.\n"
+                + "It's not allowed because this file is already referred by another rule in\n"
+                + "'%s'.\n\n"
+                + "It may also be due to a bug in buckd's caching.\n"
+                + "Please check whether using `buck kill` will resolve it.",
+            target, path, buckFile);
       }
     }
   }

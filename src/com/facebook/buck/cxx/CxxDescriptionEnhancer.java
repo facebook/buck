@@ -866,24 +866,26 @@ public class CxxDescriptionEnhancer {
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
+    CxxSourceRuleFactory.PicType pic =
+        linkStyle == Linker.LinkableDepType.STATIC
+            ? CxxSourceRuleFactory.PicType.PDC
+            : CxxSourceRuleFactory.PicType.PIC;
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
-        CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            projectFilesystem,
-            target,
-            resolver,
-            sourcePathResolver,
-            ruleFinder,
-            cxxBuckConfig,
-            cxxPlatform,
-            cxxPreprocessorInput,
-            allCompilerFlags,
-            prefixHeader,
-            precompiledHeader,
-            srcs,
-            linkStyle == Linker.LinkableDepType.STATIC
-                ? CxxSourceRuleFactory.PicType.PDC
-                : CxxSourceRuleFactory.PicType.PIC,
-            sandboxTree);
+        CxxSourceRuleFactory.of(
+                projectFilesystem,
+                target,
+                resolver,
+                sourcePathResolver,
+                ruleFinder,
+                cxxBuckConfig,
+                cxxPlatform,
+                cxxPreprocessorInput,
+                allCompilerFlags,
+                prefixHeader,
+                precompiledHeader,
+                pic,
+                sandboxTree)
+            .requirePreprocessAndCompileRules(srcs);
 
     // Build up the linker flags, which support macro expansion.
     CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
