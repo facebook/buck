@@ -24,6 +24,7 @@ import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -54,7 +55,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1232,18 +1232,9 @@ public class ProjectView {
 
   private void deleteAll(Path root) {
     try {
-      Files.walk(root)
-          .sorted(Comparator.reverseOrder()) // foo/bar before foo
-          .forEach(
-              p -> {
-                try {
-                  Files.delete(p);
-                } catch (IOException e) {
-                  stderr("'%s' deleting %s\n", e.getMessage(), p);
-                }
-              });
+      MoreFiles.deleteRecursivelyIfExists(root);
     } catch (IOException e) {
-      e.printStackTrace();
+      stderr("'%s' deleting %s\n", e.getMessage(), root);
     }
   }
 

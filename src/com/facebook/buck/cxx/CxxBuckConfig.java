@@ -17,6 +17,16 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.platform.Archiver;
+import com.facebook.buck.cxx.platform.BsdArchiver;
+import com.facebook.buck.cxx.platform.CompilerProvider;
+import com.facebook.buck.cxx.platform.CxxToolProvider;
+import com.facebook.buck.cxx.platform.GnuArchiver;
+import com.facebook.buck.cxx.platform.HeaderVerification;
+import com.facebook.buck.cxx.platform.LinkerProvider;
+import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.platform.WindowsArchiver;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;

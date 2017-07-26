@@ -18,7 +18,7 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -117,7 +117,7 @@ public class RustCompileTest {
   private static Linker fakeLinker() {
     return new Linker() {
       @Override
-      public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
+      public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
         return null;
       }
 

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.ObjectFileCommonModificationDate;
 import com.facebook.buck.io.FileAttributesScrubber;
 import java.nio.file.Path;
 

@@ -855,7 +855,10 @@ public final class Main {
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
-                  args.length > 0 ? args[0] : "", remainingArgs, daemon.isPresent(), getBuckPID());
+                  command.getDeclaredSubCommandName(),
+                  remainingArgs,
+                  daemon.isPresent(),
+                  getBuckPID());
           buildEventBus.post(startedEvent);
 
           // Create or get Parser and invalidate cached command parameters.

@@ -19,10 +19,10 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -91,8 +91,7 @@ abstract class DDescriptionUtils {
   }
 
   /**
-   * Creates a {@link com.facebook.buck.cxx.NativeLinkable} using sources compiled by the D
-   * compiler.
+   * Creates a {@link NativeLinkable} using sources compiled by the D compiler.
    *
    * @param params build parameters for the build target
    * @param sources source files to compile

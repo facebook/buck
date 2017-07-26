@@ -37,4 +37,6 @@ fi
 if [ "$CI_ACTION" = "ant" ]; then
   # Run all the other checks with ant.
   ant travis
+
+  ./scripts/travisci_test_java_file_format
 fi

@@ -17,17 +17,17 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileContentsScrubber;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 
 public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
 
-  private final ImmutableCollection<Path> cellRoots;
+  private final ImmutableMap<Path, Path> cellRootMap;
 
-  public OsoSymbolsContentsScrubber(ImmutableCollection<Path> cellRoots) {
-    this.cellRoots = cellRoots;
+  OsoSymbolsContentsScrubber(ImmutableMap<Path, Path> cellRootMap) {
+    this.cellRootMap = cellRootMap;
   }
 
   @Override
@@ -36,7 +36,7 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
       return;
     }
     try {
-      Machos.relativizeOsoSymbols(file, cellRoots);
+      Machos.relativizeOsoSymbols(file, cellRootMap);
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }

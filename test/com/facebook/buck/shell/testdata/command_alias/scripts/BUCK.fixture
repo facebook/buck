@@ -1,0 +1,11 @@
+export_file(
+    name = "scripts",
+    src = ".",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "echo",
+    src = "echo.sh",
+    visibility = ["PUBLIC"],
+)

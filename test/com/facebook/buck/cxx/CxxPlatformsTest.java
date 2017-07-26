@@ -25,6 +25,17 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.platform.Archiver;
+import com.facebook.buck.cxx.platform.BsdArchiver;
+import com.facebook.buck.cxx.platform.CompilerProvider;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxToolProvider;
+import com.facebook.buck.cxx.platform.GnuArchiver;
+import com.facebook.buck.cxx.platform.LazyDelegatingArchiver;
+import com.facebook.buck.cxx.platform.LinkerProvider;
+import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.platform.WindowsArchiver;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;

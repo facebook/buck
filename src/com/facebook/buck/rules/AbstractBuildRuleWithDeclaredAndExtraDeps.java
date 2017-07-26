@@ -22,17 +22,8 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
 
-/**
- * Some rules have a legacy behavior of distinguishing between "declared" deps (i.e. the contents of
- * the TargetNode's deps attribute) and "extra" deps (i.e. other deps which were detected somehow
- * else).
- *
- * <p>This class formalizes those concepts.
- *
- * <p>Some rules have switched to have more custom handling of different kinds of deps. Other rules
- * are currently very unclear as to what "extra" means, or when it should be used.
- */
-public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRule {
+public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends AbstractBuildRule
+    implements HasDeclaredAndExtraDeps {
 
   private final Supplier<? extends SortedSet<BuildRule>> declaredDeps;
   private final Supplier<? extends SortedSet<BuildRule>> extraDeps;
@@ -55,15 +46,18 @@ public abstract class AbstractBuildRuleWithDeclaredAndExtraDeps extends Abstract
     return buildDeps.get();
   }
 
+  @Override
   public final SortedSet<BuildRule> getDeclaredDeps() {
     return declaredDeps.get();
   }
 
+  @Override
   public final SortedSet<BuildRule> deprecatedGetExtraDeps() {
     return extraDeps.get();
   }
 
   /** See {@link TargetNode#getTargetGraphOnlyDeps}. */
+  @Override
   public final ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
     return targetGraphOnlyDeps;
   }

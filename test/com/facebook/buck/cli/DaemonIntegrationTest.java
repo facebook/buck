@@ -558,7 +558,8 @@ public class DaemonIntegrationTest {
       assertThat(
           "Failure should be due to syntax error.",
           expected.getHumanReadableErrorMessage(),
-          containsString("Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
+          containsString(
+              "    when trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
     }
   }
 

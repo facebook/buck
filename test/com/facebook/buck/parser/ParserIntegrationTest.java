@@ -71,7 +71,7 @@ public class ParserIntegrationTest {
   public void testParseRuleWithBadDependency() throws IOException {
     // Ensure an exception with a specific message is thrown.
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Couldn't get dependency '//:bad-dep' of target '//:base'");
+    thrown.expectMessage("    when trying to get dependency '//:bad-dep' of target '//:base'");
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -227,7 +227,7 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//java:foo");
       fail("Expected exception");
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("already referred by"));
+      assertThat(e.getMessage(), containsString("can only be referenced from"));
     }
 
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "false");
@@ -240,7 +240,7 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//java2:foo").assertSuccess();
       fail("Expected exception");
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("already referred by"));
+      assertThat(e.getMessage(), containsString("can only be referenced from"));
     }
   }
 

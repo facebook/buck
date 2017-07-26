@@ -1,0 +1,6 @@
+command_alias(
+    name = "inner",
+    exe = "//scripts:echo",
+    env = {"ENV_A": "1"},
+    visibility = ["PUBLIC"],
+)

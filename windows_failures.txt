@@ -25,10 +25,10 @@
 !com.facebook.buck.cxx.CxxPreprocessAndCompileIntegrationTest
 !com.facebook.buck.cxx.CxxPreprocessablesTest
 !com.facebook.buck.cxx.CxxTestStepTest#output
-!com.facebook.buck.cxx.DebugPathSanitizerTest
 !com.facebook.buck.cxx.HeaderMapStepTest
 !com.facebook.buck.cxx.OmnibusTest
 !com.facebook.buck.cxx.ToolTest
+!com.facebook.buck.cxx.platform.DebugPathSanitizerTest
 !com.facebook.buck.jvm.java.ExternalJavacIntegrationTest#whenBuckdUsesExternalJavacThenClientEnvironmentUsed
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryIntegrationTest

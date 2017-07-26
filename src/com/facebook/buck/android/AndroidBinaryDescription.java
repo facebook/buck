@@ -58,6 +58,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -354,8 +355,7 @@ public class AndroidBinaryDescription
               args.getCpuFilters(),
               resourceFilter,
               exopackageModes,
-              MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver),
-              args.getPreprocessJavaClassesBash(),
+              getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots),
               rulesToExcludeFromDex,
               result,
               args.isReorderClassesIntraDex(),
@@ -473,6 +473,15 @@ public class AndroidBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots) {
     return arg.getPostFilterResourcesCmd()
+        .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply);
+  }
+
+  private Optional<Arg> getPreprocessJavaClassesBash(
+      AndroidBinaryDescriptionArg arg,
+      BuildTarget buildTarget,
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots) {
+    return arg.getPreprocessJavaClassesBash()
         .map(MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply);
   }
 

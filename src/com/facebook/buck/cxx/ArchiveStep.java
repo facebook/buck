@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.Archiver;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -51,6 +52,7 @@ public class ArchiveStep implements Step {
   private final Path output;
   private final ImmutableList<Path> inputs;
   private final Archiver archiver;
+  private final Path scratchDir;
 
   public ArchiveStep(
       ProjectFilesystem filesystem,
@@ -60,7 +62,8 @@ public class ArchiveStep implements Step {
       ImmutableList<String> archiverExtraFlags,
       Path output,
       ImmutableList<Path> inputs,
-      Archiver archiver) {
+      Archiver archiver,
+      Path scratchDir) {
     Preconditions.checkArgument(!output.isAbsolute());
     // Our current support for thin archives requires that all the inputs are relative paths from
     // the same cell as the output.
@@ -75,6 +78,7 @@ public class ArchiveStep implements Step {
     this.output = output;
     this.inputs = inputs;
     this.archiver = archiver;
+    this.scratchDir = scratchDir;
   }
 
   private ImmutableList<String> getAllInputs() throws IOException {
@@ -123,6 +127,10 @@ public class ArchiveStep implements Step {
     return result;
   }
 
+  private Path getArgfile() {
+    return filesystem.resolve(scratchDir).resolve("ar.argsfile");
+  }
+
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
@@ -131,33 +139,46 @@ public class ArchiveStep implements Step {
       filesystem.writeContentsToPath("!<arch>\n", output);
       return StepExecutionResult.SUCCESS;
     } else {
-      ImmutableList<String> archiveCommandPrefix =
-          ImmutableList.<String>builder()
-              .addAll(archiverCommand)
-              .addAll(archiverFlags)
-              .addAll(archiverExtraFlags)
-              .addAll(archiver.outputArgs(output.toString()))
-              .build();
-      CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
-      for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
-        ProcessExecutor.Result result = runArchiver(context, command);
-        if (result.getExitCode() != 0) {
-          return StepExecutionResult.of(result);
+      ImmutableList<String> outputArgs = archiver.outputArgs(output.toString());
+      if (archiver.isArgfileRequired()) {
+        Iterable<String> argfileLines =
+            Iterables.concat(archiverFlags, archiverExtraFlags, outputArgs, allInputs);
+        Path argfile = getArgfile();
+        filesystem.writeLinesToPath(argfileLines, argfile);
+        ImmutableList<String> command =
+            ImmutableList.<String>builder().addAll(archiverCommand).add("@" + argfile).build();
+        return StepExecutionResult.of(runArchiver(context, command));
+      } else {
+        ImmutableList<String> archiveCommandPrefix =
+            ImmutableList.<String>builder()
+                .addAll(archiverCommand)
+                .addAll(archiverFlags)
+                .addAll(archiverExtraFlags)
+                .addAll(outputArgs)
+                .build();
+        CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
+        for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
+          ProcessExecutor.Result result = runArchiver(context, command);
+          if (result.getExitCode() != 0) {
+            return StepExecutionResult.of(result);
+          }
         }
+        return StepExecutionResult.SUCCESS;
       }
-      return StepExecutionResult.SUCCESS;
     }
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
     ImmutableList.Builder<String> command =
-        ImmutableList.<String>builder()
-            .add("ar")
-            .addAll(archiverFlags)
-            .addAll(archiverExtraFlags)
-            .addAll(archiver.outputArgs(output.toString()))
-            .addAll(Iterables.transform(inputs, Object::toString));
+        archiver.isArgfileRequired()
+            ? ImmutableList.<String>builder().addAll(archiverCommand).add("@" + getArgfile())
+            : ImmutableList.<String>builder()
+                .add("ar")
+                .addAll(archiverFlags)
+                .addAll(archiverExtraFlags)
+                .addAll(archiver.outputArgs(output.toString()))
+                .addAll(Iterables.transform(inputs, Object::toString));
     return Joiner.on(' ').join(command.build());
   }
 
