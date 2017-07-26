@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
@@ -115,5 +116,30 @@ public class BuckCommand extends AbstractContainerCommand {
   @Override
   public boolean isSourceControlStatsGatheringEnabled() {
     return false;
+  }
+
+  /**
+   * @return The name that was used to invoke the subcommand, as declared in the annotations above
+   */
+  String getDeclaredSubCommandName() {
+    if (subcommand == null) {
+      return "no_sub_command";
+    } else {
+      final Class<? extends Command> subcommandClass = subcommand.getClass();
+      try {
+        final SubCommands subCommands =
+            this.getClass()
+                .getDeclaredField(getSubcommandsFieldName())
+                .getAnnotation(SubCommands.class);
+        for (SubCommand c : subCommands.value()) {
+          if (c.impl().equals(subcommandClass)) {
+            return c.name();
+          }
+        }
+        return "unknown_sub_command";
+      } catch (NoSuchFieldException e) {
+        throw new HumanReadableException(e.getMessage());
+      }
+    }
   }
 }
