@@ -81,7 +81,7 @@ public final class TestConfigurationUtil {
                 return null;
               }
             });
-    handler.command().addParameter("kind('java_test', owner(" + containingFile.getPath() + "))");
+    handler.command().addParameter("kind('.*_test', owner(" + containingFile.getPath() + "))");
     return handler;
   }
 
