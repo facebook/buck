@@ -1,0 +1,5 @@
+command_alias(
+    name = "inner",
+    exe = "//scripts:echo",
+    visibility = ["PUBLIC"],
+)

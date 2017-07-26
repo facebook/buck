@@ -1,0 +1,9 @@
+command_alias(
+    name = "outer",
+    exe = "//alias:inner",
+    args = [
+        "$(location //scripts:scripts)",
+        "1",
+        "second arg",
+    ],
+)

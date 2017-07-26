@@ -146,6 +146,7 @@ import com.facebook.buck.rust.RustBinaryDescription;
 import com.facebook.buck.rust.RustBuckConfig;
 import com.facebook.buck.rust.RustLibraryDescription;
 import com.facebook.buck.rust.RustTestDescription;
+import com.facebook.buck.shell.CommandAliasDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
@@ -590,6 +591,7 @@ public class KnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             defaultTestRuleTimeoutMs));
+    builder.register(new CommandAliasDescription());
     builder.register(new CoreDataModelDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);
