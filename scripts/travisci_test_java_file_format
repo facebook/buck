@@ -1,6 +1,14 @@
 #!/bin/bash
 set -x
 
+git stash save -u
+
+function finish {
+  git stash pop
+}
+
+trap finish EXIT
+
 REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
 
 FORMAT_JAR_URL="https://github.com/google/google-java-format/releases/download/google-java-format-1.3/google-java-format-1.3-all-deps.jar"
@@ -19,5 +27,6 @@ done
 if [ "$(git status --porcelain)" ]; then
   echo "Some files are not formatted properly."
   git diff
+  git checkout -- .
   exit 1
 fi
