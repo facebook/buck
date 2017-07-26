@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -438,8 +439,13 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return buildOutputInitializer.getBuildOutput().primaryDexHash;
   }
 
-  public ImmutableSet<Path> getSecondaryDexDirectories() {
-    return buildOutputInitializer.getBuildOutput().secondaryDexDirectories;
+  public ImmutableSortedSet<SourcePath> getSecondaryDexDirectories() {
+    return buildOutputInitializer
+        .getBuildOutput()
+        .secondaryDexDirectories
+        .stream()
+        .map(path -> new ExplicitBuildTargetSourcePath(getBuildTarget(), path))
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   static class BuildOutput {
