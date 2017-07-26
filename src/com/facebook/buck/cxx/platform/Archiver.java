@@ -31,4 +31,14 @@ public interface Archiver extends Tool {
   ImmutableList<String> outputArgs(String outputPath);
 
   boolean isRanLibStepRequired();
+
+  /**
+   * Whether an argfile is required for a long command line (false means that it is possible to
+   * split a long command line into chunks). Eg, ar on *nix allows to add new files to an already
+   * created archive, but doesn't accept argfiles. On the contrary, VS lib.exe on windows always
+   * overrides the previous archive, but supports argfiles.
+   *
+   * @return whether @argfile is required for a long command line
+   */
+  boolean isArgfileRequired();
 }

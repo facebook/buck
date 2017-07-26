@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreCollectors;
@@ -184,7 +186,16 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output)),
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
+
+    if (archiver.isArgfileRequired()) {
+      builder.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), getScratchPath())));
+    }
+
+    builder.add(
         new ArchiveStep(
             getProjectFilesystem(),
             archiver.getEnvironment(resolver),
@@ -196,7 +207,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
                 .stream()
                 .map(resolver::getRelativePath)
                 .collect(MoreCollectors.toImmutableList()),
-            archiver));
+            archiver,
+            getScratchPath()));
 
     if (archiver.isRanLibStepRequired()) {
       builder.add(
@@ -213,6 +225,10 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     }
 
     return builder.build();
+  }
+
+  private Path getScratchPath() {
+    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
   }
 
   /**

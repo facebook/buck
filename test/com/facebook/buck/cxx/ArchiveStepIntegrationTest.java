@@ -88,7 +88,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(false),
             output,
             ImmutableList.of(input),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
     FileScrubberStep fileScrubberStep =
         new FileScrubberStep(filesystem, output, platform.getAr().getScrubbers());
 
@@ -138,7 +139,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(false),
             output,
             ImmutableList.of(),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -183,7 +185,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(false),
             output,
             ImmutableList.of(input.getParent()),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -239,7 +242,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(true),
             output,
             ImmutableList.of(input),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();

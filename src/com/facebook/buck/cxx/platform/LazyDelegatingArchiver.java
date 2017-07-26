@@ -85,6 +85,11 @@ public class LazyDelegatingArchiver implements Archiver {
     return delegate.get().getEnvironment(resolver);
   }
 
+  @Override
+  public boolean isArgfileRequired() {
+    return delegate.get().isArgfileRequired();
+  }
+
   public Archiver getDelegate() {
     return delegate.get();
   }

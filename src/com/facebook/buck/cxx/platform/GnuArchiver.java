@@ -86,4 +86,9 @@ public class GnuArchiver implements Archiver {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("tool", tool).setReflectively("type", getClass().getSimpleName());
   }
+
+  @Override
+  public boolean isArgfileRequired() {
+    return false;
+  }
 }
