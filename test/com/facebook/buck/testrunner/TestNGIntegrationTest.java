@@ -23,45 +23,43 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import java.io.IOException;
 
 public class TestNGIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testThatSuccessfulTestNGTestWorks() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_testng", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_testng", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult simpleTestNGTestResult = workspace.runBuckCommand(
-        "test", "//test:SimpleTest");
+    ProcessResult simpleTestNGTestResult = workspace.runBuckCommand("test", "//test:SimpleTest");
     simpleTestNGTestResult.assertSuccess();
   }
 
   @Test
   public void testThatFailingTestNGTestWorks() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_testng", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_testng", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult simpleFailingTestNGTestResult = workspace.runBuckCommand(
-        "test", "//test:SimpleFailingTest");
+    ProcessResult simpleFailingTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:SimpleFailingTest");
     simpleFailingTestNGTestResult.assertTestFailure();
   }
 
   @Test
   public void testThatInjectionWorks() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "simple_testng", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_testng", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult injectionTestNGTestResult = workspace.runBuckCommand(
-        "test", "//test:InjectionTest");
+    ProcessResult injectionTestNGTestResult =
+        workspace.runBuckCommand("test", "//test:InjectionTest");
     injectionTestNGTestResult.assertSuccess();
     // Make sure that we didn't just skip over the class.
     assertThat(injectionTestNGTestResult.getStderr(), containsString("1 Passed"));

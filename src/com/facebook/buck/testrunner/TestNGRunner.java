@@ -18,6 +18,15 @@ package com.facebook.buck.testrunner;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelector;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.testng.IAnnotationTransformer;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
@@ -31,15 +40,6 @@ import org.testng.internal.annotations.JDK15AnnotationFinder;
 import org.testng.xml.XmlClass;
 import org.testng.xml.XmlSuite;
 import org.testng.xml.XmlTest;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /** Class that runs a set of TestNG tests and writes the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
@@ -110,7 +110,8 @@ public final class TestNGRunner extends BaseRunner {
     }
     // Test classes must either have a public, no-arg constructor, or have a constructor that
     // initializes using dependency injection, via the org.testng.annotations.Guice annotation on
-    // the class and the com.google.inject.Inject or javax.inject.Inject annotation on the constructor.
+    // the class and the com.google.inject.Inject or javax.inject.Inject annotation on the
+    // constructor.
     boolean foundPublicNoArgConstructor = false;
     boolean foundInjectedConstructor = false;
     boolean hasGuiceAnnotation = klass.getAnnotationsByType(Guice.class).length > 0;
@@ -121,7 +122,7 @@ public final class TestNGRunner extends BaseRunner {
         }
         if (hasGuiceAnnotation
             && (c.getAnnotationsByType(com.google.inject.Inject.class).length > 0
-            || c.getAnnotationsByType(javax.inject.Inject.class).length > 0)) {
+                || c.getAnnotationsByType(javax.inject.Inject.class).length > 0)) {
           foundInjectedConstructor = true;
         }
       }

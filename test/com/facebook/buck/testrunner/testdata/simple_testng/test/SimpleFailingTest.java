@@ -30,4 +30,3 @@ public class SimpleFailingTest {
     throw new RuntimeException();
   }
 }
-

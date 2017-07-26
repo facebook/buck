@@ -16,22 +16,20 @@
 
 package com.example;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
 import com.example.InjectionTest.InjectionTestModule;
 import com.example.InjectionTest.TestInterface;
 import com.example.InjectionTest.TestInterfaceImpl;
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
+import javax.inject.Inject;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
-import javax.inject.Inject;
-import javax.inject.Named;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
 
 @Guice(modules = InjectionTestModule.class)
 public class InjectionTest {
-  final private TestInterface injectedInterface;
+  private final TestInterface injectedInterface;
 
   @Inject
   public InjectionTest(TestInterface injectedInterface) {
@@ -61,4 +59,3 @@ public class InjectionTest {
     }
   }
 }
-
