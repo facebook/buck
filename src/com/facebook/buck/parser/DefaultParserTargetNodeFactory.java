@@ -218,8 +218,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       if (!ancestor.get().equals(basePath)) {
         Path buckFile = ancestor.get().resolve("BUCK");
         throw new HumanReadableException(
-            "The target '%s' tried to refer '%s'.\n"
-                + "It's not allowed because this file is already referred by another rule in\n"
+            "The target '%s' tried to reference '%s'.\n"
+                + "It's not allowed because this file is already referenced by another rule in\n"
                 + "'%s'.\n\n"
                 + "It may also be due to a bug in buckd's caching.\n"
                 + "Please check whether using `buck kill` will resolve it.",
