@@ -29,10 +29,10 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-final public class TestConfigurationUtil {
+public final class TestConfigurationUtil {
 
   private static final String[] TEST_ANNOTATIONS = {
-      "org.junit.Test", "org.testng.annotations.Test"
+    "org.junit.Test", "org.testng.annotations.Test"
   };
 
   /**
@@ -41,13 +41,14 @@ final public class TestConfigurationUtil {
    * @param testConfiguration the {@link TestConfiguration} to fill out.
    * @param name a {@link String} representing the name of the configuration.
    * @param testSelectors a {@link String} representing optional testSelectors for filtering.
-   * @param project {@link Project} then intellij project corresponding the the file or module under test.
+   * @param project {@link Project} then intellij project corresponding the the file or module under
+   *     test.
    * @param containingFile {@link VirtualFile} the file that containing the impacted tests.
    * @param buckFile {@link VirtualFile} the file representing the buck File.
    * @param testConfigurationProcessor a {@link Function<TestConfiguration, null>} representing a
-   *                                   callback to run after the test configuration is filled out.
+   *     callback to run after the test configuration is filled out.
    * @return a {@link BuckCommandHandler} that handles the buck query command used to fill out the
-   * test configuration.
+   *     test configuration.
    */
   public static BuckCommandHandler getTestConfigurationDataHandler(
       @Nonnull TestConfiguration testConfiguration,
@@ -66,12 +67,10 @@ final public class TestConfigurationUtil {
               @Nullable
               @Override
               public Void apply(@Nullable List<String> strings) {
-                if (
-                    !(strings == null
-                        || strings.isEmpty()
-                        || strings.get(0) == null
-                        || strings.get(0).isEmpty())
-                    ) {
+                if (!(strings == null
+                    || strings.isEmpty()
+                    || strings.get(0) == null
+                    || strings.get(0).isEmpty())) {
                   testConfiguration.setName(name);
                   testConfiguration.data.target = strings.get(0);
                   testConfiguration.data.testSelectors = testSelectors.orElse("");
@@ -81,8 +80,7 @@ final public class TestConfigurationUtil {
                 }
                 return null;
               }
-            }
-        );
+            });
     handler.command().addParameter("kind('java_test', owner(" + containingFile.getPath() + "))");
     return handler;
   }

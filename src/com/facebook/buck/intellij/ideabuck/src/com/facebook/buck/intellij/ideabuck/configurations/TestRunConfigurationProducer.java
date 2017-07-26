@@ -36,9 +36,7 @@ public class TestRunConfigurationProducer extends RunConfigurationProducer<TestC
 
   @Override
   protected boolean setupConfigurationFromContext(
-      TestConfiguration config,
-      ConfigurationContext context,
-      Ref<PsiElement> ref) {
+      TestConfiguration config, ConfigurationContext context, Ref<PsiElement> ref) {
 
     PsiElement location = context.getPsiLocation();
     if (location == null) {
@@ -66,26 +64,25 @@ public class TestRunConfigurationProducer extends RunConfigurationProducer<TestC
 
     BuckBuildManager buildManager = BuckBuildManager.getInstance(context.getProject());
     final CompletableFuture<Boolean> success = new CompletableFuture<>();
-    BuckCommandHandler handler = TestConfigurationUtil.getTestConfigurationDataHandler(
-        config,
-        name,
-        testSelector,
-        context.getProject(),
-        file.getVirtualFile(),
-        context.getProject().getProjectFile(),
-        configuration -> {
-          success.complete(configuration.data.target != null);
-          return null;
-        }
-    );
+    BuckCommandHandler handler =
+        TestConfigurationUtil.getTestConfigurationDataHandler(
+            config,
+            name,
+            testSelector,
+            context.getProject(),
+            file.getVirtualFile(),
+            context.getProject().getProjectFile(),
+            configuration -> {
+              success.complete(configuration.data.target != null);
+              return null;
+            });
     buildManager.runInCurrentThread(handler, null, true, null);
     return success.getNow(false);
   }
 
   @Override
   public boolean isConfigurationFromContext(
-      TestConfiguration config,
-      ConfigurationContext context) {
+      TestConfiguration config, ConfigurationContext context) {
     PsiElement location = context.getPsiLocation();
     if (location == null) {
       return false;

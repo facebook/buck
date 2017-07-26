@@ -141,41 +141,41 @@ public class RunSelectedTestAction extends AnAction {
     }
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
     RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
-    RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings
-        = (RunnerAndConfigurationSettingsImpl)runManager.createRunConfiguration(
-        name,
-        type.getConfigurationFactories()[0]);
+    RunnerAndConfigurationSettingsImpl runnerAndConfigurationSettings =
+        (RunnerAndConfigurationSettingsImpl)
+            runManager.createRunConfiguration(name, type.getConfigurationFactories()[0]);
     TestConfiguration testConfiguration =
         (TestConfiguration) runnerAndConfigurationSettings.getConfiguration();
-    BuckCommandHandler handler = TestConfigurationUtil.getTestConfigurationDataHandler(
-        testConfiguration,
-        name,
-        testSelectors,
-        project,
-        containingFile,
-        buckFile,
-        configuration -> {
-          runnerAndConfigurationSettingsResult = runnerAndConfigurationSettings;
-          runManager.addConfiguration(runnerAndConfigurationSettings, false);
-          return null;
-        }
-    );
-    buildManager.runInCurrentThreadPostEnd(handler,
-      () -> {
-        if (runnerAndConfigurationSettingsResult != null) {
-          runManager.setSelectedConfiguration(runnerAndConfigurationSettingsResult);
-          Executor executor;
-          if (debug) {
-            executor = DefaultDebugExecutor.getDebugExecutorInstance();
-          } else {
-            if (ExecutorRegistry.getInstance().getRegisteredExecutors().length == 0) {
-              return;
+    BuckCommandHandler handler =
+        TestConfigurationUtil.getTestConfigurationDataHandler(
+            testConfiguration,
+            name,
+            testSelectors,
+            project,
+            containingFile,
+            buckFile,
+            configuration -> {
+              runnerAndConfigurationSettingsResult = runnerAndConfigurationSettings;
+              runManager.addConfiguration(runnerAndConfigurationSettings, false);
+              return null;
+            });
+    buildManager.runInCurrentThreadPostEnd(
+        handler,
+        () -> {
+          if (runnerAndConfigurationSettingsResult != null) {
+            runManager.setSelectedConfiguration(runnerAndConfigurationSettingsResult);
+            Executor executor;
+            if (debug) {
+              executor = DefaultDebugExecutor.getDebugExecutorInstance();
+            } else {
+              if (ExecutorRegistry.getInstance().getRegisteredExecutors().length == 0) {
+                return;
+              }
+              executor = ExecutorRegistry.getInstance().getRegisteredExecutors()[0];
+              ProgramRunnerUtil.executeConfiguration(
+                  project, runnerAndConfigurationSettingsResult, executor);
             }
-            executor = ExecutorRegistry.getInstance().getRegisteredExecutors()[0];
-            ProgramRunnerUtil.executeConfiguration(
-                project, runnerAndConfigurationSettingsResult, executor);
           }
-        }
-      });
+        });
   }
 }
