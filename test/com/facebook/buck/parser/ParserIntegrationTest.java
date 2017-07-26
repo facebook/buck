@@ -227,7 +227,7 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//java:foo");
       fail("Expected exception");
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("already referenced by"));
+      assertThat(e.getMessage(), containsString("can only be referenced from"));
     }
 
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "false");
@@ -240,7 +240,7 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//java2:foo").assertSuccess();
       fail("Expected exception");
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("already referenced by"));
+      assertThat(e.getMessage(), containsString("can only be referenced from"));
     }
   }
 
