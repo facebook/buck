@@ -117,7 +117,12 @@ public class AppleSdkDiscovery {
             for (Path sdkDir : sdkStream) {
               LOG.debug("Fetching SDK name for %s", sdkDir);
 
-              sdkDir = sdkDir.toRealPath();
+              try {
+                sdkDir = sdkDir.toRealPath();
+              } catch (NoSuchFileException e) {
+                LOG.warn(e, "SDK at path %s is a dangling link, ignoring", sdkDir);
+                continue;
+              }
               if (scannedSdkDirs.contains(sdkDir)) {
                 LOG.debug("Skipping already scanned SDK directory %s", sdkDir);
                 continue;

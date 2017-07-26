@@ -171,12 +171,11 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             filesystem,
-            BuildTarget.builder(target)
-                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
-                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
+            target.withAppendedFlavors(
+                AppleDebugFormat.DWARF.getFlavor(),
+                AppleTestDescription.BUNDLE_FLAVOR,
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
 
@@ -195,12 +194,11 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             filesystem,
-            BuildTarget.builder(target)
-                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
 
@@ -219,12 +217,11 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             filesystem,
-            BuildTarget.builder(buildTarget)
-                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
-                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
+            buildTarget.withAppendedFlavors(
+                AppleDebugFormat.DWARF.getFlavor(),
+                AppleTestDescription.BUNDLE_FLAVOR,
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
@@ -273,12 +270,11 @@ public class AppleTestIntegrationTest {
         Paths.get("foo_output.expected"),
         BuildTargets.getGenPath(
             filesystem,
-            BuildTarget.builder(target)
-                .addFlavors(AppleDebugFormat.DWARF.getFlavor())
-                .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
+            target.withAppendedFlavors(
+                AppleDebugFormat.DWARF.getFlavor(),
+                AppleTestDescription.BUNDLE_FLAVOR,
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
 

@@ -21,8 +21,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.platform.DebugPathSanitizer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

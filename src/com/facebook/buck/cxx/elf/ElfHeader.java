@@ -42,6 +42,7 @@ public class ElfHeader {
   // CHECKSTYLE.OFF: MemberName
   public final EIClass ei_class;
   public final EIData ei_data;
+  public final byte[] e_ident;
   public final int e_type;
   public final int e_machine;
   public final long e_version;
@@ -60,6 +61,7 @@ public class ElfHeader {
   ElfHeader(
       EIClass ei_class,
       EIData ei_data,
+      byte[] e_ident,
       int e_type,
       int e_machine,
       long e_version,
@@ -75,6 +77,7 @@ public class ElfHeader {
       int e_shstrndx) {
     this.ei_class = ei_class;
     this.ei_data = ei_data;
+    this.e_ident = e_ident;
     this.e_type = e_type;
     this.e_machine = e_machine;
     this.e_version = e_version;
@@ -110,23 +113,80 @@ public class ElfHeader {
 
     // Read the class field to determine whether we're parsing for 32-bit or 64-bit.
     EIClass ei_class = EIClass.valueOf(e_ident[EI_CLASS]);
-    return ei_class.parseHeader(ei_data, buffer);
+    return ei_class.parseHeader(ei_data, e_ident, buffer);
+  }
+
+  public void write(ByteBuffer buffer) {
+
+    // Write out the identifier array.
+    buffer.put(e_ident);
+
+    if (ei_class == EIClass.ELFCLASS32) {
+      Elf.Elf32.putElf32Half(buffer, (short) e_type);
+      Elf.Elf32.putElf32Half(buffer, (short) e_machine);
+      Elf.Elf32.putElf32Word(buffer, (int) e_version);
+      Elf.Elf32.putElf32Addr(buffer, (int) e_entry);
+      Elf.Elf32.putElf32Addr(buffer, (int) e_phoff);
+      Elf.Elf32.putElf32Addr(buffer, (int) e_shoff);
+      Elf.Elf32.putElf32Word(buffer, (int) e_flags);
+      Elf.Elf32.putElf32Half(buffer, (short) e_ehsize);
+      Elf.Elf32.putElf32Half(buffer, (short) e_phentsize);
+      Elf.Elf32.putElf32Half(buffer, (short) e_phnum);
+      Elf.Elf32.putElf32Half(buffer, (short) e_shentsize);
+      Elf.Elf32.putElf32Half(buffer, (short) e_shnum);
+      Elf.Elf32.putElf32Half(buffer, (short) e_shstrndx);
+    } else {
+      Elf.Elf64.putElf64Half(buffer, (short) e_type);
+      Elf.Elf64.putElf64Half(buffer, (short) e_machine);
+      Elf.Elf64.putElf64Word(buffer, (int) e_version);
+      Elf.Elf64.putElf64Addr(buffer, e_entry);
+      Elf.Elf64.putElf64Addr(buffer, e_phoff);
+      Elf.Elf64.putElf64Addr(buffer, e_shoff);
+      Elf.Elf64.putElf64Word(buffer, (int) e_flags);
+      Elf.Elf64.putElf64Half(buffer, (short) e_ehsize);
+      Elf.Elf64.putElf64Half(buffer, (short) e_phentsize);
+      Elf.Elf64.putElf64Half(buffer, (short) e_phnum);
+      Elf.Elf64.putElf64Half(buffer, (short) e_shentsize);
+      Elf.Elf64.putElf64Half(buffer, (short) e_shnum);
+      Elf.Elf64.putElf64Half(buffer, (short) e_shstrndx);
+    }
+  }
+
+  public ElfHeader withEntry(long e_entry) {
+    return new ElfHeader(
+        ei_class,
+        ei_data,
+        e_ident,
+        e_type,
+        e_machine,
+        e_version,
+        e_entry,
+        e_phoff,
+        e_shoff,
+        e_flags,
+        e_ehsize,
+        e_phentsize,
+        e_phnum,
+        e_shentsize,
+        e_shnum,
+        e_shstrndx);
   }
 
   public enum EIClass {
     ELFCLASSNONE(0) {
       @Override
-      ElfHeader parseHeader(EIData ei_data, ByteBuffer buffer) {
+      ElfHeader parseHeader(EIData ei_data, byte[] e_ident, ByteBuffer buffer) {
         throw new IllegalStateException();
       }
     },
 
     ELFCLASS32(1) {
       @Override
-      ElfHeader parseHeader(EIData ei_data, ByteBuffer buffer) {
+      ElfHeader parseHeader(EIData ei_data, byte[] e_ident, ByteBuffer buffer) {
         return new ElfHeader(
             this,
             ei_data,
+            e_ident,
             getUnsignedShort(buffer),
             getUnsignedShort(buffer),
             getUnsignedInt(buffer),
@@ -145,10 +205,11 @@ public class ElfHeader {
 
     ELFCLASS64(2) {
       @Override
-      ElfHeader parseHeader(EIData ei_data, ByteBuffer buffer) {
+      ElfHeader parseHeader(EIData ei_data, byte[] e_ident, ByteBuffer buffer) {
         return new ElfHeader(
             this,
             ei_data,
+            e_ident,
             getUnsignedShort(buffer),
             getUnsignedShort(buffer),
             getUnsignedInt(buffer),
@@ -180,7 +241,7 @@ public class ElfHeader {
       throw new IllegalStateException();
     }
 
-    abstract ElfHeader parseHeader(EIData ei_data, ByteBuffer buffer);
+    abstract ElfHeader parseHeader(EIData ei_data, byte[] e_ident, ByteBuffer buffer);
   }
 
   public enum EIData {

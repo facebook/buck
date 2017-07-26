@@ -16,22 +16,21 @@
 
 package com.facebook.buck.android.support.exopackage;
 
+import android.content.Context;
+import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import android.content.Context;
-import android.util.Log;
-
 /**
  * Loads pre-dexed jars installed by the exopackage installer into our ClassLoader.
- * <p>
- * See http://android-developers.blogspot.com/2011/07/custom-class-loading-in-dalvik.html for an
+ *
+ * <p>See http://android-developers.blogspot.com/2011/07/custom-class-loading-in-dalvik.html for an
  * explanation of how an app can load pre-dexed libraries. This class goes a step further and then
- * hacks the system class loader so these can be referenced by default. This logic has to run
- * before any class that references the code in these dexes is loaded.
+ * hacks the system class loader so these can be referenced by default. This logic has to run before
+ * any class that references the code in these dexes is loaded.
  */
 public class ExopackageDexLoader {
 
@@ -40,15 +39,14 @@ public class ExopackageDexLoader {
   private ExopackageDexLoader() {}
 
   /**
-   * Load JARs installed by Buck's Exopackage installer and add them to
-   * the Application ClassLoader.
+   * Load JARs installed by Buck's Exopackage installer and add them to the Application ClassLoader.
    *
    * @param context The application context.
    */
   @SuppressWarnings("PMD.CollapsibleIfStatements")
   public static void loadExopackageJars(Context context) {
-    File containingDirectory = new File(
-        "/data/local/tmp/exopackage/" + context.getPackageName() + "/secondary-dex");
+    File containingDirectory =
+        new File("/data/local/tmp/exopackage/" + context.getPackageName() + "/secondary-dex");
 
     List<File> dexJars = new ArrayList<>();
     Set<String> expectedOdexSet = new HashSet<>();

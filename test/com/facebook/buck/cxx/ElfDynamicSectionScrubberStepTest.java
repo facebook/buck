@@ -21,16 +21,15 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfDynamicSection;
-import com.facebook.buck.cxx.elf.ElfHeader;
 import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
@@ -48,10 +47,15 @@ public class ElfDynamicSectionScrubberStepTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
+
+    ImmutableSet<ElfDynamicSection.DTag> whitelist =
+        ImmutableSet.of(ElfDynamicSection.DTag.DT_SONAME, ElfDynamicSection.DTag.DT_NEEDED);
     ElfDynamicSectionScrubberStep step =
         ElfDynamicSectionScrubberStep.of(
             new ProjectFilesystem(tmp.getRoot()),
-            tmp.getRoot().getFileSystem().getPath("libfoo.so"));
+            tmp.getRoot().getFileSystem().getPath("libfoo.so"),
+            whitelist,
+            /* removeScrubbedTags */ false);
     step.execute(TestExecutionContext.newInstance());
 
     // Verify that the relevant dynamic section tag have been zero'd out.
@@ -60,20 +64,46 @@ public class ElfDynamicSectionScrubberStepTest {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
       Optional<ElfSection> section =
-          elf.getSectionByName(ElfDynamicSectionScrubberStep.SECTION).map(Pair::getSecond);
-      for (ByteBuffer body = section.get().body; body.hasRemaining(); ) {
-        ElfDynamicSection.DTag dTag =
-            ElfDynamicSection.DTag.valueOf(
-                elf.header.ei_class == ElfHeader.EIClass.ELFCLASS32
-                    ? Elf.Elf32.getElf32Sword(body)
-                    : (int) Elf.Elf64.getElf64Sxword(body));
-        long dPtr =
-            elf.header.ei_class == ElfHeader.EIClass.ELFCLASS32
-                ? Elf.Elf32.getElf32Addr(body)
-                : Elf.Elf64.getElf64Addr(body);
-        if (!ElfDynamicSectionScrubberStep.WHITELISTED_TAGS.contains(dTag)) {
-          assertThat(dPtr, Matchers.equalTo(0L));
+          elf.getSectionByName(ElfDynamicSectionScrubberStep.SECTION)
+              .map(ElfSectionLookupResult::getSection);
+      ElfDynamicSection dynamic = ElfDynamicSection.parse(elf.header.ei_class, section.get().body);
+      for (ElfDynamicSection.Entry entry : dynamic.entries) {
+        if (!whitelist.contains(entry.d_tag)) {
+          assertThat(entry.d_un, Matchers.equalTo(0L));
         }
+      }
+    }
+  }
+
+  @Test
+  public void testRemoveScrubbedTags() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
+    workspace.setUp();
+
+    ImmutableSet<ElfDynamicSection.DTag> whitelist =
+        ImmutableSet.of(ElfDynamicSection.DTag.DT_SONAME, ElfDynamicSection.DTag.DT_NEEDED);
+    ElfDynamicSectionScrubberStep step =
+        ElfDynamicSectionScrubberStep.of(
+            new ProjectFilesystem(tmp.getRoot()),
+            tmp.getRoot().getFileSystem().getPath("libfoo.so"),
+            whitelist,
+            /* removeScrubbedTags */ true);
+    step.execute(TestExecutionContext.newInstance());
+
+    // Verify that the relevant dynamic section tag have been zero'd out.
+    try (FileChannel channel =
+        FileChannel.open(step.getFilesystem().resolve(step.getPath()), StandardOpenOption.READ)) {
+      MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
+      Elf elf = new Elf(buffer);
+      Optional<ElfSection> section =
+          elf.getSectionByName(ElfDynamicSectionScrubberStep.SECTION)
+              .map(ElfSectionLookupResult::getSection);
+      ElfDynamicSection dynamic = ElfDynamicSection.parse(elf.header.ei_class, section.get().body);
+      for (ElfDynamicSection.Entry entry : dynamic.entries) {
+        assertThat(
+            entry.d_tag,
+            Matchers.anyOf(Matchers.in(whitelist), Matchers.is(ElfDynamicSection.DTag.DT_NULL)));
       }
     }
   }

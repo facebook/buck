@@ -17,10 +17,10 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -188,10 +188,7 @@ public class AppleBundleDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget =
-          BuildTarget.builder(buildTarget)
-              .addAllFlavors(ImmutableSet.of(defaultCxxPlatform.getFlavor()))
-              .build();
+      buildTarget = buildTarget.withAppendedFlavors(defaultCxxPlatform.getFlavor());
     }
 
     Optional<MultiarchFileInfo> fatBinaryInfo =
@@ -236,10 +233,7 @@ public class AppleBundleDescription
           targetsWithoutPlatformFlavors
               .filter(BuildTargets.containsFlavor(WATCH))
               .transform(
-                  input ->
-                      BuildTarget.builder(input.withoutFlavors(WATCH))
-                          .addFlavors(actualWatchFlavor)
-                          .build());
+                  input -> input.withoutFlavors(WATCH).withAppendedFlavors(actualWatchFlavor));
 
       targetsWithoutPlatformFlavors =
           targetsWithoutPlatformFlavors.filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));

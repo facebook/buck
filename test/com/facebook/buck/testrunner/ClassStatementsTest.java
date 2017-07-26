@@ -33,7 +33,7 @@ import org.junit.Test;
 
 public class ClassStatementsTest {
 
-  public static final int BEFORE_CLASS_EXPECTED_RUNTIME = 250;
+  private static final int BEFORE_CLASS_EXPECTED_RUNTIME = 250;
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -60,13 +60,20 @@ public class ClassStatementsTest {
         containsRegex(
             createBuckTestOutputLineRegex("FAIL", 0, 0, 1, "com.example.HasBeforeClassFailure")));
 
-    Pattern failPattern = Pattern.compile("^FAIL +(\\d+)ms", Pattern.MULTILINE);
-    Matcher matcher = failPattern.matcher(stderr);
-    matcher.find();
-    int actualRuntime = Integer.parseInt(matcher.group(1));
+    // Find the ms or s runtime.
+    int actualRuntimeMs;
+    Matcher matcher = Pattern.compile("^FAIL +(\\d+)ms", Pattern.MULTILINE).matcher(stderr);
+    if (matcher.find()) {
+      actualRuntimeMs = Integer.parseInt(matcher.group(1));
+    } else {
+      matcher = Pattern.compile("^FAIL +(\\d|\\.)+s", Pattern.MULTILINE).matcher(stderr);
+      matcher.find();
+      actualRuntimeMs = (int) (Double.parseDouble(matcher.group(1)) * 1000);
+    }
+
     assertThat(
-        "Reasonable runtime was guessed",
-        actualRuntime,
+        "Reported a runtime that's at least the expected run time",
+        actualRuntimeMs,
         greaterThanOrEqualTo(BEFORE_CLASS_EXPECTED_RUNTIME));
   }
 }

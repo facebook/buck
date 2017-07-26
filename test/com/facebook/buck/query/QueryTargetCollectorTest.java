@@ -18,7 +18,7 @@ package com.facebook.buck.query;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
@@ -98,6 +98,6 @@ public class QueryTargetCollectorTest {
   }
 
   private static QueryTarget target(String shortName) {
-    return QueryBuildTarget.of(BuildTarget.builder(ROOT, baseName, shortName).build());
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, baseName, shortName));
   }
 }

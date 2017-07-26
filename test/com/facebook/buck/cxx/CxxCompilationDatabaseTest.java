@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.platform.GccCompiler;
+import com.facebook.buck.cxx.platform.GccPreprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -60,9 +62,8 @@ public class CxxCompilationDatabaseTest {
   @Test
   public void testCompilationDatabase() throws Exception {
     BuildTarget testBuildTarget =
-        BuildTarget.builder(BuildTargetFactory.newInstance("//foo:baz"))
-            .addAllFlavors(ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE))
-            .build();
+        BuildTargetFactory.newInstance("//foo:baz")
+            .withAppendedFlavors(ImmutableSet.of(CxxCompilationDatabase.COMPILATION_DATABASE));
 
     final String root = "/Users/user/src";
     final Path fakeRoot = Paths.get(root);
@@ -94,10 +95,7 @@ public class CxxCompilationDatabaseTest {
             true);
     testBuildRuleResolver.addToIndex(exportedSymlinkTree);
 
-    BuildTarget compileTarget =
-        BuildTarget.builder(testBuildTarget.getUnflavoredBuildTarget())
-            .addFlavors(InternalFlavor.of("compile-test.cpp"))
-            .build();
+    BuildTarget compileTarget = testBuildTarget.withFlavors(InternalFlavor.of("compile-test.cpp"));
 
     PreprocessorFlags preprocessorFlags =
         PreprocessorFlags.builder()

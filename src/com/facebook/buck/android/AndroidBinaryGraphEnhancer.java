@@ -532,8 +532,7 @@ public class AndroidBinaryGraphEnhancer {
       // Java package.
       String javaPackage = entry.getKey();
       Flavor flavor = InternalFlavor.of("buildconfig_" + javaPackage.replace('.', '_'));
-      BuildTarget buildTargetWithFlavors =
-          BuildTarget.builder(originalBuildTarget).addFlavors(flavor).build();
+      BuildTarget buildTargetWithFlavors = originalBuildTarget.withAppendedFlavors(flavor);
       BuildRuleParams buildConfigParams =
           new BuildRuleParams(
               /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
@@ -629,7 +628,7 @@ public class AndroidBinaryGraphEnhancer {
       // See whether the corresponding IntermediateDexRule has already been added to the
       // ruleResolver.
       BuildTarget originalTarget = javaLibrary.getBuildTarget();
-      BuildTarget preDexTarget = BuildTarget.builder(originalTarget).addFlavors(DEX_FLAVOR).build();
+      BuildTarget preDexTarget = originalTarget.withAppendedFlavors(DEX_FLAVOR);
       Optional<BuildRule> preDexRule = ruleResolver.getRuleOptional(preDexTarget);
       if (preDexRule.isPresent()) {
         preDexDeps.put(

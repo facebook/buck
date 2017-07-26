@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import logging
 import os
 import sys
 import zipfile
 
+from buck_logging import setup_logging
 from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from subprocutils import propagate_failure
@@ -23,7 +25,7 @@ def main(argv):
             from buck_repo import BuckRepo
             buck_repo = BuckRepo(THIS_DIR, project)
         if '--help' in argv:
-            print("Specify --kill to kill buckd.", file=sys.stderr)
+            logging.info("Specify --kill to kill buckd.")
             return 0
         buck_repo.kill_buckd()
         if '--kill' in sys.argv:
@@ -32,11 +34,12 @@ def main(argv):
 
 if __name__ == "__main__":
     try:
+        setup_logging()
         propagate_failure(main(sys.argv))
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buckd'), sys.argv)
     except (BuckToolException, NoBuckConfigFoundException) as e:
-        print(str(e), file=sys.stderr)
+        logging.info(str(e))
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)

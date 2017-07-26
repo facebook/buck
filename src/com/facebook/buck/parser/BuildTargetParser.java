@@ -21,6 +21,7 @@ import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -121,12 +122,10 @@ public class BuildTargetParser {
             .setCell(cellNames.getCanonicalCellName(cellPath));
 
     UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
-
-    BuildTarget.Builder builder = BuildTarget.builder(unflavoredBuildTarget);
-    for (String flavor : flavorNames) {
-      builder.addFlavors(InternalFlavor.of(flavor));
-    }
-    return flavoredTargetCache.intern(builder.build());
+    return flavoredTargetCache.intern(
+        BuildTarget.of(
+            unflavoredBuildTarget,
+            RichStream.from(flavorNames).map(InternalFlavor::of).toImmutableSet()));
   }
 
   protected static void checkBaseName(String baseName, String buildTargetName) {

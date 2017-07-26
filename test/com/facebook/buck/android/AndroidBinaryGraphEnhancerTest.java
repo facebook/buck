@@ -227,17 +227,11 @@ public class AndroidBinaryGraphEnhancerTest {
     assertEquals(dexMergeRule, preDexMergeRule);
 
     BuildTarget javaDep1DexBuildTarget =
-        BuildTarget.builder(javaDep1BuildTarget)
-            .addFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR)
-            .build();
+        javaDep1BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
     BuildTarget javaDep2DexBuildTarget =
-        BuildTarget.builder(javaDep2BuildTarget)
-            .addFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR)
-            .build();
+        javaDep2BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
     BuildTarget javaLibDexBuildTarget =
-        BuildTarget.builder(javaLibBuildTarget)
-            .addFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR)
-            .build();
+        javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
     assertThat(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx "
             + "list.  And we should depend on uber_r_dot_java",
@@ -333,8 +327,7 @@ public class AndroidBinaryGraphEnhancerTest {
     Flavor flavor = InternalFlavor.of("buildconfig_com_example_buck");
     final SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-    BuildTarget enhancedBuildConfigTarget =
-        BuildTarget.builder(apkTarget).addFlavors(flavor).build();
+    BuildTarget enhancedBuildConfigTarget = apkTarget.withAppendedFlavors(flavor);
     assertEquals(
         "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary"
             + " created via graph enhancement.",

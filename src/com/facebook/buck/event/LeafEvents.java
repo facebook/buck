@@ -16,12 +16,12 @@
 
 package com.facebook.buck.event;
 
-import java.io.Closeable;
+import com.facebook.buck.util.Scope;
 
 public class LeafEvents {
 
   /** Creates a simple scoped leaf event that will be logged to superconsole, chrome traces, etc. */
-  public static Closeable scope(BuckEventBus eventBus, String category) {
+  public static Scope scope(BuckEventBus eventBus, String category) {
     SimpleLeafEvent.Started started = new SimpleLeafEvent.Started(EventKey.unique(), category);
     eventBus.post(started);
     return () -> eventBus.post(new SimpleLeafEvent.Finished(started));

@@ -1,4 +1,5 @@
 from __future__ import print_function
+import logging
 import os
 import sys
 import textwrap
@@ -12,7 +13,6 @@ import buck_version
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
 RESOURCES = {
-    "abi_processor_classes": "build/abi_processor/classes",
     "android_agent_path": "assets/android/agent.apk",
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",
@@ -96,12 +96,8 @@ class BuckRepo(BuckTool):
                     with open(fake_buck_version_file_path) as fake_buck_version_file:
                         fake_buck_version = fake_buck_version_file.read().strip()
 
-            if fake_buck_version:
-                print(textwrap.dedent("""\
-                ::: Faking buck version {}, despite your buck directory not being that version."""
-                      .format(fake_buck_version)),
-                      file=sys.stderr)
-                return fake_buck_version
+            if self._fake_buck_version:
+                return self._fake_buck_version
 
             # First try to get the "clean" buck version.  If it succeeds,
             # return it.

@@ -16,13 +16,13 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.NativeLinkables;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -92,12 +92,12 @@ public class OcamlRuleBuilder {
 
   @VisibleForTesting
   protected static BuildTarget createStaticLibraryBuildTarget(BuildTarget target) {
-    return BuildTarget.builder(target).addFlavors(OCAML_STATIC_FLAVOR).build();
+    return target.withAppendedFlavors(OCAML_STATIC_FLAVOR);
   }
 
   @VisibleForTesting
   protected static BuildTarget createOcamlLinkTarget(BuildTarget target) {
-    return BuildTarget.builder(target).addFlavors(OCAML_LINK_BINARY_FLAVOR).build();
+    return target.withAppendedFlavors(OCAML_LINK_BINARY_FLAVOR);
   }
 
   public static BuildRule createBuildRule(

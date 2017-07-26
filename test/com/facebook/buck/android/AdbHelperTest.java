@@ -26,10 +26,12 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
@@ -329,6 +331,10 @@ public class AdbHelperTest {
 
   @Test
   public void testQuietDeviceInstall() throws InterruptedException {
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
+    testContext.getBuckEventBus().register(listener);
+
     final File apk = new File("/some/file.apk");
     final AtomicReference<String> apkPath = new AtomicReference<>();
 
@@ -352,12 +358,15 @@ public class AdbHelperTest {
 
     assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
-    assertEquals("", testConsole.getTextWrittenToStdOut());
-    assertEquals("", testConsole.getTextWrittenToStdErr());
+    assertTrue(listener.getLogMessages().isEmpty());
   }
 
   @Test
   public void testNonQuietShowsOutput() throws InterruptedException {
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
+    testContext.getBuckEventBus().register(listener);
+
     final File apk = new File("/some/file.apk");
     final AtomicReference<String> apkPath = new AtomicReference<>();
 
@@ -381,9 +390,10 @@ public class AdbHelperTest {
 
     assertTrue(success);
     assertEquals(apk.getAbsolutePath(), apkPath.get());
-    assertEquals("", testConsole.getTextWrittenToStdOut());
-    assertEquals(
-        "Successfully ran install apk on 1 device(s)\n", testConsole.getTextWrittenToStdErr());
+    MoreAsserts.assertListEquals(
+        listener.getLogMessages(),
+        ImmutableList.of(
+            "Installing apk on serial#1.", "Successfully ran install apk on 1 device(s)"));
   }
 
   private AdbHelper createAdbHelper(final List<IDevice> deviceList) {

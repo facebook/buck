@@ -58,6 +58,7 @@ public class AbstractAutoSparseFactory {
     if (perSCRoot.containsKey(hgRoot)) {
       AutoSparseState entry = perSCRoot.get(hgRoot).get();
       if (entry != null && entry.getRevisionId().equals(hgRevisionId)) {
+        entry.updateConfig(autoSparseConfig);
         return entry;
       } else {
         perSCRoot.remove(hgRoot);

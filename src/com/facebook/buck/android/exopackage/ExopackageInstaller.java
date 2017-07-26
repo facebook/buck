@@ -102,17 +102,8 @@ public class ExopackageInstaller {
       if (shouldAppBeInstalled(apkInfo) || processName == null) {
         device.stopPackage(packageName);
       } else {
-        try {
-          device.killProcess(processName);
-        } catch (Exception e) {
-          if (e.getLocalizedMessage().contains("No such process")) {
-            LOG.warn(
-                "WARN: No running process matching %s, either it was not running or does not exist",
-                processName);
-          } else {
-            throw e;
-          }
-        }
+        device.killProcess(processName);
+        eventBus.post(ConsoleEvent.warning("Successfully terminated process " + processName));
       }
       device.stopPackage(packageName);
     }

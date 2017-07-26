@@ -17,9 +17,9 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CompilerProvider;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.PreprocessorProvider;
+import com.facebook.buck.cxx.platform.CompilerProvider;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;

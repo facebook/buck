@@ -91,9 +91,7 @@ public class CxxTestDescriptionTest {
       BuildRuleResolver resolver, ProjectFilesystem filesystem, BuildTarget libTarget)
       throws NoSuchBuildTargetException {
     BuildTarget target =
-        BuildTarget.builder(libTarget)
-            .addFlavors(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())
-            .build();
+        libTarget.withAppendedFlavors(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor());
     createTestBuilder(target.toString()).build(resolver, filesystem);
   }
 

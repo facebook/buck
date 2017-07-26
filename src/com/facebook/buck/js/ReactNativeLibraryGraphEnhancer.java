@@ -105,7 +105,7 @@ public class ReactNativeLibraryGraphEnhancer {
             params,
             resolver,
             ruleFinder,
-            BuildTarget.builder(originalBuildTarget).addFlavors(REACT_NATIVE_BUNDLE_FLAVOR).build(),
+            originalBuildTarget.withAppendedFlavors(REACT_NATIVE_BUNDLE_FLAVOR),
             args,
             ReactNativePlatform.ANDROID);
     resolver.addToIndex(bundle);

@@ -40,14 +40,15 @@ import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -133,16 +134,17 @@ public class WorkspaceAndProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin.
 
-    BuildTarget bazTestTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "xctest").build();
+    BuildTarget bazTestTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "xctest");
     BuildTarget fooBinTestTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "bin-xctest").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "bin-xctest");
     BuildTarget fooTestTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "lib-xctest").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib-xctest");
 
-    BuildTarget barLibTarget = BuildTarget.builder(rootCell.getRoot(), "//bar", "lib").build();
+    BuildTarget barLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar", "lib");
     TargetNode<?, ?> barLibNode = AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
     TargetNode<?, ?> fooLibNode =
         AppleLibraryBuilder.createBuilder(fooLibTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
@@ -150,13 +152,13 @@ public class WorkspaceAndProjectGeneratorTest {
             .build();
 
     BuildTarget fooBinBinaryTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "binbinary").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "binbinary");
     TargetNode<?, ?> fooBinBinaryNode =
         AppleBinaryBuilder.createBuilder(fooBinBinaryTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
             .build();
 
-    BuildTarget fooBinTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "bin").build();
+    BuildTarget fooBinTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "bin");
     TargetNode<?, ?> fooBinNode =
         AppleBundleBuilder.createBuilder(fooBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -165,7 +167,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
             .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "lib").build();
+    BuildTarget bazLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "lib");
     TargetNode<?, ?> bazLibNode =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
@@ -190,14 +192,14 @@ public class WorkspaceAndProjectGeneratorTest {
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
-    BuildTarget quxBinTarget = BuildTarget.builder(rootCell.getRoot(), "//qux", "bin").build();
+    BuildTarget quxBinTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "bin");
     TargetNode<?, ?> quxBinNode =
         AppleBinaryBuilder.createBuilder(quxBinTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .build();
 
     BuildTarget workspaceTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace");
     workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(workspaceTarget)
             .setWorkspaceName(Optional.of("workspace"))
@@ -416,11 +418,11 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void requiredBuildTargets() throws IOException, InterruptedException {
-    BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "gen");
     TargetNode<GenruleDescriptionArg, GenruleDescription> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
 
-    BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
@@ -430,7 +432,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
+                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
             .setSrcTarget(Optional.of(libraryTarget))
             .build();
 
@@ -462,11 +464,11 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void requiredBuildTargetsForCombinedProject() throws IOException, InterruptedException {
-    BuildTarget genruleTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "gen").build();
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "gen");
     TargetNode<GenruleDescriptionArg, GenruleDescription> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
 
-    BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
@@ -476,7 +478,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
+                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
             .setSrcTarget(Optional.of(libraryTarget))
             .build();
 
@@ -524,16 +526,19 @@ public class WorkspaceAndProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin.
 
-    BuildTarget bazTestTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "BazTest").build();
+    BuildTarget bazTestTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "BazTest");
     BuildTarget fooBinTestTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "FooBinTest").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooBinTest");
     BuildTarget fooTestTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLibTest").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLibTest");
 
-    BuildTarget barLibTarget = BuildTarget.builder(rootCell.getRoot(), "//bar", "BarLib").build();
+    BuildTarget barLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar", "BarLib");
     TargetNode<?, ?> barLibNode = AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
     TargetNode<?, ?> fooLibNode =
         AppleLibraryBuilder.createBuilder(fooLibTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
@@ -541,13 +546,14 @@ public class WorkspaceAndProjectGeneratorTest {
             .build();
 
     BuildTarget fooBinBinaryTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "FooBinBinary").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooBinBinary");
     TargetNode<?, ?> fooBinBinaryNode =
         AppleBinaryBuilder.createBuilder(fooBinBinaryTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
             .build();
 
-    BuildTarget fooBinTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooBin").build();
+    BuildTarget fooBinTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooBin");
     TargetNode<?, ?> fooBinNode =
         AppleBundleBuilder.createBuilder(fooBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -556,7 +562,8 @@ public class WorkspaceAndProjectGeneratorTest {
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
             .build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "BazLib").build();
+    BuildTarget bazLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "BazLib");
     TargetNode<?, ?> bazLibNode =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
@@ -581,14 +588,15 @@ public class WorkspaceAndProjectGeneratorTest {
             .setInfoPlist(new FakeSourcePath("Info.plist"))
             .build();
 
-    BuildTarget quxBinTarget = BuildTarget.builder(rootCell.getRoot(), "//qux", "QuxBin").build();
+    BuildTarget quxBinTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "QuxBin");
     TargetNode<?, ?> quxBinNode =
         AppleBinaryBuilder.createBuilder(quxBinTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .build();
 
     BuildTarget workspaceTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace");
     workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(workspaceTarget)
             .setWorkspaceName(Optional.of("workspace"))
@@ -596,7 +604,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .build();
 
     BuildTarget workspaceWithExtraSchemeTarget =
-        BuildTarget.builder(rootCell.getRoot(), "//qux", "workspace").build();
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "workspace");
     workspaceWithExtraSchemeNode =
         XcodeWorkspaceConfigBuilder.createBuilder(workspaceWithExtraSchemeTarget)
             .setWorkspaceName(Optional.of("workspace"))
@@ -713,15 +721,18 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void targetsForWorkspaceWithExtraTargets() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg, ?> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
-    BuildTarget barLibTarget = BuildTarget.builder(rootCell.getRoot(), "//bar", "BarLib").build();
+    BuildTarget barLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar", "BarLib");
     TargetNode<AppleLibraryDescriptionArg, ?> barLib =
         AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget bazLibTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "BazLib").build();
+    BuildTarget bazLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "BazLib");
     TargetNode<AppleLibraryDescriptionArg, ?> bazLib =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
@@ -729,7 +740,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
+                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .setExtraTargets(ImmutableSortedSet.of(bazLibTarget))
@@ -795,13 +806,14 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void enablingParallelizeBuild() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg, ?> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
+                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .build();
@@ -844,13 +856,14 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void customRunnableSettings() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
+    BuildTarget fooLibTarget =
+        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg, ?> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
+                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .setExplicitRunnablePath(Optional.of("/some.app"))

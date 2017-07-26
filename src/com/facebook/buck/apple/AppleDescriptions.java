@@ -24,13 +24,13 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.NativeLinkable;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -606,11 +606,10 @@ public class AppleDescriptions {
       for (BuildTarget dep : deps) {
         Optional<FrameworkDependencies> frameworkDependencies =
             resolver.requireMetadata(
-                BuildTarget.builder(dep)
-                    .addFlavors(FRAMEWORK_FLAVOR)
-                    .addFlavors(NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
-                    .build(),
+                dep.withAppendedFlavors(
+                    FRAMEWORK_FLAVOR,
+                    NO_INCLUDE_FRAMEWORKS_FLAVOR,
+                    appleCxxPlatform.getCxxPlatform().getFlavor()),
                 FrameworkDependencies.class);
         if (frameworkDependencies.isPresent()) {
           frameworksBuilder.addAll(frameworkDependencies.get().getSourcePaths());
@@ -836,15 +835,15 @@ public class AppleDescriptions {
               .build();
     }
 
-    BuildTarget.Builder buildTargetBuilder =
-        BuildTarget.builder(binary.getUnflavoredBuildTarget()).addAllFlavors(flavors);
+    ImmutableSet.Builder<Flavor> binaryFlavorsBuilder = ImmutableSet.builder();
+    binaryFlavorsBuilder.addAll(flavors);
     if (!(AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent())) {
-      buildTargetBuilder.addAllFlavors(binary.getFlavors());
+      binaryFlavorsBuilder.addAll(binary.getFlavors());
     } else {
-      buildTargetBuilder.addAllFlavors(
+      binaryFlavorsBuilder.addAll(
           Sets.difference(binary.getFlavors(), AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
     }
-    BuildTarget buildTarget = buildTargetBuilder.build();
+    BuildTarget buildTarget = binary.withFlavors(binaryFlavorsBuilder.build());
 
     final TargetNode<?, ?> binaryTargetNode = targetGraph.get(buildTarget);
 

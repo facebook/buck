@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.cxx.NativeLinkable.Linkage.STATIC;
+import static com.facebook.buck.cxx.platform.NativeLinkable.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;

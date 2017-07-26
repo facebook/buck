@@ -19,16 +19,16 @@ package com.facebook.buck.android;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkTarget;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.cxx.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkTarget;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -723,17 +723,11 @@ class NativeLibraryMergeEnhancer {
 
       String mergeFlavor = "merge_structure_" + hasher.hash();
 
-      return BuildTarget.builder()
-          .from(initialTarget)
-          .addFlavors(InternalFlavor.of(mergeFlavor))
-          .build();
+      return initialTarget.withAppendedFlavors(InternalFlavor.of(mergeFlavor));
     }
 
     private BuildTarget getBuildTargetForPlatform(CxxPlatform cxxPlatform) {
-      return BuildTarget.builder()
-          .from(getBuildTarget())
-          .addFlavors(cxxPlatform.getFlavor())
-          .build();
+      return getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor());
     }
 
     @Override
@@ -950,8 +944,10 @@ class NativeLibraryMergeEnhancer {
 
             void fixSection(Elf elf, String sectionName, String stringSectionName)
                 throws IOException {
-              ElfSection section = elf.getMandatorySectionByName(linkOutput, sectionName);
-              ElfSection strings = elf.getMandatorySectionByName(linkOutput, stringSectionName);
+              ElfSection section =
+                  elf.getMandatorySectionByName(linkOutput, sectionName).getSection();
+              ElfSection strings =
+                  elf.getMandatorySectionByName(linkOutput, stringSectionName).getSection();
               ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
 
               ImmutableList.Builder<ElfSymbolTable.Entry> fixedEntries = ImmutableList.builder();

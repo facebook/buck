@@ -33,7 +33,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -224,7 +227,7 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//java:foo");
       fail("Expected exception");
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("package boundary"));
+      assertThat(e.getMessage(), containsString("already referred by"));
     }
 
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "false");
@@ -237,7 +240,56 @@ public class ParserIntegrationTest {
       workspace.runBuckCommand("build", "//java2:foo").assertSuccess();
       fail("Expected exception");
     } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("package boundary"));
+      assertThat(e.getMessage(), containsString("already referred by"));
     }
+  }
+
+  static class BigFileTree {
+    private final ProjectWorkspace workspace;
+
+    BigFileTree(ProjectWorkspace workspace) {
+      this.workspace = workspace;
+    }
+
+    interface LeafVisitor {
+      void visit(Path path) throws IOException;
+    }
+
+    public void visit(LeafVisitor visitor) throws IOException {
+      for (int i = 0; i < 10; i++) {
+        Path levelOne = workspace.resolve(Integer.toString(i));
+        Files.createDirectories(levelOne);
+        for (int j = 0; j < 10; j++) {
+          Path levelTwo = levelOne.resolve(Integer.toString(j));
+          Files.createDirectories(levelTwo);
+          for (int k = 0; k < 100; k++) {
+            Path leafFile = levelTwo.resolve(Integer.toString(k));
+            visitor.visit(leafFile);
+          }
+        }
+      }
+    }
+  }
+
+  @Ignore
+  @Test
+  public void testOverflowInvalidatesBuildFileTree() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "overflow", temporaryFolder);
+    workspace.setUp();
+    BigFileTree bigFileTree = new BigFileTree(workspace);
+
+    // We need to change a bunch of files to trigger watchman overflow.  Build a directory hierarchy to avoid overstuffing any individual directory.
+    byte[] initialContents = "xxx".getBytes();
+    bigFileTree.visit(path -> Files.write(path, initialContents));
+
+    workspace.copyFile("foo/BUCK.1", "foo/BUCK");
+    workspace.runBuckdCommand("build", "//foo:foo").assertSuccess();
+
+    workspace.copyFile("foo/BUCK.2", "foo/BUCK");
+    workspace.copyFile("foo/bar/BUCK.1", "foo/bar/BUCK");
+    byte[] modifiedContents = "yyy".getBytes();
+    bigFileTree.visit(path -> Files.write(path, modifiedContents));
+    workspace.runBuckdCommand("build", "//foo/bar:bar").assertSuccess();
   }
 }

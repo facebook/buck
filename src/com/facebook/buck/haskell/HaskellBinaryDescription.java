@@ -18,11 +18,11 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.Linkers;
-import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.Linkers;
+import com.facebook.buck.cxx.platform.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -55,6 +55,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -66,6 +67,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class HaskellBinaryDescription
@@ -147,19 +149,24 @@ public class HaskellBinaryDescription
     }
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
+
     depsBuilder.addAll(
         CxxDeps.builder()
             .addDeps(args.getDeps())
             .addPlatformDeps(args.getPlatformDeps())
             .build()
             .get(resolver, cxxPlatform));
-    args.getDepsQuery()
-        .ifPresent(
-            query ->
-                QueryUtils.resolveDepQuery(
-                        buildTarget, query, resolver, cellRoots, targetGraph, args.getDeps())
-                    .filter(NativeLinkable.class::isInstance)
-                    .forEach(depsBuilder::add));
+
+    ImmutableList<BuildRule> depQueryDeps =
+        args.getDepsQuery()
+            .map(
+                query ->
+                    QueryUtils.resolveDepQuery(
+                            buildTarget, query, resolver, cellRoots, targetGraph, args.getDeps())
+                        .filter(NativeLinkable.class::isInstance))
+            .orElse(Stream.of())
+            .collect(MoreCollectors.toImmutableList());
+    depsBuilder.addAll(depQueryDeps);
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 
     // Inputs we'll be linking (archives, objects, etc.)
@@ -266,6 +273,9 @@ public class HaskellBinaryDescription
             linkFlags,
             linkInputs,
             RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+            args.getLinkDepsQueryWhole()
+                ? RichStream.from(depQueryDeps).map(BuildRule::getBuildTarget).toImmutableSet()
+                : ImmutableSet.of(),
             depType,
             outputPath,
             Optional.empty(),
@@ -364,6 +374,11 @@ public class HaskellBinaryDescription
     }
 
     Optional<Query> getDepsQuery();
+
+    @Value.Default
+    default boolean getLinkDepsQueryWhole() {
+      return false;
+    }
 
     Optional<String> getMain();
 

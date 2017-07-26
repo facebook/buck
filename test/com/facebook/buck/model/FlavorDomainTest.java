@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -48,9 +47,7 @@ public class FlavorDomainTest {
                 hello, "something",
                 goodbye, "something"));
     BuildTarget target =
-        BuildTarget.builder(BuildTargetFactory.newInstance("//:test"))
-            .addAllFlavors(ImmutableSet.of(hello, goodbye))
-            .build();
+        BuildTargetFactory.newInstance("//:test").withAppendedFlavors(hello, goodbye);
     try {
       domain.getFlavor(target);
       fail("should have thrown");

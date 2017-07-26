@@ -76,7 +76,8 @@ public class ExecutableMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildTarget target = BuildTarget.builder(filesystem.getRootPath(), "//cheese", "cake").build();
+    BuildTarget target =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cheese", "cake");
     createSampleJavaBinaryRule(ruleResolver);
     String originalCmd = "$(exe //java/com/facebook/util:ManifestGenerator) $OUT";
 

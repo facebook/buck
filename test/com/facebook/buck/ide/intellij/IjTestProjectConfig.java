@@ -24,7 +24,16 @@ public class IjTestProjectConfig {
 
   public static IjProjectConfig create() {
     return IjProjectBuckConfig.create(
-        FakeBuckConfig.builder().build(), null, null, "", "modules", false, false, true, false, true);
+        FakeBuckConfig.builder().build(),
+        null,
+        null,
+        "",
+        "modules",
+        false,
+        false,
+        true,
+        false,
+        true);
   }
 
   public static IjProjectConfig create(BuckConfig buckConfig) {

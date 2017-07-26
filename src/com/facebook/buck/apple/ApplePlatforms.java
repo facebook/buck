@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
@@ -52,7 +52,9 @@ public class ApplePlatforms {
       } catch (FlavorDomainException e) {
         throw new HumanReadableException(
             e,
-            "%s: Apple bundle requires an Apple platform, found '%s'",
+            "%s: Apple bundle requires an Apple platform, found '%s'\n\n"
+                + "A common cause of this error is that the required SDK is missing.\n"
+                + "Please check whether it's installed and retry.",
             target,
             cxxPlatform.getFlavor().getName());
       }

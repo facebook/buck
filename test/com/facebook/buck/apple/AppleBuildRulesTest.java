@@ -23,7 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -66,7 +66,7 @@ public class AppleBuildRulesTest {
   @Test
   public void testAppleLibraryIsXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg, ?> library =
         AppleLibraryBuilder.createBuilder(libraryTarget).setSrcs(ImmutableSortedSet.of()).build();
     assertTrue(AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
@@ -75,7 +75,7 @@ public class AppleBuildRulesTest {
   @Test
   public void testIosResourceIsNotXcodeTargetDescription() throws Exception {
     Cell rootCell = (new TestCellBuilder()).build();
-    BuildTarget resourceTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "res").build();
+    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "res");
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of())

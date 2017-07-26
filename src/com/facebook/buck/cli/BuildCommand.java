@@ -469,11 +469,14 @@ public class BuildCommand extends AbstractCommand {
           computeDistBuildState(params, graphs, executorService);
       BuildJobState jobState = stateAndCells.getFirst();
       DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
-      DistBuildClientStatsTracker distBuildClientStatsTracker = new DistBuildClientStatsTracker();
+      DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
+      DistBuildClientStatsTracker distBuildClientStatsTracker =
+          new DistBuildClientStatsTracker(distBuildConfig.getBuildLabel());
       try {
         exitCode =
             executeDistBuild(
                 params,
+                distBuildConfig,
                 graphs,
                 executorService,
                 params.getCell().getFilesystem(),
@@ -611,6 +614,7 @@ public class BuildCommand extends AbstractCommand {
 
   private int executeDistBuild(
       CommandRunnerParams params,
+      DistBuildConfig distBuildConfig,
       ActionAndTargetGraphs graphs,
       WeightedListeningExecutorService executorService,
       ProjectFilesystem filesystem,
@@ -665,7 +669,6 @@ public class BuildCommand extends AbstractCommand {
                     1,
                     new CommandThreadFactory(
                         DistBuildClientExecutor.class.getName() + "Scheduler")));
-        DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
         distBuildResult =
             build.executeAndPrintFailuresToEventBus(
                 executorService,
@@ -683,7 +686,6 @@ public class BuildCommand extends AbstractCommand {
         params.getBuckEventBus().post(finished);
       }
 
-      DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       distBuildClientStats.setIsLocalFallbackBuildEnabled(
           distBuildConfig.isSlowLocalBuildFallbackModeEnabled());
       distBuildClientStats.setDistributedBuildExitCode(distBuildExitCode);

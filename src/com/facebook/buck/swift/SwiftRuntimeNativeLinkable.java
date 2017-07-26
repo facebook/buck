@@ -18,11 +18,12 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
 final class SwiftRuntimeNativeLinkable implements NativeLinkable {
@@ -37,9 +39,12 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
   private static final BuildTarget PSEUDO_BUILD_TARGET =
-      BuildTarget.builder(
-              Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME)
-          .build();
+      BuildTarget.of(
+          UnflavoredBuildTarget.of(
+              Paths.get(SWIFT_RUNTIME),
+              Optional.empty(),
+              BUILD_TARGET_PREFIX + SWIFT_RUNTIME,
+              SWIFT_RUNTIME));
   private final SwiftPlatform swiftPlatform;
 
   SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {

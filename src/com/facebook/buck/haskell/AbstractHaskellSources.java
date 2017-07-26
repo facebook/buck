@@ -17,7 +17,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxGenruleDescription;
-import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;

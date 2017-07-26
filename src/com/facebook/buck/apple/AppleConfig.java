@@ -33,7 +33,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -132,20 +131,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       return path.toRealPath();
     } catch (IOException e) {
       return path;
-    }
-  }
-
-  public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
-    Optional<Path> appleDeveloperDirectory =
-        getAppleDeveloperDirectorySupplier(processExecutor).get();
-    try {
-      ImmutableMap<String, AppleToolchain> toolchains =
-          AppleToolchainDiscovery.discoverAppleToolchains(
-              appleDeveloperDirectory, getExtraToolchainPaths());
-      return AppleSdkDiscovery.discoverAppleSdkPaths(
-          appleDeveloperDirectory, getExtraPlatformPaths(), toolchains, this);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 

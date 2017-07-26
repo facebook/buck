@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -253,6 +254,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       } else {
         javacTask = new BuckJavacTask(innerTask);
       }
+      javacTask.setProcessors(Collections.emptyList());
     }
 
     return javacTask;

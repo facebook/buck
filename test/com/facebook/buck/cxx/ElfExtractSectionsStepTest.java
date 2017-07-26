@@ -77,18 +77,21 @@ public class ElfExtractSectionsStepTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path output = tmp.getRoot().getFileSystem().getPath("libfoo.extracted.so");
     ElfExtractSectionsStep step =
-        ElfExtractSectionsStep.of(
-            new ProjectFilesystem(tmp.getRoot()),
+        new ElfExtractSectionsStep(
             ImmutableList.of(objcopy.toString()),
-            tmp.getRoot().getFileSystem().getPath("libfoo.so"),
-            tmp.getRoot().getFileSystem().getPath("libfoo.extracted.so"),
-            ImmutableSet.of(".dynamic"));
+            ImmutableSet.of(".dynamic"),
+            filesystem,
+            filesystem.getPath("libfoo.so"),
+            filesystem,
+            output);
     step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
 
     // Verify that the program table section is empty.
     try (FileChannel channel =
-        FileChannel.open(step.getFilesystem().resolve(step.getOutput()), StandardOpenOption.READ)) {
+        FileChannel.open(filesystem.resolve(output), StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
       List<String> sections = new ArrayList<>();

@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -41,15 +42,16 @@ public class TargetNodeVisibilityTest {
   private static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   private static final BuildTarget orcaTarget =
-      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/orca", "orca").build();
+      BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/facebook/orca", "orca");
   private static final BuildTarget publicTarget =
-      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/for", "everyone").build();
+      BuildTargetFactory.newInstance(
+          filesystem.getRootPath(), "//src/com/facebook/for", "everyone");
   private static final BuildTarget nonPublicTarget1 =
-      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/something1", "nonPublic")
-          .build();
+      BuildTargetFactory.newInstance(
+          filesystem.getRootPath(), "//src/com/facebook/something1", "nonPublic");
   private static final BuildTarget nonPublicTarget2 =
-      BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/something2", "nonPublic")
-          .build();
+      BuildTargetFactory.newInstance(
+          filesystem.getRootPath(), "//src/com/facebook/something2", "nonPublic");
 
   private static final ImmutableList<String> DEFAULT = ImmutableList.of();
   private static final ImmutableList<String> PUBLIC = ImmutableList.of("PUBLIC");
@@ -146,23 +148,24 @@ public class TargetNodeVisibilityTest {
 
   @Test
   public void testVisibilityForDirectory() throws NoSuchBuildTargetException {
-    BuildTarget libTarget = BuildTarget.builder(filesystem.getRootPath(), "//lib", "lib").build();
+    BuildTarget libTarget =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//lib", "lib");
     TargetNode<?, ?> targetInSpecifiedDirectory =
         createTargetNode(
-            BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build(),
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/facebook", "test"),
             DEFAULT);
     TargetNode<?, ?> targetUnderSpecifiedDirectory =
         createTargetNode(
-            BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/buck", "test")
-                .build(),
+            BuildTargetFactory.newInstance(
+                filesystem.getRootPath(), "//src/com/facebook/buck", "test"),
             DEFAULT);
     TargetNode<?, ?> targetInOtherDirectory =
         createTargetNode(
-            BuildTarget.builder(filesystem.getRootPath(), "//src/com/instagram", "test").build(),
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//src/com/instagram", "test"),
             DEFAULT);
     TargetNode<?, ?> targetInParentDirectory =
         createTargetNode(
-            BuildTarget.builder(filesystem.getRootPath(), "//", "test").build(), DEFAULT);
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//", "test"), DEFAULT);
 
     // Build rule that visible to targets in or under directory src/com/facebook
     TargetNode<?, ?> directoryTargetNode =

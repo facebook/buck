@@ -36,7 +36,7 @@ public class ElfSectionHeader {
   public final long sh_entsize;
   // CHECKSTYLE.ON: MemberName
 
-  ElfSectionHeader(
+  public ElfSectionHeader(
       long sh_name,
       SHType sh_type,
       long sh_flags,
@@ -88,7 +88,61 @@ public class ElfSectionHeader {
     }
   }
 
-  public static enum SHType {
+  public void write(ElfHeader.EIClass eiClass, ByteBuffer buffer) {
+    if (eiClass == ElfHeader.EIClass.ELFCLASS32) {
+      buffer.putInt((int) sh_name);
+      buffer.putInt(sh_type.getValue());
+      buffer.putInt((int) sh_flags);
+      buffer.putInt((int) sh_addr);
+      buffer.putInt((int) sh_off);
+      buffer.putInt((int) sh_size);
+      buffer.putInt((int) sh_link);
+      buffer.putInt((int) sh_info);
+      buffer.putInt((int) sh_addralign);
+      buffer.putInt((int) sh_entsize);
+    } else {
+      buffer.putInt((int) sh_name);
+      buffer.putInt(sh_type.getValue());
+      buffer.putLong(sh_flags);
+      buffer.putLong(sh_addr);
+      buffer.putLong(sh_off);
+      buffer.putLong(sh_size);
+      buffer.putInt((int) sh_link);
+      buffer.putInt((int) sh_info);
+      buffer.putLong(sh_addralign);
+      buffer.putLong(sh_entsize);
+    }
+  }
+
+  public ElfSectionHeader withSize(long size) {
+    return new ElfSectionHeader(
+        sh_name,
+        sh_type,
+        sh_flags,
+        sh_addr,
+        sh_off,
+        size,
+        sh_link,
+        sh_info,
+        sh_addralign,
+        sh_entsize);
+  }
+
+  public ElfSectionHeader withInfo(long info) {
+    return new ElfSectionHeader(
+        sh_name,
+        sh_type,
+        sh_flags,
+        sh_addr,
+        sh_off,
+        sh_size,
+        sh_link,
+        info,
+        sh_addralign,
+        sh_entsize);
+  }
+
+  public enum SHType {
     SHT_NULL(0),
     SHT_PROGBITS(1),
     SHT_SYMTAB(2),
@@ -102,13 +156,18 @@ public class ElfSectionHeader {
     SHT_SHLIB(10),
     SHT_DYNSYM(11),
 
+    // GNU-specific types.
+    SHT_GNU_VERNEED(0x6ffffffe),
+    SHT_GNU_VERDEF(0x6ffffffd),
+    SHT_GNU_VERSYM(0x6fffffff),
+
     // Represents one of the user/processor specific values.
     SHT_UNKNOWN(0xffffffff),
     ;
 
     private final int value;
 
-    private SHType(int value) {
+    SHType(int value) {
       this.value = value;
     }
 
@@ -119,6 +178,10 @@ public class ElfSectionHeader {
         }
       }
       return SHT_UNKNOWN;
+    }
+
+    public int getValue() {
+      return value;
     }
   }
 }

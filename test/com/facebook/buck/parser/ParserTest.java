@@ -251,8 +251,8 @@ public class ParserTest {
   public void testParseBuildFilesForTargetsWithOverlappingTargets() throws Exception {
     // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
     // build file.
-    BuildTarget fooTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
-    BuildTarget barTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "bar").build();
+    BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
+    BuildTarget barTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "bar");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
 
     // The EventBus should be updated with events indicating how parsing ran.
@@ -281,8 +281,8 @@ public class ParserTest {
   public void testMissingBuildRuleInValidFile()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
-    BuildTarget fooTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
-    BuildTarget razTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "raz").build();
+    BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
+    BuildTarget razTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "raz");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
 
     thrown.expectMessage(
@@ -298,7 +298,7 @@ public class ParserTest {
   @Test
   public void testMissingBuildFile()
       throws InterruptedException, BuildFileParseException, IOException, BuildTargetException {
-    BuildTarget target = BuildTarget.builder(cellRoot, "//path/to/nowhere", "nowhere").build();
+    BuildTarget target = BuildTargetFactory.newInstance(cellRoot, "//path/to/nowhere", "nowhere");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(target);
 
     thrown.expect(Cell.MissingBuildFileException.class);
@@ -382,9 +382,8 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeen()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored =
-        BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
-            .addFlavors(InternalFlavor.of("doesNotExist"))
-            .build();
+        BuildTargetFactory.newInstance(
+            cellRoot, "//java/com/facebook", "foo", InternalFlavor.of("doesNotExist"));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -398,9 +397,8 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestionsDefault()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored =
-        BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
-            .addFlavors(InternalFlavor.of("android-unknown"))
-            .build();
+        BuildTargetFactory.newInstance(
+            cellRoot, "//java/com/facebook", "foo", InternalFlavor.of("android-unknown"));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -417,9 +415,8 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAnUnknownFlavorIsSeenAndShowSuggestionsFromConfig()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored =
-        BuildTarget.builder(cellRoot, "//java/com/facebook", "foo")
-            .addFlavors(InternalFlavor.of("macosx109sdk"))
-            .build();
+        BuildTargetFactory.newInstance(
+            cellRoot, "//java/com/facebook", "foo", InternalFlavor.of("macosx109sdk"));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -435,9 +432,7 @@ public class ParserTest {
   public void shouldThrowAnExceptionWhenAFlavorIsAskedOfATargetThatDoesntSupportFlavors()
       throws BuildFileParseException, BuildTargetException, InterruptedException, IOException {
     BuildTarget flavored =
-        BuildTarget.builder(cellRoot, "//java/com/facebook", "baz")
-            .addFlavors(JavaLibrary.SRC_JAR)
-            .build();
+        BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "baz", JavaLibrary.SRC_JAR);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -470,7 +465,7 @@ public class ParserTest {
     tempDir.newFile("java/com/facebook/invalid/lib/BUCK");
 
     BuildTarget fooTarget =
-        BuildTarget.builder(cellRoot, "//java/com/facebook/invalid", "foo").build();
+        BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook/invalid", "foo");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
@@ -485,9 +480,9 @@ public class ParserTest {
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(
-            BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build(),
-            BuildTarget.builder(cellRoot, "//java/com/facebook", "bar").build(),
-            BuildTarget.builder(cellRoot, "//java/com/facebook", "baz").build());
+            BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo"),
+            BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "bar"),
+            BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "baz"));
     assertEquals("Should have returned all rules.", expectedTargets, targets);
   }
 
@@ -1095,7 +1090,7 @@ public class ParserTest {
   public void whenAllRulesThenSingleTargetRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
-    BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
+    BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
     parser.buildTargetGraph(eventBus, cell, false, executorService, ImmutableList.of(foo));
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
@@ -1104,7 +1099,7 @@ public class ParserTest {
   @Test
   public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
+    BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
     parser.buildTargetGraph(eventBus, cell, false, executorService, ImmutableList.of(foo));
     filterAllTargetsInProject(parser, cell, eventBus, executorService);
 
@@ -1127,7 +1122,7 @@ public class ParserTest {
 
     // Fetch //bar:bar#src to put it in cache.
     BuildTarget barTarget =
-        BuildTarget.builder(cellRoot, "//bar", "bar").addFlavors(InternalFlavor.of("src")).build();
+        BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
@@ -1162,7 +1157,7 @@ public class ParserTest {
         testFooBuckFile,
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
             .getBytes(UTF_8));
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -1195,7 +1190,7 @@ public class ParserTest {
     Path testBarJavaFile = tempDir.newFile("foo/Bar.java");
     Files.write(testBarJavaFile, "// Seriously, no Java here\n".getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     Files.delete(testBarJavaFile);
@@ -1222,7 +1217,7 @@ public class ParserTest {
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
 
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
@@ -1252,8 +1247,8 @@ public class ParserTest {
                 + "java_library(name = 'lib2', visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
-    BuildTarget fooLib2Target = BuildTarget.builder(cellRoot, "//foo", "lib2").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
 
     ImmutableMap<BuildTarget, HashCode> hashes =
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target);
@@ -1275,8 +1270,8 @@ public class ParserTest {
                 + "java_library(name = 'lib2', deps = [], visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
-    BuildTarget fooLib2Target = BuildTarget.builder(cellRoot, "//foo", "lib2").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
     ImmutableMap<BuildTarget, HashCode> hashes =
         buildTargetGraphAndGetHashCodes(parser, fooLibTarget, fooLib2Target);
     HashCode libKey = hashes.get(fooLibTarget);
@@ -1310,8 +1305,8 @@ public class ParserTest {
     Files.write(
         testFooBuckFile,
         "java_library(name = 'lib1')\njava_library(name = 'lib2')\n".getBytes(UTF_8));
-    BuildTarget fooLib1Target = BuildTarget.builder(cellRoot, "//foo", "lib1").build();
-    BuildTarget fooLib2Target = BuildTarget.builder(cellRoot, "//foo", "lib2").build();
+    BuildTarget fooLib1Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib1");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
@@ -1338,7 +1333,7 @@ public class ParserTest {
 
     Path testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(testFooBuckFile, "java_library(name = 'lib')\n".getBytes(UTF_8));
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
 
     TargetNode<?, ?> targetNode =
         parser.getTargetNode(eventBus, cell, false, executorService, fooLibTarget);
@@ -1367,7 +1362,7 @@ public class ParserTest {
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     {
@@ -1419,7 +1414,7 @@ public class ParserTest {
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     {
@@ -1482,7 +1477,7 @@ public class ParserTest {
     Files.write(
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
-    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
@@ -1511,7 +1506,7 @@ public class ParserTest {
     Files.write(
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
-    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
@@ -1542,7 +1537,7 @@ public class ParserTest {
     Path testBarJavaFile = tempDir.newFile("foo/Bar.java");
     Files.write(testBarJavaFile, "// Plz, leave me alone!\n".getBytes(UTF_8));
 
-    BuildTarget libTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     TargetGraph oldGraph =
@@ -1603,7 +1598,7 @@ public class ParserTest {
     Files.write(
         testFooBuckFile, "java_library(name = 'lib', visibility=['PUBLIC'])\n".getBytes(UTF_8));
 
-    BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
 
     // We can't precalculate the hash, since it depends on the buck version. Check for the presence
     // of a hash for the right key.
@@ -1768,17 +1763,19 @@ public class ParserTest {
                 executorService,
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
-                        BuildTarget.builder(cellRoot, "//lib", "lib").build())),
+                        BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
                 ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
             .getBuildTargets();
 
     assertThat(
         result,
         hasItems(
-            BuildTarget.builder(cellRoot, "//lib", "lib")
-                .addFlavors(
-                    InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("static"))
-                .build()));
+            BuildTargetFactory.newInstance(
+                cellRoot,
+                "//lib",
+                "lib",
+                InternalFlavor.of("iphonesimulator-x86_64"),
+                InternalFlavor.of("static"))));
   }
 
   @Test
@@ -1812,16 +1809,19 @@ public class ParserTest {
                 executorService,
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
-                        BuildTarget.builder(cellRoot, "//lib", "lib").build())),
+                        BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
                 ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
             .getBuildTargets();
 
     assertThat(
         result,
         hasItems(
-            BuildTarget.builder(cellRoot, "//lib", "lib")
-                .addFlavors(InternalFlavor.of("iphoneos-arm64"), InternalFlavor.of("shared"))
-                .build()));
+            BuildTargetFactory.newInstance(
+                cellRoot,
+                "//lib",
+                "lib",
+                InternalFlavor.of("iphoneos-arm64"),
+                InternalFlavor.of("shared"))));
   }
 
   @Test
@@ -1860,16 +1860,19 @@ public class ParserTest {
                 executorService,
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
-                        BuildTarget.builder(cellRoot, "//lib", "lib").build())),
+                        BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
                 ParserConfig.ApplyDefaultFlavorsMode.ENABLED)
             .getBuildTargets();
 
     assertThat(
         result,
         hasItems(
-            BuildTarget.builder(cellRoot, "//lib", "lib")
-                .addFlavors(InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"))
-                .build()));
+            BuildTargetFactory.newInstance(
+                cellRoot,
+                "//lib",
+                "lib",
+                InternalFlavor.of("macosx-x86_64"),
+                InternalFlavor.of("shared"))));
   }
 
   @Test
@@ -1898,7 +1901,7 @@ public class ParserTest {
         false,
         executorService,
         ImmutableList.of(
-            AbstractBuildTargetSpec.from(BuildTarget.builder(cellRoot, "//lib", "gen").build())),
+            AbstractBuildTargetSpec.from(BuildTargetFactory.newInstance(cellRoot, "//lib", "gen"))),
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -1916,7 +1919,7 @@ public class ParserTest {
         false,
         executorService,
         ImmutableList.of(
-            AbstractBuildTargetSpec.from(BuildTarget.builder(cellRoot, "//lib", "gen").build())),
+            AbstractBuildTargetSpec.from(BuildTargetFactory.newInstance(cellRoot, "//lib", "gen"))),
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }

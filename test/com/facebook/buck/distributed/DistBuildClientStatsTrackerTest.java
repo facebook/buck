@@ -33,18 +33,19 @@ public class DistBuildClientStatsTrackerTest {
   private static final int UPLOAD_BUCK_DOT_FILES_DURATION = 6;
   private static final int SET_BUCK_VERSION_DURATION = 7;
   private static final int MATERIALIZE_SLAVE_LOGS_DURATION = 8;
-  public static final int MISSING_FILES_UPLOADED_COUNT = 2001;
-  public static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
+  private static final int MISSING_FILES_UPLOADED_COUNT = 2001;
+  private static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
+  private static final String BUILD_LABEL = "unit_test";
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateThrowsExceptionWhenStatsNotRecorded() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     tracker.generateStats();
   }
 
   @Test
   public void testGenerateSucceedsWhenAllStandardStatsSet() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     initializeCommonStats(tracker);
     DistBuildClientStats stats = tracker.generateStats();
     assertCommonStats(stats);
@@ -52,7 +53,7 @@ public class DistBuildClientStatsTrackerTest {
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenLocalBuildButMissingLocalBuildFields() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     initializeCommonStats(tracker);
     tracker.setPerformedLocalBuild(true);
     tracker.generateStats();
@@ -60,20 +61,20 @@ public class DistBuildClientStatsTrackerTest {
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenNoStampedeId() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     tracker.generateStats();
   }
 
   @Test(expected = java.lang.IllegalArgumentException.class)
   public void testGenerateFailsWhenNoErrorButRequiredFieldMissing() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     tracker.setStampedeId(STAMPEDE_ID_ONE);
     tracker.generateStats();
   }
 
   @Test
   public void testGeneratesPartialResultWhenErrorButRequiredFields() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     tracker.setBuckClientError(true);
     tracker.setBuckClientErrorMessage(BUCK_CLIENT_ERROR_MESSAGE);
 
@@ -88,6 +89,7 @@ public class DistBuildClientStatsTrackerTest {
     Assert.assertEquals(DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().get());
     Assert.assertEquals(IS_LOCAL_FALLBACK_BUILD_ENABLED, stats.isLocalFallbackBuildEnabled().get());
     Assert.assertEquals(BUCK_CLIENT_ERROR_MESSAGE, stats.buckClientErrorMessage().get());
+    Assert.assertEquals(BUILD_LABEL, stats.buildLabel());
     Assert.assertTrue(stats.buckClientError());
 
     Assert.assertFalse(stats.performDistributedBuildDurationMs().isPresent());
@@ -102,7 +104,7 @@ public class DistBuildClientStatsTrackerTest {
 
   @Test
   public void testGenerateSucceedsWhenLocalBuildAndHasLocalBuildFields() {
-    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker();
+    DistBuildClientStatsTracker tracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     initializeCommonStats(tracker);
     tracker.setPerformedLocalBuild(true);
     tracker.setDurationMs(PERFORM_LOCAL_BUILD, PERFORM_LOCAL_BUILD_DURATION);

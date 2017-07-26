@@ -16,21 +16,22 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.ElfSharedLibraryInterfaceFactory;
-import com.facebook.buck.cxx.GnuArchiver;
-import com.facebook.buck.cxx.GnuLinker;
-import com.facebook.buck.cxx.HeaderVerification;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.PreprocessorProvider;
+import com.facebook.buck.cxx.platform.CompilerProvider;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxToolProvider;
+import com.facebook.buck.cxx.platform.GnuArchiver;
+import com.facebook.buck.cxx.platform.GnuLinker;
+import com.facebook.buck.cxx.platform.HeaderVerification;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.LinkerProvider;
+import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -607,11 +608,13 @@ public class NdkCxxPlatforms {
         .setStaticLibraryExtension("a")
         .setObjectFileExtension("o")
         .setSharedLibraryInterfaceFactory(
-            config.shouldUseSharedLibraryInterfaces()
+            config.getSharedLibraryInterfaces() != SharedLibraryInterfaceFactory.Type.DISABLED
                 ? Optional.of(
                     ElfSharedLibraryInterfaceFactory.of(
                         new ConstantToolProvider(
-                            getGccTool(toolchainPaths, "objcopy", version, executableFinder))))
+                            getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
+                        config.getSharedLibraryInterfaces()
+                            == SharedLibraryInterfaceFactory.Type.DEFINED_ONLY))
                 : Optional.empty())
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());

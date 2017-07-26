@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -58,7 +59,8 @@ import org.junit.Test;
 public class ExternallyBuiltApplePackageTest {
 
   private String bundleLocation = "Fake/Bundle/Location";
-  private BuildTarget buildTarget = BuildTarget.builder(Paths.get("."), "//foo", "package").build();
+  private BuildTarget buildTarget =
+      BuildTargetFactory.newInstance(Paths.get("."), "//foo", "package");
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private BuildRuleParams params = TestBuildRuleParams.create();
   private BuildRuleResolver resolver =

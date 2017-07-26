@@ -109,6 +109,7 @@ import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
@@ -745,6 +746,7 @@ public final class Main {
             // stderr.
             Closeable logErrorToEventBus =
                 loggerThreadMappingScope.setWriter(createWriterForConsole(consoleListener));
+            Scope ddmLibLogRedirector = DdmLibLogRedirector.redirectDdmLogger(buildEventBus);
 
             // NOTE: This will only run during the lifetime of the process and will flush on close.
             CounterRegistry counterRegistry =

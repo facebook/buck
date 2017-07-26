@@ -446,6 +446,8 @@ public class TestCommand extends BuildCommand {
           ImmutableSet<BuildTarget> testTargets = testTargetsBuilder.build();
           if (!testTargets.isEmpty()) {
             LOG.debug("Got related test targets %s, building new target graph...", testTargets);
+            Iterable<BuildTarget> allTargets =
+                Iterables.concat(targetGraphAndBuildTargets.getBuildTargets(), testTargets);
             TargetGraph targetGraph =
                 params
                     .getParser()
@@ -454,10 +456,9 @@ public class TestCommand extends BuildCommand {
                         params.getCell(),
                         getEnableParserProfiling(),
                         pool.getExecutor(),
-                        Iterables.concat(
-                            targetGraphAndBuildTargets.getBuildTargets(), testTargets));
+                        allTargets);
             LOG.debug("Finished building new target graph with tests.");
-            targetGraphAndBuildTargets = targetGraphAndBuildTargets.withTargetGraph(targetGraph);
+            targetGraphAndBuildTargets = TargetGraphAndBuildTargets.of(targetGraph, allTargets);
           }
         }
 

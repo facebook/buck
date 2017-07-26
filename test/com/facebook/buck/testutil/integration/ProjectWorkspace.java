@@ -671,11 +671,12 @@ public class ProjectWorkspace {
     Files.move(getPath(source), getPath(dest));
   }
 
-  public void replaceFileContents(
+  public boolean replaceFileContents(
       String pathRelativeToProjectRoot, String target, String replacement) throws IOException {
     String fileContents = getFileContents(pathRelativeToProjectRoot);
-    fileContents = fileContents.replace(target, replacement);
-    writeContentsToPath(fileContents, pathRelativeToProjectRoot);
+    String newFileContents = fileContents.replace(target, replacement);
+    writeContentsToPath(newFileContents, pathRelativeToProjectRoot);
+    return !newFileContents.equals(fileContents);
   }
 
   public void writeContentsToPath(

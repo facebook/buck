@@ -32,19 +32,10 @@ public class BuildTargetsTest {
 
   private static final Path ROOT = Paths.get("/opt/src/buck");
 
-  @Test
-  public void testCreateFlavoredBuildTarget() {
-    BuildTarget fooBar = BuildTarget.builder(ROOT, "//foo", "bar").build();
-    BuildTarget fooBarBaz =
-        BuildTargets.createFlavoredBuildTarget(fooBar.checkUnflavored(), InternalFlavor.of("baz"));
-    assertTrue(fooBarBaz.isFlavored());
-    assertEquals("//foo:bar#baz", fooBarBaz.getFullyQualifiedName());
-  }
-
   @Test(expected = IllegalStateException.class)
   public void testCheckUnflavoredRejectsFlavoredBuildTarget() {
     BuildTarget fooBarBaz =
-        BuildTarget.builder(ROOT, "//foo", "bar").addFlavors(InternalFlavor.of("baz")).build();
+        BuildTargetFactory.newInstance(ROOT, "//foo", "bar", InternalFlavor.of("baz"));
     fooBarBaz.checkUnflavored();
   }
 
@@ -57,8 +48,7 @@ public class BuildTargetsTest {
     ImmutableSortedSet<BuildTarget> result =
         BuildTargets.propagateFlavorDomains(
             parent, ImmutableList.of(domain), ImmutableList.of(child));
-    assertEquals(
-        ImmutableSortedSet.of(BuildTarget.builder(child).addFlavors(flavor).build()), result);
+    assertEquals(ImmutableSortedSet.of(child.withAppendedFlavors(flavor)), result);
   }
 
   @Test
@@ -72,10 +62,7 @@ public class BuildTargetsTest {
     ImmutableSortedSet<BuildTarget> result =
         BuildTargets.propagateFlavorDomains(
             parent, ImmutableList.of(domain), ImmutableList.of(child));
-    assertEquals(
-        ImmutableSortedSet.of(
-            BuildTarget.builder(child).addFlavors(flavor).addFlavors(flavor2).build()),
-        result);
+    assertEquals(ImmutableSortedSet.of(child.withAppendedFlavors(flavor, flavor2)), result);
   }
 
   @Test

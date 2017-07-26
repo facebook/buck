@@ -123,13 +123,15 @@ public class ProjectView {
   /** {@code Sets.union(buildTargets, allTargets)} */
   private final Set<BuildTarget> allTargets = new HashSet<>();
 
-  private final String repository = new File("").getAbsolutePath();
+  private final String repository;
 
   private ProjectView(
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
       ActionGraphAndResolver actionGraph) {
+    repository = projectViewParameters.getPath().toString();
+
     this.stdErr = projectViewParameters.getStdErr();
     this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
     this.dryRun = projectViewParameters.isDryRun();
@@ -152,11 +154,6 @@ public class ProjectView {
   }
 
   private int run() {
-    if (viewPathIsUnderRepository()) {
-      stderr("\nView directory %s is under the repo directory %s\n", viewPath, repository);
-      return 1;
-    }
-
     getTestTargets();
 
     List<String> inputs = getPrunedInputs();
@@ -179,12 +176,6 @@ public class ProjectView {
     buildAllDirectoriesAndSymlinks();
 
     return 0;
-  }
-
-  private boolean viewPathIsUnderRepository() {
-    Path view = Paths.get(viewPath).toAbsolutePath();
-    Path repo = Paths.get(repository).toAbsolutePath();
-    return view.startsWith(repo);
   }
 
   // region getTestTargets

@@ -30,10 +30,13 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
+import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
+import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
+import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsResponse;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
@@ -46,6 +49,8 @@ import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
+import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
+import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsResponse;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusResponse;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -89,13 +94,14 @@ public class DistBuildServiceTest {
   private DistBuildClientStatsTracker distBuildClientStatsTracker;
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
+  private static final String BUILD_LABEL = "unit_test";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     frontendService = EasyMock.createStrictMock(FrontendService.class);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     distBuildService = new DistBuildService(frontendService);
-    distBuildClientStatsTracker = new DistBuildClientStatsTracker();
+    distBuildClientStatsTracker = new DistBuildClientStatsTracker(BUILD_LABEL);
   }
 
   @After
@@ -511,6 +517,90 @@ public class DistBuildServiceTest {
     Assert.assertEquals(statusRequest.getStampedeId(), stampedeId);
     Assert.assertTrue(statusRequest.isSetRunId());
     Assert.assertEquals(statusRequest.getRunId(), runId);
+  }
+
+  @Test
+  public void canTransmitSlaveFinishedStats() throws IOException {
+    // Check that storeBuildSlaveFinishedStats sends a valid thing,
+    // and then use that capture to reply to a fetchBuildSlaveFinishedStatsRequest request,
+    // and finally verify that the stats object is the same.
+
+    StampedeId stampedeId = new StampedeId();
+    stampedeId.setId("super");
+    RunId runId = new RunId();
+    runId.setId("duper");
+
+    BuildSlaveFinishedStats slaveFinishedStats = new BuildSlaveFinishedStats();
+    BuildSlaveStatus slaveStatus = new BuildSlaveStatus();
+    slaveStatus.setStampedeId(stampedeId);
+    slaveStatus.setRunId(runId);
+    slaveStatus.setTotalRulesCount(123);
+    slaveFinishedStats.setBuildSlaveStatus(slaveStatus);
+    slaveFinishedStats.setExitCode(42);
+
+    Capture<FrontendRequest> request1 = EasyMock.newCapture();
+    Capture<FrontendRequest> request2 = EasyMock.newCapture();
+
+    FrontendResponse response = new FrontendResponse();
+    response.setWasSuccessful(true);
+    response.setType(FrontendRequestType.STORE_BUILD_SLAVE_FINISHED_STATS);
+    response.setStoreBuildSlaveFinishedStatsResponse(new StoreBuildSlaveFinishedStatsResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request1)))
+        .andReturn(response)
+        .once();
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request2)))
+        .andAnswer(
+            () -> {
+              FetchBuildSlaveFinishedStatsResponse statsResponse =
+                  new FetchBuildSlaveFinishedStatsResponse();
+              statsResponse.setBuildSlaveFinishedStats(
+                  request1
+                      .getValue()
+                      .getStoreBuildSlaveFinishedStatsRequest()
+                      .getBuildSlaveFinishedStats());
+
+              FrontendResponse response2 = new FrontendResponse();
+              response2.setWasSuccessful(true);
+              response2.setType(FrontendRequestType.FETCH_BUILD_SLAVE_FINISHED_STATS);
+              response2.setFetchBuildSlaveFinishedStatsResponse(statsResponse);
+              return response2;
+            })
+        .once();
+    EasyMock.replay(frontendService);
+
+    distBuildService.storeBuildSlaveFinishedStats(stampedeId, runId, slaveFinishedStats);
+    BuildSlaveFinishedStats receivedStats =
+        distBuildService.fetchBuildSlaveFinishedStats(stampedeId, runId).get();
+    Assert.assertEquals(receivedStats, slaveFinishedStats);
+
+    // Verify validity of first request.
+    FrontendRequest receivedRequest = request1.getValue();
+    Assert.assertTrue(receivedRequest.isSetType());
+    Assert.assertEquals(
+        receivedRequest.getType(), FrontendRequestType.STORE_BUILD_SLAVE_FINISHED_STATS);
+    Assert.assertTrue(receivedRequest.isSetStoreBuildSlaveFinishedStatsRequest());
+
+    StoreBuildSlaveFinishedStatsRequest storeRequest =
+        receivedRequest.getStoreBuildSlaveFinishedStatsRequest();
+    Assert.assertTrue(storeRequest.isSetStampedeId());
+    Assert.assertEquals(storeRequest.getStampedeId(), stampedeId);
+    Assert.assertTrue(storeRequest.isSetRunId());
+    Assert.assertEquals(storeRequest.getRunId(), runId);
+    Assert.assertTrue(storeRequest.isSetBuildSlaveFinishedStats());
+
+    // Verify validity of second request.
+    receivedRequest = request2.getValue();
+    Assert.assertTrue(receivedRequest.isSetType());
+    Assert.assertEquals(
+        receivedRequest.getType(), FrontendRequestType.FETCH_BUILD_SLAVE_FINISHED_STATS);
+    Assert.assertTrue(receivedRequest.isSetFetchBuildSlaveFinishedStatsRequest());
+
+    FetchBuildSlaveFinishedStatsRequest statsRequest =
+        receivedRequest.getFetchBuildSlaveFinishedStatsRequest();
+    Assert.assertTrue(statsRequest.isSetStampedeId());
+    Assert.assertEquals(statsRequest.getStampedeId(), stampedeId);
+    Assert.assertTrue(statsRequest.isSetRunId());
+    Assert.assertEquals(statsRequest.getRunId(), runId);
   }
 
   @Test
