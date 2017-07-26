@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.config.Config;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.autosparse.AutoSparseConfig;
@@ -92,6 +93,8 @@ import javax.annotation.Nullable;
 /** An injectable service for interacting with the filesystem relative to the project root. */
 public class ProjectFilesystem {
 
+  private final boolean windowsSymlinks;
+
   /** Controls the behavior of how the source should be treated when copying. */
   public enum CopySourceMode {
     /** Copy the single source file into the destination path. */
@@ -157,8 +160,15 @@ public class ProjectFilesystem {
    * appropriate delegate. Currently, the only case in which we need to override this behavior is in
    * unit tests.
    */
-  protected ProjectFilesystem(Path root, ProjectFilesystemDelegate delegate) {
-    this(root.getFileSystem(), root, ImmutableSet.of(), getDefaultBuckPaths(root), delegate);
+  protected ProjectFilesystem(
+      Path root, ProjectFilesystemDelegate delegate, boolean windowsSymlinks) {
+    this(
+        root.getFileSystem(),
+        root,
+        ImmutableSet.of(),
+        getDefaultBuckPaths(root),
+        delegate,
+        windowsSymlinks);
   }
 
   public ProjectFilesystem(Path root, Config config) throws InterruptedException {
@@ -170,7 +180,8 @@ public class ProjectFilesystem {
         ProjectFilesystemDelegateFactory.newInstance(
             root,
             config.getValue("version_control", "hg_cmd").orElse("hg"),
-            AutoSparseConfig.of(config)));
+            AutoSparseConfig.of(config)),
+        config.getBooleanValue("project", "windows_symlinks", false));
   }
 
   /**
@@ -186,7 +197,8 @@ public class ProjectFilesystem {
       final Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
       BuckPaths buckPaths,
-      ProjectFilesystemDelegate delegate) {
+      ProjectFilesystemDelegate delegate,
+      boolean windowsSymlinks) {
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
       Preconditions.checkState(vfs.equals(root.getFileSystem()));
@@ -241,6 +253,7 @@ public class ProjectFilesystem {
               }
               return relativeTmpDir;
             });
+    this.windowsSymlinks = windowsSymlinks;
   }
 
   private static BuckPaths getDefaultBuckPaths(Path rootPath) {
@@ -849,15 +862,20 @@ public class ProjectFilesystem {
       Files.deleteIfExists(symLink);
     }
     if (Platform.detect() == Platform.WINDOWS) {
-      if (isDirectory(realFile)) {
-        // Creating symlinks to directories on Windows requires escalated privileges. We're just
-        // going to have to copy things recursively.
-        MoreFiles.copyRecursively(realFile, symLink);
-      } else {
-        // When sourcePath is relative, resolve it from the targetPath. We're creating a hard link
-        // anyway.
+      if (windowsSymlinks) {
+        // Windows symlinks are not enabled by default, so symlinks on windows are created
+        // only when they are explicitly enabled
         realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
-        Files.createLink(symLink, realFile);
+        WindowsFS.createSymbolicLink(symLink, realFile, isDirectory(realFile));
+      } else {
+        // otherwise, creating hardlinks
+        if (isDirectory(realFile)) {
+          // Hardlinks are only for files - so, copying folders
+          MoreFiles.copyRecursively(realFile, symLink);
+        } else {
+          realFile = MorePaths.normalize(symLink.getParent().resolve(realFile));
+          Files.createLink(symLink, realFile);
+        }
       }
     } else {
       Files.createSymbolicLink(symLink, realFile);
