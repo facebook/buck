@@ -17,20 +17,25 @@
 package com.facebook.buck.jvm.java.plugin.adapter;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
 
 /**
  * Extends {@link JavacTask} with functionality that is useful for Buck:
@@ -70,6 +75,64 @@ public class BuckJavacTask extends JavacTaskWrapper {
         });
 
     postEnterTaskListener = new PostEnterTaskListener(this, this::onPostEnter);
+  }
+
+  @Override
+  public Iterable<? extends CompilationUnitTree> parse() throws IOException {
+    Iterable<? extends CompilationUnitTree> result = super.parse();
+    workaroundJavacTaskDiagnosticsBug();
+    return result;
+  }
+
+  /**
+   * JavacTaskImpl does not report errors that occur between parse and enter until after enter (on
+   * any version of javac). In a just world, that would only result in extra spew. However, on javac
+   * 8 and older, there's another bug that allows fatal diagnostics to get marked as recoverable
+   * sometimes in the presence of annotation processors. Thus in javac 8 and older, when invoking
+   * the compiler phases separately, these errors get swallowed and the compiler crashes in later
+   * phases.
+   *
+   * <p>This method reaches into the compiler to force it to report diagnostics between parse and
+   * enter, thus allowing the logic in Jsr199JavacInvocation to detect the error and stop.
+   */
+  private void workaroundJavacTaskDiagnosticsBug() {
+    try {
+      Field compilerField = inner.getClass().getDeclaredField("compiler");
+      compilerField.setAccessible(true);
+      Object compiler = compilerField.get(inner);
+
+      Field deferredDiagnosticHandlerField =
+          compiler.getClass().getDeclaredField("deferredDiagnosticHandler");
+      deferredDiagnosticHandlerField.setAccessible(true);
+      Object deferredDiagnosticHandler = deferredDiagnosticHandlerField.get(compiler);
+
+      if (deferredDiagnosticHandler != null) {
+        @SuppressWarnings("unchecked")
+        Queue<Diagnostic<JavaFileObject>> deferredDiagnostics =
+            (Queue<Diagnostic<JavaFileObject>>)
+                deferredDiagnosticHandler
+                    .getClass()
+                    .getMethod("getDiagnostics")
+                    .invoke(deferredDiagnosticHandler);
+
+        if (deferredDiagnostics
+            .stream()
+            .anyMatch(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)) {
+          // The queue gets nulled out after reporting, so only report when we know the build will
+          // be failing
+          deferredDiagnosticHandler
+              .getClass()
+              .getMethod("reportDeferredDiagnostics")
+              .invoke(deferredDiagnosticHandler);
+        }
+      }
+    } catch (IllegalAccessException // NOPMD
+        | NoSuchFieldException
+        | NoSuchMethodException e) {
+      // Do nothing; must not be javac 8
+    } catch (InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public Iterable<? extends TypeElement> enter() throws IOException {
