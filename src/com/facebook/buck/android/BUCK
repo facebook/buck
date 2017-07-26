@@ -81,6 +81,7 @@ RULES_SRCS = [
     "AndroidAppModularity.java",
     "AndroidAppModularityDescription.java",
     "AndroidBinary.java",
+    "AndroidBinaryBuildable.java",
     "AndroidBinaryDescription.java",
     "AndroidBinaryGraphEnhancer.java",
     "AndroidBinaryInstallGraphEnhancer.java",
