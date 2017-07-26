@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.0</version>
+  <version>3.1</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -23,6 +23,10 @@
 
   <ul>
       <li>
+        <b>3.1</b>
+	      Detect new package creation, and mark it as a source folder.
+      </li>
+      <li>
         <b>3.0</b>
           Make plugin compatible with IntelliJ 2017.1.
       </li>
@@ -31,8 +35,8 @@
         <b>2.9</b>
           Add an ability to run tests from editor.
           Find adb based on ANDROID_SDK environment variable.
+          Fold BUCK files.
       </li>
-
       <li>
         <b>2.8</b>
 	      Detect resource creation in a Project View's <tt>/res</tt> directory, and moves the new
