@@ -236,12 +236,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     environmentVariablesBuilder.put("NO_BUCKD", "1");
   }
 
-  private static Optional<String> flattenToSpaceSeparatedString(
-      Optional<Arg> arg, SourcePathResolver pathResolver) {
-    return arg.map((input1) -> Arg.stringifyList(input1, pathResolver))
-        .map(input -> Joiner.on(' ').join(input));
-  }
-
   @VisibleForTesting
   public boolean isWorkerGenrule() {
     Arg cmdArg = cmd.orElse(null);
@@ -277,9 +271,9 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem(),
         getBuildTarget(),
         new CommandString(
-            flattenToSpaceSeparatedString(cmd, context.getSourcePathResolver()),
-            flattenToSpaceSeparatedString(bash, context.getSourcePathResolver()),
-            flattenToSpaceSeparatedString(cmdExe, context.getSourcePathResolver())),
+            Arg.flattenToSpaceSeparatedString(cmd, context.getSourcePathResolver()),
+            Arg.flattenToSpaceSeparatedString(bash, context.getSourcePathResolver()),
+            Arg.flattenToSpaceSeparatedString(cmdExe, context.getSourcePathResolver())),
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToSrcDirectory)
             .getPathRelativeToBuildCellRoot()) {

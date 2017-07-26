@@ -39,6 +39,7 @@ import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -46,7 +47,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -158,7 +158,6 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final EnumSet<ExopackageMode> exopackageModes;
-  private final Function<String, String> macroExpander;
   private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
 
   private final AndroidGraphEnhancementResult enhancementResult;
@@ -191,8 +190,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
-      Function<String, String> macroExpander,
-      Optional<String> preprocessJavaClassesBash,
+      Optional<Arg> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       boolean reorderClassesIntraDex,
@@ -219,7 +217,6 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.resourceFilter = resourceFilter;
     this.exopackageModes = exopackageModes;
-    this.macroExpander = macroExpander;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.enhancementResult = enhancementResult;
     this.skipProguard = skipProguard;
@@ -271,7 +268,6 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             proguardAgentPath,
             this.cpuFilters,
             exopackageModes,
-            macroExpander,
             preprocessJavaClassesBash,
             reorderClassesIntraDex,
             dexReorderToolFile,
@@ -327,10 +323,6 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public ResourceFilter getResourceFilter() {
     return resourceFilter;
-  }
-
-  public Function<String, String> getMacroExpander() {
-    return macroExpander;
   }
 
   ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig() {

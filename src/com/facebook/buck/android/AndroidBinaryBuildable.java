@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -47,7 +48,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -112,7 +112,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final Optional<String> proguardAgentPath;
   @AddToRuleKey private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
   @AddToRuleKey private final EnumSet<AndroidBinary.ExopackageMode> exopackageModes;
-  @AddToRuleKey private final Optional<String> preprocessJavaClassesBash;
+  @AddToRuleKey private final Optional<Arg> preprocessJavaClassesBash;
   @AddToRuleKey private final boolean reorderClassesIntraDex;
   @AddToRuleKey private final Optional<SourcePath> dexReorderToolFile;
   @AddToRuleKey private final Optional<SourcePath> dexReorderDataDumpFile;
@@ -147,7 +147,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
   private final ImmutableMultimap<APKModule, SourcePath> moduleMappedClasspathEntriesToDex;
   private final APKModuleGraph apkModuleGraph;
-  private final Function<String, String> macroExpander;
   private final ImmutableMultimap<APKModule, SourcePath> nativeLibAssetsDirectories;
   private final ImmutableSet<APKModule> apkModules;
   private final Supplier<Optional<ImmutableSortedSet<SourcePath>>>
@@ -171,8 +170,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Optional<String> proguardAgentPath,
       ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       EnumSet<AndroidBinary.ExopackageMode> exopackageModes,
-      Function<String, String> macroExpander,
-      Optional<String> preprocessJavaClassesBash,
+      Optional<Arg> preprocessJavaClassesBash,
       boolean reorderClassesIntraDex,
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
@@ -209,7 +207,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.proguardAgentPath = proguardAgentPath;
     this.cpuFilters = cpuFilters;
     this.exopackageModes = exopackageModes;
-    this.macroExpander = macroExpander;
     this.preprocessJavaClassesBash = preprocessJavaClassesBash;
     this.reorderClassesIntraDex = reorderClassesIntraDex;
     this.dexReorderToolFile = dexReorderToolFile;
@@ -720,7 +717,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       AbstractGenruleStep.CommandString commandString =
           new AbstractGenruleStep.CommandString(
               /* cmd */ Optional.empty(),
-              /* bash */ preprocessJavaClassesBash.map(macroExpander::apply),
+              /* bash */ Arg.flattenToSpaceSeparatedString(
+                  preprocessJavaClassesBash, buildContext.getSourcePathResolver()),
               /* cmdExe */ Optional.empty());
       steps.add(
           new AbstractGenruleStep(
