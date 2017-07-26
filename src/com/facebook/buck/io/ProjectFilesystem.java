@@ -322,12 +322,6 @@ public class ProjectFilesystem {
     return projectRoot;
   }
 
-  public ProjectFilesystem replaceBlacklistedPaths(
-      ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
-    return new ProjectFilesystem(
-        projectRoot.getFileSystem(), projectRoot, blackListedPaths, buckPaths, delegate);
-  }
-
   /**
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
    * them past this point.
