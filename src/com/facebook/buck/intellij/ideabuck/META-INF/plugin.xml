@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.1</version>
+  <version>3.2-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -23,10 +23,16 @@
 
   <ul>
       <li>
+        <b>3.2</b>
+        
+      </li>
+
+      <li>
         <b>3.1</b>
 	      Detect new package creation, and mark it as a source folder.
 	      Remove the default folding of large arrays.
       </li>
+
       <li>
         <b>3.0</b>
           Make plugin compatible with IntelliJ 2017.1.
