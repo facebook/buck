@@ -111,7 +111,7 @@ class ExecuteTarget(Exception):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         os.chdir(self._cwd)
-        os.execve(self._path, self._argv, self._envp)
+        os.execvpe(self._path, self._argv, self._envp)
 
 
 class JvmCrashLogger(object):
