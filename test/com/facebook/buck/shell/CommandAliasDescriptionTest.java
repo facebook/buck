@@ -26,6 +26,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -92,6 +93,45 @@ public class CommandAliasDescriptionTest {
             .build();
 
     assertEquals(ImmutableSet.of(delegate, argTarget), targetNode.getParseDeps());
+  }
+
+  @Test
+  public void supportsStringEnvVars() throws NoSuchBuildTargetException {
+    String key = "THE_KEY";
+    String value = "arbitrary value";
+    CommandAliasBuilder.BuildResult result =
+        builder().setExe(delegate).setStringEnv(key, value).buildResult();
+
+    assertEquals(
+        ImmutableMap.of(key, value),
+        result.aliasBinary().getExecutableCommand().getEnvironment(result.sourcePathResolver()));
+  }
+
+  @Test
+  public void supportsLocationMacrosInEnv() throws NoSuchBuildTargetException {
+    String key = "THE_KEY";
+    CommandAliasBuilder.BuildResult result =
+        builder()
+            .setExe(delegate)
+            .setMacroEnv(key, "prefix %s suffix", LocationMacro.of(argTarget))
+            .addTarget(argTarget)
+            .buildResult();
+
+    ImmutableMap<String, String> env =
+        result.aliasBinary().getExecutableCommand().getEnvironment(result.sourcePathResolver());
+    assertEquals(
+        ImmutableMap.of(
+            key,
+            String.format(
+                "prefix %s suffix",
+                result
+                    .sourcePathResolver()
+                    .getAbsolutePath(
+                        result.resolver().requireRule(argTarget).getSourcePathToOutput()))),
+        env);
+    assertThat(
+        argTarget,
+        in(result.aliasBinary().getRuntimeDeps(result.ruleFinder()).collect(Collectors.toList())));
   }
 
   @Test

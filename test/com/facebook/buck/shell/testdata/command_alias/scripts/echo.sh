@@ -6,3 +6,5 @@ shift
 for ARG in "$@"; do
     echo $ARG
 done
+
+echo $ENV_A $ENV_B

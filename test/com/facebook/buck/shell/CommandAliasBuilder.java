@@ -30,6 +30,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -77,6 +78,17 @@ public class CommandAliasBuilder
   public CommandAliasBuilder setMacroArg(String format, Macro... macros) {
     StringWithMacros arg = StringWithMacrosUtils.format(format, macros);
     getArgForPopulating().setArgs(Arrays.asList(arg));
+    return this;
+  }
+
+  public CommandAliasBuilder setStringEnv(String key, String value) {
+    getArgForPopulating().setEnv(ImmutableMap.of(key, StringWithMacrosUtils.format(value)));
+    return this;
+  }
+
+  public CommandAliasBuilder setMacroEnv(String key, String format, Macro... macros) {
+    StringWithMacros value = StringWithMacrosUtils.format(format, macros);
+    getArgForPopulating().setEnv(ImmutableMap.of(key, value));
     return this;
   }
 

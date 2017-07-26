@@ -37,6 +37,8 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -75,6 +77,12 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       tool.addArg(StringWithMacrosArg.of(x, MACRO_EXPANDERS, buildTarget, cellRoots, resolver));
     }
 
+    for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
+      tool.addEnv(
+          x.getKey(),
+          StringWithMacrosArg.of(x.getValue(), MACRO_EXPANDERS, buildTarget, cellRoots, resolver));
+    }
+
     return new CommandAlias(buildTarget, projectFilesystem, params, tool.build());
   }
 
@@ -84,6 +92,8 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
     ImmutableList<StringWithMacros> getArgs();
 
     BuildTarget getExe();
+
+    ImmutableMap<String, StringWithMacros> getEnv();
   }
 
   private static Optional<BinaryBuildRule> getAsBinaryRule(

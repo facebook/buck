@@ -39,6 +39,7 @@ public class CommandAliasIntegrationTest {
     String stdout =
         workspace.runBuckCommand("run", "//:outer", "extra arg").assertSuccess().getStdout();
 
-    assertEquals(String.join("\n", "BUCK", "echo.sh", "1", "second arg", "extra arg", ""), stdout);
+    assertEquals(
+        String.join("\n", "BUCK", "echo.sh", "1", "second arg", "extra arg", "1 2", ""), stdout);
   }
 }

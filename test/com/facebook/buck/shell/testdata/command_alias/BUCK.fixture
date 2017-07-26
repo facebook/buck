@@ -6,4 +6,5 @@ command_alias(
         "1",
         "second arg",
     ],
+    env = {"ENV_B": "2"},
 )
