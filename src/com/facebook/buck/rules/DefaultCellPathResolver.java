@@ -82,9 +82,9 @@ public class DefaultCellPathResolver implements CellPathResolver {
   private static ImmutableMap<RelativeCellName, Path> bootstrapPathMapping(
       Path root, ImmutableMap<String, Path> cellPaths) {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
+    // Add the implicit empty root cell
     builder.put(RelativeCellName.of(ImmutableList.of()), root);
     HashSet<Path> seenPaths = new HashSet<>();
-    seenPaths.add(root);
 
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
@@ -102,6 +102,12 @@ public class DefaultCellPathResolver implements CellPathResolver {
       seenPaths.add(cellRoot);
     }
     return builder.build();
+  }
+
+  public static ImmutableMap<RelativeCellName, Path> bootstrapPathMapping(
+      Path root, Config config) {
+    return bootstrapPathMapping(
+        root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
   public ImmutableMap<RelativeCellName, Path> getPathMapping() {

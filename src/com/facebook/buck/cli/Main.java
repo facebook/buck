@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.config.CellConfig.MalformedOverridesException;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
@@ -29,6 +30,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
@@ -483,10 +485,20 @@ public final class Main {
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config =
-        Configs.createDefaultConfig(
-            canonicalRootPath,
-            command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
+    ImmutableMap<RelativeCellName, Path> cellMapping =
+        DefaultCellPathResolver.bootstrapPathMapping(
+            canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
+    RawConfig rootCellConfigOverrides = RawConfig.of();
+    try {
+      ImmutableMap<Path, RawConfig> overridesByPath =
+          command.getConfigOverrides().getOverridesByPath(cellMapping);
+      rootCellConfigOverrides =
+          Optional.ofNullable(overridesByPath.get(canonicalRootPath)).orElse(RawConfig.of());
+    } catch (MalformedOverridesException exception) {
+      rootCellConfigOverrides =
+          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
+    }
+    Config config = Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     DefaultCellPathResolver cellPathResolver =
         new DefaultCellPathResolver(filesystem.getRootPath(), config);
