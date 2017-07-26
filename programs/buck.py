@@ -50,7 +50,7 @@ if __name__ == "__main__":
         setup_logging()
         propagate_failure(main(sys.argv))
     except ExecuteTarget as e:
-        e.execve()
+        e.execvpe()
     except RestartBuck:
         os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buck'), sys.argv)
     except (BuckToolException, NailgunException, NoBuckConfigFoundException) as e:
