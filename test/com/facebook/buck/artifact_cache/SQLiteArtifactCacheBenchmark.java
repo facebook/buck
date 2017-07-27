@@ -40,6 +40,7 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -134,12 +135,14 @@ public class SQLiteArtifactCacheBenchmark {
         CacheReadMode.READWRITE);
   }
 
+  @Ignore
   @Test
   public void testSingleThreaded() {
     executor = MoreExecutors.newDirectExecutorService();
     runAllBenchmarks();
   }
 
+  @Ignore
   @Test
   public void testMultiThreaded() {
     executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
