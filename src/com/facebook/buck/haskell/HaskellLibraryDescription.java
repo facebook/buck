@@ -189,7 +189,17 @@ public class HaskellLibraryDescription
                 : CxxSourceRuleFactory.PicType.PIC,
             cxxPlatform.getStaticLibraryExtension(),
             hsProfile ? "_p" : ""),
-        compileRule.getObjects());
+        compileRule.getObjects(),
+        // TODO(#20466393): Currently, GHC produces nono-deterministically sized object files.
+        // This means that it's possible to get a thin archive fetched from cache originating from
+        // one build and the associated object files fetched from cache originating from another, in
+        // which the sizes listed in the archive differ from the objects on disk, causing the GHC
+        // linker to fail. Technically, since `HaskellCompileRule` is producing non-deterministic
+        // outputs, we should mark that as uncacheable.  However, as that would have a significant
+        // affect on build efficiency, and since this issue appears to only manifest by a size
+        // mismatch with what is embedded in thin archives, just disable caching when using thin
+        // archives.
+        /* cacheable */ cxxBuckConfig.getArchiveContents() != Archive.Contents.THIN);
   }
 
   private Archive requireStaticLibrary(

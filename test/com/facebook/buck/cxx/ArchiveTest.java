@@ -103,7 +103,8 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     Archive.Contents.NORMAL,
                     DEFAULT_OUTPUT,
-                    DEFAULT_INPUTS));
+                    DEFAULT_INPUTS,
+                    /* cacheable */ true));
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
@@ -119,7 +120,8 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     Archive.Contents.NORMAL,
                     DEFAULT_OUTPUT,
-                    DEFAULT_INPUTS));
+                    DEFAULT_INPUTS,
+                    /* cacheable */ true));
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -136,7 +138,8 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     Archive.Contents.NORMAL,
                     Paths.get("different"),
-                    DEFAULT_INPUTS));
+                    DEFAULT_INPUTS,
+                    /* cacheable */ true));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
@@ -153,7 +156,8 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     Archive.Contents.NORMAL,
                     DEFAULT_OUTPUT,
-                    ImmutableList.of(new FakeSourcePath("different"))));
+                    ImmutableList.of(new FakeSourcePath("different")),
+                    /* cacheable */ true));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
@@ -170,7 +174,8 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     Archive.Contents.NORMAL,
                     DEFAULT_OUTPUT,
-                    DEFAULT_INPUTS));
+                    DEFAULT_INPUTS,
+                    /* cacheable */ true));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
   }
 
@@ -193,7 +198,8 @@ public class ArchiveTest {
             ImmutableList.of("-bar"),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
-            ImmutableList.of(new FakeSourcePath("simple.o")));
+            ImmutableList.of(new FakeSourcePath("simple.o")),
+            /* cacheable */ true);
 
     BuildContext buildContext =
         BuildContext.builder()
@@ -244,7 +250,8 @@ public class ArchiveTest {
             ImmutableList.of(
                 new FakeSourcePath("simple.o"),
                 genrule1.getSourcePathToOutput(),
-                genrule2.getSourcePathToOutput()));
+                genrule2.getSourcePathToOutput()),
+            /* cacheable */ true);
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.
