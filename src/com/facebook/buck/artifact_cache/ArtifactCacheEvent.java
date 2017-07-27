@@ -43,7 +43,8 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   public enum CacheMode {
     dir,
-    http
+    http,
+    sqlite
   }
 
   @JsonIgnore private final CacheMode cacheMode;

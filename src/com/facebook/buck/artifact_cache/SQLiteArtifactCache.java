@@ -70,8 +70,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(SQLiteArtifactCache.class);
 
-  // TODO: add ArtifactCacheMode.sqlite
-  private static final ArtifactCacheMode CACHE_MODE = ArtifactCacheMode.dir;
+  private static final ArtifactCacheMode CACHE_MODE = ArtifactCacheMode.sqlite;
   // How much of the max size to leave if we decide to delete old files.
   private static final float MAX_BYTES_TRIM_RATIO = 2 / 3f;
   private static final String TMP_EXTENSION = ".tmp";
