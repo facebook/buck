@@ -64,6 +64,7 @@ public class DefaultJavaLibraryBuilder {
   protected boolean trackClassUsage = false;
   protected boolean compileAgainstAbis = false;
   protected Optional<Path> resourcesRoot = Optional.empty();
+  protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
   protected Optional<SourcePath> manifestFile = Optional.empty();
   protected Optional<String> mavenCoords = Optional.empty();
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
@@ -119,6 +120,7 @@ public class DefaultJavaLibraryBuilder {
     return setSrcs(args.getSrcs())
         .setResources(args.getResources())
         .setResourcesRoot(args.getResourcesRoot())
+        .setUnbundledResourcesRoot(args.getUnbundledResourcesRoot())
         .setProguardConfig(args.getProguardConfig())
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
         .setExportedDeps(args.getExportedDeps())
@@ -190,6 +192,11 @@ public class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setResourcesRoot(Optional<Path> resourcesRoot) {
     this.resourcesRoot = resourcesRoot;
+    return this;
+  }
+
+  public DefaultJavaLibraryBuilder setUnbundledResourcesRoot(Optional<SourcePath> unbundledResourcesRoot) {
+    this.unbundledResourcesRoot = unbundledResourcesRoot;
     return this;
   }
 

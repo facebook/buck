@@ -200,6 +200,7 @@ public class RobolectricTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
+        args.getUnbundledResourcesRoot(),
         args.getRobolectricRuntimeDependency(),
         args.getRobolectricManifest());
   }
