@@ -1034,7 +1034,7 @@ public final class Main {
           LOG.debug(t, "Failing build on exception.");
           closeHttpExecutorService(cacheBuckConfig, Optional.empty(), httpWriteExecutorService);
           closeDiskIoExecutorService(diskIoExecutorService);
-          flushEventListeners(console, buildId, eventListeners);
+          flushAndCloseEventListeners(console, buildId, eventListeners);
           throw t;
         } finally {
           if (commandSemaphoreAcquired) {
@@ -1061,7 +1061,7 @@ public final class Main {
         }
 
         closeDiskIoExecutorService(diskIoExecutorService);
-        flushEventListeners(console, buildId, eventListeners);
+        flushAndCloseEventListeners(console, buildId, eventListeners);
         return exitCode;
       }
     } finally {
@@ -1085,12 +1085,15 @@ public final class Main {
     return new Console(verbosity, stdOut, stdErr, buckConfig.createAnsi(color));
   }
 
-  private void flushEventListeners(
+  private void flushAndCloseEventListeners(
       Console console, BuildId buildId, ImmutableList<BuckEventListener> eventListeners)
-      throws InterruptedException {
+      throws InterruptedException, IOException {
     for (BuckEventListener eventListener : eventListeners) {
       try {
         eventListener.outputTrace(buildId);
+        if (eventListener instanceof Closeable) {
+          ((Closeable) eventListener).close();
+        }
       } catch (RuntimeException e) {
         PrintStream stdErr = console.getStdErr();
         stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
