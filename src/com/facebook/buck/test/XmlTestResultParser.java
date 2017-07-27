@@ -19,7 +19,7 @@ package com.facebook.buck.test;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.XmlDomParser;
+import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.io.IOException;

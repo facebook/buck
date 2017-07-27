@@ -65,6 +65,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/xml:xml",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/versions:versions",

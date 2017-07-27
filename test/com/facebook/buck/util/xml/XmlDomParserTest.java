@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.xml;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -48,7 +48,8 @@ public class XmlDomParserTest {
 
   /**
    * Checks that when creating an {@link InputSource} from a {@link Reader} and passing that through
-   * {@link XmlDomParser#parse(InputSource,boolean)}, it is closed before the method returns.
+   * {@link com.facebook.buck.util.xml.XmlDomParser#parse(InputSource,boolean)}, it is closed before
+   * the method returns.
    *
    * @see <a href="http://fburl.com/8289364">DocumentBuilder.parse(InputStream)</a>
    * @throws IOException
