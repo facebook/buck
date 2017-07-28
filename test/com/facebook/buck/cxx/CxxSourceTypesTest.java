@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 

@@ -111,7 +111,7 @@ public class ResolverIntegrationTest {
         new ProjectBuildFileParser(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
-                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
+                .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter().toString())
                 .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
                 .setIgnorePaths(filesystem.getIgnorePaths())
                 .setBuildFileName(parserConfig.getBuildFileName())

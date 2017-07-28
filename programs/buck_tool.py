@@ -111,7 +111,7 @@ class ExecuteTarget(Exception):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
         os.chdir(self._cwd)
-        os.execve(self._path, self._argv, self._envp)
+        os.execvpe(self._path, self._argv, self._envp)
 
 
 class JvmCrashLogger(object):
@@ -264,8 +264,11 @@ class BuckTool(object):
                         # Build failed, so there's nothing to run.  Exit normally.
                         return exit_code
                     cmd = json.load(argsfile)
-                    raise ExecuteTarget(cmd['path'], cmd['argv'], cmd['envp'], cmd['cwd'])
-
+                    path = cmd['path'].encode('utf8')
+                    argv = [arg.encode('utf8') for arg in cmd['argv']]
+                    envp = {k.encode('utf8'): v.encode('utf8') for k, v in cmd['envp'].iteritems()}
+                    cwd = cmd['cwd'].encode('utf8')
+                    raise ExecuteTarget(path, argv, envp, cwd)
 
     def launch_buck(self, build_id):
         with Tracing('BuckTool.launch_buck'):

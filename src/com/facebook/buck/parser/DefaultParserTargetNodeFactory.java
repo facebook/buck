@@ -179,7 +179,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         if (buildFileTrees.isPresent()
             && cell.isEnforcingBuckPackageBoundaries(target.getBasePath())) {
           enforceBuckPackageBoundaries(
-              target, buildFileTrees.get().getUnchecked(targetCell), node.getInputs());
+              targetCell, target, buildFileTrees.get().getUnchecked(targetCell), node.getInputs());
         }
         nodeListener.onCreate(buildFile, node);
         return node;
@@ -194,7 +194,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   }
 
   protected void enforceBuckPackageBoundaries(
-      BuildTarget target, BuildFileTree buildFileTree, ImmutableSet<Path> paths) {
+      Cell targetCell, BuildTarget target, BuildFileTree buildFileTree, ImmutableSet<Path> paths) {
     Path basePath = target.getBasePath();
 
     for (Path path : paths) {
@@ -210,21 +210,28 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       // 2) You don't have a build file above this file, which is impossible if it is referenced in
       //    a build file *unless* you happen to be referencing something that is ignored.
       if (!ancestor.isPresent()) {
-        throw new HumanReadableException(
-            "The target '%s' tried to refer '%s'.\n"
-                + "It's not allowed probably because you referred one of the folders containing\n"
-                + "this file in your .buckconfig under `project.ignore`.",
-            target, path);
+        throw new IllegalStateException(
+            String.format(
+                "Target '%s' refers to file '%s', which doesn't belong to any package",
+                target, path));
       }
       if (!ancestor.get().equals(basePath)) {
-        Path buckFile = ancestor.get().resolve("BUCK");
+        String buildFileName = targetCell.getBuildFileName();
+        Path buckFile = ancestor.get().resolve(buildFileName);
+        // TODO(cjhopman): If we want to manually split error message lines ourselves, we should
+        // have a utility to do it correctly after formatting instead of doing it manually.
         throw new HumanReadableException(
-            "The target '%s' tried to refer '%s'.\n"
-                + "It's not allowed because this file is already referred by another rule in\n"
-                + "'%s'.\n\n"
-                + "It may also be due to a bug in buckd's caching.\n"
+            "The target '%1$s' tried to reference '%2$s'.\n"
+                + "This is not allowed because '%2$s' can only be referenced from '%3$s' \n"
+                + "which is it's closest parent '%4$s' file.\n"
+                + "\n"
+                + "You should find or create the rule in '%3$s' that references\n"
+                + "'%2$s' and use that in '%1$s'\n"
+                + "instead of directly referencing '%2$s'.\n"
+                + "\n"
+                + "This may also be due to a bug in buckd's caching.\n"
                 + "Please check whether using `buck kill` will resolve it.",
-            target, path, buckFile);
+            target, path, buckFile, buildFileName);
       }
     }
   }

@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
@@ -305,21 +304,17 @@ class AndroidBinaryResourcesGraphEnhancer {
           resourceFilterRule.isPresent(),
           "Expected ResourceFilterRule to be present when filtered resources are present.");
       ImmutableSortedSet<BuildRule> compileDeps = ImmutableSortedSet.of(resourceFilterRule.get());
+      int index = 0;
       for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
-        String safeName =
-            ((resDir instanceof ExplicitBuildTargetSourcePath)
-                    ? ((ExplicitBuildTargetSourcePath) resDir).getResolvedPath().toString()
-                    : resDir.toString())
-                .replaceAll("[^0-9A-Za-z]", "_");
-
         Aapt2Compile compileRule =
             new Aapt2Compile(
-                buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + safeName)),
+                buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index)),
                 projectFilesystem,
                 buildRuleParams.withoutDeclaredDeps().withExtraDeps(compileDeps),
                 resDir);
         ruleResolver.addToIndex(compileRule);
         compileListBuilder.add(compileRule);
+        index++;
       }
     } else {
       for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {

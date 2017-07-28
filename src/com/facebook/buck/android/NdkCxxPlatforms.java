@@ -16,22 +16,22 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.ElfSharedLibraryInterfaceFactory;
-import com.facebook.buck.cxx.GnuArchiver;
-import com.facebook.buck.cxx.GnuLinker;
-import com.facebook.buck.cxx.HeaderVerification;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.PreprocessorProvider;
-import com.facebook.buck.cxx.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.platform.CompilerProvider;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxToolProvider;
+import com.facebook.buck.cxx.platform.GnuArchiver;
+import com.facebook.buck.cxx.platform.GnuLinker;
+import com.facebook.buck.cxx.platform.HeaderVerification;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.LinkerProvider;
+import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -187,6 +187,49 @@ public class NdkCxxPlatforms {
     return !(cxxRuntime == NdkCxxRuntime.LIBCXX && getNdkMajorVersion(ndkVersion) >= 12);
   }
 
+  public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+      CxxBuckConfig config,
+      AndroidBuckConfig androidConfig,
+      ProjectFilesystem filesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      Platform platform,
+      Optional<String> ndkVersion) {
+    Optional<Path> ndkRoot = androidDirectoryResolver.getNdkOrAbsent();
+    if (!ndkRoot.isPresent()) {
+      return ImmutableMap.of();
+    }
+
+    NdkCxxPlatformCompiler.Type compilerType =
+        androidConfig.getNdkCompiler().orElse(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
+    String gccVersion =
+        androidConfig
+            .getNdkGccVersion()
+            .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
+    String clangVersion =
+        androidConfig
+            .getNdkClangVersion()
+            .orElse(NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
+    String compilerVersion =
+        compilerType == NdkCxxPlatformCompiler.Type.GCC ? gccVersion : clangVersion;
+    NdkCxxPlatformCompiler compiler =
+        NdkCxxPlatformCompiler.builder()
+            .setType(compilerType)
+            .setVersion(compilerVersion)
+            .setGccVersion(gccVersion)
+            .build();
+    return getPlatforms(
+        config,
+        androidConfig,
+        filesystem,
+        ndkRoot.get(),
+        compiler,
+        androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
+        androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
+        androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
+        platform);
+  }
+
+  @VisibleForTesting
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,

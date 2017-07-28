@@ -19,8 +19,8 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -160,7 +160,8 @@ public class DLibraryDescription
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
-        compiledSources);
+        compiledSources,
+        /* cacheable */ true);
   }
 
   @BuckStyleImmutable

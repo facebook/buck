@@ -226,8 +226,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             // rather than the change in the srcs property of that class is a bug in the differ.
             "Change details for [//:java_lib_all]",
             "  (jarBuildStepsFactory):",
-            "    -[ruleKey(sha1=c63b53f2e008a9b991a6b46fdc4db3f2d5c7b3ff)]",
-            "    +[ruleKey(sha1=197e9e32c133fd19a9552d13d085a7d5e0b87f29)]",
+            "    -[ruleKey(sha1=b474649c3064a98cb65606d58496d4ef987a553a)]",
+            "    +[ruleKey(sha1=105823a5d9b698b967ab48c183d1f39bcafacaa9)]",
             "Change details for [//:java_lib_2->jarBuildStepsFactory]",
             "  (srcs):",
             "    -[<missing>]",

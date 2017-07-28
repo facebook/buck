@@ -25,7 +25,7 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;

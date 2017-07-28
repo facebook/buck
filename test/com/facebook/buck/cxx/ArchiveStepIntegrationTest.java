@@ -21,6 +21,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.platform.Archiver;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.ObjectFileCommonModificationDate;
+import com.facebook.buck.cxx.platform.ObjectFileScrubbers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -84,7 +88,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(false),
             output,
             ImmutableList.of(input),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
     FileScrubberStep fileScrubberStep =
         new FileScrubberStep(filesystem, output, platform.getAr().getScrubbers());
 
@@ -134,7 +139,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(false),
             output,
             ImmutableList.of(),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -179,7 +185,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(false),
             output,
             ImmutableList.of(input.getParent()),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -235,7 +242,8 @@ public class ArchiveStepIntegrationTest {
             getArchiveOptions(true),
             output,
             ImmutableList.of(input),
-            archiver);
+            archiver,
+            filesystem.getPath("scratchDir"));
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();

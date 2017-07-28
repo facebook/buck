@@ -19,13 +19,13 @@ import static com.facebook.buck.util.MoreCollectors.toImmutableMap;
 import static java.util.stream.Collectors.collectingAndThen;
 
 import com.facebook.buck.rules.RelativeCellName;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -87,8 +87,10 @@ abstract class AbstractCellConfig {
         Multimaps.index(pathMapping.keySet(), Functions.forMap(pathMapping));
 
     for (Path pathWithOverrides : pathsWithOverrides.build()) {
-      ImmutableCollection<RelativeCellName> namesForPath =
-          pathToRelativeName.get(pathWithOverrides);
+      ImmutableList<RelativeCellName> namesForPath =
+          RichStream.from(pathToRelativeName.get(pathWithOverrides))
+              .filter(name -> name.getLegacyName().isPresent())
+              .toImmutableList();
       if (namesForPath.size() > 1) {
         throw new MalformedOverridesException(
             String.format(
@@ -106,13 +108,10 @@ abstract class AbstractCellConfig {
       RawConfig configFromOtherRelativeName = overridesByPath.get(cellPath);
       RawConfig config = getForCell(cellRelativeName);
       if (configFromOtherRelativeName != null) {
-        Preconditions.checkState(
-            configFromOtherRelativeName.equals(config),
-            "Attempting to create cell %s at %s with conflicting overrides [%s] vs [%s].",
-            cellRelativeName,
-            cellPath,
-            configFromOtherRelativeName,
-            config);
+        // Merge configs
+        RawConfig mergedConfig =
+            RawConfig.builder().putAll(configFromOtherRelativeName).putAll(config).build();
+        overridesByPath.put(cellPath, mergedConfig);
       } else {
         overridesByPath.put(cellPath, config);
       }

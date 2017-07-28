@@ -1,2 +1,5 @@
+[repositories]
+repo = .
+
 [buildfile]
 includes = //nothing.py

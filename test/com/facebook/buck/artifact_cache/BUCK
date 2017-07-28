@@ -56,6 +56,7 @@ java_library(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/okhttp:okhttp",
+        "//third-party/java/sqlite:sqlite",
         "//third-party/java/thrift:libthrift",
     ],
 )
@@ -87,7 +88,6 @@ standard_java_test(
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",
-        "//src/com/facebook/buck/cxx:platform",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
         "//src/com/facebook/buck/distributed:distributed",
@@ -226,5 +226,32 @@ standard_java_test(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+)
+
+java_library(
+    name = "artifact_cache_benchmark_lib",
+    srcs = ["SQLiteArtifactCacheBenchmark.java"],
+    exported_deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/artifact_cache:impl",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:rules",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/caliper:caliper",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/benchmarks/...",
+    ],
+)
+
+java_test(
+    name = "artifact_cache_benchmark",
+    srcs = ["SQLiteArtifactCacheBenchmark.java"],
+    deps = [
+        ":artifact_cache_benchmark_lib",
     ],
 )

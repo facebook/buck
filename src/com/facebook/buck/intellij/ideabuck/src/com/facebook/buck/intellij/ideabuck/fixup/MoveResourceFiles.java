@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.fixup;
 
-import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckArrayElementsImpl;
@@ -25,21 +24,16 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckPropertyLvalueImpl;
 import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckValueArrayImpl;
 import com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckValueImpl;
 import com.intellij.facet.Facet;
-import com.intellij.facet.FacetManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.PopupStep;
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.openapi.vfs.newvfs.BulkFileListener;
-import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
+import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor;
@@ -47,215 +41,62 @@ import com.intellij.psi.impl.source.tree.CompositeElement;
 import com.intellij.util.PathUtil;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MoveResourceFiles implements BulkFileListener {
+class MoveResourceFiles implements FileCreateHandler {
 
   private static final Logger LOG = Logger.getInstance(MoveResourceFiles.class);
 
-  // We need to use Reflection to call into the Android plugin
-  private Class<?> androidFacet;
-  private Method getAllResourceDirectories;
-  private boolean loaded = false;
-
-  /** Maps a new file name to the info needed to move / reopen it */
-  private final Map<String, FileContext> creationContext = new HashMap<>();
-
-  private static class FileContext {
-    private final Project project;
-    private final VirtualFile selection;
-    private final Editor editor;
-
-    private FileContext(Project project, VirtualFile selection, Editor editor) {
-      this.project = project;
-      this.selection = selection;
-      this.editor = editor;
-    }
-
-    private String getRepositoryPath() {
-      String basePath = project.getBasePath();
-      String selectionName = selection.getPath();
-      String selectionSuffix = selectionName.substring(basePath.length());
-      if (selectionSuffix.startsWith(File.separator)) {
-        selectionSuffix = selectionSuffix.substring(1);
-      }
-      Path selectionPath = Paths.get(selectionName);
-      String realSelectionPath;
-      try {
-        realSelectionPath = selectionPath.toRealPath().toString();
-      } catch (IOException e) {
-        return null;
-      }
-      return realSelectionPath.endsWith(selectionSuffix)
-          ? realSelectionPath.substring(0, realSelectionPath.length() - selectionSuffix.length())
-          : null;
-    }
-  }
-
-  // region BulkFileListener overrides
+  // region FileCreateHandler overrides
 
   @Override
-  public void before(@NotNull List<? extends VFileEvent> list) {
-    for (VFileEvent event : list) {
-      Project project = getProject(event);
+  public void onFileCreate(VFileCreateEvent event, Facet facet) {
+    Project project = facet.getModule().getProject();
 
-      if (project != null) {
-        ModuleManager moduleManager = ModuleManager.getInstance(project);
-        Module[] modules = moduleManager.getModules();
-        if (modules.length != 1) {
-          continue; // This is NOT a Project View
-        }
-        Module module = modules[0];
-
-        if (!module.getName().equals(SharedConstants.ROOT_MODULE_NAME)) {
-          continue; // This is NOT a Project View
-        }
-
-        FacetManager facetManager = FacetManager.getInstance(module);
-        Facet[] facets = facetManager.getAllFacets();
-        if (facets.length != 1) {
-          continue; // This is NOT a Project View
-        }
-        Facet facet = facets[0];
-
-        if (!facet.getName().equals("Android")) {
-          continue; // This is NOT a Project View
-        }
-
-        List<VirtualFile> resourceDirectories = getAllResourceDirectories(facet);
-        if (resourceDirectories == null || resourceDirectories.size() != 1) {
-          continue; // This is NOT a Project View
-        }
-        VirtualFile resourceDirectory = resourceDirectories.get(0);
-
-        boolean inProjectViewResourceDirectory =
-            event.getPath().startsWith(resourceDirectory.getPath());
-
-        if (inProjectViewResourceDirectory) {
-          FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
-          VirtualFile[] selectedFiles = fileEditorManager.getSelectedFiles();
-          if (selectedFiles.length != 1) {
-            log(
-                "Oh, dear. We have a new file in a Project View resource directory, but we have %d selected files",
-                selectedFiles.length);
-            showErrorDialog(
-                project,
-                "Error moving new file",
-                "We have a new file in a Project View resource directory, but we have %d selected files and so don't know which BUCK file to examine",
-                selectedFiles.length);
-            continue; // we are expecting a SINGLE file, here
-          }
-
-          // We use event.getPath() because .getFile() == null
-          creationContext.put(
-              event.getPath(),
-              new FileContext(
-                  project, selectedFiles[0], fileEditorManager.getSelectedTextEditor()));
-        }
-      }
+    FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+    VirtualFile[] selectedFiles = fileEditorManager.getSelectedFiles();
+    if (selectedFiles.length != 1) {
+      log(
+          "Oh, dear. We have a new file in a Project View resource directory, but we have %d selected files",
+          selectedFiles.length);
+      ErrorDialog.showErrorDialog(
+          project,
+          "Error moving new file",
+          "We have a new file in a Project View resource directory, but we have %d selected files and so don't know which BUCK file to examine",
+          selectedFiles.length);
+      return; // we are expecting a SINGLE file, here
     }
+    VirtualFile selection = selectedFiles[0];
+
+    Editor editor = fileEditorManager.getSelectedTextEditor();
+
+    moveResourceFile(event.getPath(), project, selection, editor);
   }
 
-  @Override
-  public void after(@NotNull List<? extends VFileEvent> list) {
-    for (VFileEvent event : list) {
-      String newFile = event.getPath();
-      FileContext selectedContext = creationContext.remove(newFile);
-      if (selectedContext == null) {
-        continue;
-      }
-
-      moveResourceFile(newFile, selectedContext);
-    }
-  }
-
-  // region BulkFileListener private utilities
-
-  private List<VirtualFile> getAllResourceDirectories(Facet facet) {
-    Class<? extends Facet> facetClass = facet.getClass();
-
-    if (!loaded) {
-      Class<?> clazz = null;
-      Method method = null;
-      try {
-        clazz =
-            Class.forName(
-                "org.jetbrains.android.facet.AndroidFacet", true, facetClass.getClassLoader());
-      } catch (Exception e) {
-        // Leave clazz equal to null
-        log("getAllResourceDirectories(): Exception %s in Class.forName()", e);
-      }
-
-      if (clazz != null) {
-        try {
-          method = clazz.getMethod("getAllResourceDirectories", (Class<?>[]) null);
-        } catch (Exception e) {
-          // Leave method equal to null
-          log("getAllResourceDirectories(): Exception %s in clazz.getMethod()", e);
-        }
-      }
-
-      androidFacet = clazz;
-      getAllResourceDirectories = method;
-      loaded = true;
-    }
-
-    if (androidFacet == null || getAllResourceDirectories == null) {
-      if (androidFacet == null) {
-        log("getAllResourceDirectories(): No clazz");
-      }
-      if (getAllResourceDirectories == null) {
-        log("getAllResourceDirectories(): No method");
-      }
-      return null;
-    }
-
-    try {
-      return (List<VirtualFile>) getAllResourceDirectories.invoke(facet);
-    } catch (Exception e) {
-      log("getAllResourceDirectories(): Exception %s calling facet.getAllResourceDirectories()", e);
-      return null;
-    }
-  }
-
-  private static Project getProject(VFileEvent event) {
-    Object requestor = event.getRequestor();
-    if (requestor instanceof PsiManager) {
-      PsiManager psiManager = (PsiManager) requestor;
-      return psiManager.getProject();
-    }
-    return null;
-  }
-
-  // endregion BulkFileListener private utilities
-
-  // endregion BulkFileListener overrides
+  // endregion FileCreateHandler overrides
 
   // region Move resource file
 
-  private void moveResourceFile(String newFile, FileContext selectedContext) {
-    VirtualFile buckFile = BuckFileUtil.getBuckFile(selectedContext.selection);
+  private void moveResourceFile(
+      String newFile, Project project, VirtualFile selection, Editor editor) {
+    VirtualFile buckFile = BuckFileUtil.getBuckFile(selection);
 
     if (buckFile == null) {
-      log("No BUCK file for %s?", selectedContext);
-      showErrorDialog(
-          selectedContext,
+      log("No BUCK file for %s?", selection.getName());
+      ErrorDialog.showErrorDialog(
+          project,
           "Can't move " + PathUtil.getFileName(newFile) + " to a resource module",
           "Can't find a BUCK file for \"%s\"",
-          selectedContext.selection);
+          selection.getName());
       return;
     }
 
-    PsiManager psiManager = PsiManager.getInstance(selectedContext.project);
+    PsiManager psiManager = PsiManager.getInstance(project);
     BuckFile parsed = new BuckFile(psiManager.findViewProvider(buckFile));
 
     List<String> androidRes = new ArrayList<>();
@@ -308,8 +149,8 @@ public class MoveResourceFiles implements BulkFileListener {
     // TODO(shemitz) filter out targets that can't host this file (ie, already have a res/colors.xml or whatever)
 
     if (androidRes.isEmpty()) {
-      showErrorDialog(
-          selectedContext,
+      ErrorDialog.showErrorDialog(
+          project,
           "No android_res modules",
           "Could not find any android_res modules in %s - can't move the new resource file",
           buckFile);
@@ -317,34 +158,39 @@ public class MoveResourceFiles implements BulkFileListener {
     }
 
     if (androidRes.size() == 1) {
-      moveTo(selectedContext, newFile, androidRes.get(0));
+      moveTo(project, selection, newFile, androidRes.get(0));
     } else {
       Path resourceFilePath = Paths.get(newFile).getFileName();
       String resourceFileName = resourceFilePath == null ? null : resourceFilePath.toString();
       PopupTargets popupTargets =
           new PopupTargets(
               newFile,
-              selectedContext,
+              project,
+              selection,
               "Please choose an android resource module"
                   + (resourceFileName == null ? "" : " for " + resourceFileName),
               androidRes);
       // PopupTargets.onChosen() will call this.moveTo()
-      JBPopupFactory.getInstance()
-          .createListPopup(popupTargets)
-          .showInBestPositionFor(selectedContext.editor);
+      JBPopupFactory.getInstance().createListPopup(popupTargets).showInBestPositionFor(editor);
     }
   }
 
   private class PopupTargets extends BaseListPopupStep<String> {
     private final String newFile;
-    private final FileContext selectedContext;
+    private final Project project;
+    private final VirtualFile selection;
     private String selectedTarget;
 
     private PopupTargets(
-        String newFile, FileContext selectedContext, @Nullable String title, List<String> values) {
+        String newFile,
+        Project project,
+        VirtualFile selection,
+        @Nullable String title,
+        List<String> values) {
       super(title, values);
       this.newFile = newFile;
-      this.selectedContext = selectedContext;
+      this.project = project;
+      this.selection = selection;
     }
 
     @Override
@@ -355,17 +201,18 @@ public class MoveResourceFiles implements BulkFileListener {
 
     @Override
     public Runnable getFinalRunnable() {
-      return () -> moveTo(selectedContext, newFile, selectedTarget);
+      return () -> moveTo(project, selection, newFile, selectedTarget);
     }
   }
 
-  private void moveTo(FileContext selectedContext, String newFile, String selectedTarget) {
-    String repo = selectedContext.getRepositoryPath();
+  private void moveTo(
+      Project project, VirtualFile selection, String newFile, String selectedTarget) {
+    String repo = getRepositoryPath(project, selection);
     if (repo != null) {
       int colon = selectedTarget.lastIndexOf(':');
       selectedTarget = colon < 0 ? selectedTarget : selectedTarget.substring(0, colon);
 
-      String basePath = selectedContext.project.getBasePath();
+      String basePath = project.getBasePath();
       String newFileSuffix = newFile.substring(basePath.length());
       Path newTarget = Paths.get(repo, selectedTarget, newFileSuffix);
 
@@ -382,7 +229,8 @@ public class MoveResourceFiles implements BulkFileListener {
       // mv newFilePath to newTarget
       boolean moved = move(newFilePath, newTarget);
       if (!moved) {
-        showErrorDialog(selectedContext, "Error moving file", "New file is still at %s", newFile);
+        ErrorDialog.showErrorDialog(
+            project, "Error moving file", "New file is still at %s", newFile);
       } else {
         // ln -s newTarget mangledTarget
         boolean linked = createSymbolicLink(mangledTarget, newTarget);
@@ -394,29 +242,44 @@ public class MoveResourceFiles implements BulkFileListener {
                 VirtualFile virtualFile =
                     virtualFileManager.findFileByUrl("file://" + mangledTarget.toString());
                 if (virtualFile != null) {
-                  FileEditorManager fileEditorManager =
-                      FileEditorManager.getInstance(selectedContext.project);
+                  FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
                   fileEditorManager.openFile(virtualFile, /*focusEditor=*/ true);
                 } else {
-                  showErrorDialog(
-                      selectedContext,
-                      "Can't reopen resource file",
-                      "Could not find %s",
-                      mangledTarget);
+                  ErrorDialog.showErrorDialog(
+                      project, "Can't reopen resource file", "Could not find %s", mangledTarget);
                 }
               });
         } else {
           move(newTarget, newFilePath); // move back
-          showErrorDialog(
-              selectedContext, "Error creating symlink", "New file is still at %s", newFile);
+          ErrorDialog.showErrorDialog(
+              project, "Error creating symlink", "New file is still at %s", newFile);
         }
       }
     } else {
-      showErrorDialog(selectedContext, "Can't find repo", "New file is still at %s", newFile);
+      ErrorDialog.showErrorDialog(project, "Can't find repo", "New file is still at %s", newFile);
     }
   }
 
   // region Move resource file private utilities
+
+  private static String getRepositoryPath(Project project, VirtualFile selection) {
+    String basePath = project.getBasePath();
+    String selectionName = selection.getPath();
+    String selectionSuffix = selectionName.substring(basePath.length());
+    if (selectionSuffix.startsWith(File.separator)) {
+      selectionSuffix = selectionSuffix.substring(1);
+    }
+    Path selectionPath = Paths.get(selectionName);
+    String realSelectionPath;
+    try {
+      realSelectionPath = selectionPath.toRealPath().toString();
+    } catch (IOException e) {
+      return null;
+    }
+    return realSelectionPath.endsWith(selectionSuffix)
+        ? realSelectionPath.substring(0, realSelectionPath.length() - selectionSuffix.length())
+        : null;
+  }
 
   /**
    * Returns (what would be) the next child in {@link PsiElement#getParent() getParent()}.{@link
@@ -469,21 +332,11 @@ public class MoveResourceFiles implements BulkFileListener {
 
   // endregion Move resource file
 
-  // region Log and popup messages
+  // region Log messages
 
   private static void log(String pattern, Object... parameters) {
     LOG.info(String.format(pattern, parameters));
   }
 
-  private static void showErrorDialog(
-      Project project, String title, String messagePattern, Object... parameters) {
-    Messages.showErrorDialog(project, String.format(messagePattern, parameters), title);
-  }
-
-  private static void showErrorDialog(
-      FileContext context, String title, String messagePattern, Object... parameters) {
-    Messages.showErrorDialog(context.project, String.format(messagePattern, parameters), title);
-  }
-
-  // endregion Log and popup messages
+  // endregion Log messages
 }

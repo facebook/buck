@@ -19,15 +19,15 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
-import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
@@ -39,12 +39,12 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
+public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
 
   private static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
 
-  private final Kotlinc kotlinc;
-  private final ImmutableList<String> extraArguments;
+  @AddToRuleKey private final Kotlinc kotlinc;
+  @AddToRuleKey private final ImmutableList<String> extraArguments;
   private final Function<BuildContext, Iterable<Path>> extraClassPath;
   private final Javac javac;
   private final JavacOptions javacOptions;
@@ -76,8 +76,8 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
-      ClassUsageFileWriter usedClassesFileWriter,
       /* out params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
@@ -125,8 +125,8 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
               outputDirectory,
               generatedCodeDirectory,
               workingDirectory,
+              depFilePath,
               pathToSrcsList,
-              usedClassesFileWriter,
               steps,
               buildableContext);
     }
@@ -136,12 +136,6 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
   protected Optional<String> getBootClasspath(BuildContext context) {
     JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
     return buildTimeOptions.getBootclasspath();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    kotlinc.appendToRuleKey(sink);
-    sink.setReflectively("extraArguments", extraArguments);
   }
 
   @Override

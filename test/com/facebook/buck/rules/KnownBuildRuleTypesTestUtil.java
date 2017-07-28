@@ -65,7 +65,7 @@ public final class KnownBuildRuleTypesTestUtil {
                   .setCommand(
                       ImmutableList.of(path + File.separator + python.getKey() + extension, "-"))
                   .build(),
-              new FakeProcess(0, "CPython " + python.getValue().replace('.', ' '), ""));
+              new FakeProcess(0, "CPython " + python.getValue(), ""));
         }
       }
     }

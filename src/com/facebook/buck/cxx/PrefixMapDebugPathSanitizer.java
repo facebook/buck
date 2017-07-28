@@ -15,6 +15,10 @@
  */
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.Compiler;
+import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.platform.GccCompiler;
+import com.facebook.buck.cxx.platform.WindowsCompiler;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -49,18 +53,19 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  ImmutableMap<String, String> getCompilationEnvironment(Path workingDir, boolean shouldSanitize) {
+  public ImmutableMap<String, String> getCompilationEnvironment(
+      Path workingDir, boolean shouldSanitize) {
     return ImmutableMap.of("PWD", workingDir.toString());
   }
 
   @Override
-  void restoreCompilationDirectory(Path path, Path workingDir) throws IOException {
+  public void restoreCompilationDirectory(Path path, Path workingDir) throws IOException {
     // There should be nothing to sanitize in the compilation directory because the compilation
     // flags took care of it.
   }
 
   @Override
-  ImmutableList<String> getCompilationFlags(
+  public ImmutableList<String> getCompilationFlags(
       Compiler compiler, Path workingDir, ImmutableMap<Path, Path> prefixMap) {
     if (compiler instanceof WindowsCompiler) {
       return ImmutableList.of();

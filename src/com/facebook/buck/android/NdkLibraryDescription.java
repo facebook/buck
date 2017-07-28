@@ -16,15 +16,15 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.CxxHeaders;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceTypes;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.cxx.NativeLinkables;
-import com.facebook.buck.cxx.Preprocessor;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.platform.Preprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

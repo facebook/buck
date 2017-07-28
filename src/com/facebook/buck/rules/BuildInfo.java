@@ -68,6 +68,20 @@ public class BuildInfo {
     static final String ORIGIN_BUILD_ID = "ORIGIN_BUILD_ID";
   }
 
+  public static final ImmutableSet<String> METADATA_KEYS =
+      ImmutableSet.of(
+          MetadataKey.RECORDED_PATHS,
+          MetadataKey.RECORDED_PATH_HASHES,
+          MetadataKey.ADDITIONAL_INFO,
+          MetadataKey.RULE_KEY,
+          MetadataKey.INPUT_BASED_RULE_KEY,
+          MetadataKey.DEP_FILE_RULE_KEY,
+          MetadataKey.DEP_FILE,
+          MetadataKey.TARGET,
+          MetadataKey.MANIFEST_KEY,
+          MetadataKey.BUILD_ID,
+          MetadataKey.ORIGIN_BUILD_ID);
+
   /** All keys corresponding to rule keys. */
   static final ImmutableSet<String> RULE_KEY_NAMES =
       ImmutableSet.of(

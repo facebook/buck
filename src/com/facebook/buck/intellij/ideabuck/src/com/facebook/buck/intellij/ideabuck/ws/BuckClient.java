@@ -109,7 +109,7 @@ public class BuckClient {
     //    mProject
     //        .getMessageBus()
     //        .connect()
-    //        .subscribe(VirtualFileManager.VFS_CHANGES, new MoveResourceFiles());
+    //        .subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListenerDispatcher());
     // endregion Debugging hint
   }
 

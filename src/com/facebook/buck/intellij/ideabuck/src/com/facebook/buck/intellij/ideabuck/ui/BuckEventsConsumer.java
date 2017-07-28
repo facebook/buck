@@ -18,7 +18,7 @@ package com.facebook.buck.intellij.ideabuck.ui;
 
 import com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction;
 import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
-import com.facebook.buck.intellij.ideabuck.fixup.MoveResourceFiles;
+import com.facebook.buck.intellij.ideabuck.fixup.BulkFileListenerDispatcher;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeBuild;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetail;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
@@ -176,7 +176,7 @@ public class BuckEventsConsumer
 
     mConnection.subscribe(BuckInstallFinishedConsumer.INSTALL_FINISHED_CONSUMER, this);
 
-    mConnection.subscribe(VirtualFileManager.VFS_CHANGES, new MoveResourceFiles());
+    mConnection.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListenerDispatcher());
 
     attached = true;
   }

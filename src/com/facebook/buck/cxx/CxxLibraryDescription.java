@@ -16,6 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -586,7 +591,8 @@ public class CxxLibraryDescription
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
-        ImmutableList.copyOf(objects.values()));
+        ImmutableList.copyOf(objects.values()),
+        /* cacheable */ true);
   }
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */

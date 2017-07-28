@@ -162,16 +162,16 @@ public class BuildInfoRecorder {
    */
   public void writeMetadataToDisk(boolean clearExistingMetadata) throws IOException {
     if (clearExistingMetadata) {
-      projectFilesystem.deleteRecursivelyIfExists(pathToMetadataDirectory);
       buildInfoStore.deleteMetadata(buildTarget);
+      projectFilesystem.deleteRecursivelyIfExists(pathToMetadataDirectory);
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
-    buildInfoStore.updateMetadata(buildTarget, getBuildMetadata());
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
       projectFilesystem.writeContentsToPath(
           entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
     }
+    buildInfoStore.updateMetadata(buildTarget, getBuildMetadata());
   }
 
   /**
