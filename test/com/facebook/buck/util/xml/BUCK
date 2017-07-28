@@ -1,5 +1,7 @@
-standard_java_test(
+java_test(
     name = "xml",
+    srcs = glob(["*Test.java"]),
+    resources = glob(["*.xml"]),
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:apkmodule",
