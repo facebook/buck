@@ -209,6 +209,9 @@ public final class Main {
   /** Trying again later might work. */
   public static final int BUSY_EXIT_CODE = 2;
 
+  /** Internal error exit code, meaning Buck fails with unknown exception */
+  public static final int INTERNAL_ERROR_EXIT_CODE = 13;
+
   /** The command was interrupted */
   public static final int INTERRUPTED_EXIT_CODE = 130;
 
@@ -376,6 +379,7 @@ public final class Main {
               args);
     } catch (InterruptedException | ClosedByInterruptException e) {
       // We're about to exit, so it's acceptable to swallow interrupts here.
+      exitCode = INTERRUPTED_EXIT_CODE;
       LOG.debug(e, "Interrupted");
     } catch (IOException e) {
       if (e.getMessage().startsWith("No space left on device")) {
@@ -386,12 +390,15 @@ public final class Main {
     } catch (HumanReadableException e) {
       makeStandardConsole(context).printBuildFailure(e.getHumanReadableErrorMessage());
     } catch (InterruptionFailedException e) { // Command could not be interrupted.
+      exitCode = INTERRUPTED_EXIT_CODE;
       if (context.isPresent()) {
-        context.get().getNGServer().shutdown(true); // Exit process to halt command execution.
+        context.get().getNGServer().shutdown(false);
       }
     } catch (BuckIsDyingException e) {
+      exitCode = INTERNAL_ERROR_EXIT_CODE;
       LOG.warn(e, "Fallout because buck was already dying");
     } catch (Throwable t) {
+      exitCode = INTERNAL_ERROR_EXIT_CODE;
       LOG.error(t, "Uncaught exception at top level");
     } finally {
       LOG.debug("Done.");
@@ -1008,7 +1015,6 @@ public final class Main {
                         .setBuildInfoStoreManager(storeManager)
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
-            exitCode = INTERRUPTED_EXIT_CODE;
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
             throw e;
           }
@@ -1513,7 +1519,7 @@ public final class Main {
             // We pass false for exitVM because otherwise Nailgun exits with code 0.
             context.get().getNGServer().shutdown(/* exitVM */ false);
           }
-          NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(FAIL_EXIT_CODE);
+          NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(INTERNAL_ERROR_EXIT_CODE);
         });
   }
 
