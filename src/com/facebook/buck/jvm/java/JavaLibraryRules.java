@@ -65,8 +65,7 @@ public class JavaLibraryRules {
       ImmutableSortedSet<SourcePath> resources,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-      boolean trackClassUsage,
-      @Nullable Path depFileRelativePath,
+      Optional<Path> depFileRelativePath,
       CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<SourcePath> manifestFile,
@@ -109,9 +108,9 @@ public class JavaLibraryRules {
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!srcs.isEmpty()) {
-      if (trackClassUsage) {
+      if (depFileRelativePath.isPresent()) {
         Preconditions.checkNotNull(depFileRelativePath);
-        buildableContext.recordArtifact(depFileRelativePath);
+        buildableContext.recordArtifact(depFileRelativePath.get());
       }
 
       // This adds the javac command, along with any supporting commands.
@@ -147,7 +146,7 @@ public class JavaLibraryRules {
           outputDirectory,
           generatedCodeDirectory,
           workingDirectory,
-          trackClassUsage ? Optional.of(depFileRelativePath) : Optional.empty(),
+          depFileRelativePath,
           pathToSrcsList,
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
