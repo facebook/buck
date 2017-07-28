@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.platform.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -32,10 +31,8 @@ import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,129 +50,6 @@ public class JavaLibraryRules {
 
   /** Utility class: do not instantiate. */
   private JavaLibraryRules() {}
-
-  public static void addCompileToJarSteps(
-      BuildTarget target,
-      ProjectFilesystem filesystem,
-      BuildContext context,
-      BuildableContext buildableContext,
-      Optional<Path> outputJar,
-      SourcePathRuleFinder ruleFinder,
-      ImmutableSortedSet<SourcePath> srcs,
-      ImmutableSortedSet<SourcePath> resources,
-      ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
-      Optional<Path> depFileRelativePath,
-      CompileToJarStepFactory compileStepFactory,
-      Optional<Path> resourcesRoot,
-      Optional<SourcePath> manifestFile,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar,
-      ImmutableList.Builder<Step> steps) {
-    // Always create the output directory, even if there are no .java files to compile because there
-    // might be resources that need to be copied there.
-    Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, filesystem);
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputDirectory)));
-
-    // We don't want to add provided to the declared or transitive deps, since they're only used at
-    // compile time.
-    ImmutableSortedSet<Path> compileTimeClasspathPaths =
-        compileTimeClasspathSourcePaths
-            .stream()
-            .map(context.getSourcePathResolver()::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSortedSet());
-
-    // If there are resources, then link them to the appropriate place in the classes directory.
-    JavaPackageFinder finder = context.getJavaPackageFinder();
-    if (resourcesRoot.isPresent()) {
-      finder = new ResourcesRootPackageFinder(resourcesRoot.get(), finder);
-    }
-
-    steps.add(
-        new CopyResourcesStep(
-            filesystem, context, ruleFinder, target, resources, outputDirectory, finder));
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                filesystem,
-                DefaultJavaLibrary.getOutputJarDirPath(target, filesystem))));
-
-    // Only run javac if there are .java files to compile or we need to shovel the manifest file
-    // into the built jar.
-    if (!srcs.isEmpty()) {
-      if (depFileRelativePath.isPresent()) {
-        Preconditions.checkNotNull(depFileRelativePath);
-        buildableContext.recordArtifact(depFileRelativePath.get());
-      }
-
-      // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList = BuildTargets.getGenPath(filesystem, target, "__%s__srcs");
-      steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), filesystem, pathToSrcsList.getParent())));
-
-      Path scratchDir = BuildTargets.getGenPath(filesystem, target, "lib__%s____working_directory");
-
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), filesystem, scratchDir)));
-      Optional<Path> workingDirectory = Optional.of(scratchDir);
-
-      Optional<Path> generatedCodeDirectory = getAnnotationPath(filesystem, target);
-
-      ImmutableSortedSet<Path> javaSrcs =
-          srcs.stream()
-              .map(context.getSourcePathResolver()::getRelativePath)
-              .collect(MoreCollectors.toImmutableSortedSet());
-
-      compileStepFactory.createCompileToJarStep(
-          context,
-          javaSrcs,
-          target,
-          context.getSourcePathResolver(),
-          ruleFinder,
-          filesystem,
-          compileTimeClasspathPaths,
-          outputDirectory,
-          generatedCodeDirectory,
-          workingDirectory,
-          depFileRelativePath,
-          pathToSrcsList,
-          postprocessClassesCommands,
-          ImmutableSortedSet.of(outputDirectory),
-          /* mainClass */ Optional.empty(),
-          manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-          outputJar.get(),
-          /* output params */
-          steps,
-          buildableContext,
-          classesToRemoveFromJar);
-    }
-
-    if (outputJar.isPresent()) {
-      Path output = outputJar.get();
-
-      // No source files, only resources
-      if (srcs.isEmpty()) {
-        compileStepFactory.createJarStep(
-            filesystem,
-            outputDirectory,
-            Optional.empty(),
-            manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-            classesToRemoveFromJar,
-            output,
-            steps);
-      }
-      buildableContext.recordArtifact(output);
-    }
-  }
 
   public static Optional<Path> getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
     return Optional.of(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
