@@ -109,14 +109,9 @@ public class JavaLibraryRules {
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!srcs.isEmpty()) {
-      ClassUsageFileWriter usedClassesFileWriter;
       if (trackClassUsage) {
         Preconditions.checkNotNull(depFileRelativePath);
-        usedClassesFileWriter = new DefaultClassUsageFileWriter(depFileRelativePath);
-
         buildableContext.recordArtifact(depFileRelativePath);
-      } else {
-        usedClassesFileWriter = NoOpClassUsageFileWriter.instance();
       }
 
       // This adds the javac command, along with any supporting commands.
@@ -152,13 +147,13 @@ public class JavaLibraryRules {
           outputDirectory,
           generatedCodeDirectory,
           workingDirectory,
+          trackClassUsage ? Optional.of(depFileRelativePath) : Optional.empty(),
           pathToSrcsList,
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.empty(),
           manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
           outputJar.get(),
-          usedClassesFileWriter,
           /* output params */
           steps,
           buildableContext,

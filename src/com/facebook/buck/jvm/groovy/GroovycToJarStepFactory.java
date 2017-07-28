@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
-import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
@@ -59,8 +58,8 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
-      ClassUsageFileWriter usedClassesFileWriter,
       /* out params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {

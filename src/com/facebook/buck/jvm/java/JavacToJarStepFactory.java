@@ -69,8 +69,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
-      ClassUsageFileWriter usedClassesFileWriter,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
 
@@ -83,6 +83,10 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           generatedCodeDirectory, filesystem, steps, buildableContext, context);
     }
 
+    final ClassUsageFileWriter usedClassesFileWriter =
+        depFilePath.isPresent()
+            ? new DefaultClassUsageFileWriter(depFilePath.get())
+            : NoOpClassUsageFileWriter.instance();
     steps.add(
         new JavacStep(
             outputDirectory,
@@ -155,13 +159,13 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       Path outputJar,
-      ClassUsageFileWriter usedClassesFileWriter,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
@@ -190,6 +194,10 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
       addAnnotationGenFolderStep(
           generatedCodeDirectory, filesystem, steps, buildableContext, context);
 
+      final ClassUsageFileWriter usedClassesFileWriter =
+          depFilePath.isPresent()
+              ? new DefaultClassUsageFileWriter(depFilePath.get())
+              : NoOpClassUsageFileWriter.instance();
       steps.add(
           new JavacStep(
               outputDirectory,
@@ -221,13 +229,13 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
           outputDirectory,
           generatedCodeDirectory,
           workingDirectory,
+          depFilePath,
           pathToSrcsList,
           postprocessClassesCommands,
           entriesToJar,
           mainClass,
           manifestFile,
           outputJar,
-          usedClassesFileWriter,
           steps,
           buildableContext,
           classesToRemoveFromJar);

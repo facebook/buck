@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
-import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
@@ -76,8 +75,8 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
-      ClassUsageFileWriter usedClassesFileWriter,
       /* out params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
@@ -125,8 +124,8 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
               outputDirectory,
               generatedCodeDirectory,
               workingDirectory,
+              depFilePath,
               pathToSrcsList,
-              usedClassesFileWriter,
               steps,
               buildableContext);
     }
