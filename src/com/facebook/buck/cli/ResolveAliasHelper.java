@@ -47,7 +47,7 @@ public class ResolveAliasHelper {
     List<String> resolvedAliases = new ArrayList<>();
     for (String alias : aliases) {
       ImmutableSet<String> buildTargets;
-      if (alias.startsWith("//")) {
+      if (alias.contains("//")) {
         String buildTarget =
             validateBuildTargetForFullyQualifiedTarget(
                 params, executor, enableProfiling, alias, params.getParser());

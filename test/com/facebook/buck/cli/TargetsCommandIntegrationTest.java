@@ -505,6 +505,9 @@ public class TargetsCommandIntegrationTest {
         workspace.runBuckCommand("targets", "--resolve-alias", "//:test-library");
     assertTrue(result.getStdout(), result.getStdout().contains("//:test-library"));
 
+    result = workspace.runBuckCommand("targets", "--resolve-alias", "cell//:test-library");
+    assertTrue(result.getStdout(), result.getStdout().contains("//:test-library"));
+
     try {
       workspace.runBuckCommand("targets", "--resolve-alias", "//:");
     } catch (HumanReadableException e) {
