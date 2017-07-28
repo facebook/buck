@@ -24,6 +24,7 @@ import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeDetailError;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTreeNodeFileError;
 import com.facebook.buck.intellij.ideabuck.ui.tree.renderers.BuckTreeCellRenderer;
 import com.intellij.execution.filters.HyperlinkInfo;
+import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.RunnerLayoutUi;
@@ -39,6 +40,9 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -49,12 +53,13 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
 import com.intellij.ui.treeStructure.Tree;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import javax.swing.JComponent;
+import javax.swing.*;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import org.jetbrains.annotations.NotNull;
 
 public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
@@ -90,6 +95,28 @@ public class BuckToolWindowFactory implements ToolWindowFactory, DumbAware {
 
   public static void showRunToolWindow(final Project project) {
     showToolWindow(project, RUN_TOOL_WINDOW_ID);
+  }
+
+  public static void showRunToolWindowAfterOSProcessHandler(
+      final OSProcessHandler handler, final String title, final Project mProject) {
+    final ProgressManager manager = ProgressManager.getInstance();
+    ApplicationManager.getApplication()
+        .invokeLater(
+            () -> {
+              manager.run(
+                  new Task.Backgroundable(mProject, title, true) {
+                    public void run(@NotNull final ProgressIndicator indicator) {
+                      try {
+                        handler.waitFor();
+                      } finally {
+                        indicator.cancel();
+                      }
+                      if (!isRunToolWindowVisible(mProject)) {
+                        showRunToolWindow(mProject);
+                      }
+                    }
+                  });
+            });
   }
 
   public static void showToolWindow(final Project project, String tooWindowId) {

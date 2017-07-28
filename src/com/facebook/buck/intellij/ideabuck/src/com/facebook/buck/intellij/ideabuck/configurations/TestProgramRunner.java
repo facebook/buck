@@ -61,6 +61,6 @@ public class TestProgramRunner extends DefaultProgramRunner {
 
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-    return profile instanceof TestConfiguration;
+    return (profile instanceof TestConfiguration) || (profile instanceof BuckRunConfiguration);
   }
 }
