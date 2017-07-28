@@ -22,10 +22,11 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
@@ -39,12 +40,12 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
+public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
-  private final Javac javac;
-  private JavacOptions javacOptions;
-  private final JavacOptionsAmender amender;
+  @AddToRuleKey private final Javac javac;
+  @AddToRuleKey private JavacOptions javacOptions;
+  @AddToRuleKey private final JavacOptionsAmender amender;
   @Nullable private Path abiJar;
 
   public JavacToJarStepFactory(
@@ -255,13 +256,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
                   buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder.get())));
       buildableContext.recordArtifact(annotationGenFolder.get());
     }
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("javac", javac);
-    sink.setReflectively("javacOptions", javacOptions);
-    sink.setReflectively("amender", amender);
   }
 
   @VisibleForTesting

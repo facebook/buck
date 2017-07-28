@@ -19,10 +19,11 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -37,13 +38,13 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
+public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
 
-  private final Tool scalac;
+  @AddToRuleKey private final Tool scalac;
   private final BuildRule scalaLibraryTarget;
-  private final ImmutableList<String> configCompilerFlags;
-  private final ImmutableList<String> extraArguments;
-  private final ImmutableSet<SourcePath> compilerPlugins;
+  @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
+  @AddToRuleKey private final ImmutableList<String> extraArguments;
+  @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
   private final Function<BuildContext, Iterable<Path>> extraClassPath;
 
   public ScalacToJarStepFactory(
@@ -122,14 +123,6 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
                 .addAll(classpathEntries)
                 .build(),
             filesystem));
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    scalac.appendToRuleKey(sink);
-    sink.setReflectively("configCompilerFlags", configCompilerFlags);
-    sink.setReflectively("extraArguments", extraArguments);
-    sink.setReflectively("compilerPlugins", compilerPlugins);
   }
 
   @Override
