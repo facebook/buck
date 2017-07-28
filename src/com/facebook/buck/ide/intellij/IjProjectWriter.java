@@ -26,11 +26,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import org.stringtemplate.v4.ST;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.stringtemplate.v4.ST;
 
 /** Writes the serialized representations of IntelliJ project components to disk. */
 public class IjProjectWriter {
@@ -184,7 +184,7 @@ public class IjProjectWriter {
             .map(projectPaths::toProjectDirRelativeString)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add("javadocUrls", library.getJavadocUrls());
-    //TODO(mkosiba): support res and assets for aar.
+    // TODO(mkosiba): support res and assets for aar.
 
     StringTemplateFile.writeToFile(
         projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
