@@ -126,6 +126,9 @@ public class IjProjectWriter {
     contents.add("jdk15", getJdk15FromLanguageLevel(languageLevelInIjFormat));
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
+    if (projectConfig.getOutputUrl().isPresent()) {
+      contents.add("outputUrl", projectConfig.getOutputUrl().get());
+    }
 
     StringTemplateFile.writeToFile(
         projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());
@@ -181,7 +184,7 @@ public class IjProjectWriter {
             .map(projectPaths::toProjectDirRelativeString)
             .collect(MoreCollectors.toImmutableSortedSet()));
     contents.add("javadocUrls", library.getJavadocUrls());
-    //TODO(mkosiba): support res and assets for aar.
+    // TODO(mkosiba): support res and assets for aar.
 
     StringTemplateFile.writeToFile(
         projectFilesystem, contents, path, projectConfig.getProjectPaths().getIdeaConfigDir());

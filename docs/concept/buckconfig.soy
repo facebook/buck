@@ -2063,6 +2063,15 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'project_compiler_output_url' /}
+  {param example_value: 'build-ij/classes' /}
+  {param description}
+    The output directory for IntelliJ's builds.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}
