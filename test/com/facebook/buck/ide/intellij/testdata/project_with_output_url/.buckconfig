@@ -1,0 +1,14 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[java]
+  source_level = 6
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true
+[intellij]
+  jdk_name = Android SDK Version 23
+  jdk_type = Android SDK
+  project_compiler_output_url = build-ij/classes

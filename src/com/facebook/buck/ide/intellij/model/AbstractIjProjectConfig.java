@@ -92,4 +92,6 @@ abstract class AbstractIjProjectConfig {
   public abstract int getAggregationLimitForAndroidResourceModule();
 
   public abstract boolean isGeneratingAndroidManifestEnabled();
+
+  public abstract Optional<String> getOutputUrl();
 }
