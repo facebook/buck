@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
@@ -36,7 +35,7 @@ import java.util.Optional;
  * Creates the necessary steps to compile the source files, apply post process classes commands, and
  * pack the output .class files into a Jar.
  */
-public interface CompileToJarStepFactory extends RuleKeyAppendable {
+public interface CompileToJarStepFactory {
 
   default BuildRuleParams addInputs(BuildRuleParams params, SourcePathRuleFinder ruleFinder) {
     return params
@@ -64,8 +63,8 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
-      ClassUsageFileWriter usedClassesFile,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);
@@ -90,6 +89,7 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,
@@ -97,7 +97,6 @@ public interface CompileToJarStepFactory extends RuleKeyAppendable {
       Optional<Path> manifestFile,
       Path outputJar,
       /* output params */
-      ClassUsageFileWriter usedClassesFileWriter,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
       RemoveClassesPatternsMatcher classesToRemoveFromJar);

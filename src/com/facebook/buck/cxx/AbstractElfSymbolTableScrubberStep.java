@@ -19,25 +19,28 @@ package com.facebook.buck.cxx;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
 import com.facebook.buck.cxx.elf.Elf;
+import com.facebook.buck.cxx.elf.ElfHeader;
 import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.elf.ElfSymbolTable;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.immutables.value.Value;
 
 /** A step which scrubs an ELF symbol table of information relevant to dynamic linking. */
@@ -53,7 +56,11 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
 
   abstract String getSection();
 
+  abstract Optional<String> getVersymSection();
+
   abstract boolean isAllowMissing();
+
+  abstract boolean isScrubUndefinedSymbols();
 
   private ElfSymbolTable fixUpSymbolTable(ElfSymbolTable table) {
     ImmutableList.Builder<ElfSymbolTable.Entry> entries = ImmutableList.builder();
@@ -63,31 +70,77 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
     entries.add(table.entries.get(0));
 
     // Fixup and add the remaining entries.
-    RichStream.from(MoreIterables.enumerate(table.entries))
+    AtomicInteger count = new AtomicInteger();
+    RichStream.from(table.entries)
         .skip(1)
+        // Filter out undefined symbols.
+        .filter(entry -> !isScrubUndefinedSymbols() || entry.st_shndx != 0)
         // Generate a new sanitized symbol table entry.
         .map(
-            pair ->
+            entry ->
                 new ElfSymbolTable.Entry(
-                    pair.getSecond().st_name,
-                    pair.getSecond().st_info,
-                    pair.getSecond().st_other,
+                    entry.st_name,
+                    entry.st_info,
+                    entry.st_other,
                     // A section index of 0 is special and means the symbol is undefined, so we
                     // must maintain that.  Otherwise, if it's non-zero, fix it up to an arbitrary
                     // stable section value so the number and ordering of sections can never affect
                     // the content of the symbol table.
-                    pair.getSecond().st_shndx > 0 ? STABLE_SECTION : pair.getSecond().st_shndx,
+                    entry.st_shndx > 0 ? STABLE_SECTION : entry.st_shndx,
                     // Substitute non-zero addresses, dependent on size/layout of sections with a
                     // stable address determined by the index of this symbol table entry in the
                     // symbol table.
-                    pair.getSecond().st_value == 0 ? 0 : pair.getFirst(),
+                    entry.st_value == 0 ? 0 : count.incrementAndGet(),
                     // For functions, set the size to zero.
-                    pair.getSecond().st_info.st_type == ElfSymbolTable.Entry.Info.Type.STT_FUNC
+                    entry.st_info.st_type == ElfSymbolTable.Entry.Info.Type.STT_FUNC
                         ? 0
-                        : pair.getSecond().st_size))
+                        : entry.st_size))
         .forEach(entries::add);
 
     return new ElfSymbolTable(entries.build());
+  }
+
+  // Read in versions from the ELF file.
+  private ImmutableList<Integer> parseVersions(ElfHeader.EIClass eiClass, ElfSection verSym) {
+    ImmutableList.Builder<Integer> versions = ImmutableList.builder();
+    while (verSym.body.hasRemaining()) {
+      int val;
+      if (eiClass == ElfHeader.EIClass.ELFCLASS32) {
+        val = Elf.Elf32.getElf32Half(verSym.body);
+      } else {
+        val = Elf.Elf64.getElf64Half(verSym.body);
+      }
+      versions.add(val);
+    }
+    return versions.build();
+  }
+
+  // Write out versions to the ELF file.
+  private void writeVersions(
+      ElfHeader.EIClass eiClass, ByteBuffer buffer, Iterable<Integer> versions) {
+    for (int version : versions) {
+      if (eiClass == ElfHeader.EIClass.ELFCLASS32) {
+        Elf.Elf32.putElf32Half(buffer, (short) version);
+      } else {
+        Elf.Elf64.putElf64Half(buffer, (short) version);
+      }
+    }
+  }
+
+  // Drop versions whose corresponding symbol is undefined, and therefore getting scrubbed from the
+  // symbol table.
+  private ImmutableMap<Integer, Integer> fixUpVersions(
+      ElfSymbolTable table, ImmutableList<Integer> versions) {
+    Preconditions.checkArgument(table.entries.size() == versions.size());
+    Preconditions.checkState(isScrubUndefinedSymbols());
+    ImmutableMap.Builder<Integer, Integer> fixedVersions = ImmutableMap.builder();
+    fixedVersions.put(0, versions.get(0));
+    for (int index = 1; index < table.entries.size(); index++) {
+      if (table.entries.get(index).st_shndx != 0) {
+        fixedVersions.put(index, versions.get(index));
+      }
+    }
+    return fixedVersions.build();
   }
 
   @Override
@@ -102,8 +155,8 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       Elf elf = new Elf(buffer);
 
       // Locate the symbol table section.
-      Optional<ElfSection> section = elf.getSectionByName(getSection()).map(Pair::getSecond);
-      if (!section.isPresent()) {
+      Optional<ElfSectionLookupResult> sectionResult = elf.getSectionByName(getSection());
+      if (!sectionResult.isPresent()) {
         if (isAllowMissing()) {
           return StepExecutionResult.SUCCESS;
         } else {
@@ -113,12 +166,47 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
         }
       }
 
+      int sectionIndex = sectionResult.get().getIndex();
+      ElfSection section = sectionResult.get().getSection();
+
       // Read in and fixup the symbol table then write it back out.
-      ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.get().body);
+      ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
       ElfSymbolTable fixedUpTable = fixUpSymbolTable(table);
-      Preconditions.checkState(table.entries.size() == fixedUpTable.entries.size());
-      section.get().body.rewind();
-      fixedUpTable.write(elf.header.ei_class, section.get().body);
+      section.body.rewind();
+      fixedUpTable.write(elf.header.ei_class, section.body);
+
+      // If we've dropped some symbols, we have some additional work to do.
+      if (table.entries.size() != fixedUpTable.entries.size()) {
+        Preconditions.checkState(isScrubUndefinedSymbols());
+
+        // Fixup the section header with the new size and write it out.
+        buffer.position((int) (elf.header.e_shoff + sectionIndex * elf.header.e_shentsize));
+        section.header.withSize(section.body.position()).write(elf.header.ei_class, buffer);
+
+        // If a versym section is given, also update it to remove dropped symbols.
+        if (getVersymSection().isPresent()) {
+          Optional<ElfSectionLookupResult> versymSectionResult =
+              elf.getSectionByName(getVersymSection().get());
+          if (versymSectionResult.isPresent()) {
+            int versymSectionIndex = versymSectionResult.get().getIndex();
+            ElfSection versymSection = versymSectionResult.get().getSection();
+
+            // Remove dropped symbols from the version symbol table and re-write it.
+            ImmutableList<Integer> versions = parseVersions(elf.header.ei_class, versymSection);
+            ImmutableMap<Integer, Integer> fixedVersions = fixUpVersions(table, versions);
+            versymSection.body.rewind();
+            writeVersions(elf.header.ei_class, versymSection.body, fixedVersions.values());
+
+            // Fixup the version section header with the new size and write it out.
+            buffer.position(
+                (int) (elf.header.e_shoff + versymSectionIndex * elf.header.e_shentsize));
+            versymSection
+                .header
+                .withSize(versymSection.body.position())
+                .write(elf.header.ei_class, buffer);
+          }
+        }
+      }
     }
 
     return StepExecutionResult.SUCCESS;

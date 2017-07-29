@@ -81,6 +81,7 @@ BUCK_CORE_RESOURCES = {
 python_library(
     name = "bucklib",
     srcs = [
+        "buck_logging.py",
         "buck_package.py",
         "buck_project.py",
         "buck_repo.py",

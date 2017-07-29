@@ -20,6 +20,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import java.nio.file.Path;
 
 /**
  * Extract fields from {@code com.facebook.buck.cli.CommandRunnerParams} without a dependency on
@@ -37,4 +38,6 @@ public interface CommandRunnerParameters {
   Config getConfig();
 
   Parser getParser();
+
+  Path getPath();
 }

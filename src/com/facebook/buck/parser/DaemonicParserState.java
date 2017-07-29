@@ -601,12 +601,12 @@ public class DaemonicParserState {
     try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
       boolean invalidated = !cellPathToDaemonicState.isEmpty();
       cellPathToDaemonicState.clear();
+      buildFileTrees.invalidateAll();
       if (invalidated) {
         LOG.debug("Cache data invalidated.");
       } else {
         LOG.debug("Caches were empty, no data invalidated.");
       }
-
       return invalidated;
     }
   }

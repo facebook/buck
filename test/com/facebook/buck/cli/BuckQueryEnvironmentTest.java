@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
@@ -62,7 +62,7 @@ public class BuckQueryEnvironmentTest {
   private PerBuildState parserState;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return QueryBuildTarget.of(BuildTarget.builder(cellRoot, baseName, shortName).build());
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(cellRoot, baseName, shortName));
   }
 
   @Before

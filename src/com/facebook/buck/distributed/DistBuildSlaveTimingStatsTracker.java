@@ -16,13 +16,12 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.immutables.value.Value;
 
 public class DistBuildSlaveTimingStatsTracker {
 
@@ -56,8 +55,8 @@ public class DistBuildSlaveTimingStatsTracker {
     watch.stop();
   }
 
-  public DistBuildSlaveTimingStats generateStats() {
-    return DistBuildSlaveTimingStats.builder()
+  public BuildSlavePerStageTimingStats generateStats() {
+    return new BuildSlavePerStageTimingStats()
         .setDistBuildStateFetchTimeMillis(getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_FETCH_TIME))
         .setDistBuildStateLoadingTimeMillis(
             getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME))
@@ -65,23 +64,6 @@ public class DistBuildSlaveTimingStatsTracker {
         .setTargetGraphDeserializationTimeMillis(
             getElapsedTimeMs(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME))
         .setActionGraphCreationTimeMillis(getElapsedTimeMs(SlaveEvents.ACTION_GRAPH_CREATION_TIME))
-        .setTotalRuntimeMillis(getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME))
-        .build();
+        .setTotalBuildtimeMillis(getElapsedTimeMs(SlaveEvents.TOTAL_RUNTIME));
   }
-}
-
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractDistBuildSlaveTimingStats {
-  abstract long getDistBuildStateFetchTimeMillis();
-
-  abstract long getDistBuildStateLoadingTimeMillis();
-
-  abstract long getSourceFilePreloadTimeMillis();
-
-  abstract long getTargetGraphDeserializationTimeMillis();
-
-  abstract long getActionGraphCreationTimeMillis();
-
-  abstract long getTotalRuntimeMillis();
 }

@@ -16,20 +16,20 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.cxx.NativeLinkable.Linkage;
+import static com.facebook.buck.cxx.platform.NativeLinkable.Linkage;
 import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -523,11 +523,10 @@ public class AppleLibraryDescription
       for (BuildTarget dep : args.getDeps()) {
         Optional<FrameworkDependencies> frameworks =
             resolver.requireMetadata(
-                BuildTarget.builder(dep)
-                    .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
-                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                    .addFlavors(cxxPlatformFlavor.get())
-                    .build(),
+                dep.withAppendedFlavors(
+                    AppleDescriptions.FRAMEWORK_FLAVOR,
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+                    cxxPlatformFlavor.get()),
                 FrameworkDependencies.class);
         if (frameworks.isPresent()) {
           sourcePaths.addAll(frameworks.get().getSourcePaths());

@@ -64,6 +64,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -268,21 +269,21 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
     // For testing, we always use a DefaultProjectFilesystemDelegate so that the logic being
     // exercised is always the same, even if a test using FakeProjectFilesystem is used on EdenFS.
-    super(root, new DefaultProjectFilesystemDelegate(root));
+    super(root, new DefaultProjectFilesystemDelegate(root), false);
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in
     // different orders.)
-    fileContents = new LinkedHashMap<>();
-    fileLastModifiedTimes = new LinkedHashMap<>();
+    fileContents = Collections.synchronizedMap(new LinkedHashMap<>());
+    fileLastModifiedTimes = Collections.synchronizedMap(new LinkedHashMap<>());
     FileTime modifiedTime = FileTime.fromMillis(clock.currentTimeMillis());
     for (Path file : files) {
       fileContents.put(file, new byte[0]);
       fileLastModifiedTimes.put(file, modifiedTime);
     }
-    fileAttributes = new LinkedHashMap<>();
-    symLinks = new LinkedHashMap<>();
-    directories = new LinkedHashSet<>();
+    fileAttributes = Collections.synchronizedMap(new LinkedHashMap<>());
+    symLinks = Collections.synchronizedMap(new LinkedHashMap<>());
+    directories = Collections.synchronizedSet(new LinkedHashSet<>());
     directories.add(Paths.get(""));
     for (Path file : files) {
       Path dir = file.getParent();

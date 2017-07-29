@@ -79,7 +79,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         EnumSet.noneOf(ExopackageMode.class),
-        apkUnderTest.getMacroExpander(),
         // preprocessJavaClassBash is not supported in instrumentation
         Optional.empty(),
         rulesToExcludeFromDex,

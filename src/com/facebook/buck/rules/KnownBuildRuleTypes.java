@@ -33,7 +33,6 @@ import com.facebook.buck.android.DefaultAndroidLibraryCompilerFactory;
 import com.facebook.buck.android.DxConfig;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkCxxPlatform;
-import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
@@ -64,7 +63,6 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
@@ -72,6 +70,7 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
@@ -146,6 +145,7 @@ import com.facebook.buck.rust.RustBinaryDescription;
 import com.facebook.buck.rust.RustBuckConfig;
 import com.facebook.buck.rust.RustLibraryDescription;
 import com.facebook.buck.rust.RustTestDescription;
+import com.facebook.buck.shell.CommandAliasDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.GenruleDescription;
 import com.facebook.buck.shell.ShBinaryDescription;
@@ -168,7 +168,6 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -248,13 +247,6 @@ public class KnownBuildRuleTypes {
     Platform platform = Platform.detect();
 
     AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
-    Optional<String> ndkVersion = androidConfig.getNdkVersion();
-    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
-    // out which one we will end up using.
-    if (!ndkVersion.isPresent()) {
-      ndkVersion = androidDirectoryResolver.getNdkVersion();
-    }
-
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
@@ -276,42 +268,21 @@ public class KnownBuildRuleTypes {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     // Setup the NDK C/C++ platforms.
-    Optional<Path> ndkRoot = androidDirectoryResolver.getNdkOrAbsent();
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatformsBuilder =
-        ImmutableMap.builder();
-    if (ndkRoot.isPresent()) {
-      NdkCxxPlatformCompiler.Type compilerType =
-          androidConfig.getNdkCompiler().orElse(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
-      String gccVersion =
-          androidConfig
-              .getNdkGccVersion()
-              .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
-      String clangVersion =
-          androidConfig
-              .getNdkClangVersion()
-              .orElse(NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
-      String compilerVersion =
-          compilerType == NdkCxxPlatformCompiler.Type.GCC ? gccVersion : clangVersion;
-      NdkCxxPlatformCompiler compiler =
-          NdkCxxPlatformCompiler.builder()
-              .setType(compilerType)
-              .setVersion(compilerVersion)
-              .setGccVersion(gccVersion)
-              .build();
-      ndkCxxPlatformsBuilder.putAll(
-          NdkCxxPlatforms.getPlatforms(
-              cxxBuckConfig,
-              androidConfig,
-              filesystem,
-              ndkRoot.get(),
-              compiler,
-              androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
-              androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
-              androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
-              platform));
+    Optional<String> ndkVersion = androidConfig.getNdkVersion();
+    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
+    // out which one we will end up using.
+    if (!ndkVersion.isPresent()) {
+      ndkVersion = androidDirectoryResolver.getNdkVersion();
     }
+
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
-        ndkCxxPlatformsBuilder.build();
+        NdkCxxPlatforms.getPlatforms(
+            cxxBuckConfig,
+            androidConfig,
+            filesystem,
+            androidDirectoryResolver,
+            platform,
+            ndkVersion);
 
     // Create a map of system platforms.
     ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
@@ -590,6 +561,7 @@ public class KnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             defaultTestRuleTimeoutMs));
+    builder.register(new CommandAliasDescription());
     builder.register(new CoreDataModelDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);

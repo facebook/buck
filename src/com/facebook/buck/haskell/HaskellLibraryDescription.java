@@ -20,12 +20,12 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -189,7 +189,17 @@ public class HaskellLibraryDescription
                 : CxxSourceRuleFactory.PicType.PIC,
             cxxPlatform.getStaticLibraryExtension(),
             hsProfile ? "_p" : ""),
-        compileRule.getObjects());
+        compileRule.getObjects(),
+        // TODO(#20466393): Currently, GHC produces nono-deterministically sized object files.
+        // This means that it's possible to get a thin archive fetched from cache originating from
+        // one build and the associated object files fetched from cache originating from another, in
+        // which the sizes listed in the archive differ from the objects on disk, causing the GHC
+        // linker to fail. Technically, since `HaskellCompileRule` is producing non-deterministic
+        // outputs, we should mark that as uncacheable.  However, as that would have a significant
+        // affect on build efficiency, and since this issue appears to only manifest by a size
+        // mismatch with what is embedded in thin archives, just disable caching when using thin
+        // archives.
+        /* cacheable */ cxxBuckConfig.getArchiveContents() != Archive.Contents.THIN);
   }
 
   private Archive requireStaticLibrary(
@@ -491,6 +501,7 @@ public class HaskellLibraryDescription
         ImmutableList.of(),
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
         RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+        ImmutableSet.of(),
         Linker.LinkableDepType.SHARED,
         outputPath,
         Optional.of(name),

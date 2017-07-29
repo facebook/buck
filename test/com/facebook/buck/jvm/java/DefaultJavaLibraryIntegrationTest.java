@@ -947,7 +947,16 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   public void parseErrorsShouldBeReportedGracefully() throws IOException {
     setUpProjectWorkspaceForScenario("parse_errors");
 
-    workspace.runBuckBuild("//:errors");
+    ProcessResult result = workspace.runBuckBuild("//:errors");
+    assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
+  }
+
+  @Test
+  public void parseErrorsShouldBeReportedGracefullyWithAnnotationProcessors() throws IOException {
+    setUpProjectWorkspaceForScenario("parse_errors_with_aps");
+
+    ProcessResult result = workspace.runBuckBuild("//:errors");
+    assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
   }
 
   /** Asserts that the specified file exists and returns its contents. */

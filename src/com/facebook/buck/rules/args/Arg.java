@@ -26,12 +26,19 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * An abstraction for modeling the arguments that contribute to a command run by a {@link
  * BuildRule}, and also carry information for computing a rule key.
  */
 public interface Arg extends RuleKeyAppendable {
+
+  static Optional<String> flattenToSpaceSeparatedString(
+      Optional<Arg> arg, SourcePathResolver pathResolver) {
+    return arg.map((input1) -> stringifyList(input1, pathResolver))
+        .map(input -> Joiner.on(' ').join(input));
+  }
 
   /** @return any {@link BuildRule}s that need to be built before this argument can be used. */
   ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);

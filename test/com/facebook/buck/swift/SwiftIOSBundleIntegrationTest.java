@@ -63,18 +63,14 @@ public class SwiftIOSBundleIntegrationTest {
         Paths.get("DemoApp_output.expected"),
         BuildTargets.getGenPath(
             filesystem,
-            BuildTarget.builder(target)
-                .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                .build(),
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         workspace.getPath(
             BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
@@ -102,9 +98,7 @@ public class SwiftIOSBundleIntegrationTest {
         workspace.getPath(
             BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
@@ -297,9 +291,7 @@ public class SwiftIOSBundleIntegrationTest {
         workspace.getPath(
             BuildTargets.getGenPath(
                     filesystem,
-                    BuildTarget.builder(target)
-                        .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
-                        .build(),
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));

@@ -82,7 +82,7 @@ public class AndroidLibraryGraphEnhancer {
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
-    return BuildTarget.builder(buildTarget).addFlavors(DUMMY_R_DOT_JAVA_FLAVOR).build();
+    return buildTarget.withAppendedFlavors(DUMMY_R_DOT_JAVA_FLAVOR);
   }
 
   public Optional<DummyRDotJava> getBuildableForAndroidResources(

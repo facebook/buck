@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android.support.exopackage;
 
+import android.content.Context;
+import android.os.Build;
+import android.util.Log;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -29,14 +32,10 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.content.Context;
-import android.os.Build;
-import android.util.Log;
-
 /**
  * Loads native library files installed by the exopackage installer. This class requires
- * initialization before use; {@link ExopackageApplication#attachBaseContext} is responsible
- * for calling {@link #init} so that application-specific code doesn't need to.
+ * initialization before use; {@link ExopackageApplication#attachBaseContext} is responsible for
+ * calling {@link #init} so that application-specific code doesn't need to.
  */
 public class ExopackageSoLoader {
 
@@ -73,8 +72,9 @@ public class ExopackageSoLoader {
     if (abiMetadata == null || abiMetadata.exists()) {
       return;
     }
-    throw new RuntimeException("Either 'native' exopackage is not turned on for this build, " +
-        "or the installation did not complete successfully.");
+    throw new RuntimeException(
+        "Either 'native' exopackage is not turned on for this build, "
+            + "or the installation did not complete successfully.");
   }
 
   private static void preparePrivateDirectory(Context context) {

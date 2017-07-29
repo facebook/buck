@@ -355,10 +355,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final CacheResult cacheResult,
       final ListeningExecutorService service)
       throws StepFailedException, InterruptedException {
-    BuildRuleSteps buildRuleSteps =
-        new BuildRuleSteps(rule, buildContext, executionContext, buildableContext, cacheResult);
-    service.execute(buildRuleSteps);
-    return buildRuleSteps.getFuture();
+    ImmutableList<? extends Step> buildSteps;
+    try (Scope scope = LeafEvents.scope(buildContext.getEventBus(), "get_build_steps")) {
+      buildSteps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+    }
+
+    BuildRuleStepsRunner stepsRunner =
+        new BuildRuleStepsRunner(rule, buildContext, executionContext, buildSteps, cacheResult);
+    service.execute(stepsRunner);
+    return stepsRunner.getFuture();
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -760,7 +765,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             return Futures.immediateFuture(input);
           }
 
-          try (Closeable closeable =
+          try (Scope scope =
               LeafEvents.scope(buildContext.getEventBus(), "finalizing_build_rule")) {
             // We shouldn't see any build fail result at this point.
             BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
@@ -2062,24 +2067,24 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
-  private class BuildRuleSteps implements Runnable {
+  private class BuildRuleStepsRunner implements Runnable {
     private final BuildRule rule;
     private final BuildEngineBuildContext buildContext;
     private final ExecutionContext executionContext;
-    private final BuildableContext buildableContext;
+    private final ImmutableList<? extends Step> steps;
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
 
-    public BuildRuleSteps(
+    public BuildRuleStepsRunner(
         BuildRule rule,
         BuildEngineBuildContext buildContext,
         ExecutionContext executionContext,
-        BuildableContext buildableContext,
+        ImmutableList<? extends Step> steps,
         CacheResult cacheResult) {
       this.rule = rule;
       this.buildContext = buildContext;
       this.executionContext = executionContext;
-      this.buildableContext = buildableContext;
+      this.steps = steps;
       this.cacheResult = cacheResult;
     }
 
@@ -2125,10 +2130,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
       cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
-
-      // Get and run all of the commands.
-      List<? extends Step> steps =
-          rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
 
       Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
       for (Step step : steps) {

@@ -696,6 +696,12 @@ public class IjModuleGraphTest {
                   TargetNode<? extends JvmLibraryArg, ?> targetNode) {
                 return Optional.empty();
               }
+
+              @Override
+              public Optional<Path> getCompilerOutputPath(
+                  TargetNode<? extends JvmLibraryArg, ?> targetNode) {
+                return Optional.empty();
+              }
             },
             projectConfig);
     IjModuleFactory moduleFactory = new DefaultIjModuleFactory(filesystem, typeRegistry);

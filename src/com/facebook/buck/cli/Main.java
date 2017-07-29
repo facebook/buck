@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.config.CellConfig.MalformedOverridesException;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 
@@ -29,6 +30,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
@@ -109,6 +111,7 @@ import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.WatchmanWatcherException;
@@ -482,10 +485,20 @@ public final class Main {
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    Config config =
-        Configs.createDefaultConfig(
-            canonicalRootPath,
-            command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
+    ImmutableMap<RelativeCellName, Path> cellMapping =
+        DefaultCellPathResolver.bootstrapPathMapping(
+            canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
+    RawConfig rootCellConfigOverrides = RawConfig.of();
+    try {
+      ImmutableMap<Path, RawConfig> overridesByPath =
+          command.getConfigOverrides().getOverridesByPath(cellMapping);
+      rootCellConfigOverrides =
+          Optional.ofNullable(overridesByPath.get(canonicalRootPath)).orElse(RawConfig.of());
+    } catch (MalformedOverridesException exception) {
+      rootCellConfigOverrides =
+          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
+    }
+    Config config = Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
     DefaultCellPathResolver cellPathResolver =
         new DefaultCellPathResolver(filesystem.getRootPath(), config);
@@ -745,6 +758,7 @@ public final class Main {
             // stderr.
             Closeable logErrorToEventBus =
                 loggerThreadMappingScope.setWriter(createWriterForConsole(consoleListener));
+            Scope ddmLibLogRedirector = DdmLibLogRedirector.redirectDdmLogger(buildEventBus);
 
             // NOTE: This will only run during the lifetime of the process and will flush on close.
             CounterRegistry counterRegistry =
@@ -853,7 +867,10 @@ public final class Main {
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
-                  args.length > 0 ? args[0] : "", remainingArgs, daemon.isPresent(), getBuckPID());
+                  command.getDeclaredSubCommandName(),
+                  remainingArgs,
+                  daemon.isPresent(),
+                  getBuckPID());
           buildEventBus.post(startedEvent);
 
           // Create or get Parser and invalidate cached command parameters.
@@ -1017,7 +1034,7 @@ public final class Main {
           LOG.debug(t, "Failing build on exception.");
           closeHttpExecutorService(cacheBuckConfig, Optional.empty(), httpWriteExecutorService);
           closeDiskIoExecutorService(diskIoExecutorService);
-          flushEventListeners(console, buildId, eventListeners);
+          flushAndCloseEventListeners(console, buildId, eventListeners);
           throw t;
         } finally {
           if (commandSemaphoreAcquired) {
@@ -1044,7 +1061,7 @@ public final class Main {
         }
 
         closeDiskIoExecutorService(diskIoExecutorService);
-        flushEventListeners(console, buildId, eventListeners);
+        flushAndCloseEventListeners(console, buildId, eventListeners);
         return exitCode;
       }
     } finally {
@@ -1068,12 +1085,15 @@ public final class Main {
     return new Console(verbosity, stdOut, stdErr, buckConfig.createAnsi(color));
   }
 
-  private void flushEventListeners(
+  private void flushAndCloseEventListeners(
       Console console, BuildId buildId, ImmutableList<BuckEventListener> eventListeners)
-      throws InterruptedException {
+      throws InterruptedException, IOException {
     for (BuckEventListener eventListener : eventListeners) {
       try {
         eventListener.outputTrace(buildId);
+        if (eventListener instanceof Closeable) {
+          ((Closeable) eventListener).close();
+        }
       } catch (RuntimeException e) {
         PrintStream stdErr = console.getStdErr();
         stdErr.println("Ignoring non-fatal error!  The stack trace is below:");

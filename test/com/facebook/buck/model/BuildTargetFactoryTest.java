@@ -30,16 +30,14 @@ public class BuildTargetFactoryTest {
   @Test
   public void testTargetWithoutFlavor() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one");
-    assertEquals(BuildTarget.builder(ROOT, "//example/base", "one").build(), buildTarget);
+    assertEquals(BuildTargetFactory.newInstance(ROOT, "//example/base", "one"), buildTarget);
   }
 
   @Test
   public void testTargetWithFlavor() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "//example/base:one#two");
     assertEquals(
-        BuildTarget.builder(ROOT, "//example/base", "one")
-            .addFlavors(InternalFlavor.of("two"))
-            .build(),
+        BuildTargetFactory.newInstance(ROOT, "//example/base", "one", InternalFlavor.of("two")),
         buildTarget);
   }
 
@@ -48,11 +46,13 @@ public class BuildTargetFactoryTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(ROOT, "//example/base:shortName#one,two,three");
     assertEquals(
-        BuildTarget.builder(ROOT, "//example/base", "shortName")
-            .addFlavors(InternalFlavor.of("one"))
-            .addFlavors(InternalFlavor.of("two"))
-            .addFlavors(InternalFlavor.of("three"))
-            .build(),
+        BuildTargetFactory.newInstance(
+            ROOT,
+            "//example/base",
+            "shortName",
+            InternalFlavor.of("one"),
+            InternalFlavor.of("two"),
+            InternalFlavor.of("three")),
         buildTarget);
   }
 
@@ -60,9 +60,8 @@ public class BuildTargetFactoryTest {
   public void testTargetWithCell() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "xplat//example/base:one");
     assertEquals(
-        BuildTarget.builder(
-                UnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one"))
-            .build(),
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one")),
         buildTarget);
   }
 }

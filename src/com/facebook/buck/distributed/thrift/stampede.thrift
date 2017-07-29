@@ -355,6 +355,27 @@ struct FetchBuildSlaveStatusResponse {
   1: optional binary buildSlaveStatus;
 }
 
+struct StoreBuildSlaveFinishedStatsRequest {
+  1: optional StampedeId stampedeId;
+  2: optional RunId runId;
+  3: optional binary buildSlaveFinishedStats;
+}
+
+struct StoreBuildSlaveFinishedStatsResponse {
+}
+
+# Retrieves binary encoded build slave stats for the given runId.
+# Structure of the stats object can be found in client-side build_slave.thrift.
+struct FetchBuildSlaveFinishedStatsRequest {
+  1: optional StampedeId stampedeId;
+  2: optional RunId runId;
+}
+
+struct FetchBuildSlaveFinishedStatsResponse {
+  # If the stats object existed, it will be set here. Otherwise field left unset
+  1: optional binary buildSlaveFinishedStats;
+}
+
 # Used by build slaves to stream events (e.g. console events) back to the
 # client that initiated the distributed build.
 struct AppendBuildSlaveEventsRequest {
@@ -417,6 +438,8 @@ enum FrontendRequestType {
   MULTI_GET_BUILD_SLAVE_EVENTS = 20,
   SET_BUILD_MODE = 21,
   FETCH_RULE_KEY_LOGS = 22,
+  STORE_BUILD_SLAVE_FINISHED_STATS = 23,
+  FETCH_BUILD_SLAVE_FINISHED_STATS = 24,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -436,13 +459,17 @@ struct FrontendRequest {
   14: optional AnnouncementRequest announcementRequest;
   15: optional SetBuckDotFilePathsRequest setBuckDotFilePathsRequest;
   16: optional MultiGetBuildSlaveLogDirRequest multiGetBuildSlaveLogDirRequest;
-  17: optional
-    MultiGetBuildSlaveRealTimeLogsRequest multiGetBuildSlaveRealTimeLogsRequest;
+  17: optional MultiGetBuildSlaveRealTimeLogsRequest
+    multiGetBuildSlaveRealTimeLogsRequest;
   18: optional UpdateBuildSlaveStatusRequest updateBuildSlaveStatusRequest;
   19: optional FetchBuildSlaveStatusRequest fetchBuildSlaveStatusRequest;
   20: optional AppendBuildSlaveEventsRequest appendBuildSlaveEventsRequest;
   21: optional MultiGetBuildSlaveEventsRequest multiGetBuildSlaveEventsRequest;
   22: optional FetchRuleKeyLogsRequest fetchRuleKeyLogsRequest;
+  23: optional StoreBuildSlaveFinishedStatsRequest
+    storeBuildSlaveFinishedStatsRequest;
+  24: optional FetchBuildSlaveFinishedStatsRequest
+    fetchBuildSlaveFinishedStatsRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -469,6 +496,10 @@ struct FrontendResponse {
   25: optional MultiGetBuildSlaveEventsResponse
     multiGetBuildSlaveEventsResponse;
   26: optional FetchRuleKeyLogsResponse fetchRuleKeyLogsResponse;
+  27: optional StoreBuildSlaveFinishedStatsResponse
+    storeBuildSlaveFinishedStatsResponse;
+  28: optional FetchBuildSlaveFinishedStatsResponse
+    fetchBuildSlaveFinishedStatsResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

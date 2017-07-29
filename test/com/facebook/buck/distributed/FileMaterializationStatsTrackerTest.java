@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.FileMaterializationStats;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,17 +28,17 @@ public class FileMaterializationStatsTrackerTest {
     tracker.recordLocalFileMaterialized();
     tracker.recordLocalFileMaterialized();
 
-    Assert.assertEquals(3, tracker.getFilesMaterializedLocallyCount());
+    Assert.assertEquals(3, tracker.getFilesMaterializedFromLocalCacheCount());
 
     tracker.recordRemoteFileMaterialized(10);
     tracker.recordRemoteFileMaterialized(20);
 
-    Assert.assertEquals(2, tracker.getFilesMaterializedRemotelyCount());
-    Assert.assertEquals(30, tracker.getTotalTimeSpentMaterializingFilesRemotelyMillis());
+    Assert.assertEquals(2, tracker.getFilesMaterializedFromCASCount());
+    Assert.assertEquals(30, tracker.getTotalTimeSpentMaterializingFilesFromCASMillis());
 
     FileMaterializationStats stats = tracker.getFileMaterializationStats();
-    Assert.assertEquals(3, stats.getFilesMaterializedLocallyCount());
-    Assert.assertEquals(2, stats.getFilesMaterializedRemotelyCount());
-    Assert.assertEquals(30, tracker.getTotalTimeSpentMaterializingFilesRemotelyMillis());
+    Assert.assertEquals(5, stats.getTotalFilesMaterializedCount());
+    Assert.assertEquals(2, stats.getFilesMaterializedFromCASCount());
+    Assert.assertEquals(30, tracker.getTotalTimeSpentMaterializingFilesFromCASMillis());
   }
 }

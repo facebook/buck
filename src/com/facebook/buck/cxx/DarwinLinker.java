@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.Linkers;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -74,9 +76,9 @@ public class DarwinLinker implements Linker, HasLinkerMap, HasThinLTO {
   }
 
   @Override
-  public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
+  public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
     return ImmutableList.of(
-        new OsoSymbolsContentsScrubber(cellRoots), new LcUuidContentsScrubber());
+        new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber());
   }
 
   @Override

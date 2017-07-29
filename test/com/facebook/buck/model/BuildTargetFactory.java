@@ -17,7 +17,9 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -52,15 +54,23 @@ public class BuildTargetFactory {
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
-      return BuildTarget.builder(UnflavoredBuildTarget.of(root, cellName, parts[0], parts[1]))
-          .build();
+      return BuildTarget.of(UnflavoredBuildTarget.of(root, cellName, parts[0], parts[1]));
     }
     String[] flavors = nameAndFlavor[1].split(",");
-    BuildTarget.Builder buildTargetBuilder =
-        BuildTarget.builder(UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]));
-    for (String flavor : flavors) {
-      buildTargetBuilder.addFlavors(InternalFlavor.of(flavor));
-    }
-    return buildTargetBuilder.build();
+    return BuildTarget.of(
+        UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]),
+        RichStream.from(flavors).map(InternalFlavor::of).toOnceIterable());
+  }
+
+  public static BuildTarget newInstance(Path cellPath, String baseName, String shortName) {
+    return BuildTarget.of(
+        UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
+  }
+
+  public static BuildTarget newInstance(
+      Path cellPath, String baseName, String shortName, Flavor... flavors) {
+    return BuildTarget.of(
+        UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName),
+        ImmutableSet.copyOf(flavors));
   }
 }

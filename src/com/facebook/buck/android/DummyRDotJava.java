@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
-import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -254,8 +253,8 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Optional.of(
             BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
         Optional.empty(),
+        Optional.empty(),
         pathToSrcsList,
-        NoOpClassUsageFileWriter.instance(),
         steps,
         buildableContext);
     buildableContext.recordArtifact(rDotJavaClassesFolder);

@@ -16,12 +16,15 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -155,7 +158,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> args =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=false",
+            "cxx.shlib_interfaces=disabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -163,7 +166,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "bar1", "bar2");
+    assertTrue(workspace.replaceFileContents("library.cpp", "bar1", "bar2"));
     workspace.runBuckBuild(argv).assertSuccess();
     log = workspace.getBuildLog();
     if (sharedLibraryTarget.isPresent()) {
@@ -176,7 +179,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> iArgs =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=true",
+            "cxx.shlib_interfaces=enabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -184,7 +187,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "bar2", "bar3");
+    assertTrue(workspace.replaceFileContents("library.cpp", "bar2", "bar3"));
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
     if (sharedLibraryTarget.isPresent()) {
@@ -202,7 +205,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> args =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=false",
+            "cxx.shlib_interfaces=disabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -210,7 +213,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "bar1 = 0", "bar1 = 1");
+    assertTrue(workspace.replaceFileContents("library.cpp", "bar1 = 0", "bar1 = 1"));
     workspace.runBuckBuild(argv).assertSuccess();
     log = workspace.getBuildLog();
     if (sharedLibraryTarget.isPresent()) {
@@ -223,7 +226,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> iArgs =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=true",
+            "cxx.shlib_interfaces=enabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -231,7 +234,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "bar1 = 1", "bar1 = 2");
+    assertTrue(workspace.replaceFileContents("library.cpp", "bar1 = 1", "bar1 = 2"));
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
     if (sharedLibraryTarget.isPresent()) {
@@ -249,7 +252,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> args =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=false",
+            "cxx.shlib_interfaces=disabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -257,7 +260,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15");
+    assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15"));
     workspace.runBuckBuild(argv).assertSuccess();
     log = workspace.getBuildLog();
     if (sharedLibraryTarget.isPresent()) {
@@ -266,14 +269,14 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     log.assertTargetBuiltLocally(sharedBinaryBuiltTarget.toString());
 
     // Revert changes.
-    workspace.replaceFileContents("library.cpp", "return bar1 += 15", "return bar1");
+    assertTrue(workspace.replaceFileContents("library.cpp", "return bar1 += 15", "return bar1"));
 
     // Now verify that using shared library interfaces does not cause a rebuild after making a
     // non-interface change.
     ImmutableList<String> iArgs =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=true",
+            "cxx.shlib_interfaces=enabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -281,7 +284,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15");
+    assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15"));
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
     if (sharedLibraryTarget.isPresent()) {
@@ -295,7 +298,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> args =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=true",
+            "cxx.shlib_interfaces=enabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -303,7 +306,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "foo", "bar");
+    assertTrue(workspace.replaceFileContents("library.cpp", "foo", "bar"));
     workspace.runBuckBuild(argv).assertFailure();
   }
 
@@ -315,7 +318,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     ImmutableList<String> iArgs =
         ImmutableList.of(
             "-c",
-            "cxx.shared_library_interfaces=true",
+            "cxx.shlib_interfaces=enabled",
             "-c",
             "cxx.objcopy=/usr/bin/objcopy",
             "-c",
@@ -323,9 +326,60 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             staticBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("library.cpp", "bar1", "bar2");
+    assertTrue(workspace.replaceFileContents("library.cpp", "bar1", "bar2"));
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
     log.assertTargetBuiltLocally(staticBinaryBuiltTarget.toString());
+  }
+
+  @Test
+  public void sharedInterfaceLibraryPreventsRebuildAfterAddedUndefinedSymbol() throws IOException {
+    BuckBuildLog log;
+    String originalContents = workspace.getFileContents("library.cpp");
+
+    // First verify that *not* using shared library interfaces causes a rebuild even after making a
+    // non-interface change.
+    ImmutableList<String> args =
+        ImmutableList.of(
+            "-c",
+            "cxx.shlib_interfaces=disabled",
+            "-c",
+            "cxx.objcopy=/usr/bin/objcopy",
+            "-c",
+            "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
+    String[] argv = args.toArray(new String[args.size()]);
+    workspace.runBuckBuild(argv).assertSuccess();
+    assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 + bar2"));
+    workspace.runBuckBuild(argv).assertSuccess();
+    log = workspace.getBuildLog();
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetBuiltLocally(sharedBinaryBuiltTarget.toString());
+
+    // Revert changes.
+    workspace.writeContentsToPath(originalContents, "library.cpp");
+
+    // Now verify that using shared library interfaces does not cause a rebuild after making a
+    // non-interface change.
+    ImmutableList<String> iArgs =
+        ImmutableList.of(
+            "-c",
+            "cxx.shlib_interfaces=defined_only",
+            "-c",
+            "cxx.objcopy=/usr/bin/objcopy",
+            "-c",
+            "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
+    String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
+    workspace.runBuckBuild(iArgv).assertSuccess();
+    assertTrue(workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 + bar2"));
+    workspace.runBuckBuild(iArgv).assertSuccess();
+    log = workspace.getBuildLog();
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
   }
 }

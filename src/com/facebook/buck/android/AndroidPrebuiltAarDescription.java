@@ -26,7 +26,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
@@ -177,8 +176,8 @@ public class AndroidPrebuiltAarDescription
 
     BuildRule prebuiltJarRule =
         buildRuleResolver.requireRule(
-            BuildTargets.createFlavoredBuildTarget(
-                buildTarget.checkUnflavored(), AAR_PREBUILT_JAR_FLAVOR));
+            BuildTarget.of(
+                buildTarget.checkUnflavored(), ImmutableSet.of(AAR_PREBUILT_JAR_FLAVOR)));
     Preconditions.checkState(
         prebuiltJarRule instanceof PrebuiltJar,
         "%s flavor created rule of unexpected type %s for target %s",

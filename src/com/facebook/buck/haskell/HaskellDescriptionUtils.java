@@ -17,7 +17,6 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -26,10 +25,12 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -257,6 +258,7 @@ public class HaskellDescriptionUtils {
       ImmutableList<Arg> linkerFlags,
       Iterable<Arg> linkerInputs,
       Iterable<? extends NativeLinkable> deps,
+      ImmutableSet<BuildTarget> linkWholeDeps,
       Linker.LinkableDepType depType,
       Path outputPath,
       Optional<String> soname,
@@ -291,8 +293,14 @@ public class HaskellDescriptionUtils {
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
         NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
-      linkerArgsBuilder.addAll(
-          NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable).getArgs());
+      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+      NativeLinkableInput input =
+          nativeLinkable.getNativeLinkableInput(
+              cxxPlatform,
+              NativeLinkables.getLinkStyle(link, depType),
+              linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
+              ImmutableSet.of());
+      linkerArgsBuilder.addAll(input.getArgs());
     }
 
     // Since we use `-optl` to pass all linker inputs directly to the linker, the haskell linker
@@ -342,7 +350,8 @@ public class HaskellDescriptionUtils {
                 cxxPlatform,
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
-                emptyCompiledModule.getObjects()));
+                emptyCompiledModule.getObjects(),
+                /* cacheable */ true));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();

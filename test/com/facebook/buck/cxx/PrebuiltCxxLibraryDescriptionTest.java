@@ -24,6 +24,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -102,11 +107,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
   private static ImmutableSet<BuildTarget> getInputRules(BuildRule buildRule) {
     return ImmutableSet.of(
-        BuildTarget.builder()
-            .from(buildRule.getBuildTarget())
-            .addFlavors(CXX_PLATFORM.getFlavor())
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .build());
+        buildRule
+            .getBuildTarget()
+            .withAppendedFlavors(
+                CXX_PLATFORM.getFlavor(),
+                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR));
   }
 
   private static ImmutableSet<Path> getHeaderNames(Iterable<CxxHeaders> includes) {
@@ -635,10 +640,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void exportedLinkerFlagsAreUsedToBuildSharedLibrary() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
-        BuildTarget.builder(BuildTargetFactory.newInstance("//:lib"))
-            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .addFlavors(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())
-            .build();
+        BuildTargetFactory.newInstance("//:lib")
+            .withAppendedFlavors(
+                CxxDescriptionEnhancer.SHARED_FLAVOR,
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(target)
             .setExportedLinkerFlags(ImmutableList.of("--some-flag"))

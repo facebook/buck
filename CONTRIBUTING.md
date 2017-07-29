@@ -62,49 +62,16 @@ This means that immediately after you save your code in Eclipse, you can switch 
 
 Buck also contains the metadata files so that it can be imported as a project in IntelliJ. Developing Buck in IntelliJ works perfectly fine; however, it does not automatically overwrite the existing `.class` files as Eclipse does. (You could likely add some sort of build step to IntelliJ to make this possible, but we have not.) Therefore, if you elect to develop Buck using IntelliJ, you may want to create an alias for buck that runs ant before running Buck to reduce the friction of developing with IntelliJ.
 
-## Code Style
+### Code Style
 
-Writing a detailed Java style guide takes a considerable amount of effort, so here are the highlights for what we expect in Buck:
+We use [google-java-format](https://github.com/google/google-java-format) to format Java files.
+You can either install the IntelliJ plugin or use a pre commit hook to automatically re-format files.
 
-### Spacing
+To add a pre commit hook:
 
-- Spaces only: no tabs.
-- Standard indent is 2 spaces; continued lines are indented 4 spaces.
-- Lines are a maximum of 100 columns.
-- For a method call/declaration, if all params do not fit on one line, then each param should be on its own line.
-
-### Naming
-
-- The use of Hungarian notation in any form is prohibited.
-- Prefer descriptive names to single-letter names. The primary exceptions to this rule are (1) the use of `e` for the name of an exception in a `catch` block, and (2) the use of `i` as the - name of an index in a `for` loop.
-
-### Null
-
-- In the spirit of Guava, references are assumed to be non-null unless otherwise noted.
-- Non-null parameters should be verified using `Preconditions.checkNotNull()`.
-- A nullable reference should be annotated with `@javax.annotation.Nullable`.
-- A popular alternative to `@Nullable` is `java.util.Optional`.
-- Annotating an Optional as `@Nullable` is "grounds for dismissal".
-
-### APIs
-
-- Guava should be used liberally.
-- In particular, favor Guava's immutable collections. In addition to preventing aliasing bugs, they disallow null as an element, which is in line with the previous bullet point.
-- Log only using com.facebook.buck.log.Logger. Do not use java.util.logging.Logger or other logging APIs. See the article on logging for more details.
-
-### Comments
-
-- Comments should be valid US-English sentences: they should start with a capital letter and end with appropriate punctuation.
-- One space after a full stop is preferred. This makes it easier to honor the 100 column rule. This may violate what you learned in high school, but browsers have been condensing your two spaces down to one in HTML for years, so you are likely more accustomed to it than you think.
-- The specification of a field or member should be documented using Javadoc (i.e., `/** */`) rather than implementation comments (i.e., `//`), even if the field or member is private.
-- A Javadoc comment should be preceded by a blank line.
-
-### Imports
-
-- No wildcards in imports.
-- Non-`java` imports are listed before `java` imports.
-- `java` imports are listed before `javax` imports.
-- Files should not contain unnecessary imports. Use your favorite IDE to help you with this.
+- Build `google-java-format` jar following instructions from [github page](https://github.com/google/google-java-format).
+- Copy `config/git-hooks/pre-commit.template` to `.git/hooks/pre-commit`
+- Replace `<<PATH_TO_JAR>>` in `.git/hooks/pre-commit` with the location of google-java-format jar.
 
 ### Warnings
 

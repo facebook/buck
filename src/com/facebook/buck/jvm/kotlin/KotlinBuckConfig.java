@@ -45,7 +45,8 @@ public class KotlinBuckConfig {
       return new ExternalKotlinc(getPathToCompilerBinary());
     } else {
       ImmutableSet<SourcePath> classpathEntries =
-          ImmutableSet.of(delegate.getSourcePath(getPathToStdlibJar()),
+          ImmutableSet.of(
+              delegate.getSourcePath(getPathToStdlibJar()),
               delegate.getSourcePath(getPathToCompilerJar()));
 
       return new JarBackedReflectedKotlinc(classpathEntries);

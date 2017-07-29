@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
  */
 interface FileHashCacheEngine {
 
+  @FunctionalInterface
   interface ValueLoader<T> {
     T load(Path path);
   }

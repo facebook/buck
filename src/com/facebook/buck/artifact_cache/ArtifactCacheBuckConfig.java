@@ -44,6 +44,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String CACHE_SECTION_NAME = "cache";
 
   private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.READWRITE.name();
+  private static final String DEFAULT_SQLITE_CACHE_MODE = CacheReadMode.READWRITE.name();
 
   // Names of the fields in a [cache*] section that describe a single HTTP cache.
   private static final String HTTP_URL_FIELD_NAME = "http_url";
@@ -91,6 +92,11 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String DEFAULT_HTTP_CACHE_ERROR_MESSAGE =
       "{cache_name} cache encountered an error: {error_message}";
   private static final int DEFAULT_HTTP_MAX_FETCH_RETRIES = 2;
+
+  private static final String SQLITE_MODE_FIELD = "sqlite_mode";
+  private static final String SQLITE_MAX_SIZE_FIELD = "sqlite_max_size";
+  private static final String SQLITE_MAX_INLINED_SIZE_FIELD = "sqlite_inlined_size";
+  private static final String SQLITE_CACHE_NAMES_FIELD_NAME = "sqlite_cache_names";
 
   private static final String SERVED_CACHE_ENABLED_FIELD_NAME = "serve_local_cache";
   private static final String DEFAULT_SERVED_CACHE_MODE = CacheReadMode.READONLY.name();
@@ -227,6 +233,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public ArtifactCacheEntries getCacheEntries() {
     ImmutableSet<DirCacheEntry> dirCacheEntries = getDirCacheEntries();
     ImmutableSet<HttpCacheEntry> httpCacheEntries = getHttpCacheEntries();
+    ImmutableSet<SQLiteCacheEntry> sqliteCacheEntries = getSQLiteCacheEntries();
     Predicate<DirCacheEntry> isDirCacheEntryWriteable =
         dirCache -> dirCache.getCacheReadMode().isWritable();
 
@@ -248,6 +255,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return ArtifactCacheEntries.builder()
         .setDirCacheEntries(dirCacheEntries)
         .setHttpCacheEntries(httpCacheEntries)
+        .setSQLiteCacheEntries(sqliteCacheEntries)
         .build();
   }
 
@@ -274,6 +282,13 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     }
 
     return result.build();
+  }
+
+  private ImmutableSet<SQLiteCacheEntry> getSQLiteCacheEntries() {
+    return getSQLiteCacheNames()
+        .parallelStream()
+        .map(this::obtainSQLiteEntryForName)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   // It's important that this number is greater than the `-j` parallelism,
@@ -349,6 +364,10 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig.getListWithoutComments(CACHE_SECTION_NAME, DIR_CACHE_NAMES_FIELD_NAME);
   }
 
+  private ImmutableList<String> getSQLiteCacheNames() {
+    return buckConfig.getListWithoutComments(CACHE_SECTION_NAME, SQLITE_CACHE_NAMES_FIELD_NAME);
+  }
+
   private String getCacheErrorFormatMessage(String section, String fieldName, String defaultValue) {
     return buckConfig.getValue(section, fieldName).orElse(defaultValue);
   }
@@ -411,6 +430,31 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return builder.build();
   }
 
+  private SQLiteCacheEntry obtainSQLiteEntryForName(String cacheName) {
+    final String section = String.join("#", CACHE_SECTION_NAME, cacheName);
+
+    CacheReadMode readMode =
+        getCacheReadMode(section, SQLITE_MODE_FIELD, DEFAULT_SQLITE_CACHE_MODE);
+
+    String cacheDir = buckConfig.getLocalCacheDirectory(section);
+    Path pathToCacheDir =
+        buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(cacheDir));
+
+    Optional<Long> maxSizeBytes =
+        buckConfig.getValue(section, SQLITE_MAX_SIZE_FIELD).map(SizeUnit::parseBytes);
+
+    Optional<Long> maxInlinedSizeBytes =
+        buckConfig.getValue(section, SQLITE_MAX_INLINED_SIZE_FIELD).map(SizeUnit::parseBytes);
+
+    return SQLiteCacheEntry.builder()
+        .setName(cacheName)
+        .setCacheDir(pathToCacheDir)
+        .setCacheReadMode(readMode)
+        .setMaxSizeBytes(maxSizeBytes)
+        .setMaxInlinedSizeBytes(maxInlinedSizeBytes)
+        .build();
+  }
+
   public ImmutableSet<String> getBlacklistedWifiSsids() {
     return ImmutableSet.copyOf(
         buckConfig.getListWithoutComments(
@@ -441,6 +485,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     public abstract ImmutableSet<HttpCacheEntry> getHttpCacheEntries();
 
     public abstract ImmutableSet<DirCacheEntry> getDirCacheEntries();
+
+    public abstract ImmutableSet<SQLiteCacheEntry> getSQLiteCacheEntries();
   }
 
   @Value.Immutable
@@ -484,5 +530,19 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
       return !(currentWifiSsid.isPresent()
           && getBlacklistedWifiSsids().contains(currentWifiSsid.get()));
     }
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractSQLiteCacheEntry {
+    public abstract Optional<String> getName();
+
+    public abstract Path getCacheDir();
+
+    public abstract Optional<Long> getMaxSizeBytes();
+
+    public abstract Optional<Long> getMaxInlinedSizeBytes();
+
+    public abstract CacheReadMode getCacheReadMode();
   }
 }

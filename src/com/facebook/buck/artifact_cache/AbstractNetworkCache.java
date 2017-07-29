@@ -24,6 +24,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
+import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -52,6 +53,7 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   private final Optional<Long> maxStoreSize;
 
   private final Set<String> seenErrors = Sets.newConcurrentHashSet();
+  private boolean isNoHealthyServersSeen = false;
 
   public AbstractNetworkCache(NetworkCacheArgs args) {
     this.name = args.getCacheName();
@@ -78,6 +80,16 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       final HttpArtifactCacheEvent.Finished.Builder eventBuilder)
       throws IOException;
 
+  private boolean isNoHealthyServersException(Throwable exception) {
+    if (exception == null) {
+      return false;
+    } else if (exception instanceof NoHealthyServersException) {
+      return true;
+    } else {
+      return isNoHealthyServersException(exception.getCause());
+    }
+  }
+
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     HttpArtifactCacheEvent.Started startedEvent =
@@ -93,7 +105,21 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
-      reportFailure(e, "fetch(%s): %s", ruleKey, msg);
+      if (isNoHealthyServersException(e)) {
+        if (!isNoHealthyServersSeen) {
+          isNoHealthyServersSeen = true;
+          buckEventBus.post(
+              ConsoleEvent.warning(
+                  "\n"
+                      + "Failed to fetch %s over %s:\n"
+                      + "Buck encountered a critical network failure.\n"
+                      + "Please check your network connection and retry."
+                      + "\n",
+                  ruleKey, name));
+        }
+      } else {
+        reportFailure(e, "fetch(%s): %s", ruleKey, msg);
+      }
       result = CacheResult.error(name, mode, msg);
       return result;
     } finally {

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -120,7 +120,7 @@ public class ApplePackageDescription
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {
-    return BuildTarget.builder(toTarget).addAllFlavors(fromTarget.getFlavors()).build();
+    return toTarget.withAppendedFlavors(fromTarget.getFlavors());
   }
 
   /** Propagate the packages's flavors to its dependents. */

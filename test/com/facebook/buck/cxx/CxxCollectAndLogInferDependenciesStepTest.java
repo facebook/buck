@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.platform.GccPreprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -120,12 +121,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     ProjectFilesystem filesystem = createFakeFilesystem("/Users/user/src");
 
     BuildTarget testBuildTarget =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    filesystem.getRootPath(), Optional.empty(), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
-            .build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                filesystem.getRootPath(), Optional.empty(), "//target", "short"),
+            ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
@@ -157,12 +156,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     String cellName = "cellname";
 
     BuildTarget testBuildTarget =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    filesystem.getRootPath(), Optional.of(cellName), "//target", "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
-            .build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                filesystem.getRootPath(), Optional.of(cellName), "//target", "short"),
+            ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
@@ -192,28 +189,18 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     // filesystem, buildTarget and buildRuleParams for first cell (analysis)
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/cell_one");
     BuildTarget buildTarget1 =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    filesystem1.getRootPath(),
-                    Optional.of("cell1"),
-                    "//target/in_cell_one",
-                    "short1"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
-            .build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                filesystem1.getRootPath(), Optional.of("cell1"), "//target/in_cell_one", "short1"),
+            ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
     BuildTarget buildTarget2 =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    filesystem2.getRootPath(),
-                    Optional.of("cell2"),
-                    "//target/in_cell_two",
-                    "short2"))
-            .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
-            .build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
+            ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
     BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
@@ -260,28 +247,18 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     // filesystem, buildTarget and buildRuleParams for first, unnamed cell (analysis)
     ProjectFilesystem filesystem1 = createFakeFilesystem("/Users/user/default_cell");
     BuildTarget buildTarget1 =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    filesystem1.getRootPath(),
-                    Optional.empty(),
-                    "//target/in_default_cell",
-                    "short"))
-            .addFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor())
-            .build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                filesystem1.getRootPath(), Optional.empty(), "//target/in_default_cell", "short"),
+            ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 = createFakeFilesystem("/Users/user/cell_two");
     BuildTarget buildTarget2 =
-        BuildTarget.builder()
-            .setUnflavoredBuildTarget(
-                UnflavoredBuildTarget.of(
-                    filesystem2.getRootPath(),
-                    Optional.of("cell2"),
-                    "//target/in_cell_two",
-                    "short2"))
-            .addFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR)
-            .build();
+        BuildTarget.of(
+            UnflavoredBuildTarget.of(
+                filesystem2.getRootPath(), Optional.of("cell2"), "//target/in_cell_two", "short2"),
+            ImmutableSet.of(CxxInferEnhancer.INFER_CAPTURE_FLAVOR));
     BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =

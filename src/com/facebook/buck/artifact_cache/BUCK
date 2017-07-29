@@ -139,13 +139,16 @@ java_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/sqlite:sqlite",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/okhttp:okhttp",
+        "//third-party/java/sqlite:sqlite",
     ],
 )
 

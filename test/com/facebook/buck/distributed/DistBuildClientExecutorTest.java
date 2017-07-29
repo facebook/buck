@@ -16,11 +16,14 @@
 
 package com.facebook.buck.distributed;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -35,6 +38,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
+import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -58,6 +62,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -65,10 +70,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
+import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IArgumentMatcher;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -89,6 +94,7 @@ public class DistBuildClientExecutorTest {
   private DistBuildClientStatsTracker distBuildClientStatsTracker;
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
+  private static final String BUILD_LABEL = "unit_test";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -98,7 +104,7 @@ public class DistBuildClientExecutorTest {
     buckVersion = new BuckVersion();
     buckVersion.setGitHash("thishashisamazing");
     buildJobState = createMinimalFakeBuildJobState();
-    distBuildClientStatsTracker = new DistBuildClientStatsTracker();
+    distBuildClientStatsTracker = new DistBuildClientStatsTracker(BUILD_LABEL);
     distBuildCellIndexer = new DistBuildCellIndexer(new TestCellBuilder().build());
     distBuildClientExecutor =
         new DistBuildClientExecutor(
@@ -204,8 +210,7 @@ public class DistBuildClientExecutorTest {
 
     List<BuildSlaveStatus> slaveStatuses =
         distBuildClientExecutor.fetchBuildSlaveStatusesAsync(job, directExecutor).get();
-    Assert.assertEquals(
-        ImmutableSet.copyOf(slaveStatuses), ImmutableSet.of(slaveStatus0, slaveStatus1));
+    assertEquals(ImmutableSet.copyOf(slaveStatuses), ImmutableSet.of(slaveStatus0, slaveStatus1));
 
     verify(mockDistBuildService);
   }
@@ -368,6 +373,53 @@ public class DistBuildClientExecutorTest {
     verify(mockDistBuildService);
   }
 
+  @Test
+  public void testPublishingBuildSlaveFinishedStats() throws IOException {
+    final BuildJob job = createBuildJobWithSlaves();
+    List<RunId> runIds =
+        job.getSlaveInfoByRunId()
+            .values()
+            .stream()
+            .map(BuildSlaveInfo::getRunId)
+            .collect(Collectors.toList());
+
+    List<BuildSlaveFinishedStats> finishedStatsList = new ArrayList<>();
+
+    // Return empty stats for the first slave and test the expected response.
+    expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, runIds.get(0)))
+        .andReturn(Optional.empty());
+    finishedStatsList.add(
+        new BuildSlaveFinishedStats()
+            .setBuildSlaveStatus(
+                new BuildSlaveStatus().setStampedeId(stampedeId).setRunId(runIds.get(0))));
+
+    for (int idx = 1; idx < runIds.size(); ++idx) {
+      RunId runId = runIds.get(idx);
+      BuildSlaveFinishedStats finishedStats =
+          new BuildSlaveFinishedStats()
+              .setBuildSlaveStatus(new BuildSlaveStatus().setStampedeId(stampedeId).setRunId(runId))
+              .setExitCode(idx);
+
+      finishedStatsList.add(finishedStats);
+      expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, runId))
+          .andReturn(Optional.of(finishedStats));
+    }
+
+    Capture<ClientSideBuildSlaveFinishedStatsEvent> capturedEvent = EasyMock.newCapture();
+    mockEventBus.post(capture(capturedEvent));
+    expectLastCall().times(1);
+
+    replay(mockDistBuildService);
+    replay(mockEventBus);
+
+    distBuildClientExecutor.publishBuildSlaveFinishedStatsEvent(job, mockEventBus, directExecutor);
+
+    verify(mockDistBuildService);
+    verify(mockEventBus);
+
+    assertEquals(finishedStatsList, capturedEvent.getValue().getBuildSlaveFinishedStats());
+  }
+
   /**
    * This test sees that executeAndPrintFailuresToEventBus(...) does the following: 1. Initiates the
    * build by uploading missing source files, dot files and target graph. 2. Kicks off the build. 3.
@@ -473,6 +525,10 @@ public class DistBuildClientExecutorTest {
     expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0)).andReturn(query);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
         .andReturn(ImmutableList.of());
+    expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, runId))
+        .andReturn(Optional.empty());
+    mockEventBus.post(anyObject(ClientSideBuildSlaveFinishedStatsEvent.class));
+    expectLastCall().times(1);
 
     expect(mockLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values()))
         .andReturn(ImmutableList.of());

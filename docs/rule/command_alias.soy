@@ -1,0 +1,127 @@
+{namespace buck.command_alias}
+
+/***/
+{template .soyweb}
+{call buck.page}
+    {param title: 'command_alias()' /}
+    {param navid: 'rule_command_alias' /}
+    {param prettify: true /}
+    {param description}
+    A rule for wrapping binary rules, and add fixed arguments or environment variables.
+    {/param}
+    {param content}
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+    <p>
+        This rule allows to wrap other build rules that create binaries and to pre-apply command
+        line arguments and environment variables.
+    </p>
+    <p>
+        Examples include providing a command written in a scripting language, and running it with a
+        specific interpreter, or transparently wrapping sub-commands of a binary.
+    </p>
+    <p>
+        A <code>command_alias</code> rule can be referenced in the <code>cmd</code> parameter of
+        a <code>genrule</code> by using the <code>exe</code> macro:
+        <br/>
+        <code>$(exe/&#x2Fpath/to:target)</code></p>
+{/param}
+
+{param args}
+{call buck.arg}
+    {param name: 'name' /}
+    {param desc}
+    The name of the rule.
+    {/param}
+{/call}
+
+{call buck.arg}
+    {param name: 'exe' /}
+    {param desc}
+    A {call buck.build_target /} for a rule that outputs
+    an executable, such as an <code>sh_binary</code>.
+    {/param}
+{/call}
+
+{call buck.arg}
+    {param name: 'args' /}
+    {param default: 'None' /}
+    {param desc}
+    A string of args that will be passed to the executable represented by <code>exe</code> on
+    startup. Arguments support {call buck.string_parameter_macros /} (only{sp}
+    <code>$(location ...)</code> is supported at the moment).
+    {/param}
+{/call}
+
+{call buck.arg}
+    {param name: 'env' /}
+    {param default: 'None' /}
+    {param desc}
+    A map of environment variables that will be passed to the executable represented
+    by <code>exe</code> on startup. Environment variables support the same macros as arguments.
+    {/param}
+{/call}
+{/param}
+
+{param examples}
+
+{literal}<pre class="prettyprint lang-py">
+# Combining an interpreter and a script
+
+cxx_binary(
+    name = "node-js",
+    srcs = [
+        # ...
+    ],
+    headers = [
+        # ...
+    ],
+)
+
+export_file(
+    name = "scripts"
+)
+
+command_alias(
+    name = "server",
+    exe = ":node-js",
+    args = [
+        "$(location :scripts)/start-server.js",
+    ],
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# Exposing sub commands
+
+export_file(
+    name = "yarn",
+    src = "yarn.sh",
+)
+
+command_alias(
+    name = "add",
+    exe = ":yarn",
+    args = ["add"],
+)
+
+command_alias(
+    name = "install",
+    exe = ":yarn",
+    args = ["install"],
+)
+
+command_alias(
+    name = "run",
+    exe = ":yarn",
+    args = ["run"],
+)
+</pre>{/literal}
+
+{/param}
+{/call}
+
+{/param}
+{/call}
+{/template}

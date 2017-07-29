@@ -16,7 +16,7 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -83,9 +83,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
   @Override
   public SourcePath build() {
     BuildTarget templateTarget =
-        BuildTarget.builder(getBaseTarget())
-            .addFlavors(InternalFlavor.of("starter-template"))
-            .build();
+        getBaseTarget().withAppendedFlavors(InternalFlavor.of("starter-template"));
     WriteFile templateRule =
         getRuleResolver()
             .addToIndex(

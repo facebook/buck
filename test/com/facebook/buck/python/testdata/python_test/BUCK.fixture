@@ -50,3 +50,21 @@ python_test(
     'test_setup_class_failure_with_test_suite.py',
   ],
 )
+
+python_binary(
+  name='binary-with-tests',
+  main_module='binary_main.py',
+  tests=[
+    '//:test-assigned-to-binary',
+  ],
+)
+
+python_test(
+  name='test-assigned-to-binary',
+  srcs=[
+    'test_success.py',
+  ],
+  deps=[
+    '//:binary-with-tests',
+  ],
+)

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.elf;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 public class Elf {
 
@@ -68,27 +69,27 @@ public class Elf {
   }
 
   /** @return the parsed section header for the section of the given name. */
-  public Optional<Pair<Integer, ElfSection>> getSectionByName(String name) {
+  public Optional<ElfSectionLookupResult> getSectionByName(String name) {
     ElfSection stringTable = getSectionByIndex(header.e_shstrndx);
     for (int index = 0; index < header.e_shnum; index++) {
       ElfSection section = getSectionByIndex(index);
       String sectionName = stringTable.lookupString(section.header.sh_name);
       if (name.equals(sectionName)) {
-        return Optional.of(new Pair<>(index, section));
+        return Optional.of(ElfSectionLookupResult.of(index, section));
       }
     }
     return Optional.empty();
   }
 
-  public ElfSection getMandatorySectionByName(Object fileName, String sectionName)
+  public ElfSectionLookupResult getMandatorySectionByName(Object fileName, String sectionName)
       throws IOException {
-    Optional<Pair<Integer, ElfSection>> result = getSectionByName(sectionName);
+    Optional<ElfSectionLookupResult> result = getSectionByName(sectionName);
     if (!result.isPresent()) {
       throw new IOException(
           String.format(
               "Error parsing ELF file %s: no such section \"%s\"", fileName, sectionName));
     }
-    return result.get().getSecond();
+    return result.get();
   }
 
   /** @return whether the data this buffer points to is most likely ELF. */
@@ -184,5 +185,20 @@ public class Elf {
     public static void putElf64Sxword(ByteBuffer buffer, long val) {
       buffer.putLong(val);
     }
+  }
+
+  /**
+   * A tuple of section index and {@link ElfSection} object returned from lookup functions in this
+   * class.
+   */
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractElfSectionLookupResult {
+
+    /** @return the index of the section in the ELF file. */
+    int getIndex();
+
+    /** @return the parsed {@link ElfSection}. */
+    ElfSection getSection();
   }
 }

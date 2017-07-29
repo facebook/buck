@@ -426,6 +426,7 @@ public class InstallCommand extends BuildCommand {
 
       if (!adbHelper.installApk(
           pathResolver, hasInstallableApk, shouldInstallViaSd(), false, process)) {
+        params.getConsole().printBuildFailure("Install failed.");
         return 1;
       }
     } else if (shouldUninstallFirst()) {
@@ -453,12 +454,13 @@ public class InstallCommand extends BuildCommand {
     }
 
     // We've installed the application successfully.
-    // Is either of --activity or --run present?
+    // Are any of --activity, --process, or --run present?
     if (shouldStartActivity()) {
       int exitCode =
           adbHelper.startActivity(
               pathResolver, hasInstallableApk, getActivityToStart(), waitForDebugger);
       if (exitCode != 0) {
+        params.getConsole().printBuildFailure("Starting activity failed.");
         return exitCode;
       }
     }

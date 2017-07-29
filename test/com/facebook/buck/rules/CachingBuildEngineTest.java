@@ -149,6 +149,7 @@ import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.hamcrest.core.StringContains;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -812,6 +813,7 @@ public class CachingBuildEngineTest {
       }
     }
 
+    @Ignore
     @Test
     public void multipleTopLevelRulesDontBlockEachOther() throws Exception {
       Exchanger<Boolean> exchanger = new Exchanger<>();
@@ -3080,6 +3082,7 @@ public class CachingBuildEngineTest {
       super(metadataStorage);
     }
 
+    @Ignore
     @Test
     public void eventsForBuiltLocallyRuleAreOnCorrectThreads() throws Exception {
       // Create a noop simple rule.
@@ -3148,6 +3151,7 @@ public class CachingBuildEngineTest {
           FluentIterable.from(listener.getEvents()).filter(BuildRuleEvent.class));
     }
 
+    @Ignore
     @Test
     public void eventsForBuiltLocallyRuleAndDepAreOnCorrectThreads() throws Exception {
       // Create a simple rule and dep.

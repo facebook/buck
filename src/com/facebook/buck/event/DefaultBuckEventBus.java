@@ -48,6 +48,10 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   private final BuildId buildId;
   private final int shutdownTimeoutMillis;
 
+  // synchronization variables to ensure proper shutdown
+  private volatile int activeTasks = 0;
+  private final Object lock = new Object();
+
   public DefaultBuckEventBus(Clock clock, BuildId buildId) {
     this(clock, true, buildId, DEFAULT_SHUTDOWN_TIMEOUT_MS);
   }
@@ -68,7 +72,24 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   }
 
   private void dispatch(final BuckEvent event) {
-    executorService.submit(() -> eventBus.post(event));
+    // keep track the number of active tasks so we can do proper shutdown
+    synchronized (lock) {
+      activeTasks++;
+    }
+
+    executorService.submit(
+        () -> {
+          try {
+            eventBus.post(event);
+          } finally {
+            // event bus should not throw but just in case wrap with try-finally
+            synchronized (lock) {
+              activeTasks--;
+              // notify about task completion; shutdown may wait for it
+              lock.notifyAll();
+            }
+          }
+        });
   }
 
   @Override
@@ -125,9 +146,33 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
    */
   @Override
   public void close() throws IOException {
+    // it might have happened that executor service is still processing a task which in turn may
+    // post new tasks to the executor, in this case if we shutdown executor they won't be processed
+    // so first wait for all currently running tasks and their descendants to finish
+    // ideally it should be done inside executorService but it only provides shutdown() method
+    // which immediately stops accepting new tasks, that's why we have some wrapper on top of it
+    long timeoutTime = System.currentTimeMillis() + shutdownTimeoutMillis;
+    synchronized (lock) {
+      while (activeTasks > 0) {
+
+        long waitTime = timeoutTime - System.currentTimeMillis();
+        if (waitTime <= 0) {
+          break;
+        }
+
+        try {
+          lock.wait(waitTime);
+        } catch (InterruptedException e) {
+          Threads.interruptCurrentThread();
+          break;
+        }
+      }
+    }
+
     executorService.shutdown();
     try {
-      if (!executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS)) {
+      long waitTime = timeoutTime - System.currentTimeMillis();
+      if (waitTime <= 0 || !executorService.awaitTermination(waitTime, TimeUnit.MILLISECONDS)) {
         LOG.warn(
             Joiner.on(System.lineSeparator())
                 .join(

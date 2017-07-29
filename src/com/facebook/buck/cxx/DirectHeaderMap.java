@@ -32,6 +32,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 public class DirectHeaderMap extends HeaderSymlinkTree {
@@ -58,12 +59,11 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
-    ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
-    for (Path key : getLinks().keySet()) {
-      Path path = context.getSourcePathResolver().getAbsolutePath(getLinks().get(key));
-      LOG.debug("header map %s -> %s", key, path);
-      headerMapEntries.put(key, path);
+    LOG.debug("Generating build steps to write header map to %s", headerMapPath);
+    ImmutableMap.Builder<Path, Path> entriesBuilder = ImmutableMap.builder();
+    for (Map.Entry<Path, SourcePath> entry : getLinks().entrySet()) {
+      entriesBuilder.put(
+          entry.getKey(), context.getSourcePathResolver().getAbsolutePath(entry.getValue()));
     }
     return ImmutableList.<Step>builder()
         .add(getVerifyStep())
@@ -77,7 +77,7 @@ public class DirectHeaderMap extends HeaderSymlinkTree {
             RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), headerMapPath)))
-        .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()))
+        .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, entriesBuilder.build()))
         .build();
   }
 

@@ -19,12 +19,14 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -202,12 +204,15 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public String getPythonInterpreter(Optional<String> configPath, ExecutableFinder exeFinder) {
     PythonBuckConfig pyconfig = new PythonBuckConfig(getDelegate(), exeFinder);
-    if (configPath.isPresent()) {
-      return pyconfig.getPythonInterpreter(configPath);
+    Path path =
+        configPath
+            .map(c -> pyconfig.getPythonInterpreter(Optional.of(c)))
+            // Fall back to the Python section configuration
+            .orElseGet(pyconfig::getPythonInterpreter);
+    if (!(Files.isExecutable(path) && !Files.isDirectory(path))) {
+      throw new HumanReadableException("Not a python executable: " + path);
     }
-
-    // Fall back to the Python section configuration
-    return pyconfig.getPythonInterpreter();
+    return path.toString();
   }
 
   @Value.Lazy

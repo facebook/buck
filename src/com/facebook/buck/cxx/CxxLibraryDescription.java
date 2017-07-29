@@ -16,6 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -41,6 +46,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -57,6 +63,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
@@ -260,24 +267,7 @@ public class CxxLibraryDescription
     }
 
     // Create rule to build the object files.
-    return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-        projectFilesystem,
-        buildTarget,
-        ruleResolver,
-        sourcePathResolver,
-        ruleFinder,
-        cxxBuckConfig,
-        cxxPlatform,
-        getPreprocessorInputsForBuildingLibrarySources(
-            ruleResolver,
-            cellRoots,
-            buildTarget,
-            args,
-            cxxPlatform,
-            deps,
-            transitivePreprocessorInputs,
-            headerSymlinkTree,
-            sandboxTree),
+    ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
         ImmutableListMultimap.copyOf(
             Multimaps.transformValues(
                 CxxFlags.getLanguageFlagsWithMacros(
@@ -287,13 +277,33 @@ public class CxxLibraryDescription
                     cxxPlatform),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f))),
-        args.getPrefixHeader(),
-        args.getPrecompiledHeader(),
-        CxxDescriptionEnhancer.parseCxxSources(
-            buildTarget, ruleResolver, ruleFinder, sourcePathResolver, cxxPlatform, args),
-        pic,
-        sandboxTree);
+                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f)));
+    return CxxSourceRuleFactory.of(
+            projectFilesystem,
+            buildTarget,
+            ruleResolver,
+            sourcePathResolver,
+            ruleFinder,
+            cxxBuckConfig,
+            cxxPlatform,
+            getPreprocessorInputsForBuildingLibrarySources(
+                ruleResolver,
+                cellRoots,
+                buildTarget,
+                args,
+                cxxPlatform,
+                deps,
+                transitivePreprocessorInputs,
+                headerSymlinkTree,
+                sandboxTree),
+            compilerFlags,
+            args.getPrefixHeader(),
+            args.getPrecompiledHeader(),
+            pic,
+            sandboxTree)
+        .requirePreprocessAndCompileRules(
+            CxxDescriptionEnhancer.parseCxxSources(
+                buildTarget, ruleResolver, ruleFinder, sourcePathResolver, cxxPlatform, args));
   }
 
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(
@@ -581,7 +591,8 @@ public class CxxLibraryDescription
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
-        ImmutableList.copyOf(objects.values()));
+        ImmutableList.copyOf(objects.values()),
+        /* cacheable */ true);
   }
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */
@@ -929,8 +940,7 @@ public class CxxLibraryDescription
     }
     Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
     flavors.remove(type.get().getKey());
-    BuildTarget target =
-        BuildTarget.builder(buildTarget.getUnflavoredBuildTarget()).addAllFlavors(flavors).build();
+    BuildTarget target = buildTarget.withFlavors(flavors);
     return target;
   }
 

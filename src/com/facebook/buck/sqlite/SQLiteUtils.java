@@ -16,6 +16,7 @@
 
 package com.facebook.buck.sqlite;
 
+import com.facebook.buck.util.HumanReadableException;
 import org.sqlite.SQLiteJDBCLoader;
 
 public class SQLiteUtils {
@@ -28,13 +29,17 @@ public class SQLiteUtils {
    * thread-unsafe manner. This method should be called statically from any class that uses
    * SQLiteJDBC.
    */
-  public static void initialize() {
+  public static synchronized void initialize() {
+    boolean success;
     try {
-      if (!SQLiteJDBCLoader.initialize()) {
-        throw new RuntimeException("sqlite-jdbc initialization failed");
-      }
+      success = SQLiteJDBCLoader.initialize();
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+    if (!success) {
+      throw new HumanReadableException(
+          "Failed to initialize Buck (sqlite-jdbc). A common reason is that the disk is full. "
+              + "Please try to clean up your disk and try again.");
     }
   }
 }

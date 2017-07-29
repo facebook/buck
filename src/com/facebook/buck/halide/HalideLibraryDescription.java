@@ -23,15 +23,15 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -248,7 +248,8 @@ public class HalideLibraryDescription
             new ExplicitBuildTargetSourcePath(
                 halideCompileBuildTarget,
                 HalideCompile.objectOutputPath(
-                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))));
+                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))),
+        /* cacheable */ true);
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(

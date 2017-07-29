@@ -33,6 +33,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -166,10 +171,9 @@ public class CxxLibraryDescriptionTest {
             .setSrcs(
                 ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test_shared.cpp"))));
     BuildTarget sharedHeaderSymlinkTreeTarget =
-        BuildTarget.builder(sharedDepTarget.getUnflavoredBuildTarget())
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        sharedDepTarget.withFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     CxxLibraryBuilder depBuilder =
@@ -178,10 +182,9 @@ public class CxxLibraryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget headerSymlinkTreeTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -448,15 +451,12 @@ public class CxxLibraryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget sharedLibraryDepTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-            .addFlavors(cxxPlatform.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.SHARED_FLAVOR, cxxPlatform.getFlavor());
     BuildTarget headerSymlinkTreeTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

@@ -364,6 +364,10 @@ def main():
             os.makedirs(cwd_root)
         move_mount(args.repo_under_test, cwd_root)
     else:
+        # If cwd_root exists, it means that a previous attempt to run
+        # this script wasn't able to clean up that folder properly.
+        # In this case, we clean up that folder.
+        shutil.rmtree(cwd_root, ignore_errors=True)
         os.rename(args.repo_under_test, cwd_root)
 
     try:

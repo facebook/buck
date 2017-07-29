@@ -16,6 +16,11 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.Compiler;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.Preprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -214,9 +219,8 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @VisibleForTesting
   BuildTarget createAggregatedPreprocessDepsBuildTarget() {
-    return BuildTarget.builder(getBaseBuildTarget())
-        .addFlavors(getCxxPlatform().getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR)
-        .build();
+    return getBaseBuildTarget()
+        .withAppendedFlavors(getCxxPlatform().getFlavor(), AGGREGATED_PREPROCESS_DEPS_FLAVOR);
   }
 
   private String getOutputName(String name) {
@@ -253,27 +257,24 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   public BuildTarget createCompileBuildTarget(String name) {
     String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
-    return BuildTarget.builder(getBaseBuildTarget())
-        .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
             InternalFlavor.of(
                 String.format(
                     COMPILE_FLAVOR_PREFIX + "%s%s",
                     getPicType() == PicType.PIC ? "pic-" : "",
-                    outputName)))
-        .build();
+                    outputName)));
   }
 
   public BuildTarget createInferCaptureBuildTarget(String name) {
     String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
-    return BuildTarget.builder(getBaseBuildTarget())
-        .addAllFlavors(getBaseBuildTarget().getFlavors())
-        .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
             InternalFlavor.of(
                 String.format(
-                    "%s-%s", CxxInferEnhancer.INFER_CAPTURE_FLAVOR.toString(), outputName)))
-        .build();
+                    "%s-%s", CxxInferEnhancer.INFER_CAPTURE_FLAVOR.toString(), outputName)));
   }
 
   // Use a "lazy" method here to memoize the sanitizer function.  This is necessary as it's used to
@@ -765,8 +766,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return objects.build();
   }
 
-  @VisibleForTesting
-  ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
+  public ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       ImmutableMap<String, CxxSource> sources) {
 
     return sources
@@ -824,42 +824,6 @@ abstract class AbstractCxxSourceRuleFactory {
     return type.isAssembly()
         ? getCxxPlatform().getAssemblerDebugPathSanitizer()
         : getCxxPlatform().getCompilerDebugPathSanitizer();
-  }
-
-  /**
-   * Shorthand to create a {@code CxxSourceRuleFactory} and use it to generate compilation rules.
-   */
-  public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
-      ProjectFilesystem filesystem,
-      BuildTarget baseBuildTarget,
-      BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
-      ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
-      ImmutableMultimap<CxxSource.Type, Arg> compilerFlags,
-      Optional<SourcePath> prefixHeader,
-      Optional<SourcePath> precompiledHeader,
-      ImmutableMap<String, CxxSource> sources,
-      PicType pic,
-      Optional<SymlinkTree> sandboxTree) {
-    CxxSourceRuleFactory factory =
-        CxxSourceRuleFactory.of(
-            filesystem,
-            baseBuildTarget,
-            resolver,
-            pathResolver,
-            ruleFinder,
-            cxxBuckConfig,
-            cxxPlatform,
-            cxxPreprocessorInput,
-            compilerFlags,
-            prefixHeader,
-            precompiledHeader,
-            pic,
-            sandboxTree);
-    return factory.requirePreprocessAndCompileRules(sources);
   }
 
   private BuildRuleParams buildRuleParamsWithAndDeps(SortedSet<BuildRule> deps) {

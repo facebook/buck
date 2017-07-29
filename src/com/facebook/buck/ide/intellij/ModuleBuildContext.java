@@ -54,6 +54,7 @@ public class ModuleBuildContext {
   private IjModuleType moduleType;
   private Optional<Path> metaInfDirectory;
   private Optional<String> javaLanguageLevel;
+  private Optional<Path> compilerOutputPath;
 
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
@@ -65,6 +66,7 @@ public class ModuleBuildContext {
     this.moduleType = IjModuleType.UNKNOWN_MODULE;
     this.metaInfDirectory = Optional.empty();
     this.javaLanguageLevel = Optional.empty();
+    this.compilerOutputPath = Optional.empty();
   }
 
   public void ensureAndroidFacetBuilder() {
@@ -133,6 +135,14 @@ public class ModuleBuildContext {
     if (!this.javaLanguageLevel.isPresent()) {
       this.javaLanguageLevel = javaLanguageLevel;
     }
+  }
+
+  public Optional<Path> getCompilerOutputPath() {
+    return compilerOutputPath;
+  }
+
+  public void setCompilerOutputPath(Optional<Path> compilerOutputPath) {
+    this.compilerOutputPath = compilerOutputPath;
   }
 
   /**

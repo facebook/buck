@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
+import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -43,7 +44,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Functions;
@@ -409,12 +409,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         exceptionInput -> {
           if (exceptionInput instanceof BuildTargetException
               || exceptionInput instanceof BuildFileParseException) {
-            throw new HumanReadableException(
-                exceptionInput,
-                "Couldn't get dependency '%s' of target '%s':\n%s",
-                parseDep,
-                buildTarget,
-                exceptionInput.getMessage());
+            throw ParserMessages.createReadableExceptionWithWhenSuffix(
+                buildTarget, parseDep, exceptionInput);
           }
           throw exceptionInput;
         });

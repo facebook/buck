@@ -113,10 +113,7 @@ public class DistBuildTargetGraphCodec {
             .map(InternalFlavor::of)
             .collect(MoreCollectors.toImmutableSet());
 
-    return BuildTarget.builder()
-        .setUnflavoredBuildTarget(unflavoredBuildTarget)
-        .setFlavors(flavors)
-        .build();
+    return BuildTarget.of(unflavoredBuildTarget, flavors);
   }
 
   public TargetGraphAndBuildTargets createTargetGraph(

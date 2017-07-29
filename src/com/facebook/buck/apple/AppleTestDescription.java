@@ -19,13 +19,13 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -313,9 +313,7 @@ public class AppleTestDescription
     if (appleConfig.getXctoolZipTarget().isPresent()) {
       final BuildRule xctoolZipBuildRule = resolver.getRule(appleConfig.getXctoolZipTarget().get());
       BuildTarget unzipXctoolTarget =
-          BuildTarget.builder(xctoolZipBuildRule.getBuildTarget())
-              .addFlavors(UNZIP_XCTOOL_FLAVOR)
-              .build();
+          xctoolZipBuildRule.getBuildTarget().withAppendedFlavors(UNZIP_XCTOOL_FLAVOR);
       final Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
       if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
@@ -433,11 +431,11 @@ public class AppleTestDescription
       throws NoSuchBuildTargetException {
     BuildRule rule =
         resolver.requireRule(
-            BuildTarget.builder(testHostAppBuildTarget)
-                .addAllFlavors(additionalFlavors)
-                .addFlavors(debugFormat.getFlavor())
-                .addFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
-                .build());
+            testHostAppBuildTarget.withAppendedFlavors(
+                ImmutableSet.<Flavor>builder()
+                    .addAll(additionalFlavors)
+                    .add(debugFormat.getFlavor(), StripStyle.NON_GLOBAL_SYMBOLS.getFlavor())
+                    .build()));
 
     if (!(rule instanceof AppleBundle)) {
       throw new HumanReadableException(

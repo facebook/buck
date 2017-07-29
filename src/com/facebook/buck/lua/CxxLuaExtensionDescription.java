@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -30,11 +29,12 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.NativeLinkTargetMode;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
+import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -53,6 +53,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
@@ -63,6 +64,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import java.io.File;
@@ -94,7 +96,7 @@ public class CxxLuaExtensionDescription
   }
 
   private BuildTarget getExtensionTarget(BuildTarget target, Flavor platform) {
-    return BuildTarget.builder(target).addFlavors(platform).build();
+    return target.withAppendedFlavors(platform);
   }
 
   private Path getExtensionPath(
@@ -166,31 +168,33 @@ public class CxxLuaExtensionDescription
             .build();
 
     // Generate rule to build the object files.
+    ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
+        ImmutableListMultimap.copyOf(
+            Multimaps.transformValues(
+                CxxFlags.getLanguageFlagsWithMacros(
+                    args.getCompilerFlags(),
+                    args.getPlatformCompilerFlags(),
+                    args.getLangCompilerFlags(),
+                    cxxPlatform),
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        buildTarget, cellRoots, ruleResolver, cxxPlatform, f)));
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
-        CxxSourceRuleFactory.requirePreprocessAndCompileRules(
-            projectFilesystem,
-            buildTarget,
-            ruleResolver,
-            pathResolver,
-            ruleFinder,
-            cxxBuckConfig,
-            cxxPlatform,
-            cxxPreprocessorInput,
-            ImmutableListMultimap.copyOf(
-                Multimaps.transformValues(
-                    CxxFlags.getLanguageFlagsWithMacros(
-                        args.getCompilerFlags(),
-                        args.getPlatformCompilerFlags(),
-                        args.getLangCompilerFlags(),
-                        cxxPlatform),
-                    f ->
-                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            buildTarget, cellRoots, ruleResolver, cxxPlatform, f))),
-            args.getPrefixHeader(),
-            args.getPrecompiledHeader(),
-            srcs,
-            CxxSourceRuleFactory.PicType.PIC,
-            sandboxTree);
+        CxxSourceRuleFactory.of(
+                projectFilesystem,
+                buildTarget,
+                ruleResolver,
+                pathResolver,
+                ruleFinder,
+                cxxBuckConfig,
+                cxxPlatform,
+                cxxPreprocessorInput,
+                compilerFlags,
+                args.getPrefixHeader(),
+                args.getPrecompiledHeader(),
+                CxxSourceRuleFactory.PicType.PIC,
+                sandboxTree)
+            .requirePreprocessAndCompileRules(srcs);
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
     CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
@@ -302,8 +306,7 @@ public class CxxLuaExtensionDescription
       @Override
       public SourcePath getExtension(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
         BuildRule rule =
-            resolver.requireRule(
-                BuildTarget.builder(getBuildTarget()).addFlavors(cxxPlatform.getFlavor()).build());
+            resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
         return Preconditions.checkNotNull(rule.getSourcePathToOutput());
       }
 

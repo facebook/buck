@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -112,10 +113,10 @@ public class CxxBinaryDescriptionTest {
       flavors.remove(type.get().getKey());
     }
     BuildTarget target =
-        BuildTarget.builder(libTarget.getUnflavoredBuildTarget())
-            .addAllFlavors(flavors)
-            .addFlavors(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())
-            .build();
+        BuildTarget.of(
+            libTarget.getUnflavoredBuildTarget(),
+            Sets.union(
+                flavors, ImmutableSet.of(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())));
     return new CxxBinaryBuilder(target, cxxBuckConfig).build();
   }
 
@@ -146,15 +147,12 @@ public class CxxBinaryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget archiveTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR)
-            .addFlavors(cxxPlatform.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.STATIC_FLAVOR, cxxPlatform.getFlavor());
     BuildTarget headerSymlinkTreeTarget =
-        BuildTarget.builder(depTarget)
-            .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-            .addFlavors(CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())
-            .build();
+        depTarget.withAppendedFlavors(
+            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

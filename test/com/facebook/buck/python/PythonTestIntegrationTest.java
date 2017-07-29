@@ -159,6 +159,13 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
+  public void testRunPythonBinaryTest() throws IOException {
+    ProcessResult result = workspace.runBuckCommand("test", "//:binary-with-tests");
+    result.assertSuccess();
+    assertThat(result.getStderr(), containsString("1 Passed"));
+  }
+
+  @Test
   public void testPythonSetupClassFailureWithTestSuite() throws IOException, InterruptedException {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProjectWorkspace.ProcessResult result =

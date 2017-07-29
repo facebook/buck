@@ -29,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +54,8 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private Set<String> directoryPaths;
   private Map<String, JarFileObject> fileForOutputPaths;
   private RemoveClassesPatternsMatcher classesToRemoveFromJar;
+
+  private int FILENAME_LENGTH_LIMIT = 255;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
@@ -103,7 +106,10 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
       return delegate.getJavaFileForOutput(location, className, kind, sibling);
     }
     String path = getPath(className, kind);
-
+    // Check that the filename does not exceed the filesystem limt
+    if (Paths.get(path).getFileName().toString().length() > FILENAME_LENGTH_LIMIT) {
+      throw new IOException(String.format("%s (File name too long)", path));
+    }
     // If the class is to be removed from the Jar create a NoOp FileObject.
     if (classesToRemoveFromJar.shouldRemoveClass(className)) {
       LOG.info(

@@ -69,13 +69,13 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       Path outputDirectory,
       Optional<Path> generatedCodeDirectory,
       Optional<Path> workingDirectory,
+      Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       Path outputJar,
-      ClassUsageFileWriter usedClassesFileWriter,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
@@ -91,8 +91,8 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
         outputDirectory,
         generatedCodeDirectory,
         workingDirectory,
+        depFilePath,
         pathToSrcsList,
-        usedClassesFileWriter,
         steps,
         buildableContext);
 

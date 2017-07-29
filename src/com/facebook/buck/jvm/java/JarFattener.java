@@ -196,8 +196,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         /* workingDir */ Optional.empty(),
         Optional.of(
             BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
+        Optional.empty(),
         pathToSrcsList,
-        NoOpClassUsageFileWriter.instance(),
         steps,
         buildableContext);
 

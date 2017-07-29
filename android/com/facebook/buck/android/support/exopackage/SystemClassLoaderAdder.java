@@ -16,15 +16,14 @@
 
 package com.facebook.buck.android.support.exopackage;
 
-import java.io.File;
-import java.lang.reflect.Array;
-import java.util.List;
-
 import android.annotation.TargetApi;
 import android.os.Build;
 import dalvik.system.BaseDexClassLoader;
 import dalvik.system.DexClassLoader;
 import dalvik.system.PathClassLoader;
+import java.io.File;
+import java.lang.reflect.Array;
+import java.util.List;
 
 /**
  * Uses reflection to modify the system class loader. There's no way to override or replace the
@@ -39,26 +38,21 @@ class SystemClassLoaderAdder {
   /**
    * Installs a list of .dex.jar files into the application class loader.
    *
-   * @param appClassLoader  The application ClassLoader, which can be retrieved by calling
-   *    {@code getClassLoader} on the application Context.
-   * @param optimizedDirectory  Directory for storing optimized dex files.
-   * @param dexJars  The list of .dex.jar files to load.
+   * @param appClassLoader The application ClassLoader, which can be retrieved by calling {@code
+   *     getClassLoader} on the application Context.
+   * @param optimizedDirectory Directory for storing optimized dex files.
+   * @param dexJars The list of .dex.jar files to load.
    */
   static void installDexJars(
-      ClassLoader appClassLoader,
-      File optimizedDirectory,
-      List<File> dexJars) {
+      ClassLoader appClassLoader, File optimizedDirectory, List<File> dexJars) {
     SystemClassLoaderAdder classLoaderAdder = new SystemClassLoaderAdder();
 
     for (File dexJar : dexJars) {
-      DexClassLoader newClassLoader = new DexClassLoader(
-          dexJar.getAbsolutePath(),
-          optimizedDirectory.getAbsolutePath(),
-          null,
-          appClassLoader);
+      DexClassLoader newClassLoader =
+          new DexClassLoader(
+              dexJar.getAbsolutePath(), optimizedDirectory.getAbsolutePath(), null, appClassLoader);
       classLoaderAdder.addPathsOfClassLoaderToSystemClassLoader(
-          newClassLoader,
-          (PathClassLoader) appClassLoader);
+          newClassLoader, (PathClassLoader) appClassLoader);
     }
   }
 
@@ -70,8 +64,7 @@ class SystemClassLoaderAdder {
    * @param systemClassLoader the system class loader
    */
   private void addPathsOfClassLoaderToSystemClassLoader(
-      DexClassLoader newClassLoader,
-      PathClassLoader systemClassLoader) {
+      DexClassLoader newClassLoader, PathClassLoader systemClassLoader) {
 
     try {
       if (existsBaseDexClassLoader()) {
@@ -107,8 +100,8 @@ class SystemClassLoaderAdder {
    * @param systemClassLoader the system class loader
    */
   private void addNewClassLoaderToSystemClassLoaderWithBaseDex(
-      DexClassLoader newClassLoader,
-      PathClassLoader systemClassLoader) throws NoSuchFieldException, IllegalAccessException {
+      DexClassLoader newClassLoader, PathClassLoader systemClassLoader)
+      throws NoSuchFieldException, IllegalAccessException {
     Object currentElementsArray = getDexElementsArray(getDexPathList(systemClassLoader));
     Object newElementsArray = getDexElementsArray(getDexPathList(newClassLoader));
     Object mergedElementsArray = mergeArrays(currentElementsArray, newElementsArray);
@@ -124,8 +117,8 @@ class SystemClassLoaderAdder {
    */
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private void addNewClassLoaderToSystemClassLoaderPreBaseDex(
-      DexClassLoader newClassLoader,
-      PathClassLoader systemClassLoader) throws NoSuchFieldException, IllegalAccessException {
+      DexClassLoader newClassLoader, PathClassLoader systemClassLoader)
+      throws NoSuchFieldException, IllegalAccessException {
 
     try {
       // The class loader is lazily initialized. Loading any class forces it to be initialized.
@@ -142,9 +135,7 @@ class SystemClassLoaderAdder {
         "mPaths",
         mergeArrayAndScalar(
             Reflect.getField(systemClassLoader, PathClassLoader.class, "mPaths"),
-            Reflect.getField(newClassLoader, DexClassLoader.class, "mRawDexPath")
-        )
-    );
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mRawDexPath")));
 
     // Copy values in array field newClassLoader.mFiles and array field systemClassLoader.mFiles
     // to a new array that replaces systemClassLoader.mFiles.
@@ -154,9 +145,7 @@ class SystemClassLoaderAdder {
         "mFiles",
         mergeArrays(
             Reflect.getField(systemClassLoader, PathClassLoader.class, "mFiles"),
-            Reflect.getField(newClassLoader, DexClassLoader.class, "mFiles")
-        )
-    );
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mFiles")));
 
     // Copy values in array field newClassLoader.mZips and array field systemClassLoader.mZips
     // to a new array that replaces systemClassLoader.mZips.
@@ -166,9 +155,7 @@ class SystemClassLoaderAdder {
         "mZips",
         mergeArrays(
             Reflect.getField(systemClassLoader, PathClassLoader.class, "mZips"),
-            Reflect.getField(newClassLoader, DexClassLoader.class, "mZips")
-        )
-    );
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mZips")));
 
     // Copy values in array field newClassLoader.mDexs and array field systemClassLoader.mDexs
     // to a new array that replaces systemClassLoader.mDexs.
@@ -178,9 +165,7 @@ class SystemClassLoaderAdder {
         "mDexs",
         mergeArrays(
             Reflect.getField(systemClassLoader, PathClassLoader.class, "mDexs"),
-            Reflect.getField(newClassLoader, DexClassLoader.class, "mDexs")
-        )
-    );
+            Reflect.getField(newClassLoader, DexClassLoader.class, "mDexs")));
   }
 
   @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -33,6 +34,8 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
 
   abstract ToolProvider getObjcopy();
 
+  abstract boolean isRemoveUndefinedSymbols();
+
   @Override
   public final BuildRule createSharedInterfaceLibrary(
       BuildTarget target,
@@ -47,7 +50,8 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
         pathResolver,
         ruleFinder,
         getObjcopy().resolve(resolver),
-        library);
+        library,
+        isRemoveUndefinedSymbols());
   }
 
   @Override

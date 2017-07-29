@@ -104,14 +104,12 @@ public class RuleKeyLoggerListenerTest {
   private BuildRuleEvent.Finished createBuildEvent() {
     BuildRule rule =
         new FakeBuildRule(
-            BuildTarget.builder()
-                .setUnflavoredBuildTarget(
-                    UnflavoredBuildTarget.of(
-                        projectFilesystem.getRootPath(),
-                        Optional.empty(),
-                        "//topspin",
-                        "//downtheline"))
-                .build());
+            BuildTarget.of(
+                UnflavoredBuildTarget.of(
+                    projectFilesystem.getRootPath(),
+                    Optional.empty(),
+                    "//topspin",
+                    "//downtheline")));
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
     BuildRuleEvent.Started started =
         TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));

@@ -16,9 +16,12 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.Archiver;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -34,6 +37,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreCollectors;
@@ -63,6 +67,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   // Not added to RuleKey because it's a view over things already in the RuleKey.
   private final ImmutableSortedSet<BuildRule> deps;
 
+  private final boolean cacheable;
+
   private Archive(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -73,7 +79,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<String> ranlibFlags,
       Contents contents,
       Path output,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean cacheable) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkState(
         contents == Contents.NORMAL || archiver.supportsThinArchives(),
@@ -91,6 +98,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     this.contents = contents;
     this.output = output;
     this.inputs = inputs;
+    this.cacheable = cacheable;
   }
 
   public static Archive from(
@@ -100,7 +108,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       CxxPlatform platform,
       Contents contents,
       Path output,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean cacheable) {
     return from(
         target,
         projectFilesystem,
@@ -111,7 +120,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         platform.getRanlibflags(),
         contents,
         output,
-        inputs);
+        inputs,
+        cacheable);
   }
 
   /**
@@ -130,7 +140,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<String> ranlibFlags,
       Contents contents,
       Path output,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean cacheable) {
 
     ImmutableSortedSet<BuildRule> deps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -148,7 +159,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         ranlibFlags,
         contents,
         output,
-        inputs);
+        inputs,
+        cacheable);
   }
 
   @Override
@@ -182,7 +194,16 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output)),
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
+
+    if (archiver.isArgfileRequired()) {
+      builder.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), getScratchPath())));
+    }
+
+    builder.add(
         new ArchiveStep(
             getProjectFilesystem(),
             archiver.getEnvironment(resolver),
@@ -194,7 +215,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
                 .stream()
                 .map(resolver::getRelativePath)
                 .collect(MoreCollectors.toImmutableList()),
-            archiver));
+            archiver,
+            getScratchPath()));
 
     if (archiver.isRanLibStepRequired()) {
       builder.add(
@@ -213,6 +235,10 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     return builder.build();
   }
 
+  private Path getScratchPath() {
+    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
+  }
+
   /**
    * @return the {@link Arg} to use when using this archive. When thin archives are used, this will
    *     ensure that the inputs are also propagated as build time deps to whatever rule uses this
@@ -223,6 +249,11 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     return contents == Contents.NORMAL
         ? SourcePathArg.of(archive)
         : ThinArchiveArg.of(archive, inputs);
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
   }
 
   @Override
