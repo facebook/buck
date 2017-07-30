@@ -32,6 +32,11 @@ public enum HeaderMode implements FlavorConvertible {
    * symbolic links to the headers.
    */
   SYMLINK_TREE_WITH_HEADER_MAP,
+  /**
+   * Creates the tree of symbolic links of headers and creates a module map that references the
+   * symbolic links to the headers.
+   */
+  SYMLINK_TREE_WITH_MODULEMAP,
   ;
 
   private final Flavor flavor;
