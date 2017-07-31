@@ -26,7 +26,7 @@ public class ParserMessages {
       BuildTarget buildTarget, BuildTarget parseDep, Exception exceptionInput) {
     return new HumanReadableException(
         exceptionInput,
-        "%s\n    when trying to get dependency '%s' of target '%s'",
+        "%s\n\nThis error happened while trying to get dependency '%s' of target '%s'",
         exceptionInput.getMessage(),
         parseDep,
         buildTarget);

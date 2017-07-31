@@ -114,10 +114,7 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
             }
           }
           throw NoSuchBuildTargetException.createForMissingBuildRule(
-              buildTarget,
-              BuildTargetPatternParser.forBaseName(buildTarget.getBaseName()),
-              cell.getBuildFileName(),
-              "Defined in file: " + cell.getAbsolutePathToBuildFile(buildTarget));
+              buildTarget, cell.getAbsolutePathToBuildFile(buildTarget));
         },
         executorService);
   }

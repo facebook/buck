@@ -286,10 +286,7 @@ public class ParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
 
     thrown.expectMessage(
-        "No rule found when resolving target //java/com/facebook:raz in build file "
-            + "//java/com/facebook/BUCK");
-    thrown.expectMessage(
-        "Defined in file: "
+        "The rule //java/com/facebook:raz could not be found.\nPlease check the spelling and whether it exists in "
             + filesystem.resolve(razTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
 
     parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
@@ -448,8 +445,7 @@ public class ParserTest {
     // Ensure an exception with a specific message is thrown.
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "    when trying to get dependency '//java/com/facebook/invalid/lib:missing_rule' of target "
-            + "'//java/com/facebook/invalid:foo'");
+        "This error happened while trying to get dependency '//java/com/facebook/invalid/lib:missing_rule' of target '//java/com/facebook/invalid:foo'");
 
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");

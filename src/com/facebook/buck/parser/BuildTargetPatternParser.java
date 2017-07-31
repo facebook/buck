@@ -135,8 +135,6 @@ public abstract class BuildTargetPatternParser<T> {
    *     Examples are ":azzetz in build file //first-party/orca/orcaapp/BUCK" and
    *     "//first-party/orca/orcaapp:mezzenger in context FULLY_QUALIFIED"
    */
-  public abstract String makeTargetDescription(String buildTargetName, String buildFileName);
-
   protected abstract T createForDescendants(Path cellPath, Path basePath);
 
   protected abstract T createForChildren(Path cellPath, Path basePath);
@@ -171,11 +169,6 @@ public abstract class BuildTargetPatternParser<T> {
     public BuildFileContext(String basePath) {
       super(basePath);
     }
-
-    @Override
-    public String makeTargetDescription(String buildTargetName, String buildFileName) {
-      return String.format("%s in build file %s/%s", buildTargetName, getBaseName(), buildFileName);
-    }
   }
 
   /**
@@ -187,22 +180,12 @@ public abstract class BuildTargetPatternParser<T> {
     public FullyQualifiedContext() {
       super("");
     }
-
-    @Override
-    public String makeTargetDescription(String buildTargetName, String buildFileName) {
-      return String.format("%s in fully qualified context.", buildTargetName);
-    }
   }
 
   private static class VisibilityContext extends BuildTargetPatternBaseParser {
 
     public VisibilityContext() {
       super("");
-    }
-
-    @Override
-    public String makeTargetDescription(String buildTargetName, String buildFileName) {
-      return String.format("%s in context visibility", buildTargetName);
     }
 
     @Override

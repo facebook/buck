@@ -143,7 +143,8 @@ public class ParsePipelineTest {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCell();
       expectedException.expect(NoSuchBuildTargetException.class);
-      expectedException.expectMessage("No rule found when resolving target //:notthere");
+      expectedException.expectMessage(
+          "The rule //:notthere could not be found.\nPlease check the spelling and whether it exists in");
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
