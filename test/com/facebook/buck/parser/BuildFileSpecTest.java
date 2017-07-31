@@ -27,6 +27,7 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -254,5 +255,16 @@ public class BuildFileSpecTest {
     ImmutableSet<Path> actualBuildFiles =
         recursiveSpec.findBuildFiles(cell, ParserConfig.BuildFileSearchMethod.WATCHMAN);
     assertEquals(expectedBuildFiles, actualBuildFiles);
+  }
+
+  @Test
+  public void testWildcardFolderNotFound() throws IOException, InterruptedException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    BuildFileSpec recursiveSpec =
+        BuildFileSpec.fromRecursivePath(filesystem.resolve("foo/bar"), filesystem.getRootPath());
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("could not be found");
+    recursiveSpec.findBuildFiles(cell, ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
   }
 }
