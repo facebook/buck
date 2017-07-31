@@ -169,6 +169,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             tmpDir,
             jsPackager.getCommandPrefix(context.getSourcePathResolver()),
+            jsPackager.getEnvironment(context.getSourcePathResolver()),
             packagerFlags,
             platform,
             isUnbundle,
@@ -187,6 +188,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             tmpDir,
             jsPackager.getCommandPrefix(context.getSourcePathResolver()),
+            jsPackager.getEnvironment(context.getSourcePathResolver()),
             packagerFlags,
             platform,
             getProjectFilesystem()

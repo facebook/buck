@@ -9,9 +9,15 @@ ios_react_native_library(
 )
 
 sh_binary(
-  name = 'packager_worker',
+  name = 'packager_worker_sh',
   main = 'packager_worker.sh',
   visibility = [
     'PUBLIC',
   ],
+)
+
+command_alias(
+    name = 'packager_worker',
+    exe = ':packager_worker_sh',
+    env = {'ABC': '123'},
 )

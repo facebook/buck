@@ -32,6 +32,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
       ProjectFilesystem filesystem,
       Path tmpDir,
       ImmutableList<String> jsPackagerCommand,
+      ImmutableMap<String, String> startupEnv,
       ImmutableList<String> additionalPackagerFlags,
       ReactNativePlatform platform,
       boolean isUnbundle,
@@ -62,7 +63,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                         .add("--platform", platform.toString())
                         .addAll(additionalPackagerFlags)
                         .build(),
-                    ImmutableMap.of(),
+                    startupEnv,
                     1,
                     Optional.empty()))),
         Optional.empty(),
