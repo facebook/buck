@@ -23,6 +23,7 @@ import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -215,6 +216,12 @@ abstract class AbstractBuildFileSpec {
   private void forEachBuildFileFilesystem(
       final ProjectFilesystem filesystem, final String buildFileName, final Consumer<Path> function)
       throws IOException {
+    if (!filesystem.isDirectory(getBasePath())) {
+      throw new HumanReadableException(
+          "The folder %s could not be found.\n"
+              + "Please check that you spelled the name of the buck target correctly.",
+          getBasePath());
+    }
     filesystem.walkRelativeFileTree(
         getBasePath(),
         new FileVisitor<Path>() {

@@ -26,11 +26,6 @@ public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser
   }
 
   @Override
-  public String makeTargetDescription(String buildTargetName, String buildFileName) {
-    return String.format("%s in command line context.", buildTargetName);
-  }
-
-  @Override
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
         BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath), cellPath));

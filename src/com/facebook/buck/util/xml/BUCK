@@ -1,4 +1,4 @@
-java_library(
+java_immutables_library(
     name = "xml",
     srcs = glob(["*.java"]),
     tests = [
@@ -8,6 +8,8 @@ java_library(
     deps = [
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/immutables:immutables",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )

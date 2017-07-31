@@ -32,6 +32,7 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
       ProjectFilesystem filesystem,
       Path tmpDir,
       ImmutableList<String> jsPackagerCommand,
+      ImmutableMap<String, String> startupEnv,
       ImmutableList<String> additionalPackagerFlags,
       ReactNativePlatform platform,
       Path entryFile,
@@ -49,7 +50,7 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                         .add("--platform", platform.toString())
                         .addAll(additionalPackagerFlags)
                         .build(),
-                    ImmutableMap.of(),
+                    startupEnv,
                     1,
                     Optional.empty()))),
         Optional.empty(),

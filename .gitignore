@@ -25,6 +25,9 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 *.pyc
 *py.class
 
+# mypy cache files
+.mypy_cache
+
 # buckconfig in Ocaml test project directory to override compiler paths.
 /test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
 # bootstrapper test is run in the source tree

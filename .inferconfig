@@ -9,16 +9,5 @@
     "src/com/facebook/buck/testrunner",
     "src-gen"
   ],
-  "eradicate-whitelist-path-regex": [
-    "this/path/does/not/exist"
-  ],
-  "infer-whitelist-path-regex": [
-    "src",
-    "ideabuck"
-  ],
-  "infer-blacklist-path-regex": [
-    "src-gen"
-  ],
-  "resolve-infer-eradicate-conflict": true,
   "skip-duplicated-types": false
 }

@@ -43,7 +43,8 @@ public final class ProjectFilesystemDelegateFactory {
 
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
-      Path root, String hgCmd, AutoSparseConfig autoSparseConfig) throws InterruptedException {
+      Path root, Path buckOut, String hgCmd, AutoSparseConfig autoSparseConfig)
+      throws InterruptedException {
     Optional<EdenClient> client = EdenClient.tryToCreateEdenClient(root);
 
     if (client.isPresent()) {
@@ -65,7 +66,7 @@ public final class ProjectFilesystemDelegateFactory {
       HgCmdLineInterface hgCmdLine =
           new HgCmdLineInterface(new PrintStreamProcessExecutorFactory(), root, hgCmd, environment);
       AutoSparseState autoSparseState =
-          AbstractAutoSparseFactory.getAutoSparseState(root, hgCmdLine, autoSparseConfig);
+          AbstractAutoSparseFactory.getAutoSparseState(root, buckOut, hgCmdLine, autoSparseConfig);
       if (autoSparseState != null) {
         LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
         return new AutoSparseProjectFilesystemDelegate(autoSparseState, root);

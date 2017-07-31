@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -109,6 +110,7 @@ public class WorkerToolDescription
             .getBuildDeps()
             .stream()
             .map(BuildRule::getSourcePathToOutput)
+            .filter(Objects::nonNull)
             .collect(MoreCollectors.toImmutableList()));
 
     Function<String, com.facebook.buck.rules.args.Arg> toArg =
