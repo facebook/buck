@@ -325,7 +325,7 @@ public class ParserTest {
   @Test
   public void shouldThrowAnExceptionIfADepIsInAFileThatCannotBeParsed()
       throws IOException, InterruptedException, BuildTargetException, BuildFileParseException {
-    thrown.expectMessage("Parse error for build file");
+    thrown.expectMessage("Buck wasn't able to parse");
     thrown.expectMessage(Paths.get("foo/BUCK").toString());
 
     Path buckFile = cellRoot.resolve("BUCK");
@@ -1674,7 +1674,7 @@ public class ParserTest {
     Files.write(buckFile, "I do not parse as python".getBytes(UTF_8));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Parse error for build file");
+    thrown.expectMessage("Buck wasn't able to parse");
     thrown.expectMessage(Paths.get("bar/BUCK").toString());
 
     parser.resolveTargetSpecs(
