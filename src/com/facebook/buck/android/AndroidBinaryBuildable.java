@@ -151,7 +151,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private final ImmutableSet<APKModule> apkModules;
   private final Supplier<Optional<ImmutableSortedSet<SourcePath>>>
       predexedSecondaryDexDirectoriesSupplier;
-  private final ImmutableSortedSet<SourcePath> classpathEntriesToDexSourcePaths;
+  private final ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
@@ -240,7 +240,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         RichStream.from(enhancementResult.getClasspathEntriesToDex())
             .concat(
                 RichStream.of(enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
-            .collect(MoreCollectors.toImmutableSortedSet());
+            .collect(MoreCollectors.toImmutableSet());
     this.predexedSecondaryDexDirectoriesSupplier =
         () -> enhancementResult.getPreDexMerge().map(PreDexMerge::getSecondaryDexDirectories);
     this.moduleMappedClasspathEntriesToDex =
