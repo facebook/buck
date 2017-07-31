@@ -164,9 +164,8 @@ public class KnownBuildRuleTypesTest {
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes =
-        KnownBuildRuleTypes.createBuilder(
-                buckConfig, filesystem, processExecutor, new FakeAndroidDirectoryResolver())
-            .build();
+        KnownBuildRuleTypes.createInstance(
+            buckConfig, filesystem, processExecutor, new FakeAndroidDirectoryResolver());
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
     SourcePathRuleFinder ruleFinder =
@@ -259,9 +258,8 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     // This would throw if "default" weren't available as a platform.
-    KnownBuildRuleTypes.createBuilder(
-            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver())
-        .build();
+    KnownBuildRuleTypes.createInstance(
+        buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
   }
 
   @Test
@@ -276,9 +274,8 @@ public class KnownBuildRuleTypesTest {
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
-    KnownBuildRuleTypes.createBuilder(
-            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver())
-        .build();
+    KnownBuildRuleTypes.createInstance(
+        buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
   }
 
   @Test
@@ -290,9 +287,8 @@ public class KnownBuildRuleTypesTest {
         ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypes.createBuilder(
-                buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver())
-            .build();
+        KnownBuildRuleTypes.createInstance(
+            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
     assertThat(
         knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
         Matchers.contains(flag));
@@ -310,9 +306,8 @@ public class KnownBuildRuleTypesTest {
             ImmutableMap.of());
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypes.createBuilder(
-                buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver())
-            .build();
+        KnownBuildRuleTypes.createInstance(
+            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
     OcamlLibraryDescription ocamlLibraryDescription =
         (OcamlLibraryDescription)
             knownBuildRuleTypes.getDescription(
@@ -341,9 +336,8 @@ public class KnownBuildRuleTypesTest {
             ImmutableMap.of("default_cxx_platform", flavor.toString()));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypes.createBuilder(
-                buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver())
-            .build();
+        KnownBuildRuleTypes.createInstance(
+            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
     JavaBinaryDescription javaBinaryDescription =
         (JavaBinaryDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));

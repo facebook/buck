@@ -231,9 +231,26 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      SdkEnvironment sdkEnvironment)
+      throws InterruptedException, IOException {
+    return createBuilder(
+            config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment)
+        .build();
+  }
+
+  @VisibleForTesting
+  static KnownBuildRuleTypes createInstance(
+      BuckConfig config,
+      ProjectFilesystem filesystem,
+      ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver)
       throws InterruptedException, IOException {
-    return createBuilder(config, filesystem, processExecutor, androidDirectoryResolver).build();
+    KnownBuildRuleTypesFactory factory =
+        new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver);
+    SdkEnvironment sdkEnvironment = factory.createSdkEnvironment(config);
+    return createInstance(
+        config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
   }
 
   @VisibleForTesting
@@ -241,7 +258,8 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver)
+      AndroidDirectoryResolver androidDirectoryResolver,
+      SdkEnvironment sdkEnvironment)
       throws InterruptedException, IOException {
 
     Platform platform = Platform.detect();
@@ -249,11 +267,15 @@ public class KnownBuildRuleTypes {
     AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
+    ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
+        AppleCxxPlatforms.buildAppleCxxPlatforms(
+            sdkEnvironment.getAppleSdkPaths(),
+            sdkEnvironment.getAppleToolchains(),
+            filesystem,
+            config,
+            swiftBuckConfig);
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        FlavorDomain.from(
-            "Apple C++ Platform",
-            AppleCxxPlatforms.buildAppleCxxPlatforms(
-                filesystem, config, swiftBuckConfig, processExecutor));
+        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
 
     ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
     for (Flavor flavor : platformFlavorsToAppleCxxPlatforms.getFlavors()) {
@@ -690,6 +712,7 @@ public class KnownBuildRuleTypes {
 
     @Nullable private FlavorDomain<CxxPlatform> cxxPlatforms;
     @Nullable private CxxPlatform defaultCxxPlatform;
+    @Nullable private ProcessExecutor processExecutor;
 
     protected Builder() {
       this.descriptions = Maps.newConcurrentMap();

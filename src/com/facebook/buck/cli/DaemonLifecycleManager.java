@@ -58,9 +58,9 @@ class DaemonLifecycleManager {
             String.format("Unsupported root path change from %s to %s", rootPath, parserRoot));
       }
 
-      // If Buck config or the AndroidDirectoryResolver has changed, invalidate the cache and
+      // If Buck config has changed or SDKs have changed, invalidate the cache and
       // create a new daemon.
-      if (!daemon.getRootCell().equals(rootCell)) {
+      if (!daemon.getRootCell().isCompatibleForCaching(rootCell)) {
         LOG.warn(
             "Shutting down and restarting daemon on config or directory resolver change (%s != %s)",
             daemon.getRootCell(), rootCell);

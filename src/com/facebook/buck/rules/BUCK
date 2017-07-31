@@ -79,6 +79,7 @@ java_library(
 java_immutables_library(
     name = "types",
     srcs = [
+        "AbstractSdkEnvironment.java",
         "Cell.java",
         "CellProvider.java",
         "KnownBuildRuleTypes.java",
