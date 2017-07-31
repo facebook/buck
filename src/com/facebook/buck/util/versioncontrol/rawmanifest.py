@@ -33,7 +33,7 @@ testedwith = 'internal'
         ['o', 'output', '', 'direct output to a file rather than STDOUT',
          'FILE'],
         ['d', 'deletions', None,
-         'add deleted entries (hash set to nullid and flag set to "d")']],
+         'add deleted entries (hash set to nullid and flag set to "r")']],
     '[PATTERN]')
 def rawmanifest(ui, repo, *patterns, **opts):
     """Output the raw manifest (optionally updated with working copy status)
@@ -74,7 +74,10 @@ def rawmanifest(ui, repo, *patterns, **opts):
         output.write(rawmanifest)
 
         if opts['deletions']:
-            deletedline = '\x00{0}d\n'.format(node.hex(node.nullid))
+            # 'r' is a non-hex character, making it easy to distinguish from the hex string
+            # preceding the flag when all you you have is a file position for the next newline
+            # delimiter.
+            deletedline = '\x00{0}r\n'.format(node.hex(node.nullid))
             matchfn = matcher and matcher.matchfn
             status = repo.status()
             for filename in chain(status.removed, status.deleted):

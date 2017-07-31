@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -36,9 +36,11 @@ public class AbstractAutosparseFactoryTest {
     FakeHgCommandlineInterface hgFake = new FakeHgCommandlineInterface(hgRoot, "hamspam");
 
     AutoSparseState state1 =
-        AbstractAutoSparseFactory.getAutoSparseState(projectPathBar, hgFake, config);
+        AbstractAutoSparseFactory.getAutoSparseState(
+            projectPathBar, projectPathBar.resolve("buck-out"), hgFake, config);
     AutoSparseState state2 =
-        AbstractAutoSparseFactory.getAutoSparseState(projectPathBaz, hgFake, config);
+        AbstractAutoSparseFactory.getAutoSparseState(
+            projectPathBaz, projectPathBaz.resolve("buck-out"), hgFake, config);
     assertSame(state1, state2);
   }
 
@@ -50,12 +52,14 @@ public class AbstractAutosparseFactoryTest {
 
     FakeHgCommandlineInterface hgFake1 = new FakeHgCommandlineInterface(hgRoot, "hamspam");
     AutoSparseState state1 =
-        AbstractAutoSparseFactory.getAutoSparseState(projectPathBar, hgFake1, config);
+        AbstractAutoSparseFactory.getAutoSparseState(
+            projectPathBar, projectPathBar.resolve("buck-out"), hgFake1, config);
 
     FakeHgCommandlineInterface hgFake2 =
         new FakeHgCommandlineInterface(hgRoot, "differentrevisionid");
     AutoSparseState state2 =
-        AbstractAutoSparseFactory.getAutoSparseState(projectPathBar, hgFake2, config);
+        AbstractAutoSparseFactory.getAutoSparseState(
+            projectPathBar, projectPathBar.resolve("buck-out"), hgFake2, config);
 
     assertNotSame(state1, state2);
   }
@@ -68,7 +72,8 @@ public class AbstractAutosparseFactoryTest {
 
     FakeHgCommandlineInterface hgFake = new FakeHgCommandlineInterface(hgRoot, "hamspam");
     AutoSparseState state =
-        AbstractAutoSparseFactory.getAutoSparseState(projectPathBar, hgFake, config);
+        AbstractAutoSparseFactory.getAutoSparseState(
+            projectPathBar, projectPathBar.resolve("buck-out"), hgFake, config);
     assertNull(state);
   }
 }

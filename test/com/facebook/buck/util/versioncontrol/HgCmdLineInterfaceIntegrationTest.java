@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -172,10 +171,9 @@ public class HgCmdLineInterfaceIntegrationTest {
   public void testExtractRawManifestNoChanges()
       throws VersionControlCommandFailedException, InterruptedException, IOException {
     HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(reposPath.resolve(REPO_TWO_DIR));
-    String path = hgCmdLineInterface.extractRawManifest();
+    Path path = hgCmdLineInterface.extractRawManifest();
     List<String> lines =
-        Files.readAllLines(
-            Paths.get(path), Charset.forName(System.getProperty("file.encoding", "UTF-8")));
+        Files.readAllLines(path, Charset.forName(System.getProperty("file.encoding", "UTF-8")));
     List<String> expected =
         ImmutableList.of(
             "change2\0b80de5d138758541c5f05265ad144ab9fa86d1db",
@@ -190,10 +188,9 @@ public class HgCmdLineInterfaceIntegrationTest {
     // This repository has no treemanifest support, but passing paths should not break the extension
     // and just return the full raw manifest.
     HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(reposPath.resolve(REPO_TWO_DIR));
-    String path = hgCmdLineInterface.extractRawManifest(ImmutableList.of("change2", "file1"));
+    Path path = hgCmdLineInterface.extractRawManifest(ImmutableList.of("change2", "file1"));
     List<String> lines =
-        Files.readAllLines(
-            Paths.get(path), Charset.forName(System.getProperty("file.encoding", "UTF-8")));
+        Files.readAllLines(path, Charset.forName(System.getProperty("file.encoding", "UTF-8")));
     List<String> expected =
         ImmutableList.of(
             "change2\0b80de5d138758541c5f05265ad144ab9fa86d1db",
@@ -212,16 +209,15 @@ public class HgCmdLineInterfaceIntegrationTest {
 
     HgCmdLineInterface hgCmdLineInterface = makeHgCmdLine(localReposPath.resolve(REPO_TWO_DIR));
 
-    String path = hgCmdLineInterface.extractRawManifest();
+    Path path = hgCmdLineInterface.extractRawManifest();
     List<String> lines =
-        Files.readAllLines(
-            Paths.get(path), Charset.forName(System.getProperty("file.encoding", "UTF-8")));
+        Files.readAllLines(path, Charset.forName(System.getProperty("file.encoding", "UTF-8")));
     List<String> expected =
         ImmutableList.of(
             "change2\u0000b80de5d138758541c5f05265ad144ab9fa86d1db",
             "file1\u0000b80de5d138758541c5f05265ad144ab9fa86d1db",
             "file2\u0000b80de5d138758541c5f05265ad144ab9fa86d1db",
-            "file1\u00000000000000000000000000000000000000000000d");
+            "file1\u00000000000000000000000000000000000000000000r");
     assertEquals(lines, expected);
   }
 

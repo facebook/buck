@@ -218,7 +218,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         Long.valueOf(baseRevisionWords[1]));
   }
 
-  public String extractRawManifest(Iterable<String> patterns)
+  public Path extractRawManifest(Iterable<String> patterns)
       throws VersionControlCommandFailedException, InterruptedException {
     try {
       Path hgmanifestDir = Files.createTempDirectory("hgmanifest");
@@ -229,13 +229,13 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
               replaceTemplateValue(
                   RAW_MANIFEST_COMMAND, PATH_TEMPLATE, hgmanifestOutput.toString()),
               patterns));
-      return hgmanifestOutput.toString();
+      return hgmanifestOutput;
     } catch (IOException e) {
       throw new VersionControlCommandFailedException("Unable to load hg manifest");
     }
   }
 
-  public String extractRawManifest()
+  public Path extractRawManifest()
       throws VersionControlCommandFailedException, InterruptedException {
     return extractRawManifest(Collections.<String>emptyList());
   }
