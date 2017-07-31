@@ -22,7 +22,6 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
-import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
@@ -106,7 +105,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     }
   }
 
-  private void addDepsAndFolderWithFolderInputIndexFilter (
+  private void addDepsAndFolderWithFolderInputIndexFilter(
       IJFolderFactory folderFactory,
       DependencyType dependencyType,
       TargetNode<T, ?> targetNode,
@@ -117,9 +116,12 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         getSourceFoldersToInputsIndex(targetNode.getInputs());
 
     if (folderInputIndexFilter != null) {
-      foldersToInputsIndex = foldersToInputsIndex.entries().stream()
-          .filter(folderInputIndexFilter)
-          .collect(MoreCollectors.toImmutableMultimap(Map.Entry::getKey, Map.Entry::getValue));
+      foldersToInputsIndex =
+          foldersToInputsIndex
+              .entries()
+              .stream()
+              .filter(folderInputIndexFilter)
+              .collect(MoreCollectors.toImmutableMultimap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
@@ -143,7 +145,9 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   }
 
   protected void addDepsAndSourcesWithFolderInputIndexFilter(
-    TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context,
+      TargetNode<T, ?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context,
       @Nullable Predicate<? super Map.Entry<Path, Path>> folderInputIndexFilter) {
     addDepsAndFolderWithFolderInputIndexFilter(
         SourceFolder.FACTORY,
@@ -161,7 +165,9 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   }
 
   protected void addDepsAndTestSourcesWithFolderInputIndexFilter(
-      TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context,
+      TargetNode<T, ?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context,
       @Nullable Predicate<? super Map.Entry<Path, Path>> folderInputIndexFilter) {
     addDepsAndFolderWithFolderInputIndexFilter(
         TestFolder.FACTORY,
@@ -188,16 +194,20 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
       Collection<SourcePath> resources,
       Path resourcesRoot,
       ModuleBuildContext context) {
-    ImmutableSet<Path> resourcePaths = resources.stream()
-        .map(sourcePath -> (sourcePath instanceof PathSourcePath)
-            ? ((PathSourcePath) sourcePath).getRelativePath()
-            : null)
-        .filter(Objects::nonNull)
-        .filter(path -> path.startsWith(resourcesRoot))
-        .collect(MoreCollectors.toImmutableSet());
+    ImmutableSet<Path> resourcePaths =
+        resources
+            .stream()
+            .map(
+                sourcePath ->
+                    (sourcePath instanceof PathSourcePath)
+                        ? ((PathSourcePath) sourcePath).getRelativePath()
+                        : null)
+            .filter(Objects::nonNull)
+            .filter(path -> path.startsWith(resourcesRoot))
+            .collect(MoreCollectors.toImmutableSet());
 
     addSourceFolders(
-        JavaResourceFolder.getFactoryWithResourcesRootAndType(resourcesRoot, resourceFolderType),
+        resourceFolderType.getFactoryWithResourcesRoot(resourcesRoot),
         getSourceFoldersToInputsIndex(resourcePaths),
         true /* wantsPackagePrefix */,
         context);

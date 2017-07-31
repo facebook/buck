@@ -22,10 +22,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-public class JavaResourceFolder extends InclusiveFolder {
+public class JavaTestResourceFolder extends InclusiveFolder {
   private Path resourcesRoot;
 
-  public JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
+  public JavaTestResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
     super(path, false, inputs);
     Preconditions.checkNotNull(resourcesRoot);
     this.resourcesRoot = resourcesRoot;
@@ -53,19 +53,19 @@ public class JavaResourceFolder extends InclusiveFolder {
   }
 
   public static final IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
-    return ((path, wantsPrefix, inputs) -> new JavaResourceFolder(path, inputs, resourcesRoot));
+    return ((path, wantsPrefix, inputs) -> new JavaTestResourceFolder(path, inputs, resourcesRoot));
   }
 
   @Override
   public boolean canMergeWith(IjFolder other) {
     return super.canMergeWith(other)
-        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot);
+        && Objects.equals(resourcesRoot, ((JavaTestResourceFolder) other).resourcesRoot);
   }
 
   @Override
   public boolean equals(Object other) {
     return super.equals(other)
-        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot);
+        && Objects.equals(resourcesRoot, ((JavaTestResourceFolder) other).resourcesRoot);
   }
 
   @Override

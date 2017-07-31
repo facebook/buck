@@ -16,7 +16,9 @@
 
 package com.facebook.buck.ide.intellij.model.folders;
 
-public enum  ResourceFolderType {
+import java.nio.file.Path;
+
+public enum ResourceFolderType {
   JAVA_RESOURCE("java-resource"),
   JAVA_TEST_RESOURCE("java-test-resource");
 
@@ -29,5 +31,15 @@ public enum  ResourceFolderType {
   @Override
   public String toString() {
     return resourceType;
+  }
+
+  public IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
+    if (this.equals(JAVA_RESOURCE)) {
+      return JavaResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
+    } else if (this.equals(JAVA_TEST_RESOURCE)) {
+      return JavaTestResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
+    } else {
+      throw new IllegalArgumentException("Invalid resource type");
+    }
   }
 }

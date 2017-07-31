@@ -338,8 +338,7 @@ public class IjSourceRootSimplifier {
 
     /** Merges JavaResourceFolders. */
     private Optional<IjFolder> tryCreateNewParentFolderFromChildrenResourceFolders(
-        Path currentPath,
-        ImmutableCollection<IjFolder> children) {
+        Path currentPath, ImmutableCollection<IjFolder> children) {
       ImmutableList<IjFolder> childrenToMerge =
           children
               .stream()
@@ -363,24 +362,25 @@ public class IjSourceRootSimplifier {
       boolean childrenHaveSameResourcesRoot =
           childrenToMerge
               .stream()
-              .allMatch(folder -> Objects.equals(
-                  ((JavaResourceFolder)folder).getResourcesRoot(),
-                  firstChildFolder.getResourcesRoot()));
+              .allMatch(
+                  folder ->
+                      Objects.equals(
+                          ((JavaResourceFolder) folder).getResourcesRoot(),
+                          firstChildFolder.getResourcesRoot()));
       if (!childrenHaveSameResourcesRoot) {
         return Optional.empty();
       }
 
-
-
       IjFolder mergedFolder =
           firstChildFolder
-          .getFactoryWithSameResourcesRootAndType()
-          .create(currentPath,
-              false,
-              childrenToMerge
-                  .stream()
-                  .flatMap(folder -> folder.getInputs().stream())
-                  .collect(MoreCollectors.toImmutableSortedSet()));
+              .getFactoryWithSameResourcesRoot()
+              .create(
+                  currentPath,
+                  false,
+                  childrenToMerge
+                      .stream()
+                      .flatMap(folder -> folder.getInputs().stream())
+                      .collect(MoreCollectors.toImmutableSortedSet()));
 
       removeFolders(childrenToMerge);
       mergePathsMap.put(currentPath, mergedFolder);
@@ -452,12 +452,12 @@ public class IjSourceRootSimplifier {
           typeForMerging
               .getFolderFactory()
               .create(
-                currentPath,
-                true,
-                childrenToMerge
-                    .stream()
-                    .flatMap(folder -> folder.getInputs().stream())
-                    .collect(MoreCollectors.toImmutableSortedSet()));
+                  currentPath,
+                  true,
+                  childrenToMerge
+                      .stream()
+                      .flatMap(folder -> folder.getInputs().stream())
+                      .collect(MoreCollectors.toImmutableSortedSet()));
 
       removeFolders(childrenToMerge);
       mergePathsMap.put(currentPath, mergedFolder);
