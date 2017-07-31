@@ -20,17 +20,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -46,7 +41,7 @@ public class CommandToolTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Build a source path which wraps a build rule.
-    BuildRule rule =
+    Genrule rule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver, filesystem);
@@ -56,10 +51,7 @@ public class CommandToolTest {
     CommandTool tool = new CommandTool.Builder().addArg(SourcePathArg.of(path)).build();
     assertThat(
         tool.getCommandPrefix(pathResolver),
-        Matchers.contains(
-            pathResolver
-                .getAbsolutePath(Preconditions.checkNotNull(rule.getSourcePathToOutput()))
-                .toString()));
+        Matchers.contains(pathResolver.getAbsolutePath(rule.getSourcePathToOutput()).toString()));
     assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
     assertThat(tool.getInputs(), Matchers.contains(path));
   }
@@ -114,31 +106,26 @@ public class CommandToolTest {
   }
 
   @Test
-  public void sourcePathsContributeToRuleKeys() {
+  public void environmentBuildTargetSourcePath() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    SourcePath path = new FakeSourcePath("input");
-    CommandTool tool = new CommandTool.Builder().addArg(SourcePathArg.of(path)).build();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    FileHashCache hashCache =
-        FakeFileHashCache.createFromStrings(ImmutableMap.of("input", Strings.repeat("a", 40)));
-    DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
-    RuleKey ruleKey =
-        new UncachedRuleKeyBuilder(ruleFinder, pathResolver, hashCache, ruleKeyFactory)
-            .setReflectively("key", tool)
-            .build(RuleKey::new);
+    // Build a source path which wraps a build rule.
+    Genrule rule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setOut("output")
+            .build(resolver, filesystem);
+    SourcePath path = rule.getSourcePathToOutput();
 
-    hashCache =
-        FakeFileHashCache.createFromStrings(ImmutableMap.of("input", Strings.repeat("b", 40)));
-    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder);
-    RuleKey changedRuleKey =
-        new UncachedRuleKeyBuilder(ruleFinder, pathResolver, hashCache, ruleKeyFactory)
-            .setReflectively("key", tool)
-            .build(RuleKey::new);
-
-    assertThat(ruleKey, Matchers.not(Matchers.equalTo(changedRuleKey)));
+    CommandTool tool = new CommandTool.Builder().addEnv("ENV", SourcePathArg.of(path)).build();
+    assertThat(
+        tool.getEnvironment(pathResolver),
+        Matchers.hasEntry(
+            "ENV", pathResolver.getAbsolutePath(rule.getSourcePathToOutput()).toString()));
+    assertThat(tool.getDeps(ruleFinder), Matchers.contains(rule));
+    assertThat(tool.getInputs(), Matchers.contains(path));
   }
 }
