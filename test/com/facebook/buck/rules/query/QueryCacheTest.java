@@ -1,0 +1,205 @@
+/*
+ * Copyright 2017-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules.query;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+
+public class QueryCacheTest {
+
+  @Test
+  public void cacheQueryResults() throws ExecutionException, QueryException {
+    Query q1 = Query.of("deps(:a) union deps(:c) except (deps(:a) intersect classpath(deps(:f)))");
+    Query q2 = Query.of("deps(:a) ^ classpath(deps(:f))");
+    Query q3 = Query.of("kind(binary, deps(:a))");
+    Query q4 = Query.of("attrfilter(deps, :e, set(:b :c :f :g))");
+    Query q5 = Query.of("kind(library, deps(:a) + deps(:c))");
+    Query q6 = Query.of("deps(:c)");
+
+    BuildTarget foo = BuildTargetFactory.newInstance("//:foo");
+    BuildTarget bar = BuildTargetFactory.newInstance("//:bar");
+    BuildTarget baz = BuildTargetFactory.newInstance("//:baz");
+
+    BuildTarget targetA = BuildTargetFactory.newInstance("//app:a");
+    BuildTarget targetB = BuildTargetFactory.newInstance("//app:b");
+    BuildTarget targetC = BuildTargetFactory.newInstance("//app:c");
+    BuildTarget targetD = BuildTargetFactory.newInstance("//app:d");
+    BuildTarget targetE = BuildTargetFactory.newInstance("//app:e");
+    BuildTarget targetF = BuildTargetFactory.newInstance("//app:f");
+    BuildTarget targetG = BuildTargetFactory.newInstance("//app:g");
+    BuildTarget targetH = BuildTargetFactory.newInstance("//app:h");
+
+    /*
+     *   a       f
+     *  / \     / \
+     * b   c   g   h
+     *  \ / \ /
+     *   d   e
+     */
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            AndroidLibraryBuilder.createBuilder(foo)
+                .setDepsQuery(q1)
+                .setProvidedDepsQuery(q2)
+                .build(),
+            AndroidLibraryBuilder.createBuilder(bar)
+                .setDepsQuery(q3)
+                .setProvidedDepsQuery(q4)
+                .build(),
+            AndroidLibraryBuilder.createBuilder(baz)
+                .setDepsQuery(q5)
+                .setProvidedDepsQuery(q6)
+                .build(),
+            JavaLibraryBuilder.createBuilder(targetA).addDep(targetB).addDep(targetC).build(),
+            JavaLibraryBuilder.createBuilder(targetB).addDep(targetD).build(),
+            JavaLibraryBuilder.createBuilder(targetC).addDep(targetD).addDep(targetE).build(),
+            new JavaBinaryRuleBuilder(targetD).build(),
+            new JavaBinaryRuleBuilder(targetE).build(),
+            JavaLibraryBuilder.createBuilder(targetF).addDep(targetG).addDep(targetH).build(),
+            JavaLibraryBuilder.createBuilder(targetG).addDep(targetE).build(),
+            JavaLibraryBuilder.createBuilder(targetH).build());
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    GraphEnhancementQueryEnvironment env =
+        new GraphEnhancementQueryEnvironment(
+            Optional.of(resolver),
+            Optional.of(targetGraph),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            BuildTargetPatternParser.forBaseName(targetA.getBaseName()),
+            ImmutableSet.of());
+
+    QueryCache cache = new QueryCache();
+
+    assertFalse(cache.isPresent(targetGraph, env, q1));
+    assertFalse(cache.isPresent(targetGraph, env, q2));
+    assertFalse(cache.isPresent(targetGraph, env, q3));
+    assertFalse(cache.isPresent(targetGraph, env, q4));
+    assertFalse(cache.isPresent(targetGraph, env, q5));
+    assertFalse(cache.isPresent(targetGraph, env, q6));
+
+    assertThat(
+        cache.getQueryEvaluator(targetGraph).eval(QueryExpression.parse(q1.getQuery(), env), env),
+        Matchers.containsInAnyOrder(
+            QueryBuildTarget.of(targetA),
+            QueryBuildTarget.of(targetB),
+            QueryBuildTarget.of(targetC),
+            QueryBuildTarget.of(targetD)));
+
+    assertTrue(cache.isPresent(targetGraph, env, q1));
+    assertTrue(cache.isPresent(targetGraph, env, q2));
+    assertFalse(cache.isPresent(targetGraph, env, q3));
+    assertFalse(cache.isPresent(targetGraph, env, q4));
+    assertFalse(cache.isPresent(targetGraph, env, q5));
+    assertTrue(cache.isPresent(targetGraph, env, q6));
+  }
+
+  @Test
+  public void dynamicDeps() throws ExecutionException, QueryException {
+    Query declared = Query.of("$declared_deps");
+
+    BuildTarget fooTarget = BuildTargetFactory.newInstance("//:foo");
+    BuildTarget barTarget = BuildTargetFactory.newInstance("//:bar");
+
+    BuildTarget targetA = BuildTargetFactory.newInstance("//app:a");
+    BuildTarget targetB = BuildTargetFactory.newInstance("//app:b");
+
+    TargetNode<?, ?> foo =
+        AndroidLibraryBuilder.createBuilder(fooTarget)
+            .addDep(targetA)
+            .setDepsQuery(declared)
+            .build();
+    TargetNode<?, ?> bar =
+        AndroidLibraryBuilder.createBuilder(barTarget)
+            .addDep(targetB)
+            .setDepsQuery(declared)
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            foo,
+            bar,
+            JavaLibraryBuilder.createBuilder(targetA).build(),
+            JavaLibraryBuilder.createBuilder(targetB).build());
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    GraphEnhancementQueryEnvironment fooEnv =
+        new GraphEnhancementQueryEnvironment(
+            Optional.of(resolver),
+            Optional.of(targetGraph),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            BuildTargetPatternParser.forBaseName(fooTarget.getBaseName()),
+            foo.getDeclaredDeps());
+
+    GraphEnhancementQueryEnvironment barEnv =
+        new GraphEnhancementQueryEnvironment(
+            Optional.of(resolver),
+            Optional.of(targetGraph),
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            BuildTargetPatternParser.forBaseName(barTarget.getBaseName()),
+            bar.getDeclaredDeps());
+
+    QueryCache cache = new QueryCache();
+
+    assertFalse(cache.isPresent(targetGraph, fooEnv, declared));
+    assertFalse(cache.isPresent(targetGraph, barEnv, declared));
+
+    assertThat(
+        cache
+            .getQueryEvaluator(targetGraph)
+            .eval(QueryExpression.parse(declared.getQuery(), fooEnv), fooEnv),
+        Matchers.contains(QueryBuildTarget.of(targetA)));
+
+    assertTrue(cache.isPresent(targetGraph, fooEnv, declared));
+    assertFalse(cache.isPresent(targetGraph, barEnv, declared));
+
+    assertThat(
+        cache
+            .getQueryEvaluator(targetGraph)
+            .eval(QueryExpression.parse(declared.getQuery(), barEnv), barEnv),
+        Matchers.contains(QueryBuildTarget.of(targetB)));
+
+    assertTrue(cache.isPresent(targetGraph, fooEnv, declared));
+    assertTrue(cache.isPresent(targetGraph, barEnv, declared));
+  }
+}

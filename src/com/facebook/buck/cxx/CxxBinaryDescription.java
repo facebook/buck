@@ -30,13 +30,13 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -134,7 +134,6 @@ public class CxxBinaryDescription
       CxxBinaryDescriptionArg args)
       throws NoSuchBuildTargetException {
     return createBuildRule(
-        targetGraph,
         buildTarget,
         projectFilesystem,
         params.getExtraDeps(),
@@ -146,7 +145,6 @@ public class CxxBinaryDescription
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public BuildRule createBuildRule(
-      TargetGraph targetGraph,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       Supplier<? extends SortedSet<BuildRule>> extraDepsFromOriginalParams,
@@ -179,7 +177,6 @@ public class CxxBinaryDescription
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-              targetGraph,
               target.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
               resolver,
@@ -222,7 +219,6 @@ public class CxxBinaryDescription
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            targetGraph,
             target,
             projectFilesystem,
             resolver,
@@ -397,9 +393,7 @@ public class CxxBinaryDescription
     return true;
   }
 
-  public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse {
-    Optional<Query> getDepsQuery();
-
+  public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse, HasDepsQuery {
     @Value.Default
     default boolean getLinkDepsQueryWhole() {
       return false;

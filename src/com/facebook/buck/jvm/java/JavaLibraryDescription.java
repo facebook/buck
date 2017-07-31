@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasProvidedDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
@@ -199,7 +200,8 @@ public class JavaLibraryDescription
     }
   }
 
-  public interface CoreArg extends JvmLibraryArg, HasDeclaredDeps, HasSrcs, HasTests {
+  public interface CoreArg
+      extends JvmLibraryArg, HasDeclaredDeps, HasProvidedDeps, HasSrcs, HasTests {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getResources();
 
@@ -215,9 +217,6 @@ public class JavaLibraryDescription
     Optional<String> getMavenCoords();
 
     Optional<SourcePath> getMavenPomTemplate();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<BuildTarget> getProvidedDeps();
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getExportedDeps();
