@@ -30,9 +30,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.function.BiFunction;
 import org.junit.Test;
 
 public class WorkerToolDescriptionTest {
@@ -55,7 +56,29 @@ public class WorkerToolDescriptionTest {
     assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
   }
 
+  @Test
+  public void testHandlesExeWithoutOutput() throws NoSuchBuildTargetException {
+    createWorkerTool(1, WorkerToolDescriptionTest::wrapExeInCommandAlias);
+  }
+
   private static WorkerTool createWorkerTool(int maxWorkers) throws NoSuchBuildTargetException {
+    return createWorkerTool(maxWorkers, (resolver, shBinary) -> shBinary.getBuildTarget());
+  }
+
+  private static BuildTarget wrapExeInCommandAlias(BuildRuleResolver resolver, BuildRule shBinary) {
+    try {
+      return new CommandAliasBuilder(BuildTargetFactory.newInstance("//:no_output"))
+          .setExe(shBinary.getBuildTarget())
+          .build(resolver)
+          .getBuildTarget();
+    } catch (NoSuchBuildTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static WorkerTool createWorkerTool(
+      int maxWorkers, BiFunction<BuildRuleResolver, BuildRule, BuildTarget> getExe)
+      throws NoSuchBuildTargetException {
     TargetGraph targetGraph = TargetGraph.EMPTY;
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -65,10 +88,11 @@ public class WorkerToolDescriptionTest {
             .setMain(new FakeSourcePath("bin/exe"))
             .build(resolver);
 
+    BuildTarget exe = getExe.apply(resolver, shBinaryRule);
     WorkerToolDescriptionArg args =
         WorkerToolDescriptionArg.builder()
             .setName("target")
-            .setExe(shBinaryRule.getBuildTarget())
+            .setExe(exe)
             .setMaxWorkers(maxWorkers)
             .build();
 
@@ -76,7 +100,11 @@ public class WorkerToolDescriptionTest {
         new WorkerToolDescription(FakeBuckConfig.builder().build());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//arbitrary:target");
-    BuildRuleParams params = TestBuildRuleParams.create();
+    BuildRuleParams params =
+        new BuildRuleParams(
+            () -> ImmutableSortedSet.of(),
+            () -> ImmutableSortedSet.of(resolver.getRule(exe)),
+            ImmutableSortedSet.of());
     return (WorkerTool)
         workerToolDescription.createBuildRule(
             targetGraph,
