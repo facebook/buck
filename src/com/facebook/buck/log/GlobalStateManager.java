@@ -142,7 +142,11 @@ public class GlobalStateManager {
         try {
           LOG_FILE_DIR_CLEANER.clean(info.getLogDirectoryPath().getParent());
         } catch (IOException e) {
-          LOG.info(e, "It's possible another concurrent buck command removed the file.");
+          LOG.info(
+              "Failed cleaning log directory. It's possible another concurrent buck command "
+                  + "removed the file. Error: %s",
+              e.getMessage());
+          LOG.debug(e, "From exception");
         }
       }
     };
