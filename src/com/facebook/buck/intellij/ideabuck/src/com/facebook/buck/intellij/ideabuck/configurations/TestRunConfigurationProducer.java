@@ -26,6 +26,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -48,6 +49,12 @@ public class TestRunConfigurationProducer extends RunConfigurationProducer<TestC
     }
     PsiClass psiClass = PsiTreeUtil.getChildOfType(file.getOriginalElement(), PsiClass.class);
     if (psiClass == null) {
+      return false;
+    }
+
+    // Try to figure out if it is a test class, by calling isTestMethod on each method in the class.
+    // If none of them are test methods, then don't run the buck commands.
+    if (Arrays.stream(psiClass.getAllMethods()).noneMatch(TestConfigurationUtil::isTestMethod)) {
       return false;
     }
 
@@ -76,7 +83,7 @@ public class TestRunConfigurationProducer extends RunConfigurationProducer<TestC
               success.complete(configuration.data.target != null);
               return null;
             });
-    buildManager.runInCurrentThread(handler, null, true, null);
+    buildManager.runInCurrentThread(handler, null);
     return success.getNow(false);
   }
 
@@ -92,6 +99,13 @@ public class TestRunConfigurationProducer extends RunConfigurationProducer<TestC
       return false;
     }
     PsiClass psiClass = PsiTreeUtil.getChildOfType(file.getOriginalElement(), PsiClass.class);
-    return psiClass != null && config.data.testSelectors.equals(psiClass.getQualifiedName());
+    PsiMethod method = PsiTreeUtil.getParentOfType(location, PsiMethod.class);
+    String testSelector;
+    if (method != null && TestConfigurationUtil.isTestMethod(method)) {
+      testSelector = psiClass.getQualifiedName() + "#" + method.getName();
+    } else {
+      testSelector = psiClass.getQualifiedName();
+    }
+    return psiClass != null && config.data.testSelectors.equals(testSelector);
   }
 }

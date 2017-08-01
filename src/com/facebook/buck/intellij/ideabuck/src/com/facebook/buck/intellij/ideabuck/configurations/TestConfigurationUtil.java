@@ -80,7 +80,8 @@ public final class TestConfigurationUtil {
                 }
                 return null;
               }
-            });
+            },
+            false);
     handler.command().addParameter("kind('.*_test', owner(" + containingFile.getPath() + "))");
     return handler;
   }

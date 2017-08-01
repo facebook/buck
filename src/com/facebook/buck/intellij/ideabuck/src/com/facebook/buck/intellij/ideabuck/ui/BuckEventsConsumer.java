@@ -383,7 +383,7 @@ public class BuckEventsConsumer
 
     final String errorsMessageToUse = errorsMessage;
 
-    //set progress to 100%
+    // set progress to 100%
     consumeBuckBuildProgressUpdate(timestamp, 1f);
 
     if (errorsMessageToUse.length() > 0) {
@@ -604,11 +604,17 @@ public class BuckEventsConsumer
 
   @Override
   public void consumeConsoleEvent(final String message) {
+    consumeConsoleEvent(message, true);
+  }
+
+  public void consumeConsoleEvent(final String message, boolean showBuckToolWindow) {
     if (!BuckToolWindowFactory.isToolWindowInstantiated(mProject)) {
       return;
     }
-    if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
-      BuckToolWindowFactory.showToolWindow(mProject);
+    if (showBuckToolWindow) {
+      if (!BuckToolWindowFactory.isToolWindowVisible(mProject)) {
+        BuckToolWindowFactory.showToolWindow(mProject);
+      }
     }
 
     if (mCurrentBuildRootElement == null) {

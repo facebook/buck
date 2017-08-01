@@ -74,7 +74,8 @@ public class BuckQueryAction {
                             fillTextResults.apply(strings);
                             return null;
                           }
-                        });
+                        },
+                        true);
                 handler.command().addParameter(target);
                 buildManager.runBuckCommand(handler, ACTION_TITLE);
               }

@@ -50,6 +50,7 @@ public abstract class BuckCommandHandler {
   private final Object processStateLock = new Object();
   private static final Pattern CHARACTER_DIGITS_PATTERN = Pattern.compile("(?s).*[A-Z0-9a-z]+.*");
   private final boolean doStartNotify;
+  private final boolean showBuckToolWindow;
 
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private Process process;
@@ -71,15 +72,26 @@ public abstract class BuckCommandHandler {
     this(project, directory, command, /* doStartNotify */ false);
   }
 
+  public BuckCommandHandler(
+      Project project, File directory, BuckCommand command, boolean doStartNotify) {
+    this(project, directory, command, /* doStartNotify */ doStartNotify, true);
+  }
+
   /**
    * @param project a project
    * @param directory a process directory
    * @param command a command to execute (if empty string, the parameter is ignored)
    * @param doStartNotify true if the handler should call OSHandler#startNotify
+   * @param showBuckToolWindow true if the handler should pop out the buck tool window when run
    */
   public BuckCommandHandler(
-      Project project, File directory, BuckCommand command, boolean doStartNotify) {
+      Project project,
+      File directory,
+      BuckCommand command,
+      boolean doStartNotify,
+      boolean showBuckToolWindow) {
     this.doStartNotify = doStartNotify;
+    this.showBuckToolWindow = showBuckToolWindow;
 
     String buckExecutable = BuckSettingsProvider.getInstance().getState().buckExecutable;
 
@@ -282,7 +294,7 @@ public abstract class BuckCommandHandler {
         }
       }
       if (stderr.length() != 0) {
-        buckEventsConsumer.consumeConsoleEvent(stderr.toString());
+        buckEventsConsumer.consumeConsoleEvent(stderr.toString(), showBuckToolWindow);
       }
     }
   }

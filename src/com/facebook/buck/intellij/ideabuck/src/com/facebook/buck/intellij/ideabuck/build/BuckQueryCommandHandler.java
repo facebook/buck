@@ -36,8 +36,9 @@ public class BuckQueryCommandHandler extends BuckCommandHandler {
       final Project project,
       final VirtualFile root,
       final BuckCommand command,
-      Function<List<String>, Void> actionsToExecute) {
-    super(project, VfsUtil.virtualToIoFile(root), command, true);
+      Function<List<String>, Void> actionsToExecute,
+      final boolean showBuckToolWindow) {
+    super(project, VfsUtil.virtualToIoFile(root), command, true, showBuckToolWindow);
     this.actionsToExecute = actionsToExecute;
   }
 
