@@ -20,6 +20,8 @@ import static com.facebook.buck.ide.intellij.projectview.Patterns.capture;
 import static com.facebook.buck.ide.intellij.projectview.Patterns.noncapture;
 import static com.facebook.buck.ide.intellij.projectview.Patterns.optional;
 
+import com.facebook.buck.android.AndroidLibrary;
+import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -41,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -55,6 +58,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,8 +85,11 @@ public class ProjectView {
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      ActionGraphAndResolver actionGraph) {
-    return new ProjectView(projectViewParameters, targetGraph, buildTargets, actionGraph).run();
+      ActionGraphAndResolver actionGraph,
+      SourcePathResolver sourcePathResolver) {
+    return new ProjectView(
+            projectViewParameters, targetGraph, buildTargets, actionGraph, sourcePathResolver)
+        .run();
   }
 
   // endregion Public API
@@ -113,11 +120,12 @@ public class ProjectView {
   private final String viewPath;
   private final boolean dryRun;
   private final boolean withTests;
-  private final TargetGraph targetGraph;
-  private final ImmutableSet<BuildTarget> buildTargets;
   private final Config config;
 
+  private final TargetGraph targetGraph;
+  private final ImmutableSet<BuildTarget> buildTargets;
   private final ActionGraphAndResolver actionGraph;
+  private final SourcePathResolver sourcePathResolver;
 
   private final Set<BuildTarget> testTargets = new HashSet<>();
   /** {@code Sets.union(buildTargets, allTargets)} */
@@ -129,9 +137,9 @@ public class ProjectView {
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      ActionGraphAndResolver actionGraph) {
-    repository = projectViewParameters.getPath().toString();
-
+      ActionGraphAndResolver actionGraph,
+      SourcePathResolver sourcePathResolver) {
+    this.repository = projectViewParameters.getPath().toString();
     this.stdErr = projectViewParameters.getStdErr();
     this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
     this.dryRun = projectViewParameters.isDryRun();
@@ -140,6 +148,7 @@ public class ProjectView {
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
     this.actionGraph = actionGraph;
+    this.sourcePathResolver = sourcePathResolver;
 
     this.config = projectViewParameters.getConfig();
 
@@ -718,6 +727,9 @@ public class ProjectView {
     String libraries = fileJoin(dotIdea, "libraries");
     immediateMkdir(libraries);
 
+    List<String> libraryXmls = new ArrayList<>();
+
+    // .jar files in the inputs
     Map<String, List<String>> directories = new HashMap<>();
     inputs
         .stream()
@@ -734,10 +746,36 @@ public class ProjectView {
               basenames.add(basename);
             });
 
-    List<String> libraryXmls = new ArrayList<>();
     for (Map.Entry<String, List<String>> entry : directories.entrySet()) {
       libraryXmls.add(buildLibraryFile(libraries, entry.getKey(), entry.getValue()));
     }
+
+    // .jar files in the action graph
+    for (BuildRule rule : actionGraph.getActionGraph().getNodes()) {
+      if (rule instanceof AndroidLibrary) {
+        AndroidLibrary androidLibrary = (AndroidLibrary) rule;
+        final boolean libraryContainsGenAidl =
+            RichStream.from(androidLibrary.getBuildDeps())
+                .filter(GenAidl.class)
+                .findAny()
+                .isPresent();
+        if (libraryContainsGenAidl) {
+          SourcePath sourcePath = rule.getSourcePathToOutput();
+          if (sourcePath != null) {
+            Path path =
+                rule.getProjectFilesystem()
+                    .getRootPath()
+                    .relativize(sourcePathResolver.getAbsolutePath(sourcePath));
+
+            String dirname = path.getParent().toString();
+            String basename = path.getFileName().toString();
+            libraryXmls.add(
+                buildLibraryFile(libraries, dirname, Collections.singletonList(basename)));
+          }
+        }
+      }
+    }
+
     return libraryXmls;
   }
 
