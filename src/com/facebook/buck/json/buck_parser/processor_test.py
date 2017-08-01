@@ -390,7 +390,7 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(1, len(decoded_result['diagnostics']))
         diagnostic = decoded_result['diagnostics'][0]
         self.assertEqual('fatal', diagnostic['level'])
-        self.assertEqual('parse', diagnostic['source'])
+        self.assertEqual('watchman', diagnostic['source'])
         self.assertEqual('Nobody watches the watchmen', diagnostic['message'])
         exception = diagnostic['exception']
         self.assertEqual('WatchmanError', exception['type'])

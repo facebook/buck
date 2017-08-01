@@ -1087,13 +1087,15 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
         trace = traceback.format_exc()
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
-            if e is WatchmanError:
+            if isinstance(e, WatchmanError):
                 source = 'watchman'
+                message = e.msg
             else:
                 source = 'parse'
+                message = str(e)
             diagnostics.append(
                 Diagnostic(
-                    message=str(e),
+                    message=message,
                     level='fatal',
                     source=source,
                     exception=sys.exc_info()))
