@@ -28,7 +28,7 @@ public class RuleKeyScopedHasherTest {
   @Test
   public void testKeyScope() {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (Scope keyScope = containerHasher.keyScope("key")) {
       countHasher.putString("val");
     }
@@ -38,7 +38,7 @@ public class RuleKeyScopedHasherTest {
   @Test
   public void testKeyScopeNoOp() {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (Scope keyScope = containerHasher.keyScope("key")) { // NOPMD
       // no-op
     }
@@ -62,7 +62,7 @@ public class RuleKeyScopedHasherTest {
 
   private void testWrapperScope(RuleKeyHasher.Wrapper wrapper) {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (Scope wrapperScope = containerHasher.wrapperScope(wrapper)) {
       countHasher.putString("val");
     }
@@ -71,7 +71,7 @@ public class RuleKeyScopedHasherTest {
 
   private void testWrapperScopeNoOp(RuleKeyHasher.Wrapper wrapper) {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (Scope wrapperScope = containerHasher.wrapperScope(wrapper)) { // NOPMD
       // no-op
     }
@@ -81,7 +81,7 @@ public class RuleKeyScopedHasherTest {
   @Test
   public void testContainerScopeList() {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
         containerHasher.containerScope(RuleKeyHasher.Container.LIST)) {
       try (Scope elementScope = containerScope.elementScope()) {
@@ -107,7 +107,7 @@ public class RuleKeyScopedHasherTest {
   @Test
   public void testContainerScopeListNoOp() {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
         containerHasher.containerScope(RuleKeyHasher.Container.LIST)) { // NOPMD
       // no-op
@@ -118,7 +118,7 @@ public class RuleKeyScopedHasherTest {
   @Test
   public void testContainerScopeMap() {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
         containerHasher.containerScope(RuleKeyHasher.Container.MAP)) {
       try (Scope elementScope = containerScope.elementScope()) {
@@ -148,7 +148,7 @@ public class RuleKeyScopedHasherTest {
   @Test
   public void testContainerScopeMapNoOp() {
     CountingRuleKeyHasher<HashCode> countHasher = newCountHasher();
-    RuleKeyScopedHasher<HashCode> containerHasher = new RuleKeyScopedHasher<>(countHasher);
+    RuleKeyScopedHasher containerHasher = new DefaultRuleKeyScopedHasher<>(countHasher);
     try (RuleKeyScopedHasher.ContainerScope containerScope =
         containerHasher.containerScope(RuleKeyHasher.Container.MAP)) { // NOPMD
       // no-op

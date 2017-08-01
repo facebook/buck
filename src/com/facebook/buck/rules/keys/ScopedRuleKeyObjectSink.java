@@ -22,7 +22,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
-/** A wrapper around {@link RuleKeyObjectSink} that respects {@link RuleKeyScopedHasher} scopes. */
+/**
+ * A wrapper around {@link RuleKeyObjectSink} that respects {@link DefaultRuleKeyScopedHasher}
+ * scopes.
+ */
 public class ScopedRuleKeyObjectSink implements RuleKeyObjectSink {
 
   private final RuleKeyScopedHasher.ContainerScope scope;
