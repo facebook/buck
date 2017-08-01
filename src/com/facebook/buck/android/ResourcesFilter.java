@@ -216,8 +216,7 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem().newFileOutputStream(filterResourcesDataPath);
             writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
             buildableContext.recordArtifact(filterResourcesDataPath);
-            addPostFilterCommandSteps(
-                cmd, context.getSourcePathResolver(), steps, filterResourcesDataPath);
+            addPostFilterCommandSteps(cmd, context.getSourcePathResolver(), steps);
           } catch (IOException e) {
             throw new RuntimeException("Could not generate/save filter resources data json", e);
           } finally {
@@ -230,6 +229,9 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
           @Override
           public StepExecutionResult execute(ExecutionContext context)
               throws IOException, InterruptedException {
+            if (postFilterResourcesCmd.isPresent()) {
+              buildableContext.recordArtifact(getRDotJsonPath());
+            }
             buildableContext.addMetadata(
                 STRING_FILES_KEY,
                 stringFilesBuilder
@@ -246,13 +248,11 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @VisibleForTesting
   void addPostFilterCommandSteps(
-      Arg command,
-      SourcePathResolver sourcePathResolver,
-      ImmutableList.Builder<Step> steps,
-      Path dataPath) {
+      Arg command, SourcePathResolver sourcePathResolver, ImmutableList.Builder<Step> steps) {
     ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
     command.appendToCommandLine(commandLineBuilder, sourcePathResolver);
-    commandLineBuilder.add(Escaper.escapeAsBashString(dataPath));
+    commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
+    commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
     steps.add(new BashStep(getProjectFilesystem().getRootPath(), commandLine));
   }
@@ -260,6 +260,18 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private Path getFilterResourcesDataPath() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/post_filter_resources_data.json");
+  }
+
+  @Override
+  public Optional<SourcePath> getOverrideSymbolsPath() {
+    if (postFilterResourcesCmd.isPresent()) {
+      return Optional.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), getRDotJsonPath()));
+    }
+    return Optional.empty();
+  }
+
+  private Path getRDotJsonPath() {
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.json");
   }
 
   @VisibleForTesting
