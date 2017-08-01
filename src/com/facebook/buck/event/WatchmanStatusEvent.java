@@ -37,6 +37,14 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
     return eventName;
   }
 
+  public static Started started() {
+    return new Started();
+  }
+
+  public static Finished finished() {
+    return new Finished();
+  }
+
   public static Overflow overflow(String reason) {
     return new Overflow(reason);
   }
@@ -51,6 +59,18 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
 
   public static ZeroFileChanges zeroFileChanges() {
     return new ZeroFileChanges();
+  }
+
+  public static class Started extends WatchmanStatusEvent {
+    public Started() {
+      super(EventKey.unique(), "WatchmanStarted");
+    }
+  }
+
+  public static class Finished extends WatchmanStatusEvent {
+    public Finished() {
+      super(EventKey.unique(), "WatchmanFinished");
+    }
   }
 
   public static class Overflow extends WatchmanStatusEvent {

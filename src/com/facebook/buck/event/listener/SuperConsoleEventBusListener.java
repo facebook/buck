@@ -274,6 +274,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
+    logEventPair(
+        "PROCESSING FILESYSTEM CHANGES",
+        Optional.empty(),
+        currentTimeMillis,
+        /* offsetMs */ 0L,
+        watchmanStarted,
+        watchmanFinished,
+        Optional.empty(),
+        lines);
+
     // If we have not yet started processing the BUCK files, show parse times
     if (parseStarted.isEmpty() && parseFinished.isEmpty()) {
       logEventPair(

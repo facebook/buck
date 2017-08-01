@@ -994,6 +994,22 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
+  public void testWatchman() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
+    SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(WatchmanStatusEvent.started(), 0L, TimeUnit.MILLISECONDS, 0L));
+    validateConsole(listener, 0L, ImmutableList.of("[+] PROCESSING FILESYSTEM CHANGES...0.0s"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(WatchmanStatusEvent.finished(), 100L, TimeUnit.MILLISECONDS, 0L));
+    validateConsole(
+        listener, 100L, ImmutableList.of("[-] PROCESSING FILESYSTEM CHANGES...FINISHED 0.1s"));
+  }
+
+  @Test
   public void testSimpleTest() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);

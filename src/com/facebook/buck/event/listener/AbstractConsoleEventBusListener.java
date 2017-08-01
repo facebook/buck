@@ -30,6 +30,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -108,6 +109,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable protected volatile ProjectGenerationEvent.Started projectGenerationStarted;
   @Nullable protected volatile ProjectGenerationEvent.Finished projectGenerationFinished;
 
+  @Nullable protected volatile WatchmanStatusEvent.Started watchmanStarted;
+  @Nullable protected volatile WatchmanStatusEvent.Finished watchmanFinished;
+
   protected ConcurrentLinkedDeque<ParseEvent.Started> parseStarted;
   protected ConcurrentLinkedDeque<ParseEvent.Finished> parseFinished;
 
@@ -168,6 +172,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.projectGenerationStarted = null;
     this.projectGenerationFinished = null;
+
+    this.watchmanStarted = null;
+    this.watchmanFinished = null;
 
     this.parseStarted = new ConcurrentLinkedDeque<>();
     this.parseFinished = new ConcurrentLinkedDeque<>();
@@ -562,6 +569,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       progressEstimator.get().didFinishParsing();
     }
     aggregateFinishedEvent(buckFilesProcessing, finished);
+  }
+
+  @Subscribe
+  public void watchmanStarted(WatchmanStatusEvent.Started started) {
+    watchmanStarted = started;
+  }
+
+  @Subscribe
+  public void watchmanFinished(WatchmanStatusEvent.Finished finished) {
+    watchmanFinished = finished;
   }
 
   @Subscribe
