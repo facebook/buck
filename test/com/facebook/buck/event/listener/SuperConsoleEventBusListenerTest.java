@@ -178,7 +178,11 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(listener, 300L, ImmutableList.of("[+] PROCESSING BUCK FILES...0.1s"));
+    validateConsole(
+        listener,
+        300L,
+        ImmutableList.of(
+            "[-] PARSING BUCK FILES...FINISHED 0.2s", "[+] PROCESSING BUCK FILES...0.1s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -197,10 +201,13 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.2s";
+    final String processingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
     validateConsole(
-        listener, 540L, ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
+        listener,
+        540L,
+        ImmutableList.of(parsingLine, processingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
@@ -211,6 +218,7 @@ public class SuperConsoleEventBusListenerTest {
         700L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (preparing)"));
@@ -225,6 +233,7 @@ public class SuperConsoleEventBusListenerTest {
         701L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (running checking_cache_input_based[0.0s])"));
@@ -241,6 +250,7 @@ public class SuperConsoleEventBusListenerTest {
         702L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (preparing)"));
@@ -256,6 +266,7 @@ public class SuperConsoleEventBusListenerTest {
         703L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (running artifact_compress[0.0s])"));
@@ -272,6 +283,7 @@ public class SuperConsoleEventBusListenerTest {
         705L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (preparing)"));
@@ -290,6 +302,7 @@ public class SuperConsoleEventBusListenerTest {
         741L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (running dir_artifact_fetch[0.0s])"));
@@ -307,6 +320,7 @@ public class SuperConsoleEventBusListenerTest {
         800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
             " |=> //banana:stand...  0.2s (preparing)"));
@@ -324,6 +338,7 @@ public class SuperConsoleEventBusListenerTest {
         900L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.5s",
             " |=> //banana:stand...  0.3s (running doing_something[0.1s])"));
@@ -354,7 +369,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         1000L,
-        ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.6s", " |=> IDLE"));
+        ImmutableList.of(
+            parsingLine, processingLine, DOWNLOAD_STRING, "[+] BUILDING...0.6s", " |=> IDLE"));
 
     BuildRuleEvent.Started startedCached = BuildRuleEvent.started(cachedRule, durationTracker);
     eventBus.postWithoutConfiguring(
@@ -365,6 +381,7 @@ public class SuperConsoleEventBusListenerTest {
         1100L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.7s",
             " |=> IDLE",
@@ -397,7 +414,9 @@ public class SuperConsoleEventBusListenerTest {
     final String buildingLine = "[-] BUILDING...FINISHED 0.8s";
 
     validateConsole(
-        listener, 1300L, ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
+        listener,
+        1300L,
+        ImmutableList.of(parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -406,7 +425,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsoleWithLogLines(
         listener,
         1600L,
-        ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine),
+        ImmutableList.of(parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine),
         ImmutableList.of(SEVERE_MESSAGE));
 
     InstallEvent.Started installEventStarted = InstallEvent.started(fakeTarget);
@@ -418,7 +437,11 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         3000L,
         ImmutableList.of(
-            parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, "[+] INSTALLING...0.5s"));
+            parsingLine,
+            processingLine,
+            FINISHED_DOWNLOAD_STRING,
+            buildingLine,
+            "[+] INSTALLING...0.5s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -432,7 +455,12 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         5000L,
-        ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, installingFinished));
+        ImmutableList.of(
+            parsingLine,
+            processingLine,
+            FINISHED_DOWNLOAD_STRING,
+            buildingLine,
+            installingFinished));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne =
         ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_ONE, 6000L);
@@ -448,6 +476,7 @@ public class SuperConsoleEventBusListenerTest {
         6021L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             installingFinished,
@@ -461,6 +490,7 @@ public class SuperConsoleEventBusListenerTest {
         7000,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             installingFinished,
@@ -475,6 +505,7 @@ public class SuperConsoleEventBusListenerTest {
         7020,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             installingFinished,
@@ -491,6 +522,7 @@ public class SuperConsoleEventBusListenerTest {
         7040,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             installingFinished,
@@ -507,6 +539,7 @@ public class SuperConsoleEventBusListenerTest {
         7040,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             installingFinished,
@@ -736,7 +769,11 @@ public class SuperConsoleEventBusListenerTest {
             parseStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     timeMillis += 100;
-    validateConsole(listener, timeMillis, ImmutableList.of("[+] PROCESSING BUCK FILES...0.1s"));
+    validateConsole(
+        listener,
+        timeMillis,
+        ImmutableList.of(
+            "[-] PARSING BUCK FILES...FINISHED 0.2s", "[+] PROCESSING BUCK FILES...0.1s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -764,10 +801,13 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     timeMillis += 150;
-    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.2s";
+    final String processingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
     validateConsole(
-        listener, timeMillis, ImmutableList.of(parsingLine, "[+] DISTBUILD...0.3s (STATUS: INIT)"));
+        listener,
+        timeMillis,
+        ImmutableList.of(parsingLine, processingLine, "[+] DISTBUILD...0.3s (STATUS: INIT)"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -786,7 +826,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         timeMillis,
-        ImmutableList.of(parsingLine, "[+] DISTBUILD...0.7s (STATUS: QUEUED, [step 1])"));
+        ImmutableList.of(
+            parsingLine, processingLine, "[+] DISTBUILD...0.7s (STATUS: QUEUED, [step 1])"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -804,7 +845,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         timeMillis,
-        ImmutableList.of(parsingLine, "[+] DISTBUILD...0.9s (STATUS: BUILDING, [step 2])"));
+        ImmutableList.of(
+            parsingLine, processingLine, "[+] DISTBUILD...0.9s (STATUS: BUILDING, [step 2])"));
 
     RunId runId1 = new RunId();
     runId1.setId("slave1");
@@ -835,6 +877,7 @@ public class SuperConsoleEventBusListenerTest {
         timeMillis,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             "[+] DISTBUILD...1.1s (STATUS: BUILDING, [step 2])",
             " SERVER 0)=> PROCESSING BUILD GRAPH...",
             " SERVER 1)=> PROCESSING BUILD GRAPH..."));
@@ -880,6 +923,7 @@ public class SuperConsoleEventBusListenerTest {
         timeMillis,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             "[+] DISTBUILD...1.3s [33%] (STATUS: BUILDING, 1 [3.3%] CACHE MISS, [step 2])",
             " SERVER 0)=> IDLE... (BUILT 5/10 JOBS, 1 [10.0%] CACHE MISS)",
             " SERVER 1)=> WORKING ON 5 JOBS... (BUILT 5/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS)"));
@@ -922,6 +966,7 @@ public class SuperConsoleEventBusListenerTest {
         timeMillis,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             "[+] DISTBUILD...1.5s [96%] (STATUS: CUSTOM,"
                 + " 1 [3.3%] CACHE MISS, 1 [3.4%] CACHE ERRORS, 1 UPLOAD ERRORS, [step 2])",
             " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
@@ -961,7 +1006,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         timeMillis,
-        ImmutableList.of(parsingLine, distbuildLine, DOWNLOAD_STRING, "[+] BUILDING...1.6s"));
+        ImmutableList.of(
+            parsingLine, processingLine, distbuildLine, DOWNLOAD_STRING, "[+] BUILDING...1.6s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -975,7 +1021,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         timeMillis,
-        ImmutableList.of(parsingLine, distbuildLine, FINISHED_DOWNLOAD_STRING, buildingLine));
+        ImmutableList.of(
+            parsingLine, processingLine, distbuildLine, FINISHED_DOWNLOAD_STRING, buildingLine));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -989,7 +1036,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsoleWithLogLines(
         listener,
         timeMillis,
-        ImmutableList.of(parsingLine, distbuildLine, FINISHED_DOWNLOAD_STRING, buildingLine),
+        ImmutableList.of(
+            parsingLine, processingLine, distbuildLine, FINISHED_DOWNLOAD_STRING, buildingLine),
         ImmutableList.of(SEVERE_MESSAGE));
   }
 
@@ -1044,7 +1092,11 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(listener, 300L, ImmutableList.of("[+] PROCESSING BUCK FILES...0.1s"));
+    validateConsole(
+        listener,
+        300L,
+        ImmutableList.of(
+            "[-] PARSING BUCK FILES...FINISHED 0.2s", "[+] PROCESSING BUCK FILES...0.1s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1063,10 +1115,13 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.2s";
+    final String processingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
     validateConsole(
-        listener, 540L, ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
+        listener,
+        540L,
+        ImmutableList.of(parsingLine, processingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
     eventBus.postWithoutConfiguring(
@@ -1077,6 +1132,7 @@ public class SuperConsoleEventBusListenerTest {
         800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
             " |=> //:test...  0.2s (preparing)"));
@@ -1108,7 +1164,9 @@ public class SuperConsoleEventBusListenerTest {
     final String buildingLine = "[-] BUILDING...FINISHED 0.8s";
 
     validateConsole(
-        listener, 1300L, ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
+        listener,
+        1300L,
+        ImmutableList.of(parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1125,7 +1183,11 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         3000L,
         ImmutableList.of(
-            parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, "[+] TESTING...0.5s"));
+            parsingLine,
+            processingLine,
+            FINISHED_DOWNLOAD_STRING,
+            buildingLine,
+            "[+] TESTING...0.5s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1136,6 +1198,7 @@ public class SuperConsoleEventBusListenerTest {
         3200L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...0.7s",
@@ -1152,6 +1215,7 @@ public class SuperConsoleEventBusListenerTest {
         3400L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...0.9s",
@@ -1169,6 +1233,7 @@ public class SuperConsoleEventBusListenerTest {
         3600L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.1s",
@@ -1188,6 +1253,7 @@ public class SuperConsoleEventBusListenerTest {
         3800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.3s",
@@ -1215,6 +1281,7 @@ public class SuperConsoleEventBusListenerTest {
         4000L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.5s (1 PASS/0 FAIL)",
@@ -1240,7 +1307,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsoleWithStdOutAndErr(
         listener,
         4200L,
-        ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, testingLine),
+        ImmutableList.of(
+            parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine, testingLine),
         ImmutableList.of(),
         Optional.of(
             Joiner.on('\n')
@@ -1288,7 +1356,11 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(listener, 300L, ImmutableList.of("[+] PROCESSING BUCK FILES...0.1s"));
+    validateConsole(
+        listener,
+        300L,
+        ImmutableList.of(
+            "[-] PARSING BUCK FILES...FINISHED 0.2s", "[+] PROCESSING BUCK FILES...0.1s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1307,10 +1379,13 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.2s";
+    final String processingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
     validateConsole(
-        listener, 540L, ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
+        listener,
+        540L,
+        ImmutableList.of(parsingLine, processingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
     eventBus.postWithoutConfiguring(
@@ -1321,6 +1396,7 @@ public class SuperConsoleEventBusListenerTest {
         800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
             " |=> //:test...  0.2s (preparing)"));
@@ -1352,7 +1428,9 @@ public class SuperConsoleEventBusListenerTest {
     final String buildingLine = "[-] BUILDING...FINISHED 0.8s";
 
     validateConsole(
-        listener, 1300L, ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
+        listener,
+        1300L,
+        ImmutableList.of(parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1369,7 +1447,11 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         3000L,
         ImmutableList.of(
-            parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, "[+] TESTING...0.5s"));
+            parsingLine,
+            processingLine,
+            FINISHED_DOWNLOAD_STRING,
+            buildingLine,
+            "[+] TESTING...0.5s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1380,6 +1462,7 @@ public class SuperConsoleEventBusListenerTest {
         3200L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...0.7s",
@@ -1396,6 +1479,7 @@ public class SuperConsoleEventBusListenerTest {
         3400L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...0.9s",
@@ -1413,6 +1497,7 @@ public class SuperConsoleEventBusListenerTest {
         3600L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.1s",
@@ -1432,6 +1517,7 @@ public class SuperConsoleEventBusListenerTest {
         3800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.3s",
@@ -1460,6 +1546,7 @@ public class SuperConsoleEventBusListenerTest {
         4000L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.5s (0 PASS/1 SKIP/0 FAIL)",
@@ -1485,7 +1572,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsoleWithStdOutAndErr(
         listener,
         4200L,
-        ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, testingLine),
+        ImmutableList.of(
+            parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine, testingLine),
         ImmutableList.of(),
         Optional.of(
             Joiner.on('\n')
@@ -1547,7 +1635,11 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
-    validateConsole(listener, 300L, ImmutableList.of("[+] PROCESSING BUCK FILES...0.1s"));
+    validateConsole(
+        listener,
+        300L,
+        ImmutableList.of(
+            "[-] PARSING BUCK FILES...FINISHED 0.2s", "[+] PROCESSING BUCK FILES...0.1s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1566,10 +1658,13 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    final String parsingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
+    final String parsingLine = "[-] PARSING BUCK FILES...FINISHED 0.2s";
+    final String processingLine = "[-] PROCESSING BUCK FILES...FINISHED 0.2s";
 
     validateConsole(
-        listener, 540L, ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
+        listener,
+        540L,
+        ImmutableList.of(parsingLine, processingLine, DOWNLOAD_STRING, "[+] BUILDING...0.1s"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
     eventBus.postWithoutConfiguring(
@@ -1580,6 +1675,7 @@ public class SuperConsoleEventBusListenerTest {
         800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.4s",
             " |=> //:test...  0.2s (preparing)"));
@@ -1611,7 +1707,9 @@ public class SuperConsoleEventBusListenerTest {
     final String buildingLine = "[-] BUILDING...FINISHED 0.8s";
 
     validateConsole(
-        listener, 1300L, ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
+        listener,
+        1300L,
+        ImmutableList.of(parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1628,7 +1726,11 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         3000L,
         ImmutableList.of(
-            parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, "[+] TESTING...0.5s"));
+            parsingLine,
+            processingLine,
+            FINISHED_DOWNLOAD_STRING,
+            buildingLine,
+            "[+] TESTING...0.5s"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1639,6 +1741,7 @@ public class SuperConsoleEventBusListenerTest {
         3200L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...0.7s",
@@ -1655,6 +1758,7 @@ public class SuperConsoleEventBusListenerTest {
         3400L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...0.9s",
@@ -1672,6 +1776,7 @@ public class SuperConsoleEventBusListenerTest {
         3600L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.1s",
@@ -1691,6 +1796,7 @@ public class SuperConsoleEventBusListenerTest {
         3800L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.3s",
@@ -1718,6 +1824,7 @@ public class SuperConsoleEventBusListenerTest {
         4000L,
         ImmutableList.of(
             parsingLine,
+            processingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine,
             "[+] TESTING...1.5s (0 PASS/1 FAIL)",
@@ -1744,7 +1851,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsoleWithStdOutAndErr(
         listener,
         4200L,
-        ImmutableList.of(parsingLine, FINISHED_DOWNLOAD_STRING, buildingLine, testingLine),
+        ImmutableList.of(
+            parsingLine, processingLine, FINISHED_DOWNLOAD_STRING, buildingLine, testingLine),
         ImmutableList.of(),
         Optional.of(
             Joiner.on('\n')

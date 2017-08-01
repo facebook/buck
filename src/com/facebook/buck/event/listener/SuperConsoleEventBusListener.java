@@ -284,18 +284,15 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional.empty(),
         lines);
 
-    // If we have not yet started processing the BUCK files, show parse times
-    if (parseStarted.isEmpty() && parseFinished.isEmpty()) {
-      logEventPair(
-          "PARSING BUCK FILES",
-          /* suffix */ Optional.empty(),
-          currentTimeMillis,
-          /* offsetMs */ 0L,
-          projectBuildFileParseStarted,
-          projectBuildFileParseFinished,
-          getEstimatedProgressOfProcessingBuckFiles(),
-          lines);
-    }
+    logEventPair(
+        "PARSING BUCK FILES",
+        /* suffix */ Optional.empty(),
+        currentTimeMillis,
+        /* offsetMs */ 0L,
+        projectBuildFileParseStarted,
+        projectBuildFileParseFinished,
+        getEstimatedProgressOfProcessingBuckFiles(),
+        lines);
 
     long parseTime =
         logEventPair(
