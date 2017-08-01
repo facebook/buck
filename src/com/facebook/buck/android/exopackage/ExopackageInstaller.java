@@ -103,7 +103,6 @@ public class ExopackageInstaller {
         device.stopPackage(packageName);
       } else {
         device.killProcess(processName);
-        eventBus.post(ConsoleEvent.warning("Successfully terminated process " + processName));
       }
     }
   }

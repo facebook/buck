@@ -729,12 +729,15 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public void killProcess(String processName) throws Exception {
-    final String pids;
+    String pids;
     try {
       String output = executeCommandWithErrorChecking(String.format("pgrep %s", processName));
       // Convert to space separated array if necessary:
-      pids = Arrays.stream(output.split("\\s+")).collect(Collectors.joining(" "));
+      pids = Arrays.stream(output.split("\\s+")).collect(Collectors.joining(" ")).trim();
     } catch (AdbHelper.CommandFailedException e) {
+      pids = "";
+    }
+    if (pids.isEmpty()) {
       eventBus.post(
           ConsoleEvent.warning(
               "No matching process found: %s. "
@@ -747,6 +750,7 @@ public class RealAndroidDevice implements AndroidDevice {
             ? processName.substring(0, processName.indexOf(':'))
             : processName;
     executeCommandWithErrorChecking(String.format("run-as %s kill %s", packageName, pids));
+    eventBus.post(ConsoleEvent.warning("Successfully terminated process " + processName));
   }
 
   /**
