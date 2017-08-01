@@ -42,4 +42,24 @@ public enum ResourceFolderType {
       throw new IllegalArgumentException("Invalid resource type");
     }
   }
+
+  public boolean isIjFolderInstance(IjFolder folder) {
+    if (this.equals(JAVA_RESOURCE)) {
+      return folder instanceof JavaResourceFolder;
+    } else if (this.equals(JAVA_TEST_RESOURCE)) {
+      return folder instanceof JavaTestResourceFolder;
+    } else {
+      return false;
+    }
+  }
+
+  public Path getResourcesRootFromFolder(IjFolder folder) {
+    if (this.equals(JAVA_RESOURCE)) {
+      return ((JavaResourceFolder) folder).getResourcesRoot();
+    } else if (this.equals(JAVA_TEST_RESOURCE)) {
+      return ((JavaTestResourceFolder) folder).getResourcesRoot();
+    } else {
+      return null;
+    }
+  }
 }

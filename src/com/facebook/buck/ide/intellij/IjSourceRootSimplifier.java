@@ -21,6 +21,8 @@ import com.facebook.buck.ide.intellij.lang.java.JavaPackagePathCache;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
@@ -316,7 +318,8 @@ public class IjSourceRootSimplifier {
                   child ->
                       SourceFolder.class.isInstance(child)
                           || TestFolder.class.isInstance(child)
-                          || JavaResourceFolder.class.isInstance(child))
+                          || JavaResourceFolder.class.isInstance(child)
+                          || JavaTestResourceFolder.class.isInstance(child))
               .collect(MoreCollectors.toImmutableList());
 
       if (childrenToMerge.isEmpty()) {
@@ -325,8 +328,14 @@ public class IjSourceRootSimplifier {
 
       FolderTypeWithPackageInfo typeForMerging = findBestFolderType(childrenToMerge);
 
-      if (typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_RESOURCE_FOLDER)) {
-        return tryCreateNewParentFolderFromChildrenResourceFolders(currentPath, childrenToMerge);
+      if (typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_RESOURCE_FOLDER)
+          || typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_TEST_RESOURCE_FOLDER)) {
+        ResourceFolderType resourceFolderType =
+            (typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_RESOURCE_FOLDER))
+                ? ResourceFolderType.JAVA_RESOURCE
+                : ResourceFolderType.JAVA_TEST_RESOURCE;
+        return tryCreateNewParentFolderFromChildrenResourceFolders(
+            currentPath, childrenToMerge, resourceFolderType);
       } else if (typeForMerging.wantsPackagePrefix()) {
         return tryCreateNewParentFolderFromChildrenWithPackage(
             typeForMerging, currentPath, childrenToMerge);
@@ -336,25 +345,30 @@ public class IjSourceRootSimplifier {
       }
     }
 
-    /** Merges JavaResourceFolders. */
+    /** Merges JavaResourceFolders or JavaTestResourceFolders. */
     private Optional<IjFolder> tryCreateNewParentFolderFromChildrenResourceFolders(
-        Path currentPath, ImmutableCollection<IjFolder> children) {
+        Path currentPath,
+        ImmutableCollection<IjFolder> children,
+        ResourceFolderType resourceFolderType) {
+      Preconditions.checkArgument(
+          resourceFolderType.equals(ResourceFolderType.JAVA_RESOURCE)
+              || resourceFolderType.equals(ResourceFolderType.JAVA_TEST_RESOURCE));
+
       ImmutableList<IjFolder> childrenToMerge =
           children
               .stream()
-              .filter(JavaResourceFolder.class::isInstance)
+              .filter(resourceFolderType::isIjFolderInstance)
               .collect(MoreCollectors.toImmutableList());
 
       if (childrenToMerge.isEmpty()) {
         return Optional.empty();
       }
 
-      final JavaResourceFolder firstChildFolder = (JavaResourceFolder) childrenToMerge.get(0);
-
-      Preconditions.checkNotNull(firstChildFolder.getResourcesRoot());
+      final Path resourcesRoot =
+          resourceFolderType.getResourcesRootFromFolder(childrenToMerge.get(0));
 
       // If merging would recurse above resources_root, don't merge.
-      if (!currentPath.startsWith(firstChildFolder.getResourcesRoot())) {
+      if (!currentPath.startsWith(resourcesRoot)) {
         return Optional.empty();
       }
 
@@ -365,15 +379,14 @@ public class IjSourceRootSimplifier {
               .allMatch(
                   folder ->
                       Objects.equals(
-                          ((JavaResourceFolder) folder).getResourcesRoot(),
-                          firstChildFolder.getResourcesRoot()));
+                          resourcesRoot, resourceFolderType.getResourcesRootFromFolder(folder)));
       if (!childrenHaveSameResourcesRoot) {
         return Optional.empty();
       }
 
       IjFolder mergedFolder =
-          firstChildFolder
-              .getFactoryWithSameResourcesRoot()
+          resourceFolderType
+              .getFactoryWithResourcesRoot(resourcesRoot)
               .create(
                   currentPath,
                   false,
