@@ -53,7 +53,7 @@ public interface Command {
   /** @return how we want logging to be configured for the the command. */
   LogConfigSetup getLogConfig();
 
-  // If it gets messy adding more arguments here, make them into an Immutable instead.
+  /** If any of these listeners also extends Closeable, it will be closed by Main. */
   Iterable<BuckEventListener> getEventListeners();
 
   void printUsage(PrintStream stream);

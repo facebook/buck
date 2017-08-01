@@ -143,7 +143,8 @@ public class ParsePipelineTest {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCell();
       expectedException.expect(NoSuchBuildTargetException.class);
-      expectedException.expectMessage("No rule found when resolving target //:notthere");
+      expectedException.expectMessage(
+          "The rule //:notthere could not be found.\nPlease check the spelling and whether it exists in");
       fixture
           .getTargetNodeParsePipeline()
           .getNode(
@@ -159,7 +160,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       expectedException.expect(BuildFileParseException.class);
       expectedException.expectMessage(
-          stringContainsInOrder("Parse error for build file", "No such file or directory"));
+          stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getTargetNodeParsePipeline()
           .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"), new AtomicLong());
@@ -172,7 +173,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       expectedException.expect(BuildFileParseException.class);
       expectedException.expectMessage(
-          stringContainsInOrder("Parse error for build file", "No such file or directory"));
+          stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getRawNodeParsePipeline()
           .getAllNodes(cell, cell.getFilesystem().resolve("no/such/file/BUCK"), new AtomicLong());

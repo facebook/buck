@@ -504,6 +504,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
+  public void autoSparseStateRefreshFailed(AutoSparseStateEvents.SparseRefreshFailed failed) {
+    String failureDetails = failed.getFailureDetails();
+    if (failureDetails.length() > 0) {
+      printSevereWarningDirectly(failureDetails);
+    }
+  }
+
+  @Subscribe
   public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
     projectBuildFileParseStarted = started;
   }

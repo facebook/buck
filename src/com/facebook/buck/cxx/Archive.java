@@ -67,6 +67,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   // Not added to RuleKey because it's a view over things already in the RuleKey.
   private final ImmutableSortedSet<BuildRule> deps;
 
+  private final boolean cacheable;
+
   private Archive(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -77,7 +79,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<String> ranlibFlags,
       Contents contents,
       Path output,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean cacheable) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkState(
         contents == Contents.NORMAL || archiver.supportsThinArchives(),
@@ -95,6 +98,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     this.contents = contents;
     this.output = output;
     this.inputs = inputs;
+    this.cacheable = cacheable;
   }
 
   public static Archive from(
@@ -104,7 +108,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       CxxPlatform platform,
       Contents contents,
       Path output,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean cacheable) {
     return from(
         target,
         projectFilesystem,
@@ -115,7 +120,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         platform.getRanlibflags(),
         contents,
         output,
-        inputs);
+        inputs,
+        cacheable);
   }
 
   /**
@@ -134,7 +140,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<String> ranlibFlags,
       Contents contents,
       Path output,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean cacheable) {
 
     ImmutableSortedSet<BuildRule> deps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -152,7 +159,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         ranlibFlags,
         contents,
         output,
-        inputs);
+        inputs,
+        cacheable);
   }
 
   @Override
@@ -241,6 +249,11 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     return contents == Contents.NORMAL
         ? SourcePathArg.of(archive)
         : ThinArchiveArg.of(archive, inputs);
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
   }
 
   @Override

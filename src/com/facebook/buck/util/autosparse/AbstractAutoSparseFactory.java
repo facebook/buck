@@ -39,7 +39,10 @@ public class AbstractAutoSparseFactory {
 
   @Nullable
   public static synchronized AutoSparseState getAutoSparseState(
-      Path projectPath, HgCmdLineInterface hgCmdLine, AutoSparseConfig autoSparseConfig)
+      Path projectPath,
+      Path buckOut,
+      HgCmdLineInterface hgCmdLine,
+      AutoSparseConfig autoSparseConfig)
       throws InterruptedException {
     Path hgRoot = hgCmdLine.getHgRoot();
     if (hgRoot == null) {
@@ -58,6 +61,7 @@ public class AbstractAutoSparseFactory {
     if (perSCRoot.containsKey(hgRoot)) {
       AutoSparseState entry = perSCRoot.get(hgRoot).get();
       if (entry != null && entry.getRevisionId().equals(hgRevisionId)) {
+        entry.addBuckOut(projectPath.resolve(buckOut));
         entry.updateConfig(autoSparseConfig);
         return entry;
       } else {
@@ -68,6 +72,7 @@ public class AbstractAutoSparseFactory {
     HgAutoSparseState newState =
         new HgAutoSparseState(hgCmdLine, hgRoot, hgRevisionId, autoSparseConfig);
     perSCRoot.put(hgRoot, new WeakReference<>(newState));
+    newState.addBuckOut(projectPath.resolve(buckOut));
     return newState;
   }
 }

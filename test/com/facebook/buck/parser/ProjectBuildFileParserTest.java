@@ -258,7 +258,7 @@ public class ProjectBuildFileParserTest {
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
-        "Parse error for build file foo/BUCK:\n"
+        "Buck wasn't able to parse foo/BUCK:\n"
             + "Syntax error on line 23, column 16:\n"
             + "java_test(name=*@!&#(!@&*()\n"
             + "               ^");
@@ -299,7 +299,7 @@ public class ProjectBuildFileParserTest {
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
-        "Parse error for build file foo/BUCK:\n"
+        "Buck wasn't able to parse foo/BUCK:\n"
             + "Syntax error on line 23:\n"
             + "java_test(name=*@!&#(!@&*()");
 
@@ -348,7 +348,7 @@ public class ProjectBuildFileParserTest {
     buckEventBus.register(eventListener);
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
-        "Parse error for build file foo/BUCK:\n"
+        "Buck wasn't able to parse foo/BUCK:\n"
             + "Syntax error in bar/BUCK\n"
             + "Line 42, column 24:\n"
             + "def some_helper_method(!@87*@!#\n"
@@ -396,7 +396,7 @@ public class ProjectBuildFileParserTest {
 
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
-        "Parse error for build file foo/BUCK:\n"
+        "Buck wasn't able to parse foo/BUCK:\n"
             + "ZeroDivisionError: integer division or modulo by zero\n"
             + "Call stack:\n"
             + "  File \"bar/BUCK\", line 42, in lets_divide_by_zero\n"

@@ -23,6 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -157,6 +158,10 @@ public class MemoryHandler extends Handler {
     if (record.getThrown() instanceof NoHealthyServersException) {
       // We don't need to log NoHealthyServersException since it's an expected behavior when the
       // network connection is bad.
+      return false;
+    } else if (record.getThrown() instanceof CancellationException) {
+      // Don't log cancellation here since it's not actionable.  If the cancellation is due to an
+      // error elsewhere, that error will get logged anyways.
       return false;
     } else {
       return super.isLoggable(record);

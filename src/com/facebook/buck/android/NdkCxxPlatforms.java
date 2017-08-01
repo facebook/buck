@@ -191,6 +191,49 @@ public class NdkCxxPlatforms {
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      Platform platform,
+      Optional<String> ndkVersion) {
+    Optional<Path> ndkRoot = androidDirectoryResolver.getNdkOrAbsent();
+    if (!ndkRoot.isPresent()) {
+      return ImmutableMap.of();
+    }
+
+    NdkCxxPlatformCompiler.Type compilerType =
+        androidConfig.getNdkCompiler().orElse(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
+    String gccVersion =
+        androidConfig
+            .getNdkGccVersion()
+            .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
+    String clangVersion =
+        androidConfig
+            .getNdkClangVersion()
+            .orElse(NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
+    String compilerVersion =
+        compilerType == NdkCxxPlatformCompiler.Type.GCC ? gccVersion : clangVersion;
+    NdkCxxPlatformCompiler compiler =
+        NdkCxxPlatformCompiler.builder()
+            .setType(compilerType)
+            .setVersion(compilerVersion)
+            .setGccVersion(gccVersion)
+            .build();
+    return getPlatforms(
+        config,
+        androidConfig,
+        filesystem,
+        ndkRoot.get(),
+        compiler,
+        androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
+        androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
+        androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
+        platform);
+  }
+
+  @VisibleForTesting
+  public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+      CxxBuckConfig config,
+      AndroidBuckConfig androidConfig,
+      ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,

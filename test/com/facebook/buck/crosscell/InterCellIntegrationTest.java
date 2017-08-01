@@ -393,8 +393,8 @@ public class InterCellIntegrationTest {
     } catch (HumanReadableException expected) {
       assertEquals(
           expected.getMessage(),
-          "Overridden cxx:cc path not found: /does/not/exist\n"
-              + "    when trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
+          "Overridden cxx:cc path not found: /does/not/exist\n\n"
+              + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
     }
 
     ProjectWorkspace.ProcessResult result =

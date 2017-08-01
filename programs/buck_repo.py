@@ -48,6 +48,17 @@ class BuckRepo(BuckTool):
         self.is_git = os.path.exists(dot_git) and os.path.isdir(dot_git) and which('git') and \
             sys.platform != 'cygwin'
         self._is_buck_repo_dirty_override = os.environ.get('BUCK_REPOSITORY_DIRTY')
+        if not self._fake_buck_version:
+            # self._fake_buck_version has been set previously through BuckTool when the environment
+            # variable BUCK_FAKE_VERSION is set.
+            # If the environement variable is not set, we'll use the content of .fakebuckversion
+            # at the root of the repository if it exists.
+            fake_buck_version_file_path = os.path.join(self.buck_dir, ".fakebuckversion")
+            if os.path.exists(fake_buck_version_file_path):
+                with open(fake_buck_version_file_path) as fake_buck_version_file:
+                    self._fake_buck_version = fake_buck_version_file.read().strip()
+                    logging.info("Using fake buck version (via .fakebuckversion): {}".format(
+                        self._fake_buck_version))
 
     def _join_buck_dir(self, relative_path):
         return os.path.join(self.buck_dir, *(relative_path.split('/')))
@@ -85,17 +96,6 @@ class BuckRepo(BuckTool):
 
     def _get_buck_version_uid(self):
         with Tracing('BuckRepo._get_buck_version_uid'):
-
-            # Check if the developer has requested that we impersonate some other version.
-            # Start with the environment variable BUCK_FAKE_VERSION.
-            fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
-            if not fake_buck_version:
-                # Then check the content of .fakebuckversion.
-                fake_buck_version_file_path = os.path.join(self.buck_dir, ".fakebuckversion")
-                if os.path.exists(fake_buck_version_file_path):
-                    with open(fake_buck_version_file_path) as fake_buck_version_file:
-                        fake_buck_version = fake_buck_version_file.read().strip()
-
             if self._fake_buck_version:
                 return self._fake_buck_version
 

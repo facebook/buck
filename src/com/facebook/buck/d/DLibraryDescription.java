@@ -160,7 +160,8 @@ public class DLibraryDescription
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
-        compiledSources);
+        compiledSources,
+        /* cacheable */ true);
   }
 
   @BuckStyleImmutable

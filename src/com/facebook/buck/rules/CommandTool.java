@@ -20,8 +20,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -40,14 +41,14 @@ public class CommandTool implements Tool {
 
   private final Optional<Tool> baseTool;
   private final ImmutableList<Arg> args;
-  private final ImmutableMap<String, Arg> environment;
+  private final ImmutableSortedMap<String, Arg> environment;
   private final ImmutableSortedSet<SourcePath> extraInputs;
   private final ImmutableSortedSet<BuildRule> extraDeps;
 
   private CommandTool(
       Optional<Tool> baseTool,
       ImmutableList<Arg> args,
-      ImmutableMap<String, Arg> environment,
+      ImmutableSortedMap<String, Arg> environment,
       ImmutableSortedSet<SourcePath> extraInputs,
       ImmutableSortedSet<BuildRule> extraDeps) {
     this.baseTool = baseTool;
@@ -66,6 +67,10 @@ public class CommandTool implements Tool {
     for (Arg arg : args) {
       inputs.addAll(arg.getInputs());
     }
+    for (Map.Entry<String, Arg> entry : environment.entrySet()) {
+      inputs.addAll(entry.getValue().getInputs());
+    }
+
     inputs.addAll(extraInputs);
     return inputs.build();
   }
@@ -94,8 +99,8 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+  public ImmutableSortedMap<String, String> getEnvironment(SourcePathResolver resolver) {
+    ImmutableSortedMap.Builder<String, String> env = ImmutableSortedMap.naturalOrder();
     if (baseTool.isPresent()) {
       env.putAll(baseTool.get().getEnvironment(resolver));
     }
@@ -107,6 +112,7 @@ public class CommandTool implements Tool {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("baseTool", baseTool)
         .setReflectively("args", args)
+        .setReflectively("environment", environment)
         .setReflectively("extraInputs", extraInputs);
   }
 
@@ -115,7 +121,8 @@ public class CommandTool implements Tool {
 
     private final Optional<Tool> baseTool;
     private final ImmutableList.Builder<Arg> args = ImmutableList.builder();
-    private final ImmutableMap.Builder<String, Arg> environment = ImmutableMap.builder();
+    private final ImmutableSortedMap.Builder<String, Arg> environment =
+        ImmutableSortedMap.naturalOrder();
     private final ImmutableSortedSet.Builder<SourcePath> extraInputs =
         ImmutableSortedSet.naturalOrder();
     private final ImmutableSortedSet.Builder<BuildRule> extraDeps =

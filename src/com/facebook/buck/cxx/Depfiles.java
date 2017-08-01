@@ -238,23 +238,27 @@ public class Depfiles {
         if (absolutePath.isPresent()) {
           Preconditions.checkState(absolutePath.get().isAbsolute());
           resultBuilder.add(absolutePath.get());
-        } else if (headerVerification.getMode() != HeaderVerification.Mode.IGNORE
-            && !(headerVerification.isWhitelisted(header.toString())
+        } else if ((headerVerification.getMode() != HeaderVerification.Mode.IGNORE)
+            && (!(headerVerification.isWhitelisted(header.toString())
                 || repoRelativePath
                     .map(path -> headerVerification.isWhitelisted(path.toString()))
-                    .orElse(false))) {
-          String errorMessage =
-              String.format(
-                  "%s: included an untracked header \"%s\"",
-                  inputPath, repoRelativePath.orElse(header));
-          eventBus.post(
-              ConsoleEvent.create(
-                  headerVerification.getMode() == HeaderVerification.Mode.ERROR
-                      ? Level.SEVERE
-                      : Level.WARNING,
-                  errorMessage));
-          if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
-            throw new HeaderVerificationException(errorMessage);
+                    .orElse(false)))) {
+          // Check again with the real path with all symbolic links resolved.
+          header = header.toRealPath();
+          if (!(headerVerification.isWhitelisted(header.toString()))) {
+            String errorMessage =
+                String.format(
+                    "%s: included an untracked header \"%s\"",
+                    inputPath, repoRelativePath.orElse(header));
+            eventBus.post(
+                ConsoleEvent.create(
+                    headerVerification.getMode() == HeaderVerification.Mode.ERROR
+                        ? Level.SEVERE
+                        : Level.WARNING,
+                    errorMessage));
+            if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
+              throw new HeaderVerificationException(errorMessage);
+            }
           }
         }
       }

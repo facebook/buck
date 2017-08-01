@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -66,8 +66,6 @@ public class ManifestTrie {
   }
 
   /**
-   * Check if the directory exists (path exists but has no leaf ManifestInfo node)
-   *
    * @param path directory to test for
    * @return true if the path exists as a directory
    */
@@ -85,6 +83,17 @@ public class ManifestTrie {
   public boolean containsLeafNodes(Path path) {
     TrieNode node = root.get(path.iterator());
     return node != null && !node.isLeaf() && node.containsLeaves;
+  }
+
+  /**
+   * Check if the trie contains the path (either as file or directory)
+   *
+   * @param path to test for
+   * @return true if the path exists in the trie
+   */
+  public boolean contains(Path path) {
+    TrieNode node = root.get(path.iterator());
+    return node != null;
   }
 
   @Nullable

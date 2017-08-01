@@ -591,7 +591,8 @@ public class CxxLibraryDescription
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
-        ImmutableList.copyOf(objects.values()));
+        ImmutableList.copyOf(objects.values()),
+        /* cacheable */ true);
   }
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */

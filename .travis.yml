@@ -35,10 +35,11 @@ addons:
       - oracle-java8-installer
 
 before_install:
-  - mkdir travis-cxx
-  - ln -s /usr/bin/gcc-4.7 travis-cxx/gcc
-  - ln -s /usr/bin/g++-4.7 travis-cxx/g++
-  - export PATH=$(pwd)/travis-cxx:$PATH
+  - rm -rf ${HOME}/travis-cxx
+  - mkdir ${HOME}/travis-cxx
+  - ln -s /usr/bin/gcc-4.7 ${HOME}/travis-cxx/gcc
+  - ln -s /usr/bin/g++-4.7 ${HOME}/travis-cxx/g++
+  - export PATH=${HOME}/travis-cxx:$PATH
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
   - export ANT_OPTS='-Xmx500m'
   - echo '-Xmx500m' > .buckjavaargs.local

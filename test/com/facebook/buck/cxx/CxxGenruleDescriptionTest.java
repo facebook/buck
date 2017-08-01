@@ -171,7 +171,7 @@ public class CxxGenruleDescriptionTest {
     BuildTarget translated = BuildTargetFactory.newInstance("//something:else");
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(target)
-            .setCmd(String.format("$(cppflags %s)", original))
+            .setCmd(String.format("$(cppflags %s) $(cxxppflags)", original))
             .setOut("foo");
     TargetNode<CxxGenruleDescriptionArg, CxxGenruleDescription> node = builder.build();
     TargetNodeTranslator translator =
@@ -182,7 +182,8 @@ public class CxxGenruleDescriptionTest {
             .translateConstructorArg(
                 target, node.getCellNames(), translator, node.getConstructorArg());
     assertThat(
-        translatedArg.get().getCmd().get(), Matchers.equalTo("$(cppflags //something:else)"));
+        translatedArg.get().getCmd().get(),
+        Matchers.equalTo("$(cppflags //something:else) $(cxxppflags)"));
   }
 
   @Test

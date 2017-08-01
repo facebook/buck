@@ -559,7 +559,7 @@ public class DaemonIntegrationTest {
           "Failure should be due to syntax error.",
           expected.getHumanReadableErrorMessage(),
           containsString(
-              "    when trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
+              "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
     }
   }
 

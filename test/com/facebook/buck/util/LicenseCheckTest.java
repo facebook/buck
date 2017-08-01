@@ -40,7 +40,8 @@ public class LicenseCheckTest {
           // Because it's not originally our code.
           Paths.get("src/com/facebook/buck/jvm/java/coverage/ReportGenerator.java"),
           Paths.get("src/com/facebook/buck/util/WindowsCreateProcessEscape.java"),
-          Paths.get("test/com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"));
+          Paths.get("test/com/facebook/buck/util/WindowsCreateProcessEscapeTest.java"),
+          Paths.get("src/com/facebook/buck/util/xml/PositionalXmlHandler.java"));
 
   private static final ImmutableSet<Path> NON_APACHE_LICENSE_DIRS_WHITELIST =
       ImmutableSet.of(

@@ -45,7 +45,7 @@ public class BuildFileParseException extends Exception
   }
 
   static BuildFileParseException createForBuildFileParseError(Path buildFile, IOException cause) {
-    String message = String.format("Parse error for build file %s", buildFile);
+    String message = String.format("Buck wasn't able to parse %s", buildFile);
     return new BuildFileParseException(formatMessageWithCause(message, cause));
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -276,7 +276,10 @@ public class AutoSparseIntegrationTest {
       throws InterruptedException {
     String hgCmd = new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd();
     return ProjectFilesystemDelegateFactory.newInstance(
-        root, hgCmd, AutoSparseConfig.of(enableAutosparse, autosparseIgnore));
+        root,
+        root.resolve("buck-out"),
+        hgCmd,
+        AutoSparseConfig.of(enableAutosparse, autosparseIgnore));
   }
 
   private static Path explodeRepoZip() throws InterruptedException, IOException {

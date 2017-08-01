@@ -46,7 +46,9 @@ do
     BUNDLE_OUTPUT=$(get_param "$args_string" "bundle-output")
     SOURCEMAP_OUTPUT=$(get_param "$args_string" "sourcemap-output")
 
-    cat $THIS_DIR/app/sample.ios.js $THIS_DIR/app/helpers.js > $BUNDLE_OUTPUT
+    echo -n "// env: " > $BUNDLE_OUTPUT
+    env | grep 'ABC=' >> $BUNDLE_OUTPUT
+    cat $THIS_DIR/app/sample.ios.js $THIS_DIR/app/helpers.js >> $BUNDLE_OUTPUT
     copy_assets "$ASSETS_DEST/assets/Apps/DemoApp/"
 
     # write something as the source map because the rule caches this output.

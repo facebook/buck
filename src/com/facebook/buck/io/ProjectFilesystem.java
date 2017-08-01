@@ -156,7 +156,7 @@ public class ProjectFilesystem {
 
   /**
    * This constructor is restricted to {@code protected} because it is generally best to let {@link
-   * ProjectFilesystemDelegateFactory#newInstance(Path, String, AutoSparseConfig)} create an
+   * ProjectFilesystemDelegateFactory#newInstance(Path, Path, String, AutoSparseConfig)} create an
    * appropriate delegate. Currently, the only case in which we need to override this behavior is in
    * unit tests.
    */
@@ -179,6 +179,7 @@ public class ProjectFilesystem {
         getConfiguredBuckPaths(root, config),
         ProjectFilesystemDelegateFactory.newInstance(
             root,
+            getConfiguredBuckPaths(root, config).getBuckOut(),
             config.getValue("version_control", "hg_cmd").orElse("hg"),
             AutoSparseConfig.of(config)),
         config.getBooleanValue("project", "windows_symlinks", false));

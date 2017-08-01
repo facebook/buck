@@ -20,7 +20,6 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,6 +41,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
   private final Path root;
   private final ImmutableMap<String, Path> cellPaths;
   private final ImmutableMap<Path, String> canonicalNames;
+  private final ImmutableMap<RelativeCellName, Path> pathMapping;
 
   public DefaultCellPathResolver(Path root, ImmutableMap<String, Path> cellPaths) {
     this.root = root;
@@ -57,6 +57,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
                         Map.Entry::getKey,
                         BinaryOperator.minBy(Comparator.<String>naturalOrder())),
                     ImmutableMap::copyOf));
+    this.pathMapping = bootstrapPathMapping(root, cellPaths);
   }
 
   public DefaultCellPathResolver(Path root, Config config) {
@@ -74,20 +75,21 @@ public class DefaultCellPathResolver implements CellPathResolver {
   }
 
   /**
-   * The root cell is required to declare all {@link Cell}s it and its dependants can reach
+   * Helper function to precompute the {@link RelativeCellName} to Path mapping
    *
    * @return Map of cell name to path.
    */
-  public ImmutableMap<RelativeCellName, Path> getPathMapping() {
+  private static ImmutableMap<RelativeCellName, Path> bootstrapPathMapping(
+      Path root, ImmutableMap<String, Path> cellPaths) {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
+    // Add the implicit empty root cell
     builder.put(RelativeCellName.of(ImmutableList.of()), root);
     HashSet<Path> seenPaths = new HashSet<>();
-    seenPaths.add(root);
 
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
     for (String cellName : sortedCellNames) {
-      Path cellRoot = Preconditions.checkNotNull(getCellPath(cellName));
+      Path cellRoot = getCellPath(cellPaths, root, cellName);
       try {
         cellRoot = cellRoot.toRealPath().normalize();
       } catch (IOException e) {
@@ -102,17 +104,32 @@ public class DefaultCellPathResolver implements CellPathResolver {
     return builder.build();
   }
 
+  public static ImmutableMap<RelativeCellName, Path> bootstrapPathMapping(
+      Path root, Config config) {
+    return bootstrapPathMapping(
+        root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
+  }
+
+  public ImmutableMap<RelativeCellName, Path> getPathMapping() {
+    return pathMapping;
+  }
+
   public Path getRoot() {
     return root;
   }
 
-  private Path getCellPath(String cellName) {
+  private static Path getCellPath(
+      ImmutableMap<String, Path> cellPaths, Path root, String cellName) {
     Path path = cellPaths.get(cellName);
     if (path == null) {
       throw new HumanReadableException(
           "In cell rooted at %s: cell named '%s' is not defined.", root, cellName);
     }
     return path;
+  }
+
+  private Path getCellPath(String cellName) {
+    return getCellPath(cellPaths, root, cellName);
   }
 
   @Override

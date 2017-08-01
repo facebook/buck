@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -194,7 +195,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               HTTP_PROTOCOL,
               mode);
           break;
-
+        case sqlite:
+          initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          break;
         case thrift_over_http:
           initializeDistributedCaches(
               cacheEntries,
@@ -273,6 +276,19 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               distributedBuildModeEnabled,
               cacheMode));
     }
+  }
+
+  private static void initializeSQLiteCaches(
+      ArtifactCacheEntries artifactCacheEntries,
+      BuckEventBus buckEventBus,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList.Builder<ArtifactCache> builder) {
+    artifactCacheEntries
+        .getSQLiteCacheEntries()
+        .forEach(
+            cacheEntry ->
+                builder.add(
+                    createSQLiteArtifactCache(buckEventBus, cacheEntry, projectFilesystem)));
   }
 
   private static ArtifactCache createDirArtifactCache(
@@ -452,6 +468,31 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
+  }
+
+  private static ArtifactCache createSQLiteArtifactCache(
+      BuckEventBus buckEventBus,
+      SQLiteCacheEntry cacheConfig,
+      ProjectFilesystem projectFilesystem) {
+    Path cacheDir = cacheConfig.getCacheDir();
+    try {
+      SQLiteArtifactCache sqLiteArtifactCache =
+          new SQLiteArtifactCache(
+              "sqlite",
+              projectFilesystem,
+              cacheDir,
+              cacheConfig.getMaxSizeBytes(),
+              cacheConfig.getMaxInlinedSizeBytes(),
+              cacheConfig.getCacheReadMode());
+
+      return new LoggingArtifactCacheDecorator(
+          buckEventBus,
+          sqLiteArtifactCache,
+          new SQLiteArtifactCacheEvent.SQLiteArtifactCacheEventFactory());
+    } catch (IOException | SQLException e) {
+      throw new HumanReadableException(
+          e, "Failure initializing artifact cache directory: %s", cacheDir);
+    }
   }
 
   private static String stripNonAscii(String str) {

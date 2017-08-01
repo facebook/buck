@@ -24,7 +24,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.XmlDomParser;
+import com.facebook.buck.util.xml.XmlDomParser;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.Charset;

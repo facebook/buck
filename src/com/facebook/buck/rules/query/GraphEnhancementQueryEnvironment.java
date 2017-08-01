@@ -232,9 +232,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
     @Override
     public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
-      if ("$declared_deps".equals(target)
-          || "$declared".equals(target)
-          || "first_order_deps()".equals(target)) {
+      if ("$declared_deps".equals(target) || "$declared".equals(target)) {
         return declaredDeps
             .stream()
             .map(QueryBuildTarget::of)

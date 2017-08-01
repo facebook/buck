@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -73,6 +73,12 @@ public abstract class AutoSparseStateEvents extends AbstractBuckEvent
 
   /** Event posted when the sparse profile refresh fails */
   public static class SparseRefreshFailed extends AutoSparseStateEvents {
+    private static String PENDING_CHANGES = "cannot change sparseness due to pending changes";
+    private static String STDERR_HEADER = "stderr:\n";
+    private static String TRACEBACK_HEADER = "Traceback (most recent call last)";
+    private static String SPARSE_ISSUE_INTRO =
+        "hg sparse failed to refresh your working copy, due to the following problems:";
+
     @JsonView(JsonViews.MachineReadableLog.class)
     private String output;
 
@@ -84,6 +90,26 @@ public abstract class AutoSparseStateEvents extends AbstractBuckEvent
     @Override
     public String getEventName() {
       return "AutoSparseSparseRefreshFailed";
+    }
+
+    public String getFailureDetails() {
+      // Look for failure information the end-user should know about
+      if (output.contains(PENDING_CHANGES)) {
+        // Sparse profile can't be materialised
+        int start = output.indexOf(STDERR_HEADER);
+        int end = output.indexOf(TRACEBACK_HEADER, start);
+        if (start > -1 && end > -1) {
+          return String.join(
+              "\n",
+              SPARSE_ISSUE_INTRO,
+              "", // empty line separating intro from error
+              output.substring(start + STDERR_HEADER.length(), end - 1),
+              output.substring(output.lastIndexOf(PENDING_CHANGES)).trim(),
+              "" // extra empty line after
+              );
+        }
+      }
+      return "";
     }
   }
 }

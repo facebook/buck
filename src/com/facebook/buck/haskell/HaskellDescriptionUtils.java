@@ -350,7 +350,8 @@ public class HaskellDescriptionUtils {
                 cxxPlatform,
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
-                emptyCompiledModule.getObjects()));
+                emptyCompiledModule.getObjects(),
+                /* cacheable */ true));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
