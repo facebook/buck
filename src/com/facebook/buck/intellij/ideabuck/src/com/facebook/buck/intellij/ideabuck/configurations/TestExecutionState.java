@@ -36,7 +36,11 @@ import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import java.util.regex.Matcher;
@@ -115,7 +119,28 @@ class TestExecutionState implements RunProfileState {
     }
     handler.start();
     final OSProcessHandler result = handler.getHandler();
-    BuckToolWindowFactory.showRunToolWindowAfterOSProcessHandler(result, title, mProject);
+    schedulePostExecutionActions(result, title);
     return result;
+  }
+
+  private void schedulePostExecutionActions(final OSProcessHandler result, final String title) {
+    final ProgressManager manager = ProgressManager.getInstance();
+    ApplicationManager.getApplication()
+        .invokeLater(
+            () -> {
+              manager.run(
+                  new Task.Backgroundable(mProject, title, true) {
+                    public void run(@NotNull final ProgressIndicator indicator) {
+                      try {
+                        result.waitFor();
+                      } finally {
+                        indicator.cancel();
+                      }
+                      if (!BuckToolWindowFactory.isRunToolWindowVisible(mProject)) {
+                        BuckToolWindowFactory.showRunToolWindow(mProject);
+                      }
+                    }
+                  });
+            });
   }
 }
