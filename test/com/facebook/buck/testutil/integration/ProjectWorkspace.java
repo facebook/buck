@@ -336,10 +336,6 @@ public class ProjectWorkspace {
             .omitEmptyStrings()
             .splitToList(buildResult.getStdout());
 
-    // Skip the first line, which is just "The outputs are:".
-    assertThat(lines.get(0), Matchers.equalTo("The outputs are:"));
-    lines = lines.subList(1, lines.size());
-
     Splitter lineSplitter = Splitter.on(' ').trimResults();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (String line : lines) {

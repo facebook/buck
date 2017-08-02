@@ -791,7 +791,6 @@ public class BuildCommand extends AbstractCommand {
               new DefaultRuleKeyFactory(
                   fieldLoader, params.getFileHashCache(), pathResolver, ruleFinder));
     }
-    params.getConsole().getStdOut().println("The outputs are:");
     for (BuildTarget buildTarget : buildTargets) {
       try {
         BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
