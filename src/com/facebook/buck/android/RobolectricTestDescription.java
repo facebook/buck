@@ -56,8 +56,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 public class RobolectricTestDescription
     implements Description<RobolectricTestDescriptionArg>,
@@ -232,12 +232,11 @@ public class RobolectricTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRobolectricTestDescriptionArg extends JavaTestDescription.CoreArg {
+  interface AbstractRobolectricTestDescriptionArg extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
+
     Optional<String> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
-
-    Optional<AndroidLibraryDescription.JvmLanguage> getLanguage();
 
     @Value.Default
     default boolean isUseOldStyleableFormat() {
