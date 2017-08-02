@@ -15,12 +15,14 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAPKModule {
+@BuckStyleTuple
+abstract class AbstractAPKModule implements RuleKeyAppendable {
   public abstract String getName();
 
   @Value.Derived
@@ -35,5 +37,10 @@ abstract class AbstractAPKModule {
     } else {
       return String.format("store%04x", getName().hashCode() & 0xFFFF);
     }
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("name", getName());
   }
 }

@@ -282,7 +282,7 @@ public class APKModuleGraph {
         }
       }.start();
     }
-    APKModule rootModule = APKModule.builder().setName(ROOT_APKMODULE_NAME).build();
+    APKModule rootModule = APKModule.of(ROOT_APKMODULE_NAME);
     buildTargetsMap.put(rootModule, ImmutableSet.copyOf(rootTargets));
     return rootModule;
   }
@@ -352,7 +352,7 @@ public class APKModuleGraph {
             containingModuleSet.size() == 1
                 ? containingModuleSet.iterator().next()
                 : generateNameFromTarget(entry.getKey());
-        APKModule module = APKModule.builder().setName(name).build();
+        APKModule module = APKModule.of(name);
         combinedModuleHashToModuleMap.put(containingModuleSet, module);
         getBuildTargets(module).add(entry.getKey());
       }
