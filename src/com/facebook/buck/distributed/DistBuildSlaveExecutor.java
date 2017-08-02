@@ -250,7 +250,7 @@ public class DistBuildSlaveExecutor {
             args.getRemoteRootCellConfig().getEnvironment(),
             androidConfig.getBuildToolsVersion(),
             androidConfig.getNdkVersion());
-    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig, args.getBuckEventBus());
+    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
   }
 
   private List<BuildTarget> fullyQualifiedNameToBuildTarget(Iterable<String> buildTargets) {

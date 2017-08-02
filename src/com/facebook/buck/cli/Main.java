@@ -958,8 +958,7 @@ public final class Main {
             processManager = Optional.of(new PkillProcessManager(processExecutor));
           }
           Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-              new AndroidPlatformTargetSupplier(
-                  androidDirectoryResolver, androidBuckConfig, buildEventBus);
+              new AndroidPlatformTargetSupplier(androidDirectoryResolver, androidBuckConfig);
 
           // At this point, we have parsed options but haven't started
           // running the command yet.  This is a good opportunity to

@@ -96,8 +96,7 @@ public class CommandRunnerParamsForTesting {
         .setAndroidPlatformTargetSupplier(
             new AndroidPlatformTargetSupplier(
                 androidDirectoryResolver,
-                new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
-                eventBus))
+                new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform)))
         .setArtifactCacheFactory(new SingletonArtifactCacheFactory(artifactCache))
         .setBuckEventBus(eventBus)
         .setTypeCoercerFactory(typeCoercerFactory)
