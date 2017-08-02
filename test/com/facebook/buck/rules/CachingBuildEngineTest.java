@@ -817,7 +817,6 @@ public class CachingBuildEngineTest {
       }
     }
 
-    @Ignore
     @Test
     public void multipleTopLevelRulesDontBlockEachOther() throws Exception {
       Exchanger<Boolean> exchanger = new Exchanger<>();
@@ -857,10 +856,10 @@ public class CachingBuildEngineTest {
       resolver.addToIndex(interleavedRuleTwo);
 
       // The engine needs a couple of threads to ensure that it can schedule multiple steps at the same time.
+      ListeningExecutorService executorService =
+          listeningDecorator(Executors.newFixedThreadPool(4));
       try (CachingBuildEngine cachingBuildEngine =
-          cachingBuildEngineFactory()
-              .setExecutorService(listeningDecorator(Executors.newFixedThreadPool(4)))
-              .build()) {
+          cachingBuildEngineFactory().setExecutorService(executorService).build()) {
         BuildEngineResult engineResultOne =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleOne);
@@ -870,6 +869,7 @@ public class CachingBuildEngineTest {
         assertThat(engineResultOne.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
         assertThat(engineResultTwo.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
       }
+      executorService.shutdown();
     }
 
     @Test
