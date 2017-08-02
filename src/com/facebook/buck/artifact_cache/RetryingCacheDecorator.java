@@ -53,35 +53,39 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
 
   @Override
   public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
-    return Futures.immediateFuture(fetch(ruleKey, output));
-  }
-
-  private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    // TODO(cjhopman): This decorator de-asyncifies the delegate.
     List<String> allCacheErrors = new ArrayList<>();
-    CacheResult lastCacheResult = null;
-    for (int retryCount = 0; retryCount < maxFetchRetries; retryCount++) {
-      CacheResult cacheResult = Futures.getUnchecked(delegate.fetchAsync(ruleKey, output));
-      if (cacheResult.getType() != CacheResultType.ERROR) {
-        return cacheResult;
-      }
-      cacheResult.cacheError().ifPresent(allCacheErrors::add);
-      LOG.debug(
-          "Failed to fetch %s after %d/%d attempts, exception: %s",
-          ruleKey, retryCount + 1, maxFetchRetries, cacheResult.cacheError());
-      lastCacheResult = cacheResult;
+    ListenableFuture<CacheResult> resultFuture = delegate.fetchAsync(ruleKey, output);
+    for (int retryCount = 1; retryCount < maxFetchRetries; retryCount++) {
+      int retryCountForLambda = retryCount;
+      resultFuture =
+          Futures.transformAsync(
+              resultFuture,
+              result -> {
+                if (result.getType() != CacheResultType.ERROR) {
+                  return Futures.immediateFuture(result);
+                }
+                result.cacheError().ifPresent(allCacheErrors::add);
+                LOG.info(
+                    "Failed to fetch %s after %d/%d attempts, exception: %s",
+                    ruleKey, retryCountForLambda + 1, maxFetchRetries, result.cacheError());
+                return delegate.fetchAsync(ruleKey, output);
+              });
     }
-    Preconditions.checkNotNull(
-        lastCacheResult,
-        "One error should have happened, therefore lastCacheResult should be non null.");
-    String msg = String.join("\n", allCacheErrors);
-    if (!msg.contains(NoHealthyServersException.class.getName())) {
-      buckEventBus.post(
-          ConsoleEvent.warning(
-              "Failed to fetch %s over %s after %d attempts.",
-              ruleKey, cacheMode.name(), maxFetchRetries));
-    }
-    return CacheResult.builder().from(lastCacheResult).setCacheError(msg).build();
+    return Futures.transform(
+        resultFuture,
+        result -> {
+          if (result.getType() != CacheResultType.ERROR) {
+            return result;
+          }
+          String msg = String.join("\n", allCacheErrors);
+          if (!msg.contains(NoHealthyServersException.class.getName())) {
+            buckEventBus.post(
+                ConsoleEvent.warning(
+                    "Failed to fetch %s over %s after %d attempts.",
+                    ruleKey, cacheMode.name(), maxFetchRetries));
+          }
+          return CacheResult.builder().from(result).setCacheError(msg).build();
+        });
   }
 
   @Override
