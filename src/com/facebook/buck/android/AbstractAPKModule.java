@@ -15,9 +15,7 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -38,6 +36,4 @@ abstract class AbstractAPKModule {
       return String.format("store%04x", getName().hashCode() & 0xFFFF);
     }
   }
-
-  public abstract ImmutableSet<BuildTarget> getBuildTargets();
 }
