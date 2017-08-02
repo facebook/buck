@@ -52,11 +52,12 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
     Optional<Path> resourcesRoot = target.getConstructorArg().getResourcesRoot();
     Predicate<Map.Entry<Path, Path>> folderInputIndexFilter = null;
     if (resourcesRoot.isPresent()) {
-      folderInputIndexFilter = addResourcesAndGetFilter(
-          ResourceFolderType.JAVA_RESOURCE,
-          target.getConstructorArg().getResources(),
-          resourcesRoot.get(),
-          context);
+      folderInputIndexFilter =
+          addResourcesAndGetFilter(
+              ResourceFolderType.JAVA_RESOURCE,
+              target.getConstructorArg().getResources(),
+              resourcesRoot.get(),
+              context);
     }
 
     addDepsAndSourcesWithFolderInputIndexFilter(

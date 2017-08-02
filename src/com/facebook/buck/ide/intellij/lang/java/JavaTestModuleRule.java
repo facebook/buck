@@ -49,11 +49,12 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
     Optional<Path> resourcesRoot = target.getConstructorArg().getResourcesRoot();
     Predicate<Map.Entry<Path, Path>> folderInputIndexFilter = null;
     if (resourcesRoot.isPresent()) {
-      folderInputIndexFilter = addResourcesAndGetFilter(
-          ResourceFolderType.JAVA_TEST_RESOURCE,
-          target.getConstructorArg().getResources(),
-          resourcesRoot.get(),
-          context);
+      folderInputIndexFilter =
+          addResourcesAndGetFilter(
+              ResourceFolderType.JAVA_TEST_RESOURCE,
+              target.getConstructorArg().getResources(),
+              resourcesRoot.get(),
+              context);
     }
     addDepsAndTestSourcesWithFolderInputIndexFilter(
         target, true /* wantsPackagePrefix */, context, folderInputIndexFilter);
