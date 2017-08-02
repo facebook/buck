@@ -341,7 +341,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             factory,
             distributedBuildModeEnabled,
             cacheMode);
-    return new RetryingNetworkCache(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
+    return new RetryingCacheDecorator(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
   }
 
   private static ArtifactCache createHttpArtifactCache(

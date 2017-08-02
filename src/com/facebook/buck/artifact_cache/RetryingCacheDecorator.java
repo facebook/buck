@@ -23,23 +23,22 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.NoHealthyServersException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RetryingNetworkCache implements ArtifactCache {
+public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
 
-  private static final Logger LOG = Logger.get(RetryingNetworkCache.class);
+  private static final Logger LOG = Logger.get(RetryingCacheDecorator.class);
 
   private final ArtifactCache delegate;
   private final int maxFetchRetries;
   private final BuckEventBus buckEventBus;
   private final ArtifactCacheMode cacheMode;
 
-  public RetryingNetworkCache(
+  public RetryingCacheDecorator(
       ArtifactCacheMode cacheMode,
       ArtifactCache delegate,
       int maxFetchRetries,
@@ -85,8 +84,8 @@ public class RetryingNetworkCache implements ArtifactCache {
     return CacheResult.builder().from(lastCacheResult).setCacheError(msg).build();
   }
 
-  @VisibleForTesting
-  protected ArtifactCache getDelegate() {
+  @Override
+  public ArtifactCache getDelegate() {
     return delegate;
   }
 
