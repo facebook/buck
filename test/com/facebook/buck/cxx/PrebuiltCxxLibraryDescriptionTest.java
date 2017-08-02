@@ -67,6 +67,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -293,6 +294,60 @@ public class PrebuiltCxxLibraryDescriptionTest {
             TARGET, cellRoots, filesystem, resolver, platform, Optional.empty(), libDir, libName);
     assertEquals(
         TARGET.getBasePath().resolve(String.format("%s/libtest.a", path)),
+        pathResolver.getAbsolutePath(staticLibraryPath));
+  }
+
+  @Test
+  public void locationMacroWithCxxGenrule() throws NoSuchBuildTargetException {
+
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
+    Optional<String> libName = Optional.of("test");
+    Optional<String> libDir = Optional.of("$(location //other:gen_lib)/");
+
+    BuildTarget flavoredTarget = TARGET.withFlavors(platform.getFlavor());
+    BuildTarget flavoredGenTarget =
+        BuildTargetFactory.newInstance("//other:gen_lib#" + platform.getFlavor().getName());
+    BuildTarget genTarget = BuildTargetFactory.newInstance("//other:gen_lib");
+
+    CxxGenruleBuilder flavoredGenruleBuilder =
+        new CxxGenruleBuilder(flavoredGenTarget).setCmd("something").setOut("lib_dir");
+
+    CxxGenruleBuilder genruleBuilder =
+        new CxxGenruleBuilder(genTarget).setCmd("something").setOut("lib_dir");
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(flavoredGenruleBuilder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule flavoredGenRule = flavoredGenruleBuilder.build(resolver, filesystem, targetGraph);
+    // This second 'build' makes it so that the unflavored rule ends up in the resolver.
+    // This is how the resolver works normally. See CxxLocationMacroExpander for where we do
+    // an initial resolution, and then refine it for specific rule types (like CxxGenrule)
+    genruleBuilder.build(resolver, filesystem, targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    Path path =
+        pathResolver.getAbsolutePath(
+            Preconditions.checkNotNull(flavoredGenRule.getSourcePathToOutput()));
+    Path flavoredGenruleDestDir =
+        Paths.get(
+            flavoredTarget.getBasePath().toString() + flavoredTarget.getFlavorPostfix().toString());
+    final SourcePath staticLibraryPath =
+        PrebuiltCxxLibraryDescription.getStaticLibraryPath(
+            flavoredTarget,
+            cellRoots,
+            filesystem,
+            resolver,
+            platform,
+            Optional.empty(),
+            libDir,
+            libName);
+    assertEquals(
+        flavoredGenruleDestDir.resolve(String.format("%s/libtest.a", path)),
         pathResolver.getAbsolutePath(staticLibraryPath));
   }
 
