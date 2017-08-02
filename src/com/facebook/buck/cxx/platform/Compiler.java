@@ -34,8 +34,6 @@ public interface Compiler extends Tool {
 
   boolean isArgFileSupported();
 
-  boolean isDependencyFileSupported();
-
   ImmutableList<String> outputArgs(String outputPath);
 
   ImmutableList<String> outputDependenciesArgs(String outputPath);
@@ -43,6 +41,8 @@ public interface Compiler extends Tool {
   ImmutableList<String> getPicFlags();
 
   ImmutableList<String> getPdcFlags();
+
+  DependencyTrackingMode getDependencyTrackingMode();
 
   boolean shouldSanitizeOutputBinary();
 

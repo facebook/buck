@@ -28,11 +28,6 @@ public class WindowsCompiler extends DefaultCompiler {
 
 
   @Override
-  public boolean isDependencyFileSupported() {
-    return false;
-  }
-
-  @Override
   public ImmutableList<String> outputArgs(String outputPath) {
     return ImmutableList.of("/Fo" + outputPath);
   }
@@ -44,7 +39,7 @@ public class WindowsCompiler extends DefaultCompiler {
 
   @Override
   public ImmutableList<String> outputDependenciesArgs(String outputPath) {
-    return ImmutableList.of();
+    return ImmutableList.of("/showIncludes");
   }
 
   @Override
@@ -60,6 +55,11 @@ public class WindowsCompiler extends DefaultCompiler {
   @Override
   public ImmutableList<String> getPicFlags() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public DependencyTrackingMode getDependencyTrackingMode() {
+    return DependencyTrackingMode.SHOW_INCLUDES;
   }
 
   @Override

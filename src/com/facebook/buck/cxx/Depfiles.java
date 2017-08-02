@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.DependencyTrackingMode;
 import com.facebook.buck.cxx.platform.HeaderVerification;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -34,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -169,27 +171,38 @@ public class Depfiles {
     }
   }
 
-  public static ImmutableList<String> getRawUsedHeadersFromDepfile(
-      ProjectFilesystem filesystem, Path sourceDepFile, Path inputPath) throws IOException {
-
-    try (InputStream input = filesystem.newFileInputStream(sourceDepFile);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
-      ImmutableList<String> prereqs = Depfiles.parseDepfile(reader).getPrereqs();
-      // Additional files passed in via command-line flags (e.g. `-fsanitize-blacklist=<file>`)
-      // appear first in the dep file, followed by the input source file.  So, just skip over
-      // everything until just after the input source which should position us at the headers.
-      //
-      // TODO(#11303454): This means we're not including the content of these special files into the
-      // rule key.  The correct way to handle this is likely to support macros in preprocessor/
-      // compiler flags at which point we can use the entries for these files in the depfile to
-      // verify that the user properly references these files via the macros.
-      int inputIndex = prereqs.indexOf(inputPath.toString());
-      Preconditions.checkState(
-          inputIndex != -1,
-          "Could not find input source (%s) in dep file prereqs (%s)",
-          inputPath,
-          prereqs);
-      return prereqs.subList(inputIndex + 1, prereqs.size());
+  private static List<String> getRawUsedHeadersFromDepfile(
+      ProjectFilesystem filesystem,
+      Path sourceDepFile,
+      Path inputPath,
+      DependencyTrackingMode dependencyTrackingMode)
+      throws IOException {
+    switch (dependencyTrackingMode) {
+      case MAKEFILE:
+        try (InputStream input = filesystem.newFileInputStream(sourceDepFile);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+          ImmutableList<String> prereqs = Depfiles.parseDepfile(reader).getPrereqs();
+          // Additional files passed in via command-line flags (e.g. `-fsanitize-blacklist=<file>`)
+          // appear first in the dep file, followed by the input source file.  So, just skip over
+          // everything until just after the input source which should position us at the headers.
+          //
+          // TODO(#11303454): This means we're not including the content of these special files into the
+          // rule key.  The correct way to handle this is likely to support macros in preprocessor/
+          // compiler flags at which point we can use the entries for these files in the depfile to
+          // verify that the user properly references these files via the macros.
+          int inputIndex = prereqs.indexOf(inputPath.toString());
+          Preconditions.checkState(
+              inputIndex != -1,
+              "Could not find input source (%s) in dep file prereqs (%s)",
+              inputPath,
+              prereqs);
+          return prereqs.subList(inputIndex + 1, prereqs.size());
+        }
+      case SHOW_INCLUDES:
+        return filesystem.readLines(sourceDepFile);
+      default:
+        // never happens
+        throw new IllegalStateException();
     }
   }
 
@@ -205,6 +218,8 @@ public class Depfiles {
    * @param inputPath Path to source file input, used to skip any leading entries from {@code
    *     -fsanitize-blacklist}.
    * @param outputPath Path to object file output, used for stat tracking.
+   * @param dependencyTrackingMode Setting for how a compiler works with dependencies, used to parse
+   *     depfile
    * @return Normalized path objects suitable for use as arguments to {@link
    *     HeaderPathNormalizer#getSourcePathForAbsolutePath(Path)}.
    * @throws IOException if an IO error occurs.
@@ -218,7 +233,8 @@ public class Depfiles {
       HeaderVerification headerVerification,
       Path sourceDepFile,
       Path inputPath,
-      Path outputPath)
+      Path outputPath,
+      DependencyTrackingMode dependencyTrackingMode)
       throws IOException, HeaderVerificationException {
     // Process the dependency file, fixing up the paths, and write it out to it's final location.
     // The paths of the headers written out to the depfile are the paths to the symlinks from the
@@ -233,8 +249,9 @@ public class Depfiles {
             PerfEventId.of("depfile-parse"),
             ImmutableMap.of("input", inputPath, "output", outputPath))) {
 
-      ImmutableList<String> headers =
-          getRawUsedHeadersFromDepfile(filesystem, sourceDepFile, inputPath);
+      List<String> headers =
+          getRawUsedHeadersFromDepfile(
+              filesystem, sourceDepFile, inputPath, dependencyTrackingMode);
 
       return normalizeAndVerifyHeaders(
           eventBus, filesystem, headerPathNormalizer, headerVerification, inputPath, headers);
@@ -247,7 +264,7 @@ public class Depfiles {
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path inputPath,
-      ImmutableList<String> headers)
+      List<String> headers)
       throws IOException, HeaderVerificationException {
     ImmutableList.Builder<Path> resultBuilder = ImmutableList.builder();
     for (String rawHeader : headers) {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.DependencyTrackingMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -166,7 +167,8 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
               preprocessorDelegate.getHeaderVerification(),
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
-              output);
+              output,
+              DependencyTrackingMode.MAKEFILE);
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }

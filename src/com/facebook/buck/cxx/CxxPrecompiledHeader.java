@@ -231,7 +231,8 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
                   getDepFilePath(context.getSourcePathResolver()),
                   // TODO(10194465): This uses relative path so as to get relative paths in the dep file
                   getRelativeInputPath(context.getSourcePathResolver()),
-                  output));
+                  output,
+                  compilerDelegate.getDependencyTrackingMode()));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
