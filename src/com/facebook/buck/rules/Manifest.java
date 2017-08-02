@@ -149,9 +149,10 @@ public class Manifest {
       SourcePath path, FileHashCache fileHashCache, SourcePathResolver resolver)
       throws IOException {
     if (path instanceof ArchiveMemberSourcePath) {
-      return fileHashCache.get(resolver.getAbsoluteArchiveMemberPath(path));
+      return fileHashCache.get(
+          resolver.getFilesystem(path), resolver.getRelativeArchiveMemberPath(path));
     } else {
-      return fileHashCache.get(resolver.getAbsolutePath(path));
+      return fileHashCache.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
     }
   }
 
