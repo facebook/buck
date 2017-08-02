@@ -355,15 +355,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       final CacheResult cacheResult,
       final ListeningExecutorService service)
       throws StepFailedException, InterruptedException {
-    ImmutableList<? extends Step> buildSteps;
-    try (Scope scope = LeafEvents.scope(buildContext.getEventBus(), "get_build_steps")) {
-      buildSteps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
-    }
-
-    BuildRuleStepsRunner stepsRunner =
-        new BuildRuleStepsRunner(rule, buildContext, executionContext, buildSteps, cacheResult);
-    service.execute(stepsRunner);
-    return stepsRunner.getFuture();
+    BuildRuleSteps buildRuleSteps =
+        new BuildRuleSteps(rule, buildContext, executionContext, buildableContext, cacheResult);
+    service.execute(buildRuleSteps);
+    return buildRuleSteps.getFuture();
   }
 
   private void fillMissingBuildMetadataFromCache(
@@ -2067,24 +2062,24 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
-  private class BuildRuleStepsRunner implements Runnable {
+  private class BuildRuleSteps implements Runnable {
     private final BuildRule rule;
     private final BuildEngineBuildContext buildContext;
     private final ExecutionContext executionContext;
-    private final ImmutableList<? extends Step> steps;
+    private final BuildableContext buildableContext;
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
 
-    public BuildRuleStepsRunner(
+    public BuildRuleSteps(
         BuildRule rule,
         BuildEngineBuildContext buildContext,
         ExecutionContext executionContext,
-        ImmutableList<? extends Step> steps,
+        BuildableContext buildableContext,
         CacheResult cacheResult) {
       this.rule = rule;
       this.buildContext = buildContext;
       this.executionContext = executionContext;
-      this.steps = steps;
+      this.buildableContext = buildableContext;
       this.cacheResult = cacheResult;
     }
 
@@ -2130,6 +2125,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
       cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+
+      // Get and run all of the commands.
+      List<? extends Step> steps;
+      try (Scope scope = LeafEvents.scope(buildContext.getEventBus(), "get_build_steps")) {
+        steps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+      }
 
       Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
       for (Step step : steps) {
