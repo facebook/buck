@@ -131,6 +131,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguard;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
   @AddToRuleKey private final boolean hasLinkableAssets;
+  @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
+
+  @AddToRuleKey
+  private final ImmutableSortedMap<APKModule, ImmutableList<SourcePath>> nativeLibAssetsDirectories;
 
   @AddToRuleKey
   @Nullable
@@ -145,13 +149,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Once these fields are properly reflected in the rulekey, we can remove the abiPath (and
   // delete ComputeExopackageDepsAbi).
   private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
-  private final ImmutableMultimap<APKModule, SourcePath> moduleMappedClasspathEntriesToDex;
   private final APKModuleGraph apkModuleGraph;
-  private final ImmutableMultimap<APKModule, SourcePath> nativeLibAssetsDirectories;
-  private final ImmutableSet<APKModule> apkModules;
   private final Supplier<Optional<ImmutableSortedSet<SourcePath>>>
       predexedSecondaryDexDirectoriesSupplier;
   private final ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths;
+  private final ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>
+      moduleMappedClasspathEntriesToDex;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
@@ -244,12 +247,25 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.predexedSecondaryDexDirectoriesSupplier =
         () -> enhancementResult.getPreDexMerge().map(PreDexMerge::getSecondaryDexDirectories);
     this.moduleMappedClasspathEntriesToDex =
-        packageableCollection.getModuleMappedClasspathEntriesToDex();
+        convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex());
     this.apkModuleGraph = enhancementResult.getAPKModuleGraph();
-    this.nativeLibAssetsDirectories = packageableCollection.getNativeLibAssetsDirectories();
-    this.apkModules = enhancementResult.getAPKModuleGraph().getAPKModules();
+    this.nativeLibAssetsDirectories =
+        convertToMapOfLists(packageableCollection.getNativeLibAssetsDirectories());
+    this.apkModules =
+        ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
 
     this.abiPath = abiPath;
+  }
+
+  private <K extends Comparable<?>, V> ImmutableSortedMap<K, ImmutableList<V>> convertToMapOfLists(
+      ImmutableMultimap<K, V> multimap) {
+    return multimap
+        .asMap()
+        .entrySet()
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableSortedMap(
+                e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -638,24 +654,21 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                         .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input)))
             .collect(MoreCollectors.toImmutableSet());
 
-    ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
-        ImmutableMultimap.builder();
-    additionalDexStoreToJarPathMapBuilder.putAll(
-        moduleMappedClasspathEntriesToDex
-            .entries()
-            .stream()
-            .map(
-                input ->
-                    new AbstractMap.SimpleEntry<>(
-                        input.getKey(),
-                        getProjectFilesystem()
-                            .relativize(
-                                buildContext
-                                    .getSourcePathResolver()
-                                    .getAbsolutePath(input.getValue()))))
-            .collect(MoreCollectors.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-        additionalDexStoreToJarPathMapBuilder.build();
+        moduleMappedClasspathEntriesToDex
+            .entrySet()
+            .stream()
+            .flatMap(
+                entry ->
+                    entry
+                        .getValue()
+                        .stream()
+                        .map(
+                            v ->
+                                new AbstractMap.SimpleEntry<>(
+                                    entry.getKey(),
+                                    buildContext.getSourcePathResolver().getAbsolutePath(v))))
+            .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
 
     // Execute preprocess_java_classes_binary, if appropriate.
     if (preprocessJavaClassesBash.isPresent()) {

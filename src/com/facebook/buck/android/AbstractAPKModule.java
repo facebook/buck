@@ -22,7 +22,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractAPKModule implements RuleKeyAppendable {
+abstract class AbstractAPKModule implements RuleKeyAppendable, Comparable<AbstractAPKModule> {
   public abstract String getName();
 
   @Value.Derived
@@ -42,5 +42,14 @@ abstract class AbstractAPKModule implements RuleKeyAppendable {
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively("name", getName());
+  }
+
+  @Override
+  public int compareTo(AbstractAPKModule o) {
+    if (this == o) {
+      return 0;
+    }
+
+    return getName().compareTo(o.getName());
   }
 }
