@@ -132,6 +132,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
   @AddToRuleKey private final boolean hasLinkableAssets;
   @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
+  @AddToRuleKey private final boolean isPreDexed;
+
+  @AddToRuleKey private final Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths;
+
+  @AddToRuleKey
+  private final Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
+      moduleMappedClasspathEntriesToDex;
 
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableList<SourcePath>> nativeLibAssetsDirectories;
@@ -150,11 +157,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // delete ComputeExopackageDepsAbi).
   private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
   private final APKModuleGraph apkModuleGraph;
-  private final Supplier<Optional<ImmutableSortedSet<SourcePath>>>
+  private final Optional<Supplier<ImmutableSortedSet<SourcePath>>>
       predexedSecondaryDexDirectoriesSupplier;
-  private final ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths;
-  private final ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>
-      moduleMappedClasspathEntriesToDex;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
@@ -239,20 +243,34 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.pathsToThirdPartyJars =
         ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars());
     this.copyNativeLibraries = enhancementResult.getCopyNativeLibraries();
-    this.classpathEntriesToDexSourcePaths =
-        RichStream.from(enhancementResult.getClasspathEntriesToDex())
-            .concat(
-                RichStream.of(enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
-            .collect(MoreCollectors.toImmutableSet());
     this.predexedSecondaryDexDirectoriesSupplier =
-        () -> enhancementResult.getPreDexMerge().map(PreDexMerge::getSecondaryDexDirectories);
-    this.moduleMappedClasspathEntriesToDex =
-        convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex());
+        enhancementResult.getPreDexMerge().map(pdm -> pdm::getSecondaryDexDirectories);
+
     this.apkModuleGraph = enhancementResult.getAPKModuleGraph();
     this.nativeLibAssetsDirectories =
         convertToMapOfLists(packageableCollection.getNativeLibAssetsDirectories());
     this.apkModules =
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
+
+    this.isPreDexed = enhancementResult.getPreDexMerge().isPresent();
+
+    if (isPreDexed) {
+      Preconditions.checkState(!preprocessJavaClassesBash.isPresent());
+      Preconditions.checkState(!packageType.isBuildWithObfuscation());
+      this.classpathEntriesToDexSourcePaths = Optional.empty();
+      this.moduleMappedClasspathEntriesToDex = Optional.empty();
+    } else {
+      this.classpathEntriesToDexSourcePaths =
+          Optional.of(
+              RichStream.from(enhancementResult.getClasspathEntriesToDex())
+                  .concat(
+                      RichStream.of(
+                          enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
+                  .collect(MoreCollectors.toImmutableSet()));
+      this.moduleMappedClasspathEntriesToDex =
+          Optional.of(
+              convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
+    }
 
     this.abiPath = abiPath;
   }
@@ -645,8 +663,25 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       BuildableContext buildableContext,
       BuildContext buildContext,
       ImmutableList.Builder<Step> steps) {
+    if (isPreDexed) {
+      ImmutableSortedSet<Path> secondaryDexDirs;
+      if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
+        secondaryDexDirs = ImmutableSortedSet.of();
+      } else {
+        secondaryDexDirs =
+            predexedSecondaryDexDirectoriesSupplier
+                .get()
+                .get()
+                .stream()
+                .map(buildContext.getSourcePathResolver()::getRelativePath)
+                .collect(MoreCollectors.toImmutableSortedSet());
+      }
+      return new DexFilesInfo(getPrimaryDexPath(), secondaryDexDirs);
+    }
+
     ImmutableSet<Path> classpathEntriesToDex =
         classpathEntriesToDexSourcePaths
+            .get()
             .stream()
             .map(
                 input ->
@@ -656,6 +691,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         moduleMappedClasspathEntriesToDex
+            .get()
             .entrySet()
             .stream()
             .flatMap(
@@ -800,37 +836,26 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     // listed in secondaryDexDirectoriesBuilder so that their contents will be compressed
     // appropriately for Froyo.
     ImmutableSet.Builder<Path> secondaryDexDirectoriesBuilder = ImmutableSet.builder();
-    Optional<ImmutableSortedSet<SourcePath>> predexedSecondaryDexDirectories =
-        predexedSecondaryDexDirectoriesSupplier.get();
-    if (!predexedSecondaryDexDirectories.isPresent()) {
-      Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier =
-          addAccumulateClassNamesStep(classpathEntriesToDex, steps);
+    Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier =
+        addAccumulateClassNamesStep(classpathEntriesToDex, steps);
 
-      steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  getPrimaryDexPath().getParent())));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPrimaryDexPath().getParent())));
 
-      addDexingSteps(
-          classpathEntriesToDex,
-          classNamesToHashesSupplier,
-          secondaryDexDirectoriesBuilder,
-          steps,
-          getPrimaryDexPath(),
-          dexReorderToolFile,
-          dexReorderDataDumpFile,
-          additionalDexStoreToJarPathMap,
-          buildContext);
-    } else if (!AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      secondaryDexDirectoriesBuilder.addAll(
-          predexedSecondaryDexDirectories
-                  .get()
-                  .stream()
-                  .map(buildContext.getSourcePathResolver()::getRelativePath)
-              ::iterator);
-    }
+    addDexingSteps(
+        classpathEntriesToDex,
+        classNamesToHashesSupplier,
+        secondaryDexDirectoriesBuilder,
+        steps,
+        getPrimaryDexPath(),
+        dexReorderToolFile,
+        dexReorderDataDumpFile,
+        additionalDexStoreToJarPathMap,
+        buildContext);
 
     return new DexFilesInfo(getPrimaryDexPath(), secondaryDexDirectoriesBuilder.build());
   }
