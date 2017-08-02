@@ -200,7 +200,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     try {
       return ImmutableList.<SourcePath>builder()
-          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines(context)))
+          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context)))
           .add(input)
           .build();
     } catch (Depfiles.HeaderVerificationException e) {
@@ -217,13 +217,13 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
     return getSuffixedOutput(pathResolver, ".dep");
   }
 
-  public ImmutableList<Path> readDepFileLines(BuildContext context)
+  private ImmutableList<Path> getDependencies(BuildContext context)
       throws IOException, Depfiles.HeaderVerificationException {
     try {
       return depFileCache.get(
           context,
           () ->
-              Depfiles.parseAndOutputBuckCompatibleDepfile(
+              Depfiles.parseAndVerifyDependencies(
                   context.getEventBus(),
                   getProjectFilesystem(),
                   preprocessorDelegate.getHeaderPathNormalizer(),

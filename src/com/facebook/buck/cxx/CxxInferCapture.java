@@ -156,10 +156,10 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
 
-    ImmutableList<Path> depFileLines;
+    ImmutableList<Path> dependencies;
     try {
-      depFileLines =
-          Depfiles.parseAndOutputBuckCompatibleDepfile(
+      dependencies =
+          Depfiles.parseAndVerifyDependencies(
               context.getEventBus(),
               getProjectFilesystem(),
               preprocessorDelegate.getHeaderPathNormalizer(),
@@ -174,7 +174,7 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // include all inputs coming from the preprocessor tool.
-    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(depFileLines));
+    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(dependencies));
 
     // Add the input.
     inputs.add(input);
