@@ -31,6 +31,7 @@ import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
@@ -120,9 +121,10 @@ public class ThriftArtifactCacheTest {
     try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs)) {
       Path artifactPath = tempPaths.newFile().toAbsolutePath();
       CacheResult result =
-          cache.fetch(
-              new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)),
-              LazyPath.ofInstance(artifactPath));
+          Futures.getUnchecked(
+              cache.fetchAsync(
+                  new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)),
+                  LazyPath.ofInstance(artifactPath)));
       Assert.assertEquals(CacheResultType.ERROR, result.getType());
     } catch (IOException e) {
       e.printStackTrace();

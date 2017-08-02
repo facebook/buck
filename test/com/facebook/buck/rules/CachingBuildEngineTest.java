@@ -472,7 +472,9 @@ public class CachingBuildEngineTest {
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
-      expect(artifactCache.fetch(eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
+      expect(
+              artifactCache.fetchAsync(
+                  eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
@@ -551,7 +553,9 @@ public class CachingBuildEngineTest {
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
-      expect(artifactCache.fetch(eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
+      expect(
+              artifactCache.fetchAsync(
+                  eq(defaultRuleKeyFactory.build(buildRule)), isA(LazyPath.class)))
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
@@ -1053,8 +1057,9 @@ public class CachingBuildEngineTest {
       ArtifactCache cache =
           new NoopArtifactCache() {
             @Override
-            public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-              return CacheResult.error("cache", ArtifactCacheMode.dir, "error");
+            public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+              return Futures.immediateFuture(
+                  CacheResult.error("cache", ArtifactCacheMode.dir, "error"));
             }
           };
 
@@ -1562,7 +1567,9 @@ public class CachingBuildEngineTest {
         // Verify that the artifact is *not* re-cached under the main rule key.
         LazyPath fetchedArtifact = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
         assertThat(
-            cache.fetch(defaultRuleKeyFactory.build(rule), fetchedArtifact).getType(),
+            Futures.getUnchecked(
+                    cache.fetchAsync(defaultRuleKeyFactory.build(rule), fetchedArtifact))
+                .getType(),
             equalTo(CacheResultType.MISS));
       }
     }
@@ -1637,8 +1644,9 @@ public class CachingBuildEngineTest {
         // Verify that the artifact is re-cached correctly under the main rule key.
         Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
         assertThat(
-            cache
-                .fetch(defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact))
+            Futures.getUnchecked(
+                    cache.fetchAsync(
+                        defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact)))
                 .getType(),
             equalTo(CacheResultType.HIT));
         assertEquals(
@@ -1851,7 +1859,9 @@ public class CachingBuildEngineTest {
       // Verify that the dep file rule key and dep file were written to the cached artifact.
       Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
       CacheResult cacheResult =
-          cache.fetch(defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact));
+          Futures.getUnchecked(
+              cache.fetchAsync(
+                  defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       assertThat(
           cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY),
@@ -2406,9 +2416,10 @@ public class CachingBuildEngineTest {
       // Verify that the manifest written to the cache is correct.
       Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
-          cache.fetch(
-              cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
-              LazyPath.ofInstance(fetchedManifest));
+          Futures.getUnchecked(
+              cache.fetchAsync(
+                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
+                  LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       Manifest manifest = loadManifest(fetchedManifest);
       // The manifest should only contain the inputs that were in the dep file. The non-eligible
@@ -2423,7 +2434,9 @@ public class CachingBuildEngineTest {
 
       // Verify that the artifact is also cached via the dep file rule key.
       Path fetchedArtifact = tmp.newFile("artifact");
-      cacheResult = cache.fetch(depFileRuleKey, LazyPath.ofInstance(fetchedArtifact));
+      cacheResult =
+          Futures.getUnchecked(
+              cache.fetchAsync(depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
     }
 
@@ -2523,9 +2536,10 @@ public class CachingBuildEngineTest {
       // Verify that the manifest written to the cache is correct.
       Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
-          cache.fetch(
-              cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
-              LazyPath.ofInstance(fetchedManifest));
+          Futures.getUnchecked(
+              cache.fetchAsync(
+                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
+                  LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       manifest = loadManifest(fetchedManifest);
       assertThat(
@@ -2539,7 +2553,9 @@ public class CachingBuildEngineTest {
 
       // Verify that the artifact is also cached via the dep file rule key.
       Path fetchedArtifact = tmp.newFile("artifact");
-      cacheResult = cache.fetch(depFileRuleKey, LazyPath.ofInstance(fetchedArtifact));
+      cacheResult =
+          Futures.getUnchecked(
+              cache.fetchAsync(depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
     }
 
@@ -2641,9 +2657,10 @@ public class CachingBuildEngineTest {
       // Verify that the manifest is truncated and now only contains the newly written entry.
       Path fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
-          cache.fetch(
-              cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
-              LazyPath.ofInstance(fetchedManifest));
+          Futures.getUnchecked(
+              cache.fetchAsync(
+                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
+                  LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       manifest = loadManifest(fetchedManifest);
       assertThat(
@@ -2776,7 +2793,7 @@ public class CachingBuildEngineTest {
       // Verify that the result has been re-written to the cache with the expected meta-data.
       for (RuleKey key : ImmutableSet.of(ruleKey, depFileKey.getRuleKey())) {
         LazyPath fetchedArtifact = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
-        CacheResult cacheResult = cache.fetch(key, fetchedArtifact);
+        CacheResult cacheResult = Futures.getUnchecked(cache.fetchAsync(key, fetchedArtifact));
         assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
         assertThat(
             cacheResult.getMetadata().get(BuildInfo.MetadataKey.RULE_KEY),
@@ -2879,7 +2896,9 @@ public class CachingBuildEngineTest {
       // Verify there's no stale entry in the manifest.
       LazyPath fetchedManifest = LazyPath.ofInstance(tmp.newFile("fetched_artifact.zip"));
       CacheResult cacheResult =
-          cache.fetch(depFilefactory.buildManifestKey(rule).getRuleKey(), fetchedManifest);
+          Futures.getUnchecked(
+              cache.fetchAsync(
+                  depFilefactory.buildManifestKey(rule).getRuleKey(), fetchedManifest));
       assertTrue(cacheResult.getType().isSuccess());
       Manifest cachedManifest = loadManifest(fetchedManifest.get());
       assertThat(cachedManifest.toMap().keySet(), Matchers.not(hasItem(staleDepFileRuleKey)));
@@ -3570,13 +3589,14 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, LazyPath file) {
+    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
       try {
-        writeEntriesToZip(file.get(), ImmutableMap.copyOf(desiredEntries));
+        writeEntriesToZip(output.get(), ImmutableMap.copyOf(desiredEntries));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      return CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata);
+      return Futures.immediateFuture(
+          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata));
     }
 
     @Override

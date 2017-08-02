@@ -31,6 +31,7 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
@@ -54,8 +55,8 @@ public class CacheCommandTest extends EasyMockSupport {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     ArtifactCache cache = createMock(ArtifactCache.class);
-    expect(cache.fetch(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
-        .andReturn(CacheResult.hit("http", ArtifactCacheMode.http));
+    expect(cache.fetchAsync(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
+        .andReturn(Futures.immediateFuture(CacheResult.hit("http", ArtifactCacheMode.http)));
     cache.close();
     expectLastCall();
 
@@ -81,8 +82,8 @@ public class CacheCommandTest extends EasyMockSupport {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
     ArtifactCache cache = createMock(ArtifactCache.class);
-    expect(cache.fetch(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
-        .andReturn(CacheResult.miss());
+    expect(cache.fetchAsync(eq(new RuleKey(ruleKeyHash)), isA(LazyPath.class)))
+        .andReturn(Futures.immediateFuture(CacheResult.miss()));
     cache.close();
     expectLastCall();
 

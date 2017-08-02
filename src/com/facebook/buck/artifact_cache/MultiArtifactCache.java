@@ -57,11 +57,6 @@ public class MultiArtifactCache implements ArtifactCache {
    * artifact to one or more of the other encapsulated ArtifactCaches as a side effect.
    */
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    return Futures.getUnchecked(fetchAsync(ruleKey, output));
-  }
-
-  @Override
   public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
     ListenableFuture<CacheResult> cacheResult = Futures.immediateFuture(CacheResult.miss());
     // This is the list of higher-priority caches that we should write the artifact to.

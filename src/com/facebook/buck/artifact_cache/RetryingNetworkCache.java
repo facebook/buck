@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,11 +53,16 @@ public class RetryingNetworkCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    return Futures.immediateFuture(fetch(ruleKey, output));
+  }
+
+  private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+    // TODO(cjhopman): This decorator de-asyncifies the delegate.
     List<String> allCacheErrors = new ArrayList<>();
     CacheResult lastCacheResult = null;
     for (int retryCount = 0; retryCount < maxFetchRetries; retryCount++) {
-      CacheResult cacheResult = delegate.fetch(ruleKey, output);
+      CacheResult cacheResult = Futures.getUnchecked(delegate.fetchAsync(ruleKey, output));
       if (cacheResult.getType() != CacheResultType.ERROR) {
         return cacheResult;
       }

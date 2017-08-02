@@ -1462,7 +1462,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private CacheResult fetch(ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
-    CacheResult cacheResult = artifactCache.fetch(ruleKey, outputPath);
+    CacheResult cacheResult = Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath));
     if (cacheResult.getType() != CacheResultType.HIT) {
       return cacheResult;
     }

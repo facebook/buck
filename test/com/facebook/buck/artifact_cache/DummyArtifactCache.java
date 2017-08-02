@@ -33,10 +33,11 @@ public class DummyArtifactCache extends NoopArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    return ruleKey.equals(storeKey)
-        ? CacheResult.hit("cache", ArtifactCacheMode.http)
-        : CacheResult.miss();
+  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    return Futures.immediateFuture(
+        ruleKey.equals(storeKey)
+            ? CacheResult.hit("cache", ArtifactCacheMode.http)
+            : CacheResult.miss());
   }
 
   @Override

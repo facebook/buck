@@ -112,11 +112,6 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    return Futures.getUnchecked(fetchAsync(ruleKey, output));
-  }
-
-  @Override
   public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
     return Futures.transformAsync(
         delegate.fetchAsync(ruleKey, output),
