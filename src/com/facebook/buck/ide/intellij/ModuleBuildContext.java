@@ -180,10 +180,11 @@ public class ModuleBuildContext {
             && to.getClass().equals(JavaTestResourceFolder.class))
         || (to.getClass().equals(JavaResourceFolder.class)
             && from.getClass().equals(JavaTestResourceFolder.class))) {
-      return new JavaResourceFolder(
-          to.getPath(),
-          IjFolder.combineInputs(from, to),
-          ((JavaResourceFolder) to).getResourcesRoot());
+      Path resourcesRoot =
+          (to instanceof JavaResourceFolder)
+              ? ((JavaResourceFolder) to).getResourcesRoot()
+              : ((JavaTestResourceFolder) to).getResourcesRoot();
+      return new JavaResourceFolder(to.getPath(), IjFolder.combineInputs(from, to), resourcesRoot);
     }
 
     // If we're not sure what to do otherwise, use SourceFolder.
