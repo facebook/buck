@@ -968,20 +968,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildResult,
             new FutureCallback<BuildResult>() {
 
-              // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
-              // to be valid at this point?
-              private void cleanupAfterError() {
-                try {
-                  onDiskBuildInfo.deleteExistingMetadata();
-                } catch (Throwable t) {
-                  buildContext
-                      .getEventBus()
-                      .post(
-                          ThrowableConsoleEvent.create(
-                              t, "Error when deleting metadata for %s.", rule));
-                }
-              }
-
               private void uploadToCache(BuildRuleSuccessType success) {
 
                 // Collect up all the rule keys we have index the artifact in the cache with.
@@ -1088,12 +1074,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 buildContext.getEventBus().post(resumedEvent);
 
                 if (input.getStatus() == BuildRuleStatus.FAIL) {
-
-                  // Make this failure visible for other rules, so that they can stop early.
-                  firstFailure = input.getFailure();
-
-                  // If we failed, cleanup the state of this rule.
-                  cleanupAfterError();
+                  recordFailureAndCleanUp(
+                      rule,
+                      Preconditions.checkNotNull(input.getFailure()),
+                      onDiskBuildInfo,
+                      buildContext);
                 }
 
                 // Unblock dependents.
@@ -1189,6 +1174,26 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               }
             }));
     return result;
+  }
+
+  private void recordFailureAndCleanUp(
+      BuildRule rule,
+      Throwable failure,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildEngineBuildContext buildContext) {
+    // Make this failure visible for other rules, so that they can stop early.
+    firstFailure = failure;
+
+    // If we failed, cleanup the state of this rule.
+    // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
+    // to be valid at this point?
+    try {
+      onDiskBuildInfo.deleteExistingMetadata();
+    } catch (Throwable t) {
+      buildContext
+          .getEventBus()
+          .post(ThrowableConsoleEvent.create(t, "Error when deleting metadata for %s.", rule));
+    }
   }
 
   private BuildRuleKeys getBuildRuleKeys(BuildRule rule, OnDiskBuildInfo onDiskBuildInfo) {
