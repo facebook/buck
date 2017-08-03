@@ -45,6 +45,7 @@ import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -71,6 +72,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -86,6 +88,8 @@ public class CxxBinaryIntegrationTest {
   public boolean sandboxSources;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testInferCxxBinaryDepsCaching() throws IOException, InterruptedException {
@@ -2135,8 +2139,10 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:binary");
-    result.assertSuccess();
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        Matchers.containsString("in the dependencies have the same output filename"));
+    workspace.runBuckBuild("//:clowny_binary");
   }
 
   @Test

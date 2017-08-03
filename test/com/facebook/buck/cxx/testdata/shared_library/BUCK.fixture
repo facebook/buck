@@ -11,3 +11,13 @@ cxx_binary(
   srcs = [ 'binary.cpp' ],
   link_style = 'static',
 )
+
+cxx_binary(
+  name = 'clowny_binary',
+  deps = [
+    '//subdir:library1',
+    '//subdir:library2',
+  ],
+  srcs = [ 'binary.cpp' ],
+  link_style = 'shared',
+)
