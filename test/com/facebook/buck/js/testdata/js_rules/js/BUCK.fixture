@@ -97,6 +97,9 @@ js_bundle(
     name = 'bundle-with-android-lib',
     deps = [':the-android-lib'],
     entry = 'fruit-salad',
+    bundle_name_for_flavor = [
+        ('android', 'android-bundle.js'),
+    ],
     android_package = 'com.sample',
     worker = ':packager_worker',
     visibility = ['PUBLIC'],

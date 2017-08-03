@@ -30,6 +30,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -153,13 +154,15 @@ public class JsBundleDescription
           resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
     }
 
+    String bundleName = getBundleName(args, buildTarget.getFlavors());
+
     return new JsBundle(
         buildTarget,
         projectFilesystem,
         paramsWithLibraries,
         libraries,
         entryPoints,
-        args.getBundleName(),
+        bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
   }
 
@@ -260,6 +263,7 @@ public class JsBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractJsBundleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+
     Either<ImmutableSet<String>, String> getEntry();
 
     @Value.Default
@@ -267,10 +271,22 @@ public class JsBundleDescription
       return getName() + ".js";
     }
 
+    ImmutableList<Pair<Flavor, String>> getBundleNameForFlavor();
+
     BuildTarget getWorker();
 
     /** For R.java */
     Optional<String> getAndroidPackage();
+  }
+
+  private static String getBundleName(
+      JsBundleDescriptionArg args, ImmutableSortedSet<Flavor> flavors) {
+    for (Pair<Flavor, String> nameForFlavor : args.getBundleNameForFlavor()) {
+      if (flavors.contains(nameForFlavor.getFirst())) {
+        return nameForFlavor.getSecond();
+      }
+    }
+    return args.getBundleName();
   }
 
   private static class TransitiveLibraryDependencies {

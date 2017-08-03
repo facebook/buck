@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -67,17 +68,23 @@ public class JsTestScenario {
 
   JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps)
       throws NoSuchBuildTargetException {
-    return createBundle(target, deps, Either.ofLeft(ImmutableSet.of()));
+    return createBundle(target, builder -> builder.setDeps(deps));
+  }
+
+  JsBundle createBundle(String target, Function<JsBundleBuilder, JsBundleBuilder> setUp)
+      throws NoSuchBuildTargetException {
+    return createBundle(target, Either.ofLeft(ImmutableSet.of()), setUp);
   }
 
   private JsBundle createBundle(
       String target,
-      ImmutableSortedSet<BuildTarget> deps,
-      Either<ImmutableSet<String>, String> entry)
+      Either<ImmutableSet<String>, String> entry,
+      Function<JsBundleBuilder, JsBundleBuilder> setUp)
       throws NoSuchBuildTargetException {
-    return new JsBundleBuilder(
-            BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem)
-        .setDeps(deps)
+    return setUp
+        .apply(
+            new JsBundleBuilder(
+                BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem))
         .build(resolver, targetGraph);
   }
 

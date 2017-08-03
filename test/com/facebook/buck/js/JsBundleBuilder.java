@@ -19,6 +19,8 @@ package com.facebook.buck.js;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,6 +48,11 @@ public class JsBundleBuilder
 
   JsBundleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
+  JsBundleBuilder setBundleNameForFlavor(Iterable<Pair<Flavor, String>> bundleNameForFlavor) {
+    getArgForPopulating().setBundleNameForFlavor(bundleNameForFlavor);
     return this;
   }
 }
