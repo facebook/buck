@@ -200,8 +200,7 @@ public class MmappedHgManifest {
           end = entryStart;
         }
       } else {
-        int cmp = entryName.compareTo(pathname);
-        if (cmp == 0) { // equal
+        if (entryName.equals(pathname)) {
           // edge-case, not a directory but a single entry
           String flag = "";
           byte flagByte = mmap.get(entryEnd + 1 + HASH_LENGTH);
@@ -210,7 +209,7 @@ public class MmappedHgManifest {
           }
           // Can't be deleted, as we tested for that case right at the start of this function
           return Stream.of(new ManifestEntry(entryName, flag));
-        } else if (cmp > 0) {
+        } else if (entryName.compareTo(dirname) > 0) {
           end = entryStart;
         } else {
           // add hash and delimiter length, then account for an optional flag
