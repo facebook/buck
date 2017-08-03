@@ -85,11 +85,8 @@ public class ProjectView {
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      ActionGraphAndResolver actionGraph,
-      SourcePathResolver sourcePathResolver) {
-    return new ProjectView(
-            projectViewParameters, targetGraph, buildTargets, actionGraph, sourcePathResolver)
-        .run();
+      ActionGraphAndResolver actionGraph) {
+    return new ProjectView(projectViewParameters, targetGraph, buildTargets, actionGraph).run();
   }
 
   // endregion Public API
@@ -137,8 +134,7 @@ public class ProjectView {
       ProjectViewParameters projectViewParameters,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
-      ActionGraphAndResolver actionGraph,
-      SourcePathResolver sourcePathResolver) {
+      ActionGraphAndResolver actionGraph) {
     this.repository = projectViewParameters.getPath().toString();
     this.stdErr = projectViewParameters.getStdErr();
     this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
@@ -148,7 +144,10 @@ public class ProjectView {
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
     this.actionGraph = actionGraph;
-    this.sourcePathResolver = sourcePathResolver;
+
+    BuildRuleResolver buildRuleResolver = actionGraph.getResolver();
+    SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    this.sourcePathResolver = DefaultSourcePathResolver.from(sourcePathRuleFinder);
 
     this.config = projectViewParameters.getConfig();
 
