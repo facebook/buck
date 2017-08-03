@@ -144,6 +144,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ForkMode forkMode;
 
+  @AddToRuleKey private final Optional<SourcePath> unbundledResourcesRoot;
+
   public JavaTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -162,7 +164,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
-      Optional<Level> stdErrLogLevel) {
+      Optional<Level> stdErrLogLevel,
+      Optional<SourcePath> unbundledResourcesRoot) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
 
@@ -189,6 +192,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.forkMode = forkMode;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
+    this.unbundledResourcesRoot = unbundledResourcesRoot;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
   }
 
@@ -659,8 +663,13 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               @Override
               public StepExecutionResult execute(ExecutionContext context)
                   throws IOException, InterruptedException {
+                ImmutableSet.Builder<Path> builder = ImmutableSet.<Path>builder();
+                if (unbundledResourcesRoot.isPresent()) {
+                  builder.add(
+                      buildContext.getSourcePathResolver().getAbsolutePath(unbundledResourcesRoot.get()));
+                }
                 ImmutableSet<Path> classpathEntries =
-                    ImmutableSet.<Path>builder()
+                    builder
                         .addAll(
                             compiledTestsLibrary
                                 .getTransitiveClasspaths()

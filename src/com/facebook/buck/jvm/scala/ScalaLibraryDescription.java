@@ -110,6 +110,8 @@ public class ScalaLibraryDescription
     @Hint(isInput = false)
     Optional<Path> getResourcesRoot();
 
+    Optional<SourcePath> getUnbundledResourcesRoot();
+
     Optional<SourcePath> getManifestFile();
 
     Optional<String> getMavenCoords();
