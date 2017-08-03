@@ -31,6 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 public class ScalaLibraryDescription
