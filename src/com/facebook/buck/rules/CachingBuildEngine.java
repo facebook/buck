@@ -964,7 +964,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transformAsync(
             buildResult,
             ruleAsyncFunction(rule, buildContext.getEventBus(), callback),
-            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
+            MoreExecutors.directExecutor());
 
     buildResult =
         Futures.catchingAsync(
@@ -1176,7 +1176,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               public void onFailure(@Nonnull Throwable thrown) {
                 throw new AssertionError("Dead code");
               }
-            }));
+            },
+            serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS)));
     return buildResult;
   }
 
@@ -2122,10 +2123,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 buildRuleDurationTracker,
                 ruleKeyFactories.getDefaultRuleKeyFactory())) {
           executeCommandsNowThatDepsAreBuilt();
-          future.set(
-              Optional.of(
-                  BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult)));
         }
+
+        // Set the future outside of the scope, to match the behavior of other steps that use
+        // futures provided by the ExecutorService.
+        future.set(
+            Optional.of(
+                BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult)));
       } catch (Throwable t) {
         future.setException(t);
       }
