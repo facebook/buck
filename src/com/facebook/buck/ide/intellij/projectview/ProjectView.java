@@ -595,6 +595,10 @@ public class ProjectView {
     return attribute(name, value.toString());
   }
 
+  private static Attribute attribute(String name, String pattern, Object... parameters) {
+    return attribute(name, String.format(pattern, parameters));
+  }
+
   private static Element newElement(String name, Attribute attribute) {
     Element element = new Element(name);
     element.setAttribute(attribute);
@@ -729,6 +733,15 @@ public class ProjectView {
     List<String> libraryXmls = new ArrayList<>();
 
     // .jar files in the inputs
+    describeInputJars(inputs, libraries, libraryXmls);
+
+    // .jar files in the action graph
+    describeAidlJars(libraries, libraryXmls);
+
+    return libraryXmls;
+  }
+
+  private void describeInputJars(List<String> inputs, String libraries, List<String> libraryXmls) {
     Map<String, List<String>> directories = new HashMap<>();
     inputs
         .stream()
@@ -746,19 +759,20 @@ public class ProjectView {
             });
 
     for (Map.Entry<String, List<String>> entry : directories.entrySet()) {
-      libraryXmls.add(buildLibraryFile(libraries, entry.getKey(), entry.getValue()));
+      libraryXmls.add(
+          buildLibraryFile(libraries, entry.getKey(), entry.getValue(), Collections.emptyList()));
     }
+  }
 
-    // .jar files in the action graph
+  private void describeAidlJars(String libraries, List<String> libraryXmls) {
     for (BuildRule rule : actionGraph.getActionGraph().getNodes()) {
       if (rule instanceof AndroidLibrary) {
         AndroidLibrary androidLibrary = (AndroidLibrary) rule;
-        final boolean libraryContainsGenAidl =
+        Collection<BuildRule> aidlSource =
             RichStream.from(androidLibrary.getBuildDeps())
                 .filter(GenAidl.class)
-                .findAny()
-                .isPresent();
-        if (libraryContainsGenAidl) {
+                .collect(Collectors.toSet());
+        if (!aidlSource.isEmpty()) {
           SourcePath sourcePath = rule.getSourcePathToOutput();
           if (sourcePath != null) {
             Path path =
@@ -769,16 +783,16 @@ public class ProjectView {
             String dirname = path.getParent().toString();
             String basename = path.getFileName().toString();
             libraryXmls.add(
-                buildLibraryFile(libraries, dirname, Collections.singletonList(basename)));
+                buildLibraryFile(
+                    libraries, dirname, Collections.singletonList(basename), aidlSource));
           }
         }
       }
     }
-
-    return libraryXmls;
   }
 
-  private String buildLibraryFile(String libraries, String directory, List<String> jars) {
+  private String buildLibraryFile(
+      String libraries, String directory, List<String> jars, Collection<BuildRule> sourceRules) {
     String filename = "library_" + directory.replace('-', '_').replace('/', '_');
     List<String> urls =
         jars.stream()
@@ -792,7 +806,14 @@ public class ProjectView {
       addElement(classes, "root", attribute(URL, url));
     }
     addElement(library, "JAVADOC");
-    addElement(library, "SOURCES");
+    Element sources = addElement(library, "SOURCES");
+    for (BuildRule sourceRule : sourceRules) {
+      SourcePath sourcePath = sourceRule.getSourcePathToOutput();
+      if (sourcePath != null) {
+        Path absolutePath = sourcePathResolver.getAbsolutePath(sourcePath);
+        addElement(sources, "root", attribute(URL, "jar://%s!/", absolutePath));
+      }
+    }
 
     saveDocument(libraries, filename + ".xml", XML.NO_DECLARATION, component);
 
