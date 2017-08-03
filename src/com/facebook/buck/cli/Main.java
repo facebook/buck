@@ -1548,16 +1548,14 @@ public final class Main {
       Libc.Constants.rFDCLOEXEC = Libc.Constants.LINUX_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.LINUX_F_GETFD;
       Libc.Constants.rFSETFD = Libc.Constants.LINUX_F_SETFD;
-      openPtyLibrary =
-          (Libc.OpenPtyLibrary) Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
+      openPtyLibrary = Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
     } else if (platform == Platform.MACOS) {
       Libc.Constants.rTIOCSCTTY = Libc.Constants.DARWIN_TIOCSCTTY;
       Libc.Constants.rFDCLOEXEC = Libc.Constants.DARWIN_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.DARWIN_F_GETFD;
       Libc.Constants.rFSETFD = Libc.Constants.DARWIN_F_SETFD;
       openPtyLibrary =
-          (Libc.OpenPtyLibrary)
-              Native.loadLibrary(com.sun.jna.Platform.C_LIBRARY_NAME, Libc.OpenPtyLibrary.class);
+          Native.loadLibrary(com.sun.jna.Platform.C_LIBRARY_NAME, Libc.OpenPtyLibrary.class);
     } else {
       LOG.info("not enabling process killing on nailgun exit: unknown OS %s", osName);
       return;
