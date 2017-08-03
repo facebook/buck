@@ -711,14 +711,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
     final AtomicReference<Long> outputSize = Atomics.newReference();
 
+    ListenableFuture<List<BuildResult>> depResults =
+        Futures.immediateFuture(Collections.emptyList());
+
+    // If we're performing a deep build, guarantee that all dependencies will *always* get
+    // materialized locally
+    if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
+      depResults = getDepResults(rule, buildContext, executionContext);
+    }
+
     ListenableFuture<BuildResult> buildResult =
-        buildOrFetchFromCache(
-            rule,
-            buildContext,
-            executionContext,
-            onDiskBuildInfo,
-            buildInfoRecorder,
-            buildableContext);
+        Futures.transformAsync(
+            depResults,
+            input ->
+                buildOrFetchFromCache(
+                    rule,
+                    buildContext,
+                    executionContext,
+                    onDiskBuildInfo,
+                    buildInfoRecorder,
+                    buildableContext),
+            serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
 
     // Check immediately (without posting a new task) for a failure so that we can short-circuit
     // pending work. Use .catchingAsync() instead of .catching() so that we can propagate unchecked
@@ -733,14 +746,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               Throwables.throwIfInstanceOf(throwable, Exception.class);
               throw new RuntimeException(throwable);
             });
-
-    // If we're performing a deep build, guarantee that all dependencies will *always* get
-    // materialized locally by chaining up to our result future.
-    if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
-      buildResult =
-          MoreFutures.chainExceptions(
-              getDepResults(rule, buildContext, executionContext), buildResult);
-    }
 
     buildResult =
         Futures.transform(
