@@ -856,7 +856,8 @@ public final class Main {
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats());
-          if (command.subcommand instanceof AbstractCommand) {
+          if (command.subcommand instanceof AbstractCommand
+              && !(command.subcommand instanceof DistBuildCommand)) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
               vcStatsGenerator.generateStatsAsync(
