@@ -961,8 +961,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             ruleAsyncFunction(rule, buildContext.getEventBus(), callback),
             serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
 
-    // Handle either build success or failure.
-    final SettableFuture<BuildResult> result = SettableFuture.create();
+    buildResult =
+        Futures.catchingAsync(
+            buildResult,
+            Exception.class,
+            thrown -> {
+              LOG.debug(thrown, "Building rule [%s] failed.", rule.getBuildTarget());
+
+              if (consoleLogBuildFailuresInline) {
+                buildContext
+                    .getEventBus()
+                    .post(ConsoleEvent.severe(getErrorMessageIncludingBuildRule(thrown, rule)));
+              }
+
+              thrown = maybeAttachBuildRuleNameToException(thrown, rule);
+              recordFailureAndCleanUp(rule, thrown, onDiskBuildInfo, buildContext);
+
+              return Futures.immediateFuture(BuildResult.failure(rule, thrown));
+            });
+
+    // Do things that need to happen after either success or failure, but don't block the dependents
+    // while doing so:
     asyncCallbacks.add(
         MoreFutures.addListenableCallback(
             buildResult,
@@ -1073,17 +1092,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 LOG.verbose(resumedEvent.toString());
                 buildContext.getEventBus().post(resumedEvent);
 
-                if (input.getStatus() == BuildRuleStatus.FAIL) {
-                  recordFailureAndCleanUp(
-                      rule,
-                      Preconditions.checkNotNull(input.getFailure()),
-                      onDiskBuildInfo,
-                      buildContext);
-                }
-
-                // Unblock dependents.
-                result.set(input);
-
                 if (input.getStatus() == BuildRuleStatus.SUCCESS) {
                   BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
                   successType = Optional.of(success);
@@ -1152,28 +1160,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               @Override
               public void onSuccess(BuildResult input) {
                 handleResult(input);
+
+                // Reset interrupted flag once failure has been recorded.
+                if (input.getFailure() instanceof InterruptedException) {
+                  Threads.interruptCurrentThread();
+                }
               }
 
               @Override
               public void onFailure(@Nonnull Throwable thrown) {
-                LOG.debug(thrown, "Building rule [%s] failed.", rule.getBuildTarget());
-
-                if (consoleLogBuildFailuresInline) {
-                  buildContext
-                      .getEventBus()
-                      .post(ConsoleEvent.severe(getErrorMessageIncludingBuildRule(thrown, rule)));
-                }
-
-                thrown = maybeAttachBuildRuleNameToException(thrown, rule);
-                handleResult(BuildResult.failure(rule, thrown));
-
-                // Reset interrupted flag once failure has been recorded.
-                if (thrown instanceof InterruptedException) {
-                  Threads.interruptCurrentThread();
-                }
+                throw new AssertionError("Dead code");
               }
             }));
-    return result;
+    return buildResult;
   }
 
   private void recordFailureAndCleanUp(
@@ -1225,8 +1224,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         new BuildRuleDiagnosticData(ruleDeps.get(rule), diagnosticKeysBuilder.build()));
   }
 
-  private static Throwable maybeAttachBuildRuleNameToException(
-      @Nonnull Throwable thrown, BuildRule rule) {
+  private static Exception maybeAttachBuildRuleNameToException(
+      @Nonnull Exception thrown, BuildRule rule) {
     if ((thrown instanceof HumanReadableException) || (thrown instanceof InterruptedException)) {
       return thrown;
     }
