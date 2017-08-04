@@ -112,12 +112,6 @@ public class JavacStep implements Step {
   @Override
   public final StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    return tryBuildWithFirstOrderDeps(context, filesystem);
-  }
-
-  private StepExecutionResult tryBuildWithFirstOrderDeps(
-      ExecutionContext context, ProjectFilesystem filesystem)
-      throws InterruptedException, IOException {
     javacOptions.validateOptions(classpathChecker::validateClasspath);
 
     Verbosity verbosity =
@@ -143,54 +137,46 @@ public class JavacStep implements Step {
               firstOrderContext.getProcessExecutor(),
               getAbsolutePathsForJavacInputs(getJavac()),
               directToJarOutputSettings);
-      return performBuild(context, stdout, stderr, getJavac(), javacExecutionContext);
-    }
-  }
-
-  private StepExecutionResult performBuild(
-      ExecutionContext context,
-      CapturingPrintStream stdout,
-      CapturingPrintStream stderr,
-      Javac javac,
-      JavacExecutionContext javacExecutionContext)
-      throws InterruptedException {
-    ImmutableList<JavacPluginJsr199Fields> pluginFields =
-        ImmutableList.copyOf(
-            javacOptions
-                .getAnnotationProcessingParams()
-                .getAnnotationProcessors(filesystem, resolver)
-                .stream()
-                .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
-                .collect(Collectors.toList()));
-    int declaredDepsBuildResult;
-    String firstOrderStdout;
-    String firstOrderStderr;
-    Optional<String> returnedStderr;
-    try (Javac.Invocation invocation =
-        javac.newBuildInvocation(
-            javacExecutionContext,
-            invokingRule,
-            getOptions(context, declaredClasspathEntries),
-            pluginFields,
-            javaSourceFilePaths,
-            pathToSrcsList,
-            workingDirectory,
-            javacOptions.getCompilationMode())) {
-      if (abiJar != null) {
-        declaredDepsBuildResult =
-            invocation.buildSourceAbiJar(filesystem.resolve(Preconditions.checkNotNull(abiJar)));
-      } else {
-        declaredDepsBuildResult = invocation.buildClasses();
+      ImmutableList<JavacPluginJsr199Fields> pluginFields =
+          ImmutableList.copyOf(
+              javacOptions
+                  .getAnnotationProcessingParams()
+                  .getAnnotationProcessors(this.filesystem, resolver)
+                  .stream()
+                  .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                  .collect(Collectors.toList()));
+      int declaredDepsBuildResult;
+      String firstOrderStdout;
+      String firstOrderStderr;
+      Optional<String> returnedStderr;
+      try (Javac.Invocation invocation =
+          getJavac()
+              .newBuildInvocation(
+                  javacExecutionContext,
+                  invokingRule,
+                  getOptions(context, declaredClasspathEntries),
+                  pluginFields,
+                  javaSourceFilePaths,
+                  pathToSrcsList,
+                  workingDirectory,
+                  javacOptions.getCompilationMode())) {
+        if (abiJar != null) {
+          declaredDepsBuildResult =
+              invocation.buildSourceAbiJar(
+                  this.filesystem.resolve(Preconditions.checkNotNull(abiJar)));
+        } else {
+          declaredDepsBuildResult = invocation.buildClasses();
+        }
       }
+      firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
+      firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+      if (declaredDepsBuildResult != 0) {
+        returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
+      } else {
+        returnedStderr = Optional.empty();
+      }
+      return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
     }
-    firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
-    firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
-    if (declaredDepsBuildResult != 0) {
-      returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
-    } else {
-      returnedStderr = Optional.empty();
-    }
-    return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
   }
 
   private Optional<String> processBuildFailure(
