@@ -97,7 +97,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
                 filesystem,
                 BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
                     .withFlavors(InternalFlavor.of("dex_merge")),
-                "_%s_output/jarfiles/assets/secondary-program-dex-jars"));
+                "%s_output/secondary/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
       List<Path> files = Lists.newArrayList(stream);

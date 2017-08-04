@@ -134,6 +134,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
   @AddToRuleKey private final boolean isPreDexed;
   @AddToRuleKey private final APKModule rootAPKModule;
+  @AddToRuleKey private final Optional<ImmutableSortedSet<SourcePath>> predexedSecondaryDirectories;
   @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
   // TODO(cjhopman): why is this derived differently than nativeLibAssetsDirectories?
   @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs;
@@ -159,11 +160,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
   private final ListeningExecutorService dxExecutorService;
-
-  // Once these fields are properly reflected in the rulekey, we can remove the abiPath (and
-  // delete ComputeExopackageDepsAbi).
-  private final Optional<Supplier<ImmutableSortedSet<SourcePath>>>
-      predexedSecondaryDexDirectoriesSupplier;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
@@ -247,8 +243,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.hasLinkableAssets = packageableCollection.getNativeLinkablesAssets().isEmpty();
     this.pathsToThirdPartyJars =
         ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars());
-    this.predexedSecondaryDexDirectoriesSupplier =
-        enhancementResult.getPreDexMerge().map(pdm -> pdm::getSecondaryDexDirectories);
+    if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
+      this.predexedSecondaryDirectories = Optional.empty();
+    } else {
+      this.predexedSecondaryDirectories =
+          enhancementResult.getPreDexMerge().map(PreDexMerge::getSecondaryDexSourcePaths);
+    }
 
     APKModuleGraph apkModuleGraph = enhancementResult.getAPKModuleGraph();
     this.nativeLibAssetsDirectories =
@@ -710,8 +710,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         secondaryDexDirs = ImmutableSortedSet.of();
       } else {
         secondaryDexDirs =
-            predexedSecondaryDexDirectoriesSupplier
-                .get()
+            predexedSecondaryDirectories
                 .get()
                 .stream()
                 .map(buildContext.getSourcePathResolver()::getRelativePath)
@@ -1007,7 +1006,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
    * @param classpathEntriesToDex Full set of classpath entries that must make their way into the
    *     final APK structure (but not necessarily into the primary dex).
    * @param secondaryDexDirectories The contract for updating this builder must match that of {@link
-   *     PreDexMerge#getSecondaryDexDirectories()}.
+   *     PreDexMerge#getSecondaryDexSourcePaths()}.
    * @param steps List of steps to add to.
    * @param primaryDexPath Output path for the primary dex file.
    */
