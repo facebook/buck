@@ -75,10 +75,10 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader);
         break;
       case LOADING_CACHE:
-        fileHashCacheEngine = new LoadingCacheFileHashCache(hashLoader, sizeLoader);
+        fileHashCacheEngine = LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader);
         break;
       case PREFIX_TREE:
-        fileHashCacheEngine = new FileSystemMapFileHashCache(hashLoader, sizeLoader);
+        fileHashCacheEngine = FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader);
         break;
       default:
         throw new RuntimeException(
@@ -137,8 +137,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  // TODO(rvitale): restrict visibility of this method after the file hash cache experiment is over.
-  HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
+  private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {

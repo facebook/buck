@@ -36,8 +36,8 @@ class ComboFileHashCache implements FileHashCacheEngine {
       ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
     fileHashCacheEngines =
         ImmutableList.of(
-            new LoadingCacheFileHashCache(hashLoader, sizeLoader),
-            new FileSystemMapFileHashCache(hashLoader, sizeLoader));
+            LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader),
+            FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader));
   }
 
   @Override

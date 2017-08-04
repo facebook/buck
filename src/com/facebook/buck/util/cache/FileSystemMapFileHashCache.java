@@ -17,33 +17,32 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.util.FileSystemMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
 class FileSystemMapFileHashCache implements FileHashCacheEngine {
-
   private final FileSystemMap<HashCodeAndFileType> loadingCache;
   private final FileSystemMap<Long> sizeCache;
 
-  private long cacheRetrievalAggregatedNanoTime = 0;
-  private long cacheInvalidationAggregatedNanoTime = 0;
-  private long numberOfInvalidations = 0;
-  private long numberOfRetrievals = 0;
-
-  public FileSystemMapFileHashCache(
+  private FileSystemMapFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
     this.loadingCache = new FileSystemMap<>(hashLoader::load);
     this.sizeCache = new FileSystemMap<>(sizeLoader::load);
+  }
+
+  public static FileHashCacheEngine createWithStats(
+      ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
+    return new StatsTrackingFileHashCacheEngine(
+        new FileSystemMapFileHashCache(hashLoader, sizeLoader), "new");
   }
 
   @Override
@@ -58,11 +57,8 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   @Override
   public void invalidate(Path path) {
-    long start = System.nanoTime();
     loadingCache.remove(path);
     sizeCache.remove(path);
-    cacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    numberOfInvalidations++;
   }
 
   @Override
@@ -72,16 +68,11 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   @Override
   public HashCode get(Path path) throws IOException {
-    long start = System.nanoTime();
-    HashCode sha1 = loadingCache.get(path.normalize()).getHashCode();
-    cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
-    numberOfRetrievals++;
-    return sha1;
+    return loadingCache.get(path.normalize()).getHashCode();
   }
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    long start = System.nanoTime(); // NOPMD
     Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
     HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
     Path memberPath = archiveMemberPath.getMemberPath();
@@ -90,10 +81,7 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
     if (memberHashCodeAndFileType == null) {
       throw new NoSuchFileException(archiveMemberPath.toString());
     }
-    HashCode sha1 = memberHashCodeAndFileType.getHashCode();
-    cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
-    numberOfRetrievals++;
-    return sha1;
+    return memberHashCodeAndFileType.getHashCode();
   }
 
   @Override
@@ -126,27 +114,6 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
 
   @Override
   public List<AbstractBuckEvent> getStatsEvents() {
-    List<AbstractBuckEvent> events = new LinkedList<>();
-    if (numberOfInvalidations > 0) {
-      events.add(
-          new FileHashCacheEvent(
-              "new.invalidation",
-              cacheInvalidationAggregatedNanoTime,
-              cacheInvalidationAggregatedNanoTime,
-              numberOfInvalidations));
-    }
-    if (numberOfRetrievals > 0) {
-      events.add(
-          new FileHashCacheEvent(
-              "new.retrieval",
-              cacheRetrievalAggregatedNanoTime,
-              cacheRetrievalAggregatedNanoTime,
-              numberOfRetrievals));
-    }
-    cacheInvalidationAggregatedNanoTime = 0;
-    cacheRetrievalAggregatedNanoTime = 0;
-    numberOfInvalidations = 0;
-    numberOfRetrievals = 0;
-    return events;
+    return Collections.emptyList();
   }
 }
