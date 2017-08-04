@@ -159,9 +159,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   // Once these fields are properly reflected in the rulekey, we can remove the abiPath (and
   // delete ComputeExopackageDepsAbi).
-  private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
   private final Optional<Supplier<ImmutableSortedSet<SourcePath>>>
       predexedSecondaryDexDirectoriesSupplier;
+  private Optional<ImmutableSortedMap<APKModule, Path>> nativeLibsDirs;
+  // TODO(cjhopman): why is this derived differently than nativeLibAssetsDirectories?
+  private Optional<ImmutableSortedMap<APKModule, Path>> nativeLibsAssetsDirs;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
@@ -245,7 +247,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.hasLinkableAssets = packageableCollection.getNativeLinkablesAssets().isEmpty();
     this.pathsToThirdPartyJars =
         ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars());
-    this.copyNativeLibraries = enhancementResult.getCopyNativeLibraries();
     this.predexedSecondaryDexDirectoriesSupplier =
         enhancementResult.getPreDexMerge().map(pdm -> pdm::getSecondaryDexDirectories);
 
@@ -258,6 +259,38 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.rootAPKModule = apkModuleGraph.getRootAPKModule();
 
     this.isPreDexed = enhancementResult.getPreDexMerge().isPresent();
+
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
+        enhancementResult.getCopyNativeLibraries();
+
+    boolean exopackageForNativeEnabled =
+        AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes);
+    if (exopackageForNativeEnabled) {
+      this.nativeLibsDirs = Optional.empty();
+    } else {
+      this.nativeLibsDirs =
+          copyNativeLibraries.map(
+              cnl ->
+                  cnl.entrySet()
+                      .stream()
+                      .collect(
+                          MoreCollectors.toImmutableSortedMap(
+                              e -> e.getKey(), e -> e.getValue().getPathToNativeLibsDir())));
+    }
+
+    this.nativeLibsAssetsDirs =
+        copyNativeLibraries.map(
+            cnl ->
+                cnl.entrySet()
+                    .stream()
+                    .filter(
+                        entry ->
+                            !exopackageForNativeEnabled
+                                || packageAssetLibraries
+                                || !entry.getKey().isRootModule())
+                    .collect(
+                        MoreCollectors.toImmutableSortedMap(
+                            e -> e.getKey(), e -> e.getValue().getPathToNativeLibsAssetsDir())));
 
     if (isPreDexed) {
       Preconditions.checkState(!preprocessJavaClassesBash.isPresent());
@@ -324,16 +357,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     for (final APKModule module : apkModules) {
       boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
-
       if (!AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)
-          && copyNativeLibraries.isPresent()
-          && copyNativeLibraries.get().containsKey(module)) {
-        CopyNativeLibraries copyNativeLibraries = this.copyNativeLibraries.get().get(module);
+          && nativeLibsDirs.isPresent()
+          && nativeLibsDirs.get().containsKey(module)) {
         if (shouldPackageAssetLibraries) {
-          nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsDir());
+          nativeLibraryDirectoriesBuilder.add(nativeLibsDirs.get().get(module));
         } else {
-          nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsDir());
-          nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsAssetsDir());
+          nativeLibraryDirectoriesBuilder.add(nativeLibsDirs.get().get(module));
+          nativeLibraryDirectoriesBuilder.add(nativeLibsAssetsDirs.get().get(module));
         }
       }
 
@@ -580,11 +611,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             });
 
     if (packageAssetLibraries || !module.isRootModule()) {
-      if (copyNativeLibraries.isPresent() && copyNativeLibraries.get().containsKey(module)) {
+      // TODO(cjhopman): Why is this packaging native libs as assets even when native exopackage is
+      // enabled?
+      if (nativeLibsAssetsDirs.isPresent() && nativeLibsAssetsDirs.get().containsKey(module)) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
         // in CopyNativeLibraries.getBuildSteps().
-        Path cxxNativeLibsSrc =
-            copyNativeLibraries.get().get(module).getPathToNativeLibsAssetsDir();
+        Path cxxNativeLibsSrc = nativeLibsAssetsDirs.get().get(module);
         steps.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
