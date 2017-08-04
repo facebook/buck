@@ -1476,7 +1476,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       }
       String ruleKeyValue = cacheResult.getMetadata().get(ruleKeyName);
       try {
-        HashCode.fromString(ruleKeyValue);
+        verify(ruleKeyValue);
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException(
             String.format(
@@ -1486,6 +1486,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       }
     }
     return cacheResult;
+  }
+
+  /**
+   * Checks that passed rule key value is valid and throws an {@link IllegalArgumentException} if it
+   * is not.
+   *
+   * @param ruleKeyValue rule key to verify.
+   */
+  @SuppressWarnings("CheckReturnValue")
+  private void verify(String ruleKeyValue) {
+    HashCode.fromString(ruleKeyValue);
   }
 
   private CacheResult unzipArtifactFromCacheResult(
