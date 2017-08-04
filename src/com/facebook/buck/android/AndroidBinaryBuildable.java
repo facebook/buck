@@ -133,6 +133,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final boolean hasLinkableAssets;
   @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
   @AddToRuleKey private final boolean isPreDexed;
+  @AddToRuleKey private final APKModule rootAPKModule;
 
   @AddToRuleKey private final Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths;
 
@@ -142,6 +143,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableList<SourcePath>> nativeLibAssetsDirectories;
+
+  @AddToRuleKey
+  private final ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap;
 
   @AddToRuleKey
   @Nullable
@@ -156,7 +160,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Once these fields are properly reflected in the rulekey, we can remove the abiPath (and
   // delete ComputeExopackageDepsAbi).
   private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
-  private final APKModuleGraph apkModuleGraph;
   private final Optional<Supplier<ImmutableSortedSet<SourcePath>>>
       predexedSecondaryDexDirectoriesSupplier;
 
@@ -246,11 +249,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.predexedSecondaryDexDirectoriesSupplier =
         enhancementResult.getPreDexMerge().map(pdm -> pdm::getSecondaryDexDirectories);
 
-    this.apkModuleGraph = enhancementResult.getAPKModuleGraph();
+    APKModuleGraph apkModuleGraph = enhancementResult.getAPKModuleGraph();
     this.nativeLibAssetsDirectories =
         convertToMapOfLists(packageableCollection.getNativeLibAssetsDirectories());
     this.apkModules =
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
+    this.apkModuleMap = apkModuleGraph.toOutgoingEdgesMap();
+    this.rootAPKModule = apkModuleGraph.getRootAPKModule();
 
     this.isPreDexed = enhancementResult.getPreDexMerge().isPresent();
 
@@ -1089,7 +1094,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               dexSplitMode.getSecondaryDexHeadClassesFile().map(resolver::getAbsolutePath),
               dexSplitMode.getSecondaryDexTailClassesFile().map(resolver::getAbsolutePath),
               additionalDexStoreToJarPathMap,
-              apkModuleGraph,
+              apkModuleMap,
+              rootAPKModule,
               zipSplitReportDir);
       steps.add(splitZipCommand);
 

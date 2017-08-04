@@ -27,6 +27,7 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -36,6 +37,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -142,6 +145,15 @@ public class APKModuleGraph {
     this.target = target;
     this.seedTargets = seedTargets;
     this.suppliedSeedConfigMap = Optional.empty();
+  }
+
+  public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
+    return getAPKModules()
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableSortedMap(
+                module -> module,
+                module -> ImmutableSortedSet.copyOf(getGraph().getOutgoingNodesFor(module))));
   }
 
   private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {
