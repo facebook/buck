@@ -32,14 +32,18 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 @JsonDeserialize(as = InvocationInfo.class)
 abstract class AbstractInvocationInfo {
-  static final SimpleDateFormat DIR_DATE_FORMAT;
+  private static final ThreadLocal<SimpleDateFormat> DIR_DATE_FORMAT =
+      new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+          SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
+          simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+          return simpleDateFormat;
+        }
+      };
+
   static final String DIR_NAME_REGEX = ".+_.+_.+";
   private static final String DIR_NAME_TEMPLATE = "%s_%s_%s";
-
-  static {
-    DIR_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
-    DIR_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-  }
 
   // TODO(#13704826): we should switch over to a machine-readable log format.
   private static final String LOG_MSG_TEMPLATE = "InvocationInfo BuildId=[%s] Args=[%s]";
@@ -99,7 +103,7 @@ abstract class AbstractInvocationInfo {
   private String getLogDirectoryName() {
     return String.format(
         DIR_NAME_TEMPLATE,
-        DIR_DATE_FORMAT.format(getTimestampMillis()),
+        DIR_DATE_FORMAT.get().format(getTimestampMillis()),
         getSubCommand(),
         getBuildId());
   }
