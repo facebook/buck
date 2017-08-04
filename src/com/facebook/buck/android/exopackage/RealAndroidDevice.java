@@ -48,7 +48,6 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -57,7 +56,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 @VisibleForTesting
@@ -729,28 +727,27 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public void killProcess(String processName) throws Exception {
-    String pids;
+    String packageName =
+        processName.contains(":")
+            ? processName.substring(0, processName.indexOf(':'))
+            : processName;
+
+    // Search through the running processes for a matching cmdline and kill it
+    String command =
+        String.format(
+            "kill \"$(for p in /proc/[0-9]*; do "
+                + "[[ -e $p/cmdline && $(<$p/cmdline) = '%s' ]] && echo `basename $p`; done)\"",
+            processName);
     try {
-      String output = executeCommandWithErrorChecking(String.format("pgrep %s", processName));
-      // Convert to space separated array if necessary:
-      pids = Arrays.stream(output.split("\\s+")).collect(Collectors.joining(" ")).trim();
+      executeCommandWithErrorChecking(String.format("run-as %s %s", packageName, command));
+      eventBus.post(ConsoleEvent.warning("Successfully terminated process " + processName));
     } catch (AdbHelper.CommandFailedException e) {
-      pids = "";
-    }
-    if (pids.isEmpty()) {
       eventBus.post(
           ConsoleEvent.warning(
               "No matching process found: %s. "
                   + "Check to ensure the process exists and is running.",
               processName));
-      return;
     }
-    String packageName =
-        processName.contains(":")
-            ? processName.substring(0, processName.indexOf(':'))
-            : processName;
-    executeCommandWithErrorChecking(String.format("run-as %s kill %s", packageName, pids));
-    eventBus.post(ConsoleEvent.warning("Successfully terminated process " + processName));
   }
 
   /**
