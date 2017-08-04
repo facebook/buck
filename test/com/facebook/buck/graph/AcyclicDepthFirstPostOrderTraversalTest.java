@@ -17,6 +17,7 @@
 package com.facebook.buck.graph;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.google.common.collect.ImmutableList;
@@ -25,10 +26,15 @@ import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /** Unit test for {@link AcyclicDepthFirstPostOrderTraversal}. */
 public class AcyclicDepthFirstPostOrderTraversalTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   /**
    * Verifies that a traversal of a well-formed DAG proceeds as expected.
@@ -77,7 +83,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    * Note that there is a circular dependency from F -> C -> E -> F.
    */
   @Test
-  public void testCycleDetection() throws IOException, InterruptedException {
+  public void testCycleDetection() throws IOException, InterruptedException, CycleException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("A", "C");
@@ -92,14 +98,17 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     try {
       dfs.traverse(ImmutableList.of("A"));
     } catch (CycleException e) {
-      assertEquals("Cycle found: F -> C -> E -> F", e.getMessage());
+      assertThat(
+          e.getMessage(),
+          Matchers.containsString(
+              "The following circular dependency has been found:\nF -> C -> E -> F"));
       assertEquals(ImmutableList.of("F", "C", "E", "F"), e.getCycle());
     }
   }
 
   /** Ensures that a cycle is detected in a trivial graph of a single node that points to itself. */
   @Test
-  public void testTrivialCycle() throws IOException, InterruptedException {
+  public void testTrivialCycle() throws IOException, InterruptedException, CycleException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "A");
     TestDagDepthFirstSearch dfs = new TestDagDepthFirstSearch(graph);
@@ -107,7 +116,9 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     try {
       dfs.traverse(ImmutableList.of("A"));
     } catch (CycleException e) {
-      assertEquals("Cycle found: A -> A", e.getMessage());
+      assertThat(
+          e.getMessage(),
+          Matchers.containsString("The following circular dependency has been found:\nA -> A"));
       assertEquals(ImmutableList.of("A", "A"), e.getCycle());
     }
   }
@@ -127,7 +138,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    */
   @Test
   public void testCycleExceptionDoesNotContainUnrelatedNodes()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, CycleException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("B", "C");
@@ -139,7 +150,10 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
     try {
       dfs.traverse(ImmutableList.of("A"));
     } catch (CycleException e) {
-      assertEquals("Cycle found: A -> B -> D -> A", e.getMessage());
+      assertThat(
+          e.getMessage(),
+          Matchers.containsString(
+              "The following circular dependency has been found:\nA -> B -> D -> A"));
       assertEquals(ImmutableList.of("A", "B", "D", "A"), e.getCycle());
     }
   }
@@ -159,7 +173,7 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
    */
   @Test
   public void testTraverseMultipleInitialNodes()
-      throws CycleException, IOException, InterruptedException {
+      throws CycleException, IOException, InterruptedException, CycleException {
     Multimap<String, String> graph = LinkedListMultimap.create();
     graph.put("A", "B");
     graph.put("B", "C");
