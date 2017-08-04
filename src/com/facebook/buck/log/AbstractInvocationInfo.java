@@ -93,7 +93,7 @@ abstract class AbstractInvocationInfo {
   }
 
   public Path getLogDirectoryPath() {
-    return getBuckLogDir().resolve(getLogDirectoryName() + "/");
+    return getBuckLogDir().resolve(getLogDirectoryName());
   }
 
   Path getLogFilePath() {
