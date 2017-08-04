@@ -42,3 +42,26 @@ android_library(
     'PUBLIC',
   ],
 )
+
+robolectric_test(
+  name = 'test',
+  srcs = glob(['Activity.kt', 'Sample.kt', 'Sample2.kt']),
+  language = 'KOTLIN',
+  deps = [
+    '//res/com/sample/title:title',
+    '//res/com/sample/top:top',
+    '//res/com/sample/asset_only:asset_only',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+robolectric_test(
+  name = 'test_mixed_sources',
+  srcs = glob(['*.kt', 'JavaClass.java']),
+  language = 'KOTLIN',
+  visibility = [
+    'PUBLIC',
+  ],
+)

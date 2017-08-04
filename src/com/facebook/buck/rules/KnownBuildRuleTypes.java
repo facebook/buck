@@ -24,6 +24,7 @@ import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidInstrumentationTestDescription;
+import com.facebook.buck.android.AndroidLibraryCompilerFactory;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
@@ -515,6 +516,9 @@ public class KnownBuildRuleTypes {
                             .orElse(SmartDexingStep.determineOptimalThreadCount())),
                 new CommandThreadFactory("SmartDexing")));
 
+    AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
+        new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
+
     builder.register(
         new AndroidAarDescription(
             new AndroidManifestDescription(),
@@ -548,9 +552,7 @@ public class KnownBuildRuleTypes {
         new AndroidInstrumentationTestDescription(defaultJavaOptions, defaultTestRuleTimeoutMs));
     builder.register(
         new AndroidLibraryDescription(
-            javaConfig,
-            defaultJavacOptions,
-            new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig)));
+            javaConfig, defaultJavacOptions, defaultAndroidCompilerFactory));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(javaConfig, defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
@@ -680,7 +682,8 @@ public class KnownBuildRuleTypes {
             defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
-            defaultCxxPlatform));
+            defaultCxxPlatform,
+            defaultAndroidCompilerFactory));
     builder.register(new RustBinaryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustLibraryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustTestDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
