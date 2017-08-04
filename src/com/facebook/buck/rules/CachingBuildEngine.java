@@ -564,14 +564,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             ruleKeyFactories,
             service,
             stepRunner,
-            this.ruleDeps)
-        .build(
+            this.ruleDeps,
             rule,
             buildContext,
             executionContext,
             onDiskBuildInfo,
             buildInfoRecorder,
-            buildableContext);
+            buildableContext)
+        .build();
   }
 
   public static class DefaultBuildRuleBuilderDelegate
