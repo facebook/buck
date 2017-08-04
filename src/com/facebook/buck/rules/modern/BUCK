@@ -1,0 +1,23 @@
+java_library(
+    name = "modern",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:interfaces",
+        "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:rules",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
