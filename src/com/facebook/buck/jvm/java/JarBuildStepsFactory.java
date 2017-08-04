@@ -251,7 +251,10 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
       ImmutableSortedSet<Path> javaSrcs =
           this.srcs
               .stream()
-              .map(context.getSourcePathResolver()::getRelativePath)
+              .map(
+                  src ->
+                      projectFilesystem.relativize(
+                          context.getSourcePathResolver().getAbsolutePath(src)))
               .collect(MoreCollectors.toImmutableSortedSet());
 
       this.compileStepFactory.createCompileToJarStep(
