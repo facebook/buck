@@ -2418,7 +2418,9 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
+                  cachingBuildEngine
+                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                      .get(),
                   LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       Manifest manifest = loadManifest(fetchedManifest);
@@ -2516,7 +2518,9 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(
-                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get())
+                  cachingBuildEngine
+                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                      .get())
               .build(),
           byteArrayOutputStream.toByteArray());
 
@@ -2538,7 +2542,9 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
+                  cachingBuildEngine
+                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                      .get(),
                   LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       manifest = loadManifest(fetchedManifest);
@@ -2637,7 +2643,9 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(
-                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get())
+                  cachingBuildEngine
+                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                      .get())
               .build(),
           byteArrayOutputStream.toByteArray());
 
@@ -2659,7 +2667,9 @@ public class CachingBuildEngineTest {
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
-                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get(),
+                  cachingBuildEngine
+                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                      .get(),
                   LazyPath.ofInstance(fetchedManifest)));
       assertThat(cacheResult.getType(), equalTo(CacheResultType.HIT));
       manifest = loadManifest(fetchedManifest);
@@ -2750,7 +2760,9 @@ public class CachingBuildEngineTest {
       cache.store(
           ArtifactInfo.builder()
               .addRuleKeys(
-                  cachingBuildEngine.getManifestRuleKey(rule, buildContext.getEventBus()).get())
+                  cachingBuildEngine
+                      .getManifestRuleKeyForTest(rule, buildContext.getEventBus())
+                      .get())
               .build(),
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip");
@@ -2881,7 +2893,7 @@ public class CachingBuildEngineTest {
           ImmutableSet.of(input),
           ImmutableSet.of(input));
       try (OutputStream outputStream =
-          filesystem.newFileOutputStream(cachingBuildEngine.getManifestPath(rule))) {
+          filesystem.newFileOutputStream(CachingBuildEngine.getManifestPath(rule))) {
         manifest.serialize(outputStream);
       }
 
