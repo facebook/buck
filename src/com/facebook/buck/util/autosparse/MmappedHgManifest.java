@@ -76,6 +76,9 @@ public class MmappedHgManifest {
     try (FileChannel fileChannel = FileChannel.open(rawManifestPath); ) {
       long longSize = fileChannel.size();
       if (longSize > MAX_FILE_SIZE) {
+        // MappedByteBuffer can only handle int positions, so we can only address 2GB with a single
+        // mmap. Reaching larger manifest sizes would require using multiple mmap objects and
+        // added complexity.
         throw new IOException("Unable to load a manifest > 2GB");
       }
       mmap = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, longSize);
