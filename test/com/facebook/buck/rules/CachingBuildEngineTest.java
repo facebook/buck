@@ -2893,8 +2893,7 @@ public class CachingBuildEngineTest {
           ImmutableSet.of(input),
           ImmutableSet.of(input));
       try (OutputStream outputStream =
-          filesystem.newFileOutputStream(
-              CachingBuildEngine.CachingBuildRuleBuilder.getManifestPath(rule))) {
+          filesystem.newFileOutputStream(CachingBuildRuleBuilder.getManifestPath(rule))) {
         manifest.serialize(outputStream);
       }
 

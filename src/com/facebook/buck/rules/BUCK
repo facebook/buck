@@ -394,6 +394,7 @@ java_immutables_library(
         "BuildRuleDiagnosticData.java",
         "BuildRuleEvent.java",
         "CachingBuildEngine.java",
+        "CachingBuildRuleBuilder.java",
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",
         "ExternalTestRunnerRule.java",
