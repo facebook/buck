@@ -577,6 +577,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 ruleKeyFactories.getDefaultRuleKeyFactory().build(rule).toString())
             .addBuildMetadata(BuildInfo.MetadataKey.BUILD_ID, buildContext.getBuildId().toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
+    return buildBuildRule(
+        rule, buildContext, executionContext, onDiskBuildInfo, buildInfoRecorder, buildableContext);
+  }
+
+  private ListenableFuture<BuildResult> buildBuildRule(
+      BuildRule rule,
+      BuildEngineBuildContext buildContext,
+      ExecutionContext executionContext,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildInfoRecorder buildInfoRecorder,
+      BuildableContext buildableContext) {
     final AtomicReference<Long> outputSize = Atomics.newReference();
 
     ListenableFuture<List<BuildResult>> depResults =
