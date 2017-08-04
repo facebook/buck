@@ -26,7 +26,6 @@ import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -52,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -291,10 +289,6 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .getComputeExopackageDepsAbi()
                 .map(ComputeExopackageDepsAbi::getAbiPath)
                 .orElse(null));
-  }
-
-  public static Path getPrimaryDexPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargets.getScratchPath(filesystem, buildTarget, ".dex/%s/classes.dex");
   }
 
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {

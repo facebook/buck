@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -99,7 +98,6 @@ public class AndroidBinaryGraphEnhancer {
   private final CellPathResolver cellRoots;
   private final PackageType packageType;
   private final boolean shouldPreDex;
-  private final Path primaryDexPath;
   private final DexSplitMode dexSplitMode;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
@@ -135,7 +133,6 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<TargetCpuType> cpuFilters,
       boolean shouldBuildStringSourceMap,
       boolean shouldPreDex,
-      Path primaryDexPath,
       DexSplitMode dexSplitMode,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
@@ -173,7 +170,6 @@ public class AndroidBinaryGraphEnhancer {
     this.cellRoots = cellRoots;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;
-    this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
@@ -585,7 +581,6 @@ public class AndroidBinaryGraphEnhancer {
             originalBuildTarget.withAppendedFlavors(DEX_MERGE_FLAVOR),
             projectFilesystem,
             paramsForPreDexMerge,
-            primaryDexPath,
             dexSplitMode,
             apkModuleGraph,
             allPreDexDeps,

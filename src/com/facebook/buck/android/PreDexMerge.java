@@ -94,7 +94,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private static final String PRIMARY_DEX_HASH_KEY = "primary_dex_hash";
 
-  private final Path primaryDexPath;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
   private final APKModuleGraph apkModuleGraph;
   private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
@@ -108,7 +107,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Path primaryDexPath,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
       ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps,
@@ -117,7 +115,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Integer> xzCompressionLevel,
       Optional<String> dxMaxHeapSize) {
     super(buildTarget, projectFilesystem, params);
-    this.primaryDexPath = primaryDexPath;
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.preDexDeps = preDexDeps;
@@ -136,9 +133,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                primaryDexPath.getParent())));
+                context.getBuildCellRootPath(), getProjectFilesystem(), getPrimaryDexRoot())));
 
     if (dexSplitMode.isShouldSplitDex()) {
       addStepsForSplitDex(steps, context, buildableContext);
@@ -175,6 +170,18 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
       additionalJarfilesSubdir = additionalJarfilesDir.resolve("assets");
       metadataFile = metadataSubdir.resolve("metadata.txt");
     }
+  }
+
+  private Path getPrimaryDexRoot() {
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s_output/primary");
+  }
+
+  private Path getPrimaryDexPath() {
+    return getPrimaryDexRoot().resolve("classes.dex");
+  }
+
+  public SourcePath getSourcePathToPrimaryDex() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPrimaryDexPath());
   }
 
   private Path getSecondaryDexRoot() {
@@ -251,7 +258,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), paths.scratchDir)));
 
-    buildableContext.recordArtifact(primaryDexPath);
+    buildableContext.recordArtifact(getPrimaryDexRoot());
     buildableContext.recordArtifact(paths.jarfilesSubdir);
     buildableContext.recordArtifact(paths.metadataSubdir);
     buildableContext.recordArtifact(paths.successDir);
@@ -294,6 +301,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     final ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesBuilder.build();
 
+    Path primaryDexPath = getPrimaryDexPath();
     steps.add(
         new SmartDexingStep(
             context,
@@ -406,6 +414,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
               filesToDex, Collections.singleton(rDotJavaDexWithClasses.get().getPathToDexFile()));
     }
 
+    Path primaryDexPath = getPrimaryDexPath();
     buildableContext.recordArtifact(primaryDexPath);
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.

@@ -133,8 +133,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final boolean hasLinkableAssets;
   @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
   @AddToRuleKey private final boolean isPreDexed;
-  @AddToRuleKey private final APKModule rootAPKModule;
+  @AddToRuleKey private final Optional<SourcePath> predexedPrimaryDexPath;
   @AddToRuleKey private final Optional<ImmutableSortedSet<SourcePath>> predexedSecondaryDirectories;
+  @AddToRuleKey private final APKModule rootAPKModule;
   @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
   // TODO(cjhopman): why is this derived differently than nativeLibAssetsDirectories?
   @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs;
@@ -293,6 +294,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                             e -> e.getKey(),
                             e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
 
+    this.predexedPrimaryDexPath =
+        enhancementResult.getPreDexMerge().map(PreDexMerge::getSourcePathToPrimaryDex);
     if (isPreDexed) {
       Preconditions.checkState(!preprocessJavaClassesBash.isPresent());
       Preconditions.checkState(!packageType.isBuildWithObfuscation());
@@ -716,7 +719,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 .map(buildContext.getSourcePathResolver()::getRelativePath)
                 .collect(MoreCollectors.toImmutableSortedSet());
       }
-      return new DexFilesInfo(getPrimaryDexPath(), secondaryDexDirs);
+      return new DexFilesInfo(
+          buildContext.getSourcePathResolver().getRelativePath(predexedPrimaryDexPath.get()),
+          secondaryDexDirs);
     }
 
     ImmutableSet<Path> classpathEntriesToDex =
@@ -879,25 +884,26 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier =
         addAccumulateClassNamesStep(classpathEntriesToDex, steps);
 
+    Path primaryDexPath = getNonPredexedPrimaryDexPath();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                getPrimaryDexPath().getParent())));
+                primaryDexPath.getParent())));
 
     addDexingSteps(
         classpathEntriesToDex,
         classNamesToHashesSupplier,
         secondaryDexDirectoriesBuilder,
         steps,
-        getPrimaryDexPath(),
+        primaryDexPath,
         dexReorderToolFile,
         dexReorderDataDumpFile,
         additionalDexStoreToJarPathMap,
         buildContext);
 
-    return new DexFilesInfo(getPrimaryDexPath(), secondaryDexDirectoriesBuilder.build());
+    return new DexFilesInfo(primaryDexPath, secondaryDexDirectoriesBuilder.build());
   }
 
   public Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(
@@ -1343,8 +1349,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
-  private Path getPrimaryDexPath() {
-    return AndroidBinary.getPrimaryDexPath(getBuildTarget(), getProjectFilesystem());
+  private Path getNonPredexedPrimaryDexPath() {
+    return BuildTargets.getScratchPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/.dex/classes.dex");
   }
 
   /**

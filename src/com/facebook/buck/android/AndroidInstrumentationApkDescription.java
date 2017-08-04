@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -123,7 +122,6 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
-    Path primaryDexPath = AndroidBinary.getPrimaryDexPath(buildTarget, projectFilesystem);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
@@ -144,7 +142,6 @@ public class AndroidInstrumentationApkDescription
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
             /* shouldPreDex */ false,
-            primaryDexPath,
             DexSplitMode.NO_SPLIT,
             rulesToExcludeFromDex
                 .stream()
