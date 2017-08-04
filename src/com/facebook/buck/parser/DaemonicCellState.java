@@ -210,7 +210,7 @@ class DaemonicCellState {
 
       // We may have been given a file that other build files depend on. Iteratively remove those.
       Iterable<Path> dependents = buildFileDependents.get(path);
-      LOG.debug("Invalidating dependents for path %s: %s", path, dependents);
+      LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
       for (Path dependent : dependents) {
         if (dependent.equals(path)) {
           continue;

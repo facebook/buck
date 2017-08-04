@@ -456,7 +456,7 @@ public class DaemonicParserState {
    *     to find and invalidate.
    */
   private void invalidateContainingBuildFile(Cell cell, BuildFileTree buildFiles, Path path) {
-    LOG.debug("Invalidating rules dependent on change to %s in cell %s", path, cell);
+    LOG.verbose("Invalidating rules dependent on change to %s in cell %s", path, cell);
     Set<Path> packageBuildFiles = new HashSet<>();
 
     // Find the closest ancestor package for the input path.  We'll definitely need to invalidate
@@ -505,7 +505,7 @@ public class DaemonicParserState {
    * @param path The File that has changed.
    */
   private void invalidatePath(DaemonicCellState state, Path path) {
-    LOG.debug("Invalidating path %s for cell %s", path, state.getCellRoot());
+    LOG.verbose("Invalidating path %s for cell %s", path, state.getCellRoot());
 
     // Paths passed in may not be absolute.
     path = state.getCellRoot().resolve(path);
