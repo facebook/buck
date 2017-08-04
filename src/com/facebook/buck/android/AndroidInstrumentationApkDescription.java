@@ -150,6 +150,7 @@ public class AndroidInstrumentationApkDescription
             resourcesToExclude,
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),
+            /* noAutoVersionResources */ false,
             javaBuckConfig,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,

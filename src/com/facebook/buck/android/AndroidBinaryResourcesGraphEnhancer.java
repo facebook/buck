@@ -73,6 +73,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final Optional<Arg> postFilterResourcesCmd;
   private final boolean exopackageForResources;
+  private final boolean noAutoVersionResources;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -92,7 +93,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean includesVectorDrawables,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries,
-      Optional<Arg> postFilterResourcesCmd) {
+      Optional<Arg> postFilterResourcesCmd,
+      boolean noAutoVersionResources) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleResolver = ruleResolver;
@@ -112,6 +114,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalBuildTarget;
     this.postFilterResourcesCmd = postFilterResourcesCmd;
+    this.noAutoVersionResources = noAutoVersionResources;
   }
 
   @Value.Immutable
@@ -333,7 +336,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         manifest,
-        manifestEntries);
+        manifestEntries,
+        noAutoVersionResources);
   }
 
   private GenerateRDotJava createGenerateRDotJava(

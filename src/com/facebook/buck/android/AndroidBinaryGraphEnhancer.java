@@ -138,6 +138,7 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> resourcesToExclude,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
+      boolean noAutoVersionResources,
       JavaBuckConfig javaBuckConfig,
       Javac javac,
       JavacOptions javacOptions,
@@ -218,7 +219,8 @@ public class AndroidBinaryGraphEnhancer {
             includesVectorDrawables,
             bannedDuplicateResourceTypes,
             manifestEntries,
-            postFilterResourcesCmd);
+            postFilterResourcesCmd,
+            noAutoVersionResources);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
   }

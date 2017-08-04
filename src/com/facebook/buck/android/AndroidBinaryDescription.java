@@ -271,6 +271,7 @@ public class AndroidBinaryDescription
               /* resourcesToExclude */ ImmutableSet.of(),
               args.isSkipCrunchPngs(),
               args.isIncludesVectorDrawables(),
+              args.isNoAutoVersionResources(),
               javaBuckConfig,
               JavacFactory.create(ruleFinder, javaBuckConfig, null),
               javacOptions,
@@ -572,6 +573,11 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default boolean isIncludesVectorDrawables() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isNoAutoVersionResources() {
       return false;
     }
 
