@@ -30,12 +30,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class LogFileHandler extends Handler {
-
-  private static final Pattern DIR_PATTERN = Pattern.compile(InvocationInfo.DIR_NAME_REGEX);
 
   private final LogFileHandlerState state;
 
@@ -120,8 +116,7 @@ public class LogFileHandler extends Handler {
                     try (DirectoryStream<Path> directoryStream =
                         Files.newDirectoryStream(rootPath)) {
                       for (Path path : directoryStream) {
-                        Matcher matcher = DIR_PATTERN.matcher(path.getFileName().toString());
-                        if (matcher.matches()) {
+                        if (AbstractInvocationInfo.isLogDirectory(path)) {
                           dirPaths.add(path);
                         }
                       }

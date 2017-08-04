@@ -26,6 +26,7 @@ import com.google.common.base.Joiner;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -42,8 +43,10 @@ abstract class AbstractInvocationInfo {
         }
       };
 
-  static final String DIR_NAME_REGEX = ".+_.+_.+";
   private static final String DIR_NAME_TEMPLATE = "%s_%s_%s";
+
+  /** Pattern that must be able to match strings generated from the {@link #DIR_NAME_TEMPLATE}. */
+  private static final Pattern DIR_PATTERN = Pattern.compile(".+_.+_.+");
 
   // TODO(#13704826): we should switch over to a machine-readable log format.
   private static final String LOG_MSG_TEMPLATE = "InvocationInfo BuildId=[%s] Args=[%s]";
@@ -106,6 +109,10 @@ abstract class AbstractInvocationInfo {
         DIR_DATE_FORMAT.get().format(getTimestampMillis()),
         getSubCommand(),
         getBuildId());
+  }
+
+  static boolean isLogDirectory(Path directory) {
+    return DIR_PATTERN.matcher(directory.getFileName().toString()).matches();
   }
 
   @Override
