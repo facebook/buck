@@ -6,8 +6,8 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

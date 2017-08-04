@@ -33,7 +33,7 @@ MORE_PATHS_SRCS = [
 ]
 
 java_library(
-    name = "MorePaths.java",
+    name = "more-paths",
     srcs = MORE_PATHS_SRCS,
     visibility = [
         "PUBLIC",
@@ -179,9 +179,9 @@ java_immutables_library(
     ),
     exported_deps = [
         ":BuckPaths",
-        ":MorePaths.java",
         ":ProjectFilesystemDelegate",
         ":ProjectFilesystemDelegateFactory",
+        ":more-paths",
     ],
     tests = [
         "//test/com/facebook/buck/io:io",

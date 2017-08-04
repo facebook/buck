@@ -22,8 +22,8 @@ java_library(
     deps = [
         ":util",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
