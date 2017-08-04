@@ -26,9 +26,9 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.sqlite.RetryBusyHandler;
 import com.facebook.buck.sqlite.SQLiteUtils;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -248,62 +248,57 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   private ListenableFuture<Void> storeContent(
       ImmutableSet<RuleKey> contentHashes, BorrowablePath content) {
+    ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
     try {
-      ImmutableList.Builder<RuleKey> inlinedHashes = ImmutableList.builder();
-      ImmutableList.Builder<byte[]> artifacts = ImmutableList.builder();
-      ImmutableList.Builder<Long> inlinedSizes = ImmutableList.builder();
+      long size = filesystem.getFileSize(content.getPath());
+      if (size <= maxInlinedBytes) {
+        // artifact is small enough to inline in the database
+        db.storeArtifact(toStore, Files.readAllBytes(content.getPath()), size);
+      } else if (!toStore.isEmpty()) {
+        // artifact is too large to inline, store on disk and put path in database
+        Path artifactPath = getArtifactPath(toStore.iterator().next());
+        filesystem.mkdirs(artifactPath.getParent());
 
-      ImmutableList.Builder<RuleKey> fileHashes = ImmutableList.builder();
-      ImmutableList.Builder<String> filepaths = ImmutableList.builder();
-      ImmutableList.Builder<Long> fileSizes = ImmutableList.builder();
-
-      Optional<Path> movedArtifactPath = Optional.empty();
-      for (RuleKey contentHash : contentHashes) {
-        // if the content already exists in the cache, skip it
-        ResultSet existingArtifact = db.selectContent(contentHash);
-        if (existingArtifact.next()) {
-          byte[] inlined = existingArtifact.getBytes(1);
-          String artifactPath = existingArtifact.getString(2);
-
-          if (Objects.nonNull(inlined) || filesystem.exists(filesystem.resolve(artifactPath))) {
-            db.accessContent(contentHash);
-            continue;
-          }
-        }
-
-        long size = filesystem.getFileSize(content.getPath());
-        if (size <= maxInlinedBytes) {
-          // artifact is small enough to inline in the database
-          inlinedHashes.add(contentHash);
-          artifacts.add(Files.readAllBytes(content.getPath()));
-          inlinedSizes.add(size);
+        if (content.canBorrow()) {
+          filesystem.move(content.getPath(), artifactPath, StandardCopyOption.REPLACE_EXISTING);
         } else {
-          // artifact is too large to inline, store on disk and put path in database
-          Path artifactPath = getArtifactPath(contentHash);
-          filesystem.mkdirs(artifactPath.getParent());
-
-          if (!content.canBorrow()) {
-            storeArtifactOutput(content.getPath(), artifactPath);
-          } else if (movedArtifactPath.isPresent()) {
-            storeArtifactOutput(movedArtifactPath.get(), artifactPath);
-          } else {
-            movedArtifactPath = Optional.of(artifactPath);
-            filesystem.move(content.getPath(), artifactPath, StandardCopyOption.REPLACE_EXISTING);
-          }
-
-          fileHashes.add(contentHash);
-          filepaths.add(artifactPath.toString());
-          fileSizes.add(size);
+          storeArtifactOutput(content.getPath(), artifactPath);
         }
-      }
 
-      db.storeArtifacts(inlinedHashes.build(), artifacts.build(), inlinedSizes.build());
-      db.storeFilepaths(fileHashes.build(), filepaths.build(), fileSizes.build());
+        db.storeFilepath(toStore, artifactPath.toString(), size);
+      }
     } catch (IOException | SQLException e) {
       LOG.warn(e, "Artifact store(%s, %s) error", contentHashes, content);
     }
 
     return Futures.immediateFuture(null);
+  }
+
+  private ImmutableSet<RuleKey> notPreexisting(ImmutableSet<RuleKey> contentHashes) {
+    return contentHashes
+        .parallelStream()
+        .filter(
+            contentHash -> {
+              try {
+                // if the content already exists in the cache, skip it
+                ResultSet existingArtifact = db.selectContent(contentHash);
+                if (existingArtifact.next()) {
+                  byte[] inlined = existingArtifact.getBytes(1);
+                  String artifactPath = existingArtifact.getString(2);
+
+                  if (Objects.nonNull(inlined)
+                      || filesystem.exists(filesystem.resolve(artifactPath))) {
+                    db.accessContent(contentHash);
+                    return false;
+                  }
+                }
+              } catch (SQLException e) {
+                throw new RuntimeException(e);
+              }
+
+              return true;
+            })
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @VisibleForTesting
@@ -640,31 +635,23 @@ public class SQLiteArtifactCache implements ArtifactCache {
       storeMetadata.executeBatch();
     }
 
-    private synchronized void storeArtifacts(
-        ImmutableList<RuleKey> hashes, ImmutableList<byte[]> artifacts, ImmutableList<Long> sizes)
+    private synchronized void storeArtifact(Iterable<RuleKey> hashes, byte[] artifact, long size)
         throws SQLException {
-      Preconditions.checkArgument(
-          hashes.size() == artifacts.size() && hashes.size() == sizes.size());
-
-      for (int i = 0; i < hashes.size(); i++) {
-        storeArtifact.setBytes(1, getBytes(hashes.get(i)));
-        storeArtifact.setBytes(2, artifacts.get(i));
-        storeArtifact.setLong(3, sizes.get(i));
+      for (RuleKey contentHash : hashes) {
+        storeArtifact.setBytes(1, getBytes(contentHash));
+        storeArtifact.setBytes(2, artifact);
+        storeArtifact.setLong(3, size);
         storeArtifact.addBatch();
       }
       storeArtifact.executeBatch();
     }
 
-    private synchronized void storeFilepaths(
-        ImmutableList<RuleKey> ruleKeys, ImmutableList<String> filepaths, ImmutableList<Long> sizes)
+    private synchronized void storeFilepath(Iterable<RuleKey> ruleKeys, String filepath, long size)
         throws SQLException {
-      Preconditions.checkArgument(
-          ruleKeys.size() == filepaths.size() && ruleKeys.size() == sizes.size());
-
-      for (int i = 0; i < ruleKeys.size(); i++) {
-        storeFilepath.setBytes(1, getBytes(ruleKeys.get(i)));
-        storeFilepath.setString(2, filepaths.get(i));
-        storeFilepath.setLong(3, sizes.get(i));
+      for (RuleKey ruleKey : ruleKeys) {
+        storeFilepath.setBytes(1, getBytes(ruleKey));
+        storeFilepath.setString(2, filepath);
+        storeFilepath.setLong(3, size);
         storeFilepath.addBatch();
       }
       storeFilepath.executeBatch();
