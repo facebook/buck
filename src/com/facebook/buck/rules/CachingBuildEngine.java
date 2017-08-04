@@ -325,6 +325,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
    */
   private WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
       ResourceAmounts defaultAmounts) {
+    return serviceByAdjustingDefaultWeightsTo(defaultAmounts, resourceAwareSchedulingInfo, service);
+  }
+
+  private static WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
+      ResourceAmounts defaultAmounts,
+      ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
+      WeightedListeningExecutorService service) {
     if (resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled()) {
       return service.withDefaultAmounts(defaultAmounts);
     }
@@ -595,7 +602,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             .addBuildMetadata(BuildInfo.MetadataKey.BUILD_ID, buildContext.getBuildId().toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
     return new CachingBuildRuleBuilder(
-            this,
+            new DefaultBuildRuleBuilderDelegate(this),
             artifactCacheSizeLimit,
             buildInfoStoreManager,
             buildMode,
@@ -624,7 +631,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   static class CachingBuildRuleBuilder {
-    private final CachingBuildEngine cachingBuildEngine;
+    private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
     private final Optional<Long> artifactCacheSizeLimit;
     private final BuildInfoStoreManager buildInfoStoreManager;
     private final BuildMode buildMode;
@@ -645,7 +652,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     private final RuleDepsCache ruleDeps;
 
     public CachingBuildRuleBuilder(
-        final CachingBuildEngine cachingBuildEngine,
+        DefaultBuildRuleBuilderDelegate buildRuleBuilderDelegate,
         Optional<Long> artifactCacheSizeLimit,
         BuildInfoStoreManager buildInfoStoreManager,
         BuildMode buildMode,
@@ -664,7 +671,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         WeightedListeningExecutorService service,
         StepRunner stepRunner,
         RuleDepsCache ruleDeps) {
-      this.cachingBuildEngine = cachingBuildEngine;
+      this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
       this.artifactCacheSizeLimit = artifactCacheSizeLimit;
       this.buildInfoStoreManager = buildInfoStoreManager;
       this.buildMode = buildMode;
@@ -685,6 +692,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       this.ruleDeps = ruleDeps;
     }
 
+    /**
+     * We have a lot of places where tasks are submitted into a service implicitly. There is no way
+     * to assign custom weights to such tasks. By creating a temporary service with adjusted weights
+     * it is possible to trick the system and tweak the weights.
+     */
+    private WeightedListeningExecutorService serviceByAdjustingDefaultWeightsTo(
+        ResourceAmounts defaultAmounts) {
+      return CachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
+          defaultAmounts, resourceAwareSchedulingInfo, service);
+    }
+
     private ListenableFuture<BuildResult> build(
         BuildRule rule,
         BuildEngineBuildContext buildContext,
@@ -700,7 +718,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       // If we're performing a deep build, guarantee that all dependencies will *always* get
       // materialized locally
       if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
-        depResults = cachingBuildEngine.getDepResults(rule, buildContext, executionContext);
+        depResults = buildRuleBuilderDelegate.getDepResults(rule, buildContext, executionContext);
       }
 
       ListenableFuture<BuildResult> buildResult =
@@ -714,8 +732,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                       onDiskBuildInfo,
                       buildInfoRecorder,
                       buildableContext),
-              cachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-                  SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+              serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
 
       // Check immediately (without posting a new task) for a failure so that we can short-circuit
       // pending work. Use .catchingAsync() instead of .catching() so that we can propagate unchecked
@@ -726,7 +743,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               Throwable.class,
               throwable -> {
                 Preconditions.checkNotNull(throwable);
-                cachingBuildEngine.firstFailure = throwable;
+                buildRuleBuilderDelegate.setFirstFailure(throwable);
                 Throwables.throwIfInstanceOf(throwable, Exception.class);
                 throw new RuntimeException(throwable);
               });
@@ -735,7 +752,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           Futures.transform(
               buildResult,
               (result) -> {
-                cachingBuildEngine.markRuleAsUsed(rule, buildContext.getEventBus());
+                buildRuleBuilderDelegate.markRuleAsUsed(rule, buildContext.getEventBus());
                 return result;
               },
               MoreExecutors.directExecutor());
@@ -948,7 +965,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           Futures.transformAsync(
               buildResult,
               ruleAsyncFunction(rule, buildContext.getEventBus(), callback),
-              MoreExecutors.directExecutor());
+              serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
 
       buildResult =
           Futures.catchingAsync(
@@ -971,7 +988,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
       // Do things that need to happen after either success or failure, but don't block the dependents
       // while doing so:
-      cachingBuildEngine.asyncCallbacks.add(
+      buildRuleBuilderDelegate.addAsyncCallback(
           MoreFutures.addListenableCallback(
               buildResult,
               new FutureCallback<BuildResult>() {
@@ -1162,8 +1179,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   throw new AssertionError("Dead code");
                 }
               },
-              cachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-                  RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS)));
+              serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS)));
       return buildResult;
     }
 
@@ -1281,8 +1297,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         final BuildableContext buildableContext) {
 
       // If we've already seen a failure, exit early.
-      if (!buildContext.isKeepGoing() && cachingBuildEngine.firstFailure != null) {
-        return Futures.immediateFuture(BuildResult.canceled(rule, cachingBuildEngine.firstFailure));
+      if (!buildContext.isKeepGoing() && buildRuleBuilderDelegate.getFirstFailure() != null) {
+        return Futures.immediateFuture(
+            BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
       }
 
       // 1. Check if it's already built.
@@ -1311,10 +1328,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               .withDefaultAmounts(CACHE_CHECK_RESOURCE_AMOUNTS)
               .submit(
                   () -> {
-                    if (!cachingBuildEngine.shouldKeepGoing(buildContext)) {
-                      Preconditions.checkNotNull(cachingBuildEngine.firstFailure);
+                    if (!buildRuleBuilderDelegate.shouldKeepGoing(buildContext)) {
+                      Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
                       return Optional.of(
-                          BuildResult.canceled(rule, cachingBuildEngine.firstFailure));
+                          BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
                     }
                     CacheResult cacheResult = performRuleKeyCacheCheck(rule, buildContext);
                     rulekeyCacheResult.set(cacheResult);
@@ -1330,10 +1347,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               buildResultFuture,
               () ->
                   Futures.transformAsync(
-                      cachingBuildEngine.getDepResults(rule, buildContext, executionContext),
+                      buildRuleBuilderDelegate.getDepResults(rule, buildContext, executionContext),
                       (depResults) -> handleDepsResults(rule, depResults),
-                      cachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-                          SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
+                      serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
 
       // 4. Return to the current rule and check caches to see if we can avoid building
       // locally. Start with input-based.
@@ -1344,8 +1360,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 buildContext,
                 buildResultFuture,
                 () -> checkInputBasedCaches(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
-                cachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-                    CACHE_CHECK_RESOURCE_AMOUNTS));
+                serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
       }
 
       // 5. Then check if the depfile matches.
@@ -1356,8 +1371,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 buildContext,
                 buildResultFuture,
                 () -> checkMatchingDepfile(rule, buildContext, onDiskBuildInfo, buildInfoRecorder),
-                cachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-                    CACHE_CHECK_RESOURCE_AMOUNTS));
+                serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
       }
 
       // 6. Check for a manifest-based cache hit.
@@ -1368,8 +1382,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 buildContext,
                 buildResultFuture,
                 () -> checkManifestBasedCaches(rule, buildContext, buildInfoRecorder),
-                cachingBuildEngine.serviceByAdjustingDefaultWeightsTo(
-                    CACHE_CHECK_RESOURCE_AMOUNTS));
+                serviceByAdjustingDefaultWeightsTo(CACHE_CHECK_RESOURCE_AMOUNTS));
       }
 
       // 7. Fail if populating the cache and cache lookups failed.
@@ -1527,7 +1540,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         OnDiskBuildInfo onDiskBuildInfo,
         BuildEngineBuildContext buildContext) {
       // Make this failure visible for other rules, so that they can stop early.
-      cachingBuildEngine.firstFailure = failure;
+      buildRuleBuilderDelegate.setFirstFailure(Preconditions.checkNotNull(failure));
 
       // If we failed, cleanup the state of this rule.
       // TODO(mbolin): Delete all files produced by the rule, as they are not guaranteed
@@ -2164,10 +2177,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           () ->
               executor.submit(
                   () -> {
-                    if (!cachingBuildEngine.shouldKeepGoing(context)) {
-                      Preconditions.checkNotNull(cachingBuildEngine.firstFailure);
+                    if (!buildRuleBuilderDelegate.shouldKeepGoing(context)) {
+                      Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
                       return Optional.of(
-                          BuildResult.canceled(rule, cachingBuildEngine.firstFailure));
+                          BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
                     }
                     try (Scope scope =
                         BuildRuleEvent.resumeSuspendScope(
@@ -2193,10 +2206,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             if (result.isPresent()) {
               return Futures.immediateFuture(result);
             }
-            if (!cachingBuildEngine.shouldKeepGoing(context)) {
-              Preconditions.checkNotNull(cachingBuildEngine.firstFailure);
+            if (!buildRuleBuilderDelegate.shouldKeepGoing(context)) {
+              Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
               return Futures.immediateFuture(
-                  Optional.of(BuildResult.canceled(rule, cachingBuildEngine.firstFailure)));
+                  Optional.of(
+                      BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
             }
             return function.call();
           },
@@ -2232,9 +2246,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       @Override
       public void run() {
         try {
-          if (!cachingBuildEngine.shouldKeepGoing(buildContext)) {
-            Preconditions.checkNotNull(cachingBuildEngine.firstFailure);
-            future.set(Optional.of(BuildResult.canceled(rule, cachingBuildEngine.firstFailure)));
+          if (!buildRuleBuilderDelegate.shouldKeepGoing(buildContext)) {
+            Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
+            future.set(
+                Optional.of(
+                    BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
             return;
           }
           try (Scope scope =
@@ -2269,7 +2285,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         long start = System.nanoTime();
 
         buildContext.getEventBus().post(BuildRuleEvent.willBuildLocally(rule));
-        cachingBuildEngine.cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+        buildRuleBuilderDelegate.onRuleAboutToBeBuilt(rule);
 
         // Get and run all of the commands.
         List<? extends Step> steps;
@@ -2304,5 +2320,68 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             rule.getType(), rule.getFullyQualifiedName(), end - start);
       }
     }
+  }
+
+  public static class DefaultBuildRuleBuilderDelegate implements BuildRuleBuilderDelegate {
+    private final CachingBuildEngine cachingBuildEngine;
+
+    public DefaultBuildRuleBuilderDelegate(CachingBuildEngine cachingBuildEngine) {
+      this.cachingBuildEngine = cachingBuildEngine;
+    }
+
+    @Override
+    public void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus) {
+      cachingBuildEngine.markRuleAsUsed(rule, eventBus);
+    }
+
+    @Override
+    public boolean shouldKeepGoing(BuildEngineBuildContext context) {
+      return cachingBuildEngine.shouldKeepGoing(context);
+    }
+
+    @Override
+    public void setFirstFailure(Throwable throwable) {
+      cachingBuildEngine.firstFailure = throwable;
+    }
+
+    @Override
+    public ListenableFuture<List<BuildResult>> getDepResults(
+        BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
+      return cachingBuildEngine.getDepResults(rule, buildContext, executionContext);
+    }
+
+    @Override
+    public void addAsyncCallback(ListenableFuture<Void> callback) {
+      cachingBuildEngine.asyncCallbacks.add(callback);
+    }
+
+    @Override
+    @Nullable
+    public Throwable getFirstFailure() {
+      return cachingBuildEngine.firstFailure;
+    }
+
+    @Override
+    public void onRuleAboutToBeBuilt(BuildRule rule) {
+      cachingBuildEngine.cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
+    }
+  }
+
+  public interface BuildRuleBuilderDelegate {
+    void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus);
+
+    boolean shouldKeepGoing(BuildEngineBuildContext context);
+
+    void setFirstFailure(Throwable throwable);
+
+    ListenableFuture<List<BuildResult>> getDepResults(
+        BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext);
+
+    void addAsyncCallback(ListenableFuture<Void> callback);
+
+    @Nullable
+    Throwable getFirstFailure();
+
+    void onRuleAboutToBeBuilt(BuildRule rule);
   }
 }
