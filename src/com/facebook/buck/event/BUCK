@@ -5,6 +5,7 @@ EVENT_INTERFACES = [
     "BuckEvent.java",
     "BuckEventListener.java",
     "BuckEventBus.java",
+    "EventDispatcher.java",
     "LeafEvent.java",
     "WorkAdvanceEvent.java",
 ]

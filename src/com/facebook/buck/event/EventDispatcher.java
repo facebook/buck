@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,18 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildId;
-import java.io.Closeable;
+/** Thin wrapper around guava event bus. */
+public interface EventDispatcher {
+  void post(BuckEvent event);
 
-/**
- * Thin wrapper around guava event bus.
- *
- * <p>This interface exists only to break circular Buck target dependencies.
- */
-public interface BuckEventBus extends Closeable, EventDispatcher {
-  BuildId getBuildId();
+  void post(BuckEvent event, BuckEvent atTime);
 
-  void register(Object object);
+  void postWithoutConfiguring(BuckEvent event);
+
+  void timestamp(BuckEvent event);
 }
