@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.autosparse;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -48,6 +49,9 @@ import javax.annotation.Nullable;
  * passed in.
  */
 public class MmappedHgManifest {
+  private static final Logger LOG = Logger.get(AutoSparseState.class);
+
+  // MOE:end_strip
   private static final short HASH_LENGTH = 40;
   private static final long MAX_FILE_SIZE = 2147483647; // 2GB, or 2 ** 31 - 1
 
@@ -75,6 +79,7 @@ public class MmappedHgManifest {
 
     try (FileChannel fileChannel = FileChannel.open(rawManifestPath); ) {
       long longSize = fileChannel.size();
+
       if (longSize > MAX_FILE_SIZE) {
         // MappedByteBuffer can only handle int positions, so we can only address 2GB with a single
         // mmap. Reaching larger manifest sizes would require using multiple mmap objects and
@@ -98,6 +103,9 @@ public class MmappedHgManifest {
       }
 
       chunkIndex = indexBuilder.build();
+      LOG.info(
+          "Manifest mmap loaded, %d chunks, %d deleted paths, %d size",
+          chunkIndex.size(), deletedPaths.size(), size);
     }
   }
 
