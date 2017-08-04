@@ -113,10 +113,13 @@ abstract class AbstractErrorLogRecord {
     StringBuilder sb = new StringBuilder(logger).append(":");
     Throwable throwable = getRecord().getThrown();
     if (throwable != null) {
-      sb.append(extractClassMethod(getThrowableOrigin(getInitialCause(throwable))));
-    } else {
-      sb.append(truncateMessage(getRecord().getMessage()));
+      Throwable originalThrowable = getInitialCause(throwable);
+      if (originalThrowable.getStackTrace().length > 0) {
+        sb.append(extractClassMethod(getThrowableOrigin(originalThrowable)));
+        return sb.toString();
+      }
     }
+    sb.append(truncateMessage(getRecord().getMessage()));
     return sb.toString();
   }
 
