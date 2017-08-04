@@ -182,6 +182,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1497,10 +1498,9 @@ public final class Main {
       specifiedBuildId = System.getenv().get(BUCK_BUILD_ID_ENV_VAR);
     }
     if (specifiedBuildId == null) {
-      throw new RuntimeException("Missing build id value.");
-    } else {
-      return new BuildId(specifiedBuildId);
+      specifiedBuildId = UUID.randomUUID().toString();
     }
+    return new BuildId(specifiedBuildId);
   }
 
   private static void installUncaughtExceptionHandler(final Optional<NGContext> context) {
