@@ -148,6 +148,7 @@ class BuckPackage(BuckTool):
             "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
             "-Dbuck.git_commit_timestamp={0}".format(self._package_info['timestamp']),
             "-Dbuck.git_dirty=0",
+            "-Dbuck.path_to_python_dsl="
         ]
 
     def _get_exported_resources(self):

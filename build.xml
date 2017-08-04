@@ -418,17 +418,6 @@
     <copy file="${third-party.dir}/java/guava/guava-20.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/guava.jar"/>
 
-    <!--
-      Copy the buck python parser code into the jar root so it can be imported
-      by python's built in zip importer.
-    -->
-    <copy todir="${classes.dir}/buck_parser">
-      <fileset dir="src/com/facebook/buck/json/buck_parser">
-        <include name="**/*.py"/>
-        <exclude name="**/*_test.py"/>
-      </fileset>
-    </copy>
-
   </target>
 
   <target name="compile"
@@ -669,7 +658,7 @@
   <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, log-rotation-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
-    <exec executable="python" failonerror="true" dir="${basedir}/src/com/facebook/buck/json">
+    <exec executable="python" failonerror="true" dir="${basedir}/python-dsl">
       <!-- The py folder is actually a python package, so use module import style here. -->
       <env key="PYTHONPATH" path="${buck.pythonpath}" />
       <arg value="-m" />
