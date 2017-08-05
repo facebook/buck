@@ -51,7 +51,6 @@ import javax.annotation.Nullable;
 public class MmappedHgManifest {
   private static final Logger LOG = Logger.get(AutoSparseState.class);
 
-  // MOE:end_strip
   private static final short HASH_LENGTH = 40;
   private static final long MAX_FILE_SIZE = 2147483647; // 2GB, or 2 ** 31 - 1
 
