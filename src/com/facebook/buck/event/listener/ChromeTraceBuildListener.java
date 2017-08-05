@@ -108,7 +108,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final Path tracePath;
   private final OutputStream traceStream;
   private final JsonGenerator jsonGenerator;
-  private final InvocationInfo invocationInfo;
+  private final Path logDirectoryPath;
   private final ChromeTraceBuckConfig config;
 
   private final ExecutorService outputExecutor;
@@ -131,7 +131,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       final TimeZone timeZone,
       ChromeTraceBuckConfig config)
       throws IOException {
-    this.invocationInfo = invocationInfo;
+    this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.dateFormat =
@@ -146,7 +146,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.config = config;
     this.outputExecutor =
         MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
-    TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo);
+    TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo.getBuildId());
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
     this.jsonGenerator = ObjectMappers.createGenerator(this.traceStream);
@@ -170,12 +170,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @VisibleForTesting
   void deleteOldTraces() {
-    if (!projectFilesystem.exists(invocationInfo.getLogDirectoryPath())) {
+    if (!projectFilesystem.exists(logDirectoryPath)) {
       return;
     }
 
-    Path traceDirectory =
-        projectFilesystem.getPathForRelativePath(invocationInfo.getLogDirectoryPath());
+    Path traceDirectory = projectFilesystem.getPathForRelativePath(logDirectoryPath);
 
     try {
       for (Path path :
@@ -193,14 +192,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
   }
 
-  private TracePathAndStream createPathAndStream(InvocationInfo invocationInfo) {
+  private TracePathAndStream createPathAndStream(BuildId buildId) {
     String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
-    String traceName =
-        String.format("build.%s.%s.trace", filenameTime, invocationInfo.getBuildId());
+    String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
     if (config.getCompressTraces()) {
       traceName = traceName + ".gz";
     }
-    Path tracePath = invocationInfo.getLogDirectoryPath().resolve(traceName);
+    Path tracePath = logDirectoryPath.resolve(traceName);
     try {
       projectFilesystem.createParentDirs(tracePath);
       OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
@@ -800,9 +798,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
 
     Path fullPath = projectFilesystem.resolve(tracePath);
-    Path logFile =
-        projectFilesystem.resolve(
-            invocationInfo.getLogDirectoryPath().resolve("upload-build-trace.log"));
+    Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
     LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
 
     try {
