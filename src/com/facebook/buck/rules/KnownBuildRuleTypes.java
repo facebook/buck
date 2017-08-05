@@ -254,7 +254,6 @@ public class KnownBuildRuleTypes {
         config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
   }
 
-  @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
       ProjectFilesystem filesystem,
@@ -275,6 +274,7 @@ public class KnownBuildRuleTypes {
             filesystem,
             config,
             swiftBuckConfig);
+    checkApplePlaforms(appleCxxPlatforms);
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
 
@@ -707,6 +707,25 @@ public class KnownBuildRuleTypes {
     builder.register(VersionedAliasDescription.of());
 
     return builder;
+  }
+
+  private static void checkApplePlaforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
+    Map<Flavor, AppleCxxPlatform> platformsMap = new HashMap<>();
+    for (AppleCxxPlatform platform : appleCxxPlatforms) {
+      Flavor flavor = platform.getFlavor();
+      if (platformsMap.containsKey(flavor)) {
+        AppleCxxPlatform otherPlatform = platformsMap.get(flavor);
+        throw new HumanReadableException(
+            "There are two conflicting SDKs providing the same platform \"%s\":\n"
+                + "- %s\n"
+                + "- %s\n\n"
+                + "Please try to remove one of them.",
+            flavor.getName(),
+            platform.getAppleSdkPaths().getSdkPath(),
+            otherPlatform.getAppleSdkPaths().getSdkPath());
+      }
+      platformsMap.put(flavor, platform);
+    }
   }
 
   public static class Builder {
