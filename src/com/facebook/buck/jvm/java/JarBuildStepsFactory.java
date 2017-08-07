@@ -129,7 +129,7 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
         ::contains;
   }
 
-  public ImmutableList<Step> getBuildStepsForAbiJar(
+  public synchronized ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -146,10 +146,12 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
         Optional.empty(),
         steps);
 
+    ((JavacToJarStepFactory) compileStepFactory).setCompileAbi(null);
+
     return steps.build();
   }
 
-  public ImmutableList<Step> getBuildStepsForLibraryJar(
+  public synchronized ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 

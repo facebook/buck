@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
-import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -199,7 +198,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Override
       protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
         return new AndroidLibrary(
-            initialBuildTarget,
+            libraryTarget,
             projectFilesystem,
             getFinalParams(),
             sourcePathResolver,
@@ -241,17 +240,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
         if (graphEnhancer == null) {
-          BuildTarget buildTarget = initialBuildTarget;
-          if (HasJavaAbi.isAbiTarget(initialBuildTarget)) {
-            buildTarget = HasJavaAbi.getLibraryTarget(buildTarget);
-          }
-
           final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = buildQueriedDepsSupplier();
           final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier =
               buildExportedDepsSupplier();
           graphEnhancer =
               new AndroidLibraryGraphEnhancer(
-                  buildTarget,
+                  libraryTarget,
                   projectFilesystem,
                   initialParams.withExtraDeps(
                       () ->

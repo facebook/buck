@@ -55,7 +55,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
     this.amender = amender;
   }
 
-  public void setCompileAbi(Path abiJar) {
+  public void setCompileAbi(@Nullable Path abiJar) {
     this.abiJar = abiJar;
   }
 
