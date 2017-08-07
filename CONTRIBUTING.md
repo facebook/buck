@@ -71,6 +71,7 @@ To add a pre commit hook:
 
 - Build `google-java-format` jar following instructions from [github page](https://github.com/google/google-java-format).
 - Copy `config/git-hooks/pre-commit.template` to `.git/hooks/pre-commit`
+- Make the script executable: `chmod +x .git/hooks/pre-commit`
 - Replace `<<PATH_TO_JAR>>` in `.git/hooks/pre-commit` with the location of google-java-format jar.
 
 ### Warnings
