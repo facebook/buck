@@ -118,11 +118,15 @@ fi
 #  Copy and/or stub jars
 # ====================================================================
 printf "Copying IntelliJ jars from %q\n" "$SRC_DIR"
-copy_or_stub_jars "$SRC_DIR" ${#INTELLIJ_LIBS_TO_COPY[@]} ${INTELLIJ_LIBS_TO_COPY[@]} ${#INTELLIJ_LIBS_TO_STUB[@]} ${INTELLIJ_LIBS_TO_STUB[@]}
+copy_or_stub_jars "$SRC_DIR" \
+    ${#INTELLIJ_LIBS_TO_COPY[@]} ${INTELLIJ_LIBS_TO_COPY[@]} \
+    ${#INTELLIJ_LIBS_TO_STUB[@]} ${INTELLIJ_LIBS_TO_STUB[@]}
 
 ANDROID_SRC_DIR="$SRC_DIR/../plugins/android/lib"
 printf "Copying IntelliJ Android jars from %q\n" "$ANDROID_SRC_DIR"
-copy_or_stub_jars "$ANDROID_SRC_DIR" ${#ANDROID_LIBS_TO_COPY[@]} ${#ANDROID_LIBS_TO_STUB[@]} ${ANDROID_LIBS_TO_COPY[@]} ${ANDROID_LIBS_TO_STUB[@]}
+copy_or_stub_jars "$ANDROID_SRC_DIR" \
+    ${#ANDROID_LIBS_TO_COPY[@]} ${ANDROID_LIBS_TO_COPY[@]} \
+    ${#ANDROID_LIBS_TO_STUB[@]} ${ANDROID_LIBS_TO_STUB[@]}
 
 # ====================================================================
 #  Sanity check against BUCK file that we:
