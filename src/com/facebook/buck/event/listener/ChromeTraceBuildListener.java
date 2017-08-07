@@ -152,10 +152,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.jsonGenerator = ObjectMappers.createGenerator(this.traceStream);
 
     this.jsonGenerator.writeStartArray();
-    addProcessMetadataEvent();
+    addProcessMetadataEvent(invocationInfo);
   }
 
-  private void addProcessMetadataEvent() {
+  private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
     submitTraceEvent(
         new ChromeTraceEvent(
             "buck",
@@ -165,7 +165,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             /* threadId */ 0,
             /* microTime */ 0,
             /* microThreadUserTime */ 0,
-            ImmutableMap.of("name", "buck")));
+            ImmutableMap.<String, Object>builder()
+                .put("user_args", invocationInfo.getUnexpandedCommandArgs())
+                .put("is_daemon", invocationInfo.getIsDaemon())
+                .put("timestamp", invocationInfo.getTimestampMillis())
+                .build()));
   }
 
   @VisibleForTesting
