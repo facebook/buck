@@ -271,10 +271,6 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private BuildTarget abiJar;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
-      if (willProduceSourceAbi()) {
-        getSourceAbiRule(true);
-      }
-
       return getLibraryRule(false);
     }
 
@@ -357,11 +353,18 @@ public class DefaultJavaLibraryBuilder {
     private DefaultJavaLibrary getLibraryRule(boolean addToIndex)
         throws NoSuchBuildTargetException {
       if (libraryRule == null) {
+        BuildRuleParams finalParams = getFinalParams();
+        CalculateAbiFromSource sourceAbiRule = null;
+        if (willProduceSourceAbi()) {
+          sourceAbiRule = getSourceAbiRule(true);
+          finalParams = finalParams.copyAppendingExtraDeps(sourceAbiRule);
+        }
+
         libraryRule =
             new DefaultJavaLibrary(
                 initialBuildTarget,
                 projectFilesystem,
-                getFinalParams(),
+                finalParams,
                 sourcePathResolver,
                 getJarBuildStepsFactory(),
                 proguardConfig,
@@ -371,6 +374,10 @@ public class DefaultJavaLibraryBuilder {
                 getAbiJar(),
                 mavenCoords,
                 tests);
+
+        if (sourceAbiRule != null) {
+          libraryRule.setSourceAbi(sourceAbiRule);
+        }
 
         if (addToIndex) {
           buildRuleResolver.addToIndex(libraryRule);

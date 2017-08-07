@@ -358,6 +358,7 @@ java_immutables_library(
         "JavaTestDescription.java",
         "JavacFactory.java",
         "JavacOptionsFactory.java",
+        "JavacPipelineState.java",
         "Javadoc.java",
         "JvmLibraryArg.java",
         "Keystore.java",

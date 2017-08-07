@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -46,7 +47,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public class JarBuildStepsFactory implements AddsToRuleKey {
+public class JarBuildStepsFactory
+    implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
 
@@ -352,5 +354,10 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
       }
     }
     return pathToSourcePathMapBuilder.build();
+  }
+
+  @Override
+  public JavacPipelineState newInstance() {
+    return new JavacPipelineState();
   }
 }

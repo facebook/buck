@@ -35,8 +35,10 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ExportDependencies;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SupportsPipelining;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -87,6 +89,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
         AndroidPackageable,
         SupportsInputBasedRuleKey,
         SupportsDependencyFileRuleKey,
+        SupportsPipelining<JavacPipelineState>,
         JavaLibraryWithTests {
 
   private static final Path METADATA_DIR = Paths.get("META-INF");
@@ -110,6 +113,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
+
+  @Nullable private CalculateAbiFromSource sourceAbi;
 
   public static DefaultJavaLibraryBuilder builder(
       TargetGraph targetGraph,
@@ -192,6 +197,10 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+  }
+
+  public void setSourceAbi(CalculateAbiFromSource sourceAbi) {
+    this.sourceAbi = sourceAbi;
   }
 
   public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -388,5 +397,28 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     return jarBuildStepsFactory.getInputsAfterBuildingLocally(
         context, cellPathResolver, getBuildTarget());
+  }
+
+  @Override
+  public boolean useRulePipelining() {
+    return true;
+  }
+
+  @Override
+  public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
+    return jarBuildStepsFactory;
+  }
+
+  @Nullable
+  @Override
+  public SupportsPipelining<JavacPipelineState> getPreviousRuleInPipeline() {
+    return sourceAbi;
+  }
+
+  @Override
+  public ImmutableList<? extends Step> getPipelinedBuildSteps(
+      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
+    // TODO: Reuse the javac
+    return getBuildSteps(context, buildableContext);
   }
 }

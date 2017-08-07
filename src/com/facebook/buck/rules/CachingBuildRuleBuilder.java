@@ -290,6 +290,23 @@ class CachingBuildRuleBuilder {
               }
             }
 
+            if (SupportsInputBasedRuleKey.isSupported(rule)
+                && success == BuildRuleSuccessType.BUILT_LOCALLY
+                && !buildInfoRecorder
+                    .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
+                    .isPresent()) {
+              // Doing this here is probably not strictly necessary, however in the case of
+              // pipelined rules built locally we will never do an input-based cache check.
+              // That check would have written the key to metadata, and there are some asserts
+              // during cache upload that try to ensure they are present.
+              Optional<RuleKey> inputRuleKey =
+                  calculateInputBasedRuleKey(buildContext.getEventBus());
+              if (inputRuleKey.isPresent()) {
+                buildInfoRecorder.addBuildMetadata(
+                    BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.get().toString());
+              }
+            }
+
             // If this rule uses dep files and we built locally, make sure we store the new dep file
             // list and re-calculate the dep file rule key.
             if (useDependencyFileRuleKey() && success == BuildRuleSuccessType.BUILT_LOCALLY) {
