@@ -145,6 +145,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
+  private final BuildRulePipelinesRunner pipelinesRunner = new BuildRulePipelinesRunner();
 
   private final BuildInfoStoreManager buildInfoStoreManager;
 
@@ -570,7 +571,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             executionContext,
             onDiskBuildInfo,
             buildInfoRecorder,
-            buildableContext)
+            buildableContext,
+            pipelinesRunner)
         .build();
   }
 

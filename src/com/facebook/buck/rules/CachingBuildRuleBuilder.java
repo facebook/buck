@@ -130,6 +130,7 @@ class CachingBuildRuleBuilder {
   private final OnDiskBuildInfo onDiskBuildInfo;
   private final BuildInfoRecorder buildInfoRecorder;
   private final BuildableContext buildableContext;
+  private final BuildRulePipelinesRunner pipelinesRunner;
 
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
@@ -156,7 +157,8 @@ class CachingBuildRuleBuilder {
       ExecutionContext executionContext,
       OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      BuildRulePipelinesRunner pipelinesRunner) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.buildInfoStoreManager = buildInfoStoreManager;
@@ -182,6 +184,7 @@ class CachingBuildRuleBuilder {
     this.onDiskBuildInfo = onDiskBuildInfo;
     this.buildInfoRecorder = buildInfoRecorder;
     this.buildableContext = buildableContext;
+    this.pipelinesRunner = pipelinesRunner;
   }
 
   /**
@@ -660,9 +663,13 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<Optional<BuildResult>> buildLocally(
       final CacheResult cacheResult, final ListeningExecutorService service)
       throws StepFailedException, InterruptedException {
-    BuildRuleSteps buildRuleSteps = new BuildRuleSteps(cacheResult);
-    service.execute(buildRuleSteps);
-    return buildRuleSteps.getFuture();
+    if (SupportsPipelining.isSupported(rule)) {
+      return pipelinesRunner.runPipelineStartingAt((SupportsPipelining<?>) rule, service);
+    } else {
+      BuildRuleSteps<RulePipelineState> buildRuleSteps = new BuildRuleSteps<>(cacheResult, null);
+      service.execute(buildRuleSteps);
+      return buildRuleSteps.getFuture();
+    }
   }
 
   private void fillMissingBuildMetadataFromCache(CacheResult cacheResult, String... names) {
@@ -783,15 +790,35 @@ class CachingBuildRuleBuilder {
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,
-            () ->
-                Futures.transformAsync(
-                    buildRuleBuilderDelegate.getDepResults(rule, buildContext, executionContext),
-                    this::handleDepsResults,
-                    serviceByAdjustingDefaultWeightsTo(
-                        CachingBuildEngine.SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS)));
+            () -> {
+              if (SupportsPipelining.isSupported(rule)) {
+                addToPipelinesRunner(
+                    (SupportsPipelining<?>) rule,
+                    Preconditions.checkNotNull(rulekeyCacheResult.get()));
+              }
 
-    // 4. Return to the current rule and check caches to see if we can avoid building
-    // locally. Start with input-based.
+              return Futures.transformAsync(
+                  buildRuleBuilderDelegate.getDepResults(rule, buildContext, executionContext),
+                  (depResults) -> handleDepsResults(depResults),
+                  serviceByAdjustingDefaultWeightsTo(
+                      CachingBuildEngine.SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
+            });
+
+    // 4. Return to the current rule and check if it was (or is being) built in a pipeline with
+    // one of its dependencies
+    if (SupportsPipelining.isSupported(rule)) {
+      buildResultFuture =
+          transformBuildResultAsyncIfNotPresent(
+              buildResultFuture,
+              () -> {
+                SupportsPipelining<?> pipelinedRule = (SupportsPipelining<?>) rule;
+                return pipelinesRunner.runningPipelinesContainRule(pipelinedRule)
+                    ? pipelinesRunner.getFuture(pipelinedRule)
+                    : Futures.immediateFuture(Optional.empty());
+              });
+    }
+
+    // 5. Return to the current rule and check caches to see if we can avoid building
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -800,7 +827,7 @@ class CachingBuildRuleBuilder {
               serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
     }
 
-    // 5. Then check if the depfile matches.
+    // 6. Then check if the depfile matches.
     if (useDependencyFileRuleKey()) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -809,7 +836,7 @@ class CachingBuildRuleBuilder {
               serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
     }
 
-    // 6. Check for a manifest-based cache hit.
+    // 7. Check for a manifest-based cache hit.
     if (useManifestCaching()) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -818,7 +845,7 @@ class CachingBuildRuleBuilder {
               serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
     }
 
-    // 7. Fail if populating the cache and cache lookups failed.
+    // 8. Fail if populating the cache and cache lookups failed.
     if (buildMode == CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       buildResultFuture =
           transformBuildResultIfNotPresent(
@@ -836,7 +863,7 @@ class CachingBuildRuleBuilder {
               MoreExecutors.newDirectExecutorService());
     }
 
-    // 8. Build the current rule locally, if we have to.
+    // 9. Build the current rule locally, if we have to.
     buildResultFuture =
         transformBuildResultAsyncIfNotPresent(
             buildResultFuture,
@@ -848,8 +875,19 @@ class CachingBuildRuleBuilder {
                         // case so that RuleScheduleInfo works correctly.
                         .withDefaultAmounts(getRuleResourceAmounts())));
 
+    if (SupportsPipelining.isSupported(rule)) {
+      buildResultFuture.addListener(
+          () -> pipelinesRunner.removeRule((SupportsPipelining<?>) rule),
+          MoreExecutors.directExecutor());
+    }
+
     // Unwrap the result.
     return Futures.transform(buildResultFuture, Optional::get);
+  }
+
+  private <T extends RulePipelineState> void addToPipelinesRunner(
+      SupportsPipelining<T> rule, CacheResult cacheResult) {
+    pipelinesRunner.addRule(rule, pipeline -> new BuildRuleSteps<T>(cacheResult, pipeline));
   }
 
   private Optional<BuildResult> checkMatchingLocalKey() {
@@ -1579,14 +1617,18 @@ class CachingBuildRuleBuilder {
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
-  private class BuildRuleSteps implements Runnable {
+  private class BuildRuleSteps<T extends RulePipelineState>
+      implements RunnableWithFuture<Optional<BuildResult>> {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+    @Nullable private final T pipelineState;
 
-    public BuildRuleSteps(CacheResult cacheResult) {
+    public BuildRuleSteps(CacheResult cacheResult, @Nullable T pipelineState) {
       this.cacheResult = cacheResult;
+      this.pipelineState = pipelineState;
     }
 
+    @Override
     public SettableFuture<Optional<BuildResult>> getFuture() {
       return future;
     }
@@ -1637,7 +1679,15 @@ class CachingBuildRuleBuilder {
       // Get and run all of the commands.
       List<? extends Step> steps;
       try (Scope scope = LeafEvents.scope(buildContext.getEventBus(), "get_build_steps")) {
-        steps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+        if (pipelineState == null) {
+          steps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
+        } else {
+          @SuppressWarnings("unchecked")
+          SupportsPipelining<T> pipelinedRule = (SupportsPipelining<T>) rule;
+          steps =
+              pipelinedRule.getPipelinedBuildSteps(
+                  buildContext.getBuildContext(), buildableContext, pipelineState);
+        }
       }
 
       Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
