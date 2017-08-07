@@ -90,6 +90,8 @@ public class ScalaLibraryDescription
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
+
+    @Override
     ImmutableList<String> getExtraArguments();
   }
 
