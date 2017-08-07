@@ -23,6 +23,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
@@ -69,11 +70,11 @@ abstract class AbstractInvocationInfo {
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
-  public abstract String[] getCommandArgs();
+  public abstract ImmutableList<String> getCommandArgs();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
-  public abstract String[] getUnexpandedCommandArgs();
+  public abstract ImmutableList<String> getUnexpandedCommandArgs();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)

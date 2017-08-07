@@ -36,61 +36,65 @@ public class BuckArgsMethodsTest {
   @Test
   public void testArgFileExpansion() throws IOException {
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1"));
+        BuckArgsMethods.expandAtFiles(ImmutableList.of("arg1"), tmp.getRoot()),
+        Matchers.contains("arg1"));
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "arg@a"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg@a"));
+        BuckArgsMethods.expandAtFiles(ImmutableList.of("arg1", "arg@a"), tmp.getRoot()),
+        Matchers.contains("arg1", "arg@a"));
 
     Path arg = tmp.newFile("argsfile");
     Files.write(arg, ImmutableList.of("arg2", "arg3"));
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + arg.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3"));
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "@" + arg.toString()), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            new String[] {"arg1", "@" + arg.toString(), "arg4"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4"));
+            ImmutableList.of("arg1", "@" + arg.toString(), "arg4"), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3", "arg4"));
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"@" + arg.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg2", "arg3"));
+        BuckArgsMethods.expandAtFiles(ImmutableList.of("@" + arg.toString()), tmp.getRoot()),
+        Matchers.contains("arg2", "arg3"));
 
     Path arg4 = tmp.newFile("argsfile4");
     Files.write(arg4, ImmutableList.of("arg4"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            new String[] {"arg1", "@" + arg.toString(), "@" + arg4.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3", "arg4"));
+            ImmutableList.of("arg1", "@" + arg.toString(), "@" + arg4.toString()), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3", "arg4"));
 
     Path argWithSpace = tmp.newFile("argsfile_space");
     Files.write(argWithSpace, ImmutableList.of("arg "));
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"@" + argWithSpace.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg "));
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("@" + argWithSpace.toString()), tmp.getRoot()),
+        Matchers.contains("arg "));
 
     Path pyArg = tmp.newFile("argsfile.py");
     Files.write(pyArg, ImmutableList.of("print('arg2'); print('arg3');"));
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            new String[] {"arg1", "@" + pyArg.toString() + "#flavor"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3"));
+            ImmutableList.of("arg1", "@" + pyArg.toString() + "#flavor"), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3"));
 
     assertThat(
-        BuckArgsMethods.expandAtFiles(new String[] {"arg1", "@" + pyArg.toString()}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "arg2", "arg3"));
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "@" + pyArg.toString()), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3"));
 
     Path pyArgWithFlavors = tmp.newFile("argsfilewithflavors.py");
     Files.write(
         pyArgWithFlavors, ImmutableList.of("import sys; print(sys.argv[1]); print(sys.argv[2])"));
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            new String[] {"arg1", "@" + pyArgWithFlavors.toString() + "#fl1,fl2"}, tmp.getRoot()),
-        Matchers.arrayContaining("arg1", "--flavors", "fl1,fl2"));
+            ImmutableList.of("arg1", "@" + pyArgWithFlavors.toString() + "#fl1,fl2"),
+            tmp.getRoot()),
+        Matchers.contains("arg1", "--flavors", "fl1,fl2"));
   }
 
   @Test

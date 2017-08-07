@@ -105,8 +105,8 @@ public class ChromeTraceBuildListenerTest {
             .setSubCommand("no_sub_command")
             .setIsDaemon(false)
             .setSuperConsoleEnabled(false)
-            .setCommandArgs("no sub command")
-            .setUnexpandedCommandArgs("no sub command")
+            .setCommandArgs(ImmutableList.of("no sub command"))
+            .setUnexpandedCommandArgs(ImmutableList.of("no sub command"))
             .build();
     durationTracker = new BuildRuleDurationTracker();
   }

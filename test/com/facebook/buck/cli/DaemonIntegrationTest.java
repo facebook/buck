@@ -221,7 +221,7 @@ public class DaemonIntegrationTest {
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
-                args);
+                ImmutableList.copyOf(args));
         assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
       } catch (IOException e) {
         fail("Should not throw exception.");

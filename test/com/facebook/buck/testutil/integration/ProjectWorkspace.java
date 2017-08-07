@@ -555,7 +555,7 @@ public class ProjectWorkspace {
               CommandMode.TEST,
               WatchmanWatcher.FreshInstanceAction.NONE,
               System.nanoTime(),
-              args);
+              ImmutableList.copyOf(args));
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;

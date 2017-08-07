@@ -174,7 +174,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -377,7 +376,7 @@ public final class Main {
               commandMode,
               watchmanFreshInstanceAction,
               initTimestamp,
-              args);
+              ImmutableList.copyOf(args));
     } catch (InterruptedException | ClosedByInterruptException e) {
       // We're about to exit, so it's acceptable to swallow interrupts here.
       exitCode = INTERRUPTED_EXIT_CODE;
@@ -436,10 +435,11 @@ public final class Main {
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       final long initTimestamp,
-      String... unexpandedCommandLineArgs)
+      ImmutableList<String> unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
 
-    String[] args = BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
+    ImmutableList<String> args =
+        BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
 
     // Parse the command line args.
     BuckCommand command = new BuckCommand();
@@ -484,9 +484,7 @@ public final class Main {
                   .format(new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
         }
         String buildRev = System.getProperty("buck.git_commit", "(unknown)");
-        LOG.debug(
-            "Starting up (build date %s, rev %s), args: %s",
-            buildDateStr, buildRev, Arrays.toString(args));
+        LOG.debug("Starting up (build date %s, rev %s), args: %s", buildDateStr, buildRev, args);
         LOG.debug("System properties: %s", System.getProperties());
       }
     }
@@ -870,9 +868,7 @@ public final class Main {
           }
 
           ImmutableList<String> remainingArgs =
-              args.length > 1
-                  ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
-                  : ImmutableList.of();
+              args.isEmpty() ? ImmutableList.of() : args.subList(1, args.size());
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
