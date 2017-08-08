@@ -73,7 +73,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
   @AddToRuleKey private final ImmutableMap<String, SourcePath> nativeLibraries;
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
+  // rule key.
+  private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final Path output;
 
   public JarFattener(
