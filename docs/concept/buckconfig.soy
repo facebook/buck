@@ -1564,11 +1564,11 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
 {literal}
 cxx_library(
   name = 'gtest',
-  srcs = subdir_glob([
+  srcs = [
     'googletest/src/gtest-all.cc',
     'googlemock/src/gmock-all.cc',
     'googlemock/src/gmock_main.cc',
-  ]),
+  ],
   header_namespace = '',
   exported_headers = subdir_glob([
     ('googletest/include', '**/*.h'),
