@@ -202,7 +202,7 @@ public class MmappedHgManifestTest {
   @Test
   public void pathPrefixEdgecase() throws IOException {
     // When bisection ends up on a path that has a matching prefix (without the path separator)
-    // make sure we recognise it as a path that preceeds the target dir.
+    // make sure we recognise it as a path that precedes the target dir.
     MmappedHgManifest mmap =
         makeOne(
             String.join(
@@ -213,6 +213,28 @@ public class MmappedHgManifestTest {
                 "foo/bar/not-prefixed/file1" + SEP_HASH,
                 "foo/bar/not-prefixed/file2" + SEP_HASH,
                 ""));
+
+    Stream<MmappedHgManifest.ManifestEntry> entries = mmap.loadDirectory("foo/bar");
+    assertEquals(
+        entries.map(e -> e.getFilename()).collect(Collectors.toList()),
+        ImmutableList.of("foo/bar/not-prefixed/file1", "foo/bar/not-prefixed/file2"));
+  }
+
+  @Test
+  public void pathPrefixChunkIndexEdgecase() throws IOException {
+    // When bisection ends up on a path that has a matching prefix (without the path separator)
+    // make sure we recognise it as a path that precedes the target dir in a chunkIndex.
+    MmappedHgManifest mmap =
+        makeOne(
+            String.join(
+                "\n",
+                "foo/bar-prefixed/path1" + SEP_HASH,
+                "foo/bar-prefixed/path2" + SEP_HASH,
+                "foo/bar-prefixed/path3" + SEP_HASH,
+                "foo/bar/not-prefixed/file1" + SEP_HASH,
+                "foo/bar/not-prefixed/file2" + SEP_HASH,
+                ""),
+            150);
 
     Stream<MmappedHgManifest.ManifestEntry> entries = mmap.loadDirectory("foo/bar");
     assertEquals(

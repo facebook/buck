@@ -182,7 +182,7 @@ public class MmappedHgManifest {
 
     String dirname = pathname.endsWith("/") ? pathname : pathname.concat("/");
     // narrow down start and end to a chunk based on cached indices; defaulting to 0 and lastIndex
-    ChunkIndexEntry testEntry = new ChunkIndexEntry(pathname, -1);
+    ChunkIndexEntry testEntry = new ChunkIndexEntry(dirname, -1);
     int start = Optional.ofNullable(chunkIndex.floor(testEntry)).map(f -> f.getIndex()).orElse(0);
     int end =
         Optional.ofNullable(chunkIndex.higher(testEntry)).map(h -> h.getIndex()).orElse(lastIndex);
