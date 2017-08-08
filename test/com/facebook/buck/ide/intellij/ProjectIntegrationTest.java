@@ -275,6 +275,11 @@ public class ProjectIntegrationTest {
     assertEquals("intellij", result.getStdout().trim());
   }
 
+  @Test
+  public void testScalaProject() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("scala_project");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
