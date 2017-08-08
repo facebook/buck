@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -31,8 +32,11 @@ import java.util.Optional;
 
 /** A java-specific "view" of BuckConfig. */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
+
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
+  private static final JavaOptions DEFAULT_JAVA_OPTIONS =
+      JavaOptions.of(new CommandTool.Builder().addArg("java").build());
 
   private final BuckConfig delegate;
 
@@ -51,15 +55,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavaOptions getDefaultJavaOptions() {
-    return JavaOptions.builder().setJavaPath(getPathToExecutable("java")).build();
+    return getPathToExecutable("java")
+        .map(path -> JavaOptions.of(new CommandTool.Builder().addArg(path.toString()).build()))
+        .orElse(DEFAULT_JAVA_OPTIONS);
   }
 
   public JavaOptions getDefaultJavaOptionsForTests() {
-    Optional<Path> javaTestPath = getPathToExecutable("java_for_tests");
-    if (javaTestPath.isPresent()) {
-      return JavaOptions.builder().setJavaPath(javaTestPath).build();
-    }
-    return getDefaultJavaOptions();
+    return getPathToExecutable("java_for_tests")
+        .map(path -> JavaOptions.of(new CommandTool.Builder().addArg(path.toString()).build()))
+        .orElseGet(this::getDefaultJavaOptions);
   }
 
   public JavacOptions getDefaultJavacOptions() {

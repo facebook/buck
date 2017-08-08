@@ -18,24 +18,15 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
-import java.util.Optional;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
+@BuckStyleTuple
 abstract class AbstractJavaOptions implements RuleKeyAppendable {
 
-  public JavaRuntimeLauncher getJavaRuntimeLauncher() {
-    Optional<Path> javaPath = getJavaPath();
-    if (javaPath.isPresent()) {
-      return new ExternalJavaRuntimeLauncher(javaPath.get().toString());
-    }
-    return new ExternalJavaRuntimeLauncher("java");
-  }
-
-  protected abstract Optional<Path> getJavaPath();
+  public abstract Tool getJavaRuntimeLauncher();
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {

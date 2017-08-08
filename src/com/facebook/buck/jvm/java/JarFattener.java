@@ -75,7 +75,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableMap<String, SourcePath> nativeLibraries;
   // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
   // rule key.
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  private final Tool javaRuntimeLauncher;
   private final Path output;
 
   public JarFattener(
@@ -86,7 +86,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
-      JavaRuntimeLauncher javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher) {
     super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
@@ -259,8 +259,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(javaRuntimeLauncher.getCommand())
+    return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();

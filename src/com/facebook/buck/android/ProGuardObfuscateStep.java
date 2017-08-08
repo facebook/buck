@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
@@ -55,7 +54,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     NONE,
   }
 
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  private final ImmutableList<String> javaRuntimeLauncher;
   private final ProjectFilesystem filesystem;
   private final Map<Path, Path> inputAndOutputEntries;
   private final Path pathToProGuardCommandLineArgsFile;
@@ -73,7 +72,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
    * @param steps Where to append the generated steps.
    */
   public static void create(
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      ImmutableList<String> javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
@@ -146,7 +145,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
    * @param pathToProGuardCommandLineArgsFile Path to file containing arguments to ProGuard.
    */
   private ProGuardObfuscateStep(
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      ImmutableList<String> javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       Map<Path, Path> inputAndOutputEntries,
       Path pathToProGuardCommandLineArgsFile,
@@ -184,7 +183,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     }
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add(javaRuntimeLauncher.getCommand());
+    args.addAll(javaRuntimeLauncher);
     if (proguardAgentPath.isPresent()) {
       args.add("-agentpath:" + proguardAgentPath.get());
     }

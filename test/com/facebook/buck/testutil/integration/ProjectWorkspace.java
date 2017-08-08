@@ -399,8 +399,7 @@ public class ProjectWorkspace {
       throws IOException, InterruptedException {
     List<String> command =
         ImmutableList.<String>builder()
-            .add(
-                JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher().getCommand())
+            .addAll(JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX)
             .addAll(vmArgs)
             .add("-jar")
             .add(jar.toString())

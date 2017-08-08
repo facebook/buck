@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.Logger;
@@ -44,6 +43,7 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
@@ -670,7 +670,7 @@ public class TestRunning {
   private static Step getReportCommand(
       ImmutableSet<JavaLibrary> rulesUnderTest,
       DefaultJavaPackageFinder defaultJavaPackageFinder,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -707,7 +707,7 @@ public class TestRunning {
     }
 
     return new GenerateCodeCoverageReportStep(
-        javaRuntimeLauncher,
+        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
         filesystem,
         srcDirectories.build(),
         pathsToJars.build(),

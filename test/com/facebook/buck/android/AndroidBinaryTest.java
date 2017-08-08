@@ -151,7 +151,7 @@ public class AndroidBinaryTest {
     ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
 
     ProGuardObfuscateStep.create(
-        JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(),
+        JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
         /* proguardMaxHeapSize */ "1024M",

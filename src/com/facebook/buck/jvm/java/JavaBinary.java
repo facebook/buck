@@ -52,7 +52,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
   // rule key.
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  private final Tool javaRuntimeLauncher;
 
   @AddToRuleKey @Nullable private final String mainClass;
 
@@ -76,7 +76,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
@@ -203,8 +203,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         "Must specify a main class for %s in order to to run it.",
         getBuildTarget());
 
-    return new CommandTool.Builder()
-        .addArg(javaRuntimeLauncher.getCommand())
+    return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();
