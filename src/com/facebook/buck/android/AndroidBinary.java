@@ -94,11 +94,6 @@ public class AndroidBinary extends AbstractBuildRule
     RELEASE,
     TEST,
     ;
-
-    /** @return true if ProGuard should be used to obfuscate the output */
-    boolean isBuildWithObfuscation() {
-      return this == RELEASE;
-    }
   }
 
   enum ExopackageMode {
@@ -182,7 +177,6 @@ public class AndroidBinary extends AbstractBuildRule
       Optional<List<String>> proguardJvmArgs,
       Optional<String> proguardAgentPath,
       Keystore keystore,
-      PackageType packageType,
       DexSplitMode dexSplitMode,
       Set<BuildTarget> buildTargetsToExcludeFromDex,
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
@@ -260,7 +254,6 @@ public class AndroidBinary extends AbstractBuildRule
             getProjectFilesystem(),
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            packageType,
             dexSplitMode,
             sdkProguardConfig,
             optimizationPasses,

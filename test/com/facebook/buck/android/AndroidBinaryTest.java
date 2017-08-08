@@ -158,7 +158,7 @@ public class AndroidBinaryTest {
         /* proguardAgentPath */ Optional.empty(),
         aaptProguardDir.resolve("proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(),
-        ProGuardObfuscateStep.SdkProguardType.DEFAULT,
+        ProGuardObfuscateStep.SdkProguardType.NONE,
         /* optimizationPasses */ Optional.empty(),
         /* proguardJvmArgs */ Optional.empty(),
         ImmutableMap.of(

@@ -207,7 +207,7 @@ public class AndroidBinaryDescription
       }
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
-          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
+          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
 
       // If the old boolean version of this argument was specified, make sure the new form
       // was not specified, and allow the old form to override the default.
@@ -223,7 +223,7 @@ public class AndroidBinaryDescription
         androidSdkProguardConfig =
             args.getUseAndroidProguardConfigWithOptimizations().orElse(false)
                 ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
-                : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
+                : ProGuardObfuscateStep.SdkProguardType.NONE;
       }
 
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
@@ -239,9 +239,15 @@ public class AndroidBinaryDescription
       DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
       PackageType packageType = getPackageType(args);
+      boolean shouldProguard =
+          args.getProguardConfig().isPresent()
+              || (args.getAndroidSdkProguardConfig().isPresent()
+                  && !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
+                      args.getAndroidSdkProguardConfig().get()));
+
       boolean shouldPreDex =
           !args.getDisablePreDex()
-              && PackageType.DEBUG.equals(packageType)
+              && !shouldProguard
               && !args.getPreprocessJavaClassesBash().isPresent();
 
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
@@ -286,7 +292,7 @@ public class AndroidBinaryDescription
               args.getNativeLibraryMergeGlue(),
               args.getNativeLibraryMergeCodeGenerator(),
               args.getNativeLibraryMergeLocalizedSymbols(),
-              args.getNativeLibraryProguardConfigGenerator(),
+              shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
               args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
               dxExecutorService,
               args.getManifestEntries(),
@@ -325,7 +331,6 @@ public class AndroidBinaryDescription
               Optional.of(args.getProguardJvmArgs()),
               proGuardConfig.getProguardAgentPath(),
               (Keystore) keystore,
-              packageType,
               dexSplitMode,
               args.getNoDx(),
               androidSdkProguardConfig,
