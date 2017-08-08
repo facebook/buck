@@ -124,6 +124,7 @@ import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
@@ -866,6 +867,7 @@ public final class Main {
                   buildEventBus);
             }
           }
+          NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService, buildEventBus);
 
           ImmutableList<String> remainingArgs =
               args.isEmpty() ? ImmutableList.of() : args.subList(1, args.size());

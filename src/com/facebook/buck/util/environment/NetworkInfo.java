@@ -16,9 +16,36 @@
 
 package com.facebook.buck.util.environment;
 
+import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.EventKey;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 public final class NetworkInfo {
+  public static class Event extends AbstractBuckEvent {
+    Network network;
+
+    public Event(Network network) {
+      super(EventKey.unique());
+      this.network = network;
+    }
+
+    public Network getNetwork() {
+      return network;
+    }
+
+    @Override
+    public String getEventName() {
+      return "NetworkInfoEvent";
+    }
+
+    @Override
+    protected String getValueString() {
+      return network.toString();
+    }
+  }
+
   // Buck's own integration tests will run with this system property
   // set to false.
   //
@@ -28,6 +55,14 @@ public final class NetworkInfo {
   private static final boolean ENABLE_OBJC = Boolean.getBoolean("buck.enable_objc");
 
   private NetworkInfo() {}
+
+  public static void generateActiveNetworkAsync(
+      ExecutorService executorService, BuckEventBus buckEventBus) {
+    executorService.submit(
+        () -> {
+          buckEventBus.post(new Event(getLikelyActiveNetwork()));
+        });
+  }
 
   public static Network getLikelyActiveNetwork() {
     if (ENABLE_OBJC) {
