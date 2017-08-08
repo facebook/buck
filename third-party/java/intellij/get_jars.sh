@@ -10,7 +10,7 @@
 # ====================================================================
 
 # Some files are copied, some are stubbed
-LIBS_TO_COPY=(
+INTELLIJ_LIBS_TO_COPY=(
   annotations.jar
   extensions.jar
   openapi.jar
@@ -18,10 +18,19 @@ LIBS_TO_COPY=(
   jdom.jar
   serviceMessages.jar
 )
-LIBS_TO_STUB=(
+INTELLIJ_LIBS_TO_STUB=(
   idea.jar
 )
-ALL_LIBS=("${LIBS_TO_COPY[@]}" "${LIBS_TO_STUB[@]}")
+INTELLIJ_LIBS=("${INTELLIJ_LIBS_TO_COPY[@]}" "${INTELLIJ_LIBS_TO_STUB[@]}")
+
+ANDROID_LIBS_TO_COPY=(
+)
+ANDROID_LIBS_TO_STUB=(
+  android.jar
+)
+ANDROID_LIBS=("${ANDROID_LIBS_TO_COPY[@]}" "${ANDROID_LIBS_TO_STUB[@]}")
+
+ALL_LIBS=("${INTELLIJ_LIBS[@]}" "${ANDROID_LIBS[@]}")
 
 usage() {
   cat <<-EOF
@@ -29,6 +38,52 @@ Usage:  $(basename "${BASH_SOURCE[0]}") [path-to-intellij-lib-dir]
 
 Updates IntelliJ jars from a local IntelliJ installation.
 EOF
+}
+
+copy_or_stub_jars() {
+  if [ "$#" -lt 3 ]; then
+    >&2 echo "ERROR:  copy_or_stub_jars() requires parameters: SOURCE_DIR, # of LIBS_TO_COPY, LIBS_TO_COPY..., # of LIBS_TO_STUB, LIBS_TO_STUB..."
+    SHOULD_FAIL=true
+  fi
+
+  SHOULD_FAIL=false
+  SOURCE_DIR=$1; shift
+  NUM_LIBS_TO_COPY=$1; shift
+  LIBS_TO_COPY=("${@:1:$NUM_LIBS_TO_COPY}"); shift $NUM_LIBS_TO_COPY
+  NUM_LIBS_TO_STUB=$1; shift
+  LIBS_TO_STUB=("${@:1:$NUM_LIBS_TO_STUB}")
+  LIBS=("${LIBS_TO_COPY[@]}" "${LIBS_TO_STUB[@]}")
+
+  for lib in "${LIBS[@]}"; do
+    if ! [[ -e "$SOURCE_DIR/$lib" ]]; then
+      >&2 echo "ERROR:  Can't find required library $lib in $SOURCE_DIR"
+      SHOULD_FAIL=true
+    fi
+  done
+  if $SHOULD_FAIL ; then
+    echo "Aborting."
+    exit 1
+  fi
+
+  for lib in "${LIBS_TO_COPY[@]}"; do
+    echo "Copying $lib..."
+    cp "$SOURCE_DIR/$lib" "$DEST_DIR/$lib"
+  done
+  for lib in "${LIBS_TO_STUB[@]}"; do
+    if [[ -e "$DEST_DIR/$lib" ]]; then
+      printf "Removing previous $lib...  "
+      rm "$DEST_DIR/$lib"
+    fi
+    echo "Stubbing $lib..."
+    if ! (cd "$DEST_DIR" && 2>/dev/null buck run //src/com/facebook/buck/jvm/java/abi:api-stubber "$SOURCE_DIR/$lib" "$DEST_DIR/$lib") ; then
+      echo "ERROR:  Failed to make stubbed copy of $lib"
+      SHOULD_FAIL=true
+    fi
+  done
+  if $SHOULD_FAIL ; then
+    echo "Aborting."
+    exit 1
+  fi
 }
 
 if [[ "$1" == -h ]] || [[ "$1" == --help ]] || [[ "$1" == help ]]; then
@@ -59,43 +114,19 @@ if [[ -z "$SRC_DIR" ]]; then
   fi
 fi
 
-
 # ====================================================================
 #  Copy and/or stub jars
 # ====================================================================
 printf "Copying IntelliJ jars from %q\n" "$SRC_DIR"
+copy_or_stub_jars "$SRC_DIR" \
+    ${#INTELLIJ_LIBS_TO_COPY[@]} ${INTELLIJ_LIBS_TO_COPY[@]} \
+    ${#INTELLIJ_LIBS_TO_STUB[@]} ${INTELLIJ_LIBS_TO_STUB[@]}
 
-SHOULD_FAIL=false
-for lib in "${ALL_LIBS[@]}"; do
-  if ! [[ -e "$SRC_DIR/$lib" ]]; then
-    >&2 echo "ERROR:  Can't find required library $lib in $SRC_DIR"
-    SHOULD_FAIL=true
-  fi
-done
-if $SHOULD_FAIL ; then
-  echo "Aborting."
-  exit 1
-fi
-
-for lib in "${LIBS_TO_COPY[@]}"; do
-  echo "Copying $lib..."
-  cp "$SRC_DIR/$lib" "$DEST_DIR/$lib"
-done
-for lib in "${LIBS_TO_STUB[@]}"; do
-  if [[ -e "$DEST_DIR/$lib" ]]; then
-    printf "Removing previous $lib...  "
-    rm "$DEST_DIR/$lib"
-  fi
-  echo "Stubbing $lib..."
-  if ! (cd "$DEST_DIR" && 2>/dev/null buck run //src/com/facebook/buck/jvm/java/abi:api-stubber "$SRC_DIR/$lib" "$DEST_DIR/$lib") ; then
-    echo "ERROR:  Failed to make stubbed copy of $lib"
-    SHOULD_FAIL=true
-  fi
-done
-if $SHOULD_FAIL ; then
-  echo "Aborting."
-  exit 1
-fi
+ANDROID_SRC_DIR="$SRC_DIR/../plugins/android/lib"
+printf "Copying IntelliJ Android jars from %q\n" "$ANDROID_SRC_DIR"
+copy_or_stub_jars "$ANDROID_SRC_DIR" \
+    ${#ANDROID_LIBS_TO_COPY[@]} ${ANDROID_LIBS_TO_COPY[@]} \
+    ${#ANDROID_LIBS_TO_STUB[@]} ${ANDROID_LIBS_TO_STUB[@]}
 
 # ====================================================================
 #  Sanity check against BUCK file that we:
