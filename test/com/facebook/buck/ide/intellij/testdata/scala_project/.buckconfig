@@ -1,0 +1,6 @@
+[project]
+  ide = intellij
+
+[scala]
+  compiler = scala-compiler.jar
+  library = //:scala-library

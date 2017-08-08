@@ -32,6 +32,8 @@ import com.facebook.buck.ide.intellij.lang.java.JavaLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.java.JavaTestModuleRule;
 import com.facebook.buck.ide.intellij.lang.kotlin.KotlinLibraryModuleRule;
 import com.facebook.buck.ide.intellij.lang.kotlin.KotlinTestModuleRule;
+import com.facebook.buck.ide.intellij.lang.scala.ScalaLibraryModuleRule;
+import com.facebook.buck.ide.intellij.lang.scala.ScalaTestModuleRule;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
@@ -43,6 +45,8 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import com.facebook.buck.jvm.kotlin.KotlinTestDescription;
+import com.facebook.buck.jvm.scala.ScalaLibraryDescription;
+import com.facebook.buck.jvm.scala.ScalaTestDescription;
 import com.facebook.buck.rules.Description;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +70,9 @@ public class SupportedTargetTypeRegistry {
               GroovyLibraryDescription.class,
               GroovyTestDescription.class,
               KotlinLibraryDescription.class,
-              KotlinTestDescription.class);
+              KotlinTestDescription.class,
+              ScalaLibraryDescription.class,
+              ScalaTestDescription.class);
 
   public static boolean isTargetTypeSupported(Class<?> descriptionClass) {
     return SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(descriptionClass);
@@ -101,6 +107,8 @@ public class SupportedTargetTypeRegistry {
     addToIndex(
         new KotlinLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new KotlinTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new ScalaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new ScalaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
 
     Preconditions.checkState(areTargetTypesEqual(moduleRuleIndex.keySet()));
   }
