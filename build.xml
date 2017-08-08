@@ -87,7 +87,7 @@
     <include name="nailgun/nailgun-server-0.9.2-SNAPSHOT.jar" />
     <include name="jna/jna-4.4.0.jar" />
     <include name="jna/jna-platform-4.4.0.jar" />
-    <include name="sqlite/sqlite-jdbc-3.16.1.jar" />
+    <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
   </fileset>
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
