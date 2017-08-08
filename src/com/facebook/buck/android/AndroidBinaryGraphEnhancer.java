@@ -70,7 +70,6 @@ public class AndroidBinaryGraphEnhancer {
 
   public static final Flavor DEX_FLAVOR = InternalFlavor.of("dex");
   public static final Flavor DEX_MERGE_FLAVOR = InternalFlavor.of("dex_merge");
-  private static final Flavor CALCULATE_ABI_FLAVOR = InternalFlavor.of("calculate_exopackage_abi");
   private static final Flavor TRIM_UBER_R_DOT_JAVA_FLAVOR =
       InternalFlavor.of("trim_uber_r_dot_java");
   private static final Flavor COMPILE_UBER_R_DOT_JAVA_FLAVOR =
@@ -424,24 +423,6 @@ public class AndroidBinaryGraphEnhancer {
     enhancedDeps.addAll(
         ruleFinder.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
-    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.empty();
-    if (!exopackageModes.isEmpty()) {
-      BuildRuleParams paramsForComputeExopackageAbi =
-          buildRuleParams.withDeclaredDeps(enhancedDeps.build()).withoutExtraDeps();
-      computeExopackageDepsAbi =
-          Optional.of(
-              new ComputeExopackageDepsAbi(
-                  originalBuildTarget.withAppendedFlavors(CALCULATE_ABI_FLAVOR),
-                  projectFilesystem,
-                  paramsForComputeExopackageAbi,
-                  exopackageModes,
-                  packageableCollection,
-                  copyNativeLibraries,
-                  preDexMerge));
-      ruleResolver.addToIndex(computeExopackageDepsAbi.get());
-      enhancedDeps.add(computeExopackageDepsAbi.get());
-    }
-
     return AndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
@@ -455,7 +436,6 @@ public class AndroidBinaryGraphEnhancer {
         .setCopyNativeLibraries(copyNativeLibraries)
         .setPackageStringAssets(resourcesEnhancementResult.getPackageStringAssets())
         .setPreDexMerge(preDexMerge)
-        .setComputeExopackageDepsAbi(computeExopackageDepsAbi)
         .setClasspathEntriesToDex(
             ImmutableSet.<SourcePath>builder()
                 .addAll(packageableCollection.getClasspathEntriesToDex())

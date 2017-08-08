@@ -355,11 +355,6 @@ public class AndroidBinaryGraphEnhancerTest {
                 BuildConfigFields.Field.of("int", "EXOPACKAGE_FLAGS", "1"))),
         androidBuildConfig.getBuildConfigFields());
 
-    ImmutableSortedSet<BuildRule> finalDeps = result.getFinalDeps();
-    BuildRule computeExopackageDepsAbiRule =
-        findRuleOfType(ruleResolver, ComputeExopackageDepsAbi.class);
-    assertThat(finalDeps, Matchers.hasItem(computeExopackageDepsAbiRule));
-
     BuildRule resourcesFilterRule = findRuleOfType(ruleResolver, ResourcesFilter.class);
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -375,22 +370,7 @@ public class AndroidBinaryGraphEnhancerTest {
         aaptPackageResourcesRule);
 
     assertFalse(result.getPreDexMerge().isPresent());
-
-    MoreAsserts.assertDepends(
-        "ComputeExopackageDepsAbi must depend on ResourcesFilter",
-        computeExopackageDepsAbiRule,
-        resourcesFilterRule);
-    MoreAsserts.assertDepends(
-        "ComputeExopackageDepsAbi must depend on PackageStringAssets",
-        computeExopackageDepsAbiRule,
-        packageStringAssetsRule);
-    MoreAsserts.assertDepends(
-        "ComputeExopackageDepsAbi must depend on AaptPackageResources",
-        computeExopackageDepsAbiRule,
-        aaptPackageResourcesRule);
-
     assertTrue(result.getPackageStringAssets().isPresent());
-    assertTrue(result.getComputeExopackageDepsAbi().isPresent());
 
     verify(keystore);
   }

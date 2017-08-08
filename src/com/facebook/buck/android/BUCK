@@ -113,7 +113,6 @@ RULES_SRCS = [
     "ApkGenruleDescription.java",
     "AssembleDirectories.java",
     "BootClasspathAppender.java",
-    "ComputeExopackageDepsAbi.java",
     "CopyNativeLibraries.java",
     "DefaultAndroidLibraryCompilerFactory.java",
     "DexProducedFromJavaLibrary.java",

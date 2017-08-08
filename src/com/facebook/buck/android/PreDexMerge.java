@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.PreDexMerge.BuildOutput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -24,13 +23,9 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -82,8 +77,7 @@ import javax.annotation.Nullable;
  * This uses a separate implementation from addDexingSteps. The differences in the splitting logic
  * are too significant to make it worth merging them.
  */
-public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements InitializableFromDisk<BuildOutput> {
+public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
   private static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS =
@@ -92,14 +86,11 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
           DxStep.Option.RUN_IN_PROCESS,
           DxStep.Option.NO_OPTIMIZE);
 
-  private static final String PRIMARY_DEX_HASH_KEY = "primary_dex_hash";
-
   @AddToRuleKey private final DexSplitMode dexSplitMode;
   private final APKModuleGraph apkModuleGraph;
   private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
   private final DexProducedFromJavaLibrary dexForUberRDotJava;
   private final ListeningExecutorService dxExecutorService;
-  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
   private final Optional<Integer> xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
 
@@ -120,7 +111,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.preDexDeps = preDexDeps;
     this.dexForUberRDotJava = dexForUberRDotJava;
     this.dxExecutorService = dxExecutorService;
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.xzCompressionLevel = xzCompressionLevel;
     this.dxMaxHeapSize = dxMaxHeapSize;
   }
@@ -317,12 +307,6 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
             xzCompressionLevel,
             dxMaxHeapSize));
 
-    // Record the primary dex SHA1 so exopackage apks can use it to compute their ABI keys.
-    // Single dex apks cannot be exopackages, so they will never need ABI keys.
-    steps.add(
-        new RecordFileSha1Step(
-            getProjectFilesystem(), primaryDexPath, PRIMARY_DEX_HASH_KEY, buildableContext));
-
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {
         Path dexMetadataOutputPath =
@@ -443,35 +427,5 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public SourcePath getSourcePathToOutput() {
     return null;
-  }
-
-  @Nullable
-  public Sha1HashCode getPrimaryDexHash() {
-    Preconditions.checkState(dexSplitMode.isShouldSplitDex());
-    return buildOutputInitializer.getBuildOutput().primaryDexHash;
-  }
-
-  static class BuildOutput {
-    /** Null iff this is a single-dex app. */
-    @Nullable private final Sha1HashCode primaryDexHash;
-
-    BuildOutput(@Nullable Sha1HashCode primaryDexHash) {
-      this.primaryDexHash = primaryDexHash;
-    }
-  }
-
-  @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> primaryDexHash = onDiskBuildInfo.getHash(PRIMARY_DEX_HASH_KEY);
-    // We only save the hash for split-dex builds.
-    if (dexSplitMode.isShouldSplitDex()) {
-      Preconditions.checkState(primaryDexHash.isPresent());
-    }
-    return new BuildOutput(primaryDexHash.orElse(null));
-  }
-
-  @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
-    return buildOutputInitializer;
   }
 }

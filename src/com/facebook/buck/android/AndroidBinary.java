@@ -232,9 +232,6 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               + "which is invalid.  (Only JAR is allowed.)",
           getBuildTarget(),
           dexSplitMode.getDexStore());
-      Preconditions.checkArgument(
-          enhancementResult.getComputeExopackageDepsAbi().isPresent(),
-          "computeExopackageDepsAbi must be set if exopackage is true.");
     }
 
     if (ExopackageMode.enabledForResources(exopackageModes)
@@ -284,11 +281,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile(),
             dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
-            resourceCompressionMode.isCompressResources(),
-            enhancementResult
-                .getComputeExopackageDepsAbi()
-                .map(ComputeExopackageDepsAbi::getAbiPath)
-                .orElse(null));
+            resourceCompressionMode.isCompressResources());
   }
 
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {

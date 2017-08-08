@@ -245,7 +245,6 @@ java_immutables_library(
         "MetadataProvidingDescription.java",
         "NonHashableSourcePathContainer.java",
         "OnDiskBuildInfo.java",
-        "RecordFileSha1Step.java",
         "RuleKeyAppendable.java",
         "RuleKeyObjectSink.java",
         "RulePipelineState.java",

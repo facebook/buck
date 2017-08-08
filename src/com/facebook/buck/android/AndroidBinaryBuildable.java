@@ -82,7 +82,6 @@ import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import javax.annotation.Nullable;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
   /**
@@ -152,11 +151,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap;
 
-  @AddToRuleKey
-  @Nullable
-  @SuppressWarnings("unused")
-  private final SourcePath abiPath;
-
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
@@ -197,8 +191,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePath aaptGeneratedProguardConfigFile,
       Optional<String> dxMaxHeapSize,
       ImmutableList<SourcePath> proguardConfigs,
-      boolean isCompressResources,
-      SourcePath abiPath) {
+      boolean isCompressResources) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
 
@@ -313,8 +306,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           Optional.of(
               convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
     }
-
-    this.abiPath = abiPath;
   }
 
   private <K extends Comparable<?>, V> ImmutableSortedMap<K, ImmutableList<V>> convertToMapOfLists(
