@@ -465,7 +465,7 @@ class CachingBuildRuleBuilder {
     buildResult =
         Futures.catchingAsync(
             buildResult,
-            Exception.class,
+            Throwable.class,
             thrown -> {
               LOG.debug(thrown, "Building rule [%s] failed.", rule.getBuildTarget());
 
@@ -1052,7 +1052,7 @@ class CachingBuildRuleBuilder {
         new BuildRuleDiagnosticData(ruleDeps.get(rule), diagnosticKeysBuilder.build()));
   }
 
-  private Exception maybeAttachBuildRuleNameToException(@Nonnull Exception thrown) {
+  private Throwable maybeAttachBuildRuleNameToException(@Nonnull Throwable thrown) {
     if ((thrown instanceof HumanReadableException) || (thrown instanceof InterruptedException)) {
       return thrown;
     }
