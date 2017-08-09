@@ -101,7 +101,11 @@ public class CalculateAbiFromSourceIntegrationTest {
     buildResult.assertFailure();
     assertThat(
         buildResult.getStderr(),
-        Matchers.stringContainsInOrder("cannot find symbol", "Nonexistent"));
+        Matchers.stringContainsInOrder(
+            "cannot find symbol",
+            "Nonexistent<Integer>",
+            "cannot find symbol",
+            "List<Nonexistent"));
   }
 
   @Test

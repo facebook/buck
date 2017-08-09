@@ -1,5 +1,8 @@
 package com.example.buck;
 
+import java.util.List;
+
 public class LibErrors {
-  Nonexistent n;
+  Nonexistent<Integer> n;
+  List<Nonexistent<?, ?>> l;
 }
