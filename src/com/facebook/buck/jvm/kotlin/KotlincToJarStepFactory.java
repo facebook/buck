@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
 
   private static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
+  private static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
@@ -82,21 +83,24 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory impleme
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
 
-    steps.add(
-        new KotlincStep(
-            invokingRule,
-            outputDirectory,
-            sourceFilePaths,
-            pathToSrcsList,
-            ImmutableSortedSet.<Path>naturalOrder()
-                .addAll(
-                    Optional.ofNullable(extraClassPath.apply(buildContext))
-                        .orElse(ImmutableList.of()))
-                .addAll(declaredClasspathEntries)
-                .build(),
-            kotlinc,
-            extraArguments,
-            filesystem));
+    // Don't invoke kotlinc if we don't have any kotlin files.
+    if (sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)) {
+      steps.add(
+          new KotlincStep(
+              invokingRule,
+              outputDirectory,
+              sourceFilePaths,
+              pathToSrcsList,
+              ImmutableSortedSet.<Path>naturalOrder()
+                  .addAll(
+                      Optional.ofNullable(extraClassPath.apply(buildContext))
+                          .orElse(ImmutableList.of()))
+                  .addAll(declaredClasspathEntries)
+                  .build(),
+              kotlinc,
+              extraArguments,
+              filesystem));
+    }
 
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
