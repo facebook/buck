@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
@@ -73,12 +75,16 @@ public class KnownBuildRuleTypesIntegrationTest {
     ImmutableMap<String, AppleToolchain> appleToolchains =
         AppleToolchainDiscovery.discoverAppleToolchains(appleDeveloperDir, ImmutableList.of());
 
+    assumeThat(appleToolchains, is(not(anEmptyMap())));
+
     ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths =
         AppleSdkDiscovery.discoverAppleSdkPaths(
             appleDeveloperDir,
             ImmutableList.of(root),
             appleToolchains,
             buckConfig.getView(AppleConfig.class));
+
+    assumeThat(appleSdkPaths, is(not(anEmptyMap())));
 
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.of(
