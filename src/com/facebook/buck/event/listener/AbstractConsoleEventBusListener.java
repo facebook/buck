@@ -319,6 +319,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       @Nullable BuckEvent startEvent,
       @Nullable BuckEvent finishedEvent,
       Optional<Double> progress,
+      Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     if (startEvent == null) {
       return UNFINISHED_EVENT_PAIR;
@@ -329,7 +330,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             .setFinish(Optional.ofNullable(finishedEvent))
             .build();
     return logEventPair(
-        prefix, suffix, currentMillis, offsetMs, ImmutableList.of(pair), progress, lines);
+        prefix, suffix, currentMillis, offsetMs, ImmutableList.of(pair), progress, minimum, lines);
   }
 
   /**
@@ -368,6 +369,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       long offsetMs,
       Collection<EventPair> eventPairs,
       Optional<Double> progress,
+      Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     if (eventPairs.isEmpty()) {
       return UNFINISHED_EVENT_PAIR;
@@ -385,6 +387,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       if (progress.isPresent()) {
         progress = Optional.of(1.0);
       }
+    }
+    if (minimum.isPresent() && elapsedTimeMs < minimum.get()) {
+      return elapsedTimeMs;
     }
     parseLine += formatElapsedTime(elapsedTimeMs);
     if (progress.isPresent()) {

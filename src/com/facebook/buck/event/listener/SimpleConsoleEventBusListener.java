@@ -93,6 +93,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             0L,
             buckFilesProcessing.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
+            Optional.empty(),
             lines));
     printLines(lines);
   }
@@ -119,6 +120,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         buildStarted,
         buildFinished,
         getApproximateBuildProgress(),
+        Optional.empty(),
         lines);
 
     String httpStatus = renderHttpUploads();
@@ -146,6 +148,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         0L,
         installStarted,
         installFinished,
+        Optional.empty(),
         Optional.empty(),
         lines);
     printLines(lines);

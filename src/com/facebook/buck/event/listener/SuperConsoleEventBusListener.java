@@ -282,6 +282,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         watchmanStarted,
         watchmanFinished,
         Optional.empty(),
+        Optional.of(1000L),
         lines);
 
     logEventPair(
@@ -292,6 +293,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         projectBuildFileParseStarted,
         projectBuildFileParseFinished,
         getEstimatedProgressOfProcessingBuckFiles(),
+        Optional.empty(),
         lines);
 
     long parseTime =
@@ -302,6 +304,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             /* offsetMs */ 0L,
             buckFilesProcessing.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
+            Optional.empty(),
             lines);
 
     logEventPair(
@@ -312,6 +315,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         projectGenerationStarted,
         projectGenerationFinished,
         getEstimatedProgressOfGeneratingProjectFiles(),
+        Optional.empty(),
         lines);
 
     logEventPair(
@@ -321,6 +325,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         /* offsetMs */ 0L,
         autoSparseState.values(),
         /* progress*/ Optional.empty(),
+        Optional.empty(),
         lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
@@ -346,6 +351,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               this.distBuildStarted,
               this.distBuildFinished,
               getApproximateDistBuildProgress(),
+              Optional.empty(),
               lines);
 
       if (distBuildMs == UNFINISHED_EVENT_PAIR) {
@@ -384,6 +390,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             this.buildStarted,
             this.buildFinished,
             getApproximateBuildProgress(),
+            Optional.empty(),
             lines);
 
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
@@ -409,6 +416,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             testRunStarted.get(),
             testRunFinished.get(),
             Optional.empty(),
+            Optional.empty(),
             lines);
 
     if (testRunTime == UNFINISHED_EVENT_PAIR) {
@@ -431,6 +439,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         0L,
         installStarted,
         installFinished,
+        Optional.empty(),
         Optional.empty(),
         lines);
 
