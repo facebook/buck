@@ -178,6 +178,7 @@ java_library(
         "CommonDescriptionArg.java",
         "HasContacts.java",
         "HasDeclaredDeps.java",
+        "HasDefaultPlatform.java",
         "HasDepsQuery.java",
         "HasProvidedDeps.java",
         "HasProvidedDepsQuery.java",

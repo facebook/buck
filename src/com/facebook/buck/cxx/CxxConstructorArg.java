@@ -22,6 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -38,6 +39,7 @@ public interface CxxConstructorArg
     extends CommonDescriptionArg,
         HasDeclaredDeps,
         HasDefaultFlavors,
+        HasDefaultPlatform,
         HasTests,
         HasSystemFrameworkAndLibraries {
   @Value.NaturalOrder

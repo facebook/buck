@@ -398,8 +398,6 @@ public class CxxBinaryDescription
     default boolean getLinkDepsQueryWhole() {
       return false;
     }
-
-    Optional<Flavor> getDefaultPlatform();
   }
 
   @BuckStyleImmutable

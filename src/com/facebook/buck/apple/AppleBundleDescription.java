@@ -35,6 +35,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -299,7 +300,11 @@ public class AppleBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleBundleDescriptionArg
-      extends CommonDescriptionArg, HasAppleBundleFields, HasDeclaredDeps, HasTests {
+      extends CommonDescriptionArg,
+          HasAppleBundleFields,
+          HasDefaultPlatform,
+          HasDeclaredDeps,
+          HasTests {
     BuildTarget getBinary();
 
     @Override
