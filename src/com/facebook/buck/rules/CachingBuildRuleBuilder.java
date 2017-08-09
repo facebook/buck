@@ -762,7 +762,7 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() {
     // If we've already seen a failure, exit early.
-    if (!buildContext.isKeepGoing() && buildRuleBuilderDelegate.getFirstFailure() != null) {
+    if (!buildRuleBuilderDelegate.shouldKeepGoing(buildContext)) {
       return Futures.immediateFuture(
           BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
     }
