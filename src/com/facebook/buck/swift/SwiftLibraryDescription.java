@@ -303,6 +303,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         resolver,
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
+        args.getBridgingHeader(),
         args.getFrameworks(),
         args.getLibraries(),
         args.getSupportedPlatformsRegex(),

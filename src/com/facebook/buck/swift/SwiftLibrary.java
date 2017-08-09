@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR;
 
+import com.facebook.buck.cxx.CxxBridgingHeaders;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLink;
@@ -71,6 +72,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final BuildRuleResolver ruleResolver;
 
   private final Collection<? extends BuildRule> exportedDeps;
+  private final Optional<SourcePath> bridgingHeader;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
   private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
@@ -84,6 +86,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildRuleResolver ruleResolver,
       Collection<? extends BuildRule> exportedDeps,
       FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain,
+      Optional<SourcePath> bridgingHeader,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       Optional<Pattern> supportedPlatformsRegex,
@@ -91,6 +94,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.exportedDeps = exportedDeps;
+    this.bridgingHeader = bridgingHeader;
     this.frameworks = frameworks;
     this.libraries = libraries;
     this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
@@ -277,10 +281,13 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     BuildRule rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
 
-    return CxxPreprocessorInput.builder()
-        .addIncludes(
-            CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, rule.getSourcePathToOutput()))
-        .build();
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+    builder.addIncludes(
+        CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, rule.getSourcePathToOutput()));
+    if (bridgingHeader.isPresent()) {
+      builder.addIncludes(CxxBridgingHeaders.from(bridgingHeader.get()));
+    }
+    return builder.build();
   }
 
   @Override
