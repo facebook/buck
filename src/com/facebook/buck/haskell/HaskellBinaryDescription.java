@@ -383,6 +383,8 @@ public class HaskellBinaryDescription
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 
+    Optional<Flavor> getPlatform();
+
     Optional<Flavor> getCxxPlatform();
   }
 }

@@ -30,6 +30,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -350,5 +351,7 @@ public class HaskellGhciDescription
     Optional<BuildTarget> getGhciBinDep();
 
     Optional<SourcePath> getGhciInit();
+
+    Optional<Flavor> getPlatform();
   }
 }
