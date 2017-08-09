@@ -487,165 +487,6 @@ class CachingBuildRuleBuilder {
         MoreFutures.addListenableCallback(
             buildResult,
             new FutureCallback<BuildResult>() {
-              private void uploadToCache(BuildRuleSuccessType success) {
-
-                // Collect up all the rule keys we have index the artifact in the cache with.
-                Set<RuleKey> ruleKeys = new HashSet<>();
-
-                // If the rule key has changed (and is not already in the cache), we need to push
-                // the artifact to cache using the new key.
-                ruleKeys.add(ruleKeyFactories.getDefaultRuleKeyFactory().build(rule));
-
-                // If the input-based rule key has changed, we need to push the artifact to cache
-                // using the new key.
-                if (SupportsInputBasedRuleKey.isSupported(rule)) {
-                  Optional<RuleKey> calculatedRuleKey = calculateInputBasedRuleKey();
-                  Optional<RuleKey> onDiskRuleKey =
-                      onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-                  Optional<RuleKey> metaDataRuleKey =
-                      buildInfoRecorder
-                          .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
-                          .map(RuleKey::new);
-                  Preconditions.checkState(
-                      calculatedRuleKey.equals(onDiskRuleKey),
-                      "%s (%s): %s: invalid on-disk input-based rule key: %s != %s",
-                      rule.getBuildTarget(),
-                      rule.getType(),
-                      success,
-                      calculatedRuleKey,
-                      onDiskRuleKey);
-                  Preconditions.checkState(
-                      calculatedRuleKey.equals(metaDataRuleKey),
-                      "%s: %s: invalid meta-data input-based rule key: %s != %s",
-                      rule.getBuildTarget(),
-                      success,
-                      calculatedRuleKey,
-                      metaDataRuleKey);
-                  if (calculatedRuleKey.isPresent()) {
-                    ruleKeys.add(calculatedRuleKey.get());
-                  }
-                }
-
-                // If the manifest-based rule key has changed, we need to push the artifact to cache
-                // using the new key.
-                if (useManifestCaching()) {
-                  Optional<RuleKey> onDiskRuleKey =
-                      onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-                  Optional<RuleKey> metaDataRuleKey =
-                      buildInfoRecorder
-                          .getBuildMetadataFor(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)
-                          .map(RuleKey::new);
-                  Preconditions.checkState(
-                      onDiskRuleKey.equals(metaDataRuleKey),
-                      "%s: %s: inconsistent meta-data and on-disk dep-file rule key: %s != %s",
-                      rule.getBuildTarget(),
-                      success,
-                      onDiskRuleKey,
-                      metaDataRuleKey);
-                  if (onDiskRuleKey.isPresent()) {
-                    ruleKeys.add(onDiskRuleKey.get());
-                  }
-                }
-
-                // Do the actual upload.
-                try {
-
-                  // Verify that the recorded path hashes are accurate.
-                  Optional<String> recordedPathHashes =
-                      buildInfoRecorder.getBuildMetadataFor(
-                          BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
-                  if (recordedPathHashes.isPresent()
-                      && !verifyRecordedPathHashes(
-                          rule.getBuildTarget(),
-                          rule.getProjectFilesystem(),
-                          recordedPathHashes.get())) {
-                    return;
-                  }
-
-                  // Push to cache.
-                  buildInfoRecorder.performUploadToArtifactCache(
-                      ImmutableSet.copyOf(ruleKeys), artifactCache, eventBus);
-
-                } catch (Throwable t) {
-                  eventBus.post(
-                      ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
-                }
-              }
-
-              private void handleResult(BuildResult input) {
-                Optional<Long> outputSize = Optional.empty();
-                Optional<HashCode> outputHash = Optional.empty();
-                Optional<BuildRuleSuccessType> successType = Optional.empty();
-                boolean shouldUploadToCache = false;
-
-                BuildRuleEvent.Resumed resumedEvent =
-                    BuildRuleEvent.resumed(
-                        rule,
-                        buildRuleDurationTracker,
-                        ruleKeyFactories.getDefaultRuleKeyFactory());
-                LOG.verbose(resumedEvent.toString());
-                eventBus.post(resumedEvent);
-
-                if (input.getStatus() == BuildRuleStatus.SUCCESS) {
-                  BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
-                  successType = Optional.of(success);
-
-                  // Try get the output size.
-                  if (success == BuildRuleSuccessType.BUILT_LOCALLY
-                      || success.shouldUploadResultingArtifact()) {
-                    try {
-                      outputSize = Optional.of(buildInfoRecorder.getOutputSize());
-                    } catch (IOException e) {
-                      eventBus.post(
-                          ThrowableConsoleEvent.create(
-                              e, "Error getting output size for %s.", rule));
-                    }
-                  }
-
-                  // Compute it's output hash for logging/tracing purposes, as this artifact will
-                  // be consumed by other builds.
-                  if (outputSize.isPresent() && shouldHashOutputs(success, outputSize.get())) {
-                    try {
-                      outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
-                    } catch (IOException e) {
-                      eventBus.post(
-                          ThrowableConsoleEvent.create(
-                              e, "Error getting output hash for %s.", rule));
-                    }
-                  }
-
-                  // Determine if this is rule is cacheable.
-                  shouldUploadToCache =
-                      outputSize.isPresent() && shouldUploadToCache(success, outputSize.get());
-
-                  // Upload it to the cache.
-                  if (shouldUploadToCache) {
-                    uploadToCache(success);
-                  }
-                }
-
-                boolean failureOrBuiltLocally =
-                    input.getStatus() == BuildRuleStatus.FAIL
-                        || input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY;
-                // Log the result to the event bus.
-                BuildRuleEvent.Finished finished =
-                    BuildRuleEvent.finished(
-                        resumedEvent,
-                        getBuildRuleKeys(),
-                        input.getStatus(),
-                        input.getCacheResult(),
-                        onDiskBuildInfo
-                            .getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
-                            .map(BuildId::new),
-                        successType,
-                        shouldUploadToCache,
-                        outputHash,
-                        outputSize,
-                        getBuildRuleDiagnosticData(failureOrBuiltLocally));
-                LOG.verbose(finished.toString());
-                eventBus.post(finished);
-              }
-
               @Override
               public void onSuccess(BuildResult input) {
                 handleResult(input);
@@ -664,6 +505,152 @@ class CachingBuildRuleBuilder {
             serviceByAdjustingDefaultWeightsTo(
                 CachingBuildEngine.RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS)));
     return buildResult;
+  }
+
+  private void uploadToCache(BuildRuleSuccessType success) {
+    // Collect up all the rule keys we have index the artifact in the cache with.
+    Set<RuleKey> ruleKeys = new HashSet<>();
+
+    // If the rule key has changed (and is not already in the cache), we need to push
+    // the artifact to cache using the new key.
+    ruleKeys.add(ruleKeyFactories.getDefaultRuleKeyFactory().build(rule));
+
+    // If the input-based rule key has changed, we need to push the artifact to cache
+    // using the new key.
+    if (SupportsInputBasedRuleKey.isSupported(rule)) {
+      Optional<RuleKey> calculatedRuleKey = calculateInputBasedRuleKey();
+      Optional<RuleKey> onDiskRuleKey =
+          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
+      Optional<RuleKey> metaDataRuleKey =
+          buildInfoRecorder
+              .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
+              .map(RuleKey::new);
+      Preconditions.checkState(
+          calculatedRuleKey.equals(onDiskRuleKey),
+          "%s (%s): %s: invalid on-disk input-based rule key: %s != %s",
+          rule.getBuildTarget(),
+          rule.getType(),
+          success,
+          calculatedRuleKey,
+          onDiskRuleKey);
+      Preconditions.checkState(
+          calculatedRuleKey.equals(metaDataRuleKey),
+          "%s: %s: invalid meta-data input-based rule key: %s != %s",
+          rule.getBuildTarget(),
+          success,
+          calculatedRuleKey,
+          metaDataRuleKey);
+      if (calculatedRuleKey.isPresent()) {
+        ruleKeys.add(calculatedRuleKey.get());
+      }
+    }
+
+    // If the manifest-based rule key has changed, we need to push the artifact to cache
+    // using the new key.
+    if (useManifestCaching()) {
+      Optional<RuleKey> onDiskRuleKey =
+          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+      Optional<RuleKey> metaDataRuleKey =
+          buildInfoRecorder
+              .getBuildMetadataFor(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)
+              .map(RuleKey::new);
+      Preconditions.checkState(
+          onDiskRuleKey.equals(metaDataRuleKey),
+          "%s: %s: inconsistent meta-data and on-disk dep-file rule key: %s != %s",
+          rule.getBuildTarget(),
+          success,
+          onDiskRuleKey,
+          metaDataRuleKey);
+      if (onDiskRuleKey.isPresent()) {
+        ruleKeys.add(onDiskRuleKey.get());
+      }
+    }
+
+    // Do the actual upload.
+    try {
+
+      // Verify that the recorded path hashes are accurate.
+      Optional<String> recordedPathHashes =
+          buildInfoRecorder.getBuildMetadataFor(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
+      if (recordedPathHashes.isPresent()
+          && !verifyRecordedPathHashes(
+              rule.getBuildTarget(), rule.getProjectFilesystem(), recordedPathHashes.get())) {
+        return;
+      }
+
+      // Push to cache.
+      buildInfoRecorder.performUploadToArtifactCache(
+          ImmutableSet.copyOf(ruleKeys), artifactCache, eventBus);
+
+    } catch (Throwable t) {
+      eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
+    }
+  }
+
+  private void handleResult(BuildResult input) {
+    Optional<Long> outputSize = Optional.empty();
+    Optional<HashCode> outputHash = Optional.empty();
+    Optional<BuildRuleSuccessType> successType = Optional.empty();
+    boolean shouldUploadToCache = false;
+
+    BuildRuleEvent.Resumed resumedEvent =
+        BuildRuleEvent.resumed(
+            rule, buildRuleDurationTracker, ruleKeyFactories.getDefaultRuleKeyFactory());
+    LOG.verbose(resumedEvent.toString());
+    eventBus.post(resumedEvent);
+
+    if (input.getStatus() == BuildRuleStatus.SUCCESS) {
+      BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+      successType = Optional.of(success);
+
+      // Try get the output size.
+      if (success == BuildRuleSuccessType.BUILT_LOCALLY
+          || success.shouldUploadResultingArtifact()) {
+        try {
+          outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+        } catch (IOException e) {
+          eventBus.post(ThrowableConsoleEvent.create(e, "Error getting output size for %s.", rule));
+        }
+      }
+
+      // Compute it's output hash for logging/tracing purposes, as this artifact will
+      // be consumed by other builds.
+      if (outputSize.isPresent() && shouldHashOutputs(success, outputSize.get())) {
+        try {
+          outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
+        } catch (IOException e) {
+          eventBus.post(ThrowableConsoleEvent.create(e, "Error getting output hash for %s.", rule));
+        }
+      }
+
+      // Determine if this is rule is cacheable.
+      shouldUploadToCache =
+          outputSize.isPresent() && shouldUploadToCache(success, outputSize.get());
+
+      // Upload it to the cache.
+      if (shouldUploadToCache) {
+        uploadToCache(success);
+      }
+    }
+
+    boolean failureOrBuiltLocally =
+        input.getStatus() == BuildRuleStatus.FAIL
+            || input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY;
+    // Log the result to the event bus.
+    BuildRuleEvent.Finished finished =
+        BuildRuleEvent.finished(
+            resumedEvent,
+            getBuildRuleKeys(),
+            input.getStatus(),
+            input.getCacheResult(),
+            onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID).map(BuildId::new),
+            successType,
+            shouldUploadToCache,
+            outputHash,
+            outputSize,
+            getBuildRuleDiagnosticData(failureOrBuiltLocally));
+    LOG.verbose(finished.toString());
+    eventBus.post(finished);
   }
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
