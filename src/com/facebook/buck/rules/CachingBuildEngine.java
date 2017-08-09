@@ -547,7 +547,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             .addBuildMetadata(BuildInfo.MetadataKey.BUILD_ID, buildContext.getBuildId().toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
     return new CachingBuildRuleBuilder(
-            new DefaultBuildRuleBuilderDelegate(this),
+            new DefaultBuildRuleBuilderDelegate(this, buildContext),
             artifactCacheSizeLimit,
             buildInfoStoreManager,
             buildMode,
@@ -579,9 +579,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   public static class DefaultBuildRuleBuilderDelegate
       implements CachingBuildRuleBuilder.BuildRuleBuilderDelegate {
     private final CachingBuildEngine cachingBuildEngine;
+    private final BuildEngineBuildContext buildContext;
 
-    public DefaultBuildRuleBuilderDelegate(CachingBuildEngine cachingBuildEngine) {
+    public DefaultBuildRuleBuilderDelegate(
+        CachingBuildEngine cachingBuildEngine, BuildEngineBuildContext buildContext) {
       this.cachingBuildEngine = cachingBuildEngine;
+      this.buildContext = buildContext;
     }
 
     @Override
@@ -590,8 +593,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     @Override
-    public boolean shouldKeepGoing(BuildEngineBuildContext context) {
-      return cachingBuildEngine.shouldKeepGoing(context);
+    public boolean shouldKeepGoing() {
+      return cachingBuildEngine.shouldKeepGoing(buildContext);
     }
 
     @Override
@@ -601,7 +604,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     @Override
     public ListenableFuture<List<BuildResult>> getDepResults(
-        BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
+        BuildRule rule, ExecutionContext executionContext) {
       return cachingBuildEngine.getDepResults(rule, buildContext, executionContext);
     }
 
