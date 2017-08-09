@@ -41,6 +41,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -64,7 +65,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -74,7 +74,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -85,14 +84,25 @@ public class CxxPythonExtensionDescription
             CxxPythonExtensionDescription.AbstractCxxPythonExtensionDescriptionArg>,
         VersionPropagator<CxxPythonExtensionDescriptionArg> {
 
-  private enum Type {
-    EXTENSION,
+  public enum Type implements FlavorConvertible {
+    EXTENSION(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    SANDBOX_TREE(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
+    ;
+
+    private final Flavor flavor;
+
+    Type(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
   }
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
-      new FlavorDomain<>(
-          "C/C++ Library Type",
-          ImmutableMap.of(CxxDescriptionEnhancer.SHARED_FLAVOR, Type.EXTENSION));
+      FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
@@ -338,30 +348,30 @@ public class CxxPythonExtensionDescription
       final CxxPythonExtensionDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
-    if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
-      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          ruleResolver, args, platform.get().getValue(), buildTarget, projectFilesystem);
-    }
-    // See if we're building a particular "type" of this library, and if so, extract
-    // it as an enum.
-    final Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    final Optional<Map.Entry<Flavor, PythonPlatform>> pythonPlatform =
-        pythonPlatforms.getFlavorAndValue(buildTarget);
+    // See if we're building a particular "type" of this library, and if so, extract it as an enum.
+    final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
+    if (type.isPresent()) {
 
-    // If we *are* building a specific type of this lib, call into the type specific
-    // rule builder methods.  Currently, we only support building a shared lib from the
-    // pre-existing static lib, which we do here.
-    if (type.isPresent() && platform.isPresent() && pythonPlatform.isPresent()) {
-      Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
-      return createExtensionBuildRule(
-          buildTarget,
-          projectFilesystem,
-          ruleResolver,
-          cellRoots,
-          pythonPlatform.get().getValue(),
-          platform.get().getValue(),
-          args);
+      // If we *are* building a specific type of this lib, call into the type specific rule builder
+      // methods.
+      switch (type.get()) {
+        case SANDBOX_TREE:
+          return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
+              ruleResolver,
+              args,
+              cxxPlatforms.getRequiredValue(buildTarget),
+              buildTarget,
+              projectFilesystem);
+        case EXTENSION:
+          return createExtensionBuildRule(
+              buildTarget,
+              projectFilesystem,
+              ruleResolver,
+              cellRoots,
+              pythonPlatforms.getRequiredValue(buildTarget),
+              cxxPlatforms.getRequiredValue(buildTarget),
+              args);
+      }
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
