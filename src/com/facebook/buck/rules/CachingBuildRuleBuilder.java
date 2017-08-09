@@ -39,6 +39,7 @@ import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.RuleKeyFactoryWithDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyType;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
@@ -590,64 +591,46 @@ class CachingBuildRuleBuilder {
     Optional<BuildRuleSuccessType> successType = Optional.empty();
     boolean shouldUploadToCache = false;
 
-    BuildRuleEvent.Resumed resumedEvent =
-        BuildRuleEvent.resumed(
-            rule, buildRuleDurationTracker, ruleKeyFactories.getDefaultRuleKeyFactory());
-    LOG.verbose(resumedEvent.toString());
-    eventBus.post(resumedEvent);
+    try (Scope scope = buildRuleScope()) {
+      if (input.getStatus() == BuildRuleStatus.SUCCESS) {
+        BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
+        successType = Optional.of(success);
 
-    if (input.getStatus() == BuildRuleStatus.SUCCESS) {
-      BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
-      successType = Optional.of(success);
+        // Try get the output size.
+        if (success == BuildRuleSuccessType.BUILT_LOCALLY
+            || success.shouldUploadResultingArtifact()) {
+          try {
+            outputSize = Optional.of(buildInfoRecorder.getOutputSize());
+          } catch (IOException e) {
+            eventBus.post(
+                ThrowableConsoleEvent.create(e, "Error getting output size for %s.", rule));
+          }
+        }
 
-      // Try get the output size.
-      if (success == BuildRuleSuccessType.BUILT_LOCALLY
-          || success.shouldUploadResultingArtifact()) {
-        try {
-          outputSize = Optional.of(buildInfoRecorder.getOutputSize());
-        } catch (IOException e) {
-          eventBus.post(ThrowableConsoleEvent.create(e, "Error getting output size for %s.", rule));
+        // Compute it's output hash for logging/tracing purposes, as this artifact will
+        // be consumed by other builds.
+        if (outputSize.isPresent() && shouldHashOutputs(success, outputSize.get())) {
+          try {
+            outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
+          } catch (IOException e) {
+            eventBus.post(
+                ThrowableConsoleEvent.create(e, "Error getting output hash for %s.", rule));
+          }
+        }
+
+        // Determine if this is rule is cacheable.
+        shouldUploadToCache =
+            outputSize.isPresent() && shouldUploadToCache(success, outputSize.get());
+
+        // Upload it to the cache.
+        if (shouldUploadToCache) {
+          uploadToCache(success);
         }
       }
 
-      // Compute it's output hash for logging/tracing purposes, as this artifact will
-      // be consumed by other builds.
-      if (outputSize.isPresent() && shouldHashOutputs(success, outputSize.get())) {
-        try {
-          outputHash = Optional.of(buildInfoRecorder.getOutputHash(fileHashCache));
-        } catch (IOException e) {
-          eventBus.post(ThrowableConsoleEvent.create(e, "Error getting output hash for %s.", rule));
-        }
-      }
-
-      // Determine if this is rule is cacheable.
-      shouldUploadToCache =
-          outputSize.isPresent() && shouldUploadToCache(success, outputSize.get());
-
-      // Upload it to the cache.
-      if (shouldUploadToCache) {
-        uploadToCache(success);
-      }
+      buildRuleScopeManager.finished(
+          input, outputSize, outputHash, successType, shouldUploadToCache);
     }
-
-    boolean failureOrBuiltLocally =
-        input.getStatus() == BuildRuleStatus.FAIL
-            || input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY;
-    // Log the result to the event bus.
-    BuildRuleEvent.Finished finished =
-        BuildRuleEvent.finished(
-            resumedEvent,
-            getBuildRuleKeys(),
-            input.getStatus(),
-            input.getCacheResult(),
-            onDiskBuildInfo.getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID).map(BuildId::new),
-            successType,
-            shouldUploadToCache,
-            outputHash,
-            outputSize,
-            getBuildRuleDiagnosticData(failureOrBuiltLocally));
-    LOG.verbose(finished.toString());
-    eventBus.post(finished);
   }
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
@@ -1706,32 +1689,123 @@ class CachingBuildRuleBuilder {
   }
 
   /**
-   * Handles BuildRule resumed/suspended scopes. Only one scope can be active at a time. Scopes
-   * nested on the same thread are allowed.
+   * Handles BuildRule resumed/suspended/finished scopes. Only one scope can be active at a time.
+   * Scopes nested on the same thread are allowed.
+   *
+   * <p>Once the rule has been marked as finished, any further scope() calls will fail.
    */
   private class BuildRuleScopeManager {
-    private @Nullable Thread currentBuildRuleScopeThread = null;
+    private final RuleKeyFactoryWithDiagnostics<RuleKey> ruleKeyFactory;
+
+    private volatile @Nullable Thread currentBuildRuleScopeThread = null;
+    private @Nullable FinishedData finishedData = null;
+
+    public BuildRuleScopeManager() {
+      ruleKeyFactory = ruleKeyFactories.getDefaultRuleKeyFactory();
+    }
 
     private Scope scope() {
       synchronized (this) {
+        Preconditions.checkState(
+            finishedData == null, "RuleScope started after rule marked as finished.");
         if (currentBuildRuleScopeThread != null) {
           Preconditions.checkState(Thread.currentThread() == currentBuildRuleScopeThread);
           return () -> {};
         }
-        Scope scope =
-            BuildRuleEvent.resumeSuspendScope(
-                eventBus,
-                rule,
-                buildRuleDurationTracker,
-                ruleKeyFactories.getDefaultRuleKeyFactory());
+        BuildRuleEvent.Resumed resumed = postResumed();
         currentBuildRuleScopeThread = Thread.currentThread();
         return () -> {
           synchronized (this) {
             currentBuildRuleScopeThread = null;
-            scope.close();
+            if (finishedData != null) {
+              postFinished(resumed);
+            } else {
+              postSuspended(resumed);
+            }
           }
         };
       }
+    }
+
+    public synchronized void finished(
+        BuildResult input,
+        Optional<Long> outputSize,
+        Optional<HashCode> outputHash,
+        Optional<BuildRuleSuccessType> successType,
+        boolean shouldUploadToCache) {
+      Preconditions.checkState(finishedData == null, "Build rule already marked finished.");
+      Preconditions.checkState(
+          currentBuildRuleScopeThread != null,
+          "finished() can only be called within a buildrule scope.");
+      Preconditions.checkState(
+          currentBuildRuleScopeThread == Thread.currentThread(),
+          "finished() should be called from the same thread as the current buildrule scope.");
+      finishedData =
+          new FinishedData(input, outputSize, outputHash, successType, shouldUploadToCache);
+    }
+
+    private void post(BuildRuleEvent event) {
+      LOG.verbose(event.toString());
+      eventBus.post(event);
+    }
+
+    private BuildRuleEvent.Resumed postResumed() {
+      BuildRuleEvent.Resumed resumedEvent =
+          BuildRuleEvent.resumed(rule, buildRuleDurationTracker, ruleKeyFactory);
+      post(resumedEvent);
+      return resumedEvent;
+    }
+
+    private void postSuspended(BuildRuleEvent.Resumed resumed) {
+      post(BuildRuleEvent.suspended(resumed, ruleKeyFactories.getDefaultRuleKeyFactory()));
+    }
+
+    private void postFinished(BuildRuleEvent.Resumed resumed) {
+      Preconditions.checkNotNull(finishedData);
+      post(finishedData.getEvent(resumed));
+    }
+  }
+
+  private class FinishedData {
+    private final BuildResult input;
+    private final Optional<Long> outputSize;
+    private final Optional<HashCode> outputHash;
+    private final Optional<BuildRuleSuccessType> successType;
+    private final boolean shouldUploadToCache;
+
+    public FinishedData(
+        BuildResult input,
+        Optional<Long> outputSize,
+        Optional<HashCode> outputHash,
+        Optional<BuildRuleSuccessType> successType,
+        boolean shouldUploadToCache) {
+      this.input = input;
+      this.outputSize = outputSize;
+      this.outputHash = outputHash;
+      this.successType = successType;
+      this.shouldUploadToCache = shouldUploadToCache;
+    }
+
+    private BuildRuleEvent.Finished getEvent(BuildRuleEvent.Resumed resumedEvent) {
+      boolean failureOrBuiltLocally =
+          input.getStatus() == BuildRuleStatus.FAIL
+              || input.getSuccess() == BuildRuleSuccessType.BUILT_LOCALLY;
+      // Log the result to the event bus.
+      BuildRuleEvent.Finished finished =
+          BuildRuleEvent.finished(
+              resumedEvent,
+              getBuildRuleKeys(),
+              input.getStatus(),
+              input.getCacheResult(),
+              onDiskBuildInfo
+                  .getBuildValue(BuildInfo.MetadataKey.ORIGIN_BUILD_ID)
+                  .map(BuildId::new),
+              successType,
+              shouldUploadToCache,
+              outputHash,
+              outputSize,
+              getBuildRuleDiagnosticData(failureOrBuiltLocally));
+      return finished;
     }
   }
 }
