@@ -384,8 +384,9 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:foo#doesNotExist while parsing "
-            + "//java/com/facebook/BUCK");
+        containsString(
+            "The following flavor(s) are not supported on target "
+                + "//java/com/facebook:foo#doesNotExist"));
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
@@ -399,11 +400,14 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:foo#android-unknown while parsing "
-            + "//java/com/facebook/BUCK\nHere are some things you can try to get the following "
-            + "flavors to work::\nandroid-unknown : Make sure you have the Android SDK/NDK "
-            + "installed and set up. "
-            + "See https://buckbuild.com/setup/install.html#locate-android-sdk\n");
+        containsString(
+            "The following flavor(s) are not supported on target "
+                + "//java/com/facebook:foo#android-unknown"));
+    thrown.expectMessage(
+        containsString(
+            "android-unknown: Please make sure you have the Android SDK/NDK "
+                + "installed and set up. "
+                + "See https://buckbuild.com/setup/install.html#locate-android-sdk"));
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
@@ -417,9 +421,11 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:foo#macosx109sdk while parsing "
-            + "//java/com/facebook/BUCK\nHere are some things you can try to get the following "
-            + "flavors to work::\nmacosx109sdk : This is an error message read by the .buckconfig");
+        containsString(
+            "The following flavor(s) are not supported on target "
+                + "//java/com/facebook:foo#macosx109sdk"));
+    thrown.expectMessage(
+        containsString("macosx109sdk: This is an error message read by the .buckconfig"));
 
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));

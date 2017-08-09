@@ -109,7 +109,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(ImmutableSet.copyOf(target.getFlavors()))) {
-          throw UnexpectedFlavorException.createWithSuggestions(cell, target);
+          throw UnexpectedFlavorException.createWithSuggestions(
+              (Flavored) description, cell, target);
         }
       } else {
         LOG.warn(
