@@ -26,7 +26,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.sqlite.RetryBusyHandler;
 import com.facebook.buck.sqlite.SQLiteUtils;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -248,8 +247,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   private ListenableFuture<Void> storeContent(
       ImmutableSet<RuleKey> contentHashes, BorrowablePath content) {
-    ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
     try {
+      ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
       long size = filesystem.getFileSize(content.getPath());
       if (size <= maxInlinedBytes) {
         // artifact is small enough to inline in the database
@@ -274,31 +273,26 @@ public class SQLiteArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
-  private ImmutableSet<RuleKey> notPreexisting(ImmutableSet<RuleKey> contentHashes) {
-    return contentHashes
-        .parallelStream()
-        .filter(
-            contentHash -> {
-              try {
-                // if the content already exists in the cache, skip it
-                ResultSet existingArtifact = db.selectContent(contentHash);
-                if (existingArtifact.next()) {
-                  byte[] inlined = existingArtifact.getBytes(1);
-                  String artifactPath = existingArtifact.getString(2);
+  private ImmutableSet<RuleKey> notPreexisting(ImmutableSet<RuleKey> contentHashes)
+      throws SQLException {
+    ImmutableSet.Builder<RuleKey> builder = ImmutableSet.builder();
+    for (RuleKey contentHash : contentHashes) {
+      // if the content already exists in the cache, skip it
+      ResultSet existingArtifact = db.selectContent(contentHash);
+      if (existingArtifact.next()) {
+        byte[] inlined = existingArtifact.getBytes(1);
+        String artifactPath = existingArtifact.getString(2);
 
-                  if (Objects.nonNull(inlined)
-                      || filesystem.exists(filesystem.resolve(artifactPath))) {
-                    db.accessContent(contentHash);
-                    return false;
-                  }
-                }
-              } catch (SQLException e) {
-                throw new RuntimeException(e);
-              }
+        if (Objects.nonNull(inlined) || filesystem.exists(filesystem.resolve(artifactPath))) {
+          db.accessContent(contentHash);
+          continue;
+        }
+      }
 
-              return true;
-            })
-        .collect(MoreCollectors.toImmutableSet());
+      builder.add(contentHash);
+    }
+
+    return builder.build();
   }
 
   @VisibleForTesting
