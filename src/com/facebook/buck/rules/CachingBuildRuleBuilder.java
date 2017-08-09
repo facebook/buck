@@ -135,6 +135,8 @@ class CachingBuildRuleBuilder {
   private final ArtifactCache artifactCache;
   private final BuildId buildId;
 
+  private final BuildRuleScopeManager buildRuleScopeManager;
+
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
       Optional<Long> artifactCacheSizeLimit,
@@ -191,6 +193,7 @@ class CachingBuildRuleBuilder {
     this.buildRuleBuildContext = buildContext.getBuildContext();
     this.artifactCache = buildContext.getArtifactCache();
     this.buildId = buildContext.getBuildId();
+    this.buildRuleScopeManager = new BuildRuleScopeManager();
   }
 
   /**
@@ -738,12 +741,7 @@ class CachingBuildRuleBuilder {
     }
 
     // 1. Check if it's already built.
-    try (Scope scope =
-        BuildRuleEvent.resumeSuspendScope(
-            eventBus,
-            rule,
-            buildRuleDurationTracker,
-            ruleKeyFactories.getDefaultRuleKeyFactory())) {
+    try (Scope scope = buildRuleScope()) {
       Optional<BuildResult> buildResult = checkMatchingLocalKey();
       if (buildResult.isPresent()) {
         return Futures.immediateFuture(buildResult.get());
@@ -1537,15 +1535,14 @@ class CachingBuildRuleBuilder {
     return ResourceAmounts.of(ruleScheduleInfo.getJobsMultiplier(), 0, 0, 0);
   }
 
+  private Scope buildRuleScope() {
+    return buildRuleScopeManager.scope();
+  }
+
   // Wrap an async function in rule resume/suspend events.
   private <F, T> AsyncFunction<F, T> ruleAsyncFunction(final AsyncFunction<F, T> delegate) {
     return input -> {
-      try (Scope event =
-          BuildRuleEvent.resumeSuspendScope(
-              eventBus,
-              rule,
-              buildRuleDurationTracker,
-              ruleKeyFactories.getDefaultRuleKeyFactory())) {
+      try (Scope scope = buildRuleScope()) {
         return delegate.apply(input);
       }
     };
@@ -1565,12 +1562,7 @@ class CachingBuildRuleBuilder {
                     return Optional.of(
                         BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
                   }
-                  try (Scope scope =
-                      BuildRuleEvent.resumeSuspendScope(
-                          eventBus,
-                          rule,
-                          buildRuleDurationTracker,
-                          ruleKeyFactories.getDefaultRuleKeyFactory())) {
+                  try (Scope scope = buildRuleScope()) {
                     return function.call();
                   }
                 }));
@@ -1624,12 +1616,7 @@ class CachingBuildRuleBuilder {
               Optional.of(BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
           return;
         }
-        try (Scope scope =
-            BuildRuleEvent.resumeSuspendScope(
-                eventBus,
-                rule,
-                buildRuleDurationTracker,
-                ruleKeyFactories.getDefaultRuleKeyFactory())) {
+        try (Scope scope = buildRuleScopeManager.scope()) {
           executeCommandsNowThatDepsAreBuilt();
         }
 
@@ -1716,5 +1703,35 @@ class CachingBuildRuleBuilder {
     Throwable getFirstFailure();
 
     void onRuleAboutToBeBuilt(BuildRule rule);
+  }
+
+  /**
+   * Handles BuildRule resumed/suspended scopes. Only one scope can be active at a time. Scopes
+   * nested on the same thread are allowed.
+   */
+  private class BuildRuleScopeManager {
+    private @Nullable Thread currentBuildRuleScopeThread = null;
+
+    private Scope scope() {
+      synchronized (this) {
+        if (currentBuildRuleScopeThread != null) {
+          Preconditions.checkState(Thread.currentThread() == currentBuildRuleScopeThread);
+          return () -> {};
+        }
+        Scope scope =
+            BuildRuleEvent.resumeSuspendScope(
+                eventBus,
+                rule,
+                buildRuleDurationTracker,
+                ruleKeyFactories.getDefaultRuleKeyFactory());
+        currentBuildRuleScopeThread = Thread.currentThread();
+        return () -> {
+          synchronized (this) {
+            currentBuildRuleScopeThread = null;
+            scope.close();
+          }
+        };
+      }
+    }
   }
 }
