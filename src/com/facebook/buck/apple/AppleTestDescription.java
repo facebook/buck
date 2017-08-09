@@ -417,6 +417,7 @@ public class AppleTestDescription
     if (xctoolZipTarget.isPresent()) {
       extraDepsBuilder.add(xctoolZipTarget.get());
     }
+    extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
     appleLibraryDescription.findDepsForTargetFromConstructorArgs(
         buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
