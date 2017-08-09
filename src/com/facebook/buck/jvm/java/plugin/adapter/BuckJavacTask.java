@@ -97,6 +97,10 @@ public class BuckJavacTask extends JavacTaskWrapper {
     } catch (InvocationTargetException e) {
       if (e.getCause() instanceof IOException) {
         throw (IOException) e.getCause();
+      } else if (e.getCause() instanceof RuntimeException) {
+        throw (RuntimeException) e.getCause();
+      } else if (e.getCause() instanceof Error) {
+        throw (Error) e.getCause();
       }
 
       throw new RuntimeException(e);
