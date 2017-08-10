@@ -1392,7 +1392,8 @@ class CachingBuildRuleBuilder {
             artifactCache,
             manifestKey.getRuleKey(),
             tempFile,
-            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+            cacheActivityService.withDefaultAmounts(
+                CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
             serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
         manifestResult -> {
           if (!manifestResult.getType().isSuccess()) {
@@ -1450,7 +1451,7 @@ class CachingBuildRuleBuilder {
                   artifactCache,
                   // TODO(simons): This should be shared between all tests, not one per cell
                   rule.getProjectFilesystem(),
-                  serviceByAdjustingDefaultWeightsTo(
+                  cacheActivityService.withDefaultAmounts(
                       CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
                   serviceByAdjustingDefaultWeightsTo(
                       CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
