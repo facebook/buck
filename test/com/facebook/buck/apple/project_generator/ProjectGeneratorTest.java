@@ -133,6 +133,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.io.ByteStreams;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -149,11 +154,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ProjectGeneratorTest {
 
@@ -2176,7 +2176,7 @@ public class ProjectGeneratorTest {
     assertEquals(null, settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) $BUILT_PRODUCTS_DIR $SDKROOT", settings.get("FRAMEWORK_SEARCH_PATHS"));
+        "$(inherited) $BUILT_PRODUCTS_DIR", settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
   @Test
@@ -2239,7 +2239,7 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("user_headers", settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
-    assertEquals("frameworks $BUILT_PRODUCTS_DIR $SDKROOT", settings.get("FRAMEWORK_SEARCH_PATHS"));
+    assertEquals("frameworks $BUILT_PRODUCTS_DIR", settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
   @Test
@@ -2313,7 +2313,7 @@ public class ProjectGeneratorTest {
     assertEquals(null, settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) " + "$BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals(
-        "$(inherited) " + "$BUILT_PRODUCTS_DIR $SDKROOT", settings.get("FRAMEWORK_SEARCH_PATHS"));
+        "$(inherited) " + "$BUILT_PRODUCTS_DIR", settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
 
   @Test

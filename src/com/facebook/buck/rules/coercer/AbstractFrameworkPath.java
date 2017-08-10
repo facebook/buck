@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -27,11 +28,11 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
@@ -78,6 +79,13 @@ abstract class AbstractFrameworkPath
   public String getName(Function<SourcePath, Path> resolver) {
     String fileName = getFileName(resolver).toString();
     return Files.getNameWithoutExtension(fileName);
+  }
+
+  public  boolean isSDKROOTFrameworkPath() {
+    if (getSourceTreePath().isPresent()){
+      return getSourceTreePath().get().getSourceTree() == PBXReference.SourceTree.SDKROOT;
+    }
+    return false;
   }
 
   public static Path getUnexpandedSearchPath(
