@@ -699,17 +699,13 @@ class CachingBuildRuleBuilder {
     return Optional.empty();
   }
 
-  private Optional<BuildResult> checkInputBasedCaches() throws IOException {
+  private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
     // Calculate input-based rule key.
     Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey();
     if (inputRuleKey.isPresent()) {
-      // Perform the cache fetch.
-      try (Scope scope = LeafEvents.scope(eventBus, "checking_cache_input_based")) {
-        // Input-based rule keys.
-        return performInputBasedCacheFetch(inputRuleKey.get());
-      }
+      return performInputBasedCacheFetch(inputRuleKey.get());
     }
-    return Optional.empty();
+    return Futures.immediateFuture(Optional.empty());
   }
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
@@ -778,10 +774,7 @@ class CachingBuildRuleBuilder {
     // 5. Return to the current rule and check caches to see if we can avoid building
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
       buildResultFuture =
-          transformBuildResultIfNotPresent(
-              buildResultFuture,
-              this::checkInputBasedCaches,
-              serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
+          transformBuildResultAsyncIfNotPresent(buildResultFuture, this::checkInputBasedCaches);
     }
 
     // 6. Then check if the depfile matches.
@@ -1483,7 +1476,7 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  private Optional<BuildResult> performInputBasedCacheFetch(RuleKey inputRuleKey)
+  private ListenableFuture<Optional<BuildResult>> performInputBasedCacheFetch(RuleKey inputRuleKey)
       throws IOException {
     Preconditions.checkArgument(SupportsInputBasedRuleKey.isSupported(rule));
 
@@ -1491,37 +1484,45 @@ class CachingBuildRuleBuilder {
         BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString());
 
     // Check the input-based rule key says we're already built.
-    Optional<RuleKey> lastInputRuleKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
-    if (inputRuleKey.equals(lastInputRuleKey.orElse(null))) {
-      return Optional.of(
-          BuildResult.success(
-              rule,
-              BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-              CacheResult.localKeyUnchangedHit()));
+    if (checkMatchingInputBasedKey(inputRuleKey)) {
+      return Futures.immediateFuture(
+          Optional.of(
+              BuildResult.success(
+                  rule,
+                  BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
+                  CacheResult.localKeyUnchangedHit())));
     }
 
     // Try to fetch the artifact using the input-based rule key.
-    CacheResult cacheResult =
-        Futures.getUnchecked(
-            tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                inputRuleKey,
-                artifactCache,
-                // TODO(simons): Share this between all tests, not one per cell.
-                rule.getProjectFilesystem(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService()));
+    return Futures.transform(
+        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+            inputRuleKey,
+            artifactCache,
+            // TODO(simons): Share this between all tests, not one per cell.
+            rule.getProjectFilesystem(),
+            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
+        cacheResult -> {
+          if (cacheResult.getType().isSuccess()) {
+            try (Scope scope = LeafEvents.scope(eventBus, "handling_cache_result")) {
+              fillInOriginFromCache(cacheResult);
+              fillMissingBuildMetadataFromCache(
+                  cacheResult,
+                  BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+                  BuildInfo.MetadataKey.DEP_FILE);
+              return Optional.of(
+                  BuildResult.success(
+                      rule, BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
+            }
+          }
+          return Optional.empty();
+        });
+  }
 
-    if (cacheResult.getType().isSuccess()) {
-      fillInOriginFromCache(cacheResult);
-      fillMissingBuildMetadataFromCache(
-          cacheResult, BuildInfo.MetadataKey.DEP_FILE_RULE_KEY, BuildInfo.MetadataKey.DEP_FILE);
-      return Optional.of(
-          BuildResult.success(
-              rule, BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
-    }
-
-    return Optional.empty();
+  private boolean checkMatchingInputBasedKey(RuleKey inputRuleKey) {
+    Optional<RuleKey> lastInputRuleKey =
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
+    return inputRuleKey.equals(lastInputRuleKey.orElse(null));
   }
 
   private ResourceAmounts getRuleResourceAmounts() {
