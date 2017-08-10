@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
-import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
