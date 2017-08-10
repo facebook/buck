@@ -69,6 +69,8 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     Path path = new File("SomeClass.java").toPath();
+    filesystem.touch(path);
+
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
@@ -86,6 +88,8 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     Path path = Paths.get("SomeClass.java");
+    filesystem.touch(path);
+
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
@@ -103,6 +107,8 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     Path path = Paths.get("SomeClass.java");
+    filesystem.touch(path);
+
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
@@ -120,6 +126,8 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     Path path = Paths.get("SomeClass.java");
+    filesystem.touch(path);
+
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
@@ -156,6 +164,8 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     Path dir = Paths.get("foo/bar/baz");
+    filesystem.mkdirs(dir);
+
     HashCodeAndFileType value =
         HashCodeAndFileType.ofDirectory(HashCode.fromInt(42), ImmutableSet.of());
     cache.fileHashCacheEngine.put(dir, value);
@@ -203,6 +213,9 @@ public class WatchedFileHashCacheTest {
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     Path parent = filesystem.getPath("directory");
     Path path = parent.resolve("SomeClass.java");
+    filesystem.mkdirs(parent);
+    filesystem.touch(path);
+
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);

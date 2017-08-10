@@ -72,36 +72,44 @@ public class DefaultFileHashCacheTest {
   }
 
   @Test
-  public void whenPathIsPutCacheContainsPath() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  public void whenPathIsPutCacheContainsPath() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path path = Paths.get("SomeClass.java");
+    filesystem.touch(path);
+
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
-    Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     assertTrue("Cache should contain path", cache.getIfPresent(path).isPresent());
   }
 
   @Test
-  public void whenPathIsPutPathGetReturnsHash() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  public void whenPathIsPutPathGetReturnsHash() throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path path = Paths.get("SomeClass.java");
+    filesystem.touch(path);
+
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
-    Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     assertEquals("Cache should contain hash", value.getHashCode(), cache.get(path));
   }
 
   @Test
-  public void whenPathIsPutThenInvalidatedCacheDoesNotContainPath() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  public void whenPathIsPutThenInvalidatedCacheDoesNotContainPath()
+      throws IOException, InterruptedException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path path = Paths.get("SomeClass.java");
+    filesystem.touch(path);
+
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
-    Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     assertTrue("Cache should contain path", cache.getIfPresent(path).isPresent());
+    filesystem.deleteFileAtPath(path);
     cache.invalidate(path);
     assertFalse("Cache should not contain pain", cache.getIfPresent(path).isPresent());
   }
@@ -201,6 +209,7 @@ public class DefaultFileHashCacheTest {
   @Test(expected = NoSuchFileException.class)
   public void whenJarMemberWithoutHashInManifestIsQueriedThenThrow() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
+    Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
@@ -245,6 +254,7 @@ public class DefaultFileHashCacheTest {
   @Test(expected = NoSuchFileException.class)
   public void whenJarMemberWithEmptyManifestIsQueriedThenThrow() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
+    Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);

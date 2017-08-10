@@ -243,6 +243,7 @@ public class StackedFileHashCacheTest {
   public void skipsFirstCacheForArchiveMemberPathAbsolutePath()
       throws InterruptedException, IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
+    Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
     Path fullPath = Paths.get("world.jar");
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
@@ -259,6 +260,7 @@ public class StackedFileHashCacheTest {
   @Test
   public void skipsFirstCacheForArchiveMemberPath() throws InterruptedException, IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
+    Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     Path path = filesystem.getPath("world.jar");

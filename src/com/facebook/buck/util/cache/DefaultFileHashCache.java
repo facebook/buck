@@ -70,6 +70,24 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
             throw new RuntimeException(e);
           }
         };
+
+    final FileHashCacheEngine.ValueLoader<HashCode> fileHashLoader =
+        (path) -> {
+          try {
+            return getFileHashCode(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        };
+
+    final FileHashCacheEngine.ValueLoader<HashCodeAndFileType> dirHashLoader =
+        (path) -> {
+          try {
+            return getDirHashCode(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        };
     switch (fileHashCacheMode) {
       case PARALLEL_COMPARISON:
         fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader);
@@ -79,6 +97,22 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         break;
       case PREFIX_TREE:
         fileHashCacheEngine = FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader);
+        break;
+      case LIMITED_PREFIX_TREE:
+        fileHashCacheEngine =
+            new StatsTrackingFileHashCacheEngine(
+                new LimitedFileHashCacheEngine(
+                    projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                "limited");
+        break;
+      case LIMITED_PREFIX_TREE_PARALLEL:
+        fileHashCacheEngine =
+            new ComboFileHashCache(
+                LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader),
+                new StatsTrackingFileHashCacheEngine(
+                    new LimitedFileHashCacheEngine(
+                        projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                    "limited"));
         break;
       default:
         throw new RuntimeException(
