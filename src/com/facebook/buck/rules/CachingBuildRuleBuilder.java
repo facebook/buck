@@ -1047,7 +1047,14 @@ class CachingBuildRuleBuilder {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    CacheResult cacheResult = fetch(artifactCache, ruleKey, lazyZipPath);
+    CacheResult cacheResult =
+        Futures.getUnchecked(
+            fetch(
+                artifactCache,
+                ruleKey,
+                lazyZipPath,
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService()));
 
     // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
     // it's metadata.
@@ -1068,27 +1075,39 @@ class CachingBuildRuleBuilder {
     return unzipArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult);
   }
 
-  private CacheResult fetch(ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
-    CacheResult cacheResult = Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath));
-    if (cacheResult.getType() != CacheResultType.HIT) {
-      return cacheResult;
-    }
-    for (String ruleKeyName : BuildInfo.RULE_KEY_NAMES) {
-      if (!cacheResult.getMetadata().containsKey(ruleKeyName)) {
-        continue;
-      }
-      String ruleKeyValue = cacheResult.getMetadata().get(ruleKeyName);
-      try {
-        verify(ruleKeyValue);
-      } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException(
-            String.format(
-                "Invalid '%s' rule key in metadata for artifact '%s' returned by cache '%s': '%s'",
-                ruleKeyName, ruleKey, artifactCache.getClass(), ruleKeyValue),
-            e);
-      }
-    }
-    return cacheResult;
+  private ListenableFuture<CacheResult> fetch(
+      ArtifactCache artifactCache,
+      RuleKey ruleKey,
+      LazyPath outputPath,
+      ListeningExecutorService fetchService,
+      ListeningExecutorService workService) {
+    return Futures.transform(
+        fetchService.submit(
+            () -> Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath))),
+        (CacheResult cacheResult) -> {
+          try (Scope scope = buildRuleScope()) {
+            if (cacheResult.getType() != CacheResultType.HIT) {
+              return cacheResult;
+            }
+            for (String ruleKeyName : BuildInfo.RULE_KEY_NAMES) {
+              if (!cacheResult.getMetadata().containsKey(ruleKeyName)) {
+                continue;
+              }
+              String ruleKeyValue = cacheResult.getMetadata().get(ruleKeyName);
+              try {
+                verify(ruleKeyValue);
+              } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(
+                    String.format(
+                        "Invalid '%s' rule key in metadata for artifact '%s' returned by cache '%s': '%s'",
+                        ruleKeyName, ruleKey, artifactCache.getClass(), ruleKeyValue),
+                    e);
+              }
+            }
+            return cacheResult;
+          }
+        },
+        workService);
   }
 
   /**
@@ -1385,7 +1404,14 @@ class CachingBuildRuleBuilder {
           }
         };
 
-    CacheResult manifestResult = fetch(artifactCache, manifestKey.getRuleKey(), tempFile);
+    CacheResult manifestResult =
+        Futures.getUnchecked(
+            fetch(
+                artifactCache,
+                manifestKey.getRuleKey(),
+                tempFile,
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService()));
 
     if (!manifestResult.getType().isSuccess()) {
       return Optional.empty();
