@@ -1500,7 +1500,8 @@ class CachingBuildRuleBuilder {
             artifactCache,
             // TODO(simons): Share this between all tests, not one per cell.
             rule.getProjectFilesystem(),
-            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+            cacheActivityService.withDefaultAmounts(
+                CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
             serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
