@@ -56,7 +56,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRuleCacheEvent;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
@@ -222,28 +221,6 @@ public class SuperConsoleEventBusListenerTest {
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
             " |=> //banana:stand...  0.1s (preparing)"));
-
-    BuildRuleCacheEvent.CacheStepStarted cacheStepStarted =
-        BuildRuleCacheEvent.started(fakeRule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(cacheStepStarted, 701L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-
-    validateConsole(
-        listener,
-        701L,
-        ImmutableList.of(
-            parsingLine,
-            processingLine,
-            DOWNLOAD_STRING,
-            "[+] BUILDING...0.3s",
-            " |=> //banana:stand...  0.1s (running checking_cache_input_based[0.0s])"));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            BuildRuleCacheEvent.finished(cacheStepStarted),
-            702L,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
 
     validateConsole(
         listener,

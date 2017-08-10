@@ -667,9 +667,7 @@ class CachingBuildRuleBuilder {
     if (manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-      try (Scope scope =
-          BuildRuleCacheEvent.startCacheCheckScope(
-              eventBus, rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
+      try (Scope scope = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
         return performManifestBasedCacheFetch(manifestKey.get());
       }
     }
@@ -706,9 +704,7 @@ class CachingBuildRuleBuilder {
     Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey();
     if (inputRuleKey.isPresent()) {
       // Perform the cache fetch.
-      try (Scope scope =
-          BuildRuleCacheEvent.startCacheCheckScope(
-              eventBus, rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
+      try (Scope scope = LeafEvents.scope(eventBus, "checking_cache_input_based")) {
         // Input-based rule keys.
         return performInputBasedCacheFetch(inputRuleKey.get());
       }

@@ -31,7 +31,6 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRuleCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -699,16 +698,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (finished.getInvocationType() == ArtifactCacheEvent.InvocationType.SYNCHRONOUS) {
       threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
     }
-  }
-
-  @Subscribe
-  public void cacheCheckStarted(BuildRuleCacheEvent.CacheStepStarted started) {
-    threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
-  }
-
-  @Subscribe
-  public void cacheCheckFinished(BuildRuleCacheEvent.CacheStepFinished finished) {
-    threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
   }
 
   @Subscribe
