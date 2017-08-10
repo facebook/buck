@@ -18,18 +18,23 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
+import java.util.function.Supplier;
 
 public class ConstantToolProvider implements ToolProvider {
 
-  private final Tool tool;
+  private final Supplier<Tool> tool;
+
+  public ConstantToolProvider(Supplier<Tool> tool) {
+    this.tool = tool;
+  }
 
   public ConstantToolProvider(Tool tool) {
-    this.tool = tool;
+    this(() -> tool);
   }
 
   @Override
   public Tool resolve(BuildRuleResolver resolver) {
-    return tool;
+    return tool.get();
   }
 
   @Override
