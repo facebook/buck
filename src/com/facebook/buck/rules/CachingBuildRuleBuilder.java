@@ -873,11 +873,14 @@ class CachingBuildRuleBuilder {
     final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
     long cacheRequestTimestampMillis = System.currentTimeMillis();
     CacheResult cacheResult =
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            defaultRuleKey,
-            artifactCache,
-            // TODO(simons): This should be a shared between all tests, not one per cell
-            rule.getProjectFilesystem());
+        Futures.getUnchecked(
+            tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                defaultRuleKey,
+                artifactCache,
+                // TODO(simons): This should be a shared between all tests, not one per cell
+                rule.getProjectFilesystem(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService()));
 
     RuleKeyCacheResult ruleKeyCacheResult =
         RuleKeyCacheResult.builder()
@@ -1024,12 +1027,16 @@ class CachingBuildRuleBuilder {
     return betterMessage;
   }
 
-  private CacheResult tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-      final RuleKey ruleKey, final ArtifactCache artifactCache, final ProjectFilesystem filesystem)
-      throws IOException {
-
+  private ListenableFuture<CacheResult>
+      tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+          final RuleKey ruleKey,
+          final ArtifactCache artifactCache,
+          final ProjectFilesystem filesystem,
+          ListeningExecutorService fetchService,
+          ListeningExecutorService workService)
+          throws IOException {
     if (!rule.isCacheable()) {
-      return CacheResult.ignored();
+      return Futures.immediateFuture(CacheResult.ignored());
     }
 
     // Create a temp file whose extension must be ".zip" for Filesystems.newFileSystem() to infer
@@ -1047,32 +1054,30 @@ class CachingBuildRuleBuilder {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    CacheResult cacheResult =
-        Futures.getUnchecked(
-            fetch(
-                artifactCache,
-                ruleKey,
-                lazyZipPath,
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService()));
+    return Futures.transformAsync(
+        fetch(artifactCache, ruleKey, lazyZipPath, fetchService, workService),
+        cacheResult -> {
+          try (Scope scope = buildRuleScope()) {
+            // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
+            // it's metadata.
+            if (cacheResult.getType().isSuccess()) {
+              ImmutableSet<RuleKey> ruleKeys =
+                  RichStream.from(cacheResult.getMetadata().entrySet())
+                      .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
+                      .map(Map.Entry::getValue)
+                      .map(RuleKey::new)
+                      .toImmutableSet();
+              if (!ruleKeys.contains(ruleKey)) {
+                LOG.warn(
+                    "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
+                    rule.getBuildTarget(), ruleKey, ruleKeys);
+              }
+            }
 
-    // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
-    // it's metadata.
-    if (cacheResult.getType().isSuccess()) {
-      ImmutableSet<RuleKey> ruleKeys =
-          RichStream.from(cacheResult.getMetadata().entrySet())
-              .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
-              .map(Map.Entry::getValue)
-              .map(RuleKey::new)
-              .toImmutableSet();
-      if (!ruleKeys.contains(ruleKey)) {
-        LOG.warn(
-            "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-            rule.getBuildTarget(), ruleKey, ruleKeys);
-      }
-    }
-
-    return unzipArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult);
+            return Futures.immediateFuture(
+                unzipArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
+          }
+        });
   }
 
   private ListenableFuture<CacheResult> fetch(
@@ -1461,11 +1466,14 @@ class CachingBuildRuleBuilder {
     }
 
     CacheResult cacheResult =
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            ruleKey.get(),
-            artifactCache,
-            // TODO(simons): This should be shared between all tests, not one per cell
-            rule.getProjectFilesystem());
+        Futures.getUnchecked(
+            tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                ruleKey.get(),
+                artifactCache,
+                // TODO(simons): This should be shared between all tests, not one per cell
+                rule.getProjectFilesystem(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService()));
 
     if (cacheResult.getType().isSuccess()) {
       fillInOriginFromCache(cacheResult);
@@ -1507,11 +1515,14 @@ class CachingBuildRuleBuilder {
 
     // Try to fetch the artifact using the input-based rule key.
     CacheResult cacheResult =
-        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            inputRuleKey,
-            artifactCache,
-            // TODO(simons): Share this between all tests, not one per cell.
-            rule.getProjectFilesystem());
+        Futures.getUnchecked(
+            tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+                inputRuleKey,
+                artifactCache,
+                // TODO(simons): Share this between all tests, not one per cell.
+                rule.getProjectFilesystem(),
+                MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService()));
 
     if (cacheResult.getType().isSuccess()) {
       fillInOriginFromCache(cacheResult);
