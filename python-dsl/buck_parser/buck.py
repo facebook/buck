@@ -497,7 +497,7 @@ class BuildFileProcessor(object):
                  watchman_use_glob_generator, use_mercurial_glob,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
-                 ignore_paths=None):
+                 ignore_paths=None, freeze_globals=False):
         if project_import_whitelist is None:
             project_import_whitelist = []
         if implicit_includes is None:
@@ -527,6 +527,7 @@ class BuildFileProcessor(object):
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
+        self._freeze_globals = freeze_globals
 
         lazy_functions = {}
         for func in BUILD_FUNCTIONS + extra_funcs:
@@ -609,7 +610,23 @@ class BuildFileProcessor(object):
             block_copying_module = not hasattr(mod, '__all__') and isinstance(
                 mod.__dict__[key], types.ModuleType)
             if not key.startswith('_') and key not in hidden and not block_copying_module:
-                dst[key] = mod.__dict__[key]
+                value = mod.__dict__[key]
+                if self._freeze_globals:
+                    value = self._freeze(value)
+                dst[key] = value
+
+    def _freeze(self, value):
+        """
+        Returns a read-only version of the passed value instance.
+
+        Note: mutable nested fields can still be modified.
+        """
+        if isinstance(value, list):
+            return tuple(value)
+        elif isinstance(value, set):
+            return frozenset(value)
+        # TODO(ttsugrii): handle other types
+        return value
 
     def _update_functions(self, build_env):
         """
@@ -1256,6 +1273,10 @@ def main():
         '--build_file_import_whitelist',
         action='append',
         dest='build_file_import_whitelist')
+    parser.add_option(
+        '--freeze_globals',
+        action='store_true',
+        help='Do not allow mutations of included globals.')
     (options, args) = parser.parse_args()
 
     # Even though project_root is absolute path, it may not be concise. For
