@@ -397,6 +397,7 @@ java_immutables_library(
         "BuildRuleDiagnosticData.java",
         "BuildRuleEvent.java",
         "BuildRulePipelinesRunner.java",
+        "BuildableSupport.java",
         "CachingBuildEngine.java",
         "CachingBuildRuleBuilder.java",
         "DefaultBuildableContext.java",
