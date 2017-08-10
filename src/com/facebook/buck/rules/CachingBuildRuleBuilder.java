@@ -716,7 +716,7 @@ class CachingBuildRuleBuilder {
     return Optional.empty();
   }
 
-  private ListenableFuture<BuildResult> buildOrFetchFromCache() {
+  private ListenableFuture<BuildResult> buildOrFetchFromCache() throws IOException {
     // If we've already seen a failure, exit early.
     if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
       return Futures.immediateFuture(
@@ -740,19 +740,12 @@ class CachingBuildRuleBuilder {
         // large ui.thread_line_limit, SuperConsole tries to redraw more lines than are available.
         // These cache threads make it more likely to hit that problem when SuperConsole is aware
         // of them.
-        cacheActivityService
-            .withDefaultAmounts(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)
-            .submit(
-                () -> {
-                  if (!buildRuleBuilderDelegate.shouldKeepGoing()) {
-                    Preconditions.checkNotNull(buildRuleBuilderDelegate.getFirstFailure());
-                    return Optional.of(
-                        BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
-                  }
-                  CacheResult cacheResult = performRuleKeyCacheCheck();
-                  rulekeyCacheResult.set(cacheResult);
-                  return getBuildResultForRuleKeyCacheResult(cacheResult);
-                });
+        Futures.transform(
+            performRuleKeyCacheCheck(),
+            cacheResult -> {
+              rulekeyCacheResult.set(cacheResult);
+              return getBuildResultForRuleKeyCacheResult(cacheResult);
+            });
 
     // 3. Build deps.
     buildResultFuture =
@@ -869,32 +862,31 @@ class CachingBuildRuleBuilder {
     return Optional.empty();
   }
 
-  private CacheResult performRuleKeyCacheCheck() throws IOException {
+  private ListenableFuture<CacheResult> performRuleKeyCacheCheck() throws IOException {
     final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
     long cacheRequestTimestampMillis = System.currentTimeMillis();
-    CacheResult cacheResult =
-        Futures.getUnchecked(
-            tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                defaultRuleKey,
-                artifactCache,
-                // TODO(simons): This should be a shared between all tests, not one per cell
-                rule.getProjectFilesystem(),
-                MoreExecutors.newDirectExecutorService(),
-                MoreExecutors.newDirectExecutorService()));
-
-    RuleKeyCacheResult ruleKeyCacheResult =
-        RuleKeyCacheResult.builder()
-            .setBuildTarget(rule.getFullyQualifiedName())
-            .setRuleKey(defaultRuleKey.toString())
-            .setRuleKeyType(RuleKeyType.DEFAULT)
-            .setCacheResult(cacheResult.getType())
-            .setRequestTimestampMillis(cacheRequestTimestampMillis)
-            .setTwoLevelContentHashKey(cacheResult.twoLevelContentHashKey())
-            .build();
-
-    eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult));
-
-    return cacheResult;
+    return Futures.transform(
+        tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
+            defaultRuleKey,
+            artifactCache,
+            // TODO(simons): This should be a shared between all tests, not one per cell
+            rule.getProjectFilesystem(),
+            cacheActivityService.withDefaultAmounts(
+                CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
+        cacheResult -> {
+          RuleKeyCacheResult ruleKeyCacheResult =
+              RuleKeyCacheResult.builder()
+                  .setBuildTarget(rule.getFullyQualifiedName())
+                  .setRuleKey(defaultRuleKey.toString())
+                  .setRuleKeyType(RuleKeyType.DEFAULT)
+                  .setCacheResult(cacheResult.getType())
+                  .setRequestTimestampMillis(cacheRequestTimestampMillis)
+                  .setTwoLevelContentHashKey(cacheResult.twoLevelContentHashKey())
+                  .build();
+          eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult));
+          return cacheResult;
+        });
   }
 
   private Optional<BuildResult> getBuildResultForRuleKeyCacheResult(CacheResult cacheResult) {
