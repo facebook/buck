@@ -856,10 +856,7 @@ class CachingBuildRuleBuilder {
             defaultRuleKey,
             artifactCache,
             // TODO(simons): This should be a shared between all tests, not one per cell
-            rule.getProjectFilesystem(),
-            cacheActivityService.withDefaultAmounts(
-                CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
-            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
+            rule.getProjectFilesystem()),
         cacheResult -> {
           RuleKeyCacheResult ruleKeyCacheResult =
               RuleKeyCacheResult.builder()
@@ -1009,9 +1006,7 @@ class CachingBuildRuleBuilder {
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           final RuleKey ruleKey,
           final ArtifactCache artifactCache,
-          final ProjectFilesystem filesystem,
-          ListeningExecutorService fetchService,
-          ListeningExecutorService workService)
+          final ProjectFilesystem filesystem)
           throws IOException {
     if (!rule.isCacheable()) {
       return Futures.immediateFuture(CacheResult.ignored());
@@ -1033,7 +1028,7 @@ class CachingBuildRuleBuilder {
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
     return Futures.transformAsync(
-        fetch(artifactCache, ruleKey, lazyZipPath, fetchService, workService),
+        fetch(artifactCache, ruleKey, lazyZipPath),
         cacheResult -> {
           try (Scope scope = buildRuleScope()) {
             // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
@@ -1059,14 +1054,11 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<CacheResult> fetch(
-      ArtifactCache artifactCache,
-      RuleKey ruleKey,
-      LazyPath outputPath,
-      ListeningExecutorService fetchService,
-      ListeningExecutorService workService) {
+      ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
-        fetchService.submit(
-            () -> Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath))),
+        cacheActivityService.submit(
+            () -> Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath)),
+            CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
         (CacheResult cacheResult) -> {
           try (Scope scope = buildRuleScope()) {
             if (cacheResult.getType() != CacheResultType.HIT) {
@@ -1090,7 +1082,7 @@ class CachingBuildRuleBuilder {
             return cacheResult;
           }
         },
-        workService);
+        serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS));
   }
 
   /**
@@ -1388,13 +1380,7 @@ class CachingBuildRuleBuilder {
         };
 
     return Futures.transformAsync(
-        fetch(
-            artifactCache,
-            manifestKey.getRuleKey(),
-            tempFile,
-            cacheActivityService.withDefaultAmounts(
-                CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
-            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
+        fetch(artifactCache, manifestKey.getRuleKey(), tempFile),
         manifestResult -> {
           if (!manifestResult.getType().isSuccess()) {
             return Futures.immediateFuture(Optional.empty());
@@ -1450,11 +1436,7 @@ class CachingBuildRuleBuilder {
                   ruleKey.get(),
                   artifactCache,
                   // TODO(simons): This should be shared between all tests, not one per cell
-                  rule.getProjectFilesystem(),
-                  cacheActivityService.withDefaultAmounts(
-                      CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
-                  serviceByAdjustingDefaultWeightsTo(
-                      CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
+                  rule.getProjectFilesystem()),
               cacheResult -> {
                 if (cacheResult.getType().isSuccess()) {
                   fillInOriginFromCache(cacheResult);
@@ -1505,10 +1487,7 @@ class CachingBuildRuleBuilder {
             inputRuleKey,
             artifactCache,
             // TODO(simons): Share this between all tests, not one per cell.
-            rule.getProjectFilesystem(),
-            cacheActivityService.withDefaultAmounts(
-                CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
-            serviceByAdjustingDefaultWeightsTo(CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS)),
+            rule.getProjectFilesystem()),
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
             try (Scope scope = LeafEvents.scope(eventBus, "handling_cache_result")) {
