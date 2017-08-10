@@ -231,4 +231,16 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public Optional<String> getPythonModuleSearchPath() {
     return getDelegate().getValue("parser", "python_path");
   }
+
+  /**
+   * Indicates whether globals imported by {@code include_defs} should be "frozen", which means they
+   * will be converted into their read-only counterparts. This can be used to detect accidental
+   * attempts to modify global variables causing non-determinism and hard to debug bugs.
+   *
+   * @return boolean flag indicating whether globals must be "frozen".
+   */
+  @Value.Lazy
+  public boolean getFreezeGlobals() {
+    return getDelegate().getBooleanValue("parser", "freeze_globals", false);
+  }
 }

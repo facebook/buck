@@ -86,6 +86,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -360,6 +361,43 @@ public class ParserTest {
             .getBytes(UTF_8));
 
     parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+  }
+
+  @Test
+  public void shouldGlobalVariableModificationsAreAllowedIfNotFrozen()
+      throws IOException, BuildFileParseException, InterruptedException {
+    Files.write(
+        includedByBuildFile, ("FOO = ['bar']\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+    Files.write(testBuildFile, ("FOO.append('bar')\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections("[parser]", "freeze_globals = false")
+            .build();
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, testBuildFile);
+  }
+
+  @Test
+  public void shouldThrowAnExceptionIfFrozenVariableIsModified()
+      throws IOException, BuildFileParseException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("'tuple' object has no attribute 'append'");
+
+    Files.write(
+        includedByBuildFile, ("FOO = ['bar']\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+    Files.write(testBuildFile, ("FOO.append('bar')\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections("[parser]", "freeze_globals = true")
+            .build();
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, testBuildFile);
   }
 
   @Test

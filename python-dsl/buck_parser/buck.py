@@ -1345,7 +1345,8 @@ def main():
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,
-        ignore_paths=ignore_paths)
+        ignore_paths=ignore_paths,
+        freeze_globals=options.freeze_globals)
 
     # While processing, we'll write exceptions as diagnostic messages
     # to the parent then re-raise them to crash the process. While

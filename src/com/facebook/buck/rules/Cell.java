@@ -274,6 +274,7 @@ public class Cell {
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
             .setCellName(getCanonicalName().orElse(""))
+            .setFreezeGlobals(parserConfig.getFreezeGlobals())
             .setPythonInterpreter(pythonInterpreter)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
