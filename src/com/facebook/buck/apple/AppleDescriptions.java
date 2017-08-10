@@ -444,7 +444,7 @@ public class AppleDescriptions {
       ProvidesLinkedBinaryDeps unstrippedBinaryRule,
       AppleDebugFormat debugFormat,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     Optional<AppleDsym> appleDsym =
         createAppleDsymForDebugFormat(
@@ -455,7 +455,7 @@ public class AppleDescriptions {
             resolver,
             unstrippedBinaryRule,
             cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
+            defaultCxxFlavor,
             appleCxxPlatforms);
     BuildRule buildRuleForDebugFormat;
     if (debugFormat == AppleDebugFormat.DWARF) {
@@ -486,7 +486,7 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       ProvidesLinkedBinaryDeps unstrippedBinaryRule,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
       BuildTarget dsymBuildTarget =
@@ -507,7 +507,7 @@ public class AppleDescriptions {
                     resolver,
                     unstrippedBinaryRule,
                     cxxPlatformFlavorDomain,
-                    defaultCxxPlatform,
+                    defaultCxxFlavor,
                     appleCxxPlatforms));
       }
       Preconditions.checkArgument(dsymRule.get() instanceof AppleDsym);
@@ -523,13 +523,13 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       ProvidesLinkedBinaryDeps unstrippedBinaryBuildRule,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
 
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
+            defaultCxxFlavor,
             appleCxxPlatforms,
             unstrippedBinaryBuildRule.getBuildTarget(),
             MultiarchFileInfos.create(
@@ -557,7 +557,7 @@ public class AppleDescriptions {
 
   static AppleBundle createAppleBundle(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
@@ -580,7 +580,7 @@ public class AppleDescriptions {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
+            defaultCxxFlavor,
             appleCxxPlatforms,
             buildTarget,
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
@@ -675,7 +675,7 @@ public class AppleDescriptions {
     BuildRule flavoredBinaryRule =
         getFlavoredBinaryRule(
             cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
+            defaultCxxFlavor,
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors.getFlavors(),
             resolver,
@@ -718,7 +718,7 @@ public class AppleDescriptions {
               (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
               debugFormat,
               cxxPlatformFlavorDomain,
-              defaultCxxPlatform,
+              defaultCxxFlavor,
               appleCxxPlatforms);
       appleDsym =
           createAppleDsymForDebugFormat(
@@ -729,7 +729,7 @@ public class AppleDescriptions {
               resolver,
               (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
               cxxPlatformFlavorDomain,
-              defaultCxxPlatform,
+              defaultCxxFlavor,
               appleCxxPlatforms);
     } else {
       targetDebuggableBinaryRule = unstrippedBinaryRule;
@@ -801,7 +801,7 @@ public class AppleDescriptions {
 
   private static BuildRule getFlavoredBinaryRule(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       TargetGraph targetGraph,
       ImmutableSet<Flavor> flavors,
       BuildRuleResolver resolver,
@@ -828,11 +828,7 @@ public class AppleDescriptions {
                 ImmutableSet.of(
                     AppleDescriptions.FRAMEWORK_FLAVOR, AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
-      flavors =
-          new ImmutableSet.Builder<Flavor>()
-              .addAll(flavors)
-              .add(defaultCxxPlatform.getFlavor())
-              .build();
+      flavors = new ImmutableSet.Builder<Flavor>().addAll(flavors).add(defaultCxxFlavor).build();
     }
 
     ImmutableSet.Builder<Flavor> binaryFlavorsBuilder = ImmutableSet.builder();

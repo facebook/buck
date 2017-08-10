@@ -447,10 +447,12 @@ public class KnownBuildRuleTypes {
     LuaConfig luaConfig = new LuaBuckConfig(config, executableFinder);
 
     CxxBinaryDescription cxxBinaryDescription =
-        new CxxBinaryDescription(cxxBuckConfig, inferBuckConfig, defaultCxxPlatform, cxxPlatforms);
+        new CxxBinaryDescription(
+            cxxBuckConfig, inferBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms);
 
     CxxLibraryDescription cxxLibraryDescription =
-        new CxxLibraryDescription(cxxBuckConfig, defaultCxxPlatform, inferBuckConfig, cxxPlatforms);
+        new CxxLibraryDescription(
+            cxxBuckConfig, defaultCxxPlatform.getFlavor(), inferBuckConfig, cxxPlatforms);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
@@ -472,7 +474,7 @@ public class KnownBuildRuleTypes {
             cxxLibraryDescription,
             swiftLibraryDescription,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig);
@@ -561,14 +563,14 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleAssetCatalogDescription());
     builder.register(
         new ApplePackageDescription(
-            appleConfig, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms));
+            appleConfig, defaultCxxPlatform.getFlavor(), platformFlavorsToAppleCxxPlatforms));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             appleBinaryDescription,
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig);
@@ -580,7 +582,7 @@ public class KnownBuildRuleTypes {
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
@@ -596,7 +598,7 @@ public class KnownBuildRuleTypes {
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new CxxTestDescription(
-            cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, defaultTestRuleTimeoutMs));
+            cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms, defaultTestRuleTimeoutMs));
     builder.register(new DBinaryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.register(

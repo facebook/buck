@@ -154,7 +154,7 @@ public class ApplePackageDescriptionTest {
                 "macosx_package_extension = api")
             .build()
             .getView(AppleConfig.class),
-        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
         FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN);
   }
 }

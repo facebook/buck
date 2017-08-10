@@ -63,17 +63,17 @@ public class CxxBinaryDescription
 
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxBinaryDescription(
       CxxBuckConfig cxxBuckConfig,
       InferBuckConfig inferBuckConfig,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.cxxPlatforms = cxxPlatforms;
   }
 
@@ -120,7 +120,7 @@ public class CxxBinaryDescription
     }
 
     // Otherwise, fallback to the description-level default platform.
-    return defaultCxxPlatform;
+    return cxxPlatforms.getValue(defaultCxxFlavor);
   }
 
   @Override
@@ -195,7 +195,7 @@ public class CxxBinaryDescription
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
           cxxPlatforms.getValue(flavors).isPresent()
               ? target
-              : target.withAppendedFlavors(defaultCxxPlatform.getFlavor()),
+              : target.withAppendedFlavors(defaultCxxFlavor),
           projectFilesystem,
           resolver);
     }
@@ -337,8 +337,8 @@ public class CxxBinaryDescription
     return cxxPlatforms;
   }
 
-  public CxxPlatform getDefaultCxxPlatform() {
-    return defaultCxxPlatform;
+  public Flavor getDefaultCxxFlavor() {
+    return defaultCxxFlavor;
   }
 
   @Override

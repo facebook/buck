@@ -46,7 +46,7 @@ public class CxxTestBuilder
     super(
         new CxxTestDescription(
             cxxBuckConfig,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             cxxPlatforms,
             /* testRuleTimeoutMs */ Optional.empty()),
         target);

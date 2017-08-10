@@ -142,17 +142,17 @@ public class CxxLibraryDescription
       FlavorDomain.from("C/C++ Header Mode", CxxPreprocessables.HeaderMode.class);
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final InferBuckConfig inferBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       InferBuckConfig inferBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.inferBuckConfig = inferBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -726,7 +726,7 @@ public class CxxLibraryDescription
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
-      CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
+      CxxPlatform cxxPlatform = platform.orElse(cxxPlatforms.getValue(defaultCxxFlavor));
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -749,9 +749,7 @@ public class CxxLibraryDescription
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          platform.isPresent()
-              ? buildTarget
-              : buildTarget.withAppendedFlavors(defaultCxxPlatform.getFlavor()),
+          platform.isPresent() ? buildTarget : buildTarget.withAppendedFlavors(defaultCxxFlavor),
           projectFilesystem,
           resolver);
     } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
@@ -761,7 +759,7 @@ public class CxxLibraryDescription
           resolver,
           cellRoots,
           cxxBuckConfig,
-          platform.orElse(defaultCxxPlatform),
+          platform.orElse(cxxPlatforms.getValue(defaultCxxFlavor)),
           args,
           inferBuckConfig);
     } else if (type.isPresent() && !platform.isPresent()) {
@@ -959,8 +957,8 @@ public class CxxLibraryDescription
     return cxxPlatforms;
   }
 
-  public CxxPlatform getDefaultCxxPlatform() {
-    return defaultCxxPlatform;
+  public Flavor getDefaultCxxFlavor() {
+    return defaultCxxFlavor;
   }
 
   /**
@@ -1137,7 +1135,7 @@ public class CxxLibraryDescription
         ImmutableSortedSet.of(
             // Default to static if not otherwise specified.
             typeFlavor.orElse(CxxDescriptionEnhancer.STATIC_FLAVOR),
-            platformFlavor.orElse(defaultCxxPlatform.getFlavor()));
+            platformFlavor.orElse(defaultCxxFlavor));
 
     LOG.debug("Got default flavors %s for rule types %s", result, Arrays.toString(types));
     return result;

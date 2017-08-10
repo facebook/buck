@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -57,15 +56,15 @@ public class ApplePackageDescription
         ImplicitDepsInferringDescription<
             ApplePackageDescription.AbstractApplePackageDescriptionArg> {
 
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final AppleConfig config;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
 
   public ApplePackageDescription(
       AppleConfig config,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.config = config;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
   }
@@ -233,7 +232,7 @@ public class ApplePackageDescription
     Sets.SetView<Flavor> intersection =
         Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
     if (intersection.isEmpty()) {
-      return ImmutableSet.of(defaultCxxPlatform.getFlavor());
+      return ImmutableSet.of(defaultCxxFlavor);
     } else {
       return intersection.immutableCopy();
     }

@@ -276,7 +276,7 @@ public class AppleBinaryDescription
         unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN.getRequiredValue(buildTarget),
         delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxPlatform(),
+        delegate.getDefaultCxxFlavor(),
         platformFlavorsToAppleCxxPlatforms);
   }
 
@@ -302,7 +302,10 @@ public class AppleBinaryDescription
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
       CxxPlatform cxxPlatform =
-          delegate.getCxxPlatforms().getValue(buildTarget).orElse(delegate.getDefaultCxxPlatform());
+          delegate
+              .getCxxPlatforms()
+              .getValue(buildTarget)
+              .orElse(delegate.getCxxPlatforms().getValue(delegate.getDefaultCxxFlavor()));
       ApplePlatform applePlatform =
           platformFlavorsToAppleCxxPlatforms
               .getValue(cxxPlatform.getFlavor())
@@ -318,7 +321,7 @@ public class AppleBinaryDescription
     BuildTarget binaryTarget = buildTarget.withoutFlavors(APP_FLAVOR);
     return AppleDescriptions.createAppleBundle(
         delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxPlatform(),
+        delegate.getDefaultCxxFlavor(),
         platformFlavorsToAppleCxxPlatforms,
         targetGraph,
         buildTarget,
