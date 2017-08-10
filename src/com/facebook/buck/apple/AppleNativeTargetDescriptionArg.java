@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.swift.HasSwiftCompilerFlags;
+import com.facebook.buck.swift.SwiftCommonArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import org.immutables.value.Value;
 
 /** Arguments common to Apple targets. */
 public interface AppleNativeTargetDescriptionArg
-    extends CxxLibraryDescription.CommonArg, HasSwiftCompilerFlags {
+    extends CxxLibraryDescription.CommonArg, SwiftCommonArg {
   @Value.NaturalOrder
   ImmutableSortedMap<String, ImmutableMap<String, String>> getConfigs();
 

@@ -19,6 +19,6 @@ package com.facebook.buck.swift;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 
-public interface HasSwiftCompilerFlags {
+public interface SwiftCommonArg {
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
 }
