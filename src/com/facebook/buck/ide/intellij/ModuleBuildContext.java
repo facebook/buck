@@ -161,21 +161,26 @@ public class ModuleBuildContext {
   }
 
   /**
-   * Merges the two folders according to the following rules: - Folders of the same type merge
-   * normally. - A resource folder and a test resource folder should become a regular resource
-   * folder. - A folder that contains both regular and test sources should become a source folder. -
-   * A folder that contains any kind of source and any kind of resource will not work correctly if
-   * the resources_root is different from the src_root, since buck allows individual files to be
-   * marked as sources/resources, but IntelliJ's granularity is only at the folder level. Thus, we
-   * try to handle this by promoting these to source folders, but there isn't really a good way
-   * around it.
+   * Merges the two folders according to the following rules:
+   *
+   * <ul>
+   *   <li>Folders of the same type merge normally.
+   *   <li>A resource folder and a test resource folder should become a regular resource folder.
+   *   <li>A folder that contains both regular and test sources should become a source folder.
+   *   <li>A folder that contains any kind of source and any kind of resource will not work
+   *       correctly if the resources_root is different from the src_root, since buck allows
+   *       individual files to be marked as sources/resources, but IntelliJ's granularity is only at
+   *       the folder level. Thus, we try to handle this by promoting these to source folders (or
+   *       test folders if it is test + resource), but there isn't really a good way around it.
+   * </ul>
    */
   private IjFolder mergePromotingToSourceIfDifferent(IjFolder from, IjFolder to) {
     if (from.getClass().equals(to.getClass())) {
       return from.merge(to);
     }
 
-    // Both resource folders but one is a test resource and one is a regular resource.
+    // If both are resource folders of different types, we merge them into a regular resource
+    // folder.
     if ((from.getClass().equals(JavaResourceFolder.class)
             && to.getClass().equals(JavaTestResourceFolder.class))
         || (to.getClass().equals(JavaResourceFolder.class)
@@ -185,6 +190,20 @@ public class ModuleBuildContext {
               ? ((JavaResourceFolder) to).getResourcesRoot()
               : ((JavaTestResourceFolder) to).getResourcesRoot();
       return new JavaResourceFolder(to.getPath(), IjFolder.combineInputs(from, to), resourcesRoot);
+    }
+
+    // If one is a test folder and one is a resource folder, we merge them into a test folder. Note
+    // that as per the comment for this function, this may not necessarily work correctly.
+    if ((from.getClass().equals(TestFolder.class)
+            && (to.getClass().equals(JavaTestResourceFolder.class)
+                || to.getClass().equals(JavaResourceFolder.class)))
+        || (to.getClass().equals(TestFolder.class)
+            && (from.getClass().equals(JavaTestResourceFolder.class)
+                || from.getClass().equals(JavaResourceFolder.class)))) {
+      return new TestFolder(
+          to.getPath(),
+          from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),
+          IjFolder.combineInputs(from, to));
     }
 
     // If we're not sure what to do otherwise, use SourceFolder.

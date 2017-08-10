@@ -16,18 +16,17 @@
 
 package com.facebook.buck.ide.intellij.model.folders;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public class JavaResourceFolder extends InclusiveFolder {
-  private Path resourcesRoot;
+  @Nullable private Path resourcesRoot;
 
   public JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
     super(path, false, inputs);
-    Preconditions.checkNotNull(resourcesRoot);
     this.resourcesRoot = resourcesRoot;
   }
 
@@ -48,11 +47,7 @@ public class JavaResourceFolder extends InclusiveFolder {
     return getFactoryWithResourcesRoot(resourcesRoot);
   }
 
-  public IJFolderFactory getFactoryWithSameResourcesRoot() {
-    return getFactory();
-  }
-
-  public static final IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
+  public static IJFolderFactory getFactoryWithResourcesRoot(@Nullable Path resourcesRoot) {
     return ((path, wantsPrefix, inputs) -> new JavaResourceFolder(path, inputs, resourcesRoot));
   }
 
