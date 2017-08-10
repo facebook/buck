@@ -60,6 +60,7 @@ public class SwiftDescriptions {
     output.setSrcs(filterSwiftSources(sourcePathResolver, args.getSrcs()));
     if (args instanceof SwiftCommonArg) {
       output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
+      output.setVersion(((SwiftCommonArg) args).getSwiftVersion());
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }

@@ -124,6 +124,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.swift.SwiftCommonArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
@@ -1135,7 +1136,13 @@ public class ProjectGenerator {
             "SWIFT_OBJC_BRIDGING_HEADER",
             Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
       }
-      Optional<String> swiftVersion = swiftBuckConfig.getVersion();
+      Optional<String> swiftVersion =
+          (arg instanceof SwiftCommonArg)
+              ? ((SwiftCommonArg) arg).getSwiftVersion()
+              : Optional.empty();
+      if (!swiftVersion.isPresent()) {
+        swiftVersion = swiftBuckConfig.getVersion();
+      }
       swiftVersion.ifPresent(s -> extraSettingsBuilder.put("SWIFT_VERSION", s));
 
       Optional<SourcePath> prefixHeaderOptional =

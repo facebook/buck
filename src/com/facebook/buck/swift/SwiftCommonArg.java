@@ -18,7 +18,10 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 public interface SwiftCommonArg {
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
+
+  Optional<String> getSwiftVersion();
 }
