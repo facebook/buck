@@ -333,7 +333,7 @@ public class HalideLibraryDescription
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       final ImmutableSortedSet<BuildTarget> compilerDeps = args.getCompilerDeps();
       return createHalideCompiler(
-          buildTarget.withAppendedFlavors(HALIDE_COMPILE_FLAVOR),
+          buildTarget,
           projectFilesystem,
           params.withDeclaredDeps(resolver.getAllRules(compilerDeps)).withoutExtraDeps(),
           resolver,
