@@ -307,7 +307,7 @@ public final class IjModuleGraphFactory {
           && !module.getExtraModuleDependencies().isEmpty()) {
         IjModule extraModule =
             createExtraModuleForCompilerOutput(
-                module, projectConfig, projectFilesystem, extraCompileOutputRootPath.get());
+                module, projectFilesystem, extraCompileOutputRootPath.get());
         moduleDeps.put(extraModule, DependencyType.PROD);
         depsBuilder.put(extraModule, ImmutableMap.of());
       }
@@ -329,15 +329,9 @@ public final class IjModuleGraphFactory {
 
   private static IjModule createExtraModuleForCompilerOutput(
       IjModule module,
-      IjProjectConfig projectConfig,
       ProjectFilesystem projectFilesystem,
       Path extraCompileOutputRootPath) {
-    Path projectRootPath = Paths.get(projectConfig.getProjectRoot());
-    Path extraModuleBasePath =
-        Paths.get(projectRootPath.toString(), extraCompileOutputRootPath.toString())
-            .resolve(projectRootPath.relativize(module.getModuleBasePath()));
-
-    Path extraModuleRelativePath = projectRootPath.relativize(extraModuleBasePath.normalize());
+    Path extraModuleRelativePath = extraCompileOutputRootPath.resolve(module.getModuleBasePath());
     if (!projectFilesystem.exists(extraModuleRelativePath)) {
       try {
         projectFilesystem.mkdirs(extraModuleRelativePath);
@@ -349,7 +343,7 @@ public final class IjModuleGraphFactory {
     }
 
     return IjModule.builder()
-        .setModuleBasePath(extraModuleBasePath)
+        .setModuleBasePath(extraModuleRelativePath)
         .setTargets(ImmutableSet.of())
         .addAllFolders(ImmutableSet.of())
         .putAllDependencies(ImmutableMap.of())

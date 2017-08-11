@@ -393,7 +393,6 @@ public class IjProjectTemplateDataPreparer {
     addAndroidManifestPath(androidProperties, basePath, androidFacet);
     addAndroidProguardPath(androidProperties, androidFacet);
     addAndroidResourcePaths(androidProperties, module, androidFacet);
-    addAndroidCompilerOutputPath(androidProperties, module, basePath);
 
     return androidProperties;
   }

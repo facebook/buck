@@ -2078,8 +2078,9 @@ cxx_library(
   {param name: 'extra_compiler_output_modules_path' /}
   {param example_value: 'buck-out/extra-intellij-output' /}
   {param description}
-    This flag decides whether or not extra library modules will be generated for Android library
-    modules and specifies the root location of those extra modules.
+    This option specifies the location of additional modules for code generated outside of buck
+    graph. For example, it can be used to specify the location of R.java classes generated for
+    Android plugin to help Layout Preview with resolving references to resources.
   {/param}
 {/call}
 
