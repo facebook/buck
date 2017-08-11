@@ -445,38 +445,31 @@ public class AppleDescriptions {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
-    Optional<AppleDsym> appleDsym =
-        debugFormat == AppleDebugFormat.DWARF_AND_DSYM
-            ? Optional.of(
-                requireAppleDsym(
-                    buildTarget,
-                    projectFilesystem,
-                    params,
-                    resolver,
-                    unstrippedBinaryRule,
-                    cxxPlatformFlavorDomain,
-                    defaultCxxFlavor,
-                    appleCxxPlatforms))
-            : Optional.empty();
-    BuildRule buildRuleForDebugFormat;
-    if (debugFormat == AppleDebugFormat.DWARF) {
-      buildRuleForDebugFormat = unstrippedBinaryRule;
-    } else {
-      buildRuleForDebugFormat = strippedBinaryRule;
+    // Target used as the base target of AppleDebuggableBinary.
+
+    BuildTarget baseTarget = strippedBinaryRule.getBuildTarget();
+    switch (debugFormat) {
+      case DWARF:
+        return AppleDebuggableBinary.createFromUnstrippedBinary(
+            projectFilesystem, baseTarget, unstrippedBinaryRule);
+      case DWARF_AND_DSYM:
+        AppleDsym dsym =
+            requireAppleDsym(
+                buildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                unstrippedBinaryRule,
+                cxxPlatformFlavorDomain,
+                defaultCxxFlavor,
+                appleCxxPlatforms);
+        return AppleDebuggableBinary.createWithDsym(
+            projectFilesystem, baseTarget, strippedBinaryRule, dsym);
+      case NONE:
+        return AppleDebuggableBinary.createWithoutDebugging(
+            projectFilesystem, baseTarget, strippedBinaryRule);
     }
-    AppleDebuggableBinary rule =
-        new AppleDebuggableBinary(
-            strippedBinaryRule
-                .getBuildTarget()
-                .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, debugFormat.getFlavor()),
-            projectFilesystem,
-            params
-                .withDeclaredDeps(
-                    AppleDebuggableBinary.getRequiredRuntimeDeps(
-                        debugFormat, strippedBinaryRule, unstrippedBinaryRule, appleDsym))
-                .withoutExtraDeps(),
-            buildRuleForDebugFormat);
-    return rule;
+    throw new IllegalStateException("Unhandled debugFormat");
   }
 
   private static AppleDsym requireAppleDsym(
@@ -680,7 +673,7 @@ public class AppleDescriptions {
           getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
               .getBuildTarget()
               .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
-      targetDebuggableBinaryRule =
+      AppleDebuggableBinary debuggableBinary =
           createAppleDebuggableBinary(
               binaryBuildTarget,
               projectFilesystem,
@@ -692,21 +685,8 @@ public class AppleDescriptions {
               cxxPlatformFlavorDomain,
               defaultCxxFlavor,
               appleCxxPlatforms);
-      if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
-        appleDsym =
-            Optional.of(
-                requireAppleDsym(
-                    binaryBuildTarget,
-                    projectFilesystem,
-                    params,
-                    resolver,
-                    (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
-                    cxxPlatformFlavorDomain,
-                    defaultCxxFlavor,
-                    appleCxxPlatforms));
-      } else {
-        appleDsym = Optional.empty();
-      }
+      targetDebuggableBinaryRule = debuggableBinary;
+      appleDsym = debuggableBinary.getAppleDsym();
     } else {
       targetDebuggableBinaryRule = unstrippedBinaryRule;
       appleDsym = Optional.empty();
