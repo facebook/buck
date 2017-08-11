@@ -7,6 +7,6 @@ prebuilt_jar(
     source_jar = "kxml2-2.3.0-sources.jar",
     visibility = [
         "//src/com/facebook/buck/android:kxml2.jar",
-        "//third-party/java/ddmlib:ddmlib",
+        "//third-party/java/android:ddmlib",
     ],
 )

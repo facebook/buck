@@ -66,7 +66,7 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/ide/intellij/projectview/shared:shared",
         "//src/com/facebook/buck/test/result/type:type",
-        "//third-party/java/ddmlib:ddmlib",
+        "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
         "//third-party/java/ini4j:ini4j",

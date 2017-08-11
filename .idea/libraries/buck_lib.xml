@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="buck-lib">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-5.0.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0.jar!/" />
@@ -26,7 +26,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-databind-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/ddmlib/ddmlib-25.2.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error-prone-annotations-2.0.15.jar!/" />
     </CLASSES>
     <JAVADOC />
@@ -43,7 +43,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.9.3-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/ddmlib/ddmlib-25.2.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error-prone-annotations-2.0.15-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.20.0-sources.jar!/" />
     </SOURCES>
