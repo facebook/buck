@@ -156,20 +156,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
-    submitTraceEvent(
-        new ChromeTraceEvent(
-            "buck",
-            "process_name",
-            ChromeTraceEvent.Phase.METADATA,
-            /* processId */ 0,
-            /* threadId */ 0,
-            /* microTime */ 0,
-            /* microThreadUserTime */ 0,
-            ImmutableMap.<String, Object>builder()
-                .put("user_args", invocationInfo.getUnexpandedCommandArgs())
-                .put("is_daemon", invocationInfo.getIsDaemon())
-                .put("timestamp", invocationInfo.getTimestampMillis())
-                .build()));
+    writeChromeTraceMetadataEvent(
+        "process_name",
+        ImmutableMap.<String, Object>builder()
+            .put("user_args", invocationInfo.getUnexpandedCommandArgs())
+            .put("is_daemon", invocationInfo.getIsDaemon())
+            .put("timestamp", invocationInfo.getTimestampMillis())
+            .build());
   }
 
   @VisibleForTesting
@@ -776,6 +769,22 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             event.getThreadId(),
             TimeUnit.NANOSECONDS.toMicros(event.getNanoTime()),
             TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime()),
+            arguments);
+    submitTraceEvent(chromeTraceEvent);
+  }
+
+  private void writeChromeTraceMetadataEvent(
+      String name, ImmutableMap<String, ? extends Object> arguments) {
+    long timestampInMicroseconds = TimeUnit.MILLISECONDS.toMicros(clock.currentTimeMillis());
+    ChromeTraceEvent chromeTraceEvent =
+        new ChromeTraceEvent(
+            /* category */ "buck",
+            name,
+            ChromeTraceEvent.Phase.METADATA,
+            /* processId */ 0,
+            /* threadId */ 0,
+            /* microTime */ timestampInMicroseconds,
+            /* microThreadUserTime */ timestampInMicroseconds,
             arguments);
     submitTraceEvent(chromeTraceEvent);
   }
