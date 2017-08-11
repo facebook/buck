@@ -53,6 +53,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.WatchmanOverflowEvent;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
@@ -752,6 +753,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     if (finished instanceof BuildRuleEvent.Suspended) {
       writeRuleSuspended((BuildRuleEvent.Suspended) finished);
     }
+  }
+
+  @Subscribe
+  public void onWatchmanOverflow(WatchmanOverflowEvent event) {
+    writeChromeTraceMetadataEvent(
+        "watchman_overflow",
+        ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
   }
 
   private void writeChromeTraceEvent(

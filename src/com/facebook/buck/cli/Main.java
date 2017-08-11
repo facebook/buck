@@ -144,6 +144,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.martiansoftware.nailgun.NGContext;
@@ -818,6 +819,7 @@ public final class Main {
           eventListeners =
               addEventListeners(
                   buildEventBus,
+                  daemon.map(d -> d.getFileEventBus()),
                   rootCell.getFilesystem(),
                   invocationInfo,
                   rootCell.getBuckConfig(),
@@ -1339,6 +1341,7 @@ public final class Main {
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEventBus,
+      Optional<EventBus> fileEventBus,
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       BuckConfig buckConfig,
@@ -1360,9 +1363,11 @@ public final class Main {
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
     if (chromeTraceConfig.isChromeTraceCreationEnabled()) {
       try {
-        eventListenersBuilder.add(
+        ChromeTraceBuildListener chromeTraceBuildListener =
             new ChromeTraceBuildListener(
-                projectFilesystem, invocationInfo, clock, chromeTraceConfig));
+                projectFilesystem, invocationInfo, clock, chromeTraceConfig);
+        eventListenersBuilder.add(chromeTraceBuildListener);
+        fileEventBus.ifPresent(bus -> bus.register(chromeTraceBuildListener));
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
       }
