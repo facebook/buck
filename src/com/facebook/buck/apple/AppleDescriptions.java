@@ -446,16 +446,18 @@ public class AppleDescriptions {
       Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     Optional<AppleDsym> appleDsym =
-        createAppleDsymForDebugFormat(
-            debugFormat,
-            buildTarget,
-            projectFilesystem,
-            params,
-            resolver,
-            unstrippedBinaryRule,
-            cxxPlatformFlavorDomain,
-            defaultCxxFlavor,
-            appleCxxPlatforms);
+        debugFormat == AppleDebugFormat.DWARF_AND_DSYM
+            ? Optional.of(
+                requireAppleDsym(
+                    buildTarget,
+                    projectFilesystem,
+                    params,
+                    resolver,
+                    unstrippedBinaryRule,
+                    cxxPlatformFlavorDomain,
+                    defaultCxxFlavor,
+                    appleCxxPlatforms))
+            : Optional.empty();
     BuildRule buildRuleForDebugFormat;
     if (debugFormat == AppleDebugFormat.DWARF) {
       buildRuleForDebugFormat = unstrippedBinaryRule;
@@ -477,8 +479,7 @@ public class AppleDescriptions {
     return rule;
   }
 
-  private static Optional<AppleDsym> createAppleDsymForDebugFormat(
-      AppleDebugFormat debugFormat,
+  private static AppleDsym requireAppleDsym(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -487,71 +488,43 @@ public class AppleDescriptions {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
-    if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
-      BuildTarget dsymBuildTarget =
-          buildTarget
-              .withoutFlavors(CxxStrip.RULE_FLAVOR)
-              .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
-              .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
-              .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
-              .withAppendedFlavors(AppleDsym.RULE_FLAVOR);
-      Optional<BuildRule> dsymRule = resolver.getRuleOptional(dsymBuildTarget);
-      if (!dsymRule.isPresent()) {
-        dsymRule =
-            Optional.of(
-                createAppleDsym(
-                    dsymBuildTarget,
-                    projectFilesystem,
-                    params,
-                    resolver,
-                    unstrippedBinaryRule,
-                    cxxPlatformFlavorDomain,
-                    defaultCxxFlavor,
-                    appleCxxPlatforms));
-      }
-      Preconditions.checkArgument(dsymRule.get() instanceof AppleDsym);
-      return Optional.of((AppleDsym) dsymRule.get());
-    }
-    return Optional.empty();
-  }
+    return (AppleDsym)
+        resolver.computeIfAbsent(
+            buildTarget
+                .withoutFlavors(CxxStrip.RULE_FLAVOR)
+                .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
+                .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+                .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
+                .withAppendedFlavors(AppleDsym.RULE_FLAVOR),
+            dsymBuildTarget -> {
+              AppleCxxPlatform appleCxxPlatform =
+                  ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+                      cxxPlatformFlavorDomain,
+                      defaultCxxFlavor,
+                      appleCxxPlatforms,
+                      unstrippedBinaryRule.getBuildTarget(),
+                      MultiarchFileInfos.create(
+                          appleCxxPlatforms, unstrippedBinaryRule.getBuildTarget()));
 
-  static AppleDsym createAppleDsym(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      ProvidesLinkedBinaryDeps unstrippedBinaryBuildRule,
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      Flavor defaultCxxFlavor,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
-
-    AppleCxxPlatform appleCxxPlatform =
-        ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-            cxxPlatformFlavorDomain,
-            defaultCxxFlavor,
-            appleCxxPlatforms,
-            unstrippedBinaryBuildRule.getBuildTarget(),
-            MultiarchFileInfos.create(
-                appleCxxPlatforms, unstrippedBinaryBuildRule.getBuildTarget()));
-
-    AppleDsym appleDsym =
-        new AppleDsym(
-            buildTarget,
-            projectFilesystem,
-            params
-                .withDeclaredDeps(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .add(unstrippedBinaryBuildRule)
-                        .addAll(unstrippedBinaryBuildRule.getCompileDeps())
-                        .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
-                        .build())
-                .withoutExtraDeps(),
-            appleCxxPlatform.getDsymutil(),
-            appleCxxPlatform.getLldb(),
-            unstrippedBinaryBuildRule.getSourcePathToOutput(),
-            AppleDsym.getDsymOutputPath(buildTarget, projectFilesystem));
-    resolver.addToIndex(appleDsym);
-    return appleDsym;
+              AppleDsym appleDsym =
+                  new AppleDsym(
+                      dsymBuildTarget,
+                      projectFilesystem,
+                      params
+                          .withDeclaredDeps(
+                              ImmutableSortedSet.<BuildRule>naturalOrder()
+                                  .add(unstrippedBinaryRule)
+                                  .addAll(unstrippedBinaryRule.getCompileDeps())
+                                  .addAll(unstrippedBinaryRule.getStaticLibraryDeps())
+                                  .build())
+                          .withoutExtraDeps(),
+                      appleCxxPlatform.getDsymutil(),
+                      appleCxxPlatform.getLldb(),
+                      unstrippedBinaryRule.getSourcePathToOutput(),
+                      AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem));
+              resolver.addToIndex(appleDsym);
+              return appleDsym;
+            });
   }
 
   static AppleBundle createAppleBundle(
@@ -719,17 +692,21 @@ public class AppleDescriptions {
               cxxPlatformFlavorDomain,
               defaultCxxFlavor,
               appleCxxPlatforms);
-      appleDsym =
-          createAppleDsymForDebugFormat(
-              debugFormat,
-              binaryBuildTarget,
-              projectFilesystem,
-              params,
-              resolver,
-              (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
-              cxxPlatformFlavorDomain,
-              defaultCxxFlavor,
-              appleCxxPlatforms);
+      if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
+        appleDsym =
+            Optional.of(
+                requireAppleDsym(
+                    binaryBuildTarget,
+                    projectFilesystem,
+                    params,
+                    resolver,
+                    (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
+                    cxxPlatformFlavorDomain,
+                    defaultCxxFlavor,
+                    appleCxxPlatforms));
+      } else {
+        appleDsym = Optional.empty();
+      }
     } else {
       targetDebuggableBinaryRule = unstrippedBinaryRule;
       appleDsym = Optional.empty();
