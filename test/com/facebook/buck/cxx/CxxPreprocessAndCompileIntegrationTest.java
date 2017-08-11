@@ -23,7 +23,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -652,6 +655,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void verifyAppleFrameworksHeaders() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild(
