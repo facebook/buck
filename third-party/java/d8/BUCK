@@ -1,0 +1,16 @@
+java_library(
+    name = "d8",
+    srcs = glob(["src/**/*.java"]),
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+    "//third-party/java/asm:asm",
+    "//third-party/java/commons-compress:commons-compress",
+    "//third-party/java/fastutil:fastutil",
+    "//third-party/java/guava:guava",
+    "//third-party/java/jopt-simple:jopt-simple",
+    "//third-party/java/json-simple:json-simple",
+    ],
+)

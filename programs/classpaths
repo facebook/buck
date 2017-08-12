@@ -2,6 +2,7 @@ build/classes
 build/src-gen/classes
 build/aosp/classes
 build/dx_classes
+build/d8_classes
 build/tracing-api/classes
 build/bootstrapper/classes
 src
@@ -30,6 +31,7 @@ third-party/java/eclipse/org.eclipse.jdt.core.prefs
 third-party/java/eclipse/org.eclipse.jdt.core_3.12.0.v20160426-1326.jar
 third-party/java/eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar
 third-party/java/errorprone/error_prone_annotations-2.0.19.jar
+third-party/java/fastutil/fastutil-7.2.0.jar
 third-party/java/gson/gson-2.8.2.jar
 third-party/java/guava/guava-20.0.jar
 third-party/java/guava/guava-23.3-jre.jar
@@ -50,6 +52,8 @@ third-party/java/jdom/jdom-2.0.6.jar
 third-party/java/jetty/jetty-all-9.2.10.v20150310.jar
 third-party/java/jna/jna-4.4.0.jar
 third-party/java/jna/jna-platform-4.4.0.jar
+third-party/java/jopt-simple/jopt-simple-4.6.jar
+third-party/java/json-simple/json-simple-1.1.1.jar
 third-party/java/jsr/javax.inject-1.jar
 third-party/java/jsr/jsr305.jar
 third-party/java/kxml2/kxml2-2.3.0.jar

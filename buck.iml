@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third-party/java/d8/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/src-gen" isTestSource="false" generated="true" />
@@ -105,5 +106,8 @@
     <orderEntry type="library" name="bazel" level="project" />
     <orderEntry type="library" name="pf4j-2.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
+    <orderEntry type="library" name="fastutil-7.2.0" level="project" />
+    <orderEntry type="library" name="jopt-simple-4.6-sources" level="project" />
+    <orderEntry type="library" name="json-simple-1.1.1-sources" level="project" />
   </component>
 </module>
