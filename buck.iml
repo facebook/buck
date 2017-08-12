@@ -95,5 +95,6 @@
     <orderEntry type="library" name="okhttp-3.6.0" level="project" />
     <orderEntry type="library" name="sqlite" level="project" />
     <orderEntry type="library" name="android-tools-25.3.0" level="project" />
+    <orderEntry type="library" name="jmh" level="project" />
   </component>
 </module>
