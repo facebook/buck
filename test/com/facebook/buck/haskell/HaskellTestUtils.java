@@ -19,13 +19,14 @@ package com.facebook.buck.haskell;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,9 +37,10 @@ class HaskellTestUtils {
 
   /** Assume that we can find a haskell compiler on the system. */
   static HaskellVersion assumeSystemCompiler() throws IOException, InterruptedException {
-    HaskellBuckConfig fakeConfig =
-        new HaskellBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    Optional<Path> compilerOptional = fakeConfig.getSystemCompiler();
+    ExecutableFinder executableFinder = new ExecutableFinder();
+    Optional<Path> compilerOptional =
+        executableFinder.getOptionalExecutable(
+            Paths.get("ghc"), ImmutableMap.copyOf(System.getenv()));
     assumeTrue(compilerOptional.isPresent());
 
     // Find the major version of the haskell compiler.

@@ -20,13 +20,12 @@ import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.platform.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import java.util.Optional;
 
 public interface LuaConfig {
 
-  Tool getLua(BuildRuleResolver resolver);
+  ToolProvider getLua();
 
   Optional<BuildTarget> getNativeStarterLibrary();
 

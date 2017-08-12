@@ -18,11 +18,8 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -53,25 +50,22 @@ public class HaskellBuckConfig implements HaskellConfig {
     return Optional.of(split.build());
   }
 
-  @VisibleForTesting
-  protected Optional<Path> getSystemCompiler() {
-    return finder.getOptionalExecutable(Paths.get("ghc"), delegate.getEnvironment());
+  private ToolProvider getTool(String configName, String systemName) {
+    return delegate
+        .getToolProvider(SECTION, configName)
+        .orElseGet(
+            () ->
+                SystemToolProvider.builder()
+                    .setExecutableFinder(finder)
+                    .setName(Paths.get(systemName))
+                    .setEnvironment(delegate.getEnvironment())
+                    .setSource(String.format(".buckconfig (%s.%s)", SECTION, configName))
+                    .build());
   }
 
   @Override
   public ToolProvider getCompiler() {
-    Optional<ToolProvider> configuredCompiler = delegate.getToolProvider(SECTION, "compiler");
-    if (configuredCompiler.isPresent()) {
-      return configuredCompiler.get();
-    }
-
-    Optional<Path> systemCompiler = getSystemCompiler();
-    if (systemCompiler.isPresent()) {
-      return new ConstantToolProvider(new HashedFileTool(systemCompiler.get()));
-    }
-
-    throw new HumanReadableException(
-        "No Haskell compiler found in .buckconfig (%s.compiler) or on system", SECTION);
+    return getTool("compiler", "ghc");
   }
 
   private static final Integer DEFAULT_MAJOR_VERSION = 7;
@@ -89,18 +83,7 @@ public class HaskellBuckConfig implements HaskellConfig {
 
   @Override
   public ToolProvider getLinker() {
-    Optional<ToolProvider> configuredLinker = delegate.getToolProvider(SECTION, "linker");
-    if (configuredLinker.isPresent()) {
-      return configuredLinker.get();
-    }
-
-    Optional<Path> systemLinker = getSystemCompiler();
-    if (systemLinker.isPresent()) {
-      return new ConstantToolProvider(new HashedFileTool(systemLinker.get()));
-    }
-
-    throw new HumanReadableException(
-        "No Haskell linker found in .buckconfig (%s.linker) or on system", SECTION);
+    return getTool("linker", "ghc");
   }
 
   @Override
@@ -108,25 +91,9 @@ public class HaskellBuckConfig implements HaskellConfig {
     return getFlags("linker_flags").orElse(ImmutableList.of());
   }
 
-  @VisibleForTesting
-  protected Optional<Path> getSystemPackager() {
-    return finder.getOptionalExecutable(Paths.get("ghc-pkg"), delegate.getEnvironment());
-  }
-
   @Override
   public ToolProvider getPackager() {
-    Optional<ToolProvider> configuredPackager = delegate.getToolProvider(SECTION, "packager");
-    if (configuredPackager.isPresent()) {
-      return configuredPackager.get();
-    }
-
-    Optional<Path> systemPackager = getSystemPackager();
-    if (systemPackager.isPresent()) {
-      return new ConstantToolProvider(new HashedFileTool(systemPackager.get()));
-    }
-
-    throw new HumanReadableException(
-        "No Haskell packager found in .buckconfig (%s.compiler) or on system", SECTION);
+    return getTool("packager", "ghc-pkg");
   }
 
   @Override

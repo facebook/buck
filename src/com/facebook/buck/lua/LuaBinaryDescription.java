@@ -674,7 +674,7 @@ public class LuaBinaryDescription
       final LuaPackageComponents components) {
     Path output = getOutputPath(buildTarget, projectFilesystem);
 
-    Tool lua = luaConfig.getLua(resolver);
+    Tool lua = luaConfig.getLua().resolve(resolver);
     Tool packager = luaConfig.getPackager().resolve(resolver);
 
     LuaStandaloneBinary binary =
@@ -810,7 +810,7 @@ public class LuaBinaryDescription
         binary,
         args.getMainModule(),
         components.getComponents(),
-        luaConfig.getLua(resolver),
+        luaConfig.getLua().resolve(resolver),
         packageStyle);
   }
 

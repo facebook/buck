@@ -58,6 +58,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -100,9 +101,9 @@ public class LuaBinaryIntegrationTest {
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that a Lua interpreter is available on the system.
-    LuaBuckConfig fakeConfig =
-        new LuaBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    Optional<Path> luaOptional = fakeConfig.getSystemLua();
+    ExecutableFinder finder = new ExecutableFinder();
+    Optional<Path> luaOptional =
+        finder.getOptionalExecutable(Paths.get("lua"), ImmutableMap.copyOf(System.getenv()));
     assumeTrue(luaOptional.isPresent());
     lua = luaOptional.get();
 
