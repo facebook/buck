@@ -284,7 +284,9 @@ public class Depfiles {
         if (!(headerVerification.isWhitelisted(header.toString()))) {
           String errorMessage =
               String.format(
-                  "%s: included an untracked header \"%s\"",
+                  "%s: included an untracked header \"%s\"\n\n"
+                      + "Please reference this header file from \"headers\" or \"exported_headers\" \n"
+                      + "in the appropriate build rule.",
                   inputPath, repoRelativePath.orElse(header));
           eventBus.post(
               ConsoleEvent.create(
