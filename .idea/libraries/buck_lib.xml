@@ -27,7 +27,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error-prone-annotations-2.0.15.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -44,7 +44,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error-prone-annotations-2.0.15-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.20.0-sources.jar!/" />
     </SOURCES>
   </library>
