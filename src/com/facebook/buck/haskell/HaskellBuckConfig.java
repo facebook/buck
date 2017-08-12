@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class HaskellBuckConfig implements HaskellConfig {
 
@@ -107,38 +108,38 @@ public class HaskellBuckConfig implements HaskellConfig {
   }
 
   @Override
-  public Path getGhciScriptTemplate() {
-    return delegate.getRequiredPath(SECTION, "ghci_script_template");
+  public Supplier<Path> getGhciScriptTemplate() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_script_template");
   }
 
   @Override
-  public Path getGhciBinutils() {
-    return delegate.getRequiredPath(SECTION, "ghci_binutils_path");
+  public Supplier<Path> getGhciBinutils() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_binutils_path");
   }
 
   @Override
-  public Path getGhciGhc() {
-    return delegate.getRequiredPath(SECTION, "ghci_ghc_path");
+  public Supplier<Path> getGhciGhc() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_ghc_path");
   }
 
   @Override
-  public Path getGhciLib() {
-    return delegate.getRequiredPath(SECTION, "ghci_lib_path");
+  public Supplier<Path> getGhciLib() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_lib_path");
   }
 
   @Override
-  public Path getGhciCxx() {
-    return delegate.getRequiredPath(SECTION, "ghci_cxx_path");
+  public Supplier<Path> getGhciCxx() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_cxx_path");
   }
 
   @Override
-  public Path getGhciCc() {
-    return delegate.getRequiredPath(SECTION, "ghci_cc_path");
+  public Supplier<Path> getGhciCc() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_cc_path");
   }
 
   @Override
-  public Path getGhciCpp() {
-    return delegate.getRequiredPath(SECTION, "ghci_cpp_path");
+  public Supplier<Path> getGhciCpp() {
+    return () -> delegate.getRequiredPath(SECTION, "ghci_cpp_path");
   }
 
   @Override

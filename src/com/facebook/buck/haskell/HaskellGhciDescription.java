@@ -295,13 +295,13 @@ public class HaskellGhciDescription
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
             args.getEnableProfiling(),
-            haskellConfig.getGhciScriptTemplate(),
-            haskellConfig.getGhciBinutils(),
-            haskellConfig.getGhciGhc(),
-            haskellConfig.getGhciLib(),
-            haskellConfig.getGhciCxx(),
-            haskellConfig.getGhciCc(),
-            haskellConfig.getGhciCpp()));
+            haskellConfig.getGhciScriptTemplate().get(),
+            haskellConfig.getGhciBinutils().get(),
+            haskellConfig.getGhciGhc().get(),
+            haskellConfig.getGhciLib().get(),
+            haskellConfig.getGhciCxx().get(),
+            haskellConfig.getGhciCc().get(),
+            haskellConfig.getGhciCpp().get()));
   }
 
   @Override

@@ -20,6 +20,7 @@ import com.facebook.buck.rules.ToolProvider;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public interface HaskellConfig {
 
@@ -48,25 +49,25 @@ public interface HaskellConfig {
   Optional<Boolean> shouldUsedOldBinaryOutputLocation();
 
   /** @return The template to use for startup scripts for GHCi targets. */
-  Path getGhciScriptTemplate();
+  Supplier<Path> getGhciScriptTemplate();
 
   /** @return The binutils dir for GHCi targets. */
-  Path getGhciBinutils();
+  Supplier<Path> getGhciBinutils();
 
   /** @return The GHC binary for GHCi targets. */
-  Path getGhciGhc();
+  Supplier<Path> getGhciGhc();
 
   /** @return The lib dir for GHCi targets. */
-  Path getGhciLib();
+  Supplier<Path> getGhciLib();
 
   /** @return The C++ compiler for GHCi targets. */
-  Path getGhciCxx();
+  Supplier<Path> getGhciCxx();
 
   /** @return The C compiler for GHCi targets. */
-  Path getGhciCc();
+  Supplier<Path> getGhciCc();
 
   /** @return The C preprocessor for GHCi targets. */
-  Path getGhciCpp();
+  Supplier<Path> getGhciCpp();
 
   /** @return An optional prefix for generated Haskell package names. */
   Optional<String> getPackageNamePrefix();
