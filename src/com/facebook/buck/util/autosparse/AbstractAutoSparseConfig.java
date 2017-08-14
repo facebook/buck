@@ -44,7 +44,10 @@ public abstract class AbstractAutoSparseConfig {
 
   public static AutoSparseConfig of(Config config) {
     return AutoSparseConfig.of(
-        config.getBooleanValue("project", "enable_autosparse", false),
-        config.getListWithoutComments("autosparse", "ignore"));
+        isAutosparseEnabled(config), config.getListWithoutComments("autosparse", "ignore"));
+  }
+
+  public static boolean isAutosparseEnabled(Config config) {
+    return config.getBooleanValue("project", "enable_autosparse", false);
   }
 }

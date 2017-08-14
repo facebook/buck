@@ -16,11 +16,13 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.config.Config;
 import com.facebook.buck.eden.EdenClient;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
+import com.facebook.buck.util.autosparse.AbstractAutoSparseConfig;
 import com.facebook.buck.util.autosparse.AbstractAutoSparseFactory;
 import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.autosparse.AutoSparseProjectFilesystemDelegate;
@@ -43,8 +45,7 @@ public final class ProjectFilesystemDelegateFactory {
 
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
-      Path root, Path buckOut, String hgCmd, AutoSparseConfig autoSparseConfig)
-      throws InterruptedException {
+      Path root, Path buckOut, String hgCmd, Config config) throws InterruptedException {
     Optional<EdenClient> client = EdenClient.tryToCreateEdenClient(root);
 
     if (client.isPresent()) {
@@ -57,7 +58,8 @@ public final class ProjectFilesystemDelegateFactory {
       }
     }
 
-    if (autoSparseConfig.enabled()) {
+    if (AbstractAutoSparseConfig.isAutosparseEnabled(config)) {
+      AutoSparseConfig autoSparseConfig = AutoSparseConfig.of(config);
       // Grab a copy of the current environment; Mercurial sometimes cares (or more specifically,
       // a remote connection command like ssh cares). We rather not pass in an environment via the
       // ProjectFilesystem here because that'd make the ProjectFilesystem variant on the env, not
