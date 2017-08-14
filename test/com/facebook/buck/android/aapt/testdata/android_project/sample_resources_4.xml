@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources exclude-from-buck-resource-map="false">
+    <string name="hello">Hello, <xliff:g id="name">%s</xliff:g>!</string>
+</resources>
