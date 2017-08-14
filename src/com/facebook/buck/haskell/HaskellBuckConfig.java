@@ -17,10 +17,12 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -29,7 +31,7 @@ import java.util.Optional;
 public class HaskellBuckConfig {
 
   private static final Integer DEFAULT_MAJOR_VERSION = 7;
-  private static final String SECTION = "haskell";
+  private static final String SECTION_PREFIX = "haskell";
 
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
@@ -39,8 +41,8 @@ public class HaskellBuckConfig {
     this.finder = finder;
   }
 
-  private Optional<ImmutableList<String>> getFlags(String field) {
-    Optional<String> value = delegate.getValue(SECTION, field);
+  private Optional<ImmutableList<String>> getFlags(String section, String field) {
+    Optional<String> value = delegate.getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
@@ -51,43 +53,56 @@ public class HaskellBuckConfig {
     return Optional.of(split.build());
   }
 
-  private ToolProvider getTool(String configName, String systemName) {
+  private ToolProvider getTool(String section, String configName, String systemName) {
     return delegate
-        .getToolProvider(SECTION, configName)
+        .getToolProvider(section, configName)
         .orElseGet(
             () ->
                 SystemToolProvider.builder()
                     .setExecutableFinder(finder)
                     .setName(Paths.get(systemName))
                     .setEnvironment(delegate.getEnvironment())
-                    .setSource(String.format(".buckconfig (%s.%s)", SECTION, configName))
+                    .setSource(String.format(".buckconfig (%s.%s)", section, configName))
                     .build());
   }
 
-  public HaskellPlatform getPlatform(CxxPlatform cxxPlatform) {
+  private HaskellPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
     return HaskellPlatform.builder()
         .setHaskellVersion(
             HaskellVersion.of(
                 delegate
-                    .getInteger(SECTION, "compiler_major_version")
+                    .getInteger(section, "compiler_major_version")
                     .orElse(DEFAULT_MAJOR_VERSION)))
-        .setCompiler(getTool("compiler", "ghc"))
-        .setCompilerFlags(getFlags("compiler_flags").orElse(ImmutableList.of()))
-        .setLinker(getTool("linker", "ghc"))
-        .setLinkerFlags(getFlags("linker_flags").orElse(ImmutableList.of()))
-        .setPackager(getTool("packager", "ghc-pkg"))
-        .setShouldCacheLinks(delegate.getBooleanValue(SECTION, "cache_links", true))
+        .setCompiler(getTool(section, "compiler", "ghc"))
+        .setCompilerFlags(getFlags(section, "compiler_flags").orElse(ImmutableList.of()))
+        .setLinker(getTool(section, "linker", "ghc"))
+        .setLinkerFlags(getFlags(section, "linker_flags").orElse(ImmutableList.of()))
+        .setPackager(getTool(section, "packager", "ghc-pkg"))
+        .setShouldCacheLinks(delegate.getBooleanValue(section, "cache_links", true))
         .setShouldUsedOldBinaryOutputLocation(
-            delegate.getBoolean(SECTION, "old_binary_output_location"))
-        .setPackageNamePrefix(delegate.getValue(SECTION, "package_name_prefix"))
-        .setGhciScriptTemplate(() -> delegate.getRequiredPath(SECTION, "ghci_script_template"))
-        .setGhciBinutils(() -> delegate.getRequiredPath(SECTION, "ghci_binutils_path"))
-        .setGhciGhc(() -> delegate.getRequiredPath(SECTION, "ghci_ghc_path"))
-        .setGhciLib(() -> delegate.getRequiredPath(SECTION, "ghci_lib_path"))
-        .setGhciCxx(() -> delegate.getRequiredPath(SECTION, "ghci_cxx_path"))
-        .setGhciCc(() -> delegate.getRequiredPath(SECTION, "ghci_cc_path"))
-        .setGhciCpp(() -> delegate.getRequiredPath(SECTION, "ghci_cpp_path"))
+            delegate.getBoolean(section, "old_binary_output_location"))
+        .setPackageNamePrefix(delegate.getValue(section, "package_name_prefix"))
+        .setGhciScriptTemplate(() -> delegate.getRequiredPath(section, "ghci_script_template"))
+        .setGhciBinutils(() -> delegate.getRequiredPath(section, "ghci_binutils_path"))
+        .setGhciGhc(() -> delegate.getRequiredPath(section, "ghci_ghc_path"))
+        .setGhciLib(() -> delegate.getRequiredPath(section, "ghci_lib_path"))
+        .setGhciCxx(() -> delegate.getRequiredPath(section, "ghci_cxx_path"))
+        .setGhciCc(() -> delegate.getRequiredPath(section, "ghci_cc_path"))
+        .setGhciCpp(() -> delegate.getRequiredPath(section, "ghci_cpp_path"))
         .setCxxPlatform(cxxPlatform)
         .build();
+  }
+
+  public ImmutableList<HaskellPlatform> getPlatforms(Iterable<CxxPlatform> cxxPlatforms) {
+    return RichStream.from(cxxPlatforms)
+        .map(
+            cxxPlatform ->
+                // We special case the "default" C/C++ platform to just use the "haskell" section.
+                cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
+                    ? getPlatform(SECTION_PREFIX, cxxPlatform)
+                    : getPlatform(
+                        String.format("%s#%s", SECTION_PREFIX, cxxPlatform.getFlavor()),
+                        cxxPlatform))
+        .toImmutableList();
   }
 }
