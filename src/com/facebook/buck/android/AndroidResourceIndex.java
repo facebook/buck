@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey public final SourcePath resDir;
 
-  private AndroidResourceIndex(
+  public AndroidResourceIndex(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
