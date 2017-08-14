@@ -16,6 +16,7 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -75,4 +76,7 @@ interface AbstractHaskellPlatform {
 
   /** @return An optional prefix for generated Haskell package names. */
   Optional<String> getPackageNamePrefix();
+
+  /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
+  CxxPlatform getCxxPlatform();
 }

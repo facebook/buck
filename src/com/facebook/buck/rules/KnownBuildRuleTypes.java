@@ -495,14 +495,17 @@ public class KnownBuildRuleTypes {
     builder.register(appleBinaryDescription);
 
     HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
-    HaskellPlatform haskellPlatform = haskellBuckConfig.getPlatform();
-    builder.register(new HaskellLibraryDescription(haskellPlatform, cxxBuckConfig, cxxPlatforms));
-    builder.register(
-        new HaskellBinaryDescription(haskellPlatform, cxxPlatforms, defaultCxxPlatform));
+    HaskellPlatform defaultHaskellPlatform = haskellBuckConfig.getPlatform(defaultCxxPlatform);
+    FlavorDomain<HaskellPlatform> haskellPlatforms =
+        new FlavorDomain<>(
+            "Haskell platform",
+            ImmutableMap.copyOf(
+                Maps.transformValues(cxxPlatformsMap, defaultHaskellPlatform::withCxxPlatform)));
+    builder.register(new HaskellLibraryDescription(haskellPlatforms, cxxBuckConfig));
+    builder.register(new HaskellBinaryDescription(defaultHaskellPlatform, haskellPlatforms));
     builder.register(new HaskellPrebuiltLibraryDescription());
     builder.register(
-        new HaskellGhciDescription(
-            haskellPlatform, cxxBuckConfig, cxxPlatforms, defaultCxxPlatform));
+        new HaskellGhciDescription(defaultHaskellPlatform, haskellPlatforms, cxxBuckConfig));
 
     if (javaConfig.getDxThreadCount().isPresent()) {
       LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");

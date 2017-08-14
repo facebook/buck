@@ -16,8 +16,6 @@
 
 package com.facebook.buck.haskell;
 
-import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -33,18 +31,13 @@ public class HaskellBinaryBuilder
 
   public HaskellBinaryBuilder(
       BuildTarget target,
-      HaskellPlatform haskellPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
-    super(new HaskellBinaryDescription(haskellPlatform, cxxPlatforms, defaultCxxPlatform), target);
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms) {
+    super(new HaskellBinaryDescription(defaultPlatform, platforms), target);
   }
 
   public HaskellBinaryBuilder(BuildTarget target) {
-    this(
-        target,
-        HaskellTestUtils.DEFAULT_PLATFORM,
-        CxxPlatformUtils.DEFAULT_PLATFORMS,
-        CxxPlatformUtils.DEFAULT_PLATFORM);
+    this(target, HaskellTestUtils.DEFAULT_PLATFORM, HaskellTestUtils.DEFAULT_PLATFORMS);
   }
 
   public HaskellBinaryBuilder setCompilerFlags(ImmutableList<String> flags) {

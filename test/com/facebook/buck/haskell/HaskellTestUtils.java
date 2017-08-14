@@ -19,7 +19,9 @@ package com.facebook.buck.haskell;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.google.common.base.Charsets;
@@ -40,8 +42,9 @@ class HaskellTestUtils {
           .setCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setHaskellVersion(HaskellVersion.of(7))
+          .setHaskellVersion(HaskellVersion.of(8))
           .setShouldCacheLinks(true)
+          .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setGhciScriptTemplate(
               () -> {
                 throw new UnsupportedOperationException();
@@ -71,6 +74,11 @@ class HaskellTestUtils {
                 throw new UnsupportedOperationException();
               })
           .build();
+
+  public static final FlavorDomain<HaskellPlatform> DEFAULT_PLATFORMS =
+      new FlavorDomain<>(
+          "Haskell Platform",
+          ImmutableMap.of(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(), DEFAULT_PLATFORM));
 
   private HaskellTestUtils() {}
 

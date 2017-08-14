@@ -19,7 +19,6 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
-import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.cxx.platform.Linkers;
 import com.facebook.buck.cxx.platform.NativeLinkable;
@@ -80,17 +79,13 @@ public class HaskellBinaryDescription
   private static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Haskell Binary Type", Type.class);
 
-  private final HaskellPlatform haskellPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPlatform defaultCxxPlatform;
+  private final HaskellPlatform defaultPlatform;
+  private final FlavorDomain<HaskellPlatform> platforms;
 
   public HaskellBinaryDescription(
-      HaskellPlatform haskellPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
-    this.haskellPlatform = haskellPlatform;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+      HaskellPlatform defaultPlatform, FlavorDomain<HaskellPlatform> platforms) {
+    this.defaultPlatform = defaultPlatform;
+    this.platforms = platforms;
   }
 
   @Override
@@ -110,18 +105,18 @@ public class HaskellBinaryDescription
   }
 
   // Return the C/C++ platform to build against.
-  private CxxPlatform getCxxPlatform(BuildTarget target, HaskellBinaryDescriptionArg arg) {
+  private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellBinaryDescriptionArg arg) {
 
-    Optional<CxxPlatform> flavorPlatform = cxxPlatforms.getValue(target);
+    Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
       return flavorPlatform.get();
     }
 
-    if (arg.getCxxPlatform().isPresent()) {
-      return cxxPlatforms.getValue(arg.getCxxPlatform().get());
+    if (arg.getPlatform().isPresent()) {
+      return platforms.getValue(arg.getPlatform().get());
     }
 
-    return defaultCxxPlatform;
+    return defaultPlatform;
   }
 
   @Override
@@ -137,15 +132,15 @@ public class HaskellBinaryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    HaskellPlatform platform = getPlatform(buildTarget, args);
     Linker.LinkableDepType depType = getLinkStyle(buildTarget, args);
 
     // The target to use for the link rule.
     BuildTarget binaryTarget = buildTarget.withFlavors(InternalFlavor.of("binary"));
 
     // Maintain backwards compatibility to ease upgrade flows.
-    if (haskellPlatform.shouldUsedOldBinaryOutputLocation().orElse(true)) {
-      binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
+    if (platform.shouldUsedOldBinaryOutputLocation().orElse(true)) {
+      binaryTarget = binaryTarget.withAppendedFlavors(platform.getCxxPlatform().getFlavor());
     }
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
@@ -155,7 +150,7 @@ public class HaskellBinaryDescription
             .addDeps(args.getDeps())
             .addPlatformDeps(args.getPlatformDeps())
             .build()
-            .get(resolver, cxxPlatform));
+            .get(resolver, platform.getCxxPlatform()));
 
     ImmutableList<BuildRule> depQueryDeps =
         args.getDepsQuery()
@@ -194,7 +189,7 @@ public class HaskellBinaryDescription
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   buildTarget,
                   projectFilesystem,
-                  cxxPlatform,
+                  platform.getCxxPlatform(),
                   deps,
                   NativeLinkable.class::isInstance));
 
@@ -208,7 +203,7 @@ public class HaskellBinaryDescription
                       "-rpath",
                       String.format(
                           "%s/%s",
-                          cxxPlatform.getLd().resolve(resolver).origin(),
+                          platform.getCxxPlatform().getLd().resolve(resolver).origin(),
                           absBinaryDir.relativize(sharedLibraries.getRoot()).toString())))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
@@ -224,7 +219,7 @@ public class HaskellBinaryDescription
                 args.getLinkerFlags(),
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, resolver, cxxPlatform, f))));
+                        buildTarget, cellRoots, resolver, platform.getCxxPlatform(), f))));
 
     // Generate the compile rule and add its objects to the link.
     HaskellCompileRule compileRule =
@@ -240,8 +235,7 @@ public class HaskellBinaryDescription
                         dep ->
                             dep instanceof HaskellCompileDep || dep instanceof CxxPreprocessorDep)
                     .toImmutableSet(),
-                cxxPlatform,
-                haskellPlatform,
+                platform,
                 depType,
                 false,
                 args.getMain(),
@@ -252,7 +246,7 @@ public class HaskellBinaryDescription
                     resolver,
                     pathResolver,
                     ruleFinder,
-                    cxxPlatform,
+                    platform,
                     "srcs",
                     args.getSrcs())));
     linkInputsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
@@ -268,8 +262,7 @@ public class HaskellBinaryDescription
             params,
             resolver,
             ruleFinder,
-            cxxPlatform,
-            haskellPlatform,
+            platform,
             Linker.LinkType.EXECUTABLE,
             linkFlags,
             linkInputs,
@@ -299,10 +292,7 @@ public class HaskellBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
-        haskellPlatform,
-        ImmutableList.of(
-            cxxPlatforms.getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)),
-        extraDepsBuilder);
+        ImmutableList.of(getPlatform(buildTarget, constructorArg)), extraDepsBuilder);
 
     constructorArg
         .getDepsQuery()
@@ -314,7 +304,7 @@ public class HaskellBinaryDescription
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (cxxPlatforms.containsAnyOf(flavors)) {
+    if (platforms.containsAnyOf(flavors)) {
       return true;
     }
 
@@ -384,7 +374,5 @@ public class HaskellBinaryDescription
     Optional<Linker.LinkableDepType> getLinkStyle();
 
     Optional<Flavor> getPlatform();
-
-    Optional<Flavor> getCxxPlatform();
   }
 }

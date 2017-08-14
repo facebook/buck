@@ -69,20 +69,17 @@ public class HaskellGhciDescription
         ImplicitDepsInferringDescription<HaskellGhciDescription.AbstractHaskellGhciDescriptionArg>,
         VersionPropagator<HaskellGhciDescriptionArg> {
 
-  private final HaskellPlatform haskellPlatform;
+  private final HaskellPlatform defaultPlatform;
+  private final FlavorDomain<HaskellPlatform> platforms;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPlatform defaultCxxPlatform;
 
   public HaskellGhciDescription(
-      HaskellPlatform haskellPlatform,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
-    this.haskellPlatform = haskellPlatform;
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
+    this.defaultPlatform = defaultPlatform;
+    this.platforms = platforms;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -177,6 +174,21 @@ public class HaskellGhciDescription
         });
   }
 
+  // Return the C/C++ platform to build against.
+  private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
+
+    Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
+    if (flavorPlatform.isPresent()) {
+      return flavorPlatform.get();
+    }
+
+    if (arg.getPlatform().isPresent()) {
+      return platforms.getValue(arg.getPlatform().get());
+    }
+
+    return defaultPlatform;
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -188,7 +200,7 @@ public class HaskellGhciDescription
       HaskellGhciDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform);
+    HaskellPlatform platform = getPlatform(buildTarget, args);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -198,7 +210,7 @@ public class HaskellGhciDescription
             .addDeps(args.getDeps())
             .addPlatformDeps(args.getPlatformDeps())
             .build()
-            .get(resolver, cxxPlatform));
+            .get(resolver, platform.getCxxPlatform()));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 
     ImmutableSet.Builder<HaskellPackage> haskellPackages = ImmutableSet.builder();
@@ -213,7 +225,7 @@ public class HaskellGhciDescription
               HaskellCompileInput ci =
                   ((HaskellCompileDep) rule)
                       .getCompileInput(
-                          cxxPlatform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
+                          platform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
@@ -245,7 +257,8 @@ public class HaskellGhciDescription
               nativeLinkables.add((NativeLinkable) rule);
             } else if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
               for (NativeLinkable nl :
-                  ((NativeLinkable) rule).getNativeLinkableExportedDepsForPlatform(cxxPlatform)) {
+                  ((NativeLinkable) rule)
+                      .getNativeLinkableExportedDepsForPlatform(platform.getCxxPlatform())) {
                 traverse.add((BuildRule) nl);
               }
             }
@@ -256,17 +269,21 @@ public class HaskellGhciDescription
     cxxVisitor.start();
 
     ImmutableList<NativeLinkable> sortedNativeLinkables =
-        getSortedNativeLinkables(cxxPlatform, nativeLinkables.build());
+        getSortedNativeLinkables(platform.getCxxPlatform(), nativeLinkables.build());
 
     BuildRule omnibusSharedObject =
         requireOmnibusSharedObject(
-            buildTarget, projectFilesystem, resolver, cxxPlatform, sortedNativeLinkables);
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            platform.getCxxPlatform(),
+            sortedNativeLinkables);
 
     ImmutableSortedMap.Builder<String, SourcePath> solibs = ImmutableSortedMap.naturalOrder();
     for (NativeLinkable nativeLinkable : sortedNativeLinkables) {
-      if (isPrebuiltSO(nativeLinkable, cxxPlatform)) {
+      if (isPrebuiltSO(nativeLinkable, platform.getCxxPlatform())) {
         ImmutableMap<String, SourcePath> sharedObjects =
-            nativeLinkable.getSharedLibraries(cxxPlatform);
+            nativeLinkable.getSharedLibraries(platform.getCxxPlatform());
         for (Map.Entry<String, SourcePath> ent : sharedObjects.entrySet()) {
           if (ent.getValue() instanceof PathSourcePath) {
             solibs.put(ent.getKey(), ent.getValue());
@@ -277,7 +294,7 @@ public class HaskellGhciDescription
 
     HaskellSources srcs =
         HaskellSources.from(
-            buildTarget, resolver, pathResolver, ruleFinder, cxxPlatform, "srcs", args.getSrcs());
+            buildTarget, resolver, pathResolver, ruleFinder, platform, "srcs", args.getSrcs());
 
     return resolver.addToIndex(
         HaskellGhciRule.from(
@@ -295,13 +312,13 @@ public class HaskellGhciDescription
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
             args.getEnableProfiling(),
-            haskellPlatform.getGhciScriptTemplate().get(),
-            haskellPlatform.getGhciBinutils().get(),
-            haskellPlatform.getGhciGhc().get(),
-            haskellPlatform.getGhciLib().get(),
-            haskellPlatform.getGhciCxx().get(),
-            haskellPlatform.getGhciCc().get(),
-            haskellPlatform.getGhciCpp().get()));
+            platform.getGhciScriptTemplate().get(),
+            platform.getGhciBinutils().get(),
+            platform.getGhciGhc().get(),
+            platform.getGhciLib().get(),
+            platform.getGhciCxx().get(),
+            platform.getGhciCc().get(),
+            platform.getGhciCpp().get()));
   }
 
   @Override
@@ -313,10 +330,7 @@ public class HaskellGhciDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     HaskellDescriptionUtils.getParseTimeDeps(
-        haskellPlatform,
-        ImmutableList.of(
-            cxxPlatforms.getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)),
-        extraDepsBuilder);
+        ImmutableList.of(getPlatform(buildTarget, constructorArg)), extraDepsBuilder);
 
     constructorArg
         .getDepsQuery()

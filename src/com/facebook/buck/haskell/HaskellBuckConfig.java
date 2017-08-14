@@ -17,6 +17,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
@@ -63,7 +64,7 @@ public class HaskellBuckConfig {
                     .build());
   }
 
-  public HaskellPlatform getPlatform() {
+  public HaskellPlatform getPlatform(CxxPlatform cxxPlatform) {
     return HaskellPlatform.builder()
         .setHaskellVersion(
             HaskellVersion.of(
@@ -86,6 +87,7 @@ public class HaskellBuckConfig {
         .setGhciCxx(() -> delegate.getRequiredPath(SECTION, "ghci_cxx_path"))
         .setGhciCc(() -> delegate.getRequiredPath(SECTION, "ghci_cc_path"))
         .setGhciCpp(() -> delegate.getRequiredPath(SECTION, "ghci_cpp_path"))
+        .setCxxPlatform(cxxPlatform)
         .build();
   }
 }

@@ -77,7 +77,7 @@ public class HaskellPrebuiltLibraryDescription
               CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
       @Override
-      public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {
+      public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
         return RichStream.from(args.getDeps())
             .map(resolver::getRule)
             .filter(HaskellCompileDep.class::isInstance)
@@ -86,7 +86,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType depType, boolean hsProfile)
+          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile)
           throws NoSuchBuildTargetException {
 
         ImmutableCollection<SourcePath> libs = null;
