@@ -138,7 +138,13 @@ public class DistBuildSlaveExecutor {
         BuildTargetsQueue.newQueue(
             Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
             fullyQualifiedNameToBuildTarget(args.getState().getRemoteState().getTopLevelTargets()));
-    return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId());
+    Preconditions.checkArgument(
+        args.getMinionQueue().isPresent(),
+        "Minion queue name is missing to be able to run in Coordinator mode.");
+    CoordinatorModeRunner.EventListener listener =
+        new CoordinatorAndMinionInfoSetter(
+            args.getDistBuildService(), args.getStampedeId(), args.getMinionQueue().get());
+    return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId(), listener);
   }
 
   private TargetGraph createTargetGraph() throws IOException, InterruptedException {

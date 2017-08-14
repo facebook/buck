@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.distributed.BuildJobStateSerializer;
+import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
@@ -142,6 +143,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
         try (CommandThreadManager pool =
             new CommandThreadManager(
                 getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
+          Optional<StampedeId> stampedeId = getStampedeIdOptional();
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
@@ -151,9 +153,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   Preconditions.checkNotNull(distBuildMode),
                   coordinatorPort,
                   coordinatorAddress,
-                  getStampedeIdOptional(),
+                  stampedeId,
                   getGlobalCacheDirOptional(),
-                  fileMaterializationStatsTracker);
+                  fileMaterializationStatsTracker,
+                  new DistBuildConfig(params.getBuckConfig()).getMinionQueue());
 
           int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);

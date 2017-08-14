@@ -33,7 +33,10 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     int port = ThriftCoordinatorServerIntegrationTest.findRandomOpenPortOnAllLocalInterfaces();
     CoordinatorModeRunner coordinator =
         new CoordinatorModeRunner(
-            port, BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID);
+            port,
+            BuildTargetsQueueTest.createDiamondDependencyQueue(),
+            STAMPEDE_ID,
+            (address, port1) -> {});
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
     MinionModeRunner minion = new MinionModeRunner("localhost", port, localBuilder, STAMPEDE_ID);

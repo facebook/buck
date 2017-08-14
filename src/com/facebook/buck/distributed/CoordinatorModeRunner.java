@@ -20,20 +20,30 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.base.Preconditions;
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 
 public class CoordinatorModeRunner implements DistBuildModeRunner {
 
   private final BuildTargetsQueue queue;
   private final int coordinatorPort;
   private final StampedeId stampedeId;
+  private final EventListener eventListener;
+
+  public interface EventListener {
+    void onThriftServerStarted(String address, int port) throws IOException;
+  }
 
   public CoordinatorModeRunner(
-      int coordinatorPort, BuildTargetsQueue queue, StampedeId stampedeId) {
+      int coordinatorPort,
+      BuildTargetsQueue queue,
+      StampedeId stampedeId,
+      EventListener eventListener) {
     this.stampedeId = stampedeId;
     Preconditions.checkArgument(
         coordinatorPort > 0, "The coordinator's port needs to be a positive integer.");
     this.queue = queue;
     this.coordinatorPort = coordinatorPort;
+    this.eventListener = eventListener;
   }
 
   @Override
@@ -53,6 +63,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
     private AsyncCoordinatorRun(BuildTargetsQueue queue) throws IOException {
       this.server = new ThriftCoordinatorServer(coordinatorPort, queue, stampedeId);
       this.server.start();
+      eventListener.onThriftServerStarted(
+          InetAddress.getLocalHost().getHostName(), coordinatorPort);
     }
 
     public int getExitCode() {

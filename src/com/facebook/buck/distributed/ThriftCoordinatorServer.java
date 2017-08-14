@@ -70,7 +70,7 @@ public class ThriftCoordinatorServer implements Closeable {
     this.allocator = new MinionWorkloadAllocator(queue, MAX_TARGETS_ALLOCATED_PER_MINION);
     this.port = port;
     this.handler = new CoordinatorServiceHandler();
-    this.processor = new CoordinatorService.Processor<CoordinatorService.Iface>(handler);
+    this.processor = new CoordinatorService.Processor<>(handler);
   }
 
   public ThriftCoordinatorServer start() throws IOException {

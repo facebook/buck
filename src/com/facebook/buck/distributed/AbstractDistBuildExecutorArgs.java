@@ -33,6 +33,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -81,4 +82,8 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract VersionedTargetGraphCache getVersionedTargetGraphCache();
 
   public abstract BuildInfoStoreManager getBuildInfoStoreManager();
+
+  public abstract DistBuildService getDistBuildService();
+
+  public abstract Optional<String> getMinionQueue();
 }
