@@ -91,7 +91,7 @@ import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.haskell.HaskellBinaryDescription;
-import com.facebook.buck.haskell.HaskellBuckConfigPlatform;
+import com.facebook.buck.haskell.HaskellBuckConfig;
 import com.facebook.buck.haskell.HaskellGhciDescription;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
 import com.facebook.buck.haskell.HaskellPlatform;
@@ -494,7 +494,8 @@ public class KnownBuildRuleTypes {
             appleConfig);
     builder.register(appleBinaryDescription);
 
-    HaskellPlatform haskellPlatform = new HaskellBuckConfigPlatform(config, executableFinder);
+    HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
+    HaskellPlatform haskellPlatform = haskellBuckConfig.getPlatform();
     builder.register(new HaskellLibraryDescription(haskellPlatform, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new HaskellBinaryDescription(haskellPlatform, cxxPlatforms, defaultCxxPlatform));

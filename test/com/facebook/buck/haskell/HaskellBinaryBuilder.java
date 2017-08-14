@@ -42,7 +42,7 @@ public class HaskellBinaryBuilder
   public HaskellBinaryBuilder(BuildTarget target) {
     this(
         target,
-        FakeHaskellPlatform.DEFAULT,
+        HaskellTestUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS,
         CxxPlatformUtils.DEFAULT_PLATFORM);
   }

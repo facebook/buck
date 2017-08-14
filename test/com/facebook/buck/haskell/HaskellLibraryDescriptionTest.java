@@ -214,7 +214,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder builder =
         new HaskellLibraryBuilder(
                 target,
-                FakeHaskellPlatform.DEFAULT,
+                HaskellTestUtils.DEFAULT_PLATFORM,
                 cxxBuckConfig,
                 CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(

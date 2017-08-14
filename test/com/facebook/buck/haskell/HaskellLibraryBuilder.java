@@ -44,7 +44,7 @@ public class HaskellLibraryBuilder
   public HaskellLibraryBuilder(BuildTarget target) {
     this(
         target,
-        FakeHaskellPlatform.DEFAULT,
+        HaskellTestUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_CONFIG,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
   }

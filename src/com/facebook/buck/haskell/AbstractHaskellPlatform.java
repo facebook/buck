@@ -17,12 +17,16 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.immutables.value.Value;
 
-public interface HaskellPlatform {
+@Value.Immutable
+@BuckStyleImmutable
+interface AbstractHaskellPlatform {
 
   /** @return the {@link ToolProvider} for the haskell compiler. */
   ToolProvider getCompiler();
