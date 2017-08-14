@@ -76,9 +76,7 @@ class HaskellTestUtils {
           .build();
 
   public static final FlavorDomain<HaskellPlatform> DEFAULT_PLATFORMS =
-      new FlavorDomain<>(
-          "Haskell Platform",
-          ImmutableMap.of(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(), DEFAULT_PLATFORM));
+      FlavorDomain.of("Haskell Platform", DEFAULT_PLATFORM);
 
   private HaskellTestUtils() {}
 

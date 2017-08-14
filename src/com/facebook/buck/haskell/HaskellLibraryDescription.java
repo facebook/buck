@@ -178,7 +178,7 @@ public class HaskellLibraryDescription
         CxxDescriptionEnhancer.getStaticLibraryPath(
             projectFilesystem,
             target.withoutFlavors(HaskellDescriptionUtils.PROF),
-            platform.getCxxPlatform().getFlavor(),
+            platform.getFlavor(),
             depType == Linker.LinkableDepType.STATIC
                 ? CxxSourceRuleFactory.PicType.PDC
                 : CxxSourceRuleFactory.PicType.PIC,
@@ -413,7 +413,7 @@ public class HaskellLibraryDescription
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
             .isEmpty());
-    BuildTarget target = baseTarget.withAppendedFlavors(platform.getCxxPlatform().getFlavor());
+    BuildTarget target = baseTarget.withAppendedFlavors(platform.getFlavor());
     switch (depType) {
       case SHARED:
         target = target.withAppendedFlavors(Type.PACKAGE_SHARED.getFlavor());
@@ -516,8 +516,7 @@ public class HaskellLibraryDescription
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
             .isEmpty());
     BuildTarget target =
-        baseTarget.withAppendedFlavors(
-            Type.SHARED.getFlavor(), platform.getCxxPlatform().getFlavor());
+        baseTarget.withAppendedFlavors(Type.SHARED.getFlavor(), platform.getFlavor());
 
     Optional<HaskellLinkRule> linkRule =
         resolver.getRuleOptionalWithType(target, HaskellLinkRule.class);

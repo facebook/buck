@@ -17,6 +17,8 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -27,56 +29,64 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractHaskellPlatform {
+abstract class AbstractHaskellPlatform implements FlavorConvertible {
+
+  // TODO: For now, we rely on Haskell platforms having the same "name" as the C/C++ platforms they
+  // wrap, due to having to lookup the Haskell platform in the C/C++ interfaces that Haskell rules
+  // implement, into which only C/C++ platform objects are threaded.
+  @Override
+  public final Flavor getFlavor() {
+    return getCxxPlatform().getFlavor();
+  }
 
   /** @return the {@link ToolProvider} for the haskell compiler. */
-  ToolProvider getCompiler();
+  abstract ToolProvider getCompiler();
 
   /** @return the {@link HaskellVersion} for the haskell compiler. */
-  HaskellVersion getHaskellVersion();
+  abstract HaskellVersion getHaskellVersion();
 
   /** @return a list of flags to use for compilation. */
-  ImmutableList<String> getCompilerFlags();
+  abstract ImmutableList<String> getCompilerFlags();
 
   /** @return the {@link ToolProvider} for the haskell linker. */
-  ToolProvider getLinker();
+  abstract ToolProvider getLinker();
 
   /** @return a list of flags to use for linking. */
-  ImmutableList<String> getLinkerFlags();
+  abstract ImmutableList<String> getLinkerFlags();
 
   /** @return the {@link ToolProvider} for the haskell packager. */
-  ToolProvider getPackager();
+  abstract ToolProvider getPackager();
 
   /** @return whether to cache haskell link rules. */
-  boolean shouldCacheLinks();
+  abstract boolean shouldCacheLinks();
 
   /** @return whether to use the deprecated binary output location. */
-  Optional<Boolean> shouldUsedOldBinaryOutputLocation();
+  abstract Optional<Boolean> shouldUsedOldBinaryOutputLocation();
 
   /** @return The template to use for startup scripts for GHCi targets. */
-  Supplier<Path> getGhciScriptTemplate();
+  abstract Supplier<Path> getGhciScriptTemplate();
 
   /** @return The binutils dir for GHCi targets. */
-  Supplier<Path> getGhciBinutils();
+  abstract Supplier<Path> getGhciBinutils();
 
   /** @return The GHC binary for GHCi targets. */
-  Supplier<Path> getGhciGhc();
+  abstract Supplier<Path> getGhciGhc();
 
   /** @return The lib dir for GHCi targets. */
-  Supplier<Path> getGhciLib();
+  abstract Supplier<Path> getGhciLib();
 
   /** @return The C++ compiler for GHCi targets. */
-  Supplier<Path> getGhciCxx();
+  abstract Supplier<Path> getGhciCxx();
 
   /** @return The C compiler for GHCi targets. */
-  Supplier<Path> getGhciCc();
+  abstract Supplier<Path> getGhciCc();
 
   /** @return The C preprocessor for GHCi targets. */
-  Supplier<Path> getGhciCpp();
+  abstract Supplier<Path> getGhciCpp();
 
   /** @return An optional prefix for generated Haskell package names. */
-  Optional<String> getPackageNamePrefix();
+  abstract Optional<String> getPackageNamePrefix();
 
   /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
-  CxxPlatform getCxxPlatform();
+  abstract CxxPlatform getCxxPlatform();
 }

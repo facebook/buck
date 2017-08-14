@@ -189,7 +189,7 @@ public class HaskellDescriptionUtils {
 
     target =
         target.withFlavors(
-            platform.getCxxPlatform().getFlavor(),
+            platform.getFlavor(),
             InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
 
     if (hsProfile) {

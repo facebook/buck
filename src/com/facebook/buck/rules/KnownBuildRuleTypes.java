@@ -174,6 +174,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** A registry of all the build rules types understood by Buck. */
@@ -497,10 +498,13 @@ public class KnownBuildRuleTypes {
     HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
     HaskellPlatform defaultHaskellPlatform = haskellBuckConfig.getPlatform(defaultCxxPlatform);
     FlavorDomain<HaskellPlatform> haskellPlatforms =
-        new FlavorDomain<>(
+        FlavorDomain.from(
             "Haskell platform",
-            ImmutableMap.copyOf(
-                Maps.transformValues(cxxPlatformsMap, defaultHaskellPlatform::withCxxPlatform)));
+            cxxPlatformsMap
+                .values()
+                .stream()
+                .map(defaultHaskellPlatform::withCxxPlatform)
+                .collect(Collectors.toList()));
     builder.register(new HaskellLibraryDescription(haskellPlatforms, cxxBuckConfig));
     builder.register(new HaskellBinaryDescription(defaultHaskellPlatform, haskellPlatforms));
     builder.register(new HaskellPrebuiltLibraryDescription());

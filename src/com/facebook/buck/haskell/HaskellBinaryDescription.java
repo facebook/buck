@@ -140,7 +140,7 @@ public class HaskellBinaryDescription
 
     // Maintain backwards compatibility to ease upgrade flows.
     if (platform.shouldUsedOldBinaryOutputLocation().orElse(true)) {
-      binaryTarget = binaryTarget.withAppendedFlavors(platform.getCxxPlatform().getFlavor());
+      binaryTarget = binaryTarget.withAppendedFlavors(platform.getFlavor());
     }
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
