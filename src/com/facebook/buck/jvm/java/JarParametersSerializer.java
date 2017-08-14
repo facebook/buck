@@ -106,11 +106,12 @@ public class JarParametersSerializer {
       manifestFile = Optional.of(Paths.get((String) data.get(MANIFEST_FILE)));
     }
 
-    return JarParameters.of(
-        outputPath,
-        new RemoveClassesPatternsMatcher(classesToRemove.build()),
-        entries.build(),
-        mainClass,
-        manifestFile);
+    return JarParameters.builder()
+        .setJarPath(outputPath)
+        .setRemoveEntryPredicate(new RemoveClassesPatternsMatcher(classesToRemove.build()))
+        .setEntriesToJar(entries.build())
+        .setMainClass(mainClass)
+        .setManifestFile(manifestFile)
+        .build();
   }
 }

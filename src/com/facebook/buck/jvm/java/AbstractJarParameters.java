@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleTuple
+@BuckStyleImmutable
 abstract class AbstractJarParameters {
   public abstract Path getJarPath();
 

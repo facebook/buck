@@ -70,14 +70,17 @@ public class JavacExecutionContextSerializerTest {
     ImmutableList<Path> pathToInputs =
         ImmutableList.of(Paths.get("/path/one"), Paths.get("/path/two"));
     JarParameters directToJarParameters =
-        JarParameters.of(
-            Paths.get("/some/path"),
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))),
-            ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
-            Optional.of("hello I am main class"),
-            Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
+        JarParameters.builder()
+            .setJarPath(Paths.get("/some/path"))
+            .setRemoveEntryPredicate(
+                new RemoveClassesPatternsMatcher(
+                    ImmutableSet.of(
+                        Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))))
+            .setEntriesToJar(
+                ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")))
+            .setMainClass(Optional.of("hello I am main class"))
+            .setManifestFile(Optional.of(Paths.get("/MANIFEST/FILE.TXT")))
+            .build();
 
     JavacExecutionContext input =
         JavacExecutionContext.of(

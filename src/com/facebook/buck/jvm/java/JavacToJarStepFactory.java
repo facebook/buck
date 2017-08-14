@@ -214,12 +214,13 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
               filesystem,
               new ClasspathChecker(),
               Optional.of(
-                  JarParameters.of(
-                      outputJar,
-                      classesToRemoveFromJar,
-                      ImmutableSortedSet.of(outputDirectory),
-                      mainClass,
-                      manifestFile)),
+                  JarParameters.builder()
+                      .setJarPath(outputJar)
+                      .setRemoveEntryPredicate(classesToRemoveFromJar)
+                      .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                      .setMainClass(mainClass)
+                      .setManifestFile(manifestFile)
+                      .build()),
               abiJar));
     } else {
       super.createCompileToJarStep(

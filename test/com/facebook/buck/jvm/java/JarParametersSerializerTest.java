@@ -31,14 +31,17 @@ public class JarParametersSerializerTest {
   @Test
   public void testSerializingAndDeserializing() throws Exception {
     JarParameters input =
-        JarParameters.of(
-            Paths.get("/some/path"),
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))),
-            ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
-            Optional.of("hello I am main class"),
-            Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
+        JarParameters.builder()
+            .setJarPath(Paths.get("/some/path"))
+            .setRemoveEntryPredicate(
+                new RemoveClassesPatternsMatcher(
+                    ImmutableSet.of(
+                        Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))))
+            .setEntriesToJar(
+                ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")))
+            .setMainClass(Optional.of("hello I am main class"))
+            .setManifestFile(Optional.of(Paths.get("/MANIFEST/FILE.TXT")))
+            .build();
 
     Map<String, Object> data = JarParametersSerializer.serialize(input);
     JarParameters output = JarParametersSerializer.deserialize(data);
@@ -72,14 +75,17 @@ public class JarParametersSerializerTest {
   @Test
   public void testWorkingWithOptionals() throws Exception {
     JarParameters input =
-        JarParameters.of(
-            Paths.get("/some/path"),
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))),
-            ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")),
-            Optional.empty(),
-            Optional.empty());
+        JarParameters.builder()
+            .setJarPath(Paths.get("/some/path"))
+            .setRemoveEntryPredicate(
+                new RemoveClassesPatternsMatcher(
+                    ImmutableSet.of(
+                        Pattern.compile("[a-z]"), Pattern.compile("[0-9]", Pattern.MULTILINE))))
+            .setEntriesToJar(
+                ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")))
+            .setMainClass(Optional.empty())
+            .setManifestFile(Optional.empty())
+            .build();
 
     Map<String, Object> data = JarParametersSerializer.serialize(input);
     JarParameters output = JarParametersSerializer.deserialize(data);
