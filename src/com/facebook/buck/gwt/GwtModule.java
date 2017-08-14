@@ -20,6 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -92,13 +93,11 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     steps.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            outputFile,
-            ImmutableSortedSet.of(tempJarFolder),
-            null,
-            null,
-            true,
-            false,
-            entry -> false));
+            JarParameters.builder()
+                .setJarPath(outputFile)
+                .setEntriesToJar(ImmutableSortedSet.of(tempJarFolder))
+                .setMergeManifests(true)
+                .build()));
 
     buildableContext.recordArtifact(outputFile);
 

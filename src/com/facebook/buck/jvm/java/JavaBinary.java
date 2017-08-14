@@ -43,7 +43,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
@@ -147,15 +149,18 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Step jar =
         new JarDirectoryStep(
             getProjectFilesystem(),
-            outputFile,
-            includePaths,
-            mainClass,
-            manifestPath,
-            mergeManifests,
-            false,
-            entry ->
-                blacklistPatternsMatcher.hasPatterns()
-                    && blacklistPatternsMatcher.substringMatches(entry.getName()));
+            JarParameters.builder()
+                .setJarPath(outputFile)
+                .setEntriesToJar(includePaths)
+                .setMainClass(Optional.ofNullable(mainClass))
+                .setManifestFile(Optional.ofNullable(manifestPath))
+                .setMergeManifests(mergeManifests)
+                .setRemoveEntryPredicate(
+                    entry ->
+                        blacklistPatternsMatcher.hasPatterns()
+                            && blacklistPatternsMatcher.substringMatches(
+                                ((ZipEntry) entry).getName()))
+                .build());
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);

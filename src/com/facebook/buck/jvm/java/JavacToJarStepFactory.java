@@ -119,13 +119,15 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
     steps.add(
         new JarDirectoryStep(
             filesystem,
-            outputJar,
-            ImmutableSortedSet.of(outputDirectory),
-            mainClass.orElse(null),
-            manifestFile.orElse(null),
-            true,
-            javacOptions.getCompilationMode() == JavacCompilationMode.ABI,
-            classesToRemoveFromJar));
+            JarParameters.builder()
+                .setJarPath(outputJar)
+                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setMainClass(mainClass)
+                .setManifestFile(manifestFile)
+                .setMergeManifests(true)
+                .setHashEntries(javacOptions.getCompilationMode() == JavacCompilationMode.ABI)
+                .setRemoveEntryPredicate(classesToRemoveFromJar)
+                .build()));
   }
 
   @Override

@@ -54,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -84,13 +85,12 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(zipup),
-            Paths.get("output.jar"),
-            ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
-            "com.example.Main",
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
@@ -122,13 +122,12 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             filesystem,
-            outputPath,
-            ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
-            "com.example.Main",
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(outputPath)
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     final BuckEventBusForTests.CapturingConsoleEventListener listener =
@@ -152,13 +151,12 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(zipup),
-            Paths.get("output.jar"),
-            ImmutableSortedSet.of(zip.getFileName()),
-            "com.example.MissingMain",
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(zip.getFileName()))
+                .setMainClass(Optional.of("com.example.MissingMain"))
+                .setMergeManifests(true)
+                .build());
     TestConsole console = new TestConsole();
     ExecutionContext context = TestExecutionContext.newBuilder().setConsole(console).build();
 
@@ -188,13 +186,12 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(zipup),
-            Paths.get("output.jar"),
-            ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
-            "com.example.Main",
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .build());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -240,13 +237,12 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(tmp),
-            output,
-            ImmutableSortedSet.of(Paths.get("input.jar")),
-            null,
-            tmp.resolve("manifest"),
-            true,
-            false,
-            RemoveClassesPatternsMatcher.EMPTY);
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(Paths.get("input.jar")))
+                .setManifestFile(Optional.of(tmp.resolve("manifest")))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
@@ -270,13 +266,11 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(zipup),
-            Paths.get("output.jar"),
-            ImmutableSortedSet.of(zipup),
-            null,
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(zipup))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
@@ -359,13 +353,14 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(zipup),
-            Paths.get("output.jar"),
-            ImmutableSortedSet.of(first.getFileName()),
-            "com.example.Main",
-            null,
-            true,
-            false,
-            new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile(".*2.*"))));
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .setRemoveEntryPredicate(
+                    new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile(".*2.*"))))
+                .build());
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -390,15 +385,16 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(zipup),
-            Paths.get("output.jar"),
-            ImmutableSortedSet.of(first.getFileName()),
-            "com.example.A",
-            null,
-            true,
-            false,
-            new RemoveClassesPatternsMatcher(
-                ImmutableSet.of(
-                    Pattern.compile("com.example.B"), Pattern.compile("com.example.C"))));
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
+                .setMainClass(Optional.of("com.example.A"))
+                .setMergeManifests(true)
+                .setRemoveEntryPredicate(
+                    new RemoveClassesPatternsMatcher(
+                        ImmutableSet.of(
+                            Pattern.compile("com.example.B"), Pattern.compile("com.example.C"))))
+                .build());
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
@@ -422,13 +418,11 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(folder.getRoot()),
-            outputJar,
-            ImmutableSortedSet.of(zipup),
-            null,
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(outputJar)
+                .setEntriesToJar(ImmutableSortedSet.of(zipup))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
     int returnCode = step.execute(context).getExitCode();
     assertEquals(0, returnCode);
@@ -509,13 +503,11 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new FakeProjectFilesystem(folder.getRoot()),
-            output,
-            ImmutableSortedSet.of(dir, inputJar),
-            null,
-            null,
-            true,
-            false,
-            entry -> false);
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(dir, inputJar))
+                .setMergeManifests(true)
+                .build());
     int exitCode = step.execute(TestExecutionContext.newInstance()).getExitCode();
 
     assertEquals(0, exitCode);
@@ -569,13 +561,13 @@ public class JarDirectoryStepTest {
     JarDirectoryStep step =
         new JarDirectoryStep(
             new ProjectFilesystem(tmp),
-            output,
-            ImmutableSortedSet.of(originalJar),
-            null,
-            manifestFile,
-            mergeEntries,
-            false,
-            RemoveClassesPatternsMatcher.EMPTY);
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(originalJar))
+                .setManifestFile(Optional.of(manifestFile))
+                .setMergeManifests(mergeEntries)
+                .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 

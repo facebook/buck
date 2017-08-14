@@ -126,13 +126,14 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
     steps.add(
         new JarDirectoryStep(
             filesystem,
-            outputJar,
-            ImmutableSortedSet.of(outputDirectory),
-            mainClass.orElse(null),
-            manifestFile.orElse(null),
-            true,
-            false,
-            classesToRemoveFromJar));
+            JarParameters.builder()
+                .setJarPath(outputJar)
+                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setMainClass(mainClass)
+                .setManifestFile(manifestFile)
+                .setMergeManifests(true)
+                .setRemoveEntryPredicate(classesToRemoveFromJar)
+                .build()));
   }
 
   /**

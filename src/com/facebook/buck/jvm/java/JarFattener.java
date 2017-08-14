@@ -207,13 +207,12 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            output,
-            ImmutableSortedSet.of(zipped),
-            FatJarMain.class.getName(),
-            null,
-            true,
-            false,
-            entry -> false));
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(zipped))
+                .setMainClass(Optional.of(FatJarMain.class.getName()))
+                .setMergeManifests(true)
+                .build()));
 
     buildableContext.recordArtifact(output);
 
