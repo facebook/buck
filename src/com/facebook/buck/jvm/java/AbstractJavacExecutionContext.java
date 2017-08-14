@@ -56,5 +56,5 @@ abstract class AbstractJavacExecutionContext {
   public abstract ImmutableList<Path> getAbsolutePathsForInputs();
 
   /** Setting this to non-absent value enables direct to jar output. */
-  public abstract Optional<DirectToJarOutputSettings> getDirectToJarOutputSettings();
+  public abstract Optional<JarParameters> getDirectToJarParameters();
 }

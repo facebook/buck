@@ -183,7 +183,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         return 1;
       }
 
-      if (!context.getDirectToJarOutputSettings().isPresent()) {
+      if (!context.getDirectToJarParameters().isPresent()) {
         return 0;
       }
 
@@ -193,10 +193,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   context
                       .getProjectFilesystem()
                       .getPathForRelativePath(
-                          context
-                              .getDirectToJarOutputSettings()
-                              .get()
-                              .getDirectToJarOutputPath())));
+                          context.getDirectToJarParameters().get().getJarPath())));
     } catch (IOException e) {
       LOG.error(e);
       throw new HumanReadableException("IOException during compilation: ", e.getMessage());
@@ -301,17 +298,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       addCloseable(standardFileManager);
 
       StandardJavaFileManager fileManager;
-      if (context.getDirectToJarOutputSettings().isPresent()) {
+      if (context.getDirectToJarParameters().isPresent()) {
         Path directToJarPath =
             context
                 .getProjectFilesystem()
-                .getPathForRelativePath(
-                    context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+                .getPathForRelativePath(context.getDirectToJarParameters().get().getJarPath());
         inMemoryFileManager =
             new JavaInMemoryFileManager(
                 standardFileManager,
                 directToJarPath,
-                context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+                context.getDirectToJarParameters().get().getClassesToRemoveFromJar());
         addCloseable(inMemoryFileManager);
         fileManager = inMemoryFileManager;
       } else {
@@ -395,17 +391,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
         .setEntriesToJar(
             context
-                .getDirectToJarOutputSettings()
+                .getDirectToJarParameters()
                 .get()
                 .getEntriesToJar()
                 .stream()
                 .map(context.getProjectFilesystem()::resolve))
-        .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
-        .setManifestFile(
-            context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+        .setMainClass(context.getDirectToJarParameters().get().getMainClass().orElse(null))
+        .setManifestFile(context.getDirectToJarParameters().get().getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
         .setRemoveEntryPredicate(
-            context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar()
+            context.getDirectToJarParameters().get().getClassesToRemoveFromJar()
                 ::shouldRemoveClass);
   }
 

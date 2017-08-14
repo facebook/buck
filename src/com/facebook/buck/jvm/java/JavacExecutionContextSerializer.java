@@ -47,7 +47,7 @@ public class JavacExecutionContextSerializer {
   private static final String ENVIRONMENT = "env";
   private static final String PROCESS_EXECUTOR = "process_executor";
   private static final String ABSOLUTE_PATHS_FOR_INPUTS = "absolute_paths_for_inputs";
-  private static final String DIRECT_TO_JAR_SETTINGS = "direct_to_jar_settings";
+  private static final String DIRECT_TO_JAR_PARAMETERS = "direct_to_jar_parameters";
 
   public static ImmutableMap<String, Object> serialize(JavacExecutionContext context) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
@@ -68,11 +68,10 @@ public class JavacExecutionContextSerializer {
         ABSOLUTE_PATHS_FOR_INPUTS,
         ImmutableList.copyOf(
             context.getAbsolutePathsForInputs().stream().map(Path::toString).iterator()));
-    if (context.getDirectToJarOutputSettings().isPresent()) {
+    if (context.getDirectToJarParameters().isPresent()) {
       builder.put(
-          DIRECT_TO_JAR_SETTINGS,
-          DirectToJarOutputSettingsSerializer.serialize(
-              context.getDirectToJarOutputSettings().get()));
+          DIRECT_TO_JAR_PARAMETERS,
+          JarParametersSerializer.serialize(context.getDirectToJarParameters().get()));
     }
 
     return builder.build();
@@ -117,13 +116,13 @@ public class JavacExecutionContextSerializer {
                 .map(s -> Paths.get(s))
                 .iterator());
 
-    Optional<DirectToJarOutputSettings> directToJarOutputSettings = Optional.empty();
-    if (data.containsKey(DIRECT_TO_JAR_SETTINGS)) {
-      directToJarOutputSettings =
+    Optional<JarParameters> directToJarParameters = Optional.empty();
+    if (data.containsKey(DIRECT_TO_JAR_PARAMETERS)) {
+      directToJarParameters =
           Optional.of(
-              DirectToJarOutputSettingsSerializer.deserialize(
+              JarParametersSerializer.deserialize(
                   (Map<String, Object>)
-                      Preconditions.checkNotNull(data.get(DIRECT_TO_JAR_SETTINGS))));
+                      Preconditions.checkNotNull(data.get(DIRECT_TO_JAR_PARAMETERS))));
     }
 
     return JavacExecutionContext.of(
@@ -141,6 +140,6 @@ public class JavacExecutionContextSerializer {
                 "Missing environment when deserializing JavacExectionContext"),
         processExecutor,
         absolutePathsForInputs,
-        directToJarOutputSettings);
+        directToJarParameters);
   }
 }

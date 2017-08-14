@@ -214,7 +214,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
               filesystem,
               new ClasspathChecker(),
               Optional.of(
-                  DirectToJarOutputSettings.of(
+                  JarParameters.of(
                       outputJar,
                       classesToRemoveFromJar,
                       ImmutableSortedSet.of(outputDirectory),

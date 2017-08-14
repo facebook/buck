@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class DirectToJarOutputSettingsSerializer {
-  private DirectToJarOutputSettingsSerializer() {}
+public class JarParametersSerializer {
+  private JarParametersSerializer() {}
 
   private static final String OUTPUT_PATH = "output_path";
   private static final String CLASSES_TO_REMOVE = "classes_to_remove";
@@ -39,10 +39,10 @@ public class DirectToJarOutputSettingsSerializer {
   private static final String MAIN_CLASS = "main_class";
   private static final String MANIFEST_FILE = "manifest_file";
 
-  public static ImmutableMap<String, Object> serialize(DirectToJarOutputSettings settings) {
+  public static ImmutableMap<String, Object> serialize(JarParameters settings) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
-    builder.put(OUTPUT_PATH, settings.getDirectToJarOutputPath().toString());
+    builder.put(OUTPUT_PATH, settings.getJarPath().toString());
 
     ImmutableList.Builder<ImmutableMap<String, Object>> serializedPatterns =
         ImmutableList.builder();
@@ -72,7 +72,7 @@ public class DirectToJarOutputSettingsSerializer {
   }
 
   @SuppressWarnings("unchecked")
-  public static DirectToJarOutputSettings deserialize(Map<String, Object> data) {
+  public static JarParameters deserialize(Map<String, Object> data) {
     Path outputPath = Paths.get((String) Preconditions.checkNotNull(data.get(OUTPUT_PATH)));
 
     ImmutableSet.Builder<Pattern> classesToRemove = ImmutableSet.builder();
@@ -83,11 +83,11 @@ public class DirectToJarOutputSettingsSerializer {
               (String)
                   Preconditions.checkNotNull(
                       patternData.get(CLASSES_TO_REMOVE_PATTERN),
-                      "Didn't find classes to remove pattern in serialized DirectToJarOutputSettings"),
+                      "Didn't find classes to remove pattern in serialized JarParameters"),
               (int)
                   Preconditions.checkNotNull(
                       patternData.get(CLASSES_TO_REMOVE_PATTERN_FLAGS),
-                      "Didn't find flags in serialized DirectToJarOutputSettings")));
+                      "Didn't find flags in serialized JarParameters")));
     }
 
     ImmutableSortedSet.Builder<Path> entries = ImmutableSortedSet.naturalOrder();
@@ -105,7 +105,7 @@ public class DirectToJarOutputSettingsSerializer {
       manifestFile = Optional.of(Paths.get((String) data.get(MANIFEST_FILE)));
     }
 
-    return DirectToJarOutputSettings.of(
+    return JarParameters.of(
         outputPath,
         new RemoveClassesPatternsMatcher(classesToRemove.build()),
         entries.build(),

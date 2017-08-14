@@ -24,8 +24,8 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractDirectToJarOutputSettings {
-  public abstract Path getDirectToJarOutputPath();
+abstract class AbstractJarParameters {
+  public abstract Path getJarPath();
 
   public abstract RemoveClassesPatternsMatcher getClassesToRemoveFromJar();
 

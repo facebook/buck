@@ -27,11 +27,11 @@ import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class DirectToJarOutputSettingsSerializerTest {
+public class JarParametersSerializerTest {
   @Test
   public void testSerializingAndDeserializing() throws Exception {
-    DirectToJarOutputSettings input =
-        DirectToJarOutputSettings.of(
+    JarParameters input =
+        JarParameters.of(
             Paths.get("/some/path"),
             new RemoveClassesPatternsMatcher(
                 ImmutableSet.of(
@@ -40,12 +40,10 @@ public class DirectToJarOutputSettingsSerializerTest {
             Optional.of("hello I am main class"),
             Optional.of(Paths.get("/MANIFEST/FILE.TXT")));
 
-    Map<String, Object> data = DirectToJarOutputSettingsSerializer.serialize(input);
-    DirectToJarOutputSettings output = DirectToJarOutputSettingsSerializer.deserialize(data);
+    Map<String, Object> data = JarParametersSerializer.serialize(input);
+    JarParameters output = JarParametersSerializer.deserialize(data);
 
-    assertThat(
-        output.getDirectToJarOutputPath(),
-        Matchers.equalToObject(input.getDirectToJarOutputPath()));
+    assertThat(output.getJarPath(), Matchers.equalToObject(input.getJarPath()));
     assertThat(output.getEntriesToJar(), Matchers.equalToObject(input.getEntriesToJar()));
     assertThat(output.getMainClass(), Matchers.equalToObject(input.getMainClass()));
     assertThat(output.getManifestFile(), Matchers.equalToObject(input.getManifestFile()));
@@ -62,8 +60,8 @@ public class DirectToJarOutputSettingsSerializerTest {
 
   @Test
   public void testWorkingWithOptionals() throws Exception {
-    DirectToJarOutputSettings input =
-        DirectToJarOutputSettings.of(
+    JarParameters input =
+        JarParameters.of(
             Paths.get("/some/path"),
             new RemoveClassesPatternsMatcher(
                 ImmutableSet.of(
@@ -72,8 +70,8 @@ public class DirectToJarOutputSettingsSerializerTest {
             Optional.empty(),
             Optional.empty());
 
-    Map<String, Object> data = DirectToJarOutputSettingsSerializer.serialize(input);
-    DirectToJarOutputSettings output = DirectToJarOutputSettingsSerializer.deserialize(data);
+    Map<String, Object> data = JarParametersSerializer.serialize(input);
+    JarParameters output = JarParametersSerializer.deserialize(data);
 
     assertThat(output.getManifestFile(), Matchers.equalToObject(Optional.empty()));
     assertThat(output.getMainClass(), Matchers.equalToObject(Optional.empty()));

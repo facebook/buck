@@ -72,7 +72,7 @@ public class JavacStep implements Step {
 
   private final ClasspathChecker classpathChecker;
 
-  private final Optional<DirectToJarOutputSettings> directToJarOutputSettings;
+  private final Optional<JarParameters> jarParameters;
 
   @Nullable private final Path abiJar;
 
@@ -90,7 +90,7 @@ public class JavacStep implements Step {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
-      Optional<DirectToJarOutputSettings> directToJarOutputSettings,
+      Optional<JarParameters> jarParameters,
       @Nullable Path abiJar) {
     this.outputDirectory = outputDirectory;
     this.usedClassesFileWriter = usedClassesFileWriter;
@@ -105,7 +105,7 @@ public class JavacStep implements Step {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
-    this.directToJarOutputSettings = directToJarOutputSettings;
+    this.jarParameters = jarParameters;
     this.abiJar = abiJar;
   }
 
@@ -136,7 +136,7 @@ public class JavacStep implements Step {
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),
               getAbsolutePathsForJavacInputs(getJavac()),
-              directToJarOutputSettings);
+              jarParameters);
       ImmutableList<JavacPluginJsr199Fields> pluginFields =
           ImmutableList.copyOf(
               javacOptions
@@ -216,17 +216,17 @@ public class JavacStep implements Step {
             .getDescription(
                 getOptions(context, getClasspathEntries()), javaSourceFilePaths, pathToSrcsList);
 
-    if (directToJarOutputSettings.isPresent()) {
-      DirectToJarOutputSettings directToJarOutputSettings = this.directToJarOutputSettings.get();
-      Optional<Path> manifestFile = directToJarOutputSettings.getManifestFile();
-      ImmutableSortedSet<Path> entriesToJar = directToJarOutputSettings.getEntriesToJar();
+    if (jarParameters.isPresent()) {
+      JarParameters jarParameters = this.jarParameters.get();
+      Optional<Path> manifestFile = jarParameters.getManifestFile();
+      ImmutableSortedSet<Path> entriesToJar = jarParameters.getEntriesToJar();
       description =
           description
               + "; "
               + String.format(
                   "jar %s %s %s %s",
                   manifestFile.isPresent() ? "cfm" : "cf",
-                  directToJarOutputSettings.getDirectToJarOutputPath(),
+                  jarParameters.getJarPath(),
                   manifestFile.isPresent() ? manifestFile.get() : "",
                   Joiner.on(' ').join(entriesToJar));
     }
@@ -239,7 +239,7 @@ public class JavacStep implements Step {
     String name;
     if (abiJar != null) {
       name = "calculate_abi_from_source";
-    } else if (directToJarOutputSettings.isPresent()) {
+    } else if (jarParameters.isPresent()) {
       name = "javac_jar";
     } else {
       name = getJavac().getShortName();

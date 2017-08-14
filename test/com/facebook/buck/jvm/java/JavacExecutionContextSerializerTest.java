@@ -69,8 +69,8 @@ public class JavacExecutionContextSerializerTest {
             new DefaultProcessExecutor(new TestConsole()), processExecutorContext);
     ImmutableList<Path> pathToInputs =
         ImmutableList.of(Paths.get("/path/one"), Paths.get("/path/two"));
-    DirectToJarOutputSettings directToJarOutputSettings =
-        DirectToJarOutputSettings.of(
+    JarParameters directToJarParameters =
+        JarParameters.of(
             Paths.get("/some/path"),
             new RemoveClassesPatternsMatcher(
                 ImmutableSet.of(
@@ -92,7 +92,7 @@ public class JavacExecutionContextSerializerTest {
             environment,
             processExecutor,
             pathToInputs,
-            Optional.of(directToJarOutputSettings));
+            Optional.of(directToJarParameters));
     Map<String, Object> data = JavacExecutionContextSerializer.serialize(input);
     JavacExecutionContext output =
         JavacExecutionContextSerializer.deserialize(
@@ -139,36 +139,26 @@ public class JavacExecutionContextSerializerTest {
     assertThat(output.getAbsolutePathsForInputs(), Matchers.equalToObject(pathToInputs));
 
     assertThat(
-        output.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
-        Matchers.equalToObject(directToJarOutputSettings.getDirectToJarOutputPath()));
+        output.getDirectToJarParameters().get().getJarPath(),
+        Matchers.equalToObject(directToJarParameters.getJarPath()));
     assertThat(
-        output.getDirectToJarOutputSettings().get().getEntriesToJar(),
-        Matchers.equalToObject(directToJarOutputSettings.getEntriesToJar()));
+        output.getDirectToJarParameters().get().getEntriesToJar(),
+        Matchers.equalToObject(directToJarParameters.getEntriesToJar()));
     assertThat(
-        output.getDirectToJarOutputSettings().get().getMainClass(),
-        Matchers.equalToObject(directToJarOutputSettings.getMainClass()));
+        output.getDirectToJarParameters().get().getMainClass(),
+        Matchers.equalToObject(directToJarParameters.getMainClass()));
     assertThat(
-        output.getDirectToJarOutputSettings().get().getManifestFile(),
-        Matchers.equalToObject(directToJarOutputSettings.getManifestFile()));
+        output.getDirectToJarParameters().get().getManifestFile(),
+        Matchers.equalToObject(directToJarParameters.getManifestFile()));
     assertThat(
-        output
-            .getDirectToJarOutputSettings()
-            .get()
-            .getClassesToRemoveFromJar()
-            .getPatterns()
-            .size(),
+        output.getDirectToJarParameters().get().getClassesToRemoveFromJar().getPatterns().size(),
         Matchers.equalToObject(
-            directToJarOutputSettings.getClassesToRemoveFromJar().getPatterns().size()));
+            directToJarParameters.getClassesToRemoveFromJar().getPatterns().size()));
 
     ImmutableList<Pattern> inputPatterns =
-        directToJarOutputSettings.getClassesToRemoveFromJar().getPatterns().asList();
+        directToJarParameters.getClassesToRemoveFromJar().getPatterns().asList();
     ImmutableList<Pattern> outputPatterns =
-        output
-            .getDirectToJarOutputSettings()
-            .get()
-            .getClassesToRemoveFromJar()
-            .getPatterns()
-            .asList();
+        output.getDirectToJarParameters().get().getClassesToRemoveFromJar().getPatterns().asList();
 
     for (int i = 0; i < inputPatterns.size(); i++) {
       Pattern inputPattern = inputPatterns.get(i);
