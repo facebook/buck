@@ -528,7 +528,7 @@ class BuckTool(object):
                     self._get_resource(
                         Resource("libjcocoa.dylib"))))
 
-            if os.environ.get("BUCK_DEBUG_MODE"):
+            if "BUCK_DEBUG_MODE" in os.environ and os.environ.get("BUCK_DEBUG_MODE") != "0":
                 java_args.append("-agentlib:jdwp=transport=dt_socket,"
                                  "server=y,suspend=y,address=8888")
 
