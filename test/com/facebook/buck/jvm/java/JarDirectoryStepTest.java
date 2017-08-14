@@ -87,7 +87,10 @@ public class JarDirectoryStepTest {
             Paths.get("output.jar"),
             ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
             "com.example.Main",
-            /* manifest file */ null);
+            null,
+            true,
+            false,
+            entry -> false);
     ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
@@ -122,7 +125,10 @@ public class JarDirectoryStepTest {
             outputPath,
             ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
             "com.example.Main",
-            /* manifest file */ null);
+            null,
+            true,
+            false,
+            entry -> false);
     ExecutionContext context = TestExecutionContext.newInstance();
 
     final BuckEventBusForTests.CapturingConsoleEventListener listener =
@@ -149,7 +155,10 @@ public class JarDirectoryStepTest {
             Paths.get("output.jar"),
             ImmutableSortedSet.of(zip.getFileName()),
             "com.example.MissingMain",
-            /* manifest file */ null);
+            null,
+            true,
+            false,
+            entry -> false);
     TestConsole console = new TestConsole();
     ExecutionContext context = TestExecutionContext.newBuilder().setConsole(console).build();
 
@@ -182,7 +191,10 @@ public class JarDirectoryStepTest {
             Paths.get("output.jar"),
             ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
             "com.example.Main",
-            /* manifest file */ null);
+            null,
+            true,
+            false,
+            entry -> false);
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -230,10 +242,11 @@ public class JarDirectoryStepTest {
             new ProjectFilesystem(tmp),
             output,
             ImmutableSortedSet.of(Paths.get("input.jar")),
-            /* main class */ null,
+            null,
             tmp.resolve("manifest"),
-            /* merge manifest */ true,
-            /* blacklist */ RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass);
+            true,
+            false,
+            RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass);
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
@@ -259,8 +272,11 @@ public class JarDirectoryStepTest {
             new ProjectFilesystem(zipup),
             Paths.get("output.jar"),
             ImmutableSortedSet.of(zipup),
-            /* main class */ null,
-            /* manifest file */ null);
+            null,
+            null,
+            true,
+            false,
+            entry -> false);
     ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
@@ -346,10 +362,10 @@ public class JarDirectoryStepTest {
             Paths.get("output.jar"),
             ImmutableSortedSet.of(first.getFileName()),
             "com.example.Main",
-            /* manifest file */ null,
-            /* merge manifests */ true,
-            /* blacklist */ new RemoveClassesPatternsMatcher(
-                    ImmutableSet.of(Pattern.compile(".*2.*")))
+            null,
+            true,
+            false,
+            new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile(".*2.*")))
                 ::shouldRemoveClass);
 
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
@@ -378,9 +394,10 @@ public class JarDirectoryStepTest {
             Paths.get("output.jar"),
             ImmutableSortedSet.of(first.getFileName()),
             "com.example.A",
-            /* manifest file */ null,
-            /* merge manifests */ true,
-            /* blacklist */ new RemoveClassesPatternsMatcher(
+            null,
+            true,
+            false,
+            new RemoveClassesPatternsMatcher(
                     ImmutableSet.of(
                         Pattern.compile("com.example.B"), Pattern.compile("com.example.C")))
                 ::shouldRemoveClass);
@@ -409,8 +426,11 @@ public class JarDirectoryStepTest {
             new ProjectFilesystem(folder.getRoot()),
             outputJar,
             ImmutableSortedSet.of(zipup),
-            /* main class */ null,
-            /* manifest file */ null);
+            null,
+            null,
+            true,
+            false,
+            entry -> false);
     ExecutionContext context = TestExecutionContext.newInstance();
     int returnCode = step.execute(context).getExitCode();
     assertEquals(0, returnCode);
@@ -494,7 +514,10 @@ public class JarDirectoryStepTest {
             output,
             ImmutableSortedSet.of(dir, inputJar),
             null,
-            null);
+            null,
+            true,
+            false,
+            entry -> false);
     int exitCode = step.execute(TestExecutionContext.newInstance()).getExitCode();
 
     assertEquals(0, exitCode);
@@ -550,10 +573,11 @@ public class JarDirectoryStepTest {
             new ProjectFilesystem(tmp),
             output,
             ImmutableSortedSet.of(originalJar),
-            /* main class */ null,
+            null,
             manifestFile,
             mergeEntries,
-            /* blacklist */ RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass);
+            false,
+            RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass);
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 

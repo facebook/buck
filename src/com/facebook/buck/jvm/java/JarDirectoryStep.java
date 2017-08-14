@@ -56,33 +56,6 @@ public class JarDirectoryStep implements Step {
   /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
   private final Predicate<ZipEntry> removeEntryPredicate;
 
-  public JarDirectoryStep(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      @Nullable String mainClass,
-      @Nullable Path manifestFile) {
-    this(filesystem, pathToOutputFile, entriesToJar, mainClass, manifestFile, true, entry -> false);
-  }
-
-  public JarDirectoryStep(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      @Nullable String mainClass,
-      @Nullable Path manifestFile,
-      boolean mergeManifests,
-      Predicate<ZipEntry> removeEntryPredicate) {
-    this(
-        filesystem,
-        pathToOutputFile,
-        entriesToJar,
-        mainClass,
-        manifestFile,
-        mergeManifests,
-        false,
-        removeEntryPredicate);
-  }
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
    *

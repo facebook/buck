@@ -139,8 +139,11 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             output,
             ImmutableSortedSet.of(outputDirectory),
-            /* main class */ null,
-            /* manifest */ null));
+            null,
+            null,
+            true,
+            false,
+            entry -> false));
     buildableContext.recordArtifact(output);
 
     return commands.build();

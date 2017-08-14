@@ -112,8 +112,11 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             pathToOutput,
             toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps),
-            /* mainClass */ null,
-            /* manifestFile */ null);
+            null,
+            null,
+            true,
+            false,
+            entry -> false);
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 

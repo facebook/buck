@@ -138,8 +138,11 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             temp.resolve("classes.jar"),
             context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar),
-            /* mainClass */ null,
-            /* manifestFile */ null));
+            null,
+            null,
+            true,
+            false,
+            entry -> false));
 
     // move native libs into tmp folder under jni/
     if (assembledNativeLibs.isPresent()) {

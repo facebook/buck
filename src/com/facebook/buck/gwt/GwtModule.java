@@ -93,9 +93,12 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new JarDirectoryStep(
             getProjectFilesystem(),
             outputFile,
-            /* entriesToJar */ ImmutableSortedSet.of(tempJarFolder),
-            /* mainClass */ null,
-            /* manifestFile */ null));
+            ImmutableSortedSet.of(tempJarFolder),
+            null,
+            null,
+            true,
+            false,
+            entry -> false));
 
     buildableContext.recordArtifact(outputFile);
 

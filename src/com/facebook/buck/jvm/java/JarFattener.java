@@ -209,8 +209,11 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             output,
             ImmutableSortedSet.of(zipped),
-            /* mainClass */ FatJarMain.class.getName(),
-            /* manifestFile */ null));
+            FatJarMain.class.getName(),
+            null,
+            true,
+            false,
+            entry -> false));
 
     buildableContext.recordArtifact(output);
 

@@ -152,6 +152,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             mainClass,
             manifestPath,
             mergeManifests,
+            false,
             entry ->
                 blacklistPatternsMatcher.hasPatterns()
                     && blacklistPatternsMatcher.substringMatches(entry.getName()));
