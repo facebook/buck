@@ -610,7 +610,9 @@ public class InstallCommand extends BuildCommand {
         Optional<String> appleBundleId;
         try (InputStream bundlePlistStream =
             projectFilesystem.getInputStreamForRelativePath(appleBundle.getInfoPlistPath())) {
-          appleBundleId = AppleInfoPlistParsing.getBundleIdFromPlistStream(bundlePlistStream);
+          appleBundleId =
+              AppleInfoPlistParsing.getBundleIdFromPlistStream(
+                  appleBundle.getInfoPlistPath(), bundlePlistStream);
         }
         if (!appleBundleId.isPresent()) {
           params
@@ -852,7 +854,9 @@ public class InstallCommand extends BuildCommand {
     Optional<String> appleBundleId;
     try (InputStream bundlePlistStream =
         projectFilesystem.getInputStreamForRelativePath(appleBundle.getInfoPlistPath())) {
-      appleBundleId = AppleInfoPlistParsing.getBundleIdFromPlistStream(bundlePlistStream);
+      appleBundleId =
+          AppleInfoPlistParsing.getBundleIdFromPlistStream(
+              appleBundle.getInfoPlistPath(), bundlePlistStream);
     }
     if (!appleBundleId.isPresent()) {
       params

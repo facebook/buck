@@ -144,7 +144,7 @@ class ProvisioningProfileCopyStep implements Step {
 
     final String bundleID =
         AppleInfoPlistParsing.getBundleIdFromPlistStream(
-                filesystem.getInputStreamForRelativePath(infoPlist))
+                infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
             .get();
     Optional<ProvisioningProfileMetadata> bestProfile =
         provisioningProfileUUID.isPresent()
