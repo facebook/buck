@@ -52,7 +52,7 @@ public final class ProjectFilesystemDelegateFactory {
       Optional<EdenMount> mount = client.get().getMountFor(root);
       if (mount.isPresent()) {
         LOG.debug("Created eden mount for %s: %s", root, mount.get());
-        return new EdenProjectFilesystemDelegate(mount.get());
+        return new EdenProjectFilesystemDelegate(mount.get(), config);
       } else {
         LOG.error("Failed to find Eden client for %s.", root);
       }
