@@ -48,11 +48,22 @@ public class JarParametersSerializerTest {
     assertThat(output.getMainClass(), Matchers.equalToObject(input.getMainClass()));
     assertThat(output.getManifestFile(), Matchers.equalToObject(input.getManifestFile()));
     assertThat(
-        output.getClassesToRemoveFromJar().getPatterns().size(),
-        Matchers.equalToObject(input.getClassesToRemoveFromJar().getPatterns().size()));
-    for (int i = 0; i < input.getClassesToRemoveFromJar().getPatterns().size(); i++) {
-      Pattern inputPattern = input.getClassesToRemoveFromJar().getPatterns().asList().get(i);
-      Pattern outputPattern = output.getClassesToRemoveFromJar().getPatterns().asList().get(i);
+        ((RemoveClassesPatternsMatcher) output.getRemoveEntryPredicate()).getPatterns().size(),
+        Matchers.equalToObject(
+            ((RemoveClassesPatternsMatcher) input.getRemoveEntryPredicate()).getPatterns().size()));
+    for (int i = 0;
+        i < ((RemoveClassesPatternsMatcher) input.getRemoveEntryPredicate()).getPatterns().size();
+        i++) {
+      Pattern inputPattern =
+          ((RemoveClassesPatternsMatcher) input.getRemoveEntryPredicate())
+              .getPatterns()
+              .asList()
+              .get(i);
+      Pattern outputPattern =
+          ((RemoveClassesPatternsMatcher) input.getRemoveEntryPredicate())
+              .getPatterns()
+              .asList()
+              .get(i);
       assertThat(outputPattern.pattern(), Matchers.equalToObject(inputPattern.pattern()));
       assertThat(outputPattern.flags(), Matchers.equalTo(inputPattern.flags()));
     }

@@ -125,7 +125,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
             manifestFile.orElse(null),
             true,
             javacOptions.getCompilationMode() == JavacCompilationMode.ABI,
-            classesToRemoveFromJar::shouldRemoveClass));
+            classesToRemoveFromJar));
   }
 
   @Override

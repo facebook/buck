@@ -46,7 +46,8 @@ public class JarParametersSerializer {
 
     ImmutableList.Builder<ImmutableMap<String, Object>> serializedPatterns =
         ImmutableList.builder();
-    for (Pattern pattern : settings.getClassesToRemoveFromJar().getPatterns()) {
+    for (Pattern pattern :
+        ((RemoveClassesPatternsMatcher) settings.getRemoveEntryPredicate()).getPatterns()) {
       serializedPatterns.add(
           ImmutableMap.<String, Object>of(
               CLASSES_TO_REMOVE_PATTERN, pattern.pattern(),

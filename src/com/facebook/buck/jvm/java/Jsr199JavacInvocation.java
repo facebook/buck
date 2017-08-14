@@ -307,7 +307,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             new JavaInMemoryFileManager(
                 standardFileManager,
                 directToJarPath,
-                context.getDirectToJarParameters().get().getClassesToRemoveFromJar());
+                context.getDirectToJarParameters().get().getRemoveEntryPredicate());
         addCloseable(inMemoryFileManager);
         fileManager = inMemoryFileManager;
       } else {
@@ -400,8 +400,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         .setManifestFile(context.getDirectToJarParameters().get().getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
         .setRemoveEntryPredicate(
-            context.getDirectToJarParameters().get().getClassesToRemoveFromJar()
-                ::shouldRemoveClass);
+            context.getDirectToJarParameters().get().getRemoveEntryPredicate());
   }
 
   @Override

@@ -151,14 +151,24 @@ public class JavacExecutionContextSerializerTest {
         output.getDirectToJarParameters().get().getManifestFile(),
         Matchers.equalToObject(directToJarParameters.getManifestFile()));
     assertThat(
-        output.getDirectToJarParameters().get().getClassesToRemoveFromJar().getPatterns().size(),
+        ((RemoveClassesPatternsMatcher)
+                output.getDirectToJarParameters().get().getRemoveEntryPredicate())
+            .getPatterns()
+            .size(),
         Matchers.equalToObject(
-            directToJarParameters.getClassesToRemoveFromJar().getPatterns().size()));
+            ((RemoveClassesPatternsMatcher) directToJarParameters.getRemoveEntryPredicate())
+                .getPatterns()
+                .size()));
 
     ImmutableList<Pattern> inputPatterns =
-        directToJarParameters.getClassesToRemoveFromJar().getPatterns().asList();
+        ((RemoveClassesPatternsMatcher) directToJarParameters.getRemoveEntryPredicate())
+            .getPatterns()
+            .asList();
     ImmutableList<Pattern> outputPatterns =
-        output.getDirectToJarParameters().get().getClassesToRemoveFromJar().getPatterns().asList();
+        ((RemoveClassesPatternsMatcher)
+                output.getDirectToJarParameters().get().getRemoveEntryPredicate())
+            .getPatterns()
+            .asList();
 
     for (int i = 0; i < inputPatterns.size(); i++) {
       Pattern inputPattern = inputPatterns.get(i);

@@ -268,7 +268,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
             /* manifestFile */ null,
             /* mergeManifests */ true,
             /* hashEntries */ true,
-            /* removeEntriesPredicate */ RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass));
+            /* removeEntriesPredicate */ RemoveClassesPatternsMatcher.EMPTY));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));

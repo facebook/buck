@@ -54,7 +54,7 @@ public class JarDirectoryStep implements Step {
   private final boolean hashEntries;
 
   /** A set of regex. If a file matches one of the regex it will not be included in the Jar. */
-  private final Predicate<ZipEntry> removeEntryPredicate;
+  private final Predicate<? super ZipEntry> removeEntryPredicate;
 
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
@@ -79,7 +79,7 @@ public class JarDirectoryStep implements Step {
       @Nullable Path manifestFile,
       boolean mergeManifests,
       boolean hashEntries,
-      Predicate<ZipEntry> removeEntryPredicate) {
+      Predicate<? super ZipEntry> removeEntryPredicate) {
     this.filesystem = filesystem;
     this.pathToOutputFile = pathToOutputFile;
     this.entriesToJar = entriesToJar;

@@ -132,7 +132,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
             manifestFile.orElse(null),
             true,
             false,
-            classesToRemoveFromJar::shouldRemoveClass));
+            classesToRemoveFromJar));
   }
 
   /**

@@ -29,8 +29,8 @@ public class RemoveClassesPatternsMatcherTest {
   public void testEmptyMatcherRemovesNothing() {
     RemoveClassesPatternsMatcher matcher = RemoveClassesPatternsMatcher.EMPTY;
 
-    assertFalse(matcher.shouldRemoveClass("com.example.Foo"));
-    assertFalse(matcher.shouldRemoveClass(new ZipEntry("com/example/Foo.class")));
+    assertFalse(matcher.test("com.example.Foo"));
+    assertFalse(matcher.test(new ZipEntry("com/example/Foo.class")));
   }
 
   @Test
@@ -38,7 +38,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher matcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("com[.]example[.]Foo")));
 
-    assertTrue(matcher.shouldRemoveClass("com.example.Foo"));
+    assertTrue(matcher.test("com.example.Foo"));
   }
 
   @Test
@@ -46,7 +46,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher matcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("com[.]example[.]Foo")));
 
-    assertTrue(matcher.shouldRemoveClass(new ZipEntry("com/example/Foo.class")));
+    assertTrue(matcher.test(new ZipEntry("com/example/Foo.class")));
   }
 
   @Test
@@ -54,7 +54,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("test")));
 
-    assertFalse(patternsMatcher.shouldRemoveClass(new ZipEntry("com/example/Foo/Foo.txt")));
+    assertFalse(patternsMatcher.test(new ZipEntry("com/example/Foo/Foo.txt")));
   }
 
   @Test
@@ -62,7 +62,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("test")));
 
-    assertTrue(patternsMatcher.shouldRemoveClass("test_pattern"));
+    assertTrue(patternsMatcher.test("test_pattern"));
   }
 
   @Test
@@ -70,7 +70,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("pattern")));
 
-    assertTrue(patternsMatcher.shouldRemoveClass("test_pattern"));
+    assertTrue(patternsMatcher.test("test_pattern"));
   }
 
   @Test
@@ -78,7 +78,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("_")));
 
-    assertTrue(patternsMatcher.shouldRemoveClass("test_pattern"));
+    assertTrue(patternsMatcher.test("test_pattern"));
   }
 
   @Test
@@ -86,7 +86,7 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("^test_pattern$")));
 
-    assertTrue(patternsMatcher.shouldRemoveClass("test_pattern"));
+    assertTrue(patternsMatcher.test("test_pattern"));
   }
 
   @Test
@@ -94,6 +94,6 @@ public class RemoveClassesPatternsMatcherTest {
     RemoveClassesPatternsMatcher patternsMatcher =
         new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile("^test_pattern$")));
 
-    assertFalse(patternsMatcher.shouldRemoveClass("test_patterns"));
+    assertFalse(patternsMatcher.test("test_patterns"));
   }
 }

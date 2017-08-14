@@ -162,7 +162,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .setMainClass(Optional.<String>empty().orElse(null))
                   .setManifestFile(Optional.<Path>empty().orElse(null))
                   .setShouldMergeManifests(true)
-                  .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass)
+                  .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
                   .createJarFile(filesystem.resolve(uberClassesJar));
             }
             return StepExecutionResult.SUCCESS;

@@ -20,6 +20,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Predicate;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -27,7 +28,10 @@ import org.immutables.value.Value;
 abstract class AbstractJarParameters {
   public abstract Path getJarPath();
 
-  public abstract RemoveClassesPatternsMatcher getClassesToRemoveFromJar();
+  @Value.Default
+  public Predicate<Object> getRemoveEntryPredicate() {
+    return RemoveClassesPatternsMatcher.EMPTY;
+  }
 
   public abstract ImmutableSortedSet<Path> getEntriesToJar();
 
