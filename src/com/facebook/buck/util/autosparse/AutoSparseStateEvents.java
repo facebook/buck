@@ -108,7 +108,7 @@ public abstract class AutoSparseStateEvents extends AbstractBuckEvent
         int abortstart = trimmed.lastIndexOf(ABORT_PREFIX);
         if (outstart > -1 && errstart > -1 && errend > -1 && abortstart > -1) {
           String stdout = trimmed.substring(outstart, errstart - 1).trim();
-          String stderr = trimmed.substring(errstart + STDERR_HEADER.length(), errend - 1).trim();
+          String stderr = trimmed.substring(errstart + STDERR_HEADER.length(), errend).trim();
           String lastLine = trimmed.substring(abortstart + ABORT_PREFIX.length()).trim();
           return String.join(
               "\n",
