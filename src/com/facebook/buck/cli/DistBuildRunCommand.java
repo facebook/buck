@@ -59,13 +59,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Option(
     name = "--coordinator-port",
-    usage = "Port of the build coordinator. (only used in MINION mode)."
+    usage = "Port of the remote build coordinator. (only used in MINION mode)."
   )
   private int coordinatorPort = -1;
 
   @Option(
     name = "--coordinator-address",
-    usage = "Address of the build coordinator. (only used in MINION mode)."
+    usage = "Address of the remote build coordinator. (only used in MINION mode)."
   )
   private String coordinatorAddress = "localhost";
 
@@ -144,6 +144,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
             new CommandThreadManager(
                 getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
           Optional<StampedeId> stampedeId = getStampedeIdOptional();
+          DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
@@ -156,7 +157,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   stampedeId,
                   getGlobalCacheDirOptional(),
                   fileMaterializationStatsTracker,
-                  new DistBuildConfig(params.getBuckConfig()).getMinionQueue());
+                  distBuildConfig);
 
           int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);

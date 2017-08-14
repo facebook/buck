@@ -75,7 +75,7 @@ public abstract class DistBuildFactory {
       Optional<StampedeId> stampedeId,
       Optional<Path> globalCacheDir,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
-      Optional<String> minionQueue)
+      DistBuildConfig distBuildConfig)
       throws InterruptedException, IOException {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
@@ -103,13 +103,13 @@ public abstract class DistBuildFactory {
                         service, fileMaterializationStatsTracker, globalCacheDir))
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)
-                .setCoordinatorPort(coordinatorPort)
-                .setCoordinatorAddress(coordinatorAddress)
+                .setRemoteCoordinatorPort(coordinatorPort)
+                .setRemoteCoordinatorAddress(coordinatorAddress)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .setDistBuildService(service)
-                .setMinionQueue(minionQueue)
+                .setDistBuildConfig(distBuildConfig)
                 .build());
     return executor;
   }

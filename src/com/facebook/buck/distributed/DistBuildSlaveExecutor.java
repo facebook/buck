@@ -108,15 +108,16 @@ public class DistBuildSlaveExecutor {
 
       case MINION:
         runner =
-            newMinionMode(localBuilder, args.getCoordinatorAddress(), args.getCoordinatorPort());
+            newMinionMode(
+                localBuilder, args.getRemoteCoordinatorAddress(), args.getRemoteCoordinatorPort());
         break;
 
       case COORDINATOR_AND_MINION:
-        int coordinatorPort = getFreePortForCoordinator();
+        int localCoordinatorPort = getFreePortForCoordinator();
         runner =
             new CoordinatorAndMinionModeRunner(
-                newCoordinatorMode(coordinatorPort),
-                newMinionMode(localBuilder, LOCALHOST_ADDRESS, coordinatorPort));
+                newCoordinatorMode(localCoordinatorPort),
+                newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
         break;
 
       default:
@@ -138,13 +139,19 @@ public class DistBuildSlaveExecutor {
         BuildTargetsQueue.newQueue(
             Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
             fullyQualifiedNameToBuildTarget(args.getState().getRemoteState().getTopLevelTargets()));
+    Optional<String> minionQueue = args.getDistBuildConfig().getMinionQueue();
     Preconditions.checkArgument(
-        args.getMinionQueue().isPresent(),
+        minionQueue.isPresent(),
         "Minion queue name is missing to be able to run in Coordinator mode.");
     CoordinatorModeRunner.EventListener listener =
         new CoordinatorAndMinionInfoSetter(
-            args.getDistBuildService(), args.getStampedeId(), args.getMinionQueue().get());
-    return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId(), listener);
+            args.getDistBuildService(), args.getStampedeId(), minionQueue.get());
+    return new CoordinatorModeRunner(
+        coordinatorPort,
+        queue,
+        args.getStampedeId(),
+        listener,
+        args.getDistBuildConfig().getMaxBuildNodesPerMinion());
   }
 
   private TargetGraph createTargetGraph() throws IOException, InterruptedException {

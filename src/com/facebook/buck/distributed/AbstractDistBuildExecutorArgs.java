@@ -33,7 +33,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -69,11 +68,11 @@ abstract class AbstractDistBuildExecutorArgs {
 
   public abstract DistBuildMode getDistBuildMode();
 
-  public abstract Integer getCoordinatorPort();
+  public abstract int getRemoteCoordinatorPort();
 
   public abstract StampedeId getStampedeId();
 
-  public abstract String getCoordinatorAddress();
+  public abstract String getRemoteCoordinatorAddress();
 
   public BuckConfig getRemoteRootCellConfig() {
     return getState().getRootCell().getBuckConfig();
@@ -85,5 +84,5 @@ abstract class AbstractDistBuildExecutorArgs {
 
   public abstract DistBuildService getDistBuildService();
 
-  public abstract Optional<String> getMinionQueue();
+  public abstract DistBuildConfig getDistBuildConfig();
 }

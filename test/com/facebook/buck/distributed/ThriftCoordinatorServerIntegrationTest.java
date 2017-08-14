@@ -29,12 +29,13 @@ public class ThriftCoordinatorServerIntegrationTest {
   public static final StampedeId STAMPEDE_ID = new StampedeId().setId("down the line");
 
   private static final String MINION_ID = "super cool minion";
+  private static final int MAX_BUILD_NODES_PER_MINION = 42;
 
   @Test
   public void testMakingSimpleRequest() throws IOException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     try (ThriftCoordinatorServer server =
-            new ThriftCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue(), STAMPEDE_ID);
+            createCoordinatorServer(port, BuildTargetsQueue.newEmptyQueue());
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
       server.start();
@@ -49,8 +50,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
-    try (ThriftCoordinatorServer server =
-            new ThriftCoordinatorServer(port, diamondQueue, STAMPEDE_ID);
+    try (ThriftCoordinatorServer server = createCoordinatorServer(port, diamondQueue);
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
       server.start();
@@ -78,6 +78,11 @@ public class ThriftCoordinatorServerIntegrationTest {
   public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue)
       throws IOException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
-    return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID);
+    return createCoordinatorServer(port, queue);
+  }
+
+  private static ThriftCoordinatorServer createCoordinatorServer(
+      int port, BuildTargetsQueue queue) {
+    return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID, MAX_BUILD_NODES_PER_MINION);
   }
 }
