@@ -154,6 +154,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
     this.jsonGenerator.writeStartArray();
     addProcessMetadataEvent(invocationInfo);
+    addProjectFilesystemDelegateMetadataEvent(projectFilesystem);
   }
 
   private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
@@ -164,6 +165,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             .put("is_daemon", invocationInfo.getIsDaemon())
             .put("timestamp", invocationInfo.getTimestampMillis())
             .build());
+  }
+
+  private void addProjectFilesystemDelegateMetadataEvent(ProjectFilesystem projectFilesystem) {
+    writeChromeTraceMetadataEvent(
+        "ProjectFilesystemDelegate", ImmutableMap.of("class", projectFilesystem.getDelegateName()));
   }
 
   @VisibleForTesting

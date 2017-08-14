@@ -335,6 +335,14 @@ public class ProjectFilesystem {
   }
 
   /**
+   * @return the name of the underlying {@link ProjectFilesystemDelegate} via {@link
+   *     Class#getName()} for logging purposes.
+   */
+  public String getDelegateName() {
+    return delegate.getClass().getName();
+  }
+
+  /**
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
    * them past this point.
    */

@@ -303,6 +303,12 @@ public class ChromeTraceBuildListenerTest {
 
     assertNextResult(
         resultListCopy,
+        "ProjectFilesystemDelegate",
+        ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.of("class", "com.facebook.buck.io.DefaultProjectFilesystemDelegate"));
+
+    assertNextResult(
+        resultListCopy,
         "party",
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of("command_args", "arg1 arg2"));
