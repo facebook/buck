@@ -30,6 +30,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -72,13 +73,11 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      Path outputJar,
+      JarParameters jarParameters,
       /* output params */
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      BuildableContext buildableContext) {
+    Preconditions.checkArgument(jarParameters.getEntriesToJar().contains(outputDirectory));
 
     createCompileStep(
         context,
@@ -104,36 +103,13 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
                 declaredClasspathEntries,
                 getBootClasspath(context))));
 
-    createJarStep(
-        filesystem,
-        outputDirectory,
-        mainClass,
-        manifestFile,
-        classesToRemoveFromJar,
-        outputJar,
-        steps);
+    createJarStep(filesystem, jarParameters, steps);
   }
 
   @Override
   public void createJarStep(
-      ProjectFilesystem filesystem,
-      Path outputDirectory,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar,
-      Path outputJar,
-      ImmutableList.Builder<Step> steps) {
-    steps.add(
-        new JarDirectoryStep(
-            filesystem,
-            JarParameters.builder()
-                .setJarPath(outputJar)
-                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
-                .setMainClass(mainClass)
-                .setManifestFile(manifestFile)
-                .setMergeManifests(true)
-                .setRemoveEntryPredicate(classesToRemoveFromJar)
-                .build()));
+      ProjectFilesystem filesystem, JarParameters parameters, ImmutableList.Builder<Step> steps) {
+    steps.add(new JarDirectoryStep(filesystem, parameters));
   }
 
   /**

@@ -275,30 +275,31 @@ public class JarBuildStepsFactory
           depFileRelativePath,
           pathToSrcsList,
           postprocessClassesCommands,
-          /* mainClass */ Optional.empty(),
-          this.manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-          outputJar.get(),
+          JarParameters.builder()
+              .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+              .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
+              .setJarPath(outputJar.get())
+              .setRemoveEntryPredicate(classesToRemoveFromJar)
+              .build(),
           /* output params */
           steps,
-          buildableContext,
-          this.classesToRemoveFromJar);
+          buildableContext);
     }
 
     if (outputJar.isPresent()) {
-      Path output = outputJar.get();
-
       // No source files, only resources
       if (this.srcs.isEmpty()) {
         this.compileStepFactory.createJarStep(
             projectFilesystem,
-            outputDirectory,
-            Optional.empty(),
-            this.manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-            this.classesToRemoveFromJar,
-            output,
+            JarParameters.builder()
+                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
+                .setJarPath(outputJar.get())
+                .setRemoveEntryPredicate(classesToRemoveFromJar)
+                .build(),
             steps);
       }
-      buildableContext.recordArtifact(output);
+      buildableContext.recordArtifact(outputJar.get());
     }
   }
 
