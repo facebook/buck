@@ -225,6 +225,9 @@ public class IjProjectTemplateDataPreparer {
   public ImmutableCollection<IjFolder> createExcludes(final IjModule module) throws IOException {
     final ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
     final Path moduleBasePath = module.getModuleBasePath();
+    if (!projectFilesystem.exists(moduleBasePath)) {
+      return ImmutableList.of();
+    }
     projectFilesystem.walkRelativeFileTree(
         moduleBasePath,
         new FileVisitor<Path>() {

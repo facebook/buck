@@ -36,7 +36,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -307,7 +306,7 @@ public final class IjModuleGraphFactory {
           && !module.getExtraModuleDependencies().isEmpty()) {
         IjModule extraModule =
             createExtraModuleForCompilerOutput(
-                module, projectFilesystem, extraCompileOutputRootPath.get());
+                module, extraCompileOutputRootPath.get());
         moduleDeps.put(extraModule, DependencyType.PROD);
         depsBuilder.put(extraModule, ImmutableMap.of());
       }
@@ -329,21 +328,9 @@ public final class IjModuleGraphFactory {
 
   private static IjModule createExtraModuleForCompilerOutput(
       IjModule module,
-      ProjectFilesystem projectFilesystem,
       Path extraCompileOutputRootPath) {
-    Path extraModuleRelativePath = extraCompileOutputRootPath.resolve(module.getModuleBasePath());
-    if (!projectFilesystem.exists(extraModuleRelativePath)) {
-      try {
-        projectFilesystem.mkdirs(extraModuleRelativePath);
-      } catch (IOException e) {
-        throw new AssertionError(
-            "Could not make directories for extra module for compiler output module: "
-                + extraModuleRelativePath.toString());
-      }
-    }
-
     return IjModule.builder()
-        .setModuleBasePath(extraModuleRelativePath)
+        .setModuleBasePath(extraCompileOutputRootPath.resolve(module.getModuleBasePath()))
         .setTargets(ImmutableSet.of())
         .addAllFolders(ImmutableSet.of())
         .putAllDependencies(ImmutableMap.of())
