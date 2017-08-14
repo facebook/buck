@@ -38,6 +38,8 @@ public class JarParametersSerializer {
   private static final String ENTRIES = "entries";
   private static final String MAIN_CLASS = "main_class";
   private static final String MANIFEST_FILE = "manifest_file";
+  private static final String MERGE_MANIFESTS = "merge_manifests";
+  private static final String HASH_ENTRIES = "hash_entries";
 
   public static ImmutableMap<String, Object> serialize(JarParameters settings) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
@@ -68,6 +70,9 @@ public class JarParametersSerializer {
     if (settings.getManifestFile().isPresent()) {
       builder.put(MANIFEST_FILE, settings.getManifestFile().get().toString());
     }
+
+    builder.put(MERGE_MANIFESTS, settings.getMergeManifests());
+    builder.put(HASH_ENTRIES, settings.getHashEntries());
 
     return builder.build();
   }
@@ -106,12 +111,22 @@ public class JarParametersSerializer {
       manifestFile = Optional.of(Paths.get((String) data.get(MANIFEST_FILE)));
     }
 
-    return JarParameters.builder()
-        .setJarPath(outputPath)
-        .setRemoveEntryPredicate(new RemoveClassesPatternsMatcher(classesToRemove.build()))
-        .setEntriesToJar(entries.build())
-        .setMainClass(mainClass)
-        .setManifestFile(manifestFile)
-        .build();
+    JarParameters.Builder resultBuilder =
+        JarParameters.builder()
+            .setJarPath(outputPath)
+            .setRemoveEntryPredicate(new RemoveClassesPatternsMatcher(classesToRemove.build()))
+            .setEntriesToJar(entries.build())
+            .setMainClass(mainClass)
+            .setManifestFile(manifestFile);
+
+    if (data.containsKey(MERGE_MANIFESTS)) {
+      resultBuilder.setMergeManifests((boolean) data.get(MERGE_MANIFESTS));
+    }
+
+    if (data.containsKey(HASH_ENTRIES)) {
+      resultBuilder.setHashEntries((boolean) data.get(HASH_ENTRIES));
+    }
+
+    return resultBuilder.build();
   }
 }

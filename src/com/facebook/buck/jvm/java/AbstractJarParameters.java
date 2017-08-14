@@ -26,6 +26,16 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractJarParameters {
+  @Value.Default
+  public boolean getHashEntries() {
+    return false;
+  }
+
+  @Value.Default
+  public boolean getMergeManifests() {
+    return false;
+  }
+
   public abstract Path getJarPath();
 
   @Value.Default

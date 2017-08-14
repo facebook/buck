@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,6 +42,8 @@ public class JarParametersSerializerTest {
                 ImmutableSortedSet.of(Paths.get("some/path"), Paths.get("/other path/")))
             .setMainClass(Optional.of("hello I am main class"))
             .setManifestFile(Optional.of(Paths.get("/MANIFEST/FILE.TXT")))
+            .setMergeManifests(true)
+            .setHashEntries(true)
             .build();
 
     Map<String, Object> data = JarParametersSerializer.serialize(input);
@@ -70,6 +73,9 @@ public class JarParametersSerializerTest {
       assertThat(outputPattern.pattern(), Matchers.equalToObject(inputPattern.pattern()));
       assertThat(outputPattern.flags(), Matchers.equalTo(inputPattern.flags()));
     }
+
+    assertTrue(output.getMergeManifests());
+    assertTrue(output.getHashEntries());
   }
 
   @Test
