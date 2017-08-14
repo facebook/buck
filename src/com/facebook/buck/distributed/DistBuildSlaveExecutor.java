@@ -64,6 +64,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -74,6 +75,7 @@ import javax.annotation.Nullable;
 
 public class DistBuildSlaveExecutor {
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
+  private static final String LOCALHOST_ADDRESS = "localhost";
 
   private final DistBuildExecutorArgs args;
 
@@ -101,16 +103,20 @@ public class DistBuildSlaveExecutor {
         break;
 
       case COORDINATOR:
-        runner = newCoordinatorMode();
+        runner = newCoordinatorMode(getFreePortForCoordinator());
         break;
 
       case MINION:
-        runner = newMinionMode(localBuilder);
+        runner =
+            newMinionMode(localBuilder, args.getCoordinatorAddress(), args.getCoordinatorPort());
         break;
 
       case COORDINATOR_AND_MINION:
+        int coordinatorPort = getFreePortForCoordinator();
         runner =
-            new CoordinatorAndMinionModeRunner(newCoordinatorMode(), newMinionMode(localBuilder));
+            new CoordinatorAndMinionModeRunner(
+                newCoordinatorMode(coordinatorPort),
+                newMinionMode(localBuilder, LOCALHOST_ADDRESS, coordinatorPort));
         break;
 
       default:
@@ -121,20 +127,18 @@ public class DistBuildSlaveExecutor {
     return runner.runAndReturnExitCode();
   }
 
-  private MinionModeRunner newMinionMode(LocalBuilder localBuilder) {
+  private MinionModeRunner newMinionMode(
+      LocalBuilder localBuilder, String coordinatorAddress, int coordinatorPort) {
     return new MinionModeRunner(
-        args.getCoordinatorAddress(),
-        args.getCoordinatorPort(),
-        localBuilder,
-        args.getStampedeId());
+        coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId());
   }
 
-  private CoordinatorModeRunner newCoordinatorMode() {
+  private CoordinatorModeRunner newCoordinatorMode(int coordinatorPort) throws IOException {
     BuildTargetsQueue queue =
         BuildTargetsQueue.newQueue(
             Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
             fullyQualifiedNameToBuildTarget(args.getState().getRemoteState().getTopLevelTargets()));
-    return new CoordinatorModeRunner(args.getCoordinatorPort(), queue, args.getStampedeId());
+    return new CoordinatorModeRunner(coordinatorPort, queue, args.getStampedeId());
   }
 
   private TargetGraph createTargetGraph() throws IOException, InterruptedException {
@@ -306,6 +310,13 @@ public class DistBuildSlaveExecutor {
             new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
 
     return targetGraphCodec;
+  }
+
+  public static int getFreePortForCoordinator() throws IOException {
+    // Passing argument 0 to ServerSocket will allocate a new free random port.
+    try (ServerSocket socket = new ServerSocket(0)) {
+      return socket.getLocalPort();
+    }
   }
 
   private class LocalBuilderImpl implements LocalBuilder {

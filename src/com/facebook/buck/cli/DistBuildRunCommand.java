@@ -58,13 +58,13 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Option(
     name = "--coordinator-port",
-    usage = "The local port that the build coordinator thrift server will listen on."
+    usage = "Port of the build coordinator. (only used in MINION mode)."
   )
   private int coordinatorPort = -1;
 
   @Option(
     name = "--coordinator-address",
-    usage = "The address of the remote coordinator thrift server to connect to."
+    usage = "Address of the build coordinator. (only used in MINION mode)."
   )
   private String coordinatorAddress = "localhost";
 

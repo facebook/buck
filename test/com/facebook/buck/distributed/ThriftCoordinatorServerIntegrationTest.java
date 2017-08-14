@@ -22,7 +22,6 @@ import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import java.io.IOException;
-import java.net.ServerSocket;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -73,9 +72,7 @@ public class ThriftCoordinatorServerIntegrationTest {
   }
 
   public static int findRandomOpenPortOnAllLocalInterfaces() throws IOException {
-    try (ServerSocket socket = new ServerSocket(0); ) {
-      return socket.getLocalPort();
-    }
+    return DistBuildSlaveExecutor.getFreePortForCoordinator();
   }
 
   public static ThriftCoordinatorServer createServerOnRandomPort(BuildTargetsQueue queue)
