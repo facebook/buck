@@ -91,9 +91,10 @@ import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.haskell.HaskellBinaryDescription;
-import com.facebook.buck.haskell.HaskellBuckConfig;
+import com.facebook.buck.haskell.HaskellBuckConfigPlatform;
 import com.facebook.buck.haskell.HaskellGhciDescription;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
+import com.facebook.buck.haskell.HaskellPlatform;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -493,14 +494,14 @@ public class KnownBuildRuleTypes {
             appleConfig);
     builder.register(appleBinaryDescription);
 
-    HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
-    builder.register(new HaskellLibraryDescription(haskellBuckConfig, cxxBuckConfig, cxxPlatforms));
+    HaskellPlatform haskellPlatform = new HaskellBuckConfigPlatform(config, executableFinder);
+    builder.register(new HaskellLibraryDescription(haskellPlatform, cxxBuckConfig, cxxPlatforms));
     builder.register(
-        new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
+        new HaskellBinaryDescription(haskellPlatform, cxxPlatforms, defaultCxxPlatform));
     builder.register(new HaskellPrebuiltLibraryDescription());
     builder.register(
         new HaskellGhciDescription(
-            haskellBuckConfig, cxxBuckConfig, cxxPlatforms, defaultCxxPlatform));
+            haskellPlatform, cxxBuckConfig, cxxPlatforms, defaultCxxPlatform));
 
     if (javaConfig.getDxThreadCount().isPresent()) {
       LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");

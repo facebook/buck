@@ -80,15 +80,15 @@ public class HaskellLibraryDescription
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);
 
-  private final HaskellConfig haskellConfig;
+  private final HaskellPlatform haskellPlatform;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public HaskellLibraryDescription(
-      HaskellConfig haskellConfig,
+      HaskellPlatform haskellPlatform,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.haskellConfig = haskellConfig;
+    this.haskellPlatform = haskellPlatform;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -109,7 +109,7 @@ public class HaskellLibraryDescription
     name = name.replace('_', '-');
     name = name.replaceFirst("^-*", "");
 
-    Optional<String> packageNamePrefix = haskellConfig.getPackageNamePrefix();
+    Optional<String> packageNamePrefix = haskellPlatform.getPackageNamePrefix();
     if (packageNamePrefix.isPresent()) {
       name = packageNamePrefix.get() + "-" + name;
     }
@@ -138,7 +138,7 @@ public class HaskellLibraryDescription
         ruleFinder,
         deps,
         cxxPlatform,
-        haskellConfig,
+        haskellPlatform,
         depType,
         hsProfile,
         Optional.empty(),
@@ -392,8 +392,8 @@ public class HaskellLibraryDescription
         projectFilesystem,
         baseParams,
         ruleFinder,
-        haskellConfig.getPackager().resolve(resolver),
-        haskellConfig.getHaskellVersion(),
+        haskellPlatform.getPackager().resolve(resolver),
+        haskellPlatform.getHaskellVersion(),
         depType,
         getPackageInfo(target),
         depPackages,
@@ -496,7 +496,7 @@ public class HaskellLibraryDescription
         resolver,
         ruleFinder,
         cxxPlatform,
-        haskellConfig,
+        haskellPlatform,
         Linker.LinkType.SHARED,
         ImmutableList.of(),
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
@@ -780,7 +780,7 @@ public class HaskellLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
-        haskellConfig, cxxPlatforms.getValues(), extraDepsBuilder);
+        haskellPlatform, cxxPlatforms.getValues(), extraDepsBuilder);
   }
 
   protected enum Type implements FlavorConvertible {

@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public interface HaskellConfig {
+public interface HaskellPlatform {
 
   /** @return the {@link ToolProvider} for the haskell compiler. */
   ToolProvider getCompiler();

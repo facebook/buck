@@ -69,17 +69,17 @@ public class HaskellGhciDescription
         ImplicitDepsInferringDescription<HaskellGhciDescription.AbstractHaskellGhciDescriptionArg>,
         VersionPropagator<HaskellGhciDescriptionArg> {
 
-  private final HaskellConfig haskellConfig;
+  private final HaskellPlatform haskellPlatform;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
   public HaskellGhciDescription(
-      HaskellConfig haskellConfig,
+      HaskellPlatform haskellPlatform,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
-    this.haskellConfig = haskellConfig;
+    this.haskellPlatform = haskellPlatform;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -295,13 +295,13 @@ public class HaskellGhciDescription
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
             args.getEnableProfiling(),
-            haskellConfig.getGhciScriptTemplate().get(),
-            haskellConfig.getGhciBinutils().get(),
-            haskellConfig.getGhciGhc().get(),
-            haskellConfig.getGhciLib().get(),
-            haskellConfig.getGhciCxx().get(),
-            haskellConfig.getGhciCc().get(),
-            haskellConfig.getGhciCpp().get()));
+            haskellPlatform.getGhciScriptTemplate().get(),
+            haskellPlatform.getGhciBinutils().get(),
+            haskellPlatform.getGhciGhc().get(),
+            haskellPlatform.getGhciLib().get(),
+            haskellPlatform.getGhciCxx().get(),
+            haskellPlatform.getGhciCc().get(),
+            haskellPlatform.getGhciCpp().get()));
   }
 
   @Override
@@ -313,7 +313,7 @@ public class HaskellGhciDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     HaskellDescriptionUtils.getParseTimeDeps(
-        haskellConfig,
+        haskellPlatform,
         ImmutableList.of(
             cxxPlatforms.getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)),
         extraDepsBuilder);

@@ -80,15 +80,15 @@ public class HaskellBinaryDescription
   private static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Haskell Binary Type", Type.class);
 
-  private final HaskellConfig haskellConfig;
+  private final HaskellPlatform haskellPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
   public HaskellBinaryDescription(
-      HaskellConfig haskellConfig,
+      HaskellPlatform haskellPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
-    this.haskellConfig = haskellConfig;
+    this.haskellPlatform = haskellPlatform;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
   }
@@ -144,7 +144,7 @@ public class HaskellBinaryDescription
     BuildTarget binaryTarget = buildTarget.withFlavors(InternalFlavor.of("binary"));
 
     // Maintain backwards compatibility to ease upgrade flows.
-    if (haskellConfig.shouldUsedOldBinaryOutputLocation().orElse(true)) {
+    if (haskellPlatform.shouldUsedOldBinaryOutputLocation().orElse(true)) {
       binaryTarget = binaryTarget.withAppendedFlavors(cxxPlatform.getFlavor());
     }
 
@@ -241,7 +241,7 @@ public class HaskellBinaryDescription
                             dep instanceof HaskellCompileDep || dep instanceof CxxPreprocessorDep)
                     .toImmutableSet(),
                 cxxPlatform,
-                haskellConfig,
+                haskellPlatform,
                 depType,
                 false,
                 args.getMain(),
@@ -269,7 +269,7 @@ public class HaskellBinaryDescription
             resolver,
             ruleFinder,
             cxxPlatform,
-            haskellConfig,
+            haskellPlatform,
             Linker.LinkType.EXECUTABLE,
             linkFlags,
             linkInputs,
@@ -299,7 +299,7 @@ public class HaskellBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
-        haskellConfig,
+        haskellPlatform,
         ImmutableList.of(
             cxxPlatforms.getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)),
         extraDepsBuilder);

@@ -27,14 +27,14 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class HaskellBuckConfig implements HaskellConfig {
+public class HaskellBuckConfigPlatform implements HaskellPlatform {
 
   private static final String SECTION = "haskell";
 
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
 
-  public HaskellBuckConfig(BuckConfig delegate, ExecutableFinder finder) {
+  public HaskellBuckConfigPlatform(BuckConfig delegate, ExecutableFinder finder) {
     this.delegate = delegate;
     this.finder = finder;
   }

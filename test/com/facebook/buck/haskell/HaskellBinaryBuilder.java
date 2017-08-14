@@ -33,16 +33,16 @@ public class HaskellBinaryBuilder
 
   public HaskellBinaryBuilder(
       BuildTarget target,
-      HaskellConfig haskellConfig,
+      HaskellPlatform haskellPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       CxxPlatform defaultCxxPlatform) {
-    super(new HaskellBinaryDescription(haskellConfig, cxxPlatforms, defaultCxxPlatform), target);
+    super(new HaskellBinaryDescription(haskellPlatform, cxxPlatforms, defaultCxxPlatform), target);
   }
 
   public HaskellBinaryBuilder(BuildTarget target) {
     this(
         target,
-        FakeHaskellConfig.DEFAULT,
+        FakeHaskellPlatform.DEFAULT,
         CxxPlatformUtils.DEFAULT_PLATFORMS,
         CxxPlatformUtils.DEFAULT_PLATFORM);
   }

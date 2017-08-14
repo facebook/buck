@@ -28,9 +28,9 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractFakeHaskellConfig implements HaskellConfig {
+abstract class AbstractFakeHaskellPlatform implements HaskellPlatform {
 
-  public static final FakeHaskellConfig DEFAULT = FakeHaskellConfig.builder().build();
+  public static final FakeHaskellPlatform DEFAULT = FakeHaskellPlatform.builder().build();
 
   @Override
   @Value.Default

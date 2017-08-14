@@ -35,16 +35,16 @@ public class HaskellLibraryBuilder
 
   public HaskellLibraryBuilder(
       BuildTarget target,
-      HaskellConfig haskellConfig,
+      HaskellPlatform haskellPlatform,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new HaskellLibraryDescription(haskellConfig, cxxBuckConfig, cxxPlatforms), target);
+    super(new HaskellLibraryDescription(haskellPlatform, cxxBuckConfig, cxxPlatforms), target);
   }
 
   public HaskellLibraryBuilder(BuildTarget target) {
     this(
         target,
-        FakeHaskellConfig.DEFAULT,
+        FakeHaskellPlatform.DEFAULT,
         CxxPlatformUtils.DEFAULT_CONFIG,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
