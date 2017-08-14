@@ -305,8 +305,7 @@ public final class IjModuleGraphFactory {
       if (extraCompileOutputRootPath.isPresent()
           && !module.getExtraModuleDependencies().isEmpty()) {
         IjModule extraModule =
-            createExtraModuleForCompilerOutput(
-                module, extraCompileOutputRootPath.get());
+            createExtraModuleForCompilerOutput(module, extraCompileOutputRootPath.get());
         moduleDeps.put(extraModule, DependencyType.PROD);
         depsBuilder.put(extraModule, ImmutableMap.of());
       }
@@ -327,8 +326,7 @@ public final class IjModuleGraphFactory {
   }
 
   private static IjModule createExtraModuleForCompilerOutput(
-      IjModule module,
-      Path extraCompileOutputRootPath) {
+      IjModule module, Path extraCompileOutputRootPath) {
     return IjModule.builder()
         .setModuleBasePath(extraCompileOutputRootPath.resolve(module.getModuleBasePath()))
         .setTargets(ImmutableSet.of())
