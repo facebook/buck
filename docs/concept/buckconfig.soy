@@ -2073,6 +2073,17 @@ cxx_library(
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'extra_compiler_output_modules_path' /}
+  {param example_value: 'buck-out/extra-intellij-output' /}
+  {param description}
+    This option specifies the location of additional modules for code generated outside of buck
+    graph. For example, it can be used to specify the location of R.java classes generated for
+    Android plugin to help Layout Preview with resolving references to resources.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}

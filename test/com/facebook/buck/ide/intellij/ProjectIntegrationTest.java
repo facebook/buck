@@ -120,6 +120,12 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testVersion2BuckProjectWithExtraOutputModules()
+      throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_extra_output_modules");
+  }
+
+  @Test
   public void testVersion2BuckProjectWithGeneratedSources()
       throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_generated_sources");
