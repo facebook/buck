@@ -60,6 +60,8 @@ public class DistBuildConfig {
   private static final String BUILD_LABEL = "build_label";
   private static final String DEFAULT_BUILD_LABEL = "";
 
+  private static final String MINION_QUEUE = "minion_queue";
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -125,6 +127,10 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
         .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
+  }
+
+  public Optional<String> getMinionQueue() {
+    return buckConfig.getValue(STAMPEDE_SECTION, MINION_QUEUE);
   }
 
   public String getRepository() {
