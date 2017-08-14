@@ -223,8 +223,11 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableCollection<IjFolder> createExcludes(final IjModule module) throws IOException {
-    final ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
     final Path moduleBasePath = module.getModuleBasePath();
+    if (!projectFilesystem.exists(moduleBasePath)) {
+      return ImmutableList.of();
+    }
+    final ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
     projectFilesystem.walkRelativeFileTree(
         moduleBasePath,
         new FileVisitor<Path>() {
@@ -363,6 +366,16 @@ public class IjProjectTemplateDataPreparer {
 
     boolean isAndroidFacetPresent = androidFacetOptional.isPresent();
     androidProperties.put("enabled", isAndroidFacetPresent);
+
+    Path basePath = module.getModuleBasePath();
+
+    Optional<Path> extraCompilerOutputPath = projectConfig.getExtraCompilerOutputModulesPath();
+    if (isAndroidFacetPresent
+        || (extraCompilerOutputPath.isPresent()
+            && basePath.toString().contains(extraCompilerOutputPath.get().toString()))) {
+      addAndroidCompilerOutputPath(androidProperties, module, basePath);
+    }
+
     if (!isAndroidFacetPresent) {
       return androidProperties;
     }
@@ -377,15 +390,12 @@ public class IjProjectTemplateDataPreparer {
         projectConfig.isAggregatingAndroidResourceModulesEnabled()
             && projectConfig.getAggregationMode() != AggregationMode.NONE);
 
-    Path basePath = module.getModuleBasePath();
-
     addAndroidApkPaths(androidProperties, module, basePath, androidFacet);
     addAndroidAssetPaths(androidProperties, module, androidFacet);
     addAndroidGenPath(androidProperties, androidFacet, basePath);
     addAndroidManifestPath(androidProperties, basePath, androidFacet);
     addAndroidProguardPath(androidProperties, androidFacet);
     addAndroidResourcePaths(androidProperties, module, androidFacet);
-    addAndroidCompilerOutputPath(androidProperties, module, basePath);
 
     return androidProperties;
   }
