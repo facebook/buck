@@ -71,6 +71,7 @@ public abstract class DistBuildFactory {
       DistBuildService service,
       DistBuildMode mode,
       int coordinatorPort,
+      String coordinatorAddress,
       Optional<StampedeId> stampedeId,
       Optional<Path> globalCacheDir,
       FileMaterializationStatsTracker fileMaterializationStatsTracker)
@@ -102,6 +103,7 @@ public abstract class DistBuildFactory {
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)
                 .setCoordinatorPort(coordinatorPort)
+                .setCoordinatorAddress(coordinatorAddress)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())

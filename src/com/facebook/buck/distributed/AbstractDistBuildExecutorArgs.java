@@ -72,9 +72,7 @@ abstract class AbstractDistBuildExecutorArgs {
 
   public abstract StampedeId getStampedeId();
 
-  public String getCoordinatorAddress() {
-    return "localhost";
-  }
+  public abstract String getCoordinatorAddress();
 
   public BuckConfig getRemoteRootCellConfig() {
     return getState().getRootCell().getBuckConfig();

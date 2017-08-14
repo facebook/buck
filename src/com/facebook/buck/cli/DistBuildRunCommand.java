@@ -56,12 +56,17 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Option(name = BUILD_STATE_FILE_ARG_NAME, usage = BUILD_STATE_FILE_ARG_USAGE)
   private String buildStateFile;
 
-  @Nullable
   @Option(
     name = "--coordinator-port",
     usage = "The local port that the build coordinator thrift server will listen on."
   )
   private int coordinatorPort = -1;
+
+  @Option(
+    name = "--coordinator-address",
+    usage = "The address of the remote coordinator thrift server to connect to."
+  )
+  private String coordinatorAddress = "localhost";
 
   @Nullable
   @Option(name = "--build-mode", usage = "The mode in which the distributed build is going to run.")
@@ -145,6 +150,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   service,
                   Preconditions.checkNotNull(distBuildMode),
                   coordinatorPort,
+                  coordinatorAddress,
                   getStampedeIdOptional(),
                   getGlobalCacheDirOptional(),
                   fileMaterializationStatsTracker);
