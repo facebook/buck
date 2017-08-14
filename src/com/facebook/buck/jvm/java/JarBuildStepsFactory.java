@@ -275,7 +275,6 @@ public class JarBuildStepsFactory
           depFileRelativePath,
           pathToSrcsList,
           postprocessClassesCommands,
-          ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.empty(),
           this.manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
           outputJar.get(),

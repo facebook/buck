@@ -163,7 +163,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
       Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<Path> entriesToJar,
       Optional<String> mainClass,
       Optional<Path> manifestFile,
       Path outputJar,
@@ -216,7 +215,11 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
               new ClasspathChecker(),
               Optional.of(
                   DirectToJarOutputSettings.of(
-                      outputJar, classesToRemoveFromJar, entriesToJar, mainClass, manifestFile)),
+                      outputJar,
+                      classesToRemoveFromJar,
+                      ImmutableSortedSet.of(outputDirectory),
+                      mainClass,
+                      manifestFile)),
               abiJar));
     } else {
       super.createCompileToJarStep(
@@ -233,7 +236,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
           depFilePath,
           pathToSrcsList,
           postprocessClassesCommands,
-          entriesToJar,
           mainClass,
           manifestFile,
           outputJar,
