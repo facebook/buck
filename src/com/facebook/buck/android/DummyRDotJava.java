@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -71,7 +72,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   private final JarContentsSupplier outputJarContentsSupplier;
-  @AddToRuleKey CompileToJarStepFactory compileStepFactory;
+  @AddToRuleKey JavacToJarStepFactory compileStepFactory;
   @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
   @AddToRuleKey private final Optional<String> finalRName;
@@ -87,7 +88,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      CompileToJarStepFactory compileStepFactory,
+      JavacToJarStepFactory compileStepFactory,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
@@ -112,7 +113,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      CompileToJarStepFactory compileStepFactory,
+      JavacToJarStepFactory compileStepFactory,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,

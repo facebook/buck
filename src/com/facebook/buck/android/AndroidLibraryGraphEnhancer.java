@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -118,7 +117,7 @@ public class AndroidLibraryGraphEnhancer {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
-    CompileToJarStepFactory compileToJarStepFactory =
+    JavacToJarStepFactory compileToJarStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
     BuildRuleParams dummyRDotJavaParams =
         compileToJarStepFactory.addInputs(
