@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -32,6 +33,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -63,7 +65,16 @@ public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraD
         new WriteFileStep(
             getProjectFilesystem(), "", getPathToOutputFile(), /* executable */ false));
 
-    // TODO add a step like MiniAapt here
+    steps.add(
+        new MiniAapt(
+            context.getSourcePathResolver(),
+            getProjectFilesystem(),
+            resDir,
+            getPathToOutputFile(),
+            ImmutableSet.of(),
+            false,
+            false,
+            MiniAapt.ResourceCollectionType.ANDROID_RESOURCE_INDEX));
     return steps.build();
   }
 

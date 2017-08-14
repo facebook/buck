@@ -20,8 +20,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.util.xml.DocumentLocation;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,26 +36,30 @@ import javax.annotation.Nullable;
  * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx} represents
  * the resource type, and {@code yyyy} represents the id within that resource type.
  */
-public class AaptResourceCollector {
+public class RDotTxtResourceCollector implements ResourceCollector {
 
   private int currentTypeId;
   private final Map<RType, ResourceIdEnumerator> enumerators;
   private final Set<RDotTxtEntry> resources;
 
-  public AaptResourceCollector() {
+  public RDotTxtResourceCollector() {
     this.enumerators = new HashMap<>();
     this.resources = new HashSet<>();
     this.currentTypeId = 1;
   }
 
-  public void addIntResourceIfNotPresent(RType rType, String name) {
+  @Override
+  public void addIntResourceIfNotPresent(
+      RType rType, String name, Path path, DocumentLocation documentLocation) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      addResource(rType, IdType.INT, name, getNextIdValue(rType), null);
+      addResource(rType, IdType.INT, name, getNextIdValue(rType), null, path, documentLocation);
     }
   }
 
-  public void addCustomDrawableResourceIfNotPresent(RType rType, String name) {
+  @Override
+  public void addCustomDrawableResourceIfNotPresent(
+      RType rType, String name, Path path, DocumentLocation documentLocation) {
     RDotTxtEntry entry =
         new FakeRDotTxtEntry(IdType.INT, rType, name, RDotTxtEntry.CustomDrawableType.CUSTOM);
     if (!resources.contains(entry)) {
@@ -61,7 +67,9 @@ public class AaptResourceCollector {
     }
   }
 
-  public void addGrayscaleImageResourceIfNotPresent(RType rType, String name) {
+  @Override
+  public void addGrayscaleImageResourceIfNotPresent(
+      RType rType, String name, Path path, DocumentLocation documentLocation) {
     RDotTxtEntry entry =
         new FakeRDotTxtEntry(
             IdType.INT, rType, name, RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE);
@@ -70,15 +78,32 @@ public class AaptResourceCollector {
     }
   }
 
-  public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
-    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues), null);
+  @Override
+  public void addIntArrayResourceIfNotPresent(
+      RType rType, String name, int numValues, Path path, DocumentLocation documentLocation) {
+    addResource(
+        rType,
+        IdType.INT_ARRAY,
+        name,
+        getNextArrayIdValue(rType, numValues),
+        null,
+        path,
+        documentLocation);
   }
 
+  @Override
   public void addResource(
-      RType rType, IdType idType, String name, String idValue, @Nullable String parent) {
+      RType rType,
+      IdType idType,
+      String name,
+      String idValue,
+      @Nullable String parent,
+      Path path,
+      DocumentLocation documentLocation) {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 
+  @Override
   public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
     if (!resources.contains(rDotTxtEntry)) {
       resources.add(rDotTxtEntry.copyWithNewIdValue(getNextIdValue(rDotTxtEntry)));
