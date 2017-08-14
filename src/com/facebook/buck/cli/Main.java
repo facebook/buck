@@ -202,7 +202,6 @@ public final class Main {
    *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
-  @SuppressWarnings("unused")
   public static final int JNA_POINTER_SIZE = Pointer.SIZE;
 
   /** Trying again won't help. */

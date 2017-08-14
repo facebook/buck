@@ -45,13 +45,7 @@ abstract class AbstractJarParameters {
 
   public abstract ImmutableSortedSet<Path> getEntriesToJar();
 
-  @Value.Default
-  public Optional<String> getMainClass() {
-    return Optional.empty();
-  }
+  public abstract Optional<String> getMainClass();
 
-  @Value.Default
-  public Optional<Path> getManifestFile() {
-    return Optional.empty();
-  }
+  public abstract Optional<Path> getManifestFile();
 }
