@@ -25,6 +25,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.NoHealthyServersException;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -34,6 +37,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
+import org.immutables.value.Value;
 
 public abstract class AbstractNetworkCache implements ArtifactCache {
 
@@ -70,15 +74,9 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     this.maxStoreSize = args.getMaxStoreSizeBytes();
   }
 
-  protected abstract CacheResult fetchImpl(
-      RuleKey ruleKey, LazyPath output, final HttpArtifactCacheEvent.Finished.Builder eventBuilder)
-      throws IOException;
+  protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;
 
-  protected abstract void storeImpl(
-      ArtifactInfo info,
-      final Path file,
-      final HttpArtifactCacheEvent.Finished.Builder eventBuilder)
-      throws IOException;
+  protected abstract StoreResult storeImpl(ArtifactInfo info, final Path file) throws IOException;
 
   private boolean isNoHealthyServersException(Throwable exception) {
     if (exception == null) {
@@ -105,7 +103,16 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
     CacheResult result = null;
     try {
-      result = fetchImpl(ruleKey, output, eventBuilder);
+      FetchResult fetchResult = fetchImpl(ruleKey, output);
+      eventBuilder.setTarget(fetchResult.getBuildTarget());
+      eventBuilder
+          .getFetchBuilder()
+          .setAssociatedRuleKeys(fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
+          .setArtifactContentHash(fetchResult.getArtifactContentHash())
+          .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
+          .setFetchResult(fetchResult.getCacheResult())
+          .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
+      result = fetchResult.getCacheResult();
       return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
@@ -127,12 +134,12 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       result = CacheResult.error(name, mode, msg);
       return result;
     } finally {
+      Preconditions.checkNotNull(result);
       HttpArtifactCacheEventFetchData.Builder fetchBuilder =
           eventBuilder.getFetchBuilder().setFetchResult(result);
       if (result.getType() == CacheResultType.ERROR && result.cacheError().isPresent()) {
         fetchBuilder.setErrorMessage(result.cacheError());
       }
-
       buckEventBus.post(eventBuilder.build());
     }
   }
@@ -174,7 +181,12 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
                 .setArtifactSizeBytes(artifactSizeBytes)
                 .setRuleKeys(info.getRuleKeys());
             if (!isArtefactTooBigToBeStored(artifactSizeBytes, maxStoreSize)) {
-              storeImpl(info, tmp, finishedEventBuilder);
+              StoreResult result = storeImpl(info, tmp);
+              finishedEventBuilder
+                  .getStoreBuilder()
+                  .setArtifactContentHash(result.getArtifactContentHash())
+                  .setRequestSizeBytes(result.getRequestSizeBytes())
+                  .setWasStoreSuccessful(result.getWasStoreSuccessful());
             } else {
               LOG.info(
                   "Artifact too big so not storing it in the distributed cache. "
@@ -227,15 +239,15 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   private void reportFailure(Exception exception, String format, Object... args) {
     LOG.warn(exception, format, args);
-    reportFailureToEvenBus(format, args);
+    reportFailureToEventBus(format, args);
   }
 
   protected void reportFailure(String format, Object... args) {
     LOG.warn(format, args);
-    reportFailureToEvenBus(format, args);
+    reportFailureToEventBus(format, args);
   }
 
-  private void reportFailureToEvenBus(String format, Object... args) {
+  private void reportFailureToEventBus(String format, Object... args) {
     if (seenErrors.add(format)) {
       buckEventBus.post(
           ConsoleEvent.warning(
@@ -251,5 +263,31 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   private static boolean isArtefactTooBigToBeStored(
       long artifactSizeBytes, Optional<Long> maxStoreSize) {
     return maxStoreSize.isPresent() && artifactSizeBytes > maxStoreSize.get();
+  }
+
+  @BuckStyleTuple
+  @Value.Immutable(builder = true)
+  public interface AbstractFetchResult {
+    Optional<Long> getResponseSizeBytes();
+
+    Optional<String> getBuildTarget();
+
+    Optional<ImmutableSet<RuleKey>> getAssociatedRuleKeys();
+
+    Optional<Long> getArtifactSizeBytes();
+
+    Optional<String> getArtifactContentHash();
+
+    CacheResult getCacheResult();
+  }
+
+  @BuckStyleTuple
+  @Value.Immutable(builder = true)
+  public interface AbstractStoreResult {
+    Optional<Long> getRequestSizeBytes();
+
+    Optional<String> getArtifactContentHash();
+
+    Optional<Boolean> getWasStoreSuccessful();
   }
 }

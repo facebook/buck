@@ -73,9 +73,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected CacheResult fetchImpl(
-      RuleKey ruleKey, LazyPath output, HttpArtifactCacheEvent.Finished.Builder eventBuilder)
-      throws IOException {
+  protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+    FetchResult.Builder resultBuilder = FetchResult.builder();
 
     BuckCacheFetchRequest fetchRequest = new BuckCacheFetchRequest();
     com.facebook.buck.artifact_cache.thrift.RuleKey thriftRuleKey =
@@ -106,17 +105,19 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 httpResponse.requestUrl(),
                 ruleKey.toString());
         LOG.error(message);
-        return CacheResult.error(name, mode, message);
+        return resultBuilder.setCacheResult(CacheResult.error(name, mode, message)).build();
       }
 
       try (ThriftArtifactCacheProtocol.Response response =
           ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
-        eventBuilder.getFetchBuilder().setResponseSizeBytes(httpResponse.contentLength());
+        resultBuilder.setResponseSizeBytes(httpResponse.contentLength());
 
         BuckCacheResponse cacheResponse = response.getThriftData();
         if (!cacheResponse.isWasSuccessful()) {
           LOG.warn("Request was unsuccessful: %s", cacheResponse.getErrorMessage());
-          return CacheResult.error(name, mode, cacheResponse.getErrorMessage());
+          return resultBuilder
+              .setCacheResult(CacheResult.error(name, mode, cacheResponse.getErrorMessage()))
+              .build();
         }
 
         BuckCacheFetchResponse fetchResponse = cacheResponse.getFetchResponse();
@@ -130,7 +131,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
         if (!fetchResponse.isArtifactExists()) {
           LOG.verbose("Artifact did not exist.");
-          return CacheResult.miss();
+          return resultBuilder.setCacheResult(CacheResult.miss()).build();
         }
 
         LOG.verbose("Got artifact.  Attempting to read payload.");
@@ -151,7 +152,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               String.format(
                   "ArtifactMetadata section is missing in the response. response=[%s]",
                   ThriftUtil.thriftToDebugJson(fetchResponse));
-          return CacheResult.error(name, mode, msg);
+          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
         }
         ArtifactMetadata metadata = fetchResponse.getMetadata();
         if (LOG.isVerboseEnabled()) {
@@ -162,7 +163,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
 
         if (!metadata.isSetRuleKeys()) {
-          return CacheResult.error(name, mode, "Rule key section in the metadata is not set.");
+          return resultBuilder
+              .setCacheResult(
+                  CacheResult.error(name, mode, "Rule key section in the metadata is not set."))
+              .build();
         }
         ImmutableSet<RuleKey> associatedRuleKeys = null;
         try {
@@ -172,19 +176,18 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               String.format(
                   "Exception parsing the rule keys in the metadata section [%s] with exception [%s].",
                   ThriftUtil.thriftToDebugJson(metadata), e.toString());
-          return CacheResult.error(name, mode, msg);
+          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
         }
 
-        eventBuilder
-            .setTarget(Optional.ofNullable(metadata.getBuildTarget()))
-            .getFetchBuilder()
+        resultBuilder
+            .setBuildTarget(Optional.ofNullable(metadata.getBuildTarget()))
             .setAssociatedRuleKeys(associatedRuleKeys)
             .setArtifactSizeBytes(readResult.getBytesRead());
         if (!metadata.isSetArtifactPayloadMd5()) {
           String msg = "Fetched artifact is missing the MD5 hash.";
           LOG.warn(msg);
         } else {
-          eventBuilder.getFetchBuilder().setArtifactContentHash(metadata.getArtifactPayloadMd5());
+          resultBuilder.setArtifactContentHash(metadata.getArtifactPayloadMd5());
           if (!readResult
               .getMd5Hash()
               .equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
@@ -193,17 +196,20 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                     "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
                     fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
             LOG.error(msg);
-            return CacheResult.error(name, mode, msg);
+            return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
           }
         }
 
         // This makes sure we don't have 'half downloaded files' in the dir cache.
         projectFilesystem.move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
-        return CacheResult.hit(
-            name,
-            mode,
-            ImmutableMap.copyOf(fetchResponse.getMetadata().getMetadata()),
-            readResult.getBytesRead());
+        return resultBuilder
+            .setCacheResult(
+                CacheResult.hit(
+                    name,
+                    mode,
+                    ImmutableMap.copyOf(fetchResponse.getMetadata().getMetadata()),
+                    readResult.getBytesRead()))
+            .build();
       }
     }
   }
@@ -215,12 +221,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected void storeImpl(
-      final ArtifactInfo info,
-      final Path file,
-      final HttpArtifactCacheEvent.Finished.Builder eventBuilder)
-      throws IOException {
-
+  protected StoreResult storeImpl(final ArtifactInfo info, final Path file) throws IOException {
+    StoreResult.Builder resultBuilder = StoreResult.builder();
     final ByteSource artifact =
         new ByteSource() {
           @Override
@@ -251,7 +253,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     final ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest, artifact);
     Request.Builder builder = toOkHttpRequest(request);
-    eventBuilder.getStoreBuilder().setRequestSizeBytes(request.getRequestLengthBytes());
+    resultBuilder.setRequestSizeBytes(request.getRequestLengthBytes());
     try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
       if (httpResponse.statusCode() != 200) {
         throw new IOException(
@@ -277,10 +279,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               artifactSizeBytes);
         }
 
-        eventBuilder
-            .getStoreBuilder()
-            .setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5);
-        eventBuilder.getStoreBuilder().setWasStoreSuccessful(cacheResponse.isWasSuccessful());
+        resultBuilder.setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5);
+        resultBuilder.setWasStoreSuccessful(cacheResponse.isWasSuccessful());
 
         if (LOG.isDebugEnabled()) {
           LOG.debug(
@@ -290,6 +290,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
       }
     }
+    return resultBuilder.build();
   }
 
   private Path createTempFileForDownload() throws IOException {

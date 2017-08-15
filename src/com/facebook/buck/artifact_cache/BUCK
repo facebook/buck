@@ -114,7 +114,7 @@ GENERATOR_SOURCE = [
     "HybridPayloadGenerator.java",
 ]
 
-java_library(
+java_immutables_library(
     name = "impl",
     srcs = glob(
         ["*.java"],

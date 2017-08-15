@@ -85,19 +85,14 @@ public class AbstractNetworkCacheTest {
                 .setDistributedBuildModeEnabled(false)
                 .build()) {
           @Override
-          protected CacheResult fetchImpl(
-              RuleKey ruleKey,
-              LazyPath output,
-              HttpArtifactCacheEvent.Finished.Builder eventBuilder)
-              throws IOException {
+          protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
             return null;
           }
 
           @Override
-          protected void storeImpl(
-              ArtifactInfo info, Path file, HttpArtifactCacheEvent.Finished.Builder eventBuilder)
-              throws IOException {
+          protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
             storeCallCount.incrementAndGet();
+            return StoreResult.builder().build();
           }
         };
 
