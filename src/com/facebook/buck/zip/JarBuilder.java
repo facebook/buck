@@ -256,14 +256,12 @@ public class JarBuilder {
 
     // Collect all services together for later merging and addition to the output jar
     if (isService(entryName)) {
-      try (InputStream entryInputStream = entrySupplier.getInputStreamSupplier().get()) {
-        if (entryInputStream != null) {
-          // Null stream means a directory
-          Set<String> existingServices = services.getOrDefault(entryName, new LinkedHashSet<>());
-          existingServices.add(
-              CharStreams.toString(new InputStreamReader(entryInputStream, Charsets.UTF_8)));
-          services.putIfAbsent(entryName, existingServices);
-        }
+      try (InputStream entryInputStream =
+          Preconditions.checkNotNull(entrySupplier.getInputStreamSupplier().get())) {
+        Set<String> existingServices =
+            services.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
+        existingServices.add(
+            CharStreams.toString(new InputStreamReader(entryInputStream, Charsets.UTF_8)));
       }
       return;
     }
@@ -279,7 +277,7 @@ public class JarBuilder {
   }
 
   private boolean isService(String entryName) {
-    return entryName.startsWith("META-INF/services/");
+    return entryName.startsWith("META-INF/services/") && !entryName.endsWith("/");
   }
 
   private void mkdirs(String name, CustomJarOutputStream jar) throws IOException {
