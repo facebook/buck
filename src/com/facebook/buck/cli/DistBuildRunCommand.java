@@ -33,30 +33,25 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
 public class DistBuildRunCommand extends AbstractDistBuildCommand {
-
-  private static final Logger LOG = Logger.get(DistBuildRunCommand.class);
-
-  private static final int EXECUTOR_TIMEOUT_SECONDS = 5;
 
   public static final String BUILD_STATE_FILE_ARG_NAME = "--build-state-file";
   public static final String BUILD_STATE_FILE_ARG_USAGE = "File containing the BuildStateJob data.";
@@ -154,15 +149,12 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           Optional<StampedeId> stampedeId = getStampedeIdOptional();
           DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
 
-          ScheduledExecutorService scheduledExecutor =
-              Executors.newScheduledThreadPool(
-                  1, new CommandThreadFactory("SourceFileMultiFetchScheduler"));
           FileContentsProvider multiSourceFileContentsProvider =
               DistBuildFactory.createMultiSourceContentsProvider(
                   service,
                   new DistBuildConfig(state.getRootCell().getBuckConfig()),
                   fileMaterializationStatsTracker,
-                  scheduledExecutor,
+                  params.getScheduledExecutor(),
                   getGlobalCacheDirOptional());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
@@ -179,10 +171,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
           int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
           multiSourceFileContentsProvider.close();
-          scheduledExecutor.shutdown();
-          if (!scheduledExecutor.awaitTermination(EXECUTOR_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            LOG.error("Failed to terminate executor after %d seconds.", EXECUTOR_TIMEOUT_SECONDS);
-          }
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
@@ -272,13 +260,14 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     }
   }
 
-  private void initEventListener() {
+  private void initEventListener(ScheduledExecutorService scheduledExecutorService) {
     if (slaveEventListener == null) {
       checkArgs();
       RunId runId = new RunId();
-      runId.setId(this.runId);
+      runId.setId(
+          Preconditions.checkNotNull(
+              this.runId, "This should have been already made sure by checkArgs()."));
 
-      ScheduledExecutorService networkScheduler = Executors.newScheduledThreadPool(1);
       slaveEventListener =
           new DistBuildSlaveEventBusListener(
               getStampedeId(),
@@ -286,14 +275,16 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               new DefaultClock(),
               timeStatsTracker,
               fileMaterializationStatsTracker,
-              networkScheduler);
+              scheduledExecutorService);
     }
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners() {
+  public Iterable<BuckEventListener> getEventListeners(
+      Map<ExecutorPool, ListeningExecutorService> executorPool,
+      ScheduledExecutorService scheduledExecutorService) {
     if (buildStateFile == null) {
-      initEventListener();
+      initEventListener(scheduledExecutorService);
       return ImmutableList.of(slaveEventListener);
     } else {
       return ImmutableList.of();

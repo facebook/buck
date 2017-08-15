@@ -43,7 +43,6 @@ import com.facebook.buck.event.listener.DistBuildClientEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -83,6 +82,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -113,7 +113,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -663,10 +663,7 @@ public class BuildCommand extends AbstractCommand {
                 distBuildLogStateTracker,
                 buckVersion,
                 distBuildClientStats,
-                Executors.newScheduledThreadPool(
-                    1,
-                    new CommandThreadFactory(
-                        DistBuildClientExecutor.class.getName() + "Scheduler")));
+                params.getScheduledExecutor());
         distBuildResult =
             build.executeAndPrintFailuresToEventBus(
                 executorService,
@@ -1017,21 +1014,16 @@ public class BuildCommand extends AbstractCommand {
     return versionedTargetGraph.isPresent() ? versionedTargetGraph.get() : unversionedTargetGraph;
   }
 
-  private void initDistBuildClientEventListener() {
-    if (useDistributedBuild && distBuildClientEventListener == null) {
-      distBuildClientEventListener = new DistBuildClientEventListener();
-    }
-  }
-
   @Override
-  public Iterable<BuckEventListener> getEventListeners() {
-    initDistBuildClientEventListener();
-    ImmutableList.Builder<BuckEventListener> listenerBuilder = ImmutableList.builder();
-    if (distBuildClientEventListener != null) {
-      listenerBuilder.add(distBuildClientEventListener);
+  public Iterable<BuckEventListener> getEventListeners(
+      Map<ExecutorPool, ListeningExecutorService> executorPool,
+      ScheduledExecutorService scheduledExecutorService) {
+    ImmutableList.Builder<BuckEventListener> listeners = ImmutableList.builder();
+    if (useDistributedBuild) {
+      distBuildClientEventListener = new DistBuildClientEventListener();
+      listeners.add(distBuildClientEventListener);
     }
-
-    return listenerBuilder.build();
+    return listeners.build();
   }
 
   public static class ActionGraphCreationException extends Exception {

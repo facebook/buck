@@ -728,6 +728,11 @@ public final class Main {
             listeningDecorator(
                 MostExecutors.newMultiThreadExecutor("Project", buckConfig.getNumThreads())));
 
+        ScheduledExecutorService scheduledExecutorPool =
+            Executors.newScheduledThreadPool(
+                buckConfig.getNumThreadsForSchedulerPool(),
+                new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool"));
+
         // Create and register the event buses that should listen to broadcast events.
         // If the build doesn't have a daemon create a new instance.
         BroadcastEventListener broadcastEventListener =
@@ -817,7 +822,10 @@ public final class Main {
 
           Iterable<BuckEventListener> commandEventListeners =
               command.getSubcommand().isPresent()
-                  ? command.getSubcommand().get().getEventListeners()
+                  ? command
+                      .getSubcommand()
+                      .get()
+                      .getEventListeners(executors, scheduledExecutorPool)
                   : ImmutableList.of();
 
           eventListeners =
@@ -1010,6 +1018,7 @@ public final class Main {
                         .setBuckConfig(buckConfig)
                         .setFileHashCache(fileHashCache)
                         .setExecutors(executors)
+                        .setScheduledExecutor(scheduledExecutorPool)
                         .setBuildEnvironmentDescription(buildEnvironmentDescription)
                         .setVersionedTargetGraphCache(versionedTargetGraphCache)
                         .setActionGraphCache(actionGraphCache)
@@ -1064,6 +1073,8 @@ public final class Main {
           for (ExecutorPool p : executors.keySet()) {
             closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
           }
+          closeExecutorService(
+              "ScheduledExecutorService", scheduledExecutorPool, EXECUTOR_SERVICES_TIMEOUT_SECONDS);
         }
         if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
           context.get().in.close(); // Avoid client exit triggering client disconnection handling.

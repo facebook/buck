@@ -40,6 +40,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
@@ -116,6 +117,7 @@ public class CommandRunnerParamsForTesting {
         .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
         .setExecutors(
             ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()))
+        .setScheduledExecutor(new FakeExecutor())
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
         .setVersionControlStatsGenerator(
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))

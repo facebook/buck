@@ -746,6 +746,11 @@ public class BuckConfig implements ConfigPathGetter {
     return getNumThreads(getDefaultMaximumNumberOfThreads());
   }
 
+  /** @return the number of threads to be used for the scheduled executor thread pool. */
+  public int getNumThreadsForSchedulerPool() {
+    return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
+  }
+
   private int getDefaultMaximumNumberOfThreads() {
     return getDefaultMaximumNumberOfThreads(Runtime.getRuntime().availableProcessors());
   }

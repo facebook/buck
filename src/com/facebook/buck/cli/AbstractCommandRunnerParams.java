@@ -47,6 +47,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ScheduledExecutorService;
 import org.immutables.value.Value;
 
 @Value.Immutable()
@@ -91,6 +92,8 @@ public interface AbstractCommandRunnerParams {
   StackedFileHashCache getFileHashCache();
 
   Map<ExecutorPool, ListeningExecutorService> getExecutors();
+
+  ScheduledExecutorService getScheduledExecutor();
 
   BuildEnvironmentDescription getBuildEnvironmentDescription();
 
