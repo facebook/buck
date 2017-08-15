@@ -508,6 +508,7 @@ public class ServedCacheIntegrationTest {
             projectFilesystem,
             Optional.empty(),
             DIRECT_EXECUTOR_SERVICE,
+            DIRECT_EXECUTOR_SERVICE,
             Optional.empty())
         .newInstance();
   }

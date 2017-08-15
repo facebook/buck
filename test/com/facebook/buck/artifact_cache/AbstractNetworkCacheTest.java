@@ -80,6 +80,7 @@ public class AbstractNetworkCacheTest {
                 .setProjectFilesystem(filesystem)
                 .setBuckEventBus(EasyMock.createMock(BuckEventBus.class))
                 .setHttpWriteExecutorService(service)
+                .setHttpFetchExecutorService(service)
                 .setErrorTextTemplate("super error message")
                 .setMaxStoreSizeBytes(maxArtifactSizeBytes)
                 .setDistributedBuildModeEnabled(false)

@@ -127,7 +127,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
   private final WeightedListeningExecutorService service;
-  private final WeightedListeningExecutorService cacheActivityService;
   private final StepRunner stepRunner;
   private final BuildMode buildMode;
   private final MetadataStorage metadataStorage;
@@ -156,7 +155,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       WeightedListeningExecutorService service,
-      WeightedListeningExecutorService artifactFetchService,
       StepRunner stepRunner,
       BuildMode buildMode,
       MetadataStorage metadataStorage,
@@ -172,7 +170,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
-    this.cacheActivityService = artifactFetchService;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
     this.metadataStorage = metadataStorage;
@@ -228,7 +225,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
 
     this.service = service;
-    this.cacheActivityService = service;
     this.stepRunner = stepRunner;
     this.buildMode = buildMode;
     this.metadataStorage = metadataStorage;
@@ -552,7 +548,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildInfoStoreManager,
             buildMode,
             buildRuleDurationTracker,
-            cacheActivityService,
             consoleLogBuildFailuresInline,
             defaultRuleKeyDiagnostics,
             depFiles,

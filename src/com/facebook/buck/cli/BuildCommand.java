@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.BuckVersionUtil;
@@ -91,7 +90,6 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Function;
@@ -925,9 +923,7 @@ public class BuildCommand extends AbstractCommand {
     MetadataChecker.checkAndCleanIfNeeded(params.getCell());
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
-    try (CommandThreadManager artifactFetchService =
-            getArtifactFetchService(params.getBuckConfig(), executor);
-        RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+    try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(
                 params,
                 new RuleKeyCacheRecycler.SettingsAffectingCache(
@@ -936,7 +932,6 @@ public class BuildCommand extends AbstractCommand {
             new CachingBuildEngine(
                 cachingBuildEngineDelegate,
                 executor,
-                artifactFetchService.getExecutor(),
                 new DefaultStepRunner(),
                 getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                 cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
@@ -987,17 +982,6 @@ public class BuildCommand extends AbstractCommand {
   @SuppressWarnings("unused")
   protected Iterable<BuildTarget> getAdditionalTargetsToBuild(BuildRuleResolver resolver) {
     return ImmutableList.of();
-  }
-
-  protected CommandThreadManager getArtifactFetchService(
-      BuckConfig config, WeightedListeningExecutorService executor) {
-    return new CommandThreadManager(
-        "cache-fetch",
-        executor.getSemaphore(),
-        ResourceAmounts.ZERO,
-        Math.min(
-            config.getMaximumResourceAmounts().getNetworkIO(),
-            (int) new ArtifactCacheBuckConfig(config).getThreadPoolSize()));
   }
 
   @Override

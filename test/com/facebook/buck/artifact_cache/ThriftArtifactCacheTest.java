@@ -106,6 +106,7 @@ public class ThriftArtifactCacheTest {
             .setStoreClient(storeClient)
             .setBuckEventBus(eventBus)
             .setHttpWriteExecutorService(service)
+            .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
             .setDistributedBuildModeEnabled(false)
             .setThriftEndpointPath("/nice_as_well")

@@ -498,23 +498,17 @@ public class TestCommand extends BuildCommand {
       MetadataChecker.checkAndCleanIfNeeded(params.getCell());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
-      try (CommandThreadManager artifactFetchService =
-              getArtifactFetchService(params.getBuckConfig(), pool.getExecutor());
-          RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
-              getDefaultRuleKeyCacheScope(
-                  params,
-                  new RuleKeyCacheRecycler.SettingsAffectingCache(
-                      params.getBuckConfig().getKeySeed(),
-                      actionGraphAndResolver.getActionGraph()))) {
+      try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+          getDefaultRuleKeyCacheScope(
+              params,
+              new RuleKeyCacheRecycler.SettingsAffectingCache(
+                  params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
                     pool.getExecutor(),
-                    artifactFetchService == null
-                        ? pool.getExecutor()
-                        : artifactFetchService.getExecutor(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                     cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

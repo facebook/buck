@@ -24,7 +24,6 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -45,7 +44,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         args.getCacheMode(),
         args.getCacheReadMode(),
         args.getHttpWriteExecutorService(),
-        MoreExecutors.newDirectExecutorService(),
+        args.getHttpFetchExecutorService(),
         new NetworkEventListener(
             args.getBuckEventBus(), args.getCacheName(), new ErrorReporter(args)),
         args.getMaxStoreSizeBytes(),

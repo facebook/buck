@@ -128,7 +128,6 @@ final class JavaBuildGraphProcessor {
           new CachingBuildEngine(
               cachingBuildEngineDelegate,
               executorService,
-              executorService,
               new DefaultStepRunner(),
               CachingBuildEngine.BuildMode.SHALLOW,
               cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

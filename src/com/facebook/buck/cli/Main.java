@@ -147,6 +147,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGListeningAddress;
 import com.martiansoftware.nailgun.NGServer;
@@ -706,6 +707,9 @@ public final class Main {
         ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
+        ListeningExecutorService httpFetchExecutorService =
+            getHttpFetchExecutorService(
+                cacheBuckConfig, buckConfig.getMaximumResourceAmounts().getNetworkIO());
         ScheduledExecutorService counterAggregatorExecutor =
             Executors.newSingleThreadScheduledExecutor(
                 new CommandThreadFactory("CounterAggregatorThread"));
@@ -795,6 +799,7 @@ public final class Main {
                   filesystem,
                   executionEnvironment.getWifiSsid(),
                   httpWriteExecutorService,
+                  httpFetchExecutorService,
                   Optional.of(asyncCloseable));
 
           ProgressEstimator progressEstimator =
@@ -1217,6 +1222,14 @@ public final class Main {
     } else {
       return newDirectExecutorService();
     }
+  }
+
+  private static ListeningExecutorService getHttpFetchExecutorService(
+      ArtifactCacheBuckConfig buckConfig, int maximumNetworkIOResources) {
+    return listeningDecorator(
+        MostExecutors.newMultiThreadExecutor(
+            new ThreadFactoryBuilder().setNameFormat("cache-fetch-%d").build(),
+            Math.min(maximumNetworkIOResources, (int) buckConfig.getThreadPoolSize())));
   }
 
   private static ConsoleHandlerState.Writer createWriterForConsole(

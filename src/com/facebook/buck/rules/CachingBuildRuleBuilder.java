@@ -111,7 +111,6 @@ class CachingBuildRuleBuilder {
   private final BuildInfoStoreManager buildInfoStoreManager;
   private final CachingBuildEngine.BuildMode buildMode;
   private final BuildRuleDurationTracker buildRuleDurationTracker;
-  private final WeightedListeningExecutorService cacheActivityService;
   private final boolean consoleLogBuildFailuresInline;
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
   private final CachingBuildEngine.DepFiles depFiles;
@@ -144,7 +143,6 @@ class CachingBuildRuleBuilder {
       BuildInfoStoreManager buildInfoStoreManager,
       CachingBuildEngine.BuildMode buildMode,
       final BuildRuleDurationTracker buildRuleDurationTracker,
-      WeightedListeningExecutorService cacheActivityService,
       final boolean consoleLogBuildFailuresInline,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       CachingBuildEngine.DepFiles depFiles,
@@ -170,7 +168,6 @@ class CachingBuildRuleBuilder {
     this.buildInfoStoreManager = buildInfoStoreManager;
     this.buildMode = buildMode;
     this.buildRuleDurationTracker = buildRuleDurationTracker;
-    this.cacheActivityService = cacheActivityService;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
     this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.depFiles = depFiles;
@@ -1062,9 +1059,7 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<CacheResult> fetch(
       ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
-        cacheActivityService.submit(
-            () -> Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath)),
-            CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+        artifactCache.fetchAsync(ruleKey, outputPath),
         (CacheResult cacheResult) -> {
           try (Scope scope = buildRuleScope()) {
             if (cacheResult.getType() != CacheResultType.HIT) {

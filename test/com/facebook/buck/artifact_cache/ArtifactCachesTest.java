@@ -46,6 +46,7 @@ public class ArtifactCachesTest {
                 projectFilesystem,
                 Optional.empty(),
                 MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
@@ -63,6 +64,7 @@ public class ArtifactCachesTest {
                 buckEventBus,
                 projectFilesystem,
                 Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
             .newInstance();
@@ -83,6 +85,7 @@ public class ArtifactCachesTest {
                 buckEventBus,
                 projectFilesystem,
                 Optional.empty(),
+                MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
             .newInstance();
@@ -111,6 +114,7 @@ public class ArtifactCachesTest {
                     buckEventBus,
                     projectFilesystem,
                     Optional.empty(),
+                    MoreExecutors.newDirectExecutorService(),
                     MoreExecutors.newDirectExecutorService(),
                     Optional.empty())
                 .newInstance());
@@ -156,6 +160,7 @@ public class ArtifactCachesTest {
                     projectFilesystem,
                     Optional.empty(),
                     MoreExecutors.newDirectExecutorService(),
+                    MoreExecutors.newDirectExecutorService(),
                     Optional.empty())
                 .newInstance());
 
@@ -194,6 +199,7 @@ public class ArtifactCachesTest {
                 projectFilesystem,
                 Optional.empty(),
                 MoreExecutors.newDirectExecutorService(),
+                MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
             .newInstance();
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
@@ -212,6 +218,7 @@ public class ArtifactCachesTest {
                 buckEventBus,
                 projectFilesystem,
                 Optional.of("evilwifi"),
+                MoreExecutors.newDirectExecutorService(),
                 MoreExecutors.newDirectExecutorService(),
                 Optional.empty())
             .newInstance();

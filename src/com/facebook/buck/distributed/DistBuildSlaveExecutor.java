@@ -358,7 +358,6 @@ public class DistBuildSlaveExecutor {
               new CachingBuildEngine(
                   Preconditions.checkNotNull(cachingBuildEngineDelegate),
                   args.getExecutorService(),
-                  args.getExecutorService(),
                   new DefaultStepRunner(),
                   engineConfig.getBuildEngineMode(),
                   engineConfig.getBuildMetadataStorage(),
