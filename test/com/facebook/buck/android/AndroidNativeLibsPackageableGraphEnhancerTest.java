@@ -292,7 +292,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testDuplicateCxxLibrary() throws Exception {
 
     NdkCxxPlatform ndkCxxPlatform =
