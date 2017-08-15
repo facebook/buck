@@ -47,8 +47,8 @@ public class CopyResourcesStep implements Step {
   private final SourcePathRuleFinder ruleFinder;
   private final BuildTarget target;
   private final Collection<? extends SourcePath> resources;
+  private final Optional<Path> resourcesRoot;
   private final Path outputDirectory;
-  private final JavaPackageFinder javaPackageFinder;
 
   public CopyResourcesStep(
       ProjectFilesystem filesystem,
@@ -56,15 +56,15 @@ public class CopyResourcesStep implements Step {
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Collection<? extends SourcePath> resources,
-      Path outputDirectory,
-      JavaPackageFinder javaPackageFinder) {
+      Optional<Path> resourcesRoot,
+      Path outputDirectory) {
     this.filesystem = filesystem;
     this.buildContext = buildContext;
     this.ruleFinder = ruleFinder;
     this.target = target;
     this.resources = resources;
+    this.resourcesRoot = resourcesRoot;
     this.outputDirectory = outputDirectory;
-    this.javaPackageFinder = javaPackageFinder;
   }
 
   @Override
@@ -87,6 +87,13 @@ public class CopyResourcesStep implements Step {
       return allSteps.build();
     }
 
+    JavaPackageFinder javaPackageFinder =
+        resourcesRoot
+            .map(
+                root ->
+                    (JavaPackageFinder)
+                        new ResourcesRootPackageFinder(root, buildContext.getJavaPackageFinder()))
+            .orElse(buildContext.getJavaPackageFinder());
     String targetPackageDir = javaPackageFinder.findJavaPackage(target);
 
     for (SourcePath rawResource : resources) {

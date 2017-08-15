@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -205,11 +204,6 @@ public class JarBuildStepsFactory
             .collect(MoreCollectors.toImmutableSortedSet());
 
     // If there are resources, then link them to the appropriate place in the classes directory.
-    JavaPackageFinder finder = context.getJavaPackageFinder();
-    if (this.resourcesRoot.isPresent()) {
-      finder = new ResourcesRootPackageFinder(this.resourcesRoot.get(), finder);
-    }
-
     steps.add(
         new CopyResourcesStep(
             projectFilesystem,
@@ -217,8 +211,8 @@ public class JarBuildStepsFactory
             this.ruleFinder,
             target,
             this.resources,
-            outputDirectory,
-            finder));
+            this.resourcesRoot,
+            outputDirectory));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(

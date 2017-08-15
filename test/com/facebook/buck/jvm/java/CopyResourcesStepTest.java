@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Test;
 
 public class CopyResourcesStepTest {
@@ -75,11 +76,11 @@ public class CopyResourcesStepTest {
                 new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
                 new FakeSourcePath(
                     filesystem, "android/java/src/com/facebook/common/util/data.json")),
+            Optional.empty(),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
-                .resolve("android/java/lib__resources__classes"),
-            javaPackageFinder);
+                .resolve("android/java/lib__resources__classes"));
 
     Path target =
         filesystem
@@ -142,11 +143,11 @@ public class CopyResourcesStepTest {
                 new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
                 new FakeSourcePath(
                     filesystem, "android/java/src/com/facebook/common/util/data.json")),
+            Optional.empty(),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
-                .resolve("android/java/src/lib__resources__classes"),
-            javaPackageFinder);
+                .resolve("android/java/src/lib__resources__classes"));
 
     Path target =
         filesystem
@@ -210,11 +211,11 @@ public class CopyResourcesStepTest {
                 new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
                 new FakeSourcePath(
                     filesystem, "android/java/src/com/facebook/common/util/data.json")),
+            Optional.empty(),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
-                .resolve("android/java/src/com/facebook/lib__resources__classes"),
-            javaPackageFinder);
+                .resolve("android/java/src/com/facebook/lib__resources__classes"));
 
     Path target =
         filesystem

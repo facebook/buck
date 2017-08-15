@@ -36,6 +36,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * {@link com.facebook.buck.rules.BuildRule} whose output file is a JAR containing the .java files
@@ -87,8 +88,8 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             ruleFinder,
             getBuildTarget(),
             filesForGwtModule,
-            tempJarFolder,
-            context.getJavaPackageFinder()));
+            Optional.empty(),
+            tempJarFolder));
 
     steps.add(
         new JarDirectoryStep(
