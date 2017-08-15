@@ -1500,7 +1500,7 @@ public class ProjectGenerator {
               (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
       ImmutableSortedMap<String, SourcePath> cxxHeaders =
           AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
-              this::resolveSourcePath, headerPathPrefix, arg);
+              targetNode.getBuildTarget(), this::resolveSourcePath, headerPathPrefix, arg);
       return convertMapKeysToPaths(cxxHeaders);
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
@@ -1530,7 +1530,7 @@ public class ProjectGenerator {
               (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
       ImmutableSortedMap<String, SourcePath> cxxHeaders =
           AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
-              this::resolveSourcePath, headerPathPrefix, arg);
+              targetNode.getBuildTarget(), this::resolveSourcePath, headerPathPrefix, arg);
       return convertMapKeysToPaths(cxxHeaders);
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);

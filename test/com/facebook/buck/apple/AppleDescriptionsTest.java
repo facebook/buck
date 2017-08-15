@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -58,6 +59,7 @@ public class AppleDescriptionsTest {
             "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+            BuildTargetFactory.newInstance("//:foobar"),
             resolver::getRelativePath,
             Paths.get("prefix"),
             SourceList.ofUnnamedSources(
@@ -82,6 +84,7 @@ public class AppleDescriptionsTest {
             "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+            BuildTargetFactory.newInstance("//:foobar"),
             resolver::getRelativePath,
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.of(
@@ -107,7 +110,10 @@ public class AppleDescriptionsTest {
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            resolver::getRelativePath, Paths.get("prefix"), SourceList.ofNamedSources(headerMap)));
+            BuildTargetFactory.newInstance("//:foobar"),
+            resolver::getRelativePath,
+            Paths.get("prefix"),
+            SourceList.ofNamedSources(headerMap)));
   }
 
   @Test
@@ -126,7 +132,9 @@ public class AppleDescriptionsTest {
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            resolver::getRelativePath, SourceList.ofNamedSources(headerMap)));
+            BuildTargetFactory.newInstance("//:foobar"),
+            resolver::getRelativePath,
+            SourceList.ofNamedSources(headerMap)));
   }
 
   @Test
@@ -143,6 +151,7 @@ public class AppleDescriptionsTest {
             "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
+            BuildTargetFactory.newInstance("//:foobar"),
             Paths.get("prefix"),
             resolver::getRelativePath,
             ImmutableSet.of(
@@ -166,6 +175,7 @@ public class AppleDescriptionsTest {
             "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
+            BuildTargetFactory.newInstance("//:foobar"),
             Paths.get(""),
             resolver::getRelativePath,
             ImmutableSet.of(
