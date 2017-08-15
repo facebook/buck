@@ -21,21 +21,21 @@ import java.nio.file.Path;
 public enum ResourceFolderType {
   JAVA_RESOURCE("java-resource", JavaResourceFolder.class) {
     @Override
-    public IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
-      return JavaResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
+    public ResourceFolderFactory getFactory() {
+      return JavaResourceFolder.getResourceFactory();
     }
   },
   JAVA_TEST_RESOURCE("java-test-resource", JavaTestResourceFolder.class) {
     @Override
-    public IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
-      return JavaTestResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
+    public ResourceFolderFactory getFactory() {
+      return JavaTestResourceFolder.getResourceFactory();
     }
   };
 
   private final String resourceType;
-  private final Class<? extends HasResourcesRoot> folderClass;
+  private final Class<? extends ResourceFolder> folderClass;
 
-  ResourceFolderType(String resourceType, Class<? extends HasResourcesRoot> folderClass) {
+  ResourceFolderType(String resourceType, Class<? extends ResourceFolder> folderClass) {
     this.resourceType = resourceType;
     this.folderClass = folderClass;
   }
@@ -45,7 +45,7 @@ public enum ResourceFolderType {
     return resourceType;
   }
 
-  public abstract IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot);
+  public abstract ResourceFolderFactory getFactory();
 
   public boolean isIjFolderInstance(IjFolder folder) {
     return folderClass.isInstance(folder);

@@ -386,10 +386,10 @@ public class IjSourceRootSimplifier {
 
       IjFolder mergedFolder =
           resourceFolderType
-              .getFactoryWithResourcesRoot(resourcesRoot)
+              .getFactory()
               .create(
                   currentPath,
-                  false,
+                  resourcesRoot,
                   childrenToMerge
                       .stream()
                       .flatMap(folder -> folder.getInputs().stream())

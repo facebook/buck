@@ -22,6 +22,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
@@ -101,6 +102,20 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
           factory.create(
               entry.getKey(),
               wantsPackagePrefix,
+              ImmutableSortedSet.copyOf(Ordering.natural(), entry.getValue())));
+    }
+  }
+
+  protected void addResourceFolders(
+      ResourceFolderFactory factory,
+      ImmutableMultimap<Path, Path> foldersToInputsIndex,
+      Path resourcesRoot,
+      ModuleBuildContext context) {
+    for (Map.Entry<Path, Collection<Path>> entry : foldersToInputsIndex.asMap().entrySet()) {
+      context.addSourceFolder(
+          factory.create(
+              entry.getKey(),
+              resourcesRoot,
               ImmutableSortedSet.copyOf(Ordering.natural(), entry.getValue())));
     }
   }
@@ -197,19 +212,16 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     ImmutableSet<Path> resourcePaths =
         resources
             .stream()
-            .map(
-                sourcePath ->
-                    (sourcePath instanceof PathSourcePath)
-                        ? ((PathSourcePath) sourcePath).getRelativePath()
-                        : null)
-            .filter(Objects::nonNull)
+            .filter(PathSourcePath.class::isInstance)
+            .map(PathSourcePath.class::cast)
+            .map(PathSourcePath::getRelativePath)
             .filter(path -> path.startsWith(resourcesRoot))
             .collect(MoreCollectors.toImmutableSet());
 
-    addSourceFolders(
-        resourceFolderType.getFactoryWithResourcesRoot(resourcesRoot),
+    addResourceFolders(
+        resourceFolderType.getFactory(),
         getSourceFoldersToInputsIndex(resourcePaths),
-        true /* wantsPackagePrefix */,
+        resourcesRoot,
         context);
 
     return entry -> !resourcePaths.contains(entry.getValue());

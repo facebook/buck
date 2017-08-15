@@ -20,10 +20,10 @@ import com.facebook.buck.ide.intellij.model.DependencyType;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
-import com.facebook.buck.ide.intellij.model.folders.HasResourcesRoot;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.model.BuildTarget;
@@ -196,7 +196,7 @@ public class ModuleBuildContext {
             && to.getClass().equals(JavaTestResourceFolder.class))
         || (to.getClass().equals(JavaResourceFolder.class)
             && from.getClass().equals(JavaTestResourceFolder.class))) {
-      Path resourcesRoot = ((HasResourcesRoot) to).getResourcesRoot();
+      Path resourcesRoot = ((ResourceFolder) to).getResourcesRoot();
       return new JavaResourceFolder(to.getPath(), IjFolder.combineInputs(from, to), resourcesRoot);
     }
 

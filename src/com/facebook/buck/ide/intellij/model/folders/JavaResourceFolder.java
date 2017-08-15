@@ -18,29 +18,12 @@ package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Objects;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavaResourceFolder extends InclusiveFolder implements HasResourcesRoot {
-  @Nullable private Path resourcesRoot;
-
-  public JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
-    super(path, false, inputs);
-    this.resourcesRoot = resourcesRoot;
-  }
-
-  public Optional<Path> getRelativeOutputPath() {
-    if (resourcesRoot == null || !getPath().startsWith(resourcesRoot)) {
-      return Optional.empty();
-    } else {
-      return Optional.of(resourcesRoot.relativize(getPath()));
-    }
-  }
-
-  @Override
-  public Path getResourcesRoot() {
-    return resourcesRoot;
+public class JavaResourceFolder extends ResourceFolder {
+  public JavaResourceFolder(
+      Path path, ImmutableSortedSet<Path> inputs, @Nullable Path resourcesRoot) {
+    super(path, inputs, resourcesRoot);
   }
 
   @Override
@@ -52,20 +35,7 @@ public class JavaResourceFolder extends InclusiveFolder implements HasResourcesR
     return ((path, wantsPrefix, inputs) -> new JavaResourceFolder(path, inputs, resourcesRoot));
   }
 
-  @Override
-  public boolean canMergeWith(IjFolder other) {
-    return super.canMergeWith(other)
-        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot);
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    return super.equals(other)
-        && Objects.equals(resourcesRoot, ((JavaResourceFolder) other).resourcesRoot);
-  }
-
-  @Override
-  public int hashCode() {
-    return super.hashCode() ^ Objects.hashCode(resourcesRoot);
+  public static ResourceFolderFactory getResourceFactory() {
+    return ((path, resourcesRoot, inputs) -> new JavaResourceFolder(path, inputs, resourcesRoot));
   }
 }

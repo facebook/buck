@@ -16,8 +16,10 @@
 
 package com.facebook.buck.ide.intellij.model.folders;
 
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
-public interface HasResourcesRoot {
-  public Path getResourcesRoot();
+/** Interface for factory classes which can create each type of resource folder. */
+public interface ResourceFolderFactory {
+  ResourceFolder create(Path path, Path resourcesRoot, ImmutableSortedSet<Path> inputs);
 }
