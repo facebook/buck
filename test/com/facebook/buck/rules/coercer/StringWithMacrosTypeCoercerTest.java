@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -33,9 +34,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class StringWithMacrosTypeCoercerTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final CellPathResolver CELL_PATH_RESOLVER = TestCellPathResolver.get(FILESYSTEM);
@@ -73,6 +78,29 @@ public class StringWithMacrosTypeCoercerTest {
         coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "$(test arg)"),
         Matchers.equalTo(
             StringWithMacrosUtils.format("%s", new TestMacro(ImmutableList.of("arg")))));
+  }
+
+  @Test
+  public void failedMacroNotFound() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+    thrown.expect(CoerceFailedException.class);
+    thrown.expectMessage(
+        containsString("Macro 'testnotfound' not found when expanding '$(testnotfound arg)'"));
+    coercer.coerce(
+        CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string with $(testnotfound arg) macro");
+  }
+
+  @Test
+  public void failedMacroArgument() throws CoerceFailedException {
+    StringWithMacrosTypeCoercer coercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.of("test", TestMacro.class),
+            ImmutableList.of(new TestFailMacroTypeCoercer()));
+    thrown.expect(CoerceFailedException.class);
+    thrown.expectMessage(containsString("The macro '$(test arg)' could not be expanded:\nfailed"));
+    coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, "string with $(test arg) macro");
   }
 
   @Test
@@ -151,6 +179,32 @@ public class StringWithMacrosTypeCoercerTest {
         ImmutableList<String> args)
         throws CoerceFailedException {
       return new TestMacro(args);
+    }
+  }
+
+  private static class TestFailMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
+
+    @Override
+    public boolean hasElementClass(Class<?>[] types) {
+      return false;
+    }
+
+    @Override
+    public Class<TestMacro> getOutputClass() {
+      return TestMacro.class;
+    }
+
+    @Override
+    public void traverse(TestMacro macro, TypeCoercer.Traversal traversal) {}
+
+    @Override
+    public TestMacro coerce(
+        CellPathResolver cellRoots,
+        ProjectFilesystem filesystem,
+        Path pathRelativeToProjectRoot,
+        ImmutableList<String> args)
+        throws CoerceFailedException {
+      throw new CoerceFailedException("failed");
     }
   }
 }

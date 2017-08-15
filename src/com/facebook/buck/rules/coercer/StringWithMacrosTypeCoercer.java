@@ -101,15 +101,15 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         parts.add(Either.ofLeft(blob.substring(lastEnd, matchResult.getStartIndex())));
       }
 
+      String macroString = blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex());
       // Look up the macro coercer that owns this macro name.
       String name = matchResult.getMacroType();
       Class<? extends Macro> clazz = macros.get(name);
       if (clazz == null) {
         throw new CoerceFailedException(
             String.format(
-                "expanding %s: no such macro \"%s\"",
-                blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex()),
-                matchResult.getMacroType()));
+                "Macro '%s' not found when expanding '%s'",
+                matchResult.getMacroType(), macroString));
       }
       MacroTypeCoercer<? extends Macro> coercer = Preconditions.checkNotNull(coercers.get(clazz));
       ImmutableList<String> args = matchResult.getMacroInput();
@@ -119,7 +119,9 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       try {
         macro = coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, args);
       } catch (CoerceFailedException e) {
-        throw new CoerceFailedException(String.format("macro \"%s\": %s", name, e.getMessage()), e);
+        throw new CoerceFailedException(
+            String.format("The macro '%s' could not be expanded:\n%s", macroString, e.getMessage()),
+            e);
       }
 
       parts.add(Either.ofRight(macro));

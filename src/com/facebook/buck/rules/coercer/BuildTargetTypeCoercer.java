@@ -55,8 +55,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
     } catch (BuildTargetParseException e) {
       throw new CoerceFailedException(
           String.format(
-              "Failed to coerce %s to %s, %s",
-              object, getOutputClass(), e.getHumanReadableErrorMessage()),
+              "Unable to find the target %s.\n%s", object, e.getHumanReadableErrorMessage()),
           e);
     }
   }
