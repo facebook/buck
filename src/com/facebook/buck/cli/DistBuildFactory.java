@@ -78,6 +78,7 @@ public abstract class DistBuildFactory {
         new ServerContentsProvider(
             service,
             sourceFileMultiFetchScheduler,
+            fileMaterializationStatsTracker,
             distBuildConfig.getSourceFileMultiFetchBufferPeriodMs(),
             distBuildConfig.getSourceFileMultiFetchMaxBufferSize()),
         fileMaterializationStatsTracker,

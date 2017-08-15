@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -46,6 +47,7 @@ public class ServerContentsProvider implements FileContentsProvider {
 
   private final DistBuildService service;
   private final int multiFetchBufferMaxSize;
+  private final FileMaterializationStatsTracker statsTracker;
 
   private final Object multiFetchLock = new Object();
 
@@ -60,11 +62,13 @@ public class ServerContentsProvider implements FileContentsProvider {
   public ServerContentsProvider(
       DistBuildService service,
       ScheduledExecutorService networkScheduler,
+      FileMaterializationStatsTracker statsTracker,
       Optional<Long> multiFetchBufferPeriodMs,
       Optional<Integer> multiFetchBufferMaxSize) {
     this(
         service,
         networkScheduler,
+        statsTracker,
         multiFetchBufferPeriodMs.orElse(MULTI_FETCH_BUFFER_PERIOD_MS),
         multiFetchBufferMaxSize.orElse(MULTI_FETCH_BUFFER_MAX_SIZE));
   }
@@ -72,10 +76,12 @@ public class ServerContentsProvider implements FileContentsProvider {
   public ServerContentsProvider(
       DistBuildService service,
       ScheduledExecutorService networkScheduler,
+      FileMaterializationStatsTracker statsTracker,
       long multiFetchBufferPeriodMs,
       int multiFetchBufferMaxSize) {
     this.service = service;
     this.multiFetchBufferMaxSize = multiFetchBufferMaxSize;
+    this.statsTracker = statsTracker;
 
     synchronized (multiFetchLock) {
       hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
@@ -84,7 +90,14 @@ public class ServerContentsProvider implements FileContentsProvider {
 
     scheduledBufferProcessor =
         networkScheduler.scheduleAtFixedRate(
-            () -> this.processFileBuffer(false),
+            () -> {
+              Stopwatch stopwatch = Stopwatch.createStarted();
+              int numFilesFetched = this.processFileBuffer(false);
+              long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
+              if (numFilesFetched > 0) {
+                this.statsTracker.recordPeriodicCasMultiFetch(elapsedMs);
+              }
+            },
             0,
             multiFetchBufferPeriodMs,
             TimeUnit.MILLISECONDS);
@@ -103,17 +116,17 @@ public class ServerContentsProvider implements FileContentsProvider {
     }
   }
 
-  private void processFileBuffer(boolean onlyIfBufferIsFull) {
+  private int processFileBuffer(boolean onlyIfBufferIsFull) {
     List<String> hashCodes;
     CompletableFuture<Map<String, byte[]>> resultFuture;
 
     synchronized (multiFetchLock) {
       if (onlyIfBufferIsFull && hashCodesToFetch.size() < multiFetchBufferMaxSize) {
-        return;
+        return 0;
       }
 
       if (hashCodesToFetch.isEmpty()) {
-        return;
+        return 0;
       }
 
       hashCodes = hashCodesToFetch;
@@ -127,6 +140,8 @@ public class ServerContentsProvider implements FileContentsProvider {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+
+    return hashCodes.size();
   }
 
   @VisibleForTesting
@@ -143,7 +158,12 @@ public class ServerContentsProvider implements FileContentsProvider {
     }
 
     // If the buffer has maxed out, fetch right away.
-    processFileBuffer(true);
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    int numFilesFetched = this.processFileBuffer(true);
+    long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
+    if (numFilesFetched > 0) {
+      statsTracker.recordFullBufferCasMultiFetch(elapsedMs);
+    }
     return future;
   }
 

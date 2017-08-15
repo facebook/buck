@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
@@ -54,11 +55,13 @@ public class ServerContentsProviderTest {
   private DistBuildService distBuildService;
   private ServerContentsProvider provider;
   private FakeExecutor fakeExecutor;
+  private FileMaterializationStatsTracker statsTracker;
 
   @Before
   public void setUp() {
     distBuildService = EasyMock.createMock(DistBuildService.class);
     fakeExecutor = new FakeExecutor();
+    statsTracker = EasyMock.createStrictMock(FileMaterializationStatsTracker.class);
   }
 
   @After
@@ -70,7 +73,8 @@ public class ServerContentsProviderTest {
 
   private void initProvider(long bufferPeriodMs, int bufferMaxSize) {
     provider =
-        new ServerContentsProvider(distBuildService, fakeExecutor, bufferPeriodMs, bufferMaxSize);
+        new ServerContentsProvider(
+            distBuildService, fakeExecutor, statsTracker, bufferPeriodMs, bufferMaxSize);
   }
 
   @Test
@@ -84,13 +88,18 @@ public class ServerContentsProviderTest {
     expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH1, HASH2)))
         .andReturn(result1.build())
         .once();
+    statsTracker.recordPeriodicCasMultiFetch(EasyMock.anyLong());
+    expectLastCall().once();
 
     ImmutableMap.Builder<String, byte[]> result2 = new ImmutableMap.Builder<>();
     result2.put(HASH3, FILE3.getBytes(StandardCharsets.UTF_8));
     expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH3)))
         .andReturn(result2.build())
         .once();
+    statsTracker.recordPeriodicCasMultiFetch(EasyMock.anyLong());
+    expectLastCall().once();
     replay(distBuildService);
+    replay(statsTracker);
 
     Future<byte[]> future1, future2, future3;
     future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH1));
@@ -107,6 +116,7 @@ public class ServerContentsProviderTest {
     fakeExecutor.drain();
 
     verify(distBuildService);
+    verify(statsTracker);
     Assert.assertArrayEquals(FILE1.getBytes(StandardCharsets.UTF_8), future1.get());
     Assert.assertArrayEquals(FILE2.getBytes(StandardCharsets.UTF_8), future2.get());
     Assert.assertArrayEquals(FILE3.getBytes(StandardCharsets.UTF_8), future3.get());
@@ -125,6 +135,8 @@ public class ServerContentsProviderTest {
     expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH1, HASH2)))
         .andReturn(result1.build())
         .once();
+    statsTracker.recordFullBufferCasMultiFetch(EasyMock.anyLong());
+    expectLastCall().once();
 
     // Then 2 again.
     ImmutableMap.Builder<String, byte[]> result2 = new ImmutableMap.Builder<>();
@@ -133,9 +145,12 @@ public class ServerContentsProviderTest {
     expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH3, HASH4)))
         .andReturn(result2.build())
         .once();
+    statsTracker.recordFullBufferCasMultiFetch(EasyMock.anyLong());
+    expectLastCall().once();
 
     // One lone request (for HASH5) should never be fetched.
     replay(distBuildService);
+    replay(statsTracker);
 
     Future<byte[]> future1, future2, future3, future4, future5;
     future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH1));
@@ -151,6 +166,7 @@ public class ServerContentsProviderTest {
     future4.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
     verify(distBuildService);
+    verify(statsTracker);
     Assert.assertArrayEquals(FILE1.getBytes(StandardCharsets.UTF_8), future1.get());
     Assert.assertArrayEquals(FILE2.getBytes(StandardCharsets.UTF_8), future2.get());
     Assert.assertArrayEquals(FILE3.getBytes(StandardCharsets.UTF_8), future3.get());
