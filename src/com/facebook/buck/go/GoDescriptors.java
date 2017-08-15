@@ -264,7 +264,7 @@ abstract class GoDescriptors {
     // TODO(mikekap): Make a single test main gen, rather than one per test. The generator itself
     // doesn't vary per test.
     BuildRule generator =
-        resolver.computeIfAbsentThrowing(
+        resolver.computeIfAbsent(
             sourceBuildTarget.withFlavors(InternalFlavor.of("make-test-main-gen")),
             generatorTarget -> {
               WriteFile writeFile =

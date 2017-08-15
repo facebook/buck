@@ -219,7 +219,7 @@ abstract class DDescriptionUtils {
       SourcePath src,
       DIncludes includes) {
     return (DCompileBuildRule)
-        buildRuleResolver.computeIfAbsentThrowing(
+        buildRuleResolver.computeIfAbsent(
             compileTarget,
             ignored -> {
               Tool compiler = dBuckConfig.getDCompiler();

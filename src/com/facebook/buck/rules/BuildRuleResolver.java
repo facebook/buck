@@ -41,11 +41,6 @@ import javax.annotation.Nullable;
  */
 public class BuildRuleResolver {
 
-  @FunctionalInterface
-  public interface BuildRuleFunction {
-    BuildRule apply(BuildTarget target);
-  }
-
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
 
@@ -136,7 +131,8 @@ public class BuildRuleResolver {
    * @param mappingFunction function to compute the rule.
    * @return the current value associated with the rule
    */
-  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleFunction mappingFunction) {
+  public BuildRule computeIfAbsent(
+      BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
     BuildRule rule = buildRuleIndex.get(target);
     if (rule != null) {
       return rule;
@@ -162,18 +158,13 @@ public class BuildRuleResolver {
     return rule;
   }
 
-  public BuildRule computeIfAbsent(
-      BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
-    return computeIfAbsentThrowing(target, mappingFunction::apply);
-  }
-
   /**
    * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
    * with the target, compute it by transforming the {@code TargetNode} associated with this build
    * target using the {@link TargetNodeToBuildRuleTransformer} associated with this instance.
    */
   public BuildRule requireRule(BuildTarget target) {
-    return computeIfAbsentThrowing(
+    return computeIfAbsent(
         target,
         (ignored) -> {
           TargetNode<?, ?> node = targetGraph.get(target);

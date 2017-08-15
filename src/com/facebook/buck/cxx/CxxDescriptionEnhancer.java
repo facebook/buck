@@ -989,7 +989,7 @@ public class CxxDescriptionEnhancer {
       BuildTarget linkRuleTarget,
       ImmutableSet<BuildTarget> linkWholeDeps) {
     return (CxxLink)
-        resolver.computeIfAbsentThrowing(
+        resolver.computeIfAbsent(
             linkRuleTarget,
             ignored ->
                 // Generate the final link rule.  We use the top-level target as the link rule's

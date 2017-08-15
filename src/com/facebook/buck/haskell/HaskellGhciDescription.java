@@ -123,7 +123,7 @@ public class HaskellGhciDescription
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       ImmutableList<NativeLinkable> sortedNativeLinkables) {
-    return resolver.computeIfAbsentThrowing(
+    return resolver.computeIfAbsent(
         BuildTarget.of(
             UnflavoredBuildTarget.of(
                 baseTarget.getCellPath(),
