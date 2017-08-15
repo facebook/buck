@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
@@ -188,15 +187,7 @@ public class Build implements Closeable {
         ImmutableList.copyOf(
             targetsToBuild
                 .stream()
-                .map(
-                    buildTarget -> {
-                      try {
-                        return getRuleResolver().requireRule(buildTarget);
-                      } catch (NoSuchBuildTargetException e) {
-                        throw new HumanReadableException(
-                            "No build rule found for target %s", buildTarget);
-                      }
-                    })
+                .map(buildTarget -> getRuleResolver().requireRule(buildTarget))
                 .collect(MoreCollectors.toImmutableSet()));
 
     // Calculate and post the number of rules that need to built.

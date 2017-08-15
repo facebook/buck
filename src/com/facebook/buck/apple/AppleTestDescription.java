@@ -36,7 +36,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -157,8 +156,7 @@ public class AppleTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AppleTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AppleTestDescriptionArg args) {
     AppleDebugFormat debugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
@@ -373,8 +371,7 @@ public class AppleTestDescription
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
       BuildTarget libraryTarget,
-      ImmutableSortedSet<BuildTarget> extraCxxDeps)
-      throws NoSuchBuildTargetException {
+      ImmutableSortedSet<BuildTarget> extraCxxDeps) {
     BuildTarget existingLibraryTarget =
         libraryTarget
             .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, CxxStrip.RULE_FLAVOR)
@@ -430,8 +427,7 @@ public class AppleTestDescription
       BuildTarget testHostAppBuildTarget,
       AppleDebugFormat debugFormat,
       Iterable<Flavor> additionalFlavors,
-      ImmutableList<CxxPlatform> cxxPlatforms)
-      throws NoSuchBuildTargetException {
+      ImmutableList<CxxPlatform> cxxPlatforms) {
     BuildRule rule =
         resolver.requireRule(
             testHostAppBuildTarget.withAppendedFlavors(
@@ -474,8 +470,7 @@ public class AppleTestDescription
       CellPathResolver cellRoots,
       AppleTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     return appleLibraryDescription.createMetadataForLibrary(
         buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
   }

@@ -40,7 +40,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -114,8 +113,7 @@ public class CxxLuaExtensionDescription
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      CxxLuaExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLuaExtensionDescriptionArg args) {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -218,8 +216,7 @@ public class CxxLuaExtensionDescription
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      CxxLuaExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLuaExtensionDescriptionArg args) {
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
           ruleResolver, args, cxxPlatform, buildTarget, projectFilesystem);
@@ -277,8 +274,7 @@ public class CxxLuaExtensionDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final CxxLuaExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final CxxLuaExtensionDescriptionArg args) {
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -304,7 +300,7 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public SourcePath getExtension(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      public SourcePath getExtension(CxxPlatform cxxPlatform) {
         BuildRule rule =
             resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
         return Preconditions.checkNotNull(rule.getSourcePathToOutput());
@@ -323,8 +319,7 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
         return NativeLinkableInput.builder()
             .addAllArgs(
                 getExtensionArgs(

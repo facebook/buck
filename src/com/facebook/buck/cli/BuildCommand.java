@@ -50,7 +50,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -787,33 +786,29 @@ public class BuildCommand extends AbstractCommand {
                   fieldLoader, params.getFileHashCache(), pathResolver, ruleFinder));
     }
     for (BuildTarget buildTarget : buildTargets) {
-      try {
-        BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-        Optional<Path> outputPath =
-            TargetsCommand.getUserFacingOutputPath(
-                    pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
-                .map(
-                    path ->
-                        showFullOutput || showFullJsonOutput
-                            ? path
-                            : params.getCell().getFilesystem().relativize(path));
-        if (showJsonOutput || showFullJsonOutput) {
-          sortedJsonOutputs.put(
-              rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
-        } else {
-          params
-              .getConsole()
-              .getStdOut()
-              .printf(
-                  "%s%s%s\n",
-                  rule.getFullyQualifiedName(),
-                  showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
-                  showOutput || showFullOutput
-                      ? " " + outputPath.map(Object::toString).orElse("")
-                      : "");
-        }
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+      BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
+      Optional<Path> outputPath =
+          TargetsCommand.getUserFacingOutputPath(
+                  pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
+              .map(
+                  path ->
+                      showFullOutput || showFullJsonOutput
+                          ? path
+                          : params.getCell().getFilesystem().relativize(path));
+      if (showJsonOutput || showFullJsonOutput) {
+        sortedJsonOutputs.put(
+            rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
+      } else {
+        params
+            .getConsole()
+            .getStdOut()
+            .printf(
+                "%s%s%s\n",
+                rule.getFullyQualifiedName(),
+                showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
+                showOutput || showFullOutput
+                    ? " " + outputPath.map(Object::toString).orElse("")
+                    : "");
       }
     }
 

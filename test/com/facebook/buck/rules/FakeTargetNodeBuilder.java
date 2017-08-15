@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
@@ -63,8 +62,7 @@ public class FakeTargetNodeBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        FakeTargetNodeArg args)
-        throws NoSuchBuildTargetException {
+        FakeTargetNodeArg args) {
       return rule;
     }
   }

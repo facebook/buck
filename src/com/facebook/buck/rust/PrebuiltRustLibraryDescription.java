@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.cxx.platform.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -56,8 +55,7 @@ public class PrebuiltRustLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      PrebuiltRustLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PrebuiltRustLibraryDescriptionArg args) {
     final SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 

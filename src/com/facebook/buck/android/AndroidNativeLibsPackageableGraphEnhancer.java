@@ -25,7 +25,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -131,7 +130,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableMap,
       NdkCxxPlatforms.TargetCpuType targetCpuType,
       NdkCxxPlatform platform)
-      throws NoSuchBuildTargetException, HumanReadableException {
+      throws HumanReadableException {
 
     boolean hasNativeLibs = false;
 
@@ -164,7 +163,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   }
 
   public AndroidNativeLibsGraphEnhancementResult enhance(
-      AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+      AndroidPackageableCollection packageableCollection) {
     @SuppressWarnings("PMD.PrematureDeclaration")
     AndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
         AndroidNativeLibsGraphEnhancementResult.builder();

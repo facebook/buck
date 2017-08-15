@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetSpec;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -135,13 +134,7 @@ public class PublishCommand extends BuildCommand {
     ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
     boolean success = true;
     for (BuildTarget buildTarget : buildTargets) {
-      BuildRule buildRule = null;
-      try {
-        buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
-      } catch (NoSuchBuildTargetException e) {
-        // This doesn't seem physically possible!
-        throw new RuntimeException(e);
-      }
+      BuildRule buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
       Preconditions.checkNotNull(buildRule);
 
       if (!(buildRule instanceof MavenPublishable)) {

@@ -22,7 +22,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -97,7 +96,7 @@ public class JavaLibraryRules {
    *     system-specific library names to their {@link SourcePath} objects.
    */
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
-      Iterable<BuildRule> deps, final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      Iterable<BuildRule> deps, final CxxPlatform cxxPlatform) {
     // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
     // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
     // against ABI rules or full rules
@@ -106,7 +105,7 @@ public class JavaLibraryRules {
   }
 
   public static ImmutableSortedSet<BuildRule> getAbiRules(
-      BuildRuleResolver resolver, Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, Iterable<BuildRule> inputs) {
     ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
     for (BuildRule input : inputs) {
       if (input instanceof HasJavaAbi && ((HasJavaAbi) input).getAbiJar().isPresent()) {
@@ -119,7 +118,7 @@ public class JavaLibraryRules {
   }
 
   public static ZipArchiveDependencySupplier getAbiClasspath(
-      BuildRuleResolver resolver, Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, Iterable<BuildRule> inputs) {
     return new ZipArchiveDependencySupplier(
         new SourcePathRuleFinder(resolver),
         getAbiRules(resolver, inputs)
@@ -135,7 +134,7 @@ public class JavaLibraryRules {
    * AndroidResource, etc. These should still be returned from this method, but without translation.
    */
   public static ImmutableSortedSet<BuildRule> getAbiRulesWherePossible(
-      BuildRuleResolver resolver, Iterable<BuildRule> inputs) throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, Iterable<BuildRule> inputs) {
     ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
     for (BuildRule dep : inputs) {
       if (dep instanceof HasJavaAbi) {

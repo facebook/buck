@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.platform.NativeLinkTarget;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -35,6 +34,5 @@ public abstract class CxxLuaExtension extends NoopBuildRuleWithDeclaredAndExtraD
 
   public abstract String getModule(CxxPlatform cxxPlatform);
 
-  public abstract SourcePath getExtension(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException;
+  public abstract SourcePath getExtension(CxxPlatform cxxPlatform);
 }

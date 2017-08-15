@@ -31,7 +31,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -93,8 +92,7 @@ public class JsBundleDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JsBundleDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JsBundleDescriptionArg args) {
 
     final ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
@@ -170,8 +168,7 @@ public class JsBundleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      Optional<String> rDotJavaPackage)
-      throws NoSuchBuildTargetException {
+      Optional<String> rDotJavaPackage) {
     final BuildTarget bundleTarget =
         buildTarget
             .withAppendedFlavors(JsFlavors.FORCE_JS_BUNDLE)
@@ -197,8 +194,7 @@ public class JsBundleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      JsBundle jsBundle)
-      throws NoSuchBuildTargetException {
+      JsBundle jsBundle) {
 
     final BuildTarget resourceTarget = buildTarget.withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
     final BuildRule resource = resolver.requireRule(resourceTarget);
@@ -219,8 +215,7 @@ public class JsBundleDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       JsBundle jsBundle,
-      String rDotJavaPackage)
-      throws NoSuchBuildTargetException {
+      String rDotJavaPackage) {
 
     BuildRuleParams params =
         new BuildRuleParams(
@@ -339,13 +334,9 @@ public class JsBundleDescription
     }
 
     private JsLibrary requireLibrary(BuildTarget target) {
-      try {
-        BuildRule rule = resolver.requireRule(target.withAppendedFlavors(extraFlavors));
-        Preconditions.checkState(rule instanceof JsLibrary);
-        return (JsLibrary) rule;
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(e);
-      }
+      BuildRule rule = resolver.requireRule(target.withAppendedFlavors(extraFlavors));
+      Preconditions.checkState(rule instanceof JsLibrary);
+      return (JsLibrary) rule;
     }
 
     private Iterable<BuildTarget> getLibraryDependencies(JsLibrary library) {

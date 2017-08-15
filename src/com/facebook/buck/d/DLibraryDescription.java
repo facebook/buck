@@ -23,7 +23,6 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -71,8 +70,7 @@ public class DLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
-      DLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      DLibraryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -123,8 +121,7 @@ public class DLibraryDescription
       ImmutableList<String> compilerFlags,
       SourceList sources,
       DIncludes dIncludes,
-      CxxSourceRuleFactory.PicType pic)
-      throws NoSuchBuildTargetException {
+      CxxSourceRuleFactory.PicType pic) {
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(

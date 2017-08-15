@@ -110,7 +110,7 @@ public class CxxLinkableEnhancerTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
+        ImmutableSet<LanguageExtensions> languageExtensions) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 

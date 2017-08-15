@@ -23,7 +23,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -144,8 +143,7 @@ public class CxxTestDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final CxxTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final CxxTestDescriptionArg args) {
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(inputBuildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(inputBuildTarget);
@@ -397,8 +395,7 @@ public class CxxTestDescription
       CellPathResolver cellRoots,
       CxxTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      final Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      final Class<U> metadataClass) {
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class)
         || !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.empty();

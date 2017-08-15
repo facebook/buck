@@ -20,7 +20,6 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -205,8 +204,7 @@ public class NativeLinkables {
   }
 
   public static NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType linkStyle, NativeLinkable nativeLinkable)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType linkStyle, NativeLinkable nativeLinkable) {
     NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
     return nativeLinkable.getNativeLinkableInput(cxxPlatform, getLinkStyle(link, linkStyle));
   }
@@ -221,8 +219,7 @@ public class NativeLinkables {
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
       Predicate<Object> traverse,
-      Predicate<Object> skip)
-      throws NoSuchBuildTargetException {
+      Predicate<Object> skip) {
 
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkable> roots =
@@ -278,8 +275,7 @@ public class NativeLinkables {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Linker.LinkableDepType depType,
-      Predicate<Object> traverse)
-      throws NoSuchBuildTargetException {
+      Predicate<Object> traverse) {
     return getTransitiveNativeLinkableInput(cxxPlatform, inputs, depType, traverse, x -> false);
   }
 
@@ -294,8 +290,7 @@ public class NativeLinkables {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
       Predicate<Object> traverse,
-      Predicate<Object> skip)
-      throws NoSuchBuildTargetException {
+      Predicate<Object> skip) {
 
     ImmutableMap<BuildTarget, NativeLinkable> roots =
         getNativeLinkableRoots(inputs, traverse, skip);
@@ -339,8 +334,7 @@ public class NativeLinkables {
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
-      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, Predicate<Object> traverse)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs, Predicate<Object> traverse) {
     return getTransitiveSharedLibraries(cxxPlatform, inputs, traverse, x -> false);
   }
 

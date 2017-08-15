@@ -24,7 +24,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -136,12 +134,7 @@ public class UninstallCommand extends AbstractCommand {
     BuildTarget buildTarget = Iterables.get(buildTargets, 0);
 
     // Find the android_binary() rule from the parse.
-    BuildRule buildRule;
-    try {
-      buildRule = resolver.requireRule(buildTarget);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e.getHumanReadableErrorMessage());
-    }
+    BuildRule buildRule = resolver.requireRule(buildTarget);
     if (!(buildRule instanceof HasInstallableApk)) {
       params
           .getBuckEventBus()

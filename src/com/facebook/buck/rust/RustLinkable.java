@@ -20,7 +20,6 @@ import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.cxx.platform.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
@@ -55,8 +54,7 @@ interface RustLinkable {
    * @param cxxPlatform the platform we're generating the shared library for
    * @return Map of soname -> source path
    */
-  ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException;
+  ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform);
 
   /**
    * Return the linkage style for this linkable.

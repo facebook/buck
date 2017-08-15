@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -72,8 +71,7 @@ public class AndroidBuildConfigDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidBuildConfigDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidBuildConfigDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       BuildTarget configTarget = HasJavaAbi.getLibraryTarget(buildTarget);
@@ -117,8 +115,7 @@ public class AndroidBuildConfigDescription
       boolean useConstantExpressions,
       Javac javac,
       JavacOptions javacOptions,
-      BuildRuleResolver ruleResolver)
-      throws NoSuchBuildTargetException {
+      BuildRuleResolver ruleResolver) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this

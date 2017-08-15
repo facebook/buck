@@ -63,7 +63,7 @@ public class NdkLibraryDescriptionTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
+        ImmutableSet<LanguageExtensions> languageExtensions) {
       return NativeLinkableInput.builder().addArgs(SourcePathArg.of(input)).build();
     }
 

@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
@@ -38,7 +37,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -196,13 +194,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .map(
             queryTarget -> {
               Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
-              try {
-                return resolver
-                    .get()
-                    .requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-              } catch (NoSuchBuildTargetException e) {
-                throw new HumanReadableException(e);
-              }
+              return resolver.get().requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
             })
         .filter(rule -> rule instanceof JavaLibrary)
         .map(rule -> (JavaLibrary) rule)

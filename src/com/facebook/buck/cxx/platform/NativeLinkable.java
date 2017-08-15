@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx.platform;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,15 +73,14 @@ public interface NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<LanguageExtensions> languageExtensions)
-      throws NoSuchBuildTargetException;
+      ImmutableSet<LanguageExtensions> languageExtensions);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
    */
   default NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
     return getNativeLinkableInput(cxxPlatform, type, false, ImmutableSet.of());
   }
 
@@ -92,8 +90,7 @@ public interface NativeLinkable {
    * @return a map of shared library SONAME to shared library path for the given {@link
    *     CxxPlatform}.
    */
-  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException;
+  ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform);
 
   enum Linkage {
     ANY,

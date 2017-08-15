@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -271,8 +270,7 @@ public class Omnibus {
       SourcePath omnibus,
       NativeLinkTarget root,
       BuildTarget rootTargetBase,
-      Optional<Path> output)
-      throws NoSuchBuildTargetException {
+      Optional<Path> output) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
@@ -413,8 +411,7 @@ public class Omnibus {
       ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
-      NativeLinkTarget root)
-      throws NoSuchBuildTargetException {
+      NativeLinkTarget root) {
     return createRoot(
         buildTarget,
         projectFilesystem,
@@ -440,8 +437,7 @@ public class Omnibus {
       ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
-      NativeLinkTarget root)
-      throws NoSuchBuildTargetException {
+      NativeLinkTarget root) {
     return createRoot(
         target,
         projectFilesystem,
@@ -498,8 +494,7 @@ public class Omnibus {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
-      OmnibusSpec spec)
-      throws NoSuchBuildTargetException {
+      OmnibusSpec spec) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
@@ -600,7 +595,6 @@ public class Omnibus {
    * @param nativeLinkTargetRoots root nodes which will be included in the omnibus link.
    * @param nativeLinkableRoots root nodes which are to be excluded from the omnibus link.
    * @return a map of shared library names to their containing {@link SourcePath}s.
-   * @throws NoSuchBuildTargetException
    */
   public static OmnibusLibraries getSharedLibraries(
       BuildTarget buildTarget,
@@ -612,8 +606,7 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
-      Iterable<? extends NativeLinkable> nativeLinkableRoots)
-      throws NoSuchBuildTargetException {
+      Iterable<? extends NativeLinkable> nativeLinkableRoots) {
 
     OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
 

@@ -29,7 +29,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -192,8 +191,7 @@ public class CxxLibraryDescription
       ImmutableSet<BuildRule> deps,
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
       HeaderSymlinkTree headerSymlinkTree,
-      Optional<SymlinkTree> sandboxTree)
-      throws NoSuchBuildTargetException {
+      Optional<SymlinkTree> sandboxTree) {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
         cxxPlatform,
@@ -237,8 +235,7 @@ public class CxxLibraryDescription
       CxxSourceRuleFactory.PicType pic,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs)
-      throws NoSuchBuildTargetException {
+      TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs) {
 
     boolean shouldCreatePrivateHeadersSymlinks =
         args.getXcodePrivateHeadersSymlinks()
@@ -321,8 +318,7 @@ public class CxxLibraryDescription
       ImmutableList<StringWithMacros> exportedLinkerFlags,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
-      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
-      throws NoSuchBuildTargetException {
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction) {
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -381,8 +377,7 @@ public class CxxLibraryDescription
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
-      throws NoSuchBuildTargetException {
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction) {
     BuildTarget buildTargetWithoutLinkerMapMode =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(
             buildTargetMaybeWithLinkerMapMode,
@@ -467,8 +462,7 @@ public class CxxLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      CxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescriptionArg args) {
     boolean shouldCreatePrivateHeaderSymlinks =
         args.getXcodePrivateHeadersSymlinks()
             .orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
@@ -491,8 +485,7 @@ public class CxxLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPreprocessables.HeaderMode mode,
-      CxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -510,8 +503,7 @@ public class CxxLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      CxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescriptionArg args) {
     boolean shouldCreatePublicHeaderSymlinks =
         args.getXcodePublicHeadersSymlinks().orElse(cxxPlatform.getPublicHeadersSymlinksEnabled());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -542,8 +534,7 @@ public class CxxLibraryDescription
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       CxxSourceRuleFactory.PicType pic,
-      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
-      throws NoSuchBuildTargetException {
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -609,8 +600,7 @@ public class CxxLibraryDescription
       Linker.LinkableDepType linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
-      throws NoSuchBuildTargetException {
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction) {
     ImmutableList.Builder<StringWithMacros> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -650,8 +640,7 @@ public class CxxLibraryDescription
       BuildTarget baseTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform) {
 
     Optional<SharedLibraryInterfaceFactory> factory =
         cxxPlatform.getSharedLibraryInterfaceFactory();
@@ -688,8 +677,7 @@ public class CxxLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescriptionArg args) {
     return createBuildRule(
         buildTarget,
         projectFilesystem,
@@ -715,8 +703,7 @@ public class CxxLibraryDescription
       final Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSortedSet<BuildTarget> extraDeps,
-      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction)
-      throws NoSuchBuildTargetException {
+      TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction) {
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -886,30 +873,26 @@ public class CxxLibraryDescription
               .toImmutableList();
         },
         cxxPlatform -> {
-          try {
-            return getSharedLibraryNativeLinkTargetInput(
-                buildTarget,
-                projectFilesystem,
-                resolver,
-                pathResolver,
-                ruleFinder,
-                cellRoots,
-                cxxBuckConfig,
-                cxxPlatform,
-                args,
-                cxxDeps.get(resolver, cxxPlatform),
-                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                    args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform),
-                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                    args.getExportedLinkerFlags(),
-                    args.getExportedPlatformLinkerFlags(),
-                    cxxPlatform),
-                args.getFrameworks(),
-                args.getLibraries(),
-                transitiveCxxPreprocessorInputFunction);
-          } catch (NoSuchBuildTargetException e) {
-            throw new RuntimeException(e);
-          }
+          return getSharedLibraryNativeLinkTargetInput(
+              buildTarget,
+              projectFilesystem,
+              resolver,
+              pathResolver,
+              ruleFinder,
+              cellRoots,
+              cxxBuckConfig,
+              cxxPlatform,
+              args,
+              cxxDeps.get(resolver, cxxPlatform),
+              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                  args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform),
+              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                  args.getExportedLinkerFlags(),
+                  args.getExportedPlatformLinkerFlags(),
+                  cxxPlatform),
+              args.getFrameworks(),
+              args.getLibraries(),
+              transitiveCxxPreprocessorInputFunction);
         },
         args.getSupportedPlatformsRegex(),
         args.getFrameworks(),
@@ -967,8 +950,7 @@ public class CxxLibraryDescription
    * <p>Use this function instead of constructing the BuildTarget manually.
    */
   public static Optional<CxxHeaders> queryMetadataCxxHeaders(
-      BuildRuleResolver resolver, BuildTarget baseTarget, CxxPreprocessables.HeaderMode mode)
-      throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, BuildTarget baseTarget, CxxPreprocessables.HeaderMode mode) {
     return resolver.requireMetadata(
         baseTarget.withAppendedFlavors(MetadataType.CXX_HEADERS.getFlavor(), mode.getFlavor()),
         CxxHeaders.class);
@@ -983,8 +965,7 @@ public class CxxLibraryDescription
       BuildRuleResolver resolver,
       BuildTarget baseTarget,
       CxxPlatform platform,
-      HeaderVisibility visibility)
-      throws NoSuchBuildTargetException {
+      HeaderVisibility visibility) {
     return resolver.requireMetadata(
         baseTarget.withAppendedFlavors(
             MetadataType.CXX_PREPROCESSOR_INPUT.getFlavor(),
@@ -1000,8 +981,7 @@ public class CxxLibraryDescription
       CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      final Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      final Class<U> metadataClass) {
 
     Map.Entry<Flavor, MetadataType> type =
         METADATA_TYPE.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
@@ -1156,8 +1136,7 @@ public class CxxLibraryDescription
         BuildRuleResolver ruleResolver,
         CxxPlatform cxxPlatform,
         ImmutableSet<BuildRule> deps,
-        CxxDeps privateDeps)
-        throws NoSuchBuildTargetException;
+        CxxDeps privateDeps);
 
     /**
      * Retrieve the transitive CxxPreprocessorInput from the CxxLibrary rule.

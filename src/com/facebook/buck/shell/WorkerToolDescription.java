@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -87,8 +86,7 @@ public class WorkerToolDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      WorkerToolDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      WorkerToolDescriptionArg args) {
 
     CommandTool.Builder builder;
     if (args.getExe().isPresent()) {

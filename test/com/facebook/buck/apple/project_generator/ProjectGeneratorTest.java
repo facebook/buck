@@ -90,7 +90,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -4387,11 +4386,7 @@ public class ProjectGeneratorTest {
             nodes,
             ImmutableSet.of(),
             input -> {
-              try {
-                resolver.requireRule(input.getBuildTarget());
-              } catch (NoSuchBuildTargetException e) {
-                throw new RuntimeException(e);
-              }
+              resolver.requireRule(input.getBuildTarget());
               return resolver;
             });
     projectGenerator.createXcodeProjects();

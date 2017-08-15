@@ -44,7 +44,7 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
 
   @Override
   public abstract PythonPackageComponents getPythonPackageComponents(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) throws NoSuchBuildTargetException;
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform);
 
   public abstract NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
 }

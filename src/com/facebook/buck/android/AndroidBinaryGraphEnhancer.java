@@ -33,7 +33,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -224,7 +223,7 @@ public class AndroidBinaryGraphEnhancer {
     this.dxConfig = dxConfig;
   }
 
-  AndroidGraphEnhancementResult createAdditionalBuildables() throws NoSuchBuildTargetException {
+  AndroidGraphEnhancementResult createAdditionalBuildables() {
     ImmutableSortedSet.Builder<BuildRule> enhancedDeps = ImmutableSortedSet.naturalOrder();
     enhancedDeps.addAll(originalDeps);
 
@@ -451,7 +450,7 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private NativeLibraryProguardGenerator createNativeLibraryProguardGenerator(
-      ImmutableList<SourcePath> nativeLibsDirs) throws NoSuchBuildTargetException {
+      ImmutableList<SourcePath> nativeLibsDirs) {
     BuildRuleParams paramsForNativeLibraryProguardGenerator =
         buildRuleParams.withoutDeclaredDeps().withoutExtraDeps();
 
@@ -479,8 +478,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleResolver ruleResolver,
       Javac javac,
       JavacOptions javacOptions,
-      AndroidPackageableCollection packageableCollection)
-      throws NoSuchBuildTargetException {
+      AndroidPackageableCollection packageableCollection) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(

@@ -26,7 +26,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -175,8 +174,7 @@ public class PythonTestDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final PythonTestDescriptionArg args)
-      throws HumanReadableException, NoSuchBuildTargetException {
+      final PythonTestDescriptionArg args) {
 
     PythonPlatform pythonPlatform =
         pythonPlatforms

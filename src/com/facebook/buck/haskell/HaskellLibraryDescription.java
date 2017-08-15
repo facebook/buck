@@ -34,7 +34,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -124,8 +123,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     return HaskellDescriptionUtils.requireCompileRule(
         buildTarget,
         projectFilesystem,
@@ -154,8 +152,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     HaskellCompileRule compileRule =
         requireCompileRule(
             target,
@@ -208,8 +205,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -258,8 +254,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
 
     ImmutableSortedSet<SourcePath> libraries;
     BuildRule library;
@@ -407,8 +402,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -461,8 +455,7 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<BuildRule> deps) {
     HaskellCompileRule compileRule =
         requireCompileRule(
             target,
@@ -509,8 +502,7 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<BuildRule> deps) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -544,8 +536,7 @@ public class HaskellLibraryDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final HaskellLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final HaskellLibraryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -633,8 +624,7 @@ public class HaskellLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile)
-          throws NoSuchBuildTargetException {
+          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile) {
         HaskellPackageRule rule =
             requirePackage(
                 getBaseBuildTarget(getBuildTarget()),
@@ -676,8 +666,7 @@ public class HaskellLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
         Iterable<com.facebook.buck.rules.args.Arg> linkArgs;
         switch (type) {
           case STATIC:
@@ -726,8 +715,7 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(

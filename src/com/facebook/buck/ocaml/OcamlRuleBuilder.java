@@ -28,7 +28,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -111,8 +110,7 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
-      boolean buildNativePlugin)
-      throws NoSuchBuildTargetException {
+      boolean buildNativePlugin) {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     boolean noYaccOrLexSources =
@@ -186,7 +184,7 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getCLinkableInput(
-      CxxPlatform cxxPlatform, Iterable<BuildRule> deps) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Iterable<BuildRule> deps) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         cxxPlatform, deps, Linker.LinkableDepType.STATIC, OcamlLibrary.class::isInstance);
   }
@@ -201,8 +199,7 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      final ImmutableList<String> linkerFlags)
-      throws NoSuchBuildTargetException {
+      final ImmutableList<String> linkerFlags) {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -355,8 +352,7 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
       final ImmutableList<String> linkerFlags,
-      boolean buildNativePlugin)
-      throws NoSuchBuildTargetException {
+      boolean buildNativePlugin) {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(

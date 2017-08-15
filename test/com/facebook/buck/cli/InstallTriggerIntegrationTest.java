@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -127,8 +126,7 @@ public class InstallTriggerIntegrationTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        InstallTriggerDescriptionArg args)
-        throws NoSuchBuildTargetException {
+        InstallTriggerDescriptionArg args) {
       return new InstallTriggerRule(buildTarget, projectFilesystem, params.getBuildDeps());
     }
 

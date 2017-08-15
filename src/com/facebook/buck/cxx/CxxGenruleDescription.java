@@ -37,7 +37,6 @@ import com.facebook.buck.model.MacroReplacer;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -117,8 +116,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
-      SourcePath path)
-      throws NoSuchBuildTargetException {
+      SourcePath path) {
     Optional<BuildRule> rule = ruleFinder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
       Genrule platformRule =
@@ -134,8 +132,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      ImmutableList<SourcePath> paths)
-      throws NoSuchBuildTargetException {
+      ImmutableList<SourcePath> paths) {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
     for (SourcePath path : paths) {
       fixed.add(fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, path));
@@ -147,8 +144,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      ImmutableSortedSet<SourcePath> paths)
-      throws NoSuchBuildTargetException {
+      ImmutableSortedSet<SourcePath> paths) {
     ImmutableSortedSet.Builder<SourcePath> fixed =
         new ImmutableSortedSet.Builder<>(Preconditions.checkNotNull(paths.comparator()));
     for (SourcePath path : paths) {
@@ -161,8 +157,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
-      ImmutableMap<T, SourcePath> paths)
-      throws NoSuchBuildTargetException {
+      ImmutableMap<T, SourcePath> paths) {
     ImmutableMap.Builder<T, SourcePath> fixed = ImmutableMap.builder();
     for (Map.Entry<T, SourcePath> ent : paths.entrySet()) {
       fixed.put(
@@ -235,12 +230,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           @Override
           protected BuildRule resolve(BuildRuleResolver resolver, LocationMacro input)
               throws MacroException {
-            try {
-              return resolver.requireRule(
-                  input.getTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
-            } catch (NoSuchBuildTargetException e) {
-              throw new MacroException(e.getHumanReadableErrorMessage());
-            }
+            return resolver.requireRule(
+                input.getTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
           }
         });
     macros.put("cc", new ToolExpander(cxxPlatform.getCc().resolve(resolver)));
@@ -277,8 +268,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxGenruleDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxGenruleDescriptionArg args) {
     Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
@@ -587,12 +577,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     /** Get the transitive C/C++ preprocessor input rooted at the given rules. */
     private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(ImmutableList<BuildRule> rules)
         throws MacroException {
-      try {
-        return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, rules);
-      } catch (NoSuchBuildTargetException e) {
-        throw new MacroException(
-            String.format("failed getting preprocessor input: %s", e.getMessage()), e);
-      }
+      return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, rules);
     }
 
     /**
@@ -719,20 +704,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       SymlinkTree symlinkTree =
           resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orElse(null);
       if (symlinkTree == null) {
-        try {
-          symlinkTree =
-              resolver.addToIndex(
-                  CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                      buildTarget,
-                      filesystem,
-                      cxxPlatform,
-                      rules,
-                      NativeLinkable.class::isInstance));
-        } catch (NoSuchBuildTargetException e) {
-          throw new MacroException(
-              String.format("cannot create shared library symlink tree: %s: %s", e, e.getMessage()),
-              e);
-        }
+        symlinkTree =
+            resolver.addToIndex(
+                CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
+                    buildTarget, filesystem, cxxPlatform, rules, NativeLinkable.class::isInstance));
       }
       return symlinkTree;
     }
@@ -761,32 +736,27 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private NativeLinkableInput getNativeLinkableInput(
         Iterable<BuildRule> rules, final Optional<Pattern> filter) throws MacroException {
-      try {
-        ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
-            NativeLinkables.getNativeLinkables(
-                cxxPlatform,
-                FluentIterable.from(rules).filter(NativeLinkable.class),
-                depType,
-                !filter.isPresent()
-                    ? x -> true
-                    : input -> {
-                      Preconditions.checkArgument(input instanceof BuildRule);
-                      BuildRule rule = (BuildRule) input;
-                      return filter
-                          .get()
-                          .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
-                          .find();
-                    });
-        ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
-        for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
-          nativeLinkableInputs.add(
-              NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
-        }
-        return NativeLinkableInput.concat(nativeLinkableInputs.build());
-      } catch (NoSuchBuildTargetException e) {
-        throw new MacroException(
-            String.format("failed getting native linker args: %s", e.getMessage()), e);
+      ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+          NativeLinkables.getNativeLinkables(
+              cxxPlatform,
+              FluentIterable.from(rules).filter(NativeLinkable.class),
+              depType,
+              !filter.isPresent()
+                  ? x -> true
+                  : input -> {
+                    Preconditions.checkArgument(input instanceof BuildRule);
+                    BuildRule rule = (BuildRule) input;
+                    return filter
+                        .get()
+                        .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
+                        .find();
+                  });
+      ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
+      for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
+        nativeLinkableInputs.add(
+            NativeLinkables.getNativeLinkableInput(cxxPlatform, depType, nativeLinkable));
       }
+      return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }
 
     /** Make sure all resolved targets are instances of {@link NativeLinkable}. */

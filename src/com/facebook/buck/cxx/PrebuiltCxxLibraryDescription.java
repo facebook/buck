@@ -34,7 +34,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -319,8 +318,7 @@ public class PrebuiltCxxLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      PrebuiltCxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PrebuiltCxxLibraryDescriptionArg args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
@@ -335,8 +333,7 @@ public class PrebuiltCxxLibraryDescription
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      PrebuiltCxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PrebuiltCxxLibraryDescriptionArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -368,8 +365,7 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      PrebuiltCxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PrebuiltCxxLibraryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -462,8 +458,7 @@ public class PrebuiltCxxLibraryDescription
       ProjectFilesystem filesystem,
       CxxPlatform cxxPlatform,
       Optional<String> versionSubdir,
-      PrebuiltCxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PrebuiltCxxLibraryDescriptionArg args) {
     SourcePath sharedLibraryPath =
         PrebuiltCxxLibraryDescription.getSharedLibraryPath(
             target,
@@ -501,8 +496,7 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<String> versionSubdir,
-      PrebuiltCxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PrebuiltCxxLibraryDescriptionArg args) {
 
     if (!args.isSupportsSharedLibraryInterface()) {
       throw new HumanReadableException(
@@ -552,8 +546,7 @@ public class PrebuiltCxxLibraryDescription
       BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      final PrebuiltCxxLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final PrebuiltCxxLibraryDescriptionArg args) {
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -683,8 +676,7 @@ public class PrebuiltCxxLibraryDescription
        *
        * @return the {@link SourcePath} representing the actual shared library.
        */
-      private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform, boolean link)
-          throws NoSuchBuildTargetException {
+      private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform, boolean link) {
         if (link
             && args.isSupportsSharedLibraryInterface()
             && cxxPlatform.getSharedLibraryInterfaceFactory().isPresent()) {
@@ -760,8 +752,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
         if (hasHeaders(cxxPlatform)) {
@@ -798,7 +789,7 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 
@@ -839,8 +830,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       private NativeLinkableInput getNativeLinkableInputUncached(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType type, boolean forceLinkWhole)
-          throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform, Linker.LinkableDepType type, boolean forceLinkWhole) {
 
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();
@@ -908,8 +898,7 @@ public class PrebuiltCxxLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
         NativeLinkableCacheKey key =
             NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole);
         NativeLinkableInput input = nativeLinkableCache.get(key);
@@ -950,8 +939,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableMap.of();
         }
@@ -991,8 +979,7 @@ public class PrebuiltCxxLibraryDescription
               }
 
               @Override
-              public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
-                  throws NoSuchBuildTargetException {
+              public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
                 return NativeLinkableInput.builder()
                     .addAllArgs(StringArg.from(getExportedLinkerFlags(cxxPlatform)))
                     .addAllArgs(

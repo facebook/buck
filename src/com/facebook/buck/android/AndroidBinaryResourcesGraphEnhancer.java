@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -140,7 +139,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   public AndroidBinaryResourcesGraphEnhancementResult enhance(
-      AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+      AndroidPackageableCollection packageableCollection) {
     ImmutableList.Builder<BuildRule> enhancedDeps = ImmutableList.builder();
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
@@ -297,8 +296,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
   private Aapt2Link createAapt2Link(
       AndroidPackageableCollection.ResourceDetails resourceDetails,
-      Optional<FilteredResourcesProvider> filteredResourcesProvider)
-      throws NoSuchBuildTargetException {
+      Optional<FilteredResourcesProvider> filteredResourcesProvider) {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     if (filteredResourcesProvider.isPresent()) {
       Optional<BuildRule> resourceFilterRule =

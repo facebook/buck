@@ -38,7 +38,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -193,8 +192,7 @@ public class AppleLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AppleLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AppleLibraryDescriptionArg args) {
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
@@ -222,8 +220,7 @@ public class AppleLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      AppleLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AppleLibraryDescriptionArg args) {
     if (!args.getInfoPlist().isPresent()) {
       throw new HumanReadableException(
           "Cannot create framework for apple_library '%s':\n"
@@ -283,8 +280,7 @@ public class AppleLibraryDescription
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSortedSet<BuildTarget> extraCxxDeps,
-      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput) {
     // We explicitly remove flavors from params to make sure rule
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(buildTarget);
@@ -364,8 +360,7 @@ public class AppleLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       SourcePathResolver pathResolver,
       ImmutableSortedSet<BuildTarget> extraCxxDeps,
-      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput) {
     Optional<MultiarchFileInfo> multiarchFileInfo =
         MultiarchFileInfos.create(appleCxxPlatformFlavorDomain, buildTarget);
     if (multiarchFileInfo.isPresent()) {
@@ -430,8 +425,7 @@ public class AppleLibraryDescription
           ImmutableSet<BuildTarget> blacklist,
           SourcePathResolver pathResolver,
           ImmutableSortedSet<BuildTarget> extraCxxDeps,
-          CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps)
-          throws NoSuchBuildTargetException {
+          CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps) {
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
@@ -497,8 +491,7 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       AppleNativeTargetDescriptionArg args,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
 
     // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
@@ -549,8 +542,7 @@ public class AppleLibraryDescription
       CellPathResolver cellRoots,
       AppleLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     return createMetadataForLibrary(
         buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
   }

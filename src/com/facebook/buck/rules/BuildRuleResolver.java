@@ -19,12 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -45,7 +43,7 @@ public class BuildRuleResolver {
 
   @FunctionalInterface
   public interface BuildRuleFunction {
-    BuildRule apply(BuildTarget target) throws NoSuchBuildTargetException;
+    BuildRule apply(BuildTarget target);
   }
 
   private final TargetGraph targetGraph;
@@ -80,14 +78,13 @@ public class BuildRuleResolver {
             .build(
                 new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
                   @Override
-                  public Optional<?> load(Pair<BuildTarget, Class<?>> key) throws Exception {
+                  public Optional<?> load(Pair<BuildTarget, Class<?>> key) {
                     TargetNode<?, ?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
                     return load(node, key.getSecond());
                   }
 
                   @SuppressWarnings("unchecked")
-                  private <T, U> Optional<U> load(TargetNode<T, ?> node, Class<U> metadataClass)
-                      throws NoSuchBuildTargetException {
+                  private <T, U> Optional<U> load(TargetNode<T, ?> node, Class<U> metadataClass) {
                     T arg = node.getConstructorArg();
                     if (metadataClass.isAssignableFrom(arg.getClass())) {
                       return Optional.of(metadataClass.cast(arg));
@@ -138,10 +135,8 @@ public class BuildRuleResolver {
    * @param target target with which the BuildRule is associated.
    * @param mappingFunction function to compute the rule.
    * @return the current value associated with the rule
-   * @throws NoSuchBuildTargetException if the supplier does so.
    */
-  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleFunction mappingFunction)
-      throws NoSuchBuildTargetException {
+  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleFunction mappingFunction) {
     BuildRule rule = buildRuleIndex.get(target);
     if (rule != null) {
       return rule;
@@ -169,11 +164,7 @@ public class BuildRuleResolver {
 
   public BuildRule computeIfAbsent(
       BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
-    try {
-      return computeIfAbsentThrowing(target, mappingFunction::apply);
-    } catch (NoSuchBuildTargetException e) {
-      throw new IllegalStateException("Supplier should not throw NoSuchBuildTargetException.", e);
-    }
+    return computeIfAbsentThrowing(target, mappingFunction::apply);
   }
 
   /**
@@ -181,7 +172,7 @@ public class BuildRuleResolver {
    * with the target, compute it by transforming the {@code TargetNode} associated with this build
    * target using the {@link TargetNodeToBuildRuleTransformer} associated with this instance.
    */
-  public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
+  public BuildRule requireRule(BuildTarget target) {
     return computeIfAbsentThrowing(
         target,
         (ignored) -> {
@@ -199,8 +190,7 @@ public class BuildRuleResolver {
         });
   }
 
-  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets)
-      throws NoSuchBuildTargetException {
+  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets) {
     ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
     for (BuildTarget target : buildTargets) {
       rules.add(requireRule(target));
@@ -209,13 +199,11 @@ public class BuildRuleResolver {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass)
-      throws NoSuchBuildTargetException {
+  public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass) {
     try {
       return (Optional<T>)
           metadataCache.get(new Pair<BuildTarget, Class<?>>(target, metadataClass));
     } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), NoSuchBuildTargetException.class);
       throw new RuntimeException(e);
     }
   }

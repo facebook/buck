@@ -25,7 +25,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -88,8 +87,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JsLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JsLibraryDescriptionArg args) {
 
     // this params object is used as base for the JsLibrary build rule, but also for all dynamically
     // created JsFile rules.
@@ -192,8 +190,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     }
 
     private LibraryBuilder setSources(
-        ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> sources)
-        throws NoSuchBuildTargetException {
+        ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> sources) {
       final ImmutableList.Builder<JsFile> builder = ImmutableList.builder();
       for (Either<SourcePath, Pair<SourcePath, String>> source : sources) {
         builder.add(this.requireJsFile(source));
@@ -203,7 +200,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     }
 
     private LibraryBuilder setLibraryDependencies(
-        ImmutableSortedSet<BuildTarget> libraryDependencies) throws NoSuchBuildTargetException {
+        ImmutableSortedSet<BuildTarget> libraryDependencies) {
 
       final BuildTarget[] targets =
           libraryDependencies
@@ -244,8 +241,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
       return !baseTarget.getFlavors().isEmpty();
     }
 
-    private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file)
-        throws NoSuchBuildTargetException {
+    private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
       final Flavor fileFlavor = sourcesToFlavors.get(file);
       final BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
       resolver.requireRule(target);
@@ -263,8 +259,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
       BuildRuleParams params,
       BuildRuleResolver resolver,
       JsLibraryDescriptionArg args,
-      WorkerTool worker)
-      throws NoSuchBuildTargetException {
+      WorkerTool worker) {
     final BuildTarget devTarget = withFileFlavorOnly(buildTarget);
     final BuildRule devFile = resolver.requireRule(devTarget);
     return new JsFile.JsFileRelease(

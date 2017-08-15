@@ -25,7 +25,6 @@ import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -77,7 +76,7 @@ public class CxxPreprocessablesTest {
 
     @Override
     public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-        CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+        CxxPlatform cxxPlatform) {
       ImmutableMap.Builder<BuildTarget, CxxPreprocessorInput> builder = ImmutableMap.builder();
       builder.put(getBuildTarget(), getCxxPreprocessorInput(cxxPlatform));
       for (BuildRule dep : getBuildDeps()) {

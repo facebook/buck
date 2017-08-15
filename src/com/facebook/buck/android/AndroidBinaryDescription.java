@@ -43,7 +43,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -165,8 +164,7 @@ public class AndroidBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidBinaryDescriptionArg args) {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             Optional.ofNullable(resolver.getEventBus()),

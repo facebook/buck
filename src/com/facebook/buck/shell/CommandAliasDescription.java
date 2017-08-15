@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -60,8 +59,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CommandAliasDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CommandAliasDescriptionArg args) {
 
     BuildTarget exe = args.getExe();
     CommandTool.Builder tool =

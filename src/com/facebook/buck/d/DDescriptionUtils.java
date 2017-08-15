@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -112,8 +111,7 @@ abstract class DDescriptionUtils {
       ImmutableList<String> compilerFlags,
       SourceList sources,
       ImmutableList<String> linkerFlags,
-      DIncludes includes)
-      throws NoSuchBuildTargetException {
+      DIncludes includes) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -219,8 +217,7 @@ abstract class DDescriptionUtils {
       ImmutableList<String> compilerFlags,
       String name,
       SourcePath src,
-      DIncludes includes)
-      throws NoSuchBuildTargetException {
+      DIncludes includes) {
     return (DCompileBuildRule)
         buildRuleResolver.computeIfAbsentThrowing(
             compileTarget,
@@ -281,8 +278,7 @@ abstract class DDescriptionUtils {
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       SourceList sources,
-      DIncludes includes)
-      throws NoSuchBuildTargetException {
+      DIncludes includes) {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :
         sources.toNameMap(baseBuildTarget, sourcePathResolver, "srcs").entrySet()) {

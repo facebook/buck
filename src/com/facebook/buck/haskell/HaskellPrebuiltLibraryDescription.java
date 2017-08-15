@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.platform.NativeLinkable;
 import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -68,8 +67,7 @@ public class HaskellPrebuiltLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final HaskellPrebuiltLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final HaskellPrebuiltLibraryDescriptionArg args) {
     return new PrebuiltHaskellLibrary(buildTarget, projectFilesystem, params) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
@@ -86,8 +84,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile)
-          throws NoSuchBuildTargetException {
+          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile) {
 
         ImmutableCollection<SourcePath> libs = null;
         if (Linker.LinkableDepType.SHARED == depType) {
@@ -129,8 +126,7 @@ public class HaskellPrebuiltLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {
@@ -165,8 +161,7 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         for (SourcePath headerDir : args.getCxxHeaderDirs()) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
@@ -176,7 +171,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
     };

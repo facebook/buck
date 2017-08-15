@@ -99,7 +99,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -876,7 +875,7 @@ public class ProjectGenerator {
                 buildRuleResolverForNode.apply(targetGraph.get(locationMacroTarget));
             try {
               resolver.requireRule(locationMacroTarget);
-            } catch (NoSuchBuildTargetException | TargetGraph.NoSuchNodeException e) {
+            } catch (TargetGraph.NoSuchNodeException e) {
               throw new MacroException(
                   String.format(
                       "couldn't find rule referenced by location macro: %s", e.getMessage()),
@@ -1506,18 +1505,14 @@ public class ProjectGenerator {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-      try {
-        return ImmutableSortedMap.copyOf(
-            CxxDescriptionEnhancer.parseExportedHeaders(
-                targetNode.getBuildTarget(),
-                resolver,
-                ruleFinder,
-                pathResolver,
-                Optional.empty(),
-                arg));
-      } catch (NoSuchBuildTargetException e) {
-        throw new RuntimeException(e);
-      }
+      return ImmutableSortedMap.copyOf(
+          CxxDescriptionEnhancer.parseExportedHeaders(
+              targetNode.getBuildTarget(),
+              resolver,
+              ruleFinder,
+              pathResolver,
+              Optional.empty(),
+              arg));
     }
   }
 
@@ -1536,18 +1531,14 @@ public class ProjectGenerator {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-      try {
-        return ImmutableSortedMap.copyOf(
-            CxxDescriptionEnhancer.parseHeaders(
-                targetNode.getBuildTarget(),
-                resolver,
-                ruleFinder,
-                pathResolver,
-                Optional.empty(),
-                arg));
-      } catch (NoSuchBuildTargetException e) {
-        throw new RuntimeException(e);
-      }
+      return ImmutableSortedMap.copyOf(
+          CxxDescriptionEnhancer.parseHeaders(
+              targetNode.getBuildTarget(),
+              resolver,
+              ruleFinder,
+              pathResolver,
+              Optional.empty(),
+              arg));
     }
   }
 

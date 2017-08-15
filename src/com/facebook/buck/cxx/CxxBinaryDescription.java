@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -85,8 +84,7 @@ public class CxxBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      CxxBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxBinaryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -131,8 +129,7 @@ public class CxxBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxBinaryDescriptionArg args) {
     return createBuildRule(
         buildTarget,
         projectFilesystem,
@@ -151,8 +148,7 @@ public class CxxBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
-      ImmutableSortedSet<BuildTarget> extraCxxDeps)
-      throws NoSuchBuildTargetException {
+      ImmutableSortedSet<BuildTarget> extraCxxDeps) {
 
     // We explicitly remove some flavors below from params to make sure rule
     // has the same output regardless if we will strip or not.
@@ -348,8 +344,7 @@ public class CxxBinaryDescription
       CellPathResolver cellRoots,
       CxxBinaryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      final Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      final Class<U> metadataClass) {
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class)
         || !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       return Optional.empty();

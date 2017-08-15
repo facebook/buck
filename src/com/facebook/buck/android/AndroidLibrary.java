@@ -26,7 +26,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -196,7 +195,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
       @Override
-      protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+      protected DefaultJavaLibrary build() {
         return new AndroidLibrary(
             libraryTarget,
             projectFilesystem,
@@ -214,7 +213,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       }
 
       @Override
-      protected JarBuildStepsFactory buildJarBuildStepsFactory() throws NoSuchBuildTargetException {
+      protected JarBuildStepsFactory buildJarBuildStepsFactory() {
         return new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,

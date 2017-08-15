@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -119,8 +118,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final T args)
-      throws NoSuchBuildTargetException {
+      final T args) {
     Optional<MacroHandler> maybeMacroHandler =
         getMacroHandler(buildTarget, projectFilesystem, resolver, targetGraph, args);
     if (maybeMacroHandler.isPresent()) {

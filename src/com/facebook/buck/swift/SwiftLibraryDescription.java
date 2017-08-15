@@ -40,7 +40,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -150,8 +149,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      SwiftLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      SwiftLibraryDescriptionArg args) {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
@@ -318,8 +316,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildTarget buildTarget,
       SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
-      Optional<String> soname)
-      throws NoSuchBuildTargetException {
+      Optional<String> soname) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -379,8 +376,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxLibraryDescription.CommonArg args)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescription.CommonArg args) {
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(

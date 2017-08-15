@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -55,8 +54,7 @@ public class JavaAnnotationProcessorDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JavaAnnotationProcessorDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JavaAnnotationProcessorDescriptionArg args) {
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
     propsBuilder.addProcessorNames(args.getProcessorClass());
     for (BuildRule dep : params.getBuildDeps()) {
