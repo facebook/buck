@@ -120,6 +120,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testVersion2BuckProjectWithJavaResources() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_java_resources");
+  }
+
+  @Test
   public void testVersion2BuckProjectWithGeneratedSources()
       throws InterruptedException, IOException {
     runBuckProjectAndVerify("project_with_generated_sources");
