@@ -16,83 +16,48 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventDispatcher;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.NoHealthyServersException;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
-import org.immutables.value.Value;
 
-public abstract class AbstractNetworkCache implements ArtifactCache {
+public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
 
   private static final Logger LOG = Logger.get(AbstractNetworkCache.class);
 
-  private final String name;
-  private final ArtifactCacheMode mode;
   private final String repository;
   protected final String scheduleType;
   protected final HttpService fetchClient;
   protected final HttpService storeClient;
-  private final CacheReadMode cacheReadMode;
-  private final ProjectFilesystem projectFilesystem;
-  private final BuckEventBus buckEventBus;
-  private final ListeningExecutorService httpWriteExecutorService;
-  private final Optional<Long> maxStoreSize;
   private final ErrorReporter errorReporter;
 
   public AbstractNetworkCache(NetworkCacheArgs args) {
-    this.name = args.getCacheName();
-    this.mode = args.getCacheMode();
+    super(
+        args.getCacheName(),
+        args.getCacheMode(),
+        args.getCacheReadMode(),
+        args.getHttpWriteExecutorService(),
+        MoreExecutors.newDirectExecutorService(),
+        new NetworkEventListener(
+            args.getBuckEventBus(), args.getCacheName(), new ErrorReporter(args)),
+        args.getMaxStoreSizeBytes(),
+        args.getProjectFilesystem());
     this.repository = args.getRepository();
     this.scheduleType = args.getScheduleType();
     this.fetchClient = args.getFetchClient();
     this.storeClient = args.getStoreClient();
-    this.cacheReadMode = args.getCacheReadMode();
-    this.projectFilesystem = args.getProjectFilesystem();
-    this.buckEventBus = args.getBuckEventBus();
-    this.httpWriteExecutorService = args.getHttpWriteExecutorService();
-    this.maxStoreSize = args.getMaxStoreSizeBytes();
     this.errorReporter = new ErrorReporter(args);
   }
 
-  protected String getName() {
-    return name;
-  }
-
-  protected ArtifactCacheMode getMode() {
-    return mode;
-  }
-
-  protected ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
-  }
-
-  protected String getRepository() {
-    return repository;
-  }
-
-  protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;
-
-  protected abstract StoreResult storeImpl(ArtifactInfo info, final Path file) throws IOException;
-
-  private boolean isNoHealthyServersException(Throwable exception) {
+  private static boolean isNoHealthyServersException(Throwable exception) {
     if (exception == null) {
       return false;
     } else if (exception instanceof NoHealthyServersException) {
@@ -102,162 +67,116 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     }
   }
 
-  @Override
-  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
-    return Futures.immediateFuture(fetch(ruleKey, output));
+  protected String getRepository() {
+    return repository;
   }
 
-  private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    HttpArtifactCacheEvent.Started startedEvent =
-        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
-    buckEventBus.post(startedEvent);
-    HttpArtifactCacheEvent.Finished.Builder eventBuilder =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-    eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
+  private static class NetworkEventListener implements CacheEventListener {
+    private final EventDispatcher dispatcher;
+    private final String name;
+    private final ErrorReporter errorReporter;
 
-    CacheResult result = null;
-    try {
-      FetchResult fetchResult = fetchImpl(ruleKey, output);
-      eventBuilder.setTarget(fetchResult.getBuildTarget());
-      eventBuilder
-          .getFetchBuilder()
-          .setAssociatedRuleKeys(fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
-          .setArtifactContentHash(fetchResult.getArtifactContentHash())
-          .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
-          .setFetchResult(fetchResult.getCacheResult())
-          .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
-      result = fetchResult.getCacheResult();
-      return result;
-    } catch (IOException e) {
-      String msg =
-          String.format("fetch(%s): %s: %s", ruleKey, e.getClass().getName(), e.getMessage());
-      if (isNoHealthyServersException(e)) {
-        errorReporter.reportFailureToEventBus(
-            "NoHealthyServers",
-            String.format(
-                "\n"
-                    + "Failed to fetch %s over %s:\n"
-                    + "Buck encountered a critical network failure.\n"
-                    + "Please check your network connection and retry."
-                    + "\n",
-                ruleKey, name));
-      } else {
-        String key = String.format("fetch:%s", e.getClass().getSimpleName());
-        errorReporter.reportFailure(e, key, msg);
-      }
-      result = CacheResult.error(name, mode, msg);
-      return result;
-    } finally {
-      Preconditions.checkNotNull(result);
-      HttpArtifactCacheEventFetchData.Builder fetchBuilder =
-          eventBuilder.getFetchBuilder().setFetchResult(result);
-      if (result.getType() == CacheResultType.ERROR && result.cacheError().isPresent()) {
-        fetchBuilder.setErrorMessage(result.cacheError());
-      }
-      buckEventBus.post(eventBuilder.build());
-    }
-  }
-
-  @Override
-  public ListenableFuture<Void> store(final ArtifactInfo info, final BorrowablePath output) {
-    if (!getCacheReadMode().isWritable()) {
-      return Futures.immediateFuture(null);
+    private NetworkEventListener(
+        EventDispatcher dispatcher, String name, ErrorReporter errorReporter) {
+      this.dispatcher = dispatcher;
+      this.name = name;
+      this.errorReporter = errorReporter;
     }
 
-    final HttpArtifactCacheEvent.Scheduled scheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(
-            ArtifactCacheEvent.getTarget(info.getMetadata()), info.getRuleKeys());
-    buckEventBus.post(scheduled);
+    @Override
+    public FetchEvents fetchScheduled(RuleKey ruleKey) {
+      // TODO(cjhopman): Send a scheduled event this when fetch is actually async.
 
-    final Path tmp;
-    try {
-      tmp = getPathForArtifact(output);
-    } catch (IOException e) {
-      LOG.error(e, "Failed to store artifact in temp file: " + output.getPath().toString());
-      return Futures.immediateFuture(null);
-    }
+      HttpArtifactCacheEvent.Started startedEvent =
+          HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
+      HttpArtifactCacheEvent.Finished.Builder eventBuilder =
+          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+      eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
+      return new FetchEvents() {
+        @Override
+        public void started() {
+          dispatcher.post(startedEvent);
+        }
 
-    // HTTP Store operations are asynchronous.
-    return httpWriteExecutorService.submit(
-        () -> {
-          HttpArtifactCacheEvent.Started startedEvent =
-              HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
-          buckEventBus.post(startedEvent);
-          HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
-              HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-          finishedEventBuilder.getStoreBuilder().setRuleKeys(info.getRuleKeys());
+        @Override
+        public void finished(FetchResult fetchResult) {
+          eventBuilder.setTarget(fetchResult.getBuildTarget());
+          eventBuilder
+              .getFetchBuilder()
+              .setAssociatedRuleKeys(fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
+              .setArtifactContentHash(fetchResult.getArtifactContentHash())
+              .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
+              .setFetchResult(fetchResult.getCacheResult())
+              .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
+          dispatcher.post(eventBuilder.build());
+        }
 
-          try {
-
-            long artifactSizeBytes = projectFilesystem.getFileSize(tmp);
-            finishedEventBuilder
-                .getStoreBuilder()
-                .setArtifactSizeBytes(artifactSizeBytes)
-                .setRuleKeys(info.getRuleKeys());
-            if (!isArtefactTooBigToBeStored(artifactSizeBytes, maxStoreSize)) {
-              StoreResult result = storeImpl(info, tmp);
-              finishedEventBuilder
-                  .getStoreBuilder()
-                  .setArtifactContentHash(result.getArtifactContentHash())
-                  .setRequestSizeBytes(result.getRequestSizeBytes())
-                  .setWasStoreSuccessful(result.getWasStoreSuccessful());
-            } else {
-              LOG.info(
-                  "Artifact too big so not storing it in the distributed cache. "
-                      + "file=[%s] buildTarget=[%s]",
-                  tmp, info.getBuildTarget());
-            }
-            buckEventBus.post(finishedEventBuilder.build());
-
-          } catch (IOException e) {
-            String key = String.format("store:%s", e.getClass().getSimpleName());
-            String message =
+        @Override
+        public void failed(IOException e, String msg, CacheResult result) {
+          if (isNoHealthyServersException(e)) {
+            errorReporter.reportFailureToEventBus(
+                "NoHealthyServers",
                 String.format(
-                    "store(%s): %s: %s",
-                    info.getRuleKeys(), e.getClass().getName(), e.getMessage());
-            errorReporter.reportFailure(e, key, message);
-            finishedEventBuilder
-                .getStoreBuilder()
-                .setWasStoreSuccessful(false)
-                .setErrorMessage(e.toString());
-            buckEventBus.post(finishedEventBuilder.build());
+                    "\n"
+                        + "Failed to fetch %s over %s:\n"
+                        + "Buck encountered a critical network failure.\n"
+                        + "Please check your network connection and retry."
+                        + "\n",
+                    ruleKey, name));
+          } else {
+            String key = String.format("store:%s", e.getClass().getSimpleName());
+            errorReporter.reportFailure(e, key, msg);
           }
-          try {
-            projectFilesystem.deleteFileAtPathIfExists(tmp);
-          } catch (IOException e) {
-            LOG.warn(e, "Failed to delete file %s", tmp);
-          }
-        },
-        /* result */ null);
-  }
-
-  @Override
-  public CacheReadMode getCacheReadMode() {
-    return cacheReadMode;
-  }
-
-  @Override
-  public void close() {
-    fetchClient.close();
-    storeClient.close();
-  }
-
-  /// depending on if we can borrow the output or not, we will either use output directly or
-  /// hold it temporary in hidden place
-  private Path getPathForArtifact(BorrowablePath output) throws IOException {
-    Path tmp;
-    if (output.canBorrow()) {
-      tmp = output.getPath();
-    } else {
-      tmp = projectFilesystem.createTempFile("artifact", ".tmp");
-      projectFilesystem.copyFile(output.getPath(), tmp);
+          eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
+          dispatcher.post(eventBuilder.build());
+        }
+      };
     }
-    return tmp;
-  }
 
-  private static boolean isArtefactTooBigToBeStored(
-      long artifactSizeBytes, Optional<Long> maxStoreSize) {
-    return maxStoreSize.isPresent() && artifactSizeBytes > maxStoreSize.get();
+    @Override
+    public StoreEvents storeScheduled(ArtifactInfo info, long artifactSizeBytes) {
+      final HttpArtifactCacheEvent.Scheduled scheduled =
+          HttpArtifactCacheEvent.newStoreScheduledEvent(
+              ArtifactCacheEvent.getTarget(info.getMetadata()), info.getRuleKeys());
+      dispatcher.post(scheduled);
+
+      HttpArtifactCacheEvent.Started startedEvent =
+          HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
+      HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
+          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+      return new StoreEvents() {
+        @Override
+        public void started() {
+          dispatcher.post(startedEvent);
+          finishedEventBuilder.getStoreBuilder().setRuleKeys(info.getRuleKeys());
+          finishedEventBuilder
+              .getStoreBuilder()
+              .setArtifactSizeBytes(artifactSizeBytes)
+              .setRuleKeys(info.getRuleKeys());
+        }
+
+        @Override
+        public void finished(StoreResult result) {
+          finishedEventBuilder
+              .getStoreBuilder()
+              .setArtifactContentHash(result.getArtifactContentHash())
+              .setRequestSizeBytes(result.getRequestSizeBytes())
+              .setWasStoreSuccessful(result.getWasStoreSuccessful());
+          dispatcher.post(finishedEventBuilder.build());
+        }
+
+        @Override
+        public void failed(IOException e, String errorMessage) {
+          String key = String.format("store:%s", e.getClass().getSimpleName());
+          errorReporter.reportFailure(e, key, errorMessage);
+          finishedEventBuilder
+              .getStoreBuilder()
+              .setWasStoreSuccessful(false)
+              .setErrorMessage(errorMessage);
+          dispatcher.post(finishedEventBuilder.build());
+        }
+      };
+    }
   }
 
   void reportFailureWithFormatKey(String format, Object... args) {
@@ -299,29 +218,9 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     }
   }
 
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractFetchResult {
-    Optional<Long> getResponseSizeBytes();
-
-    Optional<String> getBuildTarget();
-
-    Optional<ImmutableSet<RuleKey>> getAssociatedRuleKeys();
-
-    Optional<Long> getArtifactSizeBytes();
-
-    Optional<String> getArtifactContentHash();
-
-    CacheResult getCacheResult();
-  }
-
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractStoreResult {
-    Optional<Long> getRequestSizeBytes();
-
-    Optional<String> getArtifactContentHash();
-
-    Optional<Boolean> getWasStoreSuccessful();
+  @Override
+  public void close() {
+    fetchClient.close();
+    storeClient.close();
   }
 }
