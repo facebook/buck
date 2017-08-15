@@ -71,19 +71,19 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
                   "unexpected server response: [%d:%s]",
                   response.statusCode(), response.statusMessage());
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
-          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         // Setup a temporary file, which sits next to the destination, to write to and
         // make sure all parent dirs exist.
         Path file = output.get();
-        projectFilesystem.createParentDirs(file);
+        getProjectFilesystem().createParentDirs(file);
         Path temp =
-            projectFilesystem.createTempFile(
-                file.getParent(), file.getFileName().toString(), ".tmp");
+            getProjectFilesystem()
+                .createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
 
         FetchResponseReadResult fetchedData;
-        try (OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
+        try (OutputStream tempFileOutputStream = getProjectFilesystem().newFileOutputStream(temp)) {
           fetchedData =
               HttpArtifactCacheBinaryProtocol.readFetchResponse(input, tempFileOutputStream);
         }
@@ -97,7 +97,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         if (!fetchedData.getRuleKeys().contains(ruleKey)) {
           String msg = "incorrect key name";
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
-          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         // Now form the checksum on the file we got and compare it to the checksum form the
@@ -105,18 +105,21 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         if (!fetchedData.getExpectedHashCode().equals(fetchedData.getActualHashCode())) {
           String msg = "artifact had invalid checksum";
           reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
-          projectFilesystem.deleteFileAtPath(temp);
-          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
+          getProjectFilesystem().deleteFileAtPath(temp);
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         // Finally, move the temp file into it's final place.
-        projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+        getProjectFilesystem().move(temp, file, StandardCopyOption.REPLACE_EXISTING);
 
         LOG.info("fetch(%s, %s): cache hit", response.requestUrl(), ruleKey);
         return resultBuilder
             .setCacheResult(
                 CacheResult.hit(
-                    name, mode, fetchedData.getMetadata(), fetchedData.getResponseSizeBytes()))
+                    getName(),
+                    getMode(),
+                    fetchedData.getMetadata(),
+                    fetchedData.getResponseSizeBytes()))
             .build();
       }
     }
@@ -134,7 +137,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
-                return projectFilesystem.newFileInputStream(file);
+                return getProjectFilesystem().newFileInputStream(file);
               }
             });
 

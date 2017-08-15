@@ -43,14 +43,14 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
   private static final Logger LOG = Logger.get(AbstractNetworkCache.class);
 
-  protected final String name;
-  protected final ArtifactCacheMode mode;
-  protected final String repository;
+  private final String name;
+  private final ArtifactCacheMode mode;
+  private final String repository;
   protected final String scheduleType;
   protected final HttpService fetchClient;
   protected final HttpService storeClient;
   private final CacheReadMode cacheReadMode;
-  protected final ProjectFilesystem projectFilesystem;
+  private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
   private final ListeningExecutorService httpWriteExecutorService;
   private final String errorTextTemplate;
@@ -72,6 +72,22 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     this.httpWriteExecutorService = args.getHttpWriteExecutorService();
     this.errorTextTemplate = args.getErrorTextTemplate();
     this.maxStoreSize = args.getMaxStoreSizeBytes();
+  }
+
+  protected String getName() {
+    return name;
+  }
+
+  protected ArtifactCacheMode getMode() {
+    return mode;
+  }
+
+  protected ProjectFilesystem getProjectFilesystem() {
+    return projectFilesystem;
+  }
+
+  protected String getRepository() {
+    return repository;
   }
 
   protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;

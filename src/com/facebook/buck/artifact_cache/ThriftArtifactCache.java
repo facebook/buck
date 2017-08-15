@@ -81,7 +81,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         new com.facebook.buck.artifact_cache.thrift.RuleKey();
     thriftRuleKey.setHashString(ruleKey.getHashCode().toString());
     fetchRequest.setRuleKey(thriftRuleKey);
-    fetchRequest.setRepository(repository);
+    fetchRequest.setRepository(getRepository());
     fetchRequest.setScheduleType(scheduleType);
     fetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
@@ -105,7 +105,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 httpResponse.requestUrl(),
                 ruleKey.toString());
         LOG.error(message);
-        return resultBuilder.setCacheResult(CacheResult.error(name, mode, message)).build();
+        return resultBuilder
+            .setCacheResult(CacheResult.error(getName(), getMode(), message))
+            .build();
       }
 
       try (ThriftArtifactCacheProtocol.Response response =
@@ -116,7 +118,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         if (!cacheResponse.isWasSuccessful()) {
           LOG.warn("Request was unsuccessful: %s", cacheResponse.getErrorMessage());
           return resultBuilder
-              .setCacheResult(CacheResult.error(name, mode, cacheResponse.getErrorMessage()))
+              .setCacheResult(
+                  CacheResult.error(getName(), getMode(), cacheResponse.getErrorMessage()))
               .build();
         }
 
@@ -137,7 +140,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         LOG.verbose("Got artifact.  Attempting to read payload.");
         Path tmp = createTempFileForDownload();
         ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readResult;
-        try (OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp)) {
+        try (OutputStream tmpFile = getProjectFilesystem().newFileOutputStream(tmp)) {
           try {
             readResult = response.readPayload(tmpFile);
           } catch (IOException e) {
@@ -152,7 +155,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               String.format(
                   "ArtifactMetadata section is missing in the response. response=[%s]",
                   ThriftUtil.thriftToDebugJson(fetchResponse));
-          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
         ArtifactMetadata metadata = fetchResponse.getMetadata();
         if (LOG.isVerboseEnabled()) {
@@ -165,7 +168,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         if (!metadata.isSetRuleKeys()) {
           return resultBuilder
               .setCacheResult(
-                  CacheResult.error(name, mode, "Rule key section in the metadata is not set."))
+                  CacheResult.error(
+                      getName(), getMode(), "Rule key section in the metadata is not set."))
               .build();
         }
         ImmutableSet<RuleKey> associatedRuleKeys = null;
@@ -176,7 +180,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               String.format(
                   "Exception parsing the rule keys in the metadata section [%s] with exception [%s].",
                   ThriftUtil.thriftToDebugJson(metadata), e.toString());
-          return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         resultBuilder
@@ -196,17 +200,19 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                     "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
                     fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
             LOG.error(msg);
-            return resultBuilder.setCacheResult(CacheResult.error(name, mode, msg)).build();
+            return resultBuilder
+                .setCacheResult(CacheResult.error(getName(), getMode(), msg))
+                .build();
           }
         }
 
         // This makes sure we don't have 'half downloaded files' in the dir cache.
-        projectFilesystem.move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
+        getProjectFilesystem().move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
         return resultBuilder
             .setCacheResult(
                 CacheResult.hit(
-                    name,
-                    mode,
+                    getName(),
+                    getMode(),
                     ImmutableMap.copyOf(fetchResponse.getMetadata().getMetadata()),
                     readResult.getBytesRead()))
             .build();
@@ -227,13 +233,13 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         new ByteSource() {
           @Override
           public InputStream openStream() throws IOException {
-            return projectFilesystem.newFileInputStream(file);
+            return getProjectFilesystem().newFileInputStream(file);
           }
         };
 
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
     ArtifactMetadata artifactMetadata =
-        infoToMetadata(info, artifact, repository, scheduleType, distributedBuildModeEnabled);
+        infoToMetadata(info, artifact, getRepository(), scheduleType, distributedBuildModeEnabled);
     storeRequest.setMetadata(artifactMetadata);
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
@@ -294,9 +300,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   private Path createTempFileForDownload() throws IOException {
-    projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
-    return projectFilesystem.createTempFile(
-        projectFilesystem.getBuckPaths().getScratchDir(), "buckcache_artifact", ".tmp");
+    getProjectFilesystem().mkdirs(getProjectFilesystem().getBuckPaths().getScratchDir());
+    return getProjectFilesystem()
+        .createTempFile(
+            getProjectFilesystem().getBuckPaths().getScratchDir(), "buckcache_artifact", ".tmp");
   }
 
   private static ArtifactMetadata infoToMetadata(
