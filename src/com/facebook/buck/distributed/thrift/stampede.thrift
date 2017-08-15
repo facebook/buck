@@ -397,18 +397,53 @@ struct MultiGetBuildSlaveEventsResponse {
   1: optional list<BuildSlaveEventsRange> responses;
 }
 
+# Contains details about when a cache artifact was stored/fetched to a
+# particular backing store.
+struct RuleKeyStoreLogEntry {
+  1: optional string storeId;
+  2: optional i64 slaSeconds;
+  3: optional i64 lastStoredTimestampSeconds;
+  4: optional i64 lastAttemptedStoreTimetampSeconds;
+  5: optional i64 lastCacheHitTimestampSeconds;
+}
+
 struct RuleKeyLogEntry {
   1: optional string ruleKey;
-  2: optional bool wasStored;
-  3: optional i64 lastStoredTimestampMillis;
+
+  2: optional bool wasStored; // Deprecated
+  3: optional i64 lastStoredTimestampMillis; // Deprecated
+
+  4: optional list<RuleKeyStoreLogEntry> storeLogEntries;
 }
 
 struct FetchRuleKeyLogsRequest {
   1: optional list<string> ruleKeys;
+
+  2: optional string repository;
+  3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
 }
 
 struct FetchRuleKeyLogsResponse {
   1: optional list<RuleKeyLogEntry> ruleKeyLogs;
+}
+
+struct SetCoordinatorRequest {
+  1: optional StampedeId stampedeId;
+  2: optional string coordinatorHostname;
+  3: optional i32 coordinatorPort;
+}
+
+struct SetCoordinatorResponse {
+}
+
+struct EnqueueMinionsRequest {
+  1: optional StampedeId stampedeId;
+  2: optional string minionQueue;
+  3: optional i32 numberOfMinions;
+}
+
+struct EnqueueMinionsResponse {
 }
 
 ##############################################################################
@@ -440,6 +475,8 @@ enum FrontendRequestType {
   FETCH_RULE_KEY_LOGS = 22,
   STORE_BUILD_SLAVE_FINISHED_STATS = 23,
   FETCH_BUILD_SLAVE_FINISHED_STATS = 24,
+  SET_COORDINATOR = 25,
+  ENQUEUE_MINIONS = 26,
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -470,6 +507,8 @@ struct FrontendRequest {
     storeBuildSlaveFinishedStatsRequest;
   24: optional FetchBuildSlaveFinishedStatsRequest
     fetchBuildSlaveFinishedStatsRequest;
+  25: optional SetCoordinatorRequest setCoordinatorRequest;
+  26: optional EnqueueMinionsRequest enqueueMinionsRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -500,6 +539,8 @@ struct FrontendResponse {
     storeBuildSlaveFinishedStatsResponse;
   28: optional FetchBuildSlaveFinishedStatsResponse
     fetchBuildSlaveFinishedStatsResponse;
+  29: optional SetCoordinatorResponse setCoordinatorResponse;
+  30: optional EnqueueMinionsResponse enqueueMinionsResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }

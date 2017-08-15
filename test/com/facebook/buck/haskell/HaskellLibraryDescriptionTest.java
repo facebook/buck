@@ -67,10 +67,10 @@ public class HaskellLibraryDescriptionTest {
             new DefaultTargetNodeToBuildRuleTransformer());
     HaskellLibrary library = builder.build(resolver);
     library.getCompileInput(
-        CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+        HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     BuildTarget compileTarget =
         HaskellDescriptionUtils.getCompileBuildTarget(
-            target, CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+            target, HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     HaskellCompileRule rule = resolver.getRuleWithType(compileTarget, HaskellCompileRule.class);
     assertThat(rule.getFlags(), Matchers.hasItem(flag));
   }
@@ -212,11 +212,7 @@ public class HaskellLibraryDescriptionTest {
         new CxxBuckConfig(
             FakeBuckConfig.builder().setSections("[cxx]", "archive_contents=thin").build());
     HaskellLibraryBuilder builder =
-        new HaskellLibraryBuilder(
-                target,
-                FakeHaskellConfig.DEFAULT,
-                cxxBuckConfig,
-                CxxPlatformUtils.DEFAULT_PLATFORMS)
+        new HaskellLibraryBuilder(target, HaskellTestUtils.DEFAULT_PLATFORMS, cxxBuckConfig)
             .setSrcs(
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("Test.hs"))))
             .setLinkWhole(true);
@@ -238,7 +234,7 @@ public class HaskellLibraryDescriptionTest {
         Matchers.hasItem(
             HaskellDescriptionUtils.getCompileBuildTarget(
                 library.getBuildTarget(),
-                CxxPlatformUtils.DEFAULT_PLATFORM,
+                HaskellTestUtils.DEFAULT_PLATFORM,
                 Linker.LinkableDepType.STATIC,
                 false)));
   }
@@ -271,7 +267,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibrary depB = (HaskellLibrary) resolver.requireRule(depBBuilder.getTarget());
     HaskellLibrary rule = (HaskellLibrary) resolver.requireRule(ruleBuilder.getTarget());
     assertThat(
-        rule.getCompileDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        rule.getCompileDeps(HaskellTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
     assertThat(
         ImmutableList.copyOf(

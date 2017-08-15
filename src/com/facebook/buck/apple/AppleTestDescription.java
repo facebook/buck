@@ -106,7 +106,7 @@ public class AppleTestDescription
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
@@ -117,7 +117,7 @@ public class AppleTestDescription
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
@@ -126,7 +126,7 @@ public class AppleTestDescription
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
@@ -179,7 +179,7 @@ public class AppleTestDescription
     }
     extraFlavorsBuilder.add(debugFormat.getFlavor());
     if (addDefaultPlatform) {
-      extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
+      extraFlavorsBuilder.add(defaultCxxFlavor);
     }
 
     Optional<MultiarchFileInfo> multiarchFileInfo =
@@ -195,7 +195,9 @@ public class AppleTestDescription
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          cxxPlatformFlavorDomain.getValue(buildTarget).orElse(defaultCxxPlatform);
+          cxxPlatformFlavorDomain
+              .getValue(buildTarget)
+              .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor));
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
@@ -249,7 +251,7 @@ public class AppleTestDescription
     AppleBundle bundle =
         AppleDescriptions.createAppleBundle(
             cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
+            defaultCxxFlavor,
             appleCxxPlatformFlavorDomain,
             targetGraph,
             buildTarget.withAppendedFlavors(
@@ -417,6 +419,7 @@ public class AppleTestDescription
     if (xctoolZipTarget.isPresent()) {
       extraDepsBuilder.add(xctoolZipTarget.get());
     }
+    extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
     appleLibraryDescription.findDepsForTargetFromConstructorArgs(
         buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }

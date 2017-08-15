@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -117,7 +118,8 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
   }
 
   @Test
@@ -152,14 +154,16 @@ public class DirArtifactCacheTest {
     // Test that artifact overwrite works.
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
 
     // Test that artifact creation works.
     Files.delete(fileX);
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
@@ -199,7 +203,8 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
   }
 
@@ -252,13 +257,16 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyY, LazyPath.ofInstance(fileY)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyY, LazyPath.ofInstance(fileY)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyZ, LazyPath.ofInstance(fileZ)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyZ, LazyPath.ofInstance(fileZ)))
+            .getType());
 
     dirArtifactCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
@@ -276,13 +284,16 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyY, LazyPath.ofInstance(fileY)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyY, LazyPath.ofInstance(fileY)))
+            .getType());
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyZ, LazyPath.ofInstance(fileZ)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyZ, LazyPath.ofInstance(fileZ)))
+            .getType());
 
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
@@ -401,13 +412,16 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyY, LazyPath.ofInstance(fileY)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyY, LazyPath.ofInstance(fileY)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyZ, LazyPath.ofInstance(fileZ)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyZ, LazyPath.ofInstance(fileZ)))
+            .getType());
 
     dirArtifactCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
@@ -425,13 +439,16 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyY, LazyPath.ofInstance(fileY)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyY, LazyPath.ofInstance(fileY)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyZ, LazyPath.ofInstance(fileZ)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyZ, LazyPath.ofInstance(fileZ)))
+            .getType());
 
     assertEquals(inputRuleX, new BuildRuleForTest(fileX));
     assertEquals(inputRuleY, new BuildRuleForTest(fileY));
@@ -611,7 +628,8 @@ public class DirArtifactCacheTest {
         BorrowablePath.notBorrowablePath(fileX));
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
 
     Files.setAttribute(
         dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.empty()),
@@ -627,10 +645,12 @@ public class DirArtifactCacheTest {
         BorrowablePath.notBorrowablePath(fileY));
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyY, LazyPath.ofInstance(fileY)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyY, LazyPath.ofInstance(fileY)))
+            .getType());
 
     Files.setAttribute(
         dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.empty()),
@@ -647,13 +667,16 @@ public class DirArtifactCacheTest {
 
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyX, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyX, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.MISS,
-        dirArtifactCache.fetch(ruleKeyY, LazyPath.ofInstance(fileY)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyY, LazyPath.ofInstance(fileY)))
+            .getType());
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKeyZ, LazyPath.ofInstance(fileZ)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKeyZ, LazyPath.ofInstance(fileZ)))
+            .getType());
   }
 
   @Test
@@ -683,10 +706,12 @@ public class DirArtifactCacheTest {
     // Test that artifact is available via both keys.
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKey1, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKey1, LazyPath.ofInstance(fileX)))
+            .getType());
     assertEquals(
         CacheResultType.HIT,
-        dirArtifactCache.fetch(ruleKey2, LazyPath.ofInstance(fileX)).getType());
+        Futures.getUnchecked(dirArtifactCache.fetchAsync(ruleKey2, LazyPath.ofInstance(fileX)))
+            .getType());
   }
 
   @Test
@@ -711,7 +736,8 @@ public class DirArtifactCacheTest {
     cache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.notBorrowablePath(data));
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(Paths.get("out-data")));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(Paths.get("out-data"))));
 
     // Verify that the metadata is correct.
     assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));

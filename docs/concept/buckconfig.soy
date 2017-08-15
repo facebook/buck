@@ -1401,8 +1401,8 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
     The platform for the linker.  Normally this is autodetected based on the system, but it useful
     to set when cross compiling.  Valid values are:
     <ul>
-      <li><code>MACOS</code></li>
-      <li><code>LINUX</code></li>
+      <li><code>DARWIN</code></li>
+      <li><code>GNU</code></li>
       <li><code>WINDOWS</code></li>
     </ul>
   {/param}
@@ -1461,8 +1461,9 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
     The platform for the archiver.  Normally this is autodetected based on the system, but it useful
     to set when cross compiling.  Valid values are:
     <ul>
-      <li><code>MACOS</code></li>
       <li><code>LINUX</code></li>
+      <li><code>MACOS</code></li>
+      <li><code>FREEBSD</code></li>
       <li><code>WINDOWS</code></li>
     </ul>
   {/param}
@@ -1564,11 +1565,11 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
 {literal}
 cxx_library(
   name = 'gtest',
-  srcs = subdir_glob([
+  srcs = [
     'googletest/src/gtest-all.cc',
     'googlemock/src/gmock-all.cc',
     'googlemock/src/gmock_main.cc',
-  ]),
+  ],
   header_namespace = '',
   exported_headers = subdir_glob([
     ('googletest/include', '**/*.h'),
@@ -2069,6 +2070,17 @@ cxx_library(
   {param example_value: 'build-ij/classes' /}
   {param description}
     The output directory for IntelliJ's builds.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'extra_compiler_output_modules_path' /}
+  {param example_value: 'buck-out/extra-intellij-output' /}
+  {param description}
+    This option specifies the location of additional modules for code generated outside of buck
+    graph. For example, it can be used to specify the location of R.java classes generated for
+    Android plugin to help Layout Preview with resolving references to resources.
   {/param}
 {/call}
 
@@ -2583,6 +2595,18 @@ your <code>.buckjavaargs</code> file</a>:
     The <code>PYTHONPATH</code> environment variable set for the python interpreter{sp}
     used by the parser to use.
     By default, this is unset.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'freeze_globals' /}
+  {param example_value: 'false' /}
+  {param description}
+    Indicates whether globals imported by {call buck.fn_include_defs /} should be "frozen", which
+    means they will be converted into their read-only counterparts. This can be used to detect
+    accidental attempts to modify global variables causing non-determinism and hard to debug bugs.
+    By default, this is not enabled (<code>false</code>).
   {/param}
 {/call}
 

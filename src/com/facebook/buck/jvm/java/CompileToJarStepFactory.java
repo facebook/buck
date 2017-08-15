@@ -70,13 +70,7 @@ public interface CompileToJarStepFactory {
       BuildableContext buildableContext);
 
   void createJarStep(
-      ProjectFilesystem filesystem,
-      Path outputDirectory,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar,
-      Path outputJar,
-      ImmutableList.Builder<Step> steps);
+      ProjectFilesystem filesystem, JarParameters parameters, ImmutableList.Builder<Step> steps);
 
   void createCompileToJarStep(
       BuildContext context,
@@ -92,12 +86,8 @@ public interface CompileToJarStepFactory {
       Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<Path> entriesToJar,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      Path outputJar,
+      JarParameters jarParameters,
       /* output params */
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar);
+      BuildableContext buildableContext);
 }

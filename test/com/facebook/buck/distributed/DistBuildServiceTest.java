@@ -35,6 +35,8 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
+import com.facebook.buck.distributed.thrift.EnqueueMinionsRequest;
+import com.facebook.buck.distributed.thrift.EnqueueMinionsResponse;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsResponse;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
@@ -47,6 +49,8 @@ import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsResponse;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
+import com.facebook.buck.distributed.thrift.SetCoordinatorResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
@@ -614,5 +618,55 @@ public class DistBuildServiceTest {
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId(id);
     return stampedeId;
+  }
+
+  @Test
+  public void testSetCoordinator() throws IOException {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response =
+        new FrontendResponse()
+            .setWasSuccessful(true)
+            .setType(FrontendRequestType.SET_COORDINATOR)
+            .setSetCoordinatorResponse(new SetCoordinatorResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
+        .andReturn(response)
+        .once();
+    EasyMock.replay(frontendService);
+
+    StampedeId stampedeId = createStampedeId("super kewl");
+    int port = 4284;
+    String address = "very nice address indeed";
+    distBuildService.setCoordinator(stampedeId, port, address);
+    Assert.assertEquals(FrontendRequestType.SET_COORDINATOR, request.getValue().getType());
+    SetCoordinatorRequest coordinatorRequest = request.getValue().getSetCoordinatorRequest();
+    Assert.assertEquals(stampedeId, coordinatorRequest.getStampedeId());
+    Assert.assertEquals(port, coordinatorRequest.getCoordinatorPort());
+    Assert.assertEquals(address, coordinatorRequest.getCoordinatorHostname());
+    EasyMock.verify(frontendService);
+  }
+
+  @Test
+  public void testEnqueueMinions() throws IOException {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response =
+        new FrontendResponse()
+            .setWasSuccessful(true)
+            .setType(FrontendRequestType.ENQUEUE_MINIONS)
+            .setEnqueueMinionsResponse(new EnqueueMinionsResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
+        .andReturn(response)
+        .once();
+    EasyMock.replay(frontendService);
+
+    StampedeId stampedeId = createStampedeId("minions, here I come");
+    int minionCount = 21;
+    String minionQueueName = "a_happy_place_indeed";
+    distBuildService.enqueueMinions(stampedeId, minionCount, minionQueueName);
+    Assert.assertEquals(FrontendRequestType.ENQUEUE_MINIONS, request.getValue().getType());
+    EnqueueMinionsRequest minionsRequest = request.getValue().getEnqueueMinionsRequest();
+    Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());
+    Assert.assertEquals(minionCount, minionsRequest.getNumberOfMinions());
+    Assert.assertEquals(minionQueueName, minionsRequest.getMinionQueue());
+    EasyMock.verify(frontendService);
   }
 }

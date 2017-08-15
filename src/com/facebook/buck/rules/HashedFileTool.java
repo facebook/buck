@@ -22,18 +22,24 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public class HashedFileTool implements Tool {
 
-  private final Path path;
+  private final Supplier<Path> path;
+
+  public HashedFileTool(Supplier<Path> path) {
+    this.path = path;
+  }
 
   public HashedFileTool(Path path) {
-    this.path = path;
+    this(() -> path);
   }
 
   @Override
   @SuppressWarnings("deprecation")
   public void appendToRuleKey(RuleKeyObjectSink sink) {
+    Path path = this.path.get();
     try {
       sink.setPath(path.toAbsolutePath(), path);
     } catch (IOException e) {
@@ -53,7 +59,7 @@ public class HashedFileTool implements Tool {
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.of(path.toString());
+    return ImmutableList.of(path.get().toString());
   }
 
   @Override

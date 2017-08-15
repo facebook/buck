@@ -303,7 +303,7 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
 
   @Override
   public boolean useDependencyFileRuleKeys() {
-    return compilerDelegate.isDependencyFileSupported();
+    return true;
   }
 
   @Override
@@ -345,22 +345,23 @@ public class CxxPreprocessAndCompile extends AbstractBuildRuleWithDeclaredAndExt
 
     // If present, include all inputs coming from the preprocessor tool.
     if (preprocessDelegate.isPresent()) {
-      Iterable<Path> depFileLines;
+      Iterable<Path> dependencies;
       try {
-        depFileLines =
-            Depfiles.parseAndOutputBuckCompatibleDepfile(
+        dependencies =
+            Depfiles.parseAndVerifyDependencies(
                 context.getEventBus(),
                 getProjectFilesystem(),
                 preprocessDelegate.get().getHeaderPathNormalizer(),
                 preprocessDelegate.get().getHeaderVerification(),
                 getDepFilePath(),
                 getRelativeInputPath(context.getSourcePathResolver()),
-                output);
+                output,
+                compilerDelegate.getDependencyTrackingMode());
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);
       }
 
-      inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(depFileLines));
+      inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(dependencies));
     }
 
     // If present, include all inputs coming from the compiler tool.

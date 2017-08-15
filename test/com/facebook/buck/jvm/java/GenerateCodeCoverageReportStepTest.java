@@ -90,7 +90,7 @@ public class GenerateCodeCoverageReportStepTest {
 
     step =
         new GenerateCodeCoverageReportStep(
-            new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+            JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
             filesystem,
             SOURCE_DIRECTORIES,
             jarFiles,
@@ -112,7 +112,7 @@ public class GenerateCodeCoverageReportStepTest {
         MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString());
 
     shellCommandBuilder.add(
-        "/baz/qux/java",
+        "java",
         "-jar",
         MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString(),
         absolutifyPath(Paths.get(OUTPUT_DIRECTORY + "/parameters.properties")));
@@ -127,7 +127,7 @@ public class GenerateCodeCoverageReportStepTest {
     final File[] extractedDir = new File[2];
     step =
         new GenerateCodeCoverageReportStep(
-            new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+            JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
             filesystem,
             SOURCE_DIRECTORIES,
             jarFiles,
@@ -161,7 +161,7 @@ public class GenerateCodeCoverageReportStepTest {
 
     step =
         new GenerateCodeCoverageReportStep(
-            new ExternalJavaRuntimeLauncher("/baz/qux/java"),
+            JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
             filesystem,
             SOURCE_DIRECTORIES,
             jarFiles,

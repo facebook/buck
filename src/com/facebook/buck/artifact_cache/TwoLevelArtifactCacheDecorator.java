@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -111,43 +112,58 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    CacheResult fetchResult = delegate.fetch(ruleKey, output);
-    if (!fetchResult.getType().isSuccess()) {
-      LOG.verbose("Missed first-level lookup.");
-      return fetchResult;
-    } else if (!fetchResult.getMetadata().containsKey(METADATA_KEY)) {
-      LOG.verbose("Found a single-level entry.");
-      return fetchResult;
-    }
-    LOG.verbose("Found a first-level artifact with metadata: %s", fetchResult.getMetadata());
-    String contentHashKey = fetchResult.getMetadata().get(METADATA_KEY);
-    CacheResult outputFileFetchResult = delegate.fetch(new RuleKey(contentHashKey), output);
-    outputFileFetchResult = outputFileFetchResult.withTwoLevelContentHashKey(contentHashKey);
+  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    return Futures.transformAsync(
+        delegate.fetchAsync(ruleKey, output),
+        (CacheResult fetchResult) -> {
+          if (!fetchResult.getType().isSuccess()) {
+            LOG.verbose("Missed first-level lookup.");
+            return Futures.immediateFuture(fetchResult);
+          } else if (!fetchResult.getMetadata().containsKey(METADATA_KEY)) {
+            LOG.verbose("Found a single-level entry.");
+            return Futures.immediateFuture(fetchResult);
+          }
+          LOG.verbose("Found a first-level artifact with metadata: %s", fetchResult.getMetadata());
 
-    if (!outputFileFetchResult.getType().isSuccess()) {
-      LOG.verbose("Missed second-level lookup.");
-      secondLevelCacheMisses.inc();
+          String contentHashKey = fetchResult.getMetadata().get(METADATA_KEY);
+          ListenableFuture<CacheResult> outputFileFetchResultFuture =
+              delegate.fetchAsync(new RuleKey(contentHashKey), output);
 
-      // Note: for misses, the fetchResult metadata is not important, so we return
-      // outputFileFetchResult to signal the miss (as fetchResult was a hit).
-      return outputFileFetchResult;
-    }
+          return Futures.transformAsync(
+              outputFileFetchResultFuture,
+              (CacheResult outputFileFetchResult) -> {
+                outputFileFetchResult =
+                    outputFileFetchResult.withTwoLevelContentHashKey(contentHashKey);
 
-    if (outputFileFetchResult.cacheSource().isPresent()) {
-      secondLevelCacheHitTypes.add(outputFileFetchResult.cacheSource().get());
-    }
-    if (outputFileFetchResult.artifactSizeBytes().isPresent()) {
-      secondLevelCacheHitBytes.addSample(outputFileFetchResult.artifactSizeBytes().get());
-    }
+                if (!outputFileFetchResult.getType().isSuccess()) {
+                  LOG.verbose("Missed second-level lookup.");
+                  secondLevelCacheMisses.inc();
 
-    LOG.verbose(
-        "Found a second-level artifact with metadata: %s", outputFileFetchResult.getMetadata());
+                  // Note: for misses, the fetchResult metadata is not important, so we return
+                  // outputFileFetchResult to signal the miss (as fetchResult was a hit).
+                  return Futures.immediateFuture(outputFileFetchResult);
+                }
 
-    // Note: in the case of a hit, we return fetchResult, rather than outputFileFetchResult,
-    // so that the client gets the correct metadata.
-    fetchResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);
-    return fetchResult;
+                if (outputFileFetchResult.cacheSource().isPresent()) {
+                  secondLevelCacheHitTypes.add(outputFileFetchResult.cacheSource().get());
+                }
+                if (outputFileFetchResult.artifactSizeBytes().isPresent()) {
+                  secondLevelCacheHitBytes.addSample(
+                      outputFileFetchResult.artifactSizeBytes().get());
+                }
+
+                LOG.verbose(
+                    "Found a second-level artifact with metadata: %s",
+                    outputFileFetchResult.getMetadata());
+                // Note: in the case of a hit, we return fetchResult, rather than outputFileFetchResult,
+                // so that the client gets the correct metadata.
+
+                CacheResult finalResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);
+                return Futures.immediateFuture(finalResult);
+              },
+              MoreExecutors.directExecutor());
+        },
+        MoreExecutors.directExecutor());
   }
 
   @Override

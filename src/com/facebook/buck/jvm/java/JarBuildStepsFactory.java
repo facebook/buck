@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -46,7 +47,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-public class JarBuildStepsFactory implements AddsToRuleKey {
+public class JarBuildStepsFactory
+    implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
 
@@ -129,7 +131,7 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
         ::contains;
   }
 
-  public ImmutableList<Step> getBuildStepsForAbiJar(
+  public synchronized ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -146,10 +148,12 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
         Optional.empty(),
         steps);
 
+    ((JavacToJarStepFactory) compileStepFactory).setCompileAbi(null);
+
     return steps.build();
   }
 
-  public ImmutableList<Step> getBuildStepsForLibraryJar(
+  public synchronized ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -251,7 +255,10 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
       ImmutableSortedSet<Path> javaSrcs =
           this.srcs
               .stream()
-              .map(context.getSourcePathResolver()::getRelativePath)
+              .map(
+                  src ->
+                      projectFilesystem.relativize(
+                          context.getSourcePathResolver().getAbsolutePath(src)))
               .collect(MoreCollectors.toImmutableSortedSet());
 
       this.compileStepFactory.createCompileToJarStep(
@@ -268,31 +275,31 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
           depFileRelativePath,
           pathToSrcsList,
           postprocessClassesCommands,
-          ImmutableSortedSet.of(outputDirectory),
-          /* mainClass */ Optional.empty(),
-          this.manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-          outputJar.get(),
+          JarParameters.builder()
+              .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+              .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
+              .setJarPath(outputJar.get())
+              .setRemoveEntryPredicate(classesToRemoveFromJar)
+              .build(),
           /* output params */
           steps,
-          buildableContext,
-          this.classesToRemoveFromJar);
+          buildableContext);
     }
 
     if (outputJar.isPresent()) {
-      Path output = outputJar.get();
-
       // No source files, only resources
       if (this.srcs.isEmpty()) {
         this.compileStepFactory.createJarStep(
             projectFilesystem,
-            outputDirectory,
-            Optional.empty(),
-            this.manifestFile.map(context.getSourcePathResolver()::getAbsolutePath),
-            this.classesToRemoveFromJar,
-            output,
+            JarParameters.builder()
+                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
+                .setJarPath(outputJar.get())
+                .setRemoveEntryPredicate(classesToRemoveFromJar)
+                .build(),
             steps);
       }
-      buildableContext.recordArtifact(output);
+      buildableContext.recordArtifact(outputJar.get());
     }
   }
 
@@ -347,5 +354,10 @@ public class JarBuildStepsFactory implements AddsToRuleKey {
       }
     }
     return pathToSourcePathMapBuilder.build();
+  }
+
+  @Override
+  public JavacPipelineState newInstance() {
+    return new JavacPipelineState();
   }
 }

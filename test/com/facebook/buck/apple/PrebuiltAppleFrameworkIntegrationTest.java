@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,9 +46,14 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Before
+  public void setUp() throws InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+  }
+
   @Test
   public void testPrebuiltAppleFrameworkBuildsSomething() throws InterruptedException, IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_builds", tmp);
@@ -64,7 +70,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Test
   public void testPrebuiltAppleFrameworkLinks() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);
@@ -89,7 +94,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Test
   public void testPrebuiltAppleFrameworkCopiedToBundle() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);
@@ -113,7 +117,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Test
   public void testStaticWithDependencies() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_static", tmp);
@@ -145,7 +148,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Test
   public void headerUsesShouldMapBackToTestApp() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);
@@ -158,7 +160,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Test
   public void ruleKeyChangesWhenFrameworkIsModified() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);
@@ -188,7 +189,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
   @Test
   public void testProjectGeneratorGeneratesWorkingProject() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "prebuilt_apple_framework_links", tmp);

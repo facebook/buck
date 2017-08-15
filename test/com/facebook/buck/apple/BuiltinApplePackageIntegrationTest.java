@@ -55,6 +55,9 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 
@@ -66,7 +69,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void packageHasProperStructure() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -108,7 +110,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void packageHasProperStructureForSwift() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_swift_no_debug", tmp);
@@ -128,7 +129,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void swiftSupportIsOnlyAddedIfPackageContainsSwiftCode() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -148,7 +148,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void packageHasProperStructureForWatch20() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
@@ -158,7 +157,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void packageHasProperStructureForWatch21() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
@@ -195,7 +193,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void packageHasProperStructureForLegacyWatch() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "legacy_watch_application_bundle", tmp);
@@ -216,7 +213,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void packageSupportsFatBinaries() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -264,7 +260,6 @@ public class BuiltinApplePackageIntegrationTest {
 
   @Test
   public void testDisablingPackageCaching() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);

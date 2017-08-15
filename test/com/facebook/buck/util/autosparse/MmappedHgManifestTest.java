@@ -199,6 +199,49 @@ public class MmappedHgManifestTest {
     assertEquals(entries.count(), 26);
   }
 
+  @Test
+  public void pathPrefixEdgecase() throws IOException {
+    // When bisection ends up on a path that has a matching prefix (without the path separator)
+    // make sure we recognise it as a path that precedes the target dir.
+    MmappedHgManifest mmap =
+        makeOne(
+            String.join(
+                "\n",
+                "foo/bar-prefixed/path1" + SEP_HASH,
+                "foo/bar-prefixed/path2" + SEP_HASH,
+                "foo/bar-prefixed/path3" + SEP_HASH,
+                "foo/bar/not-prefixed/file1" + SEP_HASH,
+                "foo/bar/not-prefixed/file2" + SEP_HASH,
+                ""));
+
+    Stream<MmappedHgManifest.ManifestEntry> entries = mmap.loadDirectory("foo/bar");
+    assertEquals(
+        entries.map(e -> e.getFilename()).collect(Collectors.toList()),
+        ImmutableList.of("foo/bar/not-prefixed/file1", "foo/bar/not-prefixed/file2"));
+  }
+
+  @Test
+  public void pathPrefixChunkIndexEdgecase() throws IOException {
+    // When bisection ends up on a path that has a matching prefix (without the path separator)
+    // make sure we recognise it as a path that precedes the target dir in a chunkIndex.
+    MmappedHgManifest mmap =
+        makeOne(
+            String.join(
+                "\n",
+                "foo/bar-prefixed/path1" + SEP_HASH,
+                "foo/bar-prefixed/path2" + SEP_HASH,
+                "foo/bar-prefixed/path3" + SEP_HASH,
+                "foo/bar/not-prefixed/file1" + SEP_HASH,
+                "foo/bar/not-prefixed/file2" + SEP_HASH,
+                ""),
+            150);
+
+    Stream<MmappedHgManifest.ManifestEntry> entries = mmap.loadDirectory("foo/bar");
+    assertEquals(
+        entries.map(e -> e.getFilename()).collect(Collectors.toList()),
+        ImmutableList.of("foo/bar/not-prefixed/file1", "foo/bar/not-prefixed/file2"));
+  }
+
   private MmappedHgManifest makeOne(String manifestData, int chunk_size) throws IOException {
     Path manifestFilePath = Files.createTempFile(tempFolder.getRoot().toPath(), "rawmanifest", "");
     Files.write(manifestFilePath, manifestData.getBytes("UTF-8"));

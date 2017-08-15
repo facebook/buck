@@ -88,7 +88,7 @@ public class JavaBinaryTest {
                 target,
                 new FakeProjectFilesystem(),
                 params,
-                new ExternalJavaRuntimeLauncher("/foobar/java"),
+                JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(),
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,
@@ -106,7 +106,7 @@ public class JavaBinaryTest {
     String expectedClasspath =
         basePath + pathResolver.getRelativePath(javaBinary.getSourcePathToOutput());
 
-    List<String> expectedCommand = ImmutableList.of("/foobar/java", "-jar", expectedClasspath);
+    List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
 
     assertFalse(

@@ -20,6 +20,8 @@ package com.facebook.buck.util.cache;
 public enum FileHashCacheMode {
   LOADING_CACHE,
   PREFIX_TREE,
+  LIMITED_PREFIX_TREE,
+  LIMITED_PREFIX_TREE_PARALLEL,
   PARALLEL_COMPARISON;
   public static final FileHashCacheMode DEFAULT = PREFIX_TREE;
 }

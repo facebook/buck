@@ -94,4 +94,6 @@ abstract class AbstractIjProjectConfig {
   public abstract boolean isGeneratingAndroidManifestEnabled();
 
   public abstract Optional<String> getOutputUrl();
+
+  public abstract Optional<Path> getExtraCompilerOutputModulesPath();
 }

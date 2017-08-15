@@ -21,6 +21,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.platform.DebugPathSanitizer;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -52,6 +54,8 @@ public class CompDirReplacerIntegrationTest {
   @Before
   public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     filesystem = new ProjectFilesystem(tmp.getRoot());
   }
 

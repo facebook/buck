@@ -65,6 +65,7 @@ public class DistBuildClientStatsTracker {
     this.buildLabel = buildLabel;
   }
 
+  @GuardedBy("this")
   private void generateStatsPreconditionChecksNoException() {
     // Unless there was an exception, we expect all the following fields to be present.
     Preconditions.checkArgument(
@@ -103,6 +104,7 @@ public class DistBuildClientStatsTracker {
     // MATERIALIZE_SLAVE_LOGS is optional even if no buck client errors.
   }
 
+  @GuardedBy("this")
   private Optional<Long> getDurationOrEmpty(DistBuildClientStat stat) {
     if (!durationsMsByType.containsKey(stat)) {
       return Optional.empty();

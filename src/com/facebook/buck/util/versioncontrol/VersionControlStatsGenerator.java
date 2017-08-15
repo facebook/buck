@@ -84,13 +84,16 @@ public class VersionControlStatsGenerator {
     this.versionControlCmdLineInterface = versionControlCmdLineInterface;
     this.pregeneratedVersionControlStats = pregeneratedVersionControlStats;
     pregeneratedVersionControlStats.ifPresent(
-        x ->
+        x -> {
+          synchronized (this) {
             this.fastStats =
                 FastVersionControlStats.of(
                     x.getCurrentRevisionId(),
                     x.getBaseBookmarks(),
                     x.getBranchedFromMasterRevisionId(),
-                    x.getBranchedFromMasterTS()));
+                    x.getBranchedFromMasterTS());
+          }
+        });
   }
 
   public void generateStatsAsync(

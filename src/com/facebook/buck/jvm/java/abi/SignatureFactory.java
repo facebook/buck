@@ -159,6 +159,15 @@ class SignatureFactory {
         }
 
         @Override
+        public Void visitError(ErrorType t, SignatureVisitor visitor) {
+          // We don't really know, but if there's an error type the compilation is going to fail
+          // anyway, so just pretend it's Object.
+          visitor.visitClassType("java/lang/Object");
+          visitor.visitEnd();
+          return null;
+        }
+
+        @Override
         public Void visitNoType(NoType t, SignatureVisitor visitor) {
           if (t.getKind() == TypeKind.VOID) {
             visitor.visitBaseType(descriptorFactory.getDescriptor(t).charAt(0));

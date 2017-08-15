@@ -30,6 +30,7 @@ import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -40,7 +41,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -50,7 +51,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
@@ -69,20 +69,17 @@ public class HaskellGhciDescription
         ImplicitDepsInferringDescription<HaskellGhciDescription.AbstractHaskellGhciDescriptionArg>,
         VersionPropagator<HaskellGhciDescriptionArg> {
 
-  private final HaskellConfig haskellConfig;
+  private final HaskellPlatform defaultPlatform;
+  private final FlavorDomain<HaskellPlatform> platforms;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final CxxPlatform defaultCxxPlatform;
 
   public HaskellGhciDescription(
-      HaskellConfig haskellConfig,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      CxxPlatform defaultCxxPlatform) {
-    this.haskellConfig = haskellConfig;
+      HaskellPlatform defaultPlatform,
+      FlavorDomain<HaskellPlatform> platforms,
+      CxxBuckConfig cxxBuckConfig) {
+    this.defaultPlatform = defaultPlatform;
+    this.platforms = platforms;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultCxxPlatform = defaultCxxPlatform;
   }
 
   @Override
@@ -177,6 +174,21 @@ public class HaskellGhciDescription
         });
   }
 
+  // Return the C/C++ platform to build against.
+  private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
+
+    Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
+    if (flavorPlatform.isPresent()) {
+      return flavorPlatform.get();
+    }
+
+    if (arg.getPlatform().isPresent()) {
+      return platforms.getValue(arg.getPlatform().get());
+    }
+
+    return defaultPlatform;
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -188,7 +200,7 @@ public class HaskellGhciDescription
       HaskellGhciDescriptionArg args)
       throws NoSuchBuildTargetException {
 
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform);
+    HaskellPlatform platform = getPlatform(buildTarget, args);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -198,7 +210,7 @@ public class HaskellGhciDescription
             .addDeps(args.getDeps())
             .addPlatformDeps(args.getPlatformDeps())
             .build()
-            .get(resolver, cxxPlatform));
+            .get(resolver, platform.getCxxPlatform()));
     ImmutableSet<BuildRule> deps = depsBuilder.build();
 
     ImmutableSet.Builder<HaskellPackage> haskellPackages = ImmutableSet.builder();
@@ -213,7 +225,7 @@ public class HaskellGhciDescription
               HaskellCompileInput ci =
                   ((HaskellCompileDep) rule)
                       .getCompileInput(
-                          cxxPlatform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
+                          platform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
@@ -245,7 +257,8 @@ public class HaskellGhciDescription
               nativeLinkables.add((NativeLinkable) rule);
             } else if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
               for (NativeLinkable nl :
-                  ((NativeLinkable) rule).getNativeLinkableExportedDepsForPlatform(cxxPlatform)) {
+                  ((NativeLinkable) rule)
+                      .getNativeLinkableExportedDepsForPlatform(platform.getCxxPlatform())) {
                 traverse.add((BuildRule) nl);
               }
             }
@@ -256,17 +269,21 @@ public class HaskellGhciDescription
     cxxVisitor.start();
 
     ImmutableList<NativeLinkable> sortedNativeLinkables =
-        getSortedNativeLinkables(cxxPlatform, nativeLinkables.build());
+        getSortedNativeLinkables(platform.getCxxPlatform(), nativeLinkables.build());
 
     BuildRule omnibusSharedObject =
         requireOmnibusSharedObject(
-            buildTarget, projectFilesystem, resolver, cxxPlatform, sortedNativeLinkables);
+            buildTarget,
+            projectFilesystem,
+            resolver,
+            platform.getCxxPlatform(),
+            sortedNativeLinkables);
 
     ImmutableSortedMap.Builder<String, SourcePath> solibs = ImmutableSortedMap.naturalOrder();
     for (NativeLinkable nativeLinkable : sortedNativeLinkables) {
-      if (isPrebuiltSO(nativeLinkable, cxxPlatform)) {
+      if (isPrebuiltSO(nativeLinkable, platform.getCxxPlatform())) {
         ImmutableMap<String, SourcePath> sharedObjects =
-            nativeLinkable.getSharedLibraries(cxxPlatform);
+            nativeLinkable.getSharedLibraries(platform.getCxxPlatform());
         for (Map.Entry<String, SourcePath> ent : sharedObjects.entrySet()) {
           if (ent.getValue() instanceof PathSourcePath) {
             solibs.put(ent.getKey(), ent.getValue());
@@ -277,7 +294,7 @@ public class HaskellGhciDescription
 
     HaskellSources srcs =
         HaskellSources.from(
-            buildTarget, resolver, pathResolver, ruleFinder, cxxPlatform, "srcs", args.getSrcs());
+            buildTarget, resolver, pathResolver, ruleFinder, platform, "srcs", args.getSrcs());
 
     return resolver.addToIndex(
         HaskellGhciRule.from(
@@ -295,13 +312,13 @@ public class HaskellGhciDescription
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
             args.getEnableProfiling(),
-            haskellConfig.getGhciScriptTemplate(),
-            haskellConfig.getGhciBinutils(),
-            haskellConfig.getGhciGhc(),
-            haskellConfig.getGhciLib(),
-            haskellConfig.getGhciCxx(),
-            haskellConfig.getGhciCc(),
-            haskellConfig.getGhciCpp()));
+            platform.getGhciScriptTemplate().get(),
+            platform.getGhciBinutils().get(),
+            platform.getGhciGhc().get(),
+            platform.getGhciLib().get(),
+            platform.getGhciCxx().get(),
+            platform.getGhciCc().get(),
+            platform.getGhciCpp().get()));
   }
 
   @Override
@@ -313,10 +330,7 @@ public class HaskellGhciDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     HaskellDescriptionUtils.getParseTimeDeps(
-        haskellConfig,
-        ImmutableList.of(
-            cxxPlatforms.getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)),
-        extraDepsBuilder);
+        ImmutableList.of(getPlatform(buildTarget, constructorArg)), extraDepsBuilder);
 
     constructorArg
         .getDepsQuery()
@@ -328,7 +342,7 @@ public class HaskellGhciDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
     @Value.Default
     default SourceList getSrcs() {
       return SourceList.EMPTY;
@@ -348,10 +362,10 @@ public class HaskellGhciDescription
       return false;
     }
 
-    Optional<Query> getDepsQuery();
-
     Optional<BuildTarget> getGhciBinDep();
 
     Optional<SourcePath> getGhciInit();
+
+    Optional<Flavor> getPlatform();
   }
 }

@@ -91,7 +91,11 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+    return Futures.immediateFuture(fetch(ruleKey, output));
+  }
+
+  private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     HttpArtifactCacheEvent.Started startedEvent =
         HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
     buckEventBus.post(startedEvent);

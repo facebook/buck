@@ -80,11 +80,6 @@ public abstract class DefaultCompiler implements Compiler {
   }
 
   @Override
-  public boolean isDependencyFileSupported() {
-    return true;
-  }
-
-  @Override
   public ImmutableList<String> outputArgs(String outputPath) {
     return ImmutableList.of("-o", outputPath);
   }
@@ -107,6 +102,11 @@ public abstract class DefaultCompiler implements Compiler {
   @Override
   public ImmutableList<String> getPicFlags() {
     return ImmutableList.of("-fPIC");
+  }
+
+  @Override
+  public DependencyTrackingMode getDependencyTrackingMode() {
+    return DependencyTrackingMode.MAKEFILE;
   }
 
   @Override

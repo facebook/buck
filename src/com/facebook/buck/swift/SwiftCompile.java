@@ -74,7 +74,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path objectPath;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
-
+  @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
 
   private final Path headerPath;
@@ -99,6 +99,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
+      Optional<String> version,
       ImmutableList<Arg> compilerFlags,
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader,
@@ -119,6 +120,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
+    this.version = version;
     this.compilerFlags = compilerFlags;
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
@@ -196,6 +198,15 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         objectPath.toString(),
         "-emit-objc-header-path",
         headerPath.toString());
+
+    // Do not use swiftBuckConfig's version by definition
+    version.ifPresent(
+        v -> {
+          // Compiler only accepts major version
+          String majorVersion = v.length() > 1 ? v.substring(0, 1) : v;
+          compilerCommand.add("-swift-version", majorVersion);
+        });
+
     compilerCommand.addAll(Arg.stringify(compilerFlags, resolver));
     for (SourcePath sourcePath : srcs) {
       compilerCommand.add(resolver.getRelativePath(sourcePath).toString());

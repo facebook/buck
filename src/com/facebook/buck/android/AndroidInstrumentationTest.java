@@ -20,7 +20,6 @@ import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -37,6 +36,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -76,7 +76,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
           System.getProperty(
               "buck.testrunner_classes", new File("build/testrunner/classes").getAbsolutePath()));
 
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   private final ImmutableSet<String> labels;
 
@@ -93,7 +93,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       HasInstallableApk apk,
       Set<String> labels,
       Set<String> contacts,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       Optional<Long> testRuleTimeoutMs) {
     super(buildTarget, projectFilesystem, params);
     this.apk = apk;
@@ -241,7 +241,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .build();
 
     return new InstrumentationStep(
-        getProjectFilesystem(), javaRuntimeLauncher, jvmArgs, testRuleTimeoutMs);
+        getProjectFilesystem(),
+        javaRuntimeLauncher.getCommandPrefix(pathResolver),
+        jvmArgs,
+        testRuleTimeoutMs);
   }
 
   private String getPathForResourceJar(String jarName) {

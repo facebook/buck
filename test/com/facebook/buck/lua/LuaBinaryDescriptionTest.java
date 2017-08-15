@@ -39,6 +39,7 @@ import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonVersion;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -123,7 +124,9 @@ public class LuaBinaryDescriptionTest {
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
-                FakeLuaConfig.DEFAULT.withLua(override).withExtension(".override"))
+                FakeLuaConfig.DEFAULT
+                    .withLua(new ConstantToolProvider(override))
+                    .withExtension(".override"))
             .setMainModule("main")
             .build(resolver);
     assertThat(binary.getLua(), Matchers.is(override));

@@ -60,6 +60,11 @@ public class DistBuildConfig {
   private static final String BUILD_LABEL = "build_label";
   private static final String DEFAULT_BUILD_LABEL = "";
 
+  private static final String MINION_QUEUE = "minion_queue";
+
+  private static final String MAX_BUILD_NODES_PER_MINION = "max_build_nodes_per_minion";
+  private static final int DEFAULT_MAX_BUILD_NODES_PER_MINION = 100;
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -125,6 +130,16 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
         .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
+  }
+
+  public Optional<String> getMinionQueue() {
+    return buckConfig.getValue(STAMPEDE_SECTION, MINION_QUEUE);
+  }
+
+  public int getMaxBuildNodesPerMinion() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, MAX_BUILD_NODES_PER_MINION)
+        .orElse(DEFAULT_MAX_BUILD_NODES_PER_MINION);
   }
 
   public String getRepository() {

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -69,7 +70,7 @@ public class AppleBundleDescription
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
@@ -79,7 +80,7 @@ public class AppleBundleDescription
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
@@ -87,7 +88,7 @@ public class AppleBundleDescription
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
@@ -155,7 +156,7 @@ public class AppleBundleDescription
     }
     return AppleDescriptions.createAppleBundle(
         cxxPlatformFlavorDomain,
-        defaultCxxPlatform,
+        defaultCxxFlavor,
         appleCxxPlatformsFlavorDomain,
         targetGraph,
         buildTarget,
@@ -188,7 +189,7 @@ public class AppleBundleDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget = buildTarget.withAppendedFlavors(defaultCxxPlatform.getFlavor());
+      buildTarget = buildTarget.withAppendedFlavors(defaultCxxFlavor);
     }
 
     Optional<MultiarchFileInfo> fatBinaryInfo =
@@ -200,7 +201,7 @@ public class AppleBundleDescription
     } else {
       cxxPlatform =
           ApplePlatforms.getCxxPlatformForBuildTarget(
-              cxxPlatformFlavorDomain, defaultCxxPlatform, buildTarget);
+              cxxPlatformFlavorDomain, defaultCxxFlavor, buildTarget);
     }
 
     String platformName = cxxPlatform.getFlavor().getName();
@@ -299,7 +300,11 @@ public class AppleBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleBundleDescriptionArg
-      extends CommonDescriptionArg, HasAppleBundleFields, HasDeclaredDeps, HasTests {
+      extends CommonDescriptionArg,
+          HasAppleBundleFields,
+          HasDefaultPlatform,
+          HasDeclaredDeps,
+          HasTests {
     BuildTarget getBinary();
 
     @Override

@@ -17,7 +17,6 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -29,7 +28,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -39,12 +38,7 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
   private final LoadingCache<Path, HashCodeAndFileType> loadingCache;
   private final LoadingCache<Path, Long> sizeCache;
 
-  private long cacheRetrievalAggregatedNanoTime = 0;
-  private long cacheInvalidationAggregatedNanoTime = 0;
-  private long numberOfInvalidations = 0;
-  private long numberOfRetrievals = 0;
-
-  public LoadingCacheFileHashCache(
+  private LoadingCacheFileHashCache(
       ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
     loadingCache =
         CacheBuilder.newBuilder()
@@ -66,6 +60,12 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
                 });
   }
 
+  public static FileHashCacheEngine createWithStats(
+      ValueLoader<HashCodeAndFileType> hashLoader, ValueLoader<Long> sizeLoader) {
+    return new StatsTrackingFileHashCacheEngine(
+        new LoadingCacheFileHashCache(hashLoader, sizeLoader), "old");
+  }
+
   @Override
   public void put(Path path, HashCodeAndFileType value) {
     loadingCache.put(path, value);
@@ -78,7 +78,6 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
   @Override
   public void invalidateWithParents(Path path) {
-    long start = System.nanoTime();
     Iterable<Path> pathsToInvalidate =
         Maps.filterEntries(
                 loadingCache.asMap(),
@@ -108,13 +107,10 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
     for (Path pathToInvalidate : pathsToInvalidate) {
       invalidate(pathToInvalidate);
     }
-    cacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    numberOfInvalidations++;
   }
 
   @Override
   public void invalidate(Path path) {
-    long start = System.nanoTime();
     HashCodeAndFileType cached = loadingCache.getIfPresent(path);
     invalidateImmediate(path);
     if (cached != null) {
@@ -122,8 +118,6 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
         invalidateImmediate(path.resolve(child));
       }
     }
-    cacheInvalidationAggregatedNanoTime += System.nanoTime() - start;
-    numberOfInvalidations++;
   }
 
   private void invalidateImmediate(Path path) {
@@ -133,7 +127,6 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
   @Override
   public HashCode get(Path path) throws IOException {
-    long start = System.nanoTime(); // NOPMD
     HashCode sha1;
     try {
       sha1 = loadingCache.get(path.normalize()).getHashCode();
@@ -141,15 +134,12 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new RuntimeException(e.getCause());
     }
-    cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
-    numberOfRetrievals++;
 
     return Preconditions.checkNotNull(sha1, "Failed to find a HashCode for %s.", path);
   }
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    long start = System.nanoTime();
     Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
     try {
       HashCodeAndFileType fileHashCodeAndFileType = loadingCache.get(relativeFilePath);
@@ -160,8 +150,6 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
         throw new NoSuchFileException(archiveMemberPath.toString());
       }
 
-      cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
-      numberOfRetrievals++;
       return memberHashCodeAndFileType.getHashCode();
     } catch (ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
@@ -202,27 +190,6 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
 
   @Override
   public List<AbstractBuckEvent> getStatsEvents() {
-    List<AbstractBuckEvent> events = new LinkedList<>();
-    if (numberOfInvalidations > 0) {
-      events.add(
-          new FileHashCacheEvent(
-              "old.invalidation",
-              cacheInvalidationAggregatedNanoTime,
-              cacheInvalidationAggregatedNanoTime,
-              numberOfInvalidations));
-    }
-    if (numberOfRetrievals > 0) {
-      events.add(
-          new FileHashCacheEvent(
-              "old.retrieval",
-              cacheRetrievalAggregatedNanoTime,
-              cacheRetrievalAggregatedNanoTime,
-              numberOfRetrievals));
-    }
-    cacheInvalidationAggregatedNanoTime = 0;
-    cacheRetrievalAggregatedNanoTime = 0;
-    numberOfInvalidations = 0;
-    numberOfRetrievals = 0;
-    return events;
+    return Collections.emptyList();
   }
 }

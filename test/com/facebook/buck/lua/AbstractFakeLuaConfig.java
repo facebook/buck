@@ -23,7 +23,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Paths;
@@ -36,14 +35,10 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
 
   public static final FakeLuaConfig DEFAULT = FakeLuaConfig.builder().build();
 
-  @Value.Default
-  public Tool getLua() {
-    return new CommandTool.Builder().addArg("lua").build();
-  }
-
   @Override
-  public Tool getLua(BuildRuleResolver resolver) {
-    return getLua();
+  @Value.Default
+  public ToolProvider getLua() {
+    return new ConstantToolProvider(new CommandTool.Builder().addArg("lua").build());
   }
 
   @Value.Default

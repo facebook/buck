@@ -52,6 +52,7 @@ import java.util.Optional;
 public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements InitializableFromDisk<UnzipAar.BuildOutput> {
 
+  private static final String AAR_UNZIP_PATH_FORMAT = "__unpack_%s__";
   private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";
 
   @AddToRuleKey private final SourcePath aarFile;
@@ -70,7 +71,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.aarFile = aarFile;
     this.unpackDirectory =
-        BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__unpack_%s__");
+        BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, AAR_UNZIP_PATH_FORMAT);
     this.uberClassesJar =
         BuildTargets.getScratchPath(
             getProjectFilesystem(), buildTarget, "__uber_classes_%s__/classes.jar");
@@ -161,7 +162,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .setMainClass(Optional.<String>empty().orElse(null))
                   .setManifestFile(Optional.<Path>empty().orElse(null))
                   .setShouldMergeManifests(true)
-                  .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY::shouldRemoveClass)
+                  .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
                   .createJarFile(filesystem.resolve(uberClassesJar));
             }
             return StepExecutionResult.SUCCESS;
@@ -203,6 +204,10 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public Path getPathToRDotJavaPackageFile() {
     return pathToRDotJavaPackageFile;
+  }
+
+  public static String getAarUnzipPathFormat() {
+    return AAR_UNZIP_PATH_FORMAT;
   }
 
   static class BuildOutput {

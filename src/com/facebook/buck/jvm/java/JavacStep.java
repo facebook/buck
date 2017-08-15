@@ -72,7 +72,7 @@ public class JavacStep implements Step {
 
   private final ClasspathChecker classpathChecker;
 
-  private final Optional<DirectToJarOutputSettings> directToJarOutputSettings;
+  private final Optional<JarParameters> jarParameters;
 
   @Nullable private final Path abiJar;
 
@@ -90,7 +90,7 @@ public class JavacStep implements Step {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
-      Optional<DirectToJarOutputSettings> directToJarOutputSettings,
+      Optional<JarParameters> jarParameters,
       @Nullable Path abiJar) {
     this.outputDirectory = outputDirectory;
     this.usedClassesFileWriter = usedClassesFileWriter;
@@ -105,19 +105,13 @@ public class JavacStep implements Step {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
-    this.directToJarOutputSettings = directToJarOutputSettings;
+    this.jarParameters = jarParameters;
     this.abiJar = abiJar;
   }
 
   @Override
   public final StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    return tryBuildWithFirstOrderDeps(context, filesystem);
-  }
-
-  private StepExecutionResult tryBuildWithFirstOrderDeps(
-      ExecutionContext context, ProjectFilesystem filesystem)
-      throws InterruptedException, IOException {
     javacOptions.validateOptions(classpathChecker::validateClasspath);
 
     Verbosity verbosity =
@@ -142,55 +136,47 @@ public class JavacStep implements Step {
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),
               getAbsolutePathsForJavacInputs(getJavac()),
-              directToJarOutputSettings);
-      return performBuild(context, stdout, stderr, getJavac(), javacExecutionContext);
-    }
-  }
-
-  private StepExecutionResult performBuild(
-      ExecutionContext context,
-      CapturingPrintStream stdout,
-      CapturingPrintStream stderr,
-      Javac javac,
-      JavacExecutionContext javacExecutionContext)
-      throws InterruptedException {
-    ImmutableList<JavacPluginJsr199Fields> pluginFields =
-        ImmutableList.copyOf(
-            javacOptions
-                .getAnnotationProcessingParams()
-                .getAnnotationProcessors(filesystem, resolver)
-                .stream()
-                .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
-                .collect(Collectors.toList()));
-    int declaredDepsBuildResult;
-    String firstOrderStdout;
-    String firstOrderStderr;
-    Optional<String> returnedStderr;
-    try (Javac.Invocation invocation =
-        javac.newBuildInvocation(
-            javacExecutionContext,
-            invokingRule,
-            getOptions(context, declaredClasspathEntries),
-            pluginFields,
-            javaSourceFilePaths,
-            pathToSrcsList,
-            workingDirectory,
-            javacOptions.getCompilationMode())) {
-      if (abiJar != null) {
-        declaredDepsBuildResult =
-            invocation.buildSourceAbiJar(filesystem.resolve(Preconditions.checkNotNull(abiJar)));
-      } else {
-        declaredDepsBuildResult = invocation.buildClasses();
+              jarParameters);
+      ImmutableList<JavacPluginJsr199Fields> pluginFields =
+          ImmutableList.copyOf(
+              javacOptions
+                  .getAnnotationProcessingParams()
+                  .getAnnotationProcessors(this.filesystem, resolver)
+                  .stream()
+                  .map(ResolvedJavacPluginProperties::getJavacPluginJsr199Fields)
+                  .collect(Collectors.toList()));
+      int declaredDepsBuildResult;
+      String firstOrderStdout;
+      String firstOrderStderr;
+      Optional<String> returnedStderr;
+      try (Javac.Invocation invocation =
+          getJavac()
+              .newBuildInvocation(
+                  javacExecutionContext,
+                  invokingRule,
+                  getOptions(context, declaredClasspathEntries),
+                  pluginFields,
+                  javaSourceFilePaths,
+                  pathToSrcsList,
+                  workingDirectory,
+                  javacOptions.getCompilationMode())) {
+        if (abiJar != null) {
+          declaredDepsBuildResult =
+              invocation.buildSourceAbiJar(
+                  this.filesystem.resolve(Preconditions.checkNotNull(abiJar)));
+        } else {
+          declaredDepsBuildResult = invocation.buildClasses();
+        }
       }
+      firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
+      firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+      if (declaredDepsBuildResult != 0) {
+        returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
+      } else {
+        returnedStderr = Optional.empty();
+      }
+      return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
     }
-    firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
-    firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
-    if (declaredDepsBuildResult != 0) {
-      returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
-    } else {
-      returnedStderr = Optional.empty();
-    }
-    return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
   }
 
   private Optional<String> processBuildFailure(
@@ -230,17 +216,17 @@ public class JavacStep implements Step {
             .getDescription(
                 getOptions(context, getClasspathEntries()), javaSourceFilePaths, pathToSrcsList);
 
-    if (directToJarOutputSettings.isPresent()) {
-      DirectToJarOutputSettings directToJarOutputSettings = this.directToJarOutputSettings.get();
-      Optional<Path> manifestFile = directToJarOutputSettings.getManifestFile();
-      ImmutableSortedSet<Path> entriesToJar = directToJarOutputSettings.getEntriesToJar();
+    if (jarParameters.isPresent()) {
+      JarParameters jarParameters = this.jarParameters.get();
+      Optional<Path> manifestFile = jarParameters.getManifestFile();
+      ImmutableSortedSet<Path> entriesToJar = jarParameters.getEntriesToJar();
       description =
           description
               + "; "
               + String.format(
                   "jar %s %s %s %s",
                   manifestFile.isPresent() ? "cfm" : "cf",
-                  directToJarOutputSettings.getDirectToJarOutputPath(),
+                  jarParameters.getJarPath(),
                   manifestFile.isPresent() ? manifestFile.get() : "",
                   Joiner.on(' ').join(entriesToJar));
     }
@@ -253,7 +239,7 @@ public class JavacStep implements Step {
     String name;
     if (abiJar != null) {
       name = "calculate_abi_from_source";
-    } else if (directToJarOutputSettings.isPresent()) {
+    } else if (jarParameters.isPresent()) {
       name = "javac_jar";
     } else {
       name = getJavac().getShortName();

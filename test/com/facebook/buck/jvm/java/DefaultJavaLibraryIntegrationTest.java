@@ -959,6 +959,29 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat(result.getStderr(), Matchers.stringContainsInOrder("illegal start of expression"));
   }
 
+  @Test
+  public void badImportsShouldNotCrashBuck() throws IOException {
+    setUpProjectWorkspaceForScenario("import_errors");
+
+    ProcessResult result = workspace.runBuckBuild("//:errors");
+    assertThat(
+        result.getStderr(),
+        Matchers.stringContainsInOrder(
+            "class file for com.example.buck.library.dep.SuperSuper not found"));
+  }
+
+  @Test
+  public void annotationProcessorCrashesShouldCrashBuck() throws IOException {
+    setUpProjectWorkspaceForScenario("ap_crashes");
+
+    ProcessResult result = workspace.runBuckBuild("//:main");
+    assertThat(
+        result.getStderr(),
+        Matchers.stringContainsInOrder(
+            "//:main failed on step javac with an exception",
+            "java.lang.RuntimeException: Test crash!"));
+  }
+
   /** Asserts that the specified file exists and returns its contents. */
   private String getContents(Path relativePathToFile) throws IOException {
     Path file = workspace.getPath(relativePathToFile);

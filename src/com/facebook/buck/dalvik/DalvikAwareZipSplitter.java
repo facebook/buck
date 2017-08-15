@@ -17,7 +17,6 @@
 package com.facebook.buck.dalvik;
 
 import com.facebook.buck.android.APKModule;
-import com.facebook.buck.android.APKModuleGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.AbstractFileLike;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
@@ -80,16 +79,10 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
   private final MySecondaryDexHelper secondaryDexWriter;
   private final Map<APKModule, MySecondaryDexHelper> additionalDexWriters;
-  private final APKModuleGraph apkModuleGraph;
+  private final APKModule rootModule;
 
   @Nullable private DalvikAwareOutputStreamHelper primaryOut;
 
-  /**
-   * @see ZipSplitterFactory#newInstance(ProjectFilesystem, Set, Path, Path, String, Path,
-   *     Predicate, ImmutableSet, ImmutableSet, ImmutableMultimap, APKModuleGraph,
-   *     com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy,
-   *     com.facebook.buck.dalvik.ZipSplitter.CanaryStrategy, Path)
-   */
   private DalvikAwareZipSplitter(
       ProjectFilesystem filesystem,
       Set<Path> inFiles,
@@ -103,9 +96,9 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       ImmutableSet<String> secondaryHeadSet,
       ImmutableSet<String> secondaryTailSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
-      APKModuleGraph apkModuleGraph,
+      APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
-      ZipSplitter.CanaryStrategy canaryStrategy,
+      CanaryStrategy canaryStrategy,
       Path reportDir) {
     if (linearAllocLimit <= 0) {
       throw new HumanReadableException("linear_alloc_hard_limit must be greater than zero.");
@@ -122,7 +115,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.secondaryTailSet = secondaryTailSet;
     this.classPathToDexStore = additionalDexStoreSets.inverse();
     for (APKModule dexStore : additionalDexStoreSets.keySet()) {
-      if (!dexStore.equals(apkModuleGraph.getRootAPKModule())) {
+      if (!dexStore.equals(rootAPKModule)) {
         additionalDexWriters.put(
             dexStore,
             new MySecondaryDexHelper(
@@ -132,7 +125,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
                 CanaryStrategy.INCLUDE_CANARIES));
       }
     }
-    this.apkModuleGraph = apkModuleGraph;
+    this.rootModule = rootAPKModule;
     this.reportDir = reportDir;
     this.dexSplitStrategy = dexSplitStrategy;
     this.linearAllocLimit = linearAllocLimit;
@@ -152,9 +145,9 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       ImmutableSet<String> secondaryHeadSet,
       ImmutableSet<String> secondaryTailSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
-      APKModuleGraph apkModuleGraph,
+      APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
-      ZipSplitter.CanaryStrategy canaryStrategy,
+      CanaryStrategy canaryStrategy,
       Path reportDir) {
     return new DalvikAwareZipSplitter(
         filesystem,
@@ -169,7 +162,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         secondaryHeadSet,
         secondaryTailSet,
         additionalDexStoreSets,
-        apkModuleGraph,
+        rootAPKModule,
         dexSplitStrategy,
         canaryStrategy,
         reportDir);
@@ -225,7 +218,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
                           classPath, classPathToDexStore.get(classPath).asList().toString()));
                 }
                 APKModule dexStore = containingModule.iterator().next();
-                if (!dexStore.equals(apkModuleGraph.getRootAPKModule())) {
+                if (!dexStore.equals(rootModule)) {
                   MySecondaryDexHelper dexHelper = additionalDexWriters.get(dexStore);
                   Preconditions.checkNotNull(dexHelper);
                   dexHelper.getOutputToWriteTo(entry).putEntry(entry);
@@ -303,7 +296,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     secondaryDexWriter.close();
 
     ImmutableMultimap.Builder<APKModule, Path> outputFilesBuilder = ImmutableMultimap.builder();
-    APKModule secondaryDexStore = apkModuleGraph.getRootAPKModule();
+    APKModule secondaryDexStore = rootModule;
     outputFilesBuilder.putAll(secondaryDexStore, secondaryDexWriter.getFiles());
     for (Map.Entry<APKModule, MySecondaryDexHelper> entry : additionalDexWriters.entrySet()) {
       if (!entry.getKey().equals(secondaryDexStore)) {

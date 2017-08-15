@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout>
+    <Button android:id="@+id/button1"
+            android:layout_toLeftOf="@id/button2"
+            android:text="@string/text"/>
+    <Button android:id="@+id/button3"
+            style:attribute="@style/Buck.Theme"
+            android:background="@drawable/some_image"/>
+    <TextView tools:showIn="@layout/some_layout" android:id="@id/android:empty"/>
+</LinearLayout>

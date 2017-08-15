@@ -43,6 +43,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -109,7 +110,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final JavaLibrary compiledTestsLibrary;
 
   private final ImmutableSet<Either<SourcePath, Path>> additionalClasspathEntries;
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   @AddToRuleKey private final ImmutableList<String> vmArgs;
 
@@ -144,6 +145,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ForkMode forkMode;
 
+  @AddToRuleKey private final Optional<SourcePath> unbundledResourcesRoot;
+
   public JavaTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -153,7 +156,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<String> labels,
       Set<String> contacts,
       TestType testType,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
@@ -162,7 +165,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean runTestSeparately,
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
-      Optional<Level> stdErrLogLevel) {
+      Optional<Level> stdErrLogLevel,
+      Optional<SourcePath> unbundledResourcesRoot) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
 
@@ -189,6 +193,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.forkMode = forkMode;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
+    this.unbundledResourcesRoot = unbundledResourcesRoot;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
   }
 
@@ -255,7 +260,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         testRuleTimeoutMs,
         testCaseTimeoutMs,
         Arg.stringify(env, pathResolver),
-        javaRuntimeLauncher,
+        javaRuntimeLauncher.getCommandPrefix(pathResolver),
         args);
   }
 
@@ -659,8 +664,13 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               @Override
               public StepExecutionResult execute(ExecutionContext context)
                   throws IOException, InterruptedException {
+                ImmutableSet.Builder<Path> builder = ImmutableSet.<Path>builder();
+                if (unbundledResourcesRoot.isPresent()) {
+                  builder.add(
+                      buildContext.getSourcePathResolver().getAbsolutePath(unbundledResourcesRoot.get()));
+                }
                 ImmutableSet<Path> classpathEntries =
-                    ImmutableSet.<Path>builder()
+                    builder
                         .addAll(
                             compiledTestsLibrary
                                 .getTransitiveClasspaths()

@@ -47,7 +47,7 @@ public class CxxLibraryBuilder
     super(
         new CxxLibraryDescription(
             cxxBuckConfig,
-            CxxPlatformUtils.build(cxxBuckConfig),
+            CxxPlatformUtils.build(cxxBuckConfig).getFlavor(),
             new InferBuckConfig(FakeBuckConfig.builder().build()),
             cxxPlatforms),
         target);

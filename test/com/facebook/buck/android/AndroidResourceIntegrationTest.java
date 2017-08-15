@@ -77,4 +77,21 @@ public class AndroidResourceIntegrationTest {
     workspace.runBuckBuild("//generated_res:res").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//generated_res:res");
   }
+
+  @Test
+  public void testAndroidResourceIndex() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    // Verify we correctly build the json file using a generated input resource directory.
+    String buildTarget =
+        "//generated_res:res#" + AndroidResourceDescription.ANDROID_RESOURCE_INDEX_FLAVOR;
+    workspace.runBuckBuild(buildTarget);
+    workspace.verify();
+
+    // Add a new item in the input and verify that the resource rule gets re-run.
+    Files.createDirectory(workspace.getPath("generated_res/input_res/raw"));
+    workspace.writeContentsToPath("", "generated_res/input_res/raw/empty.txt");
+    workspace.runBuckBuild(buildTarget).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(buildTarget);
+  }
 }

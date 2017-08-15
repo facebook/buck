@@ -107,7 +107,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+            HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     assertThat(input.getPackages().get(0).getInterfaces(), Matchers.contains(interfaces));
   }
 
@@ -124,7 +124,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+            HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     assertThat(input.getPackages().get(0).getPackageDb(), Matchers.equalTo(db));
   }
 
@@ -143,7 +143,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+            HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     assertThat(
         input.getPackages().get(0).getInfo(),
         Matchers.equalTo(HaskellPackageInfo.of("rule", "1.0.0", "id")));
@@ -191,11 +191,11 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibrary library = builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput staticInput =
         library.getCompileInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
+            HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     assertThat(staticInput.getFlags(), Matchers.contains(flag));
     HaskellCompileInput sharedInput =
         library.getCompileInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, false);
+            HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, false);
     assertThat(sharedInput.getFlags(), Matchers.contains(flag));
   }
 

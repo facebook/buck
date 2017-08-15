@@ -27,6 +27,7 @@ import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -36,6 +37,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -60,6 +63,7 @@ public class APKModuleGraph {
   private final BuildTarget target;
   private final Optional<Map<String, List<BuildTarget>>> suppliedSeedConfigMap;
   private final Optional<Set<BuildTarget>> seedTargets;
+  private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
 
   private final Supplier<ImmutableMap<BuildTarget, APKModule>> targetToModuleMapSupplier =
       Suppliers.memoize(
@@ -75,7 +79,7 @@ public class APKModuleGraph {
                   if (node.equals(rootAPKModuleSupplier.get())) {
                     return ImmutableSet.of();
                   }
-                  node.getBuildTargets().forEach(input -> mapBuilder.put(input, node));
+                  getBuildTargets(node).forEach(input -> mapBuilder.put(input, node));
                   return getGraph().getOutgoingNodesFor(node);
                 }
               }.start();
@@ -141,6 +145,15 @@ public class APKModuleGraph {
     this.target = target;
     this.seedTargets = seedTargets;
     this.suppliedSeedConfigMap = Optional.empty();
+  }
+
+  public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
+    return getAPKModules()
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableSortedMap(
+                module -> module,
+                module -> ImmutableSortedSet.copyOf(getGraph().getOutgoingNodesFor(module))));
   }
 
   private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {
@@ -281,7 +294,9 @@ public class APKModuleGraph {
         }
       }.start();
     }
-    return APKModule.builder().setName(ROOT_APKMODULE_NAME).setBuildTargets(rootTargets).build();
+    APKModule rootModule = APKModule.of(ROOT_APKMODULE_NAME);
+    buildTargetsMap.put(rootModule, ImmutableSet.copyOf(rootTargets));
+    return rootModule;
   }
 
   /**
@@ -330,16 +345,15 @@ public class APKModuleGraph {
       HashMultimap<BuildTarget, String> targetToContainingApkModulesMap) {
 
     // Sort the targets into APKModuleBuilders based on their seed dependencies
-    final Map<ImmutableSet<String>, APKModule.Builder> combinedModuleHashToModuleMap =
-        new HashMap<>();
+    final Map<ImmutableSet<String>, APKModule> combinedModuleHashToModuleMap = new HashMap<>();
     for (Map.Entry<BuildTarget, Collection<String>> entry :
         targetToContainingApkModulesMap.asMap().entrySet()) {
       ImmutableSet<String> containingModuleSet = ImmutableSet.copyOf(entry.getValue());
       boolean exists = false;
-      for (Map.Entry<ImmutableSet<String>, APKModule.Builder> existingEntry :
+      for (Map.Entry<ImmutableSet<String>, APKModule> existingEntry :
           combinedModuleHashToModuleMap.entrySet()) {
         if (existingEntry.getKey().equals(containingModuleSet)) {
-          existingEntry.getValue().addBuildTargets(entry.getKey());
+          getBuildTargets(existingEntry.getValue()).add(entry.getKey());
           exists = true;
           break;
         }
@@ -350,17 +364,18 @@ public class APKModuleGraph {
             containingModuleSet.size() == 1
                 ? containingModuleSet.iterator().next()
                 : generateNameFromTarget(entry.getKey());
-        combinedModuleHashToModuleMap.put(
-            containingModuleSet, APKModule.builder().setName(name).addBuildTargets(entry.getKey()));
+        APKModule module = APKModule.of(name);
+        combinedModuleHashToModuleMap.put(containingModuleSet, module);
+        getBuildTargets(module).add(entry.getKey());
       }
     }
 
     // Find the seed modules and add them to the graph
     Map<String, APKModule> seedModules = new HashMap<>();
-    for (Map.Entry<ImmutableSet<String>, APKModule.Builder> entry :
+    for (Map.Entry<ImmutableSet<String>, APKModule> entry :
         combinedModuleHashToModuleMap.entrySet()) {
       if (entry.getKey().size() == 1) {
-        APKModule seed = entry.getValue().build();
+        APKModule seed = entry.getValue();
         apkModuleGraph.addNode(seed);
         seedModules.put(entry.getKey().iterator().next(), seed);
         apkModuleGraph.addEdge(seed, rootAPKModuleSupplier.get());
@@ -368,10 +383,10 @@ public class APKModuleGraph {
     }
 
     // Find the shared modules and add them to the graph
-    for (Map.Entry<ImmutableSet<String>, APKModule.Builder> entry :
+    for (Map.Entry<ImmutableSet<String>, APKModule> entry :
         combinedModuleHashToModuleMap.entrySet()) {
       if (entry.getKey().size() > 1) {
-        APKModule shared = entry.getValue().build();
+        APKModule shared = entry.getValue();
         apkModuleGraph.addNode(shared);
         apkModuleGraph.addEdge(shared, rootAPKModuleSupplier.get());
         for (String seedName : entry.getKey()) {
@@ -382,8 +397,7 @@ public class APKModuleGraph {
   }
 
   private boolean isInRootModule(BuildTarget depTarget) {
-    ImmutableSet<BuildTarget> rootTargets = rootAPKModuleSupplier.get().getBuildTargets();
-    return rootTargets != null && rootTargets.contains(depTarget);
+    return getBuildTargets(rootAPKModuleSupplier.get()).contains(depTarget);
   }
 
   private boolean isSeedTarget(BuildTarget depTarget) {
@@ -452,5 +466,9 @@ public class APKModuleGraph {
       sharedSeedMapBuilder.removeAll(targetToRemove);
     }
     return ImmutableMultimap.copyOf(sharedSeedMapBuilder);
+  }
+
+  private Set<BuildTarget> getBuildTargets(APKModule module) {
+    return buildTargetsMap.computeIfAbsent(module, (m) -> new HashSet<>());
   }
 }

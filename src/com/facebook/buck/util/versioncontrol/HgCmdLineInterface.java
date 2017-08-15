@@ -91,6 +91,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> RAW_MANIFEST_COMMAND =
       ImmutableList.of(
           HG_CMD_TEMPLATE,
+          "--traceback",
           "--config",
           "extensions.rawmanifest=" + PATH_TO_RAWMANIFEST_PY,
           "rawmanifest",

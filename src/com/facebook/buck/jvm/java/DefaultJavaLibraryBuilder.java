@@ -46,6 +46,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
+  protected final BuildTarget libraryTarget;
   protected final BuildTarget initialBuildTarget;
   protected final ProjectFilesystem projectFilesystem;
   protected final BuildRuleParams initialParams;
@@ -64,6 +65,7 @@ public class DefaultJavaLibraryBuilder {
   protected boolean trackClassUsage = false;
   protected boolean compileAgainstAbis = false;
   protected Optional<Path> resourcesRoot = Optional.empty();
+  protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
   protected Optional<SourcePath> manifestFile = Optional.empty();
   protected Optional<String> mavenCoords = Optional.empty();
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
@@ -73,6 +75,7 @@ public class DefaultJavaLibraryBuilder {
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
+  @Nullable private CompileToJarStepFactory compileStepFactory;
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
@@ -82,6 +85,11 @@ public class DefaultJavaLibraryBuilder {
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig) {
+    libraryTarget =
+        HasJavaAbi.isLibraryTarget(initialBuildTarget)
+            ? initialBuildTarget
+            : HasJavaAbi.getLibraryTarget(initialBuildTarget);
+
     this.targetGraph = targetGraph;
     this.initialBuildTarget = initialBuildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -102,6 +110,11 @@ public class DefaultJavaLibraryBuilder {
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots) {
+    libraryTarget =
+        HasJavaAbi.isLibraryTarget(initialBuildTarget)
+            ? initialBuildTarget
+            : HasJavaAbi.getLibraryTarget(initialBuildTarget);
+
     this.targetGraph = targetGraph;
     this.initialBuildTarget = initialBuildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -119,6 +132,7 @@ public class DefaultJavaLibraryBuilder {
     return setSrcs(args.getSrcs())
         .setResources(args.getResources())
         .setResourcesRoot(args.getResourcesRoot())
+        .setUnbundledResourcesRoot(args.getUnbundledResourcesRoot())
         .setProguardConfig(args.getProguardConfig())
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
         .setExportedDeps(args.getExportedDeps())
@@ -193,6 +207,12 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
+  public DefaultJavaLibraryBuilder setUnbundledResourcesRoot(
+      Optional<SourcePath> unbundledResourcesRoot) {
+    this.unbundledResourcesRoot = unbundledResourcesRoot;
+    return this;
+  }
+
   public DefaultJavaLibraryBuilder setManifestFile(Optional<SourcePath> manifestFile) {
     this.manifestFile = manifestFile;
     return this;
@@ -211,6 +231,12 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setClassesToRemoveFromJar(
       RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     this.classesToRemoveFromJar = classesToRemoveFromJar;
+    return this;
+  }
+
+  public DefaultJavaLibraryBuilder setCompileStepFactory(
+      @Nullable CompileToJarStepFactory compileStepFactory) {
+    this.compileStepFactory = compileStepFactory;
     return this;
   }
 
@@ -233,39 +259,29 @@ public class DefaultJavaLibraryBuilder {
   }
 
   protected class BuilderHelper {
+    @Nullable private DefaultJavaLibrary libraryRule;
+    @Nullable private CalculateAbiFromSource sourceAbiRule;
     @Nullable private BuildRuleParams finalParams;
     @Nullable private ImmutableSortedSet<BuildRule> finalFullJarDeclaredDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
     @Nullable private ZipArchiveDependencySupplier abiClasspath;
-    @Nullable private CompileToJarStepFactory compileStepFactory;
     @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
     @Nullable private BuildTarget abiJar;
 
     protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
-      return new DefaultJavaLibrary(
-          initialBuildTarget,
-          projectFilesystem,
-          getFinalParams(),
-          sourcePathResolver,
-          getJarBuildStepsFactory(),
-          proguardConfig,
-          getFinalFullJarDeclaredDeps(),
-          fullJarExportedDeps,
-          fullJarProvidedDeps,
-          getAbiJar(),
-          mavenCoords,
-          tests);
+      return getLibraryRule(false);
     }
 
     protected BuildRule buildAbi() throws NoSuchBuildTargetException {
       if (HasJavaAbi.isClassAbiTarget(initialBuildTarget)) {
         return buildAbiFromClasses();
       } else if (HasJavaAbi.isSourceAbiTarget(initialBuildTarget)) {
-        return buildAbiFromSource();
+        CalculateAbiFromSource abiRule = getSourceAbiRule(false);
+        getLibraryRule(true);
+        return abiRule;
       } else if (HasJavaAbi.isVerifiedSourceAbiTarget(initialBuildTarget)) {
-        BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialBuildTarget);
         BuildRule classAbi =
             buildRuleResolver.requireRule(HasJavaAbi.getClassAbiJar(libraryTarget));
         BuildRule sourceAbi =
@@ -300,10 +316,10 @@ public class DefaultJavaLibraryBuilder {
               javaBuckConfig.getSourceAbiVerificationMode();
           abiJar =
               sourceAbiVerificationMode == JavaBuckConfig.SourceAbiVerificationMode.OFF
-                  ? HasJavaAbi.getSourceAbiJar(initialBuildTarget)
-                  : HasJavaAbi.getVerifiedSourceAbiJar(initialBuildTarget);
+                  ? HasJavaAbi.getSourceAbiJar(libraryTarget)
+                  : HasJavaAbi.getVerifiedSourceAbiJar(libraryTarget);
         } else {
-          abiJar = HasJavaAbi.getClassAbiJar(initialBuildTarget);
+          abiJar = HasJavaAbi.getClassAbiJar(libraryTarget);
         }
       }
 
@@ -312,6 +328,10 @@ public class DefaultJavaLibraryBuilder {
 
     private boolean willProduceOutputJar() {
       return !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent();
+    }
+
+    private boolean willProduceSourceAbi() {
+      return willProduceOutputJar() && shouldBuildAbiFromSource();
     }
 
     private boolean shouldBuildAbiFromSource() {
@@ -330,15 +350,62 @@ public class DefaultJavaLibraryBuilder {
       return javaBuckConfig != null && javaBuckConfig.shouldGenerateAbisFromSource();
     }
 
-    private BuildRule buildAbiFromSource() throws NoSuchBuildTargetException {
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialBuildTarget);
+    private DefaultJavaLibrary getLibraryRule(boolean addToIndex)
+        throws NoSuchBuildTargetException {
+      if (libraryRule == null) {
+        BuildRuleParams finalParams = getFinalParams();
+        CalculateAbiFromSource sourceAbiRule = null;
+        if (willProduceSourceAbi()) {
+          sourceAbiRule = getSourceAbiRule(true);
+          finalParams = finalParams.copyAppendingExtraDeps(sourceAbiRule);
+        }
+
+        libraryRule =
+            new DefaultJavaLibrary(
+                initialBuildTarget,
+                projectFilesystem,
+                finalParams,
+                sourcePathResolver,
+                getJarBuildStepsFactory(),
+                proguardConfig,
+                getFinalFullJarDeclaredDeps(),
+                fullJarExportedDeps,
+                fullJarProvidedDeps,
+                getAbiJar(),
+                mavenCoords,
+                tests);
+
+        if (sourceAbiRule != null) {
+          libraryRule.setSourceAbi(sourceAbiRule);
+        }
+
+        if (addToIndex) {
+          buildRuleResolver.addToIndex(libraryRule);
+        }
+      }
+
+      return libraryRule;
+    }
+
+    private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex)
+        throws NoSuchBuildTargetException {
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
-      return new CalculateAbiFromSource(
-          abiTarget, projectFilesystem, getFinalParams(), ruleFinder, getJarBuildStepsFactory());
+      if (sourceAbiRule == null) {
+        sourceAbiRule =
+            new CalculateAbiFromSource(
+                abiTarget,
+                projectFilesystem,
+                getFinalParams(),
+                ruleFinder,
+                getJarBuildStepsFactory());
+        if (addToIndex) {
+          buildRuleResolver.addToIndex(sourceAbiRule);
+        }
+      }
+      return sourceAbiRule;
     }
 
     private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
-      BuildTarget libraryTarget = HasJavaAbi.getLibraryTarget(initialBuildTarget);
       BuildTarget abiTarget = HasJavaAbi.getClassAbiJar(libraryTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
 

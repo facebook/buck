@@ -16,25 +16,33 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 /** Unit tests for {@link AppleInfoPlistParsing}. */
 public class AppleInfoPlistParsingTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
   @Test
   public void infoPlistParsingReturnsBundleID() throws IOException {
     Optional<String> bundleID;
     try (InputStream in =
         getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
       Preconditions.checkState(in != null);
-      bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
+      bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(Paths.get("Test"), in);
     }
 
     assertThat(bundleID, is(equalTo(Optional.of("com.example.DemoApp"))));
@@ -45,9 +53,18 @@ public class AppleInfoPlistParsingTest {
     Optional<String> bundleID;
     try (InputStream in = getClass().getResourceAsStream("testdata/ios-project/version.plist")) {
       Preconditions.checkState(in != null);
-      bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
+      bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(Paths.get("Test"), in);
     }
 
     assertThat(bundleID, is(equalTo(Optional.empty())));
+  }
+
+  @Test
+  public void testEmptyFileInfoPlist() throws IOException {
+    InputStream in = getClass().getResourceAsStream("testdata/broken_info_plist/Broken-Info.plist");
+    Preconditions.checkState(in != null);
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(containsString("Test: the content of the plist is invalid or empty."));
+    AppleInfoPlistParsing.getBundleIdFromPlistStream(Paths.get("Test"), in);
   }
 }

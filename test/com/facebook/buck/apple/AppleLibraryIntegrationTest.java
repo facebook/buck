@@ -53,6 +53,8 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryBuildsSomething() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
@@ -72,6 +74,8 @@ public class AppleLibraryIntegrationTest {
   public void testAppleLibraryWithDefaultsInConfigBuildsSomething()
       throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
@@ -97,6 +101,8 @@ public class AppleLibraryIntegrationTest {
   public void testAppleLibraryWithDefaultsInRuleBuildsSomething()
       throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_platform_and_type", tmp);
@@ -220,6 +226,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryHeaderSymlinkTree() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -556,6 +563,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryExportedHeaderSymlinkTree() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -583,6 +591,8 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testAppleLibraryIsHermetic() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_is_hermetic", tmp);
     workspace.setUp();
@@ -622,6 +632,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildEmptySourceAppleLibrary() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_source_targets", tmp);
@@ -643,6 +654,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildUsingPrefixHeaderFromCxxPrecompiledHeader() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "precompiled_header", tmp);
@@ -656,6 +668,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "multicell_precompiled_header", tmp);
@@ -669,6 +682,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildAppleLibraryThatHasSwift() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_source_targets", tmp);
@@ -694,6 +708,7 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildAppleLibraryUsingBridingHeaderAndSwiftDotH() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

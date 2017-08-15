@@ -71,9 +71,11 @@ public abstract class DistBuildFactory {
       DistBuildService service,
       DistBuildMode mode,
       int coordinatorPort,
+      String coordinatorAddress,
       Optional<StampedeId> stampedeId,
       Optional<Path> globalCacheDir,
-      FileMaterializationStatsTracker fileMaterializationStatsTracker)
+      FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      DistBuildConfig distBuildConfig)
       throws InterruptedException, IOException {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
@@ -101,10 +103,13 @@ public abstract class DistBuildFactory {
                         service, fileMaterializationStatsTracker, globalCacheDir))
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)
-                .setCoordinatorPort(coordinatorPort)
+                .setRemoteCoordinatorPort(coordinatorPort)
+                .setRemoteCoordinatorAddress(coordinatorAddress)
                 .setStampedeId(stampedeId.orElse(new StampedeId().setId("LOCAL_FILE")))
                 .setVersionedTargetGraphCache(params.getVersionedTargetGraphCache())
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
+                .setDistBuildService(service)
+                .setDistBuildConfig(distBuildConfig)
                 .build());
     return executor;
   }

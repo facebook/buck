@@ -105,8 +105,8 @@ public class ChromeTraceBuildListenerTest {
             .setSubCommand("no_sub_command")
             .setIsDaemon(false)
             .setSuperConsoleEnabled(false)
-            .setCommandArgs("no sub command")
-            .setUnexpandedCommandArgs("no sub command")
+            .setUnexpandedCommandArgs(ImmutableList.of("@mode/arglist", "--foo", "--bar"))
+            .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
             .build();
     durationTracker = new BuildRuleDurationTracker();
   }
@@ -295,7 +295,17 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "process_name",
         ChromeTraceEvent.Phase.METADATA,
-        ImmutableMap.of("name", "buck"));
+        ImmutableMap.<String, Object>builder()
+            .put("user_args", ImmutableList.of("@mode/arglist", "--foo", "--bar"))
+            .put("is_daemon", false)
+            .put("timestamp", invocationInfo.getTimestampMillis())
+            .build());
+
+    assertNextResult(
+        resultListCopy,
+        "ProjectFilesystemDelegate",
+        ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.of("class", "com.facebook.buck.io.DefaultProjectFilesystemDelegate"));
 
     assertNextResult(
         resultListCopy,
@@ -440,7 +450,7 @@ public class ChromeTraceBuildListenerTest {
       List<ChromeTraceEvent> resultList,
       String expectedName,
       ChromeTraceEvent.Phase expectedPhase,
-      ImmutableMap<String, String> expectedArgs) {
+      ImmutableMap<String, ? extends Object> expectedArgs) {
     assertTrue(resultList.size() > 0);
     assertEquals(expectedName, resultList.get(0).getName());
     assertEquals(expectedPhase, resultList.get(0).getPhase());

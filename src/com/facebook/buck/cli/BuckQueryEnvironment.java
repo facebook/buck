@@ -409,8 +409,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
         exceptionInput -> {
           if (exceptionInput instanceof BuildTargetException
               || exceptionInput instanceof BuildFileParseException) {
-            throw ParserMessages.createReadableExceptionWithWhenSuffix(
-                buildTarget, parseDep, exceptionInput);
+            if (exceptionInput instanceof BuildTargetException) {
+              throw ParserMessages.createReadableExceptionWithWhenSuffix(
+                  buildTarget, parseDep, (BuildTargetException) exceptionInput);
+            } else if (exceptionInput instanceof BuildFileParseException) {
+              throw ParserMessages.createReadableExceptionWithWhenSuffix(
+                  buildTarget, parseDep, (BuildFileParseException) exceptionInput);
+            } else {
+              Preconditions.checkState(false, "Unknown exception type");
+            }
           }
           throw exceptionInput;
         });

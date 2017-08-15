@@ -108,12 +108,12 @@ RULES_SRCS = [
     "AndroidResource.java",
     "AndroidResourceDescription.java",
     "AndroidResourceHelper.java",
+    "AndroidResourceIndex.java",
     "AndroidTransitiveDependencyGraph.java",
     "ApkGenrule.java",
     "ApkGenruleDescription.java",
     "AssembleDirectories.java",
     "BootClasspathAppender.java",
-    "ComputeExopackageDepsAbi.java",
     "CopyNativeLibraries.java",
     "DefaultAndroidLibraryCompilerFactory.java",
     "DexProducedFromJavaLibrary.java",
@@ -203,8 +203,8 @@ java_immutables_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:BuckPaths",
-        "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/jvm/core:classhash",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:javac-sink",
@@ -251,9 +251,9 @@ java_immutables_library(
         "//src/com/facebook/buck/zip:constants",
         "//src/com/facebook/buck/zip:steps",
         "//src/com/facebook/buck/zip:stream",
+        "//third-party/java/android:ddmlib",
         "//third-party/java/aosp:aosp",
         "//third-party/java/commons-compress:commons-compress",
-        "//third-party/java/ddmlib:ddmlib",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jsr:jsr305",
@@ -267,7 +267,7 @@ export_file(
 
 export_file(
     name = "ddmlib.jar",
-    src = "//third-party/java/ddmlib:ddmlib",
+    src = "//third-party/java/android:ddmlib",
 )
 
 export_file(
@@ -314,6 +314,9 @@ APKMODULE_SRCS = [
 java_immutables_library(
     name = "apkmodule",
     srcs = APKMODULE_SRCS,
+    exported_deps = [
+        "//src/com/facebook/buck/rules:build_rule",
+    ],
     tests = [
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
@@ -325,7 +328,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/util:util",
     ],
 )
 
@@ -372,7 +375,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/sha1:sha1",
-        "//third-party/java/ddmlib:ddmlib",
+        "//third-party/java/android:ddmlib",
     ],
 )
 
@@ -407,7 +410,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/xml:xml",
-        "//third-party/java/ddmlib:ddmlib",
+        "//third-party/java/android:ddmlib",
         "//third-party/java/guava:guava",
     ],
 )
@@ -442,9 +445,9 @@ java_immutables_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/io:MorePaths.java",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/log:api",

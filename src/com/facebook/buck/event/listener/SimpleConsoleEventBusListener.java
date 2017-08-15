@@ -58,7 +58,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       TestResultSummaryVerbosity summaryVerbosity,
       Locale locale,
       Path testLogPath,
-      String buildId,
       ExecutionEnvironment executionEnvironment) {
     super(console, clock, locale, executionEnvironment);
     this.locale = locale;
@@ -71,10 +70,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             summaryVerbosity,
             locale,
             Optional.of(testLogPath));
-
-    ImmutableList.Builder<String> buildMetaDataLines = ImmutableList.builder();
-    buildMetaDataLines.add("Build ID: " + buildId);
-    printLines(buildMetaDataLines);
   }
 
   @Override
@@ -93,6 +88,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             0L,
             buckFilesProcessing.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
+            Optional.empty(),
             lines));
     printLines(lines);
   }
@@ -119,6 +115,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         buildStarted,
         buildFinished,
         getApproximateBuildProgress(),
+        Optional.empty(),
         lines);
 
     String httpStatus = renderHttpUploads();
@@ -146,6 +143,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         0L,
         installStarted,
         installFinished,
+        Optional.empty(),
         Optional.empty(),
         lines);
     printLines(lines);

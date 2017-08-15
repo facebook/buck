@@ -90,6 +90,7 @@ public class BgProcessKiller {
 
   private BgProcessKiller() {}
 
+  @GuardedBy("BgProcessKiller.class")
   private static void checkArmedStatus() {
     if (armed) {
       BuckIsDyingException e =

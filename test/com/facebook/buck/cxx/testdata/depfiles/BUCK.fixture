@@ -1,4 +1,4 @@
-cxx_binary(
+cxx_library(
   name = 'test',
   headers = [
     'used.h',

@@ -65,3 +65,5 @@
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 90000
+[resources]
+    resource_aware_scheduling_enabled = true

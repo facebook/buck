@@ -28,6 +28,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
+import com.google.common.util.concurrent.Futures;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,7 +101,8 @@ public class ArtifactCacheHandler extends AbstractHandler {
       temp =
           projectFilesystem.createTempFile(
               projectFilesystem.getBuckPaths().getScratchDir(), "outgoing_rulekey", ".tmp");
-      CacheResult fetchResult = artifactCache.get().fetch(ruleKey, LazyPath.ofInstance(temp));
+      CacheResult fetchResult =
+          Futures.getUnchecked(artifactCache.get().fetchAsync(ruleKey, LazyPath.ofInstance(temp)));
       if (!fetchResult.getType().isSuccess()) {
         return HttpServletResponse.SC_NOT_FOUND;
       }

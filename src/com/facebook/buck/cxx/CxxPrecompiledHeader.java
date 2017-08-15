@@ -200,7 +200,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     try {
       return ImmutableList.<SourcePath>builder()
-          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines(context)))
+          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context)))
           .add(input)
           .build();
     } catch (Depfiles.HeaderVerificationException e) {
@@ -217,13 +217,13 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
     return getSuffixedOutput(pathResolver, ".dep");
   }
 
-  public ImmutableList<Path> readDepFileLines(BuildContext context)
+  private ImmutableList<Path> getDependencies(BuildContext context)
       throws IOException, Depfiles.HeaderVerificationException {
     try {
       return depFileCache.get(
           context,
           () ->
-              Depfiles.parseAndOutputBuckCompatibleDepfile(
+              Depfiles.parseAndVerifyDependencies(
                   context.getEventBus(),
                   getProjectFilesystem(),
                   preprocessorDelegate.getHeaderPathNormalizer(),
@@ -231,7 +231,8 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
                   getDepFilePath(context.getSourcePathResolver()),
                   // TODO(10194465): This uses relative path so as to get relative paths in the dep file
                   getRelativeInputPath(context.getSourcePathResolver()),
-                  output));
+                  output,
+                  compilerDelegate.getDependencyTrackingMode()));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);

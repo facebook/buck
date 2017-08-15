@@ -124,6 +124,7 @@ import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
@@ -143,6 +144,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.martiansoftware.nailgun.NGContext;
@@ -174,7 +176,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -182,6 +183,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -200,7 +202,6 @@ public final class Main {
    *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
-  @SuppressWarnings("unused")
   public static final int JNA_POINTER_SIZE = Pointer.SIZE;
 
   /** Trying again won't help. */
@@ -376,7 +377,7 @@ public final class Main {
               commandMode,
               watchmanFreshInstanceAction,
               initTimestamp,
-              args);
+              ImmutableList.copyOf(args));
     } catch (InterruptedException | ClosedByInterruptException e) {
       // We're about to exit, so it's acceptable to swallow interrupts here.
       exitCode = INTERRUPTED_EXIT_CODE;
@@ -435,10 +436,11 @@ public final class Main {
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       final long initTimestamp,
-      String... unexpandedCommandLineArgs)
+      ImmutableList<String> unexpandedCommandLineArgs)
       throws IOException, InterruptedException {
 
-    String[] args = BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
+    ImmutableList<String> args =
+        BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
 
     // Parse the command line args.
     BuckCommand command = new BuckCommand();
@@ -483,9 +485,7 @@ public final class Main {
                   .format(new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
         }
         String buildRev = System.getProperty("buck.git_commit", "(unknown)");
-        LOG.debug(
-            "Starting up (build date %s, rev %s), args: %s",
-            buildDateStr, buildRev, Arrays.toString(args));
+        LOG.debug("Starting up (build date %s, rev %s), args: %s", buildDateStr, buildRev, args);
         LOG.debug("System properties: %s", System.getProperties());
       }
     }
@@ -747,7 +747,6 @@ public final class Main {
             BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
-                    buildId.toString(),
                     clock,
                     new SuperConsoleConfig(buckConfig),
                     console,
@@ -819,6 +818,7 @@ public final class Main {
           eventListeners =
               addEventListeners(
                   buildEventBus,
+                  daemon.map(d -> d.getFileEventBus()),
                   rootCell.getFilesystem(),
                   invocationInfo,
                   rootCell.getBuckConfig(),
@@ -856,7 +856,8 @@ public final class Main {
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats());
-          if (command.subcommand instanceof AbstractCommand) {
+          if (command.subcommand instanceof AbstractCommand
+              && !(command.subcommand instanceof DistBuildCommand)) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
               vcStatsGenerator.generateStatsAsync(
@@ -866,11 +867,10 @@ public final class Main {
                   buildEventBus);
             }
           }
+          NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService, buildEventBus);
 
           ImmutableList<String> remainingArgs =
-              args.length > 1
-                  ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
-                  : ImmutableList.of();
+              args.isEmpty() ? ImmutableList.of() : args.subList(1, args.size());
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
@@ -958,8 +958,7 @@ public final class Main {
             processManager = Optional.of(new PkillProcessManager(processExecutor));
           }
           Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
-              new AndroidPlatformTargetSupplier(
-                  androidDirectoryResolver, androidBuckConfig, buildEventBus);
+              new AndroidPlatformTargetSupplier(androidDirectoryResolver, androidBuckConfig);
 
           // At this point, we have parsed options but haven't started
           // running the command yet.  This is a good opportunity to
@@ -1341,6 +1340,7 @@ public final class Main {
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEventBus,
+      Optional<EventBus> fileEventBus,
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       BuckConfig buckConfig,
@@ -1362,9 +1362,11 @@ public final class Main {
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
     if (chromeTraceConfig.isChromeTraceCreationEnabled()) {
       try {
-        eventListenersBuilder.add(
+        ChromeTraceBuildListener chromeTraceBuildListener =
             new ChromeTraceBuildListener(
-                projectFilesystem, invocationInfo, clock, chromeTraceConfig));
+                projectFilesystem, invocationInfo, clock, chromeTraceConfig);
+        eventListenersBuilder.add(chromeTraceBuildListener);
+        fileEventBus.ifPresent(bus -> bus.register(chromeTraceBuildListener));
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
       }
@@ -1436,7 +1438,6 @@ public final class Main {
   }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
-      String buildId,
       Clock clock,
       SuperConsoleConfig config,
       Console console,
@@ -1462,13 +1463,7 @@ public final class Main {
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(
-        console,
-        clock,
-        testResultSummaryVerbosity,
-        locale,
-        testLogPath,
-        buildId,
-        executionEnvironment);
+        console, clock, testResultSummaryVerbosity, locale, testLogPath, executionEnvironment);
   }
 
   private boolean isSuperConsoleEnabled(Console console) {
@@ -1497,10 +1492,9 @@ public final class Main {
       specifiedBuildId = System.getenv().get(BUCK_BUILD_ID_ENV_VAR);
     }
     if (specifiedBuildId == null) {
-      throw new RuntimeException("Missing build id value.");
-    } else {
-      return new BuildId(specifiedBuildId);
+      specifiedBuildId = UUID.randomUUID().toString();
     }
+    return new BuildId(specifiedBuildId);
   }
 
   private static void installUncaughtExceptionHandler(final Optional<NGContext> context) {
@@ -1549,16 +1543,14 @@ public final class Main {
       Libc.Constants.rFDCLOEXEC = Libc.Constants.LINUX_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.LINUX_F_GETFD;
       Libc.Constants.rFSETFD = Libc.Constants.LINUX_F_SETFD;
-      openPtyLibrary =
-          (Libc.OpenPtyLibrary) Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
+      openPtyLibrary = Native.loadLibrary("libutil", Libc.OpenPtyLibrary.class);
     } else if (platform == Platform.MACOS) {
       Libc.Constants.rTIOCSCTTY = Libc.Constants.DARWIN_TIOCSCTTY;
       Libc.Constants.rFDCLOEXEC = Libc.Constants.DARWIN_FD_CLOEXEC;
       Libc.Constants.rFGETFD = Libc.Constants.DARWIN_F_GETFD;
       Libc.Constants.rFSETFD = Libc.Constants.DARWIN_F_SETFD;
       openPtyLibrary =
-          (Libc.OpenPtyLibrary)
-              Native.loadLibrary(com.sun.jna.Platform.C_LIBRARY_NAME, Libc.OpenPtyLibrary.class);
+          Native.loadLibrary(com.sun.jna.Platform.C_LIBRARY_NAME, Libc.OpenPtyLibrary.class);
     } else {
       LOG.info("not enabling process killing on nailgun exit: unknown OS %s", osName);
       return;

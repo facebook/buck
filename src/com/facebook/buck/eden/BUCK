@@ -1,6 +1,10 @@
 java_library(
     name = "eden",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        # EdenProjectFilesystemDelegate constructor takes this as a param.
+        "//src/com/facebook/buck/config:config",
+    ],
     tests = [
         "//test/com/facebook/buck/eden:eden",
     ],

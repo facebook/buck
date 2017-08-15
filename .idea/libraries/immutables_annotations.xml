@@ -4,6 +4,8 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-2.4.6.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-2.4.6-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

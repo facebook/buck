@@ -61,6 +61,14 @@ class BuckPythonProgram implements AutoCloseable {
   private static final Path PATH_TO_TYPING =
       Paths.get(System.getProperty("buck.path_to_typing", "third-party/py/typing/python2"));
 
+  /**
+   * Path to the python path containing the buck parser python code.
+   *
+   * <p>If empty, look for it as a java Resource.
+   */
+  private static final String PATH_TO_PYTHON_DSL =
+      System.getProperty("buck.path_to_python_dsl", "python-dsl");
+
   private static final Logger LOG = Logger.get(BuckPythonProgram.class);
 
   private final Path rootDirectory;
@@ -76,35 +84,39 @@ class BuckPythonProgram implements AutoCloseable {
 
     Path pythonPath;
 
-    try {
-      URL url = Resources.getResource("buck_parser");
+    if (PATH_TO_PYTHON_DSL.isEmpty()) {
+      try {
+        URL url = Resources.getResource("buck_parser");
 
-      if ("jar".equals(url.getProtocol())) {
-        // Buck is being executed from a JAR file. Extract the jar file from the resource path, and
-        // verify it is correct.
-        // When python attempts to import `buck_parser`, it will see the jar file, and load it via
-        // zipimport, and look into the `buck_parser` directory in the root of the jar.
-        JarURLConnection connection = (JarURLConnection) url.openConnection();
-        Preconditions.checkState(
-            connection.getEntryName().equals("buck_parser"),
-            "buck_parser directory should be at the root of the jar file.");
-        URI jarFileURI = connection.getJarFileURL().toURI();
-        pythonPath = Paths.get(jarFileURI);
-      } else if ("file".equals(url.getProtocol())) {
-        // Buck is being executed from classpath on disk. Set the parent directory as the python
-        // path.
-        // When python attempts to import `buck_parser`, it will look for a `buck_parser` child
-        // directory in the given path.
-        pythonPath = Paths.get(url.toURI()).getParent();
-      } else {
+        if ("jar".equals(url.getProtocol())) {
+          // Buck is being executed from a JAR file. Extract the jar file from the resource path, and
+          // verify it is correct.
+          // When python attempts to import `buck_parser`, it will see the jar file, and load it via
+          // zipimport, and look into the `buck_parser` directory in the root of the jar.
+          JarURLConnection connection = (JarURLConnection) url.openConnection();
+          Preconditions.checkState(
+              connection.getEntryName().equals("buck_parser"),
+              "buck_parser directory should be at the root of the jar file.");
+          URI jarFileURI = connection.getJarFileURL().toURI();
+          pythonPath = Paths.get(jarFileURI);
+        } else if ("file".equals(url.getProtocol())) {
+          // Buck is being executed from classpath on disk. Set the parent directory as the python
+          // path.
+          // When python attempts to import `buck_parser`, it will look for a `buck_parser` child
+          // directory in the given path.
+          pythonPath = Paths.get(url.toURI()).getParent();
+        } else {
+          throw new IllegalStateException(
+              "buck_python resource directory should reside in a local directory or in a jar file. "
+                  + "Got: "
+                  + url);
+        }
+      } catch (URISyntaxException e) {
         throw new IllegalStateException(
-            "buck_python resource directory should reside in a local directory or in a jar file. "
-                + "Got: "
-                + url);
+            "Failed to determine location of buck_parser python package", e);
       }
-    } catch (URISyntaxException e) {
-      throw new IllegalStateException(
-          "Failed to determine location of buck_parser python package", e);
+    } else {
+      pythonPath = Paths.get(PATH_TO_PYTHON_DSL);
     }
 
     Path generatedRoot = Files.createTempDirectory("buck_python_program");

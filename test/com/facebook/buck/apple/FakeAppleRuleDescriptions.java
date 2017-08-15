@@ -222,12 +222,12 @@ public class FakeAppleRuleDescriptions {
       new AppleLibraryDescription(
           new CxxLibraryDescription(
               CxxPlatformUtils.DEFAULT_CONFIG,
-              DEFAULT_PLATFORM,
+              DEFAULT_PLATFORM.getFlavor(),
               new InferBuckConfig(DEFAULT_BUCK_CONFIG),
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM,
+          DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
@@ -238,7 +238,7 @@ public class FakeAppleRuleDescriptions {
           new CxxBinaryDescription(
               CxxPlatformUtils.DEFAULT_CONFIG,
               new InferBuckConfig(DEFAULT_BUCK_CONFIG),
-              DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform(),
+              DEFAULT_IPHONEOS_I386_PLATFORM.getFlavor(),
               DEFAULT_APPLE_FLAVOR_DOMAIN),
           SWIFT_LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
@@ -253,7 +253,7 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM,
+          DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
@@ -265,7 +265,7 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION,
           DEFAULT_APPLE_FLAVOR_DOMAIN,
           DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN,
-          DEFAULT_PLATFORM,
+          DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           Suppliers.ofInstance(Optional.empty()),

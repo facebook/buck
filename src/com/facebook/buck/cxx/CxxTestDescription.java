@@ -69,17 +69,17 @@ public class CxxTestDescription
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public CxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
   }
@@ -127,7 +127,7 @@ public class CxxTestDescription
     }
 
     // Otherwise, fallback to the description-level default platform.
-    return defaultCxxPlatform;
+    return cxxPlatforms.getValue(defaultCxxFlavor);
   }
 
   @Override
@@ -161,7 +161,6 @@ public class CxxTestDescription
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-              targetGraph,
               buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
               resolver,
@@ -193,7 +192,6 @@ public class CxxTestDescription
     // Generate the link rule that builds the test binary.
     final CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            targetGraph,
             buildTarget,
             projectFilesystem,
             resolver,

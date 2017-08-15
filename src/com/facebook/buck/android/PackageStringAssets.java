@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -36,7 +35,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 
 /**
@@ -51,8 +49,6 @@ import java.nio.file.Path;
  * all_locales_string_assets.zip is used for debugging purposes.
  */
 public class PackageStringAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-
-  private static final String STRING_ASSETS_ZIP_HASH = "STRING_ASSETS_ZIP_HASH";
   @VisibleForTesting static final String STRING_ASSET_FILE_EXTENSION = ".fbstr";
   public static final String STRING_ASSETS_DIR_FORMAT = "__strings_%s__";
 
@@ -78,9 +74,6 @@ public class PackageStringAssets extends AbstractBuildRuleWithDeclaredAndExtraDe
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     if (filteredResourcesProvider.getResDirectories().isEmpty()) {
-      // There is no zip file, but we still need to provide a consistent hash to
-      // ComputeExopackageDepsAbi in this case.
-      buildableContext.addMetadata(STRING_ASSETS_ZIP_HASH, Hashing.sha1().hashInt(0).toString());
       return ImmutableList.of();
     }
 
@@ -133,12 +126,6 @@ public class PackageStringAssets extends AbstractBuildRuleWithDeclaredAndExtraDe
             false,
             ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));
-    steps.add(
-        new RecordFileSha1Step(
-            getProjectFilesystem(),
-            pathToStringAssetsZip,
-            STRING_ASSETS_ZIP_HASH,
-            buildableContext));
 
     buildableContext.recordArtifact(pathToAllLocalesStringAssetsZip);
     buildableContext.recordArtifact(pathToStringAssetsZip);

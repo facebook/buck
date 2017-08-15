@@ -27,17 +27,23 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.SupportsPipelining;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import javax.annotation.Nullable;
 
 public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
+    implements CalculateAbi,
+        InitializableFromDisk<Object>,
+        SupportsInputBasedRuleKey,
+        SupportsPipelining<JavacPipelineState> {
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   private final JarContentsSupplier outputJarContents;
@@ -82,5 +88,28 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
     return new BuildOutputInitializer<>(getBuildTarget(), this);
+  }
+
+  @Override
+  public boolean useRulePipelining() {
+    return true;
+  }
+
+  @Nullable
+  @Override
+  public SupportsPipelining<JavacPipelineState> getPreviousRuleInPipeline() {
+    return null;
+  }
+
+  @Override
+  public ImmutableList<? extends Step> getPipelinedBuildSteps(
+      BuildContext context, BuildableContext buildableContext, JavacPipelineState state) {
+    // TODO: Save javac for later rules in pipeline
+    return getBuildSteps(context, buildableContext);
+  }
+
+  @Override
+  public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
+    return jarBuildStepsFactory;
   }
 }

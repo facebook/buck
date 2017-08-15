@@ -120,7 +120,7 @@ public class JarDumper {
   private Stream<String> dumpBinaryFile(String name, InputStream inputStream) throws IOException {
     try (HashingInputStream is = new HashingInputStream(Hashing.murmur3_128(), inputStream)) {
       ByteStreams.exhaust(is);
-      return Stream.of(String.format("Murmur3-128: %s", name, is.hash().toString()));
+      return Stream.of(String.format("Murmur3-128 of %s: %s", name, is.hash().toString()));
     }
   }
 }

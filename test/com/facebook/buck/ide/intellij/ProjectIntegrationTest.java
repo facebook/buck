@@ -124,6 +124,10 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("project_with_java_resources");
   }
 
+  public void testVersion2BuckProjectWithExtraOutputModules() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_extra_output_modules");
+  }
+
   @Test
   public void testVersion2BuckProjectWithGeneratedSources()
       throws InterruptedException, IOException {
@@ -278,6 +282,11 @@ public class ProjectIntegrationTest {
     ProcessResult result = runBuckProjectAndVerify("preprocess_script_test");
 
     assertEquals("intellij", result.getStdout().trim());
+  }
+
+  @Test
+  public void testScalaProject() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("scala_project");
   }
 
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)

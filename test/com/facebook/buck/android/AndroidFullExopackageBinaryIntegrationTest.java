@@ -164,7 +164,7 @@ public class AndroidFullExopackageBinaryIntegrationTest {
   @Test
   public void testEditingPrimaryDexClassForcesRebuild() throws IOException {
     workspace.replaceFileContents(
-        "java/com/sample/app/MyApplication.java", "package com", "package\ncom");
+        "java/com/sample/app/MyApplication.java", "MyReplaceableName", "MyNewReplaceableName");
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(RESOURCES_EXOPACKAGE_TARGET);

@@ -48,6 +48,7 @@ EXPORTED_RESOURCES = [
     Resource("testrunner_classes"),
     Resource("path_to_asm_jar"),
     Resource("logging_config_file"),
+    Resource("path_to_python_dsl"),
     Resource("path_to_rawmanifest_py", basename='rawmanifest.py'),
     Resource("path_to_pathlib_py", basename='pathlib.py'),
     Resource("path_to_intellij_py"),
@@ -527,7 +528,7 @@ class BuckTool(object):
                     self._get_resource(
                         Resource("libjcocoa.dylib"))))
 
-            if os.environ.get("BUCK_DEBUG_MODE"):
+            if "BUCK_DEBUG_MODE" in os.environ and os.environ.get("BUCK_DEBUG_MODE") != "0":
                 java_args.append("-agentlib:jdwp=transport=dt_socket,"
                                  "server=y,suspend=y,address=8888")
 

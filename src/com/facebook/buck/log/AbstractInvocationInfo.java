@@ -23,23 +23,31 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 @JsonDeserialize(as = InvocationInfo.class)
 abstract class AbstractInvocationInfo {
-  static final SimpleDateFormat DIR_DATE_FORMAT;
-  static final String DIR_NAME_REGEX = ".+_.+_.+";
+  private static final ThreadLocal<SimpleDateFormat> DIR_DATE_FORMAT =
+      new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+          SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
+          simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+          return simpleDateFormat;
+        }
+      };
+
   private static final String DIR_NAME_TEMPLATE = "%s_%s_%s";
 
-  static {
-    DIR_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
-    DIR_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-  }
+  /** Pattern that must be able to match strings generated from the {@link #DIR_NAME_TEMPLATE}. */
+  private static final Pattern DIR_PATTERN = Pattern.compile(".+_.+_.+");
 
   // TODO(#13704826): we should switch over to a machine-readable log format.
   private static final String LOG_MSG_TEMPLATE = "InvocationInfo BuildId=[%s] Args=[%s]";
@@ -62,11 +70,11 @@ abstract class AbstractInvocationInfo {
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
-  public abstract String[] getCommandArgs();
+  public abstract ImmutableList<String> getCommandArgs();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
-  public abstract String[] getUnexpandedCommandArgs();
+  public abstract ImmutableList<String> getUnexpandedCommandArgs();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -89,7 +97,7 @@ abstract class AbstractInvocationInfo {
   }
 
   public Path getLogDirectoryPath() {
-    return getBuckLogDir().resolve(getLogDirectoryName() + "/");
+    return getBuckLogDir().resolve(getLogDirectoryName());
   }
 
   Path getLogFilePath() {
@@ -99,9 +107,13 @@ abstract class AbstractInvocationInfo {
   private String getLogDirectoryName() {
     return String.format(
         DIR_NAME_TEMPLATE,
-        DIR_DATE_FORMAT.format(getTimestampMillis()),
+        DIR_DATE_FORMAT.get().format(getTimestampMillis()),
         getSubCommand(),
         getBuildId());
+  }
+
+  static boolean isLogDirectory(Path directory) {
+    return DIR_PATTERN.matcher(directory.getFileName().toString()).matches();
   }
 
   @Override

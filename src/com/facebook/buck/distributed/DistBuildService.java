@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.CASContainsRequest;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
+import com.facebook.buck.distributed.thrift.EnqueueMinionsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
@@ -55,6 +56,7 @@ import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
+import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
@@ -674,6 +676,38 @@ public class DistBuildService implements Closeable {
   @Override
   public void close() throws IOException {
     service.close();
+  }
+
+  public void setCoordinator(StampedeId stampedeId, int coordinatorPort, String coordinatorAddress)
+      throws IOException {
+    SetCoordinatorRequest request =
+        new SetCoordinatorRequest()
+            .setCoordinatorHostname(coordinatorAddress)
+            .setCoordinatorPort(coordinatorPort)
+            .setStampedeId(stampedeId);
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.SET_COORDINATOR);
+    frontendRequest.setSetCoordinatorRequest(request);
+
+    FrontendResponse response = makeRequestChecked(frontendRequest);
+    Preconditions.checkState(response.isSetSetCoordinatorResponse());
+  }
+
+  public void enqueueMinions(StampedeId stampedeId, int numberOfMinions, String minionQueueName)
+      throws IOException {
+    EnqueueMinionsRequest request =
+        new EnqueueMinionsRequest()
+            .setMinionQueue(minionQueueName)
+            .setNumberOfMinions(numberOfMinions)
+            .setStampedeId(stampedeId);
+
+    FrontendRequest frontendRequest = new FrontendRequest();
+    frontendRequest.setType(FrontendRequestType.ENQUEUE_MINIONS);
+    frontendRequest.setEnqueueMinionsRequest(request);
+
+    FrontendResponse response = makeRequestChecked(frontendRequest);
+    Preconditions.checkState(response.isSetEnqueueMinionsResponse());
   }
 
   private FrontendResponse makeRequestChecked(FrontendRequest request) throws IOException {

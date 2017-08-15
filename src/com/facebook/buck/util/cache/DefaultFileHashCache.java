@@ -70,15 +70,49 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
             throw new RuntimeException(e);
           }
         };
+
+    final FileHashCacheEngine.ValueLoader<HashCode> fileHashLoader =
+        (path) -> {
+          try {
+            return getFileHashCode(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        };
+
+    final FileHashCacheEngine.ValueLoader<HashCodeAndFileType> dirHashLoader =
+        (path) -> {
+          try {
+            return getDirHashCode(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        };
     switch (fileHashCacheMode) {
       case PARALLEL_COMPARISON:
         fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader);
         break;
       case LOADING_CACHE:
-        fileHashCacheEngine = new LoadingCacheFileHashCache(hashLoader, sizeLoader);
+        fileHashCacheEngine = LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader);
         break;
       case PREFIX_TREE:
-        fileHashCacheEngine = new FileSystemMapFileHashCache(hashLoader, sizeLoader);
+        fileHashCacheEngine = FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader);
+        break;
+      case LIMITED_PREFIX_TREE:
+        fileHashCacheEngine =
+            new StatsTrackingFileHashCacheEngine(
+                new LimitedFileHashCacheEngine(
+                    projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                "limited");
+        break;
+      case LIMITED_PREFIX_TREE_PARALLEL:
+        fileHashCacheEngine =
+            new ComboFileHashCache(
+                LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader),
+                new StatsTrackingFileHashCacheEngine(
+                    new LimitedFileHashCacheEngine(
+                        projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                    "limited"));
         break;
       default:
         throw new RuntimeException(
@@ -137,8 +171,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  // TODO(rvitale): restrict visibility of this method after the file hash cache experiment is over.
-  HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
+  private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {

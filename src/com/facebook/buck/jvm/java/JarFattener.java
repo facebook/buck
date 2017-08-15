@@ -73,7 +73,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
   @AddToRuleKey private final ImmutableMap<String, SourcePath> nativeLibraries;
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
+  // rule key.
+  private final Tool javaRuntimeLauncher;
   private final Path output;
 
   public JarFattener(
@@ -84,7 +86,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
-      JavaRuntimeLauncher javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher) {
     super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
@@ -205,10 +207,12 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            output,
-            ImmutableSortedSet.of(zipped),
-            /* mainClass */ FatJarMain.class.getName(),
-            /* manifestFile */ null));
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(zipped))
+                .setMainClass(Optional.of(FatJarMain.class.getName()))
+                .setMergeManifests(true)
+                .build()));
 
     buildableContext.recordArtifact(output);
 
@@ -257,8 +261,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(javaRuntimeLauncher.getCommand())
+    return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();

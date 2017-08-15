@@ -79,7 +79,6 @@ public class DepsFunction implements QueryFunction {
   }
 
   private void forEachDep(
-      QueryEvaluator evaluator,
       QueryEnvironment env,
       QueryExpression depsExpression,
       Iterable<QueryTarget> targets,
@@ -87,8 +86,8 @@ public class DepsFunction implements QueryFunction {
       throws QueryException {
     for (QueryTarget target : targets) {
       Set<QueryTarget> deps =
-          evaluator.eval(
-              depsExpression,
+          depsExpression.eval(
+              new NoopQueryEvaluator(),
               new TargetVariablesQueryEnvironment(
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
@@ -130,7 +129,7 @@ public class DepsFunction implements QueryFunction {
             }
           };
       if (deps.isPresent()) {
-        forEachDep(evaluator, env, deps.get(), current, consumer);
+        forEachDep(env, deps.get(), current, consumer);
       } else {
         env.forEachFwdDep(current, consumer);
       }

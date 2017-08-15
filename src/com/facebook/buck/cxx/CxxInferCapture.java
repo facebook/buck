@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.platform.DependencyTrackingMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -156,17 +157,18 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
 
-    ImmutableList<Path> depFileLines;
+    ImmutableList<Path> dependencies;
     try {
-      depFileLines =
-          Depfiles.parseAndOutputBuckCompatibleDepfile(
+      dependencies =
+          Depfiles.parseAndVerifyDependencies(
               context.getEventBus(),
               getProjectFilesystem(),
               preprocessorDelegate.getHeaderPathNormalizer(),
               preprocessorDelegate.getHeaderVerification(),
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
-              output);
+              output,
+              DependencyTrackingMode.MAKEFILE);
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }
@@ -174,7 +176,7 @@ public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<SourcePath> inputs = ImmutableList.builder();
 
     // include all inputs coming from the preprocessor tool.
-    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(depFileLines));
+    inputs.addAll(preprocessorDelegate.getInputsAfterBuildingLocally(dependencies));
 
     // Add the input.
     inputs.add(input);

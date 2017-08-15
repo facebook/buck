@@ -46,6 +46,11 @@ public class IdentityResourcesProvider implements FilteredResourcesProvider {
   }
 
   @Override
+  public Optional<SourcePath> getOverrideSymbolsPath() {
+    return Optional.empty();
+  }
+
+  @Override
   public boolean hasResources() {
     return !resDirectories.isEmpty();
   }

@@ -97,7 +97,9 @@ public class DistBuildPostBuildAnalysis {
 
   private Map<String, BuildRuleMachineLogEntry> extractBuildRulesFromFile(Path machineLogFile)
       throws IOException {
-    return extractBuildRules(Files.lines(machineLogFile));
+    try (Stream<String> logFiles = Files.lines(machineLogFile)) {
+      return extractBuildRules(logFiles);
+    }
   }
 
   @VisibleForTesting

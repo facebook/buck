@@ -195,4 +195,9 @@ public class AppleLibraryBuilder
     getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
     return this;
   }
+
+  public AppleLibraryBuilder setSwiftVersion(Optional<String> swiftVersion) {
+    getArgForPopulating().setSwiftVersion(swiftVersion);
+    return this;
+  }
 }

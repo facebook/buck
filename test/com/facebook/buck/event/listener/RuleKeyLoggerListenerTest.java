@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
@@ -62,8 +63,8 @@ public class RuleKeyLoggerListenerTest {
             false,
             false,
             "topspin",
-            new String[0],
-            new String[0],
+            ImmutableList.of(),
+            ImmutableList.of(),
             tempDirectory.getRoot().toPath());
     durationTracker = new BuildRuleDurationTracker();
   }

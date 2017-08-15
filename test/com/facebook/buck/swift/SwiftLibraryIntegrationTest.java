@@ -16,8 +16,12 @@
 
 package com.facebook.buck.swift;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
@@ -47,7 +51,9 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -190,6 +196,37 @@ public class SwiftLibraryIntegrationTest {
     assertThat(linkRule.getArgs(), Matchers.hasItem(objArg));
     assertThat(
         linkRule.getArgs(), Matchers.not(Matchers.hasItem(SourcePathArg.of(fileListSourcePath))));
+  }
+
+  @Test
+  public void testBridgingHeaderTracking() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "bridging_header_tracking", tmpDir);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "untracked_headers", "error");
+
+    BuildTarget target = workspace.newBuildTarget("//:BigLib#iphonesimulator-x86_64,static");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testBridgingHeaderTrackingTransitive() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "bridging_header_tracking", tmpDir);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "untracked_headers", "error");
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:BigLibTransitive#iphonesimulator-x86_64,static");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {

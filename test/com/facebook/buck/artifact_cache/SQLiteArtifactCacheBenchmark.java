@@ -27,6 +27,7 @@ import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
 import com.google.caliper.Param;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -166,7 +167,7 @@ public class SQLiteArtifactCacheBenchmark {
   @Benchmark
   private void benchMetadataFetch() {
     for (RuleKey key : ruleKeys) {
-      artifactCache.fetch(key, output);
+      Futures.getUnchecked(artifactCache.fetchAsync(key, output));
     }
   }
 
@@ -184,7 +185,7 @@ public class SQLiteArtifactCacheBenchmark {
   @Benchmark
   private void benchArtifactFetch() {
     for (RuleKey key : ruleKeys) {
-      artifactCache.fetch(key, output);
+      Futures.getUnchecked(artifactCache.fetchAsync(key, output));
     }
   }
 }

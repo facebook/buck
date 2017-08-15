@@ -132,7 +132,7 @@ java_test(
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
         "//third-party/java/dd-plist:dd-plist",
-        "//third-party/java/ddmlib:ddmlib",
+        "//third-party/java/android:ddmlib",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/immutables:immutables",

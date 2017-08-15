@@ -43,14 +43,18 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
 public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasClasspathEntries {
 
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
+  // rule key.
+  private final Tool javaRuntimeLauncher;
 
   @AddToRuleKey @Nullable private final String mainClass;
 
@@ -74,7 +78,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
@@ -145,14 +149,18 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Step jar =
         new JarDirectoryStep(
             getProjectFilesystem(),
-            outputFile,
-            includePaths,
-            mainClass,
-            manifestPath,
-            mergeManifests,
-            entry ->
-                blacklistPatternsMatcher.hasPatterns()
-                    && blacklistPatternsMatcher.substringMatches(entry.getName()));
+            JarParameters.builder()
+                .setJarPath(outputFile)
+                .setEntriesToJar(includePaths)
+                .setMainClass(Optional.ofNullable(mainClass))
+                .setManifestFile(Optional.ofNullable(manifestPath))
+                .setMergeManifests(mergeManifests)
+                .setRemoveEntryPredicate(
+                    entry ->
+                        blacklistPatternsMatcher.hasPatterns()
+                            && blacklistPatternsMatcher.substringMatches(
+                                ((ZipEntry) entry).getName()))
+                .build());
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
@@ -201,8 +209,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         "Must specify a main class for %s in order to to run it.",
         getBuildTarget());
 
-    return new CommandTool.Builder()
-        .addArg(javaRuntimeLauncher.getCommand())
+    return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();

@@ -98,7 +98,14 @@ public class CalculateAbiFromSourceIntegrationTest {
   @Test
   public void testErrorsReportedGracefully() throws IOException {
     ProjectWorkspace.ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
-    buildResult.assertFailure("cannot find symbol");
+    buildResult.assertFailure();
+    assertThat(
+        buildResult.getStderr(),
+        Matchers.stringContainsInOrder(
+            "cannot find symbol",
+            "Nonexistent<Integer>",
+            "cannot find symbol",
+            "List<Nonexistent"));
   }
 
   @Test
@@ -106,7 +113,8 @@ public class CalculateAbiFromSourceIntegrationTest {
     BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main-stripped");
     ProjectWorkspace.ProcessResult buildResult =
         workspace.runBuckBuild(mainTarget.getFullyQualifiedName());
-    buildResult.assertFailure("cannot find symbol");
+    buildResult.assertFailure();
+    assertThat(buildResult.getStderr(), Matchers.stringContainsInOrder("cannot find symbol"));
 
     // Make sure we built the source ABI
     BuildTarget abiTarget = BuildTargetFactory.newInstance("//:lib-stripped#source-abi");

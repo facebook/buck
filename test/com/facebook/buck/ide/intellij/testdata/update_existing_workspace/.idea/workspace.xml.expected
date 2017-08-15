@@ -13,9 +13,7 @@
         <option name="HIGHLIGHT_CONFLICTS" value="true"/>
         <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false"/>
         <option name="LAST_RESOLUTION" value="IGNORE"/>
-    <ignored path="$PROJECT_DIR$/buck-out/"/>
-    <ignored path="$PROJECT_DIR$/modules/dep1/res/values-en/"/>
-  </component>
+    </component>
     <component name="CreatePatchCommitExecutor">
         <option name="PATCH_PATH" value=""/>
     </component>

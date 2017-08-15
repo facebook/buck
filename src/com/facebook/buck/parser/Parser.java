@@ -285,7 +285,11 @@ public class Parser {
           for (BuildTarget dep : node.getParseDeps()) {
             try {
               state.getTargetNode(dep);
-            } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
+            } catch (BuildFileParseException e) {
+              throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
+            } catch (BuildTargetException e) {
+              throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
+            } catch (HumanReadableException e) {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             }
           }

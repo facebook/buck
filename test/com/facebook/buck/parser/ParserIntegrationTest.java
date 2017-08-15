@@ -113,9 +113,18 @@ public class ParserIntegrationTest {
           is(
               in(
                   ImmutableSet.of(
-                      "Cycle found: //:C -> //:E -> //:F -> //:C",
-                      "Cycle found: //:E -> //:F -> //:C -> //:E",
-                      "Cycle found: //:F -> //:C -> //:E -> //:F"))));
+                      "Buck can't handle circular dependencies.\n"
+                          + "The following circular dependency has been found:\n"
+                          + "//:C -> //:E -> //:F -> //:C\n\n"
+                          + "Please break the circular dependency and try again.",
+                      "Buck can't handle circular dependencies.\n"
+                          + "The following circular dependency has been found:\n"
+                          + "//:E -> //:F -> //:C -> //:E\n\n"
+                          + "Please break the circular dependency and try again.",
+                      "Buck can't handle circular dependencies.\n"
+                          + "The following circular dependency has been found:\n"
+                          + "//:F -> //:C -> //:E -> //:F\n\n"
+                          + "Please break the circular dependency and try again."))));
       return;
     }
     fail("An exception should have been thrown because of a circular dependency.");

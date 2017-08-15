@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.autosparse;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -48,6 +49,8 @@ import javax.annotation.Nullable;
  * passed in.
  */
 public class MmappedHgManifest {
+  private static final Logger LOG = Logger.get(AutoSparseState.class);
+
   private static final short HASH_LENGTH = 40;
   private static final long MAX_FILE_SIZE = 2147483647; // 2GB, or 2 ** 31 - 1
 
@@ -75,7 +78,11 @@ public class MmappedHgManifest {
 
     try (FileChannel fileChannel = FileChannel.open(rawManifestPath); ) {
       long longSize = fileChannel.size();
+
       if (longSize > MAX_FILE_SIZE) {
+        // MappedByteBuffer can only handle int positions, so we can only address 2GB with a single
+        // mmap. Reaching larger manifest sizes would require using multiple mmap objects and
+        // added complexity.
         throw new IOException("Unable to load a manifest > 2GB");
       }
       mmap = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, longSize);
@@ -95,6 +102,9 @@ public class MmappedHgManifest {
       }
 
       chunkIndex = indexBuilder.build();
+      LOG.info(
+          "Manifest mmap loaded, %d chunks, %d deleted paths, %d size",
+          chunkIndex.size(), deletedPaths.size(), size);
     }
   }
 
@@ -172,7 +182,7 @@ public class MmappedHgManifest {
 
     String dirname = pathname.endsWith("/") ? pathname : pathname.concat("/");
     // narrow down start and end to a chunk based on cached indices; defaulting to 0 and lastIndex
-    ChunkIndexEntry testEntry = new ChunkIndexEntry(pathname, -1);
+    ChunkIndexEntry testEntry = new ChunkIndexEntry(dirname, -1);
     int start = Optional.ofNullable(chunkIndex.floor(testEntry)).map(f -> f.getIndex()).orElse(0);
     int end =
         Optional.ofNullable(chunkIndex.higher(testEntry)).map(h -> h.getIndex()).orElse(lastIndex);
@@ -200,8 +210,7 @@ public class MmappedHgManifest {
           end = entryStart;
         }
       } else {
-        int cmp = entryName.compareTo(pathname);
-        if (cmp == 0) { // equal
+        if (entryName.equals(pathname)) {
           // edge-case, not a directory but a single entry
           String flag = "";
           byte flagByte = mmap.get(entryEnd + 1 + HASH_LENGTH);
@@ -210,7 +219,7 @@ public class MmappedHgManifest {
           }
           // Can't be deleted, as we tested for that case right at the start of this function
           return Stream.of(new ManifestEntry(entryName, flag));
-        } else if (cmp > 0) {
+        } else if (entryName.compareTo(dirname) > 0) {
           end = entryStart;
         } else {
           // add hash and delimiter length, then account for an optional flag

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout>
+    <Button android:id="@+string/button1"
+            android:layout_toLeftOf="@id/button2"
+            android:text="@string/text" />
+</LinearLayout>

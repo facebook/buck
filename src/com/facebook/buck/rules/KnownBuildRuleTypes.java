@@ -24,6 +24,7 @@ import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidInstrumentationTestDescription;
+import com.facebook.buck.android.AndroidLibraryCompilerFactory;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
@@ -93,6 +94,7 @@ import com.facebook.buck.haskell.HaskellBinaryDescription;
 import com.facebook.buck.haskell.HaskellBuckConfig;
 import com.facebook.buck.haskell.HaskellGhciDescription;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
+import com.facebook.buck.haskell.HaskellPlatform;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -231,17 +233,34 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver)
+      AndroidDirectoryResolver androidDirectoryResolver,
+      SdkEnvironment sdkEnvironment)
       throws InterruptedException, IOException {
-    return createBuilder(config, filesystem, processExecutor, androidDirectoryResolver).build();
+    return createBuilder(
+            config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment)
+        .build();
   }
 
   @VisibleForTesting
-  static Builder createBuilder(
+  static KnownBuildRuleTypes createInstance(
       BuckConfig config,
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver)
+      throws InterruptedException, IOException {
+    KnownBuildRuleTypesFactory factory =
+        new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver);
+    SdkEnvironment sdkEnvironment = factory.createSdkEnvironment(config);
+    return createInstance(
+        config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
+  }
+
+  static Builder createBuilder(
+      BuckConfig config,
+      ProjectFilesystem filesystem,
+      ProcessExecutor processExecutor,
+      AndroidDirectoryResolver androidDirectoryResolver,
+      SdkEnvironment sdkEnvironment)
       throws InterruptedException, IOException {
 
     Platform platform = Platform.detect();
@@ -249,11 +268,16 @@ public class KnownBuildRuleTypes {
     AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
+    ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
+        AppleCxxPlatforms.buildAppleCxxPlatforms(
+            sdkEnvironment.getAppleSdkPaths(),
+            sdkEnvironment.getAppleToolchains(),
+            filesystem,
+            config,
+            swiftBuckConfig);
+    checkApplePlaforms(appleCxxPlatforms);
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        FlavorDomain.from(
-            "Apple C++ Platform",
-            AppleCxxPlatforms.buildAppleCxxPlatforms(
-                filesystem, config, swiftBuckConfig, processExecutor));
+        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
 
     ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
     for (Flavor flavor : platformFlavorsToAppleCxxPlatforms.getFlavors()) {
@@ -424,10 +448,12 @@ public class KnownBuildRuleTypes {
     LuaConfig luaConfig = new LuaBuckConfig(config, executableFinder);
 
     CxxBinaryDescription cxxBinaryDescription =
-        new CxxBinaryDescription(cxxBuckConfig, inferBuckConfig, defaultCxxPlatform, cxxPlatforms);
+        new CxxBinaryDescription(
+            cxxBuckConfig, inferBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms);
 
     CxxLibraryDescription cxxLibraryDescription =
-        new CxxLibraryDescription(cxxBuckConfig, defaultCxxPlatform, inferBuckConfig, cxxPlatforms);
+        new CxxLibraryDescription(
+            cxxBuckConfig, defaultCxxPlatform.getFlavor(), inferBuckConfig, cxxPlatforms);
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
@@ -449,7 +475,7 @@ public class KnownBuildRuleTypes {
             cxxLibraryDescription,
             swiftLibraryDescription,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig);
@@ -469,13 +495,15 @@ public class KnownBuildRuleTypes {
     builder.register(appleBinaryDescription);
 
     HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
-    builder.register(new HaskellLibraryDescription(haskellBuckConfig, cxxBuckConfig, cxxPlatforms));
-    builder.register(
-        new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
+    FlavorDomain<HaskellPlatform> haskellPlatforms =
+        FlavorDomain.from(
+            "Haskell platform", haskellBuckConfig.getPlatforms(cxxPlatformsMap.values()));
+    HaskellPlatform defaultHaskellPlatform = haskellPlatforms.getValue(DefaultCxxPlatforms.FLAVOR);
+    builder.register(new HaskellLibraryDescription(haskellPlatforms, cxxBuckConfig));
+    builder.register(new HaskellBinaryDescription(defaultHaskellPlatform, haskellPlatforms));
     builder.register(new HaskellPrebuiltLibraryDescription());
     builder.register(
-        new HaskellGhciDescription(
-            haskellBuckConfig, cxxBuckConfig, cxxPlatforms, defaultCxxPlatform));
+        new HaskellGhciDescription(defaultHaskellPlatform, haskellPlatforms, cxxBuckConfig));
 
     if (javaConfig.getDxThreadCount().isPresent()) {
       LOG.warn("java.dx_threads has been deprecated. Use dx.max_threads instead");
@@ -492,6 +520,9 @@ public class KnownBuildRuleTypes {
                             .getDxThreadCount()
                             .orElse(SmartDexingStep.determineOptimalThreadCount())),
                 new CommandThreadFactory("SmartDexing")));
+
+    AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
+        new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
 
     builder.register(
         new AndroidAarDescription(
@@ -526,9 +557,7 @@ public class KnownBuildRuleTypes {
         new AndroidInstrumentationTestDescription(defaultJavaOptions, defaultTestRuleTimeoutMs));
     builder.register(
         new AndroidLibraryDescription(
-            javaConfig,
-            defaultJavacOptions,
-            new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig)));
+            javaConfig, defaultJavacOptions, defaultAndroidCompilerFactory));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(javaConfig, defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
@@ -537,14 +566,14 @@ public class KnownBuildRuleTypes {
     builder.register(new AppleAssetCatalogDescription());
     builder.register(
         new ApplePackageDescription(
-            appleConfig, defaultCxxPlatform, platformFlavorsToAppleCxxPlatforms));
+            appleConfig, defaultCxxPlatform.getFlavor(), platformFlavorsToAppleCxxPlatforms));
     AppleBundleDescription appleBundleDescription =
         new AppleBundleDescription(
             appleBinaryDescription,
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig);
@@ -556,7 +585,7 @@ public class KnownBuildRuleTypes {
             appleLibraryDescription,
             cxxPlatforms,
             platformFlavorsToAppleCxxPlatforms,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
@@ -572,7 +601,7 @@ public class KnownBuildRuleTypes {
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new CxxTestDescription(
-            cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, defaultTestRuleTimeoutMs));
+            cxxBuckConfig, defaultCxxPlatform.getFlavor(), cxxPlatforms, defaultTestRuleTimeoutMs));
     builder.register(new DBinaryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.register(new DLibraryDescription(dBuckConfig, cxxBuckConfig, defaultCxxPlatform));
     builder.register(
@@ -658,7 +687,8 @@ public class KnownBuildRuleTypes {
             defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
-            defaultCxxPlatform));
+            defaultCxxPlatform,
+            defaultAndroidCompilerFactory));
     builder.register(new RustBinaryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustLibraryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustTestDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
@@ -684,12 +714,32 @@ public class KnownBuildRuleTypes {
     return builder;
   }
 
+  private static void checkApplePlaforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
+    Map<Flavor, AppleCxxPlatform> platformsMap = new HashMap<>();
+    for (AppleCxxPlatform platform : appleCxxPlatforms) {
+      Flavor flavor = platform.getFlavor();
+      if (platformsMap.containsKey(flavor)) {
+        AppleCxxPlatform otherPlatform = platformsMap.get(flavor);
+        throw new HumanReadableException(
+            "There are two conflicting SDKs providing the same platform \"%s\":\n"
+                + "- %s\n"
+                + "- %s\n\n"
+                + "Please try to remove one of them.",
+            flavor.getName(),
+            platform.getAppleSdkPaths().getSdkPath(),
+            otherPlatform.getAppleSdkPaths().getSdkPath());
+      }
+      platformsMap.put(flavor, platform);
+    }
+  }
+
   public static class Builder {
     private final Map<BuildRuleType, Description<?>> descriptions;
     private final Map<String, BuildRuleType> types;
 
     @Nullable private FlavorDomain<CxxPlatform> cxxPlatforms;
     @Nullable private CxxPlatform defaultCxxPlatform;
+    @Nullable private ProcessExecutor processExecutor;
 
     protected Builder() {
       this.descriptions = Maps.newConcurrentMap();

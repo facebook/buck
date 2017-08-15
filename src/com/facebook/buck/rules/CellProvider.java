@@ -104,6 +104,7 @@ public final class CellProvider {
       throw new HumanReadableException(e.getMessage());
     }
 
+    SdkEnvironment sdkEnvironment = knownBuildRuleTypesFactory.createSdkEnvironment(rootConfig);
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
     return new CellProvider(
         cellProvider ->
@@ -174,7 +175,8 @@ public final class CellProvider {
                     watchman,
                     buckConfig,
                     knownBuildRuleTypesFactory,
-                    cellProvider);
+                    cellProvider,
+                    sdkEnvironment);
               }
             },
         cellProvider -> {
@@ -190,13 +192,16 @@ public final class CellProvider {
               watchman,
               rootConfig,
               knownBuildRuleTypesFactory,
-              cellProvider);
+              cellProvider,
+              sdkEnvironment);
         });
   }
 
   public static CellProvider createForDistributedBuild(
+      BuckConfig rootConfig,
       ImmutableMap<Path, DistBuildCellParams> cellParams,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
+    SdkEnvironment sdkEnvironment = knownBuildRuleTypesFactory.createSdkEnvironment(rootConfig);
     return new CellProvider(
         cellProvider ->
             CacheLoader.from(
@@ -212,7 +217,8 @@ public final class CellProvider {
                       Watchman.NULL_WATCHMAN,
                       cellParam.getConfig(),
                       knownBuildRuleTypesFactory,
-                      cellProvider);
+                      cellProvider,
+                      sdkEnvironment);
                 }),
         null);
   }

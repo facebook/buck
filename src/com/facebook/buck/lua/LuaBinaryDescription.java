@@ -674,7 +674,7 @@ public class LuaBinaryDescription
       final LuaPackageComponents components) {
     Path output = getOutputPath(buildTarget, projectFilesystem);
 
-    Tool lua = luaConfig.getLua(resolver);
+    Tool lua = luaConfig.getLua().resolve(resolver);
     Tool packager = luaConfig.getPackager().resolve(resolver);
 
     LuaStandaloneBinary binary =
@@ -735,6 +735,21 @@ public class LuaBinaryDescription
         String.format("%s: unexpected package style %s", buildTarget, packageStyle));
   }
 
+  // Return the C/C++ platform to build against.
+  private CxxPlatform getCxxPlatform(BuildTarget target, LuaBinaryDescriptionArg arg) {
+
+    Optional<CxxPlatform> flavorPlatform = cxxPlatforms.getValue(target);
+    if (flavorPlatform.isPresent()) {
+      return flavorPlatform.get();
+    }
+
+    if (arg.getCxxPlatform().isPresent()) {
+      return cxxPlatforms.getValue(arg.getCxxPlatform().get());
+    }
+
+    return defaultCxxPlatform;
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -747,7 +762,7 @@ public class LuaBinaryDescription
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
     PythonPlatform pythonPlatform =
         pythonPlatforms
             .getValue(buildTarget)
@@ -795,7 +810,7 @@ public class LuaBinaryDescription
         binary,
         args.getMainModule(),
         components.getComponents(),
-        luaConfig.getLua(resolver),
+        luaConfig.getLua().resolve(resolver),
         packageStyle);
   }
 
@@ -830,6 +845,8 @@ public class LuaBinaryDescription
     Optional<BuildTarget> getNativeStarterLibrary();
 
     Optional<String> getPythonPlatform();
+
+    Optional<Flavor> getCxxPlatform();
 
     Optional<LuaConfig.PackageStyle> getPackageStyle();
 

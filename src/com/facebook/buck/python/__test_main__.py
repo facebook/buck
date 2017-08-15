@@ -662,6 +662,9 @@ class MainProgram(object):
         if not self.options.collect_coverage:
             return
 
+        # Keep the original working dir in case tests use os.chdir
+        self._original_working_dir = os.getcwd()
+
         self.cov = coverage.Coverage(
             include=self.options.coverage_include,
             omit=self.options.coverage_omit)
@@ -672,6 +675,9 @@ class MainProgram(object):
         if not self.options.collect_coverage:
             return None
         result = {}
+
+        # Switch back to the original working directory.
+        os.chdir(self._original_working_dir)
 
         self.cov.stop()
 

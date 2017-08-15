@@ -25,7 +25,7 @@ import com.sun.jna.ptr.IntByReference;
 
 public interface Libc extends Library {
 
-  Libc INSTANCE = (Libc) Native.loadLibrary(Platform.C_LIBRARY_NAME, Libc.class);
+  Libc INSTANCE = Native.loadLibrary(Platform.C_LIBRARY_NAME, Libc.class);
 
   Pointer signal(int signal, Pointer function);
 

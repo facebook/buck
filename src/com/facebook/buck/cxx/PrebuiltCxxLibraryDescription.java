@@ -152,8 +152,12 @@ public class PrebuiltCxxLibraryDescription
     String flav = cxxPlatform.map(input -> input.getFlavor().toString()).orElse("");
     return new MacroHandler(
         ImmutableMap.of(
-            "location", new LocationMacroExpander(),
-            "platform", new StringExpander(flav)));
+            "location",
+            cxxPlatform
+                .<LocationMacroExpander>map(CxxLocationMacroExpander::new)
+                .orElseGet(LocationMacroExpander::new),
+            "platform",
+            new StringExpander(flav)));
   }
 
   private static SourcePath getApplicableSourcePath(

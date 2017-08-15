@@ -151,7 +151,7 @@ public class AndroidBinaryTest {
     ImmutableList.Builder<Step> expectedSteps = ImmutableList.builder();
 
     ProGuardObfuscateStep.create(
-        JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(),
+        JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX,
         new FakeProjectFilesystem(),
         /* proguardJarOverride */ Optional.empty(),
         /* proguardMaxHeapSize */ "1024M",
@@ -426,19 +426,26 @@ public class AndroidBinaryTest {
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(new FakeSourcePath("manifest"));
-    builder.build(resolver);
+    AndroidBinary androidBinary = builder.build(resolver);
 
     BuildRule aaptPackageRule =
         resolver.getRule(BuildTargetFactory.newInstance("//:target#aapt_package"));
     ResourcesFilter resourcesFilter =
         (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
-    resourcesFilter.addPostFilterCommandSteps(
-        StringArg.of("cmd"), pathResolver, stepsBuilder, Paths.get("data.json"));
+    resourcesFilter.addPostFilterCommandSteps(StringArg.of("cmd"), pathResolver, stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
+    Path dataPath =
+        BuildTargets.getGenPath(
+            androidBinary.getProjectFilesystem(),
+            resourcesFilter.getBuildTarget(),
+            "%s/post_filter_resources_data.json");
+    Path rJsonPath =
+        BuildTargets.getGenPath(
+            androidBinary.getProjectFilesystem(), resourcesFilter.getBuildTarget(), "%s/R.json");
     assertEquals(
-        ImmutableList.of("bash", "-c", "cmd data.json"),
+        ImmutableList.of("bash", "-c", "cmd " + dataPath + " " + rJsonPath),
         ((BashStep) steps.get(0)).getShellCommand(null));
   }
 

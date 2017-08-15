@@ -18,8 +18,6 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -64,13 +62,13 @@ public class WorkspaceUpdater {
     return workspaceFile;
   }
 
-  public void updateOrCreateWorkspace(ImmutableSortedSet<String> excludedPaths) throws IOException {
+  public void updateOrCreateWorkspace() throws IOException {
     boolean workspaceUpdated = false;
     Document workspaceDocument = null;
     if (workspaceFile.exists()) {
       try {
         LOG.debug("Trying to update existing workspace.");
-        workspaceDocument = updateExistingWorkspace(workspaceFile, excludedPaths);
+        workspaceDocument = updateExistingWorkspace(workspaceFile);
         workspaceUpdated = true;
       } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
         LOG.error("Cannot update workspace.xml file, trying re-create it", e);
@@ -84,7 +82,7 @@ public class WorkspaceUpdater {
 
     if (!workspaceUpdated) {
       try {
-        workspaceDocument = createNewWorkspace(excludedPaths);
+        workspaceDocument = createNewWorkspace();
       } catch (ParserConfigurationException e) {
         LOG.error("Cannot create workspace.xml file", e);
         return;
@@ -98,12 +96,11 @@ public class WorkspaceUpdater {
     }
   }
 
-  private static Document updateExistingWorkspace(
-      File workspaceFile, ImmutableSortedSet<String> excludedPaths)
+  private static Document updateExistingWorkspace(File workspaceFile)
       throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
     Document workspaceDocument = parseWorkspaceFile(workspaceFile);
 
-    updateIgnoredFolders(workspaceDocument, excludedPaths);
+    removeIgnoredFoldersAndSetConvertedFlag(workspaceDocument);
 
     return workspaceDocument;
   }
@@ -121,8 +118,7 @@ public class WorkspaceUpdater {
     return workspaceDocument;
   }
 
-  private static void updateIgnoredFolders(
-      Document workspaceDocument, ImmutableSortedSet<String> excludedPaths)
+  private static void removeIgnoredFoldersAndSetConvertedFlag(Document workspaceDocument)
       throws XPathExpressionException {
     XPath xpath = XPathFactory.newInstance().newXPath();
 
@@ -151,8 +147,6 @@ public class WorkspaceUpdater {
       projectNode.appendChild(parentNode);
     }
 
-    addNewNodes(workspaceDocument, parentNode, excludedPaths);
-
     ensureExcludedConvertedToIgnoredOptionSetToTrue(workspaceDocument, xpath, parentNode);
   }
 
@@ -175,13 +169,6 @@ public class WorkspaceUpdater {
   private static Node findProjectNode(XPath xpath, Document workspaceDocument)
       throws XPathExpressionException {
     return (Node) xpath.compile("/project").evaluate(workspaceDocument, XPathConstants.NODE);
-  }
-
-  private static void addNewNodes(
-      Document workspaceDocument, Node parentNode, ImmutableCollection<String> excludedPaths) {
-    excludedPaths.forEach(
-        excludeFolder ->
-            parentNode.appendChild(createNewIgnoreNode(workspaceDocument, excludeFolder)));
   }
 
   private static void removeNodeRange(Node parentNode, Node firstNode, Node lastNode) {
@@ -214,11 +201,10 @@ public class WorkspaceUpdater {
     }
   }
 
-  private static Document createNewWorkspace(ImmutableSortedSet<String> excludedPaths)
-      throws ParserConfigurationException {
+  private static Document createNewWorkspace() throws ParserConfigurationException {
     Document workspaceDocument = createNewWorkspaceDocument();
     Element project = addNewProjectNode(workspaceDocument);
-    addIgnoredFolders(workspaceDocument, project, excludedPaths);
+    setExcludedFlag(workspaceDocument, project);
     return workspaceDocument;
   }
 
@@ -235,16 +221,11 @@ public class WorkspaceUpdater {
     return project;
   }
 
-  private static void addIgnoredFolders(
-      Document workspaceDocument, Element project, ImmutableSortedSet<String> excludedPaths) {
+  private static void setExcludedFlag(Document workspaceDocument, Element project) {
     Element changeListManager = workspaceDocument.createElement("component");
     changeListManager.setAttribute("name", "ChangeListManager");
 
     project.appendChild(changeListManager);
-
-    excludedPaths.forEach(
-        excludeFolder ->
-            changeListManager.appendChild(createNewIgnoreNode(workspaceDocument, excludeFolder)));
 
     changeListManager.appendChild(createNewOptionExcludedConvertedToIgnoredNode(workspaceDocument));
   }
@@ -259,12 +240,6 @@ public class WorkspaceUpdater {
     Element component = workspaceDocument.createElement("component");
     component.setAttribute("name", "ChangeListManager");
     return component;
-  }
-
-  private static Element createNewIgnoreNode(Document workspaceDocument, String excludeFolder) {
-    Element ignored = workspaceDocument.createElement("ignored");
-    ignored.setAttribute("path", String.format("$PROJECT_DIR$/%s/", excludeFolder));
-    return ignored;
   }
 
   private static Element createNewOptionExcludedConvertedToIgnoredNode(Document workspaceDocument) {

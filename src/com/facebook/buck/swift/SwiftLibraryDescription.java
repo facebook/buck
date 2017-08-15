@@ -281,6 +281,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           args.getModuleName().orElse(buildTarget.getShortName()),
           BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
           args.getSrcs(),
+          args.getVersion(),
           RichStream.from(args.getCompilerFlags())
               .map(
                   f ->
@@ -303,6 +304,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         resolver,
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
+        args.getBridgingHeader(),
         args.getFrameworks(),
         args.getLibraries(),
         args.getSupportedPlatformsRegex(),
@@ -426,6 +428,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     Optional<String> getModuleName();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
+
+    Optional<String> getVersion();
 
     @Value.NaturalOrder
     ImmutableSortedSet<FrameworkPath> getFrameworks();

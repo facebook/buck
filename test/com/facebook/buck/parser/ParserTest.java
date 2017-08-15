@@ -86,6 +86,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -363,6 +364,43 @@ public class ParserTest {
   }
 
   @Test
+  public void shouldGlobalVariableModificationsAreAllowedIfNotFrozen()
+      throws IOException, BuildFileParseException, InterruptedException {
+    Files.write(
+        includedByBuildFile, ("FOO = ['bar']\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+    Files.write(testBuildFile, ("FOO.append('bar')\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections("[parser]", "freeze_globals = false")
+            .build();
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, testBuildFile);
+  }
+
+  @Test
+  public void shouldThrowAnExceptionIfFrozenVariableIsModified()
+      throws IOException, BuildFileParseException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("'tuple' object has no attribute 'append'");
+
+    Files.write(
+        includedByBuildFile, ("FOO = ['bar']\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+    Files.write(testBuildFile, ("FOO.append('bar')\n").getBytes(UTF_8), StandardOpenOption.APPEND);
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections("[parser]", "freeze_globals = true")
+            .build();
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, testBuildFile);
+  }
+
+  @Test
   public void shouldThrowAnExceptionIfNameIsNone()
       throws IOException, BuildFileParseException, InterruptedException {
     thrown.expect(BuildFileParseException.class);
@@ -384,8 +422,9 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:foo#doesNotExist while parsing "
-            + "//java/com/facebook/BUCK");
+        containsString(
+            "The following flavor(s) are not supported on target "
+                + "//java/com/facebook:foo#doesNotExist"));
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
@@ -399,11 +438,14 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:foo#android-unknown while parsing "
-            + "//java/com/facebook/BUCK\nHere are some things you can try to get the following "
-            + "flavors to work::\nandroid-unknown : Make sure you have the Android SDK/NDK "
-            + "installed and set up. "
-            + "See https://buckbuild.com/setup/install.html#locate-android-sdk\n");
+        containsString(
+            "The following flavor(s) are not supported on target "
+                + "//java/com/facebook:foo#android-unknown"));
+    thrown.expectMessage(
+        containsString(
+            "android-unknown: Please make sure you have the Android SDK/NDK "
+                + "installed and set up. "
+                + "See https://buckbuild.com/setup/install.html#locate-android-sdk"));
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
@@ -417,9 +459,11 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Unrecognized flavor in target //java/com/facebook:foo#macosx109sdk while parsing "
-            + "//java/com/facebook/BUCK\nHere are some things you can try to get the following "
-            + "flavors to work::\nmacosx109sdk : This is an error message read by the .buckconfig");
+        containsString(
+            "The following flavor(s) are not supported on target "
+                + "//java/com/facebook:foo#macosx109sdk"));
+    thrown.expectMessage(
+        containsString("macosx109sdk: This is an error message read by the .buckconfig"));
 
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));

@@ -34,12 +34,18 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.Reader;
@@ -53,6 +59,12 @@ import org.junit.Test;
 
 public class JavaBuckConfigTest {
 
+  private static final SourcePathResolver PATH_RESOLVER =
+      DefaultSourcePathResolver.from(
+          new SourcePathRuleFinder(
+              new BuildRuleResolver(
+                  TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
 
@@ -65,11 +77,14 @@ public class JavaBuckConfigTest {
   public void whenJavaIsNotSetThenJavaFromPathIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavaOptions javaOptions = config.getDefaultJavaOptions();
-    assertEquals(Optional.empty(), javaOptions.getJavaPath());
-    assertEquals("java", javaOptions.getJavaRuntimeLauncher().getCommand());
+    assertEquals(
+        ImmutableList.of("java"),
+        javaOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
-    assertEquals(Optional.empty(), javaForTestsOptions.getJavaPath());
+    assertEquals(
+        ImmutableList.of("java"),
+        javaForTestsOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -91,12 +106,14 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     JavaOptions javaOptions = config.getDefaultJavaOptions();
-    assertEquals(Optional.of(java), javaOptions.getJavaPath());
-    assertEquals(javaCommand, javaOptions.getJavaRuntimeLauncher().getCommand());
+    assertEquals(
+        ImmutableList.of(javaCommand),
+        javaOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
-    assertEquals(Optional.of(javaForTests), javaForTestsOptions.getJavaPath());
-    assertEquals(javaForTestsCommand, javaForTestsOptions.getJavaRuntimeLauncher().getCommand());
+    assertEquals(
+        ImmutableList.of(javaForTestsCommand),
+        javaForTestsOptions.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -111,8 +128,9 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     JavaOptions options = config.getDefaultJavaOptions();
-    assertEquals(Optional.of(java), options.getJavaPath());
-    assertEquals(java.toString(), options.getJavaRuntimeLauncher().getCommand());
+    assertEquals(
+        ImmutableList.of(java.toString()),
+        options.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -127,8 +145,9 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     JavaOptions options = config.getDefaultJavaOptionsForTests();
-    assertEquals(Optional.of(java), options.getJavaPath());
-    assertEquals(javaCommand, options.getJavaRuntimeLauncher().getCommand());
+    assertEquals(
+        ImmutableList.of(javaCommand),
+        options.getJavaRuntimeLauncher().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test

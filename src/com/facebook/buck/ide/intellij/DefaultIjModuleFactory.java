@@ -101,6 +101,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())
         .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
+        .addAllExtraModuleDependencies(context.getExtraModuleDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
         .setLanguageLevel(context.getJavaLanguageLevel())
         .setModuleType(context.getModuleType())

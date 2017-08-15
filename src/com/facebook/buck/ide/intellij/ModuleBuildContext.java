@@ -47,6 +47,7 @@ public class ModuleBuildContext {
 
   private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
   private ImmutableSet.Builder<Path> extraClassPathDependenciesBuilder;
+  private ImmutableSet.Builder<Path> extraModuleDependenciesBuilder;
   private Map<Path, IjFolder> generatedSourceCodeFoldersMap = new HashMap<>();
   private Map<Path, IjFolder> sourceFoldersMergeMap;
   // See comment in getDependencies for these two member variables.
@@ -61,6 +62,7 @@ public class ModuleBuildContext {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
     this.androidFacetBuilder = Optional.empty();
     this.extraClassPathDependenciesBuilder = new ImmutableSet.Builder<>();
+    this.extraModuleDependenciesBuilder = new ImmutableSet.Builder<>();
     this.sourceFoldersMergeMap = new HashMap<>();
     this.dependencyTypeMap = new HashMap<>();
     this.dependencyOriginMap = HashMultimap.create();
@@ -99,6 +101,14 @@ public class ModuleBuildContext {
 
   public ImmutableSet<Path> getExtraClassPathDependencies() {
     return extraClassPathDependenciesBuilder.build();
+  }
+
+  public void addExtraModuleDependency(Path path) {
+    extraModuleDependenciesBuilder.add(path);
+  }
+
+  public ImmutableSet<Path> getExtraModuleDependencies() {
+    return extraModuleDependenciesBuilder.build();
   }
 
   public void addGeneratedSourceCodeFolder(IjFolder generatedFolder) {

@@ -45,7 +45,7 @@ public class SwiftDescriptionsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     SwiftLibraryDescriptionArg.Builder outputBuilder =
-        SwiftLibraryDescriptionArg.builder().setName("bar");
+        SwiftLibraryDescriptionArg.builder().setName("bar").setVersion("3");
 
     CxxLibraryDescriptionArg.Builder args = CxxLibraryDescriptionArg.builder().setName("bar");
 
@@ -67,5 +67,6 @@ public class SwiftDescriptionsTest {
         pathResolver, outputBuilder, args.build(), buildTarget);
     output = outputBuilder.build();
     assertThat(output.getModuleName().get(), equalTo("baz"));
+    assertThat(output.getVersion().get(), equalTo("3"));
   }
 }

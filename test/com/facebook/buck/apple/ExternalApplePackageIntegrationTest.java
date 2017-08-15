@@ -23,15 +23,21 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class ExternalApplePackageIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Before
+  public void setUp() throws InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+  }
+
   @Test
   public void usesExternalPackagerAndSetsSdkroot() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_apple_package", tmp);
     workspace.setUp();
@@ -43,7 +49,6 @@ public class ExternalApplePackageIntegrationTest {
 
   @Test
   public void useDefaultPlatformToDeterminePackagerIfPlatformFlavorIsOmitted() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_apple_package", tmp);
     workspace.setUp();

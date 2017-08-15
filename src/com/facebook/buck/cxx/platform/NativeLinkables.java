@@ -22,6 +22,7 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -309,8 +310,20 @@ public class NativeLinkables {
         for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
           SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
           if (prev != null && !prev.equals(lib.getValue())) {
+            String libTargetString = null;
+            String prevTargetString = null;
+            if ((prev instanceof BuildTargetSourcePath)
+                && (lib.getValue() instanceof BuildTargetSourcePath)) {
+              libTargetString = ((BuildTargetSourcePath) lib.getValue()).getTarget().toString();
+              prevTargetString = ((BuildTargetSourcePath) prev).getTarget().toString();
+            } else {
+              libTargetString = lib.getValue().toString();
+              prevTargetString = prev.toString();
+            }
             throw new HumanReadableException(
-                "conflicting libraries for key %s: %s != %s", lib.getKey(), lib.getValue(), prev);
+                "Two libraries in the dependencies have the same output filename: %s\n"
+                    + "Those libraries are %s and %s",
+                lib.getKey(), libTargetString, prevTargetString);
           }
         }
       }

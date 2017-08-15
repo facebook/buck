@@ -57,7 +57,7 @@ public class PreDexedFilesSorterTest {
             TargetGraph.EMPTY,
             BuildTargetFactory.newInstance("//fakeTarget:yes"),
             Optional.empty());
-    extraModule = APKModule.builder().setName("extra").build();
+    extraModule = APKModule.of("extra");
   }
 
   @Test

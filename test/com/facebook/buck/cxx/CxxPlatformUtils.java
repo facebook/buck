@@ -70,7 +70,7 @@ public class CxxPlatformUtils {
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
-          .setFlavor(InternalFlavor.of("platform"))
+          .setFlavor(InternalFlavor.of("default"))
           .setAs(DEFAULT_COMPILER_PROVIDER)
           .setAspp(DEFAULT_PREPROCESSOR_PROVIDER)
           .setCc(DEFAULT_COMPILER_PROVIDER)

@@ -45,6 +45,7 @@ import javax.annotation.Nullable;
 public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final SourcePath pathToRDotTxtFile;
+  @AddToRuleKey private final Optional<SourcePath> pathToOverrideSymbolsFile;
   @AddToRuleKey private Optional<String> resourceUnionPackage;
   @AddToRuleKey private boolean shouldBuildStringSourceMap;
 
@@ -77,6 +78,7 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
             .map(HasAndroidResourceDeps.class::cast)
             .collect(MoreCollectors.toImmutableList());
     this.resourcesProvider = resourcesProvider;
+    this.pathToOverrideSymbolsFile = resourcesProvider.getOverrideSymbolsPath();
   }
 
   private static ImmutableSortedSet<BuildRule> getAllDeps(
@@ -85,7 +87,11 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-    builder.addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxtFile)).addAll(resourceDeps);
+    builder
+        .addAll(
+            ruleFinder.filterBuildRuleInputs(
+                pathToRDotTxtFile, resourcesProvider.getOverrideSymbolsPath().orElse(null)))
+        .addAll(resourceDeps);
     resourcesProvider.getResourceFilterRule().ifPresent(builder::add);
     return builder.build();
   }
@@ -114,6 +120,7 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
             rDotTxtPath,
             rDotJavaSrc,
             bannedDuplicateResourceTypes,
+            pathToOverrideSymbolsFile.map(pathResolver::getAbsolutePath),
             resourceUnionPackage);
     steps.add(mergeStep);
 

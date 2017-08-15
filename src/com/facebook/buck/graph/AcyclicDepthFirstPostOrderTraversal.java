@@ -148,7 +148,12 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
     private final ImmutableList<?> nodes;
 
     private CycleException(Iterable<?> nodes) {
-      super("Cycle found: " + Joiner.on(" -> ").join(nodes));
+      super(
+          "Buck can't handle circular dependencies.\n"
+              + "The following circular dependency has been found:\n"
+              + Joiner.on(" -> ").join(nodes)
+              + "\n\n"
+              + "Please break the circular dependency and try again.");
       this.nodes = ImmutableList.copyOf(nodes);
     }
 

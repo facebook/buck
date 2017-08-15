@@ -22,6 +22,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -137,10 +138,11 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     commands.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            output,
-            ImmutableSortedSet.of(outputDirectory),
-            /* main class */ null,
-            /* manifest */ null));
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setMergeManifests(true)
+                .build()));
     buildableContext.recordArtifact(output);
 
     return commands.build();

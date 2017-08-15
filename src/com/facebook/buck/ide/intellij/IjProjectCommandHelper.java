@@ -180,6 +180,7 @@ public class IjProjectCommandHelper {
       if (isWithTests()) {
         projectGraph = targetGraphAndTargets.getTargetGraph();
       }
+
       return ProjectView.run(
           projectViewParameters, projectGraph, passedInTargetsSet, getActionGraph(projectGraph));
     }

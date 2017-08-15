@@ -1,0 +1,11 @@
+prebuilt_jar(
+    name = "jopt-simple",
+    binary_jar = "jopt-simple-4.6.jar",
+    source_jar = "jopt-simple-4.6-sources.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "//third-party/java/jmh/...",
+    ],
+)

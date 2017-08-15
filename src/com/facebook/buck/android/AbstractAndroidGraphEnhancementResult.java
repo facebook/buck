@@ -38,8 +38,6 @@ interface AbstractAndroidGraphEnhancementResult {
 
   Optional<PreDexMerge> getPreDexMerge();
 
-  Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
-
   ImmutableList<SourcePath> getProguardConfigs();
 
   Optional<Boolean> getPackageAssetLibraries();

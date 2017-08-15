@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.platform.Compiler;
 import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.platform.DependencyTrackingMode;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -100,8 +101,8 @@ class CompilerDelegate implements RuleKeyAppendable {
     return compiler.isArgFileSupported();
   }
 
-  public boolean isDependencyFileSupported() {
-    return compiler.isDependencyFileSupported();
+  public DependencyTrackingMode getDependencyTrackingMode() {
+    return compiler.getDependencyTrackingMode();
   }
 
   public Compiler getCompiler() {

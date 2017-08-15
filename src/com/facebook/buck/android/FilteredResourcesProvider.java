@@ -46,4 +46,6 @@ public interface FilteredResourcesProvider {
   Optional<BuildRule> getResourceFilterRule();
 
   boolean hasResources();
+
+  Optional<SourcePath> getOverrideSymbolsPath();
 }

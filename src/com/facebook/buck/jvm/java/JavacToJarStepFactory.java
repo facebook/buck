@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -55,7 +56,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
     this.amender = amender;
   }
 
-  public void setCompileAbi(Path abiJar) {
+  public void setCompileAbi(@Nullable Path abiJar) {
     this.abiJar = abiJar;
   }
 
@@ -109,23 +110,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
 
   @Override
   public void createJarStep(
-      ProjectFilesystem filesystem,
-      Path outputDirectory,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar,
-      Path outputJar,
-      ImmutableList.Builder<Step> steps) {
-    steps.add(
-        new JarDirectoryStep(
-            filesystem,
-            outputJar,
-            ImmutableSortedSet.of(outputDirectory),
-            mainClass.orElse(null),
-            manifestFile.orElse(null),
-            true,
-            javacOptions.getCompilationMode() == JavacCompilationMode.ABI,
-            classesToRemoveFromJar::shouldRemoveClass));
+      ProjectFilesystem filesystem, JarParameters parameters, ImmutableList.Builder<Step> steps) {
+    steps.add(new JarDirectoryStep(filesystem, parameters));
   }
 
   @Override
@@ -163,14 +149,11 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
       Optional<Path> depFilePath,
       Path pathToSrcsList,
       ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<Path> entriesToJar,
-      Optional<String> mainClass,
-      Optional<Path> manifestFile,
-      Path outputJar,
+      JarParameters jarParameters,
       /* output params */
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      BuildableContext buildableContext) {
+    Preconditions.checkArgument(jarParameters.getEntriesToJar().contains(outputDirectory));
 
     String spoolMode = javacOptions.getSpoolMode().name();
     // In order to use direct spooling to the Jar:
@@ -214,9 +197,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
               resolver,
               filesystem,
               new ClasspathChecker(),
-              Optional.of(
-                  DirectToJarOutputSettings.of(
-                      outputJar, classesToRemoveFromJar, entriesToJar, mainClass, manifestFile)),
+              Optional.of(jarParameters),
               abiJar));
     } else {
       super.createCompileToJarStep(
@@ -233,13 +214,9 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
           depFilePath,
           pathToSrcsList,
           postprocessClassesCommands,
-          entriesToJar,
-          mainClass,
-          manifestFile,
-          outputJar,
+          jarParameters,
           steps,
-          buildableContext,
-          classesToRemoveFromJar);
+          buildableContext);
     }
   }
 

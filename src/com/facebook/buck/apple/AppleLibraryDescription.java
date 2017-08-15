@@ -129,7 +129,7 @@ public class AppleLibraryDescription
   private final CxxLibraryDescription delegate;
   private final SwiftLibraryDescription swiftDelegate;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
@@ -138,14 +138,14 @@ public class AppleLibraryDescription
       CxxLibraryDescription delegate,
       SwiftLibraryDescription swiftDelegate,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
     this.delegate = delegate;
     this.swiftDelegate = swiftDelegate;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
@@ -244,7 +244,7 @@ public class AppleLibraryDescription
 
     return AppleDescriptions.createAppleBundle(
         delegate.getCxxPlatforms(),
-        defaultCxxPlatform,
+        defaultCxxFlavor,
         appleCxxPlatformFlavorDomain,
         targetGraph,
         buildTarget,
@@ -323,7 +323,7 @@ public class AppleLibraryDescription
                 Iterables.getFirst(
                     Sets.intersection(
                         delegate.getCxxPlatforms().getFlavors(), buildTarget.getFlavors()),
-                    defaultCxxPlatform.getFlavor()));
+                    defaultCxxFlavor));
 
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
 
@@ -347,7 +347,7 @@ public class AppleLibraryDescription
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
         delegate.getCxxPlatforms(),
-        delegate.getDefaultCxxPlatform(),
+        delegate.getDefaultCxxFlavor(),
         appleCxxPlatformFlavorDomain);
   }
 

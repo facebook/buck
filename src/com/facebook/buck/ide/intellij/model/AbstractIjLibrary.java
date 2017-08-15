@@ -48,7 +48,12 @@ abstract class AbstractIjLibrary implements IjProjectElement {
 
   @Value.Check
   protected void eitherBinaryJarOrClassPathPresent() {
-    Preconditions.checkArgument(!getBinaryJars().isEmpty() ^ !getClassPaths().isEmpty());
+    // IntelliJ library should have a binary jar or classpath, but we also allow it to have an
+    // optional res folder so that resources can be loaded properly.
+    boolean hasClasspathsWithoutRes =
+        getClassPaths().stream().anyMatch(input -> !input.endsWith("res"));
+
+    Preconditions.checkArgument(!getBinaryJars().isEmpty() ^ hasClasspathsWithoutRes);
   }
 
   @Override

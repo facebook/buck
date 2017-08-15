@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
+import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.eventbus.Subscribe;
@@ -41,6 +42,7 @@ public class PerfTimesEventListener implements BuckEventListener {
   private final BuckEventBus eventBus;
 
   private final AtomicLong buildPhasesLastEvent = new AtomicLong();
+  private final AtomicLong accumulatedParseTime = new AtomicLong();
   private final AtomicBoolean firstCacheFetchEvent = new AtomicBoolean(false);
   private final AtomicBoolean firstLocalBuildEvent = new AtomicBoolean(false);
 
@@ -74,7 +76,28 @@ public class PerfTimesEventListener implements BuckEventListener {
 
   @Subscribe
   public synchronized void parseFinished(ParseEvent.Finished finished) {
-    perfTimesStatsBuilder.setParseTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
+    // Parsing time should not include the autosparse refresh; autosparse start and finish events
+    // take place between parse start and finished events. Total parsing time so far is tracked in
+    // accumulatedParseTime
+    long parseTime = getTimeDifferenceSinceLastEventToEvent(finished);
+    perfTimesStatsBuilder.setParseTimeMs(accumulatedParseTime.addAndGet(parseTime));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public synchronized void autosparseRefreshStarted(
+      AutoSparseStateEvents.SparseRefreshStarted started) {
+    // time spent refreshing the sparse profile should not count towards parsing; record the parsing
+    // time *so far* in accumulatedParseTime.
+    long parseTime = getTimeDifferenceSinceLastEventToEvent(started);
+    perfTimesStatsBuilder.setParseTimeMs(accumulatedParseTime.addAndGet(parseTime));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public synchronized void autosparseRefreshFinished(
+      AutoSparseStateEvents.SparseRefreshFinished finished) {
+    perfTimesStatsBuilder.setSparseRefreshTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
 

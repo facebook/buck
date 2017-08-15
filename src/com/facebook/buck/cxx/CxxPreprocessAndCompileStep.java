@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.platform.Compiler;
 import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.platform.DependencyTrackingMode;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -38,7 +39,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -69,6 +72,8 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
       new FileLastModifiedDateContentsScrubber();
+
+  private static final String DEPENDENCY_OUTPUT_PREFIX = "Note: including file:";
 
   public CxxPreprocessAndCompileStep(
       ProjectFilesystem filesystem,
@@ -200,19 +205,48 @@ public class CxxPreprocessAndCompileStep implements Step {
     // We buffer error messages in memory, as these are typically small.
     String err;
     int exitCode;
+
+    List<String> includeLines = Collections.emptyList();
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(compiler.getErrorStream(process)))) {
       CxxErrorTransformer cxxErrorTransformer =
           new CxxErrorTransformer(
               filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
-      err =
-          reader.lines().map(cxxErrorTransformer::transformLine).collect(Collectors.joining("\n"));
+
+      if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
+        Map<Boolean, List<String>> includesAndErrors =
+            reader
+                .lines()
+                .collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowIncludeLine));
+        includeLines =
+            includesAndErrors
+                .getOrDefault(true, Collections.emptyList())
+                .stream()
+                .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
+                .collect(Collectors.toList());
+        List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
+        err =
+            errorLines
+                .stream()
+                .map(cxxErrorTransformer::transformLine)
+                .collect(Collectors.joining("\n"));
+      } else {
+        err =
+            reader
+                .lines()
+                .map(cxxErrorTransformer::transformLine)
+                .collect(Collectors.joining("\n"));
+      }
       exitCode = executor.waitForLaunchedProcess(process).getExitCode();
     } catch (UncheckedIOException e) {
       throw e.getCause();
     } finally {
       executor.destroyLaunchedProcess(process);
       executor.waitForLaunchedProcess(process);
+    }
+
+    if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
+      filesystem.writeLinesToPath(includeLines, depFile.get());
     }
 
     // If we generated any error output, print that to the console.
@@ -228,6 +262,14 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
 
     return exitCode;
+  }
+
+  private static boolean isShowIncludeLine(String line) {
+    return line.startsWith(DEPENDENCY_OUTPUT_PREFIX);
+  }
+
+  private static String parseShowIncludeLine(String line) {
+    return line.substring(DEPENDENCY_OUTPUT_PREFIX.length()).trim();
   }
 
   private ConsoleEvent createConsoleEvent(

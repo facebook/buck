@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.distributed.BuildJobStateSerializer;
+import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
@@ -56,12 +57,17 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Option(name = BUILD_STATE_FILE_ARG_NAME, usage = BUILD_STATE_FILE_ARG_USAGE)
   private String buildStateFile;
 
-  @Nullable
   @Option(
     name = "--coordinator-port",
-    usage = "The local port that the build coordinator thrift server will listen on."
+    usage = "Port of the remote build coordinator. (only used in MINION mode)."
   )
   private int coordinatorPort = -1;
+
+  @Option(
+    name = "--coordinator-address",
+    usage = "Address of the remote build coordinator. (only used in MINION mode)."
+  )
+  private String coordinatorAddress = "localhost";
 
   @Nullable
   @Option(name = "--build-mode", usage = "The mode in which the distributed build is going to run.")
@@ -137,6 +143,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
         try (CommandThreadManager pool =
             new CommandThreadManager(
                 getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
+          Optional<StampedeId> stampedeId = getStampedeIdOptional();
+          DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
@@ -145,9 +153,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   service,
                   Preconditions.checkNotNull(distBuildMode),
                   coordinatorPort,
-                  getStampedeIdOptional(),
+                  coordinatorAddress,
+                  stampedeId,
                   getGlobalCacheDirOptional(),
-                  fileMaterializationStatsTracker);
+                  fileMaterializationStatsTracker,
+                  distBuildConfig);
 
           int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);

@@ -1,10 +1,10 @@
 prebuilt_jar(
     name = "sqlite",
-    binary_jar = "sqlite-jdbc-3.16.1.jar",
+    binary_jar = "sqlite-jdbc-3.20.0.jar",
     licenses = [
         "LICENSE.txt",
     ],
-    source_jar = "sqlite-jdbc-3.16.1-sources.jar",
+    source_jar = "sqlite-jdbc-3.20.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],

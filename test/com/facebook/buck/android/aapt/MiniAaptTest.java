@@ -91,7 +91,8 @@ public class MiniAaptTest {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
         definitions,
@@ -153,7 +154,8 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
         definitions,
@@ -213,7 +215,8 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertThat(definitions.size(), equalTo(9));
     for (RDotTxtEntry entry : definitions) {
@@ -273,7 +276,8 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertTrue(definitions.isEmpty());
   }
@@ -300,7 +304,8 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
         definitions,
@@ -331,7 +336,8 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processDrawables(filesystem, Paths.get("android_drawable.xml"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertThat(
         definitions,
@@ -367,7 +373,8 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processDrawables(filesystem, Paths.get("custom_drawable.xml"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertThat(
         definitions,
@@ -393,10 +400,12 @@ public class MiniAaptTest {
             Paths.get("R.txt"),
             ImmutableSet.of(),
             /* resourceUnion */ false,
-            /* isGrayscaleImageProcessingEnabled */ true);
+            /* isGrayscaleImageProcessingEnabled */ true,
+            MiniAapt.ResourceCollectionType.R_DOT_TXT);
     aapt.processDrawables(filesystem, Paths.get("fbui_tomato.g.png"));
 
-    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> definitions =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertThat(
         definitions,
@@ -638,7 +647,7 @@ public class MiniAaptTest {
             new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "icon"),
             new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "nine_patch"),
             new FakeRDotTxtEntry(IdType.INT, RType.TRANSITION, "some_transition")),
-        aapt.getResourceCollector().getResources());
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources());
   }
 
   @Test
@@ -722,11 +731,13 @@ public class MiniAaptTest {
             Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
             /* resourceUnion */ true,
-            /* isGrayscaleImageProcessingEnabled */ false);
+            /* isGrayscaleImageProcessingEnabled */ false,
+            MiniAapt.ResourceCollectionType.R_DOT_TXT);
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
     aapt.resourceUnion();
 
-    Set<RDotTxtEntry> resources = aapt.getResourceCollector().getResources();
+    Set<RDotTxtEntry> resources =
+        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(

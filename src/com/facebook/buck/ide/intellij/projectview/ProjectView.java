@@ -20,6 +20,8 @@ import static com.facebook.buck.ide.intellij.projectview.Patterns.capture;
 import static com.facebook.buck.ide.intellij.projectview.Patterns.noncapture;
 import static com.facebook.buck.ide.intellij.projectview.Patterns.optional;
 
+import com.facebook.buck.android.AndroidLibrary;
+import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -41,6 +43,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -55,6 +58,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -113,11 +117,12 @@ public class ProjectView {
   private final String viewPath;
   private final boolean dryRun;
   private final boolean withTests;
-  private final TargetGraph targetGraph;
-  private final ImmutableSet<BuildTarget> buildTargets;
   private final Config config;
 
+  private final TargetGraph targetGraph;
+  private final ImmutableSet<BuildTarget> buildTargets;
   private final ActionGraphAndResolver actionGraph;
+  private final SourcePathResolver sourcePathResolver;
 
   private final Set<BuildTarget> testTargets = new HashSet<>();
   /** {@code Sets.union(buildTargets, allTargets)} */
@@ -130,8 +135,7 @@ public class ProjectView {
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> buildTargets,
       ActionGraphAndResolver actionGraph) {
-    repository = projectViewParameters.getPath().toString();
-
+    this.repository = projectViewParameters.getPath().toString();
     this.stdErr = projectViewParameters.getStdErr();
     this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
     this.dryRun = projectViewParameters.isDryRun();
@@ -140,6 +144,10 @@ public class ProjectView {
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
     this.actionGraph = actionGraph;
+
+    BuildRuleResolver buildRuleResolver = actionGraph.getResolver();
+    SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    this.sourcePathResolver = DefaultSourcePathResolver.from(sourcePathRuleFinder);
 
     this.config = projectViewParameters.getConfig();
 
@@ -587,6 +595,10 @@ public class ProjectView {
     return attribute(name, value.toString());
   }
 
+  private static Attribute attribute(String name, String pattern, Object... parameters) {
+    return attribute(name, String.format(pattern, parameters));
+  }
+
   private static Element newElement(String name, Attribute attribute) {
     Element element = new Element(name);
     element.setAttribute(attribute);
@@ -718,6 +730,18 @@ public class ProjectView {
     String libraries = fileJoin(dotIdea, "libraries");
     immediateMkdir(libraries);
 
+    List<String> libraryXmls = new ArrayList<>();
+
+    // .jar files in the inputs
+    describeInputJars(inputs, libraries, libraryXmls);
+
+    // .jar files in the action graph
+    describeAidlJars(libraries, libraryXmls);
+
+    return libraryXmls;
+  }
+
+  private void describeInputJars(List<String> inputs, String libraries, List<String> libraryXmls) {
     Map<String, List<String>> directories = new HashMap<>();
     inputs
         .stream()
@@ -734,14 +758,41 @@ public class ProjectView {
               basenames.add(basename);
             });
 
-    List<String> libraryXmls = new ArrayList<>();
     for (Map.Entry<String, List<String>> entry : directories.entrySet()) {
-      libraryXmls.add(buildLibraryFile(libraries, entry.getKey(), entry.getValue()));
+      libraryXmls.add(
+          buildLibraryFile(libraries, entry.getKey(), entry.getValue(), Collections.emptyList()));
     }
-    return libraryXmls;
   }
 
-  private String buildLibraryFile(String libraries, String directory, List<String> jars) {
+  private void describeAidlJars(String libraries, List<String> libraryXmls) {
+    for (BuildRule rule : actionGraph.getActionGraph().getNodes()) {
+      if (rule instanceof AndroidLibrary) {
+        AndroidLibrary androidLibrary = (AndroidLibrary) rule;
+        Collection<BuildRule> aidlSource =
+            RichStream.from(androidLibrary.getBuildDeps())
+                .filter(GenAidl.class)
+                .collect(Collectors.toSet());
+        if (!aidlSource.isEmpty()) {
+          SourcePath sourcePath = rule.getSourcePathToOutput();
+          if (sourcePath != null) {
+            Path path =
+                rule.getProjectFilesystem()
+                    .getRootPath()
+                    .relativize(sourcePathResolver.getAbsolutePath(sourcePath));
+
+            String dirname = path.getParent().toString();
+            String basename = path.getFileName().toString();
+            libraryXmls.add(
+                buildLibraryFile(
+                    libraries, dirname, Collections.singletonList(basename), aidlSource));
+          }
+        }
+      }
+    }
+  }
+
+  private String buildLibraryFile(
+      String libraries, String directory, List<String> jars, Collection<BuildRule> sourceRules) {
     String filename = "library_" + directory.replace('-', '_').replace('/', '_');
     List<String> urls =
         jars.stream()
@@ -755,7 +806,14 @@ public class ProjectView {
       addElement(classes, "root", attribute(URL, url));
     }
     addElement(library, "JAVADOC");
-    addElement(library, "SOURCES");
+    Element sources = addElement(library, "SOURCES");
+    for (BuildRule sourceRule : sourceRules) {
+      SourcePath sourcePath = sourceRule.getSourcePathToOutput();
+      if (sourcePath != null) {
+        Path absolutePath = sourcePathResolver.getAbsolutePath(sourcePath);
+        addElement(sources, "root", attribute(URL, "jar://%s!/", absolutePath));
+      }
+    }
 
     saveDocument(libraries, filename + ".xml", XML.NO_DECLARATION, component);
 

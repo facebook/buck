@@ -27,6 +27,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
@@ -57,14 +58,14 @@ public class TwoLevelArtifactCacheDecoratorTest {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       assertThat(
-          twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.MISS));
 
       twoLevelCache.store(
           ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       assertThat(
-          twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
 
       twoLevelCache.store(
@@ -72,7 +73,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
       assertThat(
-          twoLevelCache.fetch(dummyRuleKey2, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey2, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
       assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(3));
     }
@@ -143,8 +144,8 @@ public class TwoLevelArtifactCacheDecoratorTest {
               .build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
-      CacheResult fetch1 = twoLevelCache.fetch(dummyRuleKey, dummyFile);
-      CacheResult fetch2 = twoLevelCache.fetch(dummyRuleKey2, dummyFile);
+      CacheResult fetch1 = Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey, dummyFile));
+      CacheResult fetch2 = Futures.getUnchecked(twoLevelCache.fetchAsync(dummyRuleKey2, dummyFile));
       // Content hashes should be the same
       assertEquals(
           fetch1.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY),
@@ -182,7 +183,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
       assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(2));
 
       assertThat(
-          twoLevelCacheNoStore.fetch(dummyRuleKey, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCacheNoStore.fetchAsync(dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
     }
   }

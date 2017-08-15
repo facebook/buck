@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
@@ -74,8 +75,8 @@ public class GlobalStateManager {
                     false,
                     false,
                     "launch",
-                    new String[0],
-                    new String[0],
+                    ImmutableList.of(),
+                    ImmutableList.of(),
                     LogConfigSetup.DEFAULT_SETUP.getLogDir())
                 .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
@@ -142,7 +143,11 @@ public class GlobalStateManager {
         try {
           LOG_FILE_DIR_CLEANER.clean(info.getLogDirectoryPath().getParent());
         } catch (IOException e) {
-          LOG.info(e, "It's possible another concurrent buck command removed the file.");
+          LOG.info(
+              "Failed cleaning log directory. It's possible another concurrent buck command "
+                  + "removed the file. Error: %s",
+              e.getMessage());
+          LOG.debug(e, "From exception");
         }
       }
     };

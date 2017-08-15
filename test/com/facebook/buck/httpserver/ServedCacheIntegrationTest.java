@@ -41,6 +41,7 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.DataOutputStream;
@@ -132,7 +133,8 @@ public class ServedCacheIntegrationTest {
 
     Path fetchedContents = tmpDir.newFile();
     CacheResult cacheResult =
-        serverBackedCache.fetch(A_FILE_RULE_KEY, LazyPath.ofInstance(fetchedContents));
+        Futures.getUnchecked(
+            serverBackedCache.fetchAsync(A_FILE_RULE_KEY, LazyPath.ofInstance(fetchedContents)));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
     assertThat(cacheResult.getMetadata(), Matchers.equalTo(A_FILE_METADATA));
     assertThat(
@@ -197,11 +199,13 @@ public class ServedCacheIntegrationTest {
         createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents));
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.ERROR));
 
     // Try again to make sure the exception didn't kill the server.
-    cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents));
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
   }
 
@@ -230,7 +234,8 @@ public class ServedCacheIntegrationTest {
         createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get(), 3));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents));
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.ERROR));
   }
 
@@ -259,7 +264,8 @@ public class ServedCacheIntegrationTest {
         createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get(), 4));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents));
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
   }
 
@@ -284,7 +290,8 @@ public class ServedCacheIntegrationTest {
         createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents));
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.MISS));
   }
 
@@ -297,7 +304,8 @@ public class ServedCacheIntegrationTest {
         createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort().get()));
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents));
     assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.ERROR));
   }
 
@@ -311,17 +319,20 @@ public class ServedCacheIntegrationTest {
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     assertThat(
-        serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents))
+            .getType(),
         Matchers.equalTo(CacheResultType.ERROR));
 
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
     assertThat(
-        serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents))
+            .getType(),
         Matchers.equalTo(CacheResultType.HIT));
 
     webServer.updateAndStartIfNeeded(Optional.empty());
     assertThat(
-        serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
+        Futures.getUnchecked(serverBackedCache.fetchAsync(A_FILE_RULE_KEY, fetchedContents))
+            .getType(),
         Matchers.equalTo(CacheResultType.ERROR));
   }
 
@@ -347,14 +358,15 @@ public class ServedCacheIntegrationTest {
     projectFilesystem.writeContentsToPath(data, originalDataPath);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(ruleKey, fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
     serverBackedCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.notBorrowablePath(originalDataPath));
 
-    cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    cacheResult = Futures.getUnchecked(serverBackedCache.fetchAsync(ruleKey, fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
     assertThat(cacheResult.getMetadata(), Matchers.equalTo(metadata));
     assertThat(
@@ -383,14 +395,15 @@ public class ServedCacheIntegrationTest {
     projectFilesystem.writeContentsToPath(data, originalDataPath);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(ruleKey, fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
     serverBackedCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.borrowablePath(originalDataPath));
 
-    cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    cacheResult = Futures.getUnchecked(serverBackedCache.fetchAsync(ruleKey, fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(true));
     assertThat(cacheResult.getMetadata(), Matchers.equalTo(metadata));
     assertThat(
@@ -419,14 +432,15 @@ public class ServedCacheIntegrationTest {
     projectFilesystem.writeContentsToPath(data, originalDataPath);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
-    CacheResult cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    CacheResult cacheResult =
+        Futures.getUnchecked(serverBackedCache.fetchAsync(ruleKey, fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
 
     serverBackedCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
         BorrowablePath.notBorrowablePath(originalDataPath));
 
-    cacheResult = serverBackedCache.fetch(ruleKey, fetchedContents);
+    cacheResult = Futures.getUnchecked(serverBackedCache.fetchAsync(ruleKey, fetchedContents));
     assertThat(cacheResult.getType().isSuccess(), Matchers.is(false));
   }
 
@@ -481,7 +495,8 @@ public class ServedCacheIntegrationTest {
 
   private boolean containsKey(ArtifactCache cache, RuleKey ruleKey) throws Exception {
     Path fetchedContents = tmpDir.newFile();
-    CacheResult cacheResult = cache.fetch(ruleKey, LazyPath.ofInstance(fetchedContents));
+    CacheResult cacheResult =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(fetchedContents)));
     assertThat(cacheResult.getType(), Matchers.oneOf(CacheResultType.HIT, CacheResultType.MISS));
     return cacheResult.getType().isSuccess();
   }

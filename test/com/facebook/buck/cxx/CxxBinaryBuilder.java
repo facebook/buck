@@ -45,7 +45,7 @@ public class CxxBinaryBuilder
         new CxxBinaryDescription(
             CxxPlatformUtils.DEFAULT_CONFIG,
             new InferBuckConfig(FakeBuckConfig.builder().build()),
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             cxxPlatforms),
         target);
   }
@@ -59,7 +59,7 @@ public class CxxBinaryBuilder
         new CxxBinaryDescription(
             cxxBuckConfig,
             new InferBuckConfig(FakeBuckConfig.builder().build()),
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             cxxPlatforms),
         target);
   }

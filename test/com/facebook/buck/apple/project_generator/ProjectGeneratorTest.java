@@ -4459,6 +4459,26 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testGeneratedProjectSettingForSwiftVersionForAppleLibrary() throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of())
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+    assertThat(buildSettings.get("SWIFT_VERSION"), equalTo("3.0"));
+  }
+
+  @Test
   public void testMergedHeaderMap() throws IOException {
     BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
     BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");

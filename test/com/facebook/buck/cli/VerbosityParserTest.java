@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.util.Verbosity;
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 /** Unit test for {@link VerbosityParser}. */
@@ -26,18 +27,24 @@ public class VerbosityParserTest {
 
   @Test
   public void testVerbosity() {
-    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse());
-    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("-v"));
-    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("--verbose"));
-    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse("run hello -- -v no"));
+    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse(ImmutableList.of()));
+    assertSame(VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse(ImmutableList.of("-v")));
+    assertSame(
+        VerbosityParser.DEFAULT_VERBOSITY, VerbosityParser.parse(ImmutableList.of("--verbose")));
+    assertSame(
+        VerbosityParser.DEFAULT_VERBOSITY,
+        VerbosityParser.parse(ImmutableList.of("run hello -- -v no")));
 
-    assertSame(Verbosity.COMMANDS_AND_OUTPUT, VerbosityParser.parse("--verbose", "5"));
+    assertSame(
+        Verbosity.COMMANDS_AND_OUTPUT, VerbosityParser.parse(ImmutableList.of("--verbose", "5")));
 
-    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("-v", "3"));
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse(ImmutableList.of("-v", "3")));
 
-    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "-v", "3", "--num-threads", "4"));
+    assertSame(
+        Verbosity.COMMANDS,
+        VerbosityParser.parse(ImmutableList.of("build", "-v", "3", "--num-threads", "4")));
 
-    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "-v=3"));
-    assertSame(Verbosity.COMMANDS, VerbosityParser.parse("build", "--verbose=3"));
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse(ImmutableList.of("build", "-v=3")));
+    assertSame(Verbosity.COMMANDS, VerbosityParser.parse(ImmutableList.of("build", "--verbose=3")));
   }
 }
