@@ -61,46 +61,29 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
   @Override
   public void createCompileToJarStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
+      CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       JarParameters jarParameters,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
-    Preconditions.checkArgument(jarParameters.getEntriesToJar().contains(outputDirectory));
+    Preconditions.checkArgument(
+        jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
 
     createCompileStep(
-        context,
-        sourceFilePaths,
-        invokingRule,
-        resolver,
-        filesystem,
-        declaredClasspathEntries,
-        outputDirectory,
-        generatedCodeDirectory,
-        workingDirectory,
-        depFilePath,
-        pathToSrcsList,
-        steps,
-        buildableContext);
+        context, invokingRule, resolver, filesystem, compilerParameters, steps, buildableContext);
 
     steps.addAll(
         Lists.newCopyOnWriteArrayList(
             addPostprocessClassesCommands(
                 filesystem,
                 postprocessClassesCommands,
-                outputDirectory,
-                declaredClasspathEntries,
+                compilerParameters.getOutputDirectory(),
+                compilerParameters.getClasspathEntries(),
                 getBootClasspath(context))));
 
     createJarStep(filesystem, jarParameters, steps);

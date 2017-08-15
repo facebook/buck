@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
@@ -69,19 +70,21 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory impleme
   @Override
   public void createCompileStep(
       BuildContext buildContext,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
-      /* out params */
+      CompilerParameters parameters,
+      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+
+    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Optional<Path> workingDirectory = parameters.getWorkingDirectory();
+    Optional<Path> generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
+    Path outputDirectory = parameters.getOutputDirectory();
+    Optional<Path> depFilePath = parameters.getDepFilePath();
+    Path pathToSrcsList = parameters.getPathToSourcesList();
 
     // Don't invoke kotlinc if we don't have any kotlin files.
     if (sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)) {
@@ -114,23 +117,25 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory impleme
       new JavacToJarStepFactory(javac, javacOptions, amender)
           .createCompileStep(
               buildContext,
-              javaSourceFiles,
               invokingRule,
               resolver,
               filesystem,
-              // We need to add the kotlin class files to the classpath. (outputDirectory).
-              ImmutableSortedSet.<Path>naturalOrder()
-                  .add(outputDirectory)
-                  .addAll(
-                      Optional.ofNullable(extraClassPath.apply(buildContext))
-                          .orElse(ImmutableList.of()))
-                  .addAll(declaredClasspathEntries)
+              CompilerParameters.builder()
+                  .setClasspathEntries(
+                      ImmutableSortedSet.<Path>naturalOrder()
+                          .add(outputDirectory)
+                          .addAll(
+                              Optional.ofNullable(extraClassPath.apply(buildContext))
+                                  .orElse(ImmutableList.of()))
+                          .addAll(declaredClasspathEntries)
+                          .build())
+                  .setSourceFilePaths(javaSourceFiles)
+                  .setWorkingDirectory(workingDirectory)
+                  .setGeneratedCodeDirectory(generatedCodeDirectory)
+                  .setOutputDirectory(outputDirectory)
+                  .setDepFilePath(depFilePath)
+                  .setPathToSourcesList(pathToSrcsList)
                   .build(),
-              outputDirectory,
-              generatedCodeDirectory,
-              workingDirectory,
-              depFilePath,
-              pathToSrcsList,
               steps,
               buildableContext);
     }

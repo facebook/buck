@@ -143,6 +143,7 @@ java_immutables_library(
     name = "support",
     srcs = [
         "AbstractAnnotationProcessingParams.java",
+        "AbstractCompilerParameters.java",
         "AbstractJarParameters.java",
         "AbstractJavaOptions.java",
         "AbstractJavacExecutionContext.java",

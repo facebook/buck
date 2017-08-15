@@ -189,17 +189,21 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     compileStepFactory.createCompileStep(
         context,
-        javaSourceFilePaths.build(),
         getBuildTarget(),
         context.getSourcePathResolver(),
         getProjectFilesystem(),
-        /* classpathEntries */ ImmutableSortedSet.of(),
-        fatJarDir,
-        /* workingDir */ Optional.empty(),
-        Optional.of(
-            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
-        Optional.empty(),
-        pathToSrcsList,
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths.build())
+            .setWorkingDirectory(
+                Optional.of(
+                    BuildTargets.getAnnotationPath(
+                        getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
+            .setGeneratedCodeDirectory(Optional.empty())
+            .setOutputDirectory(fatJarDir)
+            .setDepFilePath(Optional.empty())
+            .setPathToSourcesList(pathToSrcsList)
+            .build(),
         steps,
         buildableContext);
 

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -50,20 +51,20 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory implements Add
 
   @Override
   public void createCompileStep(
-      BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
+      BuildContext buildContext,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
-      /* out params */
+      CompilerParameters parameters,
+      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+
+    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputDirectory();
+    Path pathToSrcsList = parameters.getPathToSourcesList();
+
     steps.add(
         new GroovycStep(
             groovyc,

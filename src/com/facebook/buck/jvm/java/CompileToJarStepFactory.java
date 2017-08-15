@@ -28,8 +28,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Creates the necessary steps to compile the source files, apply post process classes commands, and
@@ -55,16 +53,10 @@ public interface CompileToJarStepFactory {
 
   void createCompileStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
+      CompilerParameters parameters,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext);
@@ -74,17 +66,11 @@ public interface CompileToJarStepFactory {
 
   void createCompileToJarStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
+      CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       JarParameters jarParameters,
       /* output params */

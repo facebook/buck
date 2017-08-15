@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
@@ -84,19 +85,17 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implemen
   @Override
   public void createCompileStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> classpathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
-      /* out params */
+      CompilerParameters parameters,
+      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+
+    ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputDirectory();
 
     steps.add(
         new ScalacStep(

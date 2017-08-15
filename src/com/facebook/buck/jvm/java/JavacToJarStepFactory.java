@@ -63,18 +63,21 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
   @Override
   public void createCompileStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
+      CompilerParameters parameters,
+      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+
+    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Optional<Path> workingDirectory = parameters.getWorkingDirectory();
+    Optional<Path> generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
+    Path outputDirectory = parameters.getOutputDirectory();
+    Optional<Path> depFilePath = parameters.getDepFilePath();
+    Path pathToSrcsList = parameters.getPathToSourcesList();
 
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
@@ -137,22 +140,24 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
   @Override
   public void createCompileToJarStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
+      CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       JarParameters jarParameters,
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+    ImmutableSortedSet<Path> declaredClasspathEntries = compilerParameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = compilerParameters.getSourceFilePaths();
+    Optional<Path> workingDirectory = compilerParameters.getWorkingDirectory();
+    Optional<Path> generatedCodeDirectory = compilerParameters.getGeneratedCodeDirectory();
+    Path outputDirectory = compilerParameters.getOutputDirectory();
+    Optional<Path> depFilePath = compilerParameters.getDepFilePath();
+    Path pathToSrcsList = compilerParameters.getPathToSourcesList();
+
     Preconditions.checkArgument(jarParameters.getEntriesToJar().contains(outputDirectory));
 
     String spoolMode = javacOptions.getSpoolMode().name();
@@ -202,17 +207,11 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
     } else {
       super.createCompileToJarStep(
           context,
-          sourceFilePaths,
           invokingRule,
           resolver,
           ruleFinder,
           filesystem,
-          declaredClasspathEntries,
-          outputDirectory,
-          generatedCodeDirectory,
-          workingDirectory,
-          depFilePath,
-          pathToSrcsList,
+          compilerParameters,
           postprocessClassesCommands,
           jarParameters,
           steps,

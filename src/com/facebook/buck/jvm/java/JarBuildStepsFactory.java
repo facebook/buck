@@ -263,17 +263,19 @@ public class JarBuildStepsFactory
 
       this.compileStepFactory.createCompileToJarStep(
           context,
-          javaSrcs,
           target,
           context.getSourcePathResolver(),
           this.ruleFinder,
           projectFilesystem,
-          compileTimeClasspathPaths,
-          outputDirectory,
-          generatedCodeDirectory,
-          workingDirectory,
-          depFileRelativePath,
-          pathToSrcsList,
+          CompilerParameters.builder()
+              .setClasspathEntries(compileTimeClasspathPaths)
+              .setSourceFilePaths(javaSrcs)
+              .setWorkingDirectory(workingDirectory)
+              .setGeneratedCodeDirectory(generatedCodeDirectory)
+              .setOutputDirectory(outputDirectory)
+              .setDepFilePath(depFileRelativePath)
+              .setPathToSourcesList(pathToSrcsList)
+              .build(),
           postprocessClassesCommands,
           JarParameters.builder()
               .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
@@ -281,7 +283,6 @@ public class JarBuildStepsFactory
               .setJarPath(outputJar.get())
               .setRemoveEntryPredicate(classesToRemoveFromJar)
               .build(),
-          /* output params */
           steps,
           buildableContext);
     }

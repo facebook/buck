@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
@@ -245,17 +246,21 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Compile the .java files.
     compileStepFactory.createCompileStep(
         context,
-        javaSourceFilePaths,
         getBuildTarget(),
         context.getSourcePathResolver(),
         getProjectFilesystem(),
-        /* declared classpath */ ImmutableSortedSet.of(),
-        rDotJavaClassesFolder,
-        Optional.of(
-            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
-        Optional.empty(),
-        Optional.empty(),
-        pathToSrcsList,
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths)
+            .setWorkingDirectory(Optional.empty())
+            .setGeneratedCodeDirectory(
+                Optional.of(
+                    BuildTargets.getAnnotationPath(
+                        getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
+            .setOutputDirectory(rDotJavaClassesFolder)
+            .setDepFilePath(Optional.empty())
+            .setPathToSourcesList(pathToSrcsList)
+            .build(),
         steps,
         buildableContext);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
