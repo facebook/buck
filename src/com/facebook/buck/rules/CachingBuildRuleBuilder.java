@@ -663,7 +663,10 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
-    Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(eventBus);
+    Optional<RuleKeyAndInputs> manifestKey;
+    try (Scope scope = buildRuleScope()) {
+      manifestKey = calculateManifestKey(eventBus);
+    }
     if (manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
@@ -700,8 +703,11 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
-    // Calculate input-based rule key.
-    Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey();
+    Optional<RuleKey> inputRuleKey;
+    try (Scope scope = buildRuleScope()) {
+      // Calculate input-based rule key.
+      inputRuleKey = calculateInputBasedRuleKey();
+    }
     if (inputRuleKey.isPresent()) {
       return performInputBasedCacheFetch(inputRuleKey.get());
     }
@@ -1611,7 +1617,7 @@ class CachingBuildRuleBuilder {
               Optional.of(BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
           return;
         }
-        try (Scope scope = buildRuleScopeManager.scope()) {
+        try (Scope scope = buildRuleScope()) {
           executeCommandsNowThatDepsAreBuilt();
         }
 
