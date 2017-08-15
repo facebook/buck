@@ -51,7 +51,6 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
@@ -378,7 +377,7 @@ class CachingBuildRuleBuilder {
             inputs
                 .stream()
                 .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
-                .map(MoreFunctions.toJsonFunction())
+                .map(ObjectMappers.toJsonFunction())
                 .collect(MoreCollectors.toImmutableList());
         buildInfoRecorder.addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
 
@@ -1265,7 +1264,7 @@ class CachingBuildRuleBuilder {
         depFile
             .get()
             .stream()
-            .map(MoreFunctions.fromJsonFunction(DependencyFileEntry.class))
+            .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
             .collect(MoreCollectors.toImmutableList());
 
     try (Scope scope =

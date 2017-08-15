@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -34,6 +35,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Function;
 
 public class ObjectMappers {
 
@@ -88,6 +90,26 @@ public class ObjectMappers {
 
   public static <T> T convertValue(Map<String, Object> map, Class<T> clazz) {
     return mapper.convertValue(map, clazz);
+  }
+
+  public static <T> Function<T, String> toJsonFunction() {
+    return input -> {
+      try {
+        return WRITER.writeValueAsString(input);
+      } catch (JsonProcessingException e) {
+        throw new HumanReadableException(e, "Failed to serialize to json: " + input);
+      }
+    };
+  }
+
+  public static <T> Function<String, T> fromJsonFunction(final Class<T> type) {
+    return input -> {
+      try {
+        return readValue(input, type);
+      } catch (IOException e) {
+        throw new HumanReadableException(e, "Failed to read from json: " + input);
+      }
+    };
   }
 
   // This is mutable, and doesn't share a cache with the rest of Buck.
