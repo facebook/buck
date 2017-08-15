@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -53,11 +54,8 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus buckEventBus;
   private final ListeningExecutorService httpWriteExecutorService;
-  private final String errorTextTemplate;
   private final Optional<Long> maxStoreSize;
-
-  private final Set<String> seenErrors = Sets.newConcurrentHashSet();
-  private boolean isNoHealthyServersSeen = false;
+  private final ErrorReporter errorReporter;
 
   public AbstractNetworkCache(NetworkCacheArgs args) {
     this.name = args.getCacheName();
@@ -70,8 +68,8 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     this.projectFilesystem = args.getProjectFilesystem();
     this.buckEventBus = args.getBuckEventBus();
     this.httpWriteExecutorService = args.getHttpWriteExecutorService();
-    this.errorTextTemplate = args.getErrorTextTemplate();
     this.maxStoreSize = args.getMaxStoreSizeBytes();
+    this.errorReporter = new ErrorReporter(args);
   }
 
   protected String getName() {
@@ -131,21 +129,21 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       result = fetchResult.getCacheResult();
       return result;
     } catch (IOException e) {
-      String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
+      String msg =
+          String.format("fetch(%s): %s: %s", ruleKey, e.getClass().getName(), e.getMessage());
       if (isNoHealthyServersException(e)) {
-        if (!isNoHealthyServersSeen) {
-          isNoHealthyServersSeen = true;
-          buckEventBus.post(
-              ConsoleEvent.warning(
-                  "\n"
-                      + "Failed to fetch %s over %s:\n"
-                      + "Buck encountered a critical network failure.\n"
-                      + "Please check your network connection and retry."
-                      + "\n",
-                  ruleKey, name));
-        }
+        errorReporter.reportFailureToEventBus(
+            "NoHealthyServers",
+            String.format(
+                "\n"
+                    + "Failed to fetch %s over %s:\n"
+                    + "Buck encountered a critical network failure.\n"
+                    + "Please check your network connection and retry."
+                    + "\n",
+                ruleKey, name));
       } else {
-        reportFailure(e, "fetch(%s): %s", ruleKey, msg);
+        String key = String.format("fetch:%s", e.getClass().getSimpleName());
+        errorReporter.reportFailure(e, key, msg);
       }
       result = CacheResult.error(name, mode, msg);
       return result;
@@ -212,8 +210,12 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
             buckEventBus.post(finishedEventBuilder.build());
 
           } catch (IOException e) {
-            reportFailure(
-                e, "store(%s): %s: %s", info.getRuleKeys(), e.getClass().getName(), e.getMessage());
+            String key = String.format("store:%s", e.getClass().getSimpleName());
+            String message =
+                String.format(
+                    "store(%s): %s: %s",
+                    info.getRuleKeys(), e.getClass().getName(), e.getMessage());
+            errorReporter.reportFailure(e, key, message);
             finishedEventBuilder
                 .getStoreBuilder()
                 .setWasStoreSuccessful(false)
@@ -253,32 +255,48 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     return tmp;
   }
 
-  private void reportFailure(Exception exception, String format, Object... args) {
-    LOG.warn(exception, format, args);
-    reportFailureToEventBus(format, args);
-  }
-
-  protected void reportFailure(String format, Object... args) {
-    LOG.warn(format, args);
-    reportFailureToEventBus(format, args);
-  }
-
-  private void reportFailureToEventBus(String format, Object... args) {
-    if (seenErrors.add(format)) {
-      buckEventBus.post(
-          ConsoleEvent.warning(
-              errorTextTemplate
-                  .replaceAll("\\{cache_name}", Matcher.quoteReplacement(name))
-                  .replaceAll("\\\\t", Matcher.quoteReplacement("\t"))
-                  .replaceAll("\\\\n", Matcher.quoteReplacement("\n"))
-                  .replaceAll(
-                      "\\{error_message}", Matcher.quoteReplacement(String.format(format, args)))));
-    }
-  }
-
   private static boolean isArtefactTooBigToBeStored(
       long artifactSizeBytes, Optional<Long> maxStoreSize) {
     return maxStoreSize.isPresent() && artifactSizeBytes > maxStoreSize.get();
+  }
+
+  void reportFailureWithFormatKey(String format, Object... args) {
+    errorReporter.reportFailure(format, String.format(format, args));
+  }
+
+  private static class ErrorReporter {
+    private final EventDispatcher dispatcher;
+    private final String errorTextTemplate;
+    private final Set<String> seenErrors = Sets.newConcurrentHashSet();
+    private final String name;
+
+    public ErrorReporter(NetworkCacheArgs args) {
+      dispatcher = args.getBuckEventBus();
+      errorTextTemplate = args.getErrorTextTemplate();
+      name = args.getCacheName();
+    }
+
+    private void reportFailure(String errorKey, String message) {
+      LOG.warn(message);
+      reportFailureToEventBus(errorKey, message);
+    }
+
+    private void reportFailure(Exception exception, String errorKey, String message) {
+      LOG.warn(exception, message);
+      reportFailureToEventBus(errorKey, message);
+    }
+
+    private void reportFailureToEventBus(String errorKey, String message) {
+      if (seenErrors.add(errorKey)) {
+        dispatcher.post(
+            ConsoleEvent.warning(
+                errorTextTemplate
+                    .replaceAll("\\{cache_name}", Matcher.quoteReplacement(name))
+                    .replaceAll("\\\\t", Matcher.quoteReplacement("\t"))
+                    .replaceAll("\\\\n", Matcher.quoteReplacement("\n"))
+                    .replaceAll("\\{error_message}", Matcher.quoteReplacement(message))));
+      }
+    }
   }
 
   @BuckStyleTuple

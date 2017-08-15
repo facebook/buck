@@ -70,7 +70,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
               String.format(
                   "unexpected server response: [%d:%s]",
                   response.statusCode(), response.statusMessage());
-          reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
+          reportFailureWithFormatKey("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
@@ -96,7 +96,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         // Verify that we were one of the rule keys that stored this artifact.
         if (!fetchedData.getRuleKeys().contains(ruleKey)) {
           String msg = "incorrect key name";
-          reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
+          reportFailureWithFormatKey("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
@@ -104,7 +104,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         // the HTTP header.  If it's incorrect, log this and return a miss.
         if (!fetchedData.getExpectedHashCode().equals(fetchedData.getActualHashCode())) {
           String msg = "artifact had invalid checksum";
-          reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
+          reportFailureWithFormatKey("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
           getProjectFilesystem().deleteFileAtPath(temp);
           return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
@@ -168,7 +168,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
     try (HttpResponse response = storeClient.makeRequest("/artifacts/key", builder)) {
       final boolean requestFailed = response.statusCode() != HttpURLConnection.HTTP_ACCEPTED;
       if (requestFailed) {
-        reportFailure(
+        reportFailureWithFormatKey(
             "store(%s, %s): unexpected response: [%d:%s].",
             response.requestUrl(),
             info.getRuleKeys(),

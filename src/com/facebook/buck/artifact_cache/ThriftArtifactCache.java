@@ -277,7 +277,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
           ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
         BuckCacheResponse cacheResponse = response.getThriftData();
         if (!cacheResponse.isWasSuccessful()) {
-          reportFailure(
+          reportFailureWithFormatKey(
               "Failed to store artifact with thriftErrorMessage=[%s] "
                   + "url=[%s] artifactSizeBytes=[%d]",
               response.getThriftData().getErrorMessage(),
