@@ -22,10 +22,13 @@ import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.JarEntryContainer;
 import com.facebook.buck.zip.JarEntrySupplier;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharStreams;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +79,41 @@ public class JarBuilderTest {
               "Dog",
               "Foo"),
           jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
+    }
+  }
+
+  @Test
+  public void testMergesServicesFromAllContainers() throws IOException {
+    File tempFile = temporaryFolder.newFile();
+    try (TestJarEntryContainer container1 = new TestJarEntryContainer("Container1");
+        TestJarEntryContainer container2 = new TestJarEntryContainer("Container2");
+        TestJarEntryContainer container3 = new TestJarEntryContainer("Container3")) {
+      new JarBuilder()
+          .addEntryContainer(
+              container1.addEntry("META-INF/services/com.example.Foo1", "com.example.Bar1"))
+          .addEntryContainer(
+              container2
+                  .addEntry("META-INF/services/com.example.Foo1", "com.example.Bar2")
+                  .addEntry("META-INF/services/com.example.Foo2", "com.example.Bar3"))
+          .addEntryContainer(
+              container3.addEntry("META-INF/services/com.example.Foo2", "com.example.Bar4"))
+          .createJarFile(tempFile.toPath());
+    }
+
+    try (JarFile jarFile = new JarFile(tempFile)) {
+      assertEquals(
+          "com.example.Bar1\ncom.example.Bar2",
+          CharStreams.toString(
+              new InputStreamReader(
+                  jarFile.getInputStream(jarFile.getEntry("META-INF/services/com.example.Foo1")),
+                  Charsets.UTF_8)));
+
+      assertEquals(
+          "com.example.Bar3\ncom.example.Bar4",
+          CharStreams.toString(
+              new InputStreamReader(
+                  jarFile.getInputStream(jarFile.getEntry("META-INF/services/com.example.Foo2")),
+                  Charsets.UTF_8)));
     }
   }
 
