@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -87,8 +88,10 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             context,
             ruleFinder,
             getBuildTarget(),
-            filesForGwtModule,
-            Optional.empty(),
+            ResourcesParameters.builder()
+                .setResources(filesForGwtModule)
+                .setResourcesRoot(Optional.empty())
+                .build(),
             tempJarFolder));
 
     steps.add(

@@ -37,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 
 public class CopyResourcesStep implements Step {
@@ -46,8 +45,7 @@ public class CopyResourcesStep implements Step {
   private final BuildContext buildContext;
   private final SourcePathRuleFinder ruleFinder;
   private final BuildTarget target;
-  private final Collection<? extends SourcePath> resources;
-  private final Optional<Path> resourcesRoot;
+  private final ResourcesParameters parameters;
   private final Path outputDirectory;
 
   public CopyResourcesStep(
@@ -55,15 +53,13 @@ public class CopyResourcesStep implements Step {
       BuildContext buildContext,
       SourcePathRuleFinder ruleFinder,
       BuildTarget target,
-      Collection<? extends SourcePath> resources,
-      Optional<Path> resourcesRoot,
+      ResourcesParameters parameters,
       Path outputDirectory) {
     this.filesystem = filesystem;
     this.buildContext = buildContext;
     this.ruleFinder = ruleFinder;
     this.target = target;
-    this.resources = resources;
-    this.resourcesRoot = resourcesRoot;
+    this.parameters = parameters;
     this.outputDirectory = outputDirectory;
   }
 
@@ -83,20 +79,22 @@ public class CopyResourcesStep implements Step {
   ImmutableList<Step> buildSteps() {
     ImmutableList.Builder<Step> allSteps = ImmutableList.builder();
 
-    if (resources.isEmpty()) {
+    if (parameters.getResources().isEmpty()) {
       return allSteps.build();
     }
 
     JavaPackageFinder javaPackageFinder =
-        resourcesRoot
+        parameters
+            .getResourcesRoot()
             .map(
                 root ->
                     (JavaPackageFinder)
                         new ResourcesRootPackageFinder(root, buildContext.getJavaPackageFinder()))
             .orElse(buildContext.getJavaPackageFinder());
+
     String targetPackageDir = javaPackageFinder.findJavaPackage(target);
 
-    for (SourcePath rawResource : resources) {
+    for (SourcePath rawResource : parameters.getResources()) {
       // If the path to the file defining this rule were:
       // "first-party/orca/lib-http/tests/com/facebook/orca/BUCK"
       //

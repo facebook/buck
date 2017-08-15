@@ -38,6 +38,7 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -72,11 +73,15 @@ public class CopyResourcesStepTest {
             buildContext,
             ruleFinder,
             buildTarget,
-            ImmutableSet.of(
-                new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
-                new FakeSourcePath(
-                    filesystem, "android/java/src/com/facebook/common/util/data.json")),
-            Optional.empty(),
+            ResourcesParameters.builder()
+                .setResources(
+                    ImmutableSortedSet.of(
+                        new FakeSourcePath(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        new FakeSourcePath(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json")))
+                .setResourcesRoot(Optional.empty())
+                .build(),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -139,11 +144,15 @@ public class CopyResourcesStepTest {
             buildContext,
             ruleFinder,
             buildTarget,
-            ImmutableSet.<SourcePath>of(
-                new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
-                new FakeSourcePath(
-                    filesystem, "android/java/src/com/facebook/common/util/data.json")),
-            Optional.empty(),
+            ResourcesParameters.builder()
+                .setResources(
+                    ImmutableSortedSet.<SourcePath>of(
+                        new FakeSourcePath(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        new FakeSourcePath(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json")))
+                .setResourcesRoot(Optional.empty())
+                .build(),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -207,11 +216,15 @@ public class CopyResourcesStepTest {
             buildContext,
             ruleFinder,
             buildTarget,
-            ImmutableSet.of(
-                new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
-                new FakeSourcePath(
-                    filesystem, "android/java/src/com/facebook/common/util/data.json")),
-            Optional.empty(),
+            ResourcesParameters.builder()
+                .setResources(
+                    ImmutableSortedSet.of(
+                        new FakeSourcePath(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        new FakeSourcePath(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json")))
+                .setResourcesRoot(Optional.empty())
+                .build(),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()

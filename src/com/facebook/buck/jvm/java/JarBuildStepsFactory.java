@@ -210,8 +210,10 @@ public class JarBuildStepsFactory
             context,
             this.ruleFinder,
             target,
-            this.resources,
-            this.resourcesRoot,
+            ResourcesParameters.builder()
+                .setResources(this.resources)
+                .setResourcesRoot(this.resourcesRoot)
+                .build(),
             outputDirectory));
 
     steps.addAll(
