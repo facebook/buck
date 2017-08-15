@@ -218,8 +218,9 @@ public class DistBuildState {
         new MaterializerProjectFileHashCache(decoratedCache, remoteFileHashes, provider);
 
     // Create all symlinks and touch all other files.
-    // TODO(alisdair): remove this once action graph doesn't read from file system.
-    materializer.preloadAllFiles();
+    DistBuildConfig remoteConfig = new DistBuildConfig(getRootCell().getBuckConfig());
+    boolean materializeAllFilesDuringPreload = !remoteConfig.materializeSourceFilesOnDemand();
+    materializer.preloadAllFiles(materializeAllFilesDuringPreload);
 
     return materializer;
   }

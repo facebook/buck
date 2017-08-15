@@ -73,12 +73,14 @@ public class MaterializerProjectFileHashCacheTest {
 
   private static final MaterializeFunction GET = (materializer, path) -> materializer.get(path);
   private static final MaterializeFunction PRELOAD =
-      (materializer, path) -> materializer.preloadAllFiles();
+      (materializer, path) -> materializer.preloadAllFiles(false);
   private static final MaterializeFunction PRELOAD_THEN_GET =
       (materializer, path) -> {
-        materializer.preloadAllFiles();
+        materializer.preloadAllFiles(false);
         materializer.get(path);
       };
+  private static final MaterializeFunction PRELOAD_WITH_MATERIALIZE_ALL =
+      (materializer, path) -> materializer.preloadAllFiles(true);
 
   private void testMaterializeDirectoryHelper(
       boolean materializeDuringPreloading,
@@ -306,6 +308,21 @@ public class MaterializerProjectFileHashCacheTest {
     // => preloading for entry with materializeDuringPreloading set to true
     // creates file with correct contents
     Path realFile = testEntryForRealFile(true, PRELOAD, true);
+
+    assertTrue(realFile.toFile().exists());
+    String actualFileContents = new String(Files.readAllBytes(realFile));
+    assertThat(actualFileContents, Matchers.equalTo(FILE_CONTENTS));
+  }
+
+  @Test
+  public void testMaterializeAllFilesDuringPreloadSetsContents()
+      throws IOException, InterruptedException {
+    // Scenario:
+    //  path: /project/linktoexternaldir/externalfile
+    //  contents: "filecontents"
+    // => preloading for entry with materializeAllFiles set to true
+    // creates file with correct contents
+    Path realFile = testEntryForRealFile(false, PRELOAD_WITH_MATERIALIZE_ALL, true);
 
     assertTrue(realFile.toFile().exists());
     String actualFileContents = new String(Files.readAllBytes(realFile));

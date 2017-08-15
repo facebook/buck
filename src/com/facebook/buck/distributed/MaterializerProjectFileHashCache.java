@@ -63,20 +63,14 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
    * This method creates all symlinks and touches all regular files so that any file existence
    * checks during action graph transformation go through (for instance,
    * PrebuiltCxxLibraryDescription::requireSharedLibrary). Note: THIS IS A HACK. And this needs to
-   * be here until the misbehaving rules are fixed.
+   * be here until the misbehaving rules are fixed. TODO(alisdair): remove this once action graph
+   * doesn't read from file system.
    */
-  public void preloadAllFiles() throws IOException {
+  public void preloadAllFiles(boolean materializeAllFiles) throws IOException {
     for (Path absPath : remoteFileHashesByAbsPath.keySet()) {
       LOG.info("Preloading: [%s]", absPath.toString());
       BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
       if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
-        continue;
-      }
-
-      if (fileHashEntry.isSetMaterializeDuringPreloading()
-          && fileHashEntry.isMaterializeDuringPreloading()) {
-        Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
-        materializeIfNeeded(relPath);
         continue;
       }
 
@@ -99,6 +93,14 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         // Create directory
         // No need to materialize sub-dirs/files here, as there will be separate entries for those.
         projectFilesystem.mkdirs(absPath);
+        continue;
+      }
+
+      if (materializeAllFiles
+          || fileHashEntry.isSetMaterializeDuringPreloading()
+              && fileHashEntry.isMaterializeDuringPreloading()) {
+        Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
+        materializeIfNeeded(relPath);
         continue;
       }
 

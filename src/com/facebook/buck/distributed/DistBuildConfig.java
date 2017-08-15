@@ -70,6 +70,9 @@ public class DistBuildConfig {
   private static final String SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE =
       "source_file_multi_fetch_max_buffer_size";
 
+  private static final String MATERIALIZE_SOURCE_FILES_ON_DEMAND =
+      "materialize_source_files_on_demand";
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -94,6 +97,10 @@ public class DistBuildConfig {
 
   public Optional<Integer> getSourceFileMultiFetchMaxBufferSize() {
     return buckConfig.getInteger(STAMPEDE_SECTION, SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE);
+  }
+
+  public boolean materializeSourceFilesOnDemand() {
+    return buckConfig.getBooleanValue(STAMPEDE_SECTION, MATERIALIZE_SOURCE_FILES_ON_DEMAND, true);
   }
 
   public Optional<ImmutableList<String>> getOptionalPathWhitelist() {
