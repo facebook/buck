@@ -391,7 +391,7 @@ public class DistBuildService implements Closeable {
     return frontendRequest;
   }
 
-  public ImmutableMap<String, byte[]> multiFetchSourceFiles(ImmutableList<String> hashCodes)
+  public ImmutableMap<String, byte[]> multiFetchSourceFiles(List<String> hashCodes)
       throws IOException {
     FrontendRequest request = createFetchSourceFilesRequest(hashCodes);
     FrontendResponse response = makeRequestChecked(request);
@@ -417,7 +417,7 @@ public class DistBuildService implements Closeable {
     return Preconditions.checkNotNull(result.get(hashCode));
   }
 
-  public static FrontendRequest createFetchSourceFilesRequest(ImmutableList<String> fileHashes) {
+  public static FrontendRequest createFetchSourceFilesRequest(List<String> fileHashes) {
     FetchSourceFilesRequest fetchSourceFileRequest = new FetchSourceFilesRequest();
     fetchSourceFileRequest.setContentHashes(fileHashes);
     FrontendRequest frontendRequest = new FrontendRequest();

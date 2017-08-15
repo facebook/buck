@@ -24,6 +24,7 @@ import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.DistBuildState;
+import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RunId;
@@ -32,6 +33,8 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
@@ -45,10 +48,15 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
 public class DistBuildRunCommand extends AbstractDistBuildCommand {
+
+  private static final Logger LOG = Logger.get(DistBuildRunCommand.class);
+
+  private static final int EXECUTOR_TIMEOUT_SECONDS = 5;
 
   public static final String BUILD_STATE_FILE_ARG_NAME = "--build-state-file";
   public static final String BUILD_STATE_FILE_ARG_USAGE = "File containing the BuildStateJob data.";
@@ -145,6 +153,17 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
           Optional<StampedeId> stampedeId = getStampedeIdOptional();
           DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
+
+          ScheduledExecutorService scheduledExecutor =
+              Executors.newScheduledThreadPool(
+                  1, new CommandThreadFactory("SourceFileMultiFetchScheduler"));
+          FileContentsProvider multiSourceFileContentsProvider =
+              DistBuildFactory.createMultiSourceContentsProvider(
+                  service,
+                  new DistBuildConfig(state.getRootCell().getBuckConfig()),
+                  fileMaterializationStatsTracker,
+                  scheduledExecutor,
+                  getGlobalCacheDirOptional());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
@@ -155,11 +174,15 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   coordinatorPort,
                   coordinatorAddress,
                   stampedeId,
-                  getGlobalCacheDirOptional(),
-                  fileMaterializationStatsTracker,
+                  multiSourceFileContentsProvider,
                   distBuildConfig);
 
           int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
+          multiSourceFileContentsProvider.close();
+          scheduledExecutor.shutdown();
+          if (!scheduledExecutor.awaitTermination(EXECUTOR_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            LOG.error("Failed to terminate executor after %d seconds.", EXECUTOR_TIMEOUT_SECONDS);
+          }
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 
           if (slaveEventListener != null) {
@@ -182,7 +205,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
       } catch (HumanReadableException e) {
         logBuildFailureEvent(e.getHumanReadableErrorMessage(), slaveEventListener);
         throw e;
-      } catch (Exception e) {
+      } catch (IOException | InterruptedException | RuntimeException e) {
         logBuildFailureEvent(e.getMessage(), slaveEventListener);
         throw e;
       }

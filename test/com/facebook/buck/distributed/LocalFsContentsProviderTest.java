@@ -47,26 +47,28 @@ public class LocalFsContentsProviderTest {
 
   @Test
   public void testGettingNonExistentFile() throws InterruptedException, IOException {
-    LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir);
-    Assert.assertFalse(Files.isRegularFile(targetAbsPath));
-    provider.materializeFileContents(entry, targetAbsPath);
-    Assert.assertFalse(Files.isRegularFile(targetAbsPath));
+    try (LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir)) {
+      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
+      provider.materializeFileContents(entry, targetAbsPath);
+      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
+    }
   }
 
   @Test
   public void testGettingExistentFile() throws InterruptedException, IOException {
-    LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir);
-    Assert.assertFalse(Files.isRegularFile(targetAbsPath));
+    try (LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir)) {
+      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
 
-    Files.write(targetAbsPath, FILE_CONTENTS);
-    Assert.assertTrue(Files.isRegularFile(targetAbsPath));
-    provider.writeFileAndGetInputStream(entry, targetAbsPath);
-    Assert.assertTrue(Files.isRegularFile(targetAbsPath));
+      Files.write(targetAbsPath, FILE_CONTENTS);
+      Assert.assertTrue(Files.isRegularFile(targetAbsPath));
+      provider.writeFileAndGetInputStream(entry, targetAbsPath);
+      Assert.assertTrue(Files.isRegularFile(targetAbsPath));
 
-    Path anotherAbsPath = cacheRootDir.resolve("slicespin.file.txt");
-    Assert.assertFalse(Files.isRegularFile(anotherAbsPath));
-    provider.materializeFileContents(entry, anotherAbsPath);
-    Assert.assertTrue(Files.isRegularFile(anotherAbsPath));
-    Assert.assertThat(FILE_CONTENTS, Matchers.equalTo(Files.readAllBytes(anotherAbsPath)));
+      Path anotherAbsPath = cacheRootDir.resolve("slicespin.file.txt");
+      Assert.assertFalse(Files.isRegularFile(anotherAbsPath));
+      provider.materializeFileContents(entry, anotherAbsPath);
+      Assert.assertTrue(Files.isRegularFile(anotherAbsPath));
+      Assert.assertThat(FILE_CONTENTS, Matchers.equalTo(Files.readAllBytes(anotherAbsPath)));
+    }
   }
 }

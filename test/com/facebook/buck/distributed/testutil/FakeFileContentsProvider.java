@@ -61,6 +61,9 @@ public class FakeFileContentsProvider implements FileContentsProvider {
   }
 
   @Override
+  public void close() throws IOException {}
+
+  @Override
   public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
     filesystem.writeContentsToPath(

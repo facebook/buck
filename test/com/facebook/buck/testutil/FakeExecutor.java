@@ -111,7 +111,7 @@ public class FakeExecutor implements ScheduledExecutorService {
       throw new RejectedExecutionException();
     }
 
-    AnnotatedRunnable runnable = new AnnotatedRunnable(command, initialDelay, period, unit);
+    AnnotatedRunnable runnable = new AnnotatedRunnable(command, initialDelay, period, unit, true);
 
     runnableList.add(runnable);
 
@@ -130,7 +130,7 @@ public class FakeExecutor implements ScheduledExecutorService {
     if (rejectSubmission) {
       throw new RejectedExecutionException();
     }
-    AnnotatedRunnable runnable = new AnnotatedRunnable(command, initialDelay, delay, unit);
+    AnnotatedRunnable runnable = new AnnotatedRunnable(command, initialDelay, delay, unit, true);
 
     runnableList.add(runnable);
 
@@ -240,14 +240,26 @@ public class FakeExecutor implements ScheduledExecutorService {
 
   /** runs all tasks in the executor in the current thread */
   public void drain() {
-    while (getNumPendingTasks() > 0) {
-      removeHead().run();
-    }
+    drain(Integer.MAX_VALUE);
   }
 
   public void drain(int maxTasks) {
+    List<AnnotatedRunnable> rescheduleList = new ArrayList<>();
+
     for (int i = 0; i < maxTasks && getNumPendingTasks() > 0; i++) {
-      removeHead().run();
+      AnnotatedRunnable runnable = removeHead();
+      runnable.run();
+      if (runnable.shouldReschedule()) {
+        rescheduleList.add(runnable);
+      }
+    }
+
+    for (AnnotatedRunnable runnable : rescheduleList) {
+      FakeScheduledFuture<Void> future =
+          new FakeScheduledFuture<Void>(Executors.callable(runnable, (Void) null));
+      runnable.setFuture(future);
+      runnableList.add(runnable);
+      outstandingTasks.put(runnable.getFuture(), runnable.getFuture());
     }
   }
 }

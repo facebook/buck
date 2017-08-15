@@ -75,4 +75,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
       throw new IOException("Failed to store artifact to DirCache.", e);
     }
   }
+
+  @Override
+  public void close() {}
 }

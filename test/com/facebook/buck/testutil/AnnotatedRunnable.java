@@ -24,13 +24,20 @@ public class AnnotatedRunnable implements Runnable {
   private final long delay;
   private final TimeUnit unit;
   private final Runnable delegate;
+  private final boolean shouldReschedule;
   private ScheduledFuture<?> future;
 
-  public AnnotatedRunnable(Runnable delegate, long initDelay, long delay, TimeUnit unit) {
+  public AnnotatedRunnable(
+      Runnable delegate, long initDelay, long delay, TimeUnit unit, boolean shouldReschedule) {
     this.delegate = delegate;
     this.initDelay = initDelay;
     this.delay = delay;
     this.unit = unit;
+    this.shouldReschedule = shouldReschedule;
+  }
+
+  public AnnotatedRunnable(Runnable delegate, long initDelay, long delay, TimeUnit unit) {
+    this(delegate, initDelay, delay, unit, false);
   }
 
   public AnnotatedRunnable(Runnable delegate) {
@@ -56,6 +63,10 @@ public class AnnotatedRunnable implements Runnable {
 
   public ScheduledFuture<?> getFuture() {
     return future;
+  }
+
+  public boolean shouldReschedule() {
+    return shouldReschedule;
   }
 
   public void setFuture(ScheduledFuture<?> future) {
