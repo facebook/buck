@@ -124,7 +124,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
   }
 
   @Override
-  protected Tool getCompiler() {
+  public Tool getCompiler() {
     return javac;
   }
 

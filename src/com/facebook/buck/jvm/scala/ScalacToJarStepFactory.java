@@ -125,7 +125,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implemen
   }
 
   @Override
-  protected Tool getCompiler() {
+  public Tool getCompiler() {
     return scalac;
   }
 

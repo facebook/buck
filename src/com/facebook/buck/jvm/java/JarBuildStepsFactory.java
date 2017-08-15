@@ -52,7 +52,7 @@ public class JarBuildStepsFactory
   private final ProjectFilesystem projectFilesystem;
   private final SourcePathRuleFinder ruleFinder;
 
-  @AddToRuleKey private final CompileToJarStepFactory compileStepFactory;
+  @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
 
@@ -73,7 +73,7 @@ public class JarBuildStepsFactory
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      CompileToJarStepFactory compileStepFactory,
+      ConfiguredCompiler configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
       Optional<Path> resourcesRoot,
@@ -85,7 +85,7 @@ public class JarBuildStepsFactory
       RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
-    this.compileStepFactory = compileStepFactory;
+    this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
     this.resources = resources;
     this.resourcesRoot = resourcesRoot;
@@ -137,7 +137,7 @@ public class JarBuildStepsFactory
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Optional<Path> abiJarPath = getOutputJarPath(buildTarget);
-    ((JavacToJarStepFactory) compileStepFactory).setCompileAbi(abiJarPath.get());
+    ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(abiJarPath.get());
 
     addCompileToJarSteps(
         buildTarget,
@@ -148,7 +148,7 @@ public class JarBuildStepsFactory
         Optional.empty(),
         steps);
 
-    ((JavacToJarStepFactory) compileStepFactory).setCompileAbi(null);
+    ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(null);
 
     return steps.build();
   }
@@ -185,6 +185,8 @@ public class JarBuildStepsFactory
       ImmutableList<String> postprocessClassesCommands,
       Optional<Path> depFileRelativePath,
       ImmutableList.Builder<Step> steps) {
+
+    CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, projectFilesystem);
@@ -261,7 +263,7 @@ public class JarBuildStepsFactory
                           context.getSourcePathResolver().getAbsolutePath(src)))
               .collect(MoreCollectors.toImmutableSortedSet());
 
-      this.compileStepFactory.createCompileToJarStep(
+      compileToJarStepFactory.createCompileToJarStep(
           context,
           target,
           context.getSourcePathResolver(),
@@ -290,7 +292,7 @@ public class JarBuildStepsFactory
     if (outputJar.isPresent()) {
       // No source files, only resources
       if (this.srcs.isEmpty()) {
-        this.compileStepFactory.createJarStep(
+        compileToJarStepFactory.createJarStep(
             projectFilesystem,
             JarParameters.builder()
                 .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -50,7 +50,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   }
 
   @Override
-  public CompileToJarStepFactory compileToJar(
+  public ConfiguredCompiler configure(
       JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 
     return new ScalacToJarStepFactory(

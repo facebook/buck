@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -46,7 +46,7 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
   }
 
   @Override
-  public CompileToJarStepFactory compileToJar(
+  public ConfiguredCompiler configure(
       JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver) {
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),

@@ -148,7 +148,7 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory impleme
   }
 
   @Override
-  protected Tool getCompiler() {
+  public Tool getCompiler() {
     return kotlinc;
   }
 }

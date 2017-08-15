@@ -79,7 +79,7 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory implements Add
   }
 
   @Override
-  protected Tool getCompiler() {
+  public Tool getCompiler() {
     return groovyc;
   }
 

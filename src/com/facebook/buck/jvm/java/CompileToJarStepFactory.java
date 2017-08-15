@@ -19,38 +19,17 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 /**
  * Creates the necessary steps to compile the source files, apply post process classes commands, and
  * pack the output .class files into a Jar.
  */
-public interface CompileToJarStepFactory {
-
-  default BuildRuleParams addInputs(BuildRuleParams params, SourcePathRuleFinder ruleFinder) {
-    return params
-        .withDeclaredDeps(
-            () ->
-                ImmutableSortedSet.copyOf(
-                    Iterables.concat(params.getDeclaredDeps().get(), getDeclaredDeps(ruleFinder))))
-        .withExtraDeps(
-            () ->
-                ImmutableSortedSet.copyOf(
-                    Iterables.concat(params.getExtraDeps().get(), getExtraDeps(ruleFinder))));
-  }
-
-  Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder);
-
-  Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder);
-
+public interface CompileToJarStepFactory extends ConfiguredCompiler {
   void createCompileStep(
       BuildContext context,
       BuildTarget invokingRule,

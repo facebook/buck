@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.kotlin;
 import static com.facebook.buck.jvm.java.BaseCompileToJarStepFactory.EMPTY_EXTRA_CLASSPATH;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -79,7 +79,7 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
 
   protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
     @Override
-    protected CompileToJarStepFactory buildCompileStepFactory() {
+    protected ConfiguredCompiler buildConfiguredCompiler() {
       return new KotlincToJarStepFactory(
           Preconditions.checkNotNull(kotlinBuckConfig).getKotlinc(),
           extraKotlincArguments,

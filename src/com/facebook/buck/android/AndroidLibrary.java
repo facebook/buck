@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
@@ -218,7 +218,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         return new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
-            getCompileStepFactory(),
+            getConfiguredCompiler(),
             srcs,
             resources,
             resourcesRoot,
@@ -291,9 +291,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       }
 
       @Override
-      protected CompileToJarStepFactory buildCompileStepFactory() {
+      protected ConfiguredCompiler buildConfiguredCompiler() {
         return getAndroidCompiler()
-            .compileToJar(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
+            .configure(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
       }
 
       protected AndroidLibraryCompiler getAndroidCompiler() {

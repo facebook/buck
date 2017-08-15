@@ -75,7 +75,7 @@ public class DefaultJavaLibraryBuilder {
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
-  @Nullable private CompileToJarStepFactory compileStepFactory;
+  @Nullable private ConfiguredCompiler configuredCompiler;
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
@@ -234,9 +234,9 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setCompileStepFactory(
-      @Nullable CompileToJarStepFactory compileStepFactory) {
-    this.compileStepFactory = compileStepFactory;
+  public DefaultJavaLibraryBuilder setConfiguredCompiler(
+      @Nullable ConfiguredCompiler configuredCompiler) {
+    this.configuredCompiler = configuredCompiler;
     return this;
   }
 
@@ -343,7 +343,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean isCompilingJava() {
-      return getCompileStepFactory() instanceof JavacToJarStepFactory;
+      return getConfiguredCompiler() instanceof JavacToJarStepFactory;
     }
 
     private boolean sourceAbisEnabled() {
@@ -440,7 +440,7 @@ public class DefaultJavaLibraryBuilder {
       return ImmutableSortedSet.copyOf(
           Iterables.concat(
               initialParams.getDeclaredDeps().get(),
-              getCompileStepFactory().getDeclaredDeps(ruleFinder)));
+              getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
     }
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths()
@@ -485,12 +485,12 @@ public class DefaultJavaLibraryBuilder {
       return abiClasspath;
     }
 
-    protected final CompileToJarStepFactory getCompileStepFactory() {
-      if (compileStepFactory == null) {
-        compileStepFactory = buildCompileStepFactory();
+    protected final ConfiguredCompiler getConfiguredCompiler() {
+      if (configuredCompiler == null) {
+        configuredCompiler = buildConfiguredCompiler();
       }
 
-      return compileStepFactory;
+      return configuredCompiler;
     }
 
     protected BuildRuleParams buildFinalParams() throws NoSuchBuildTargetException {
@@ -528,7 +528,7 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet<BuildRule> extraDeps =
           extraDepsBuilder
               .addAll(Sets.difference(compileTimeClasspathAbiDeps, declaredDeps))
-              .addAll(getCompileStepFactory().getExtraDeps(ruleFinder))
+              .addAll(getConfiguredCompiler().getExtraDeps(ruleFinder))
               .build();
 
       return initialParams.withDeclaredDeps(declaredDeps).withExtraDeps(extraDeps);
@@ -565,7 +565,7 @@ public class DefaultJavaLibraryBuilder {
               .collect(MoreCollectors.toImmutableSortedSet()));
     }
 
-    protected CompileToJarStepFactory buildCompileStepFactory() {
+    protected ConfiguredCompiler buildConfiguredCompiler() {
       return new JavacToJarStepFactory(
           getJavac(), Preconditions.checkNotNull(javacOptions), javacOptionsAmender);
     }
@@ -582,7 +582,7 @@ public class DefaultJavaLibraryBuilder {
       return new JarBuildStepsFactory(
           projectFilesystem,
           ruleFinder,
-          getCompileStepFactory(),
+          getConfiguredCompiler(),
           srcs,
           resources,
           resourcesRoot,

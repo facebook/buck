@@ -496,6 +496,7 @@ java_immutables_library(
         "CalculateAbiFromClassesStep.java",
         "ClasspathChecker.java",
         "CompileToJarStepFactory.java",
+        "ConfiguredCompiler.java",
         "CopyResourcesStep.java",
         "GenerateCodeCoverageReportStep.java",
         "JUnitStep.java",

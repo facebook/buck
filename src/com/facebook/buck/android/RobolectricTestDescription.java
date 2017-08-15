@@ -176,11 +176,11 @@ public class RobolectricTestDescription
                     cellRoots,
                     javaBuckConfig)
                 .setArgs(args)
-                .setCompileStepFactory(
+                .setConfiguredCompiler(
                     compilerFactory
                         .getCompiler(
                             args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA))
-                        .compileToJar(args, Preconditions.checkNotNull(javacOptions), resolver))
+                        .configure(args, Preconditions.checkNotNull(javacOptions), resolver))
                 .setJavacOptions(javacOptions)
                 .setJavacOptionsAmender(new BootClasspathAppender())
                 .setTrackClassUsage(javacOptions.trackClassUsage())

@@ -127,7 +127,7 @@ public class DiffRuleKeysScriptIntegrationTest {
         Joiner.on('\n')
             .join(
                 "Change details for "
-                    + "[//:java_lib_2->jarBuildStepsFactory->compileStepFactory->javacOptions]",
+                    + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
                 "  (sourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
@@ -226,8 +226,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             // rather than the change in the srcs property of that class is a bug in the differ.
             "Change details for [//:java_lib_all]",
             "  (jarBuildStepsFactory):",
-            "    -[ruleKey(sha1=b474649c3064a98cb65606d58496d4ef987a553a)]",
-            "    +[ruleKey(sha1=105823a5d9b698b967ab48c183d1f39bcafacaa9)]",
+            "    -[ruleKey(sha1=38f8688422c4edf85aac34ca185fc2bca1bf9aa4)]",
+            "    +[ruleKey(sha1=ee2fa3943b8f88ead08e13f644249c748b00ca22)]",
             "Change details for [//:java_lib_2->jarBuildStepsFactory]",
             "  (srcs):",
             "    -[<missing>]",
