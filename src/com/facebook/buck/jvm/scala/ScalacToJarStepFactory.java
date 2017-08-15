@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -39,7 +39,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
+public class ScalacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
   @AddToRuleKey private final Tool scalac;
   private final BuildRule scalaLibraryTarget;

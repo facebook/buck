@@ -41,7 +41,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
+public class JavacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
@@ -109,12 +109,6 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory implement
             new ClasspathChecker(),
             Optional.empty(),
             abiJar));
-  }
-
-  @Override
-  public void createJarStep(
-      ProjectFilesystem filesystem, JarParameters parameters, ImmutableList.Builder<Step> steps) {
-    steps.add(new JarDirectoryStep(filesystem, parameters));
   }
 
   @Override

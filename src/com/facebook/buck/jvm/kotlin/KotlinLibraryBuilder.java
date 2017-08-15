@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.java.BaseCompileToJarStepFactory.EMPTY_EXTRA_CLASSPATH;
+import static com.facebook.buck.jvm.java.CompileToJarStepFactory.EMPTY_EXTRA_CLASSPATH;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;

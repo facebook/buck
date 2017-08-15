@@ -34,8 +34,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Test;
 
-/** Tests {@link BaseCompileToJarStepFactory} */
-public class BaseCompileToJarStepFactoryTest {
+/** Tests {@link CompileToJarStepFactory} */
+public class CompileToJarStepFactoryTest {
 
   @Test
   public void testAddPostprocessClassesCommands() {
@@ -53,7 +53,7 @@ public class BaseCompileToJarStepFactoryTest {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.addAll(
-        BaseCompileToJarStepFactory.addPostprocessClassesCommands(
+        CompileToJarStepFactory.addPostprocessClassesCommands(
             new FakeProjectFilesystem(),
             postprocessClassesCommands,
             outputDirectory,
