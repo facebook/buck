@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavaResourceFolder extends InclusiveFolder {
+public class JavaResourceFolder extends InclusiveFolder implements HasResourcesRoot {
   @Nullable private Path resourcesRoot;
 
   public JavaResourceFolder(Path path, ImmutableSortedSet<Path> inputs, Path resourcesRoot) {
@@ -38,6 +38,7 @@ public class JavaResourceFolder extends InclusiveFolder {
     }
   }
 
+  @Override
   public Path getResourcesRoot() {
     return resourcesRoot;
   }

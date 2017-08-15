@@ -19,13 +19,25 @@ package com.facebook.buck.ide.intellij.model.folders;
 import java.nio.file.Path;
 
 public enum ResourceFolderType {
-  JAVA_RESOURCE("java-resource"),
-  JAVA_TEST_RESOURCE("java-test-resource");
+  JAVA_RESOURCE("java-resource", JavaResourceFolder.class) {
+    @Override
+    public IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
+      return JavaResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
+    }
+  },
+  JAVA_TEST_RESOURCE("java-test-resource", JavaTestResourceFolder.class) {
+    @Override
+    public IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
+      return JavaTestResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
+    }
+  };
 
   private final String resourceType;
+  private final Class<? extends HasResourcesRoot> folderClass;
 
-  ResourceFolderType(String resourceType) {
+  ResourceFolderType(String resourceType, Class<? extends HasResourcesRoot> folderClass) {
     this.resourceType = resourceType;
+    this.folderClass = folderClass;
   }
 
   @Override
@@ -33,33 +45,13 @@ public enum ResourceFolderType {
     return resourceType;
   }
 
-  public IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot) {
-    if (this.equals(JAVA_RESOURCE)) {
-      return JavaResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
-    } else if (this.equals(JAVA_TEST_RESOURCE)) {
-      return JavaTestResourceFolder.getFactoryWithResourcesRoot(resourcesRoot);
-    } else {
-      throw new IllegalArgumentException("Invalid resource type");
-    }
-  }
+  public abstract IJFolderFactory getFactoryWithResourcesRoot(Path resourcesRoot);
 
   public boolean isIjFolderInstance(IjFolder folder) {
-    if (this.equals(JAVA_RESOURCE)) {
-      return folder instanceof JavaResourceFolder;
-    } else if (this.equals(JAVA_TEST_RESOURCE)) {
-      return folder instanceof JavaTestResourceFolder;
-    } else {
-      return false;
-    }
+    return folderClass.isInstance(folder);
   }
 
   public Path getResourcesRootFromFolder(IjFolder folder) {
-    if (this.equals(JAVA_RESOURCE)) {
-      return ((JavaResourceFolder) folder).getResourcesRoot();
-    } else if (this.equals(JAVA_TEST_RESOURCE)) {
-      return ((JavaTestResourceFolder) folder).getResourcesRoot();
-    } else {
-      return null;
-    }
+    return folderClass.cast(folder).getResourcesRoot();
   }
 }
