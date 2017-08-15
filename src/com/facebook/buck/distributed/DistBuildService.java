@@ -72,14 +72,13 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -392,24 +391,35 @@ public class DistBuildService implements Closeable {
     return frontendRequest;
   }
 
-  public InputStream fetchSourceFile(String hashCode) throws IOException {
-    FrontendRequest request = createFetchSourceFileRequest(hashCode);
+  public ImmutableMap<String, byte[]> multiFetchSourceFiles(ImmutableList<String> hashCodes)
+      throws IOException {
+    FrontendRequest request = createFetchSourceFilesRequest(hashCodes);
     FrontendResponse response = makeRequestChecked(request);
 
     Preconditions.checkState(response.isSetFetchSourceFilesResponse());
     Preconditions.checkState(response.getFetchSourceFilesResponse().isSetFiles());
     FetchSourceFilesResponse fetchSourceFilesResponse = response.getFetchSourceFilesResponse();
-    Preconditions.checkState(1 == fetchSourceFilesResponse.getFilesSize());
-    FileInfo file = fetchSourceFilesResponse.getFiles().get(0);
-    Preconditions.checkState(file.isSetContent());
 
-    return new ByteArrayInputStream(file.getContent());
+    Preconditions.checkState(hashCodes.size() == fetchSourceFilesResponse.getFilesSize());
+    ImmutableMap.Builder<String, byte[]> result = new ImmutableMap.Builder<>();
+    for (FileInfo fileInfo : fetchSourceFilesResponse.getFiles()) {
+      Preconditions.checkNotNull(fileInfo);
+      Preconditions.checkNotNull(fileInfo.getContentHash());
+      Preconditions.checkNotNull(fileInfo.getContent());
+      result.put(fileInfo.getContentHash(), fileInfo.getContent());
+    }
+
+    return result.build();
   }
 
-  public static FrontendRequest createFetchSourceFileRequest(String fileHash) {
+  public byte[] fetchSourceFile(String hashCode) throws IOException {
+    ImmutableMap<String, byte[]> result = multiFetchSourceFiles(ImmutableList.of(hashCode));
+    return Preconditions.checkNotNull(result.get(hashCode));
+  }
+
+  public static FrontendRequest createFetchSourceFilesRequest(ImmutableList<String> fileHashes) {
     FetchSourceFilesRequest fetchSourceFileRequest = new FetchSourceFilesRequest();
-    fetchSourceFileRequest.setContentHashesIsSet(true);
-    fetchSourceFileRequest.addToContentHashes(fileHash);
+    fetchSourceFileRequest.setContentHashes(fileHashes);
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_SRC_FILES);
     frontendRequest.setFetchSourceFilesRequest(fetchSourceFileRequest);

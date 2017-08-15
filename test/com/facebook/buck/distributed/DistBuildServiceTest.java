@@ -41,6 +41,9 @@ import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsResponse;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusResponse;
+import com.facebook.buck.distributed.thrift.FetchSourceFilesRequest;
+import com.facebook.buck.distributed.thrift.FetchSourceFilesResponse;
+import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -62,6 +65,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -325,6 +329,44 @@ public class DistBuildServiceTest {
 
     Assert.assertTrue(job.isSetStampedeId());
     Assert.assertEquals(job.getStampedeId(), id);
+  }
+
+  @Test
+  public void canFetchSourceFiles() throws IOException {
+    ImmutableList<String> hashCodes = ImmutableList.of("a", "b", "c");
+    ImmutableList<String> fileContents = ImmutableList.of("1", "2", "3");
+    List<FileInfo> fileInfo = new ArrayList<>(hashCodes.size());
+    for (int i = 0; i < hashCodes.size(); ++i) {
+      FileInfo f = new FileInfo();
+      f.setContentHash(hashCodes.get(i));
+      f.setContent(fileContents.get(i).getBytes(StandardCharsets.UTF_8));
+      fileInfo.add(f);
+    }
+
+    FrontendRequest expectedRequest =
+        new FrontendRequest()
+            .setType(FrontendRequestType.FETCH_SRC_FILES)
+            .setFetchSourceFilesRequest(new FetchSourceFilesRequest().setContentHashes(hashCodes));
+    FrontendResponse response =
+        new FrontendResponse()
+            .setType(FrontendRequestType.FETCH_SRC_FILES)
+            .setWasSuccessful(true)
+            .setFetchSourceFilesResponse(new FetchSourceFilesResponse().setFiles(fileInfo));
+    EasyMock.expect(frontendService.makeRequest(expectedRequest)).andReturn(response).once();
+
+    EasyMock.replay(frontendService);
+
+    ImmutableMap<String, byte[]> result = distBuildService.multiFetchSourceFiles(hashCodes);
+    Assert.assertEquals(hashCodes.size(), result.keySet().size());
+    for (int i = 0; i < hashCodes.size(); ++i) {
+      String hashCode = hashCodes.get(i);
+      String content = fileContents.get(i);
+
+      Assert.assertTrue(result.containsKey(hashCode));
+      Assert.assertArrayEquals(content.getBytes(StandardCharsets.UTF_8), result.get(hashCode));
+    }
+
+    EasyMock.verify(frontendService);
   }
 
   @Test

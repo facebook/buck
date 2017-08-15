@@ -18,9 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
@@ -37,9 +35,9 @@ public class ServerContentsProvider implements FileContentsProvider {
     Preconditions.checkState(
         entry.isSetHashCode(), String.format("File hash missing for file [%s]", entry.getPath()));
 
-    try (InputStream inputStream = service.fetchSourceFile(entry.getHashCode());
-        OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
-      ByteStreams.copy(inputStream, outputStream);
+    byte[] fileContents = service.fetchSourceFile(entry.getHashCode());
+    try (OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
+      outputStream.write(fileContents);
     }
 
     return true;
