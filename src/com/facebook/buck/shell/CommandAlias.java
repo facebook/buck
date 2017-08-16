@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -31,7 +32,7 @@ import java.util.stream.Stream;
 
 public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasRuntimeDeps {
 
-  private final Tool tool;
+  @AddToRuleKey private final Tool tool;
   private final BuildRuleParams params;
 
   public CommandAlias(
@@ -42,6 +43,11 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
     super(buildTarget, projectFilesystem);
     this.params = params;
     this.tool = tool;
+  }
+
+  @Override
+  public boolean inputBasedRuleKeyIsEnabled() {
+    return false;
   }
 
   @Override

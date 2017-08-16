@@ -575,7 +575,7 @@ public class KnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             defaultTestRuleTimeoutMs));
-    builder.register(new CommandAliasDescription());
+    builder.register(new CommandAliasDescription(Platform.detect()));
     builder.register(new CoreDataModelDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);

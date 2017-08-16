@@ -5,7 +5,13 @@ export_file(
 )
 
 export_file(
-    name = "echo",
+    name = "echo.sh",
     src = "echo.sh",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "echo.bat",
+    src = "echo.bat",
     visibility = ["PUBLIC"],
 )
