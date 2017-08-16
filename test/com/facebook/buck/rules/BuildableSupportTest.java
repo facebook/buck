@@ -45,7 +45,7 @@ public class BuildableSupportTest {
     BuildRule rule4 = makeRule(target, filesystem, "rule4");
     BuildRule rule5 = makeRule(target, filesystem, "rule5");
     ImmutableSet<BuildRule> rules = ImmutableSet.of(rule1, rule2, rule3, rule4, rule5);
-    ruleResolver.addAllToIndex(rules);
+    rules.forEach(ruleResolver::addToIndex);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
     AddsToRuleKey rule =

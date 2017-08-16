@@ -256,14 +256,6 @@ public class BuildRuleResolver {
     return buildRule;
   }
 
-  /** Adds an iterable of build rules to the index. */
-  public <T extends BuildRule, C extends Iterable<T>> C addAllToIndex(C buildRules) {
-    for (T buildRule : buildRules) {
-      addToIndex(buildRule);
-    }
-    return buildRules;
-  }
-
   @Nullable
   public BuckEventBus getEventBus() {
     return eventBus;

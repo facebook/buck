@@ -243,7 +243,7 @@ public class AndroidBinaryGraphEnhancer {
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
         nativeLibsEnhancementResult.getCopyNativeLibraries();
     if (copyNativeLibraries.isPresent()) {
-      ruleResolver.addAllToIndex(copyNativeLibraries.get().values());
+      copyNativeLibraries.get().values().forEach(ruleResolver::addToIndex);
       enhancedDeps.addAll(copyNativeLibraries.get().values());
     }
 
