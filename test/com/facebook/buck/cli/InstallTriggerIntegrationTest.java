@@ -36,7 +36,6 @@ import com.facebook.buck.rules.InstallTrigger;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.NoopInstallable;
-import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -73,12 +72,11 @@ public class InstallTriggerIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, androidDirectoryResolver) ->
+        (processExecutor, androidDirectoryResolver, sdkEnvironment) ->
             new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), new FakeAndroidDirectoryResolver()) {
+                new FakeProcessExecutor(), new FakeAndroidDirectoryResolver(), sdkEnvironment) {
               @Override
-              public KnownBuildRuleTypes create(
-                  BuckConfig config, ProjectFilesystem filesystem, SdkEnvironment sdkEnvironment)
+              public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
                   throws IOException, InterruptedException {
                 FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ platform");
                 CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;

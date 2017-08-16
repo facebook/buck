@@ -88,7 +88,8 @@ public final class CellProvider {
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      SdkEnvironment sdkEnvironment)
       throws IOException {
 
     DefaultCellPathResolver rootCellCellPathResolver =
@@ -104,7 +105,6 @@ public final class CellProvider {
       throw new HumanReadableException(e.getMessage());
     }
 
-    SdkEnvironment sdkEnvironment = knownBuildRuleTypesFactory.createSdkEnvironment(rootConfig);
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
     return new CellProvider(
         cellProvider ->
@@ -198,10 +198,9 @@ public final class CellProvider {
   }
 
   public static CellProvider createForDistributedBuild(
-      BuckConfig rootConfig,
       ImmutableMap<Path, DistBuildCellParams> cellParams,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
-    SdkEnvironment sdkEnvironment = knownBuildRuleTypesFactory.createSdkEnvironment(rootConfig);
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      SdkEnvironment sdkEnvironment) {
     return new CellProvider(
         cellProvider ->
             CacheLoader.from(

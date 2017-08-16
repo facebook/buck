@@ -88,7 +88,7 @@ public class Cell {
         Suppliers.memoize(
             () -> {
               try {
-                return knownBuildRuleTypesFactory.create(config, filesystem, sdkEnvironment);
+                return knownBuildRuleTypesFactory.create(config, filesystem);
               } catch (IOException e) {
                 throw new RuntimeException(
                     String.format(

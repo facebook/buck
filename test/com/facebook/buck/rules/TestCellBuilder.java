@@ -40,6 +40,7 @@ public class TestCellBuilder {
   private Watchman watchman = NULL_WATCHMAN;
   private CellConfig cellConfig;
   private KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
+  private SdkEnvironment sdkEnvironment;
 
   public TestCellBuilder() throws InterruptedException, IOException {
     filesystem = new FakeProjectFilesystem();
@@ -73,6 +74,11 @@ public class TestCellBuilder {
     return this;
   }
 
+  public TestCellBuilder setSdkEnvironment(SdkEnvironment sdkEnvironment) {
+    this.sdkEnvironment = sdkEnvironment;
+    return this;
+  }
+
   public Cell build() throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
@@ -81,12 +87,18 @@ public class TestCellBuilder {
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
             : buckConfig;
 
+    SdkEnvironment sdkEnvironment =
+        this.sdkEnvironment == null
+            ? SdkEnvironment.create(config, executor, androidDirectoryResolver)
+            : this.sdkEnvironment;
+
     KnownBuildRuleTypesFactory typesFactory =
         knownBuildRuleTypesFactory == null
-            ? new KnownBuildRuleTypesFactory(executor, androidDirectoryResolver)
+            ? new KnownBuildRuleTypesFactory(executor, androidDirectoryResolver, sdkEnvironment)
             : knownBuildRuleTypesFactory;
 
-    return CellProvider.createForLocalBuild(filesystem, watchman, config, cellConfig, typesFactory)
+    return CellProvider.createForLocalBuild(
+            filesystem, watchman, config, cellConfig, typesFactory, sdkEnvironment)
         .getCellByPath(filesystem.getRootPath());
   }
 

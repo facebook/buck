@@ -161,7 +161,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedAliasDescription;
 import com.facebook.buck.zip.ZipFileDescription;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -239,20 +238,6 @@ public class KnownBuildRuleTypes {
     return createBuilder(
             config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment)
         .build();
-  }
-
-  @VisibleForTesting
-  static KnownBuildRuleTypes createInstance(
-      BuckConfig config,
-      ProjectFilesystem filesystem,
-      ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver)
-      throws InterruptedException, IOException {
-    KnownBuildRuleTypesFactory factory =
-        new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver);
-    SdkEnvironment sdkEnvironment = factory.createSdkEnvironment(config);
-    return createInstance(
-        config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
   }
 
   static Builder createBuilder(

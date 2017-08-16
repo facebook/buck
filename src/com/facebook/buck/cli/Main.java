@@ -86,6 +86,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -316,7 +317,9 @@ public final class Main {
 
   public interface KnownBuildRuleTypesFactoryFactory {
     KnownBuildRuleTypesFactory create(
-        ProcessExecutor processExecutor, AndroidDirectoryResolver androidDirectoryResolver);
+        ProcessExecutor processExecutor,
+        AndroidDirectoryResolver androidDirectoryResolver,
+        SdkEnvironment sdkEnvironment);
   }
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
@@ -602,6 +605,9 @@ public final class Main {
 
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
+      SdkEnvironment sdkEnvironment =
+          SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
+
       Clock clock;
       boolean enableThreadCpuTime =
           buckConfig.getBooleanValue("build", "enable_thread_cpu_time", true);
@@ -619,11 +625,17 @@ public final class Main {
               context, parserConfig, projectWatchList, clientEnvironment, console, clock)) {
 
         KnownBuildRuleTypesFactory factory =
-            knownBuildRuleTypesFactoryFactory.create(processExecutor, androidDirectoryResolver);
+            knownBuildRuleTypesFactoryFactory.create(
+                processExecutor, androidDirectoryResolver, sdkEnvironment);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
-                    filesystem, watchman, buckConfig, command.getConfigOverrides(), factory)
+                    filesystem,
+                    watchman,
+                    buckConfig,
+                    command.getConfigOverrides(),
+                    factory,
+                    sdkEnvironment)
                 .getCellByPath(filesystem.getRootPath());
 
         Optional<Daemon> daemon =
@@ -1023,6 +1035,7 @@ public final class Main {
                         .setVersionedTargetGraphCache(versionedTargetGraphCache)
                         .setActionGraphCache(actionGraphCache)
                         .setKnownBuildRuleTypesFactory(factory)
+                        .setSdkEnvironment(sdkEnvironment)
                         .setInvocationInfo(Optional.of(invocationInfo))
                         .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
                         .setBuildInfoStoreManager(storeManager)

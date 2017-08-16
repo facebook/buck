@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.step.ExecutorPool;
@@ -100,6 +101,8 @@ public interface AbstractCommandRunnerParams {
   ActionGraphCache getActionGraphCache();
 
   KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory();
+
+  SdkEnvironment getSdkEnvironment();
 
   BuildInfoStoreManager getBuildInfoStoreManager();
 
