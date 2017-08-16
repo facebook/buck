@@ -56,7 +56,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
               resourcesRoot.get(),
               context);
     }
-    addDepsAndTestSourcesWithFolderInputIndexFilter(
+    addDepsAndTestSourcesWithFiltering(
         target, true /* wantsPackagePrefix */, context, folderInputIndexFilter);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }

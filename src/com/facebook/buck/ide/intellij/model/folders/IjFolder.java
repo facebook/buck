@@ -68,6 +68,14 @@ public abstract class IjFolder implements Comparable<IjFolder> {
   }
 
   /**
+   * @return true if it should be marked as a java-resource or java-test-resource folder, false
+   *     otherwise.
+   */
+  public boolean isResourceFolder() {
+    return false;
+  }
+
+  /**
    * Used to make IntelliJ ignore the package name-&gt;folder structure convention and assume the
    * given package prefix. An example of a scenario this makes possible to achieve is having
    * java/src/Foo.java declare the package "org.bar" (instead of having the path to the file be

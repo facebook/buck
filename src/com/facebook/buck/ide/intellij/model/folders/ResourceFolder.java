@@ -44,6 +44,11 @@ public abstract class ResourceFolder extends InclusiveFolder {
   }
 
   @Override
+  public boolean isResourceFolder() {
+    return true;
+  }
+
+  @Override
   public boolean canMergeWith(IjFolder other) {
     return super.canMergeWith(other)
         && Objects.equals(resourcesRoot, ((ResourceFolder) other).resourcesRoot);
@@ -59,4 +64,6 @@ public abstract class ResourceFolder extends InclusiveFolder {
   public int hashCode() {
     return super.hashCode() ^ Objects.hashCode(resourcesRoot);
   }
+
+  public abstract ResourceFolderType getResourceFolderType();
 }

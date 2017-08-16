@@ -60,7 +60,7 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
               context);
     }
 
-    addDepsAndSourcesWithFolderInputIndexFilter(
+    addDepsAndSourcesWithFiltering(
         target, true /* wantsPackagePrefix */, context, folderInputIndexFilter);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));

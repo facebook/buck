@@ -27,6 +27,11 @@ public class JavaResourceFolder extends ResourceFolder {
   }
 
   @Override
+  public ResourceFolderType getResourceFolderType() {
+    return ResourceFolderType.JAVA_RESOURCE;
+  }
+
+  @Override
   protected IJFolderFactory getFactory() {
     return getFactoryWithResourcesRoot(resourcesRoot);
   }

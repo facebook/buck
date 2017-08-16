@@ -120,7 +120,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     }
   }
 
-  private void addDepsAndFolderWithFolderInputIndexFilter(
+  private void addDepsAndFolderWithFiltering(
       IJFolderFactory folderFactory,
       DependencyType dependencyType,
       TargetNode<T, ?> targetNode,
@@ -155,16 +155,16 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
       TargetNode<T, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
-    addDepsAndFolderWithFolderInputIndexFilter(
+    addDepsAndFolderWithFiltering(
         folderFactory, dependencyType, targetNode, wantsPackagePrefix, context, null);
   }
 
-  protected void addDepsAndSourcesWithFolderInputIndexFilter(
+  protected void addDepsAndSourcesWithFiltering(
       TargetNode<T, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context,
       @Nullable Predicate<? super Map.Entry<Path, Path>> folderInputIndexFilter) {
-    addDepsAndFolderWithFolderInputIndexFilter(
+    addDepsAndFolderWithFiltering(
         SourceFolder.FACTORY,
         DependencyType.PROD,
         targetNode,
@@ -179,12 +179,12 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         SourceFolder.FACTORY, DependencyType.PROD, targetNode, wantsPackagePrefix, context);
   }
 
-  protected void addDepsAndTestSourcesWithFolderInputIndexFilter(
+  protected void addDepsAndTestSourcesWithFiltering(
       TargetNode<T, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context,
       @Nullable Predicate<? super Map.Entry<Path, Path>> folderInputIndexFilter) {
-    addDepsAndFolderWithFolderInputIndexFilter(
+    addDepsAndFolderWithFiltering(
         TestFolder.FACTORY,
         DependencyType.TEST,
         targetNode,
@@ -199,11 +199,13 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         TestFolder.FACTORY, DependencyType.TEST, targetNode, wantsPackagePrefix, context);
   }
 
-  // If there is no resources_root, then we use the java src_roots option from .buckconfig, so
-  // the default folders generated should work. On the other hand, if there is a resources_root,
-  // then for resources under this root, we need to create java-resource folders with the
-  // correct relativeOutputPath set. We also return a filter that removes the resources that we've
-  // added.
+  // This function should only be called if resources_root is present. If there is no
+  // resources_root, then we use the java src_roots option from .buckconfig for the resource root,
+  // so marking the containing folder of the resources as a regular source folder will work
+  // correctly. On the other hand, if there is a resources_root, then for resources under this root,
+  // we need to create java-resource folders with the correct relativeOutputPath set. We also return
+  // a filter that removes the resources that we've added, so that folders containing those
+  // resources will not be added as regular source folders.
   protected Predicate<Map.Entry<Path, Path>> addResourcesAndGetFilter(
       ResourceFolderType resourceFolderType,
       Collection<SourcePath> resources,

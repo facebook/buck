@@ -28,13 +28,10 @@ public enum FolderTypeWithPackageInfo {
   SOURCE_FOLDER_WITHOUT_PACKAGE_INFO(false, SourceFolder.FACTORY, SourceFolder.class),
   TEST_FOLDER_WITH_PACKAGE_INFO(true, TestFolder.FACTORY, TestFolder.class),
   TEST_FOLDER_WITHOUT_PACKAGE_INFO(false, TestFolder.FACTORY, TestFolder.class),
-  JAVA_RESOURCE_FOLDER(
-      false, JavaResourceFolder.getFactoryWithResourcesRoot(null), JavaResourceFolder.class),
-  JAVA_TEST_RESOURCE_FOLDER(
-      false,
-      JavaTestResourceFolder.getFactoryWithResourcesRoot(null),
-      JavaTestResourceFolder.class),
-  ;
+  // The factories for resource and test resource folders should never be called from here. Instead,
+  // they should be called using those provided in ResouceFolderType. Thus, we set them to null.
+  JAVA_RESOURCE_FOLDER(false, null, JavaResourceFolder.class),
+  JAVA_TEST_RESOURCE_FOLDER(false, null, JavaTestResourceFolder.class);
 
   public static final int FOLDER_TYPES_COUNT = values().length;
 

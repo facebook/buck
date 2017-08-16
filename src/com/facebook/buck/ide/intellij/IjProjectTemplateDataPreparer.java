@@ -30,8 +30,7 @@ import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
-import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
-import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
@@ -559,12 +558,10 @@ public class IjProjectTemplateDataPreparer {
         IjFolder folder, Path moduleLocationBasePath, @Nullable String packagePrefix) {
       Path relativeOutputPath = null;
       ResourceFolderType resourceFolderType = ResourceFolderType.JAVA_RESOURCE;
-      if (folder instanceof JavaResourceFolder) {
-        relativeOutputPath = ((JavaResourceFolder) folder).getRelativeOutputPath().orElse(null);
-        resourceFolderType = ResourceFolderType.JAVA_RESOURCE;
-      } else if (folder instanceof JavaTestResourceFolder) {
-        relativeOutputPath = ((JavaTestResourceFolder) folder).getRelativeOutputPath().orElse(null);
-        resourceFolderType = ResourceFolderType.JAVA_TEST_RESOURCE;
+      if (folder instanceof ResourceFolder) {
+        ResourceFolder resourceFolder = (ResourceFolder) folder;
+        relativeOutputPath = resourceFolder.getRelativeOutputPath().orElse(null);
+        resourceFolderType = resourceFolder.getResourceFolderType();
       }
 
       return IjSourceFolder.builder()
@@ -573,10 +570,7 @@ public class IjProjectTemplateDataPreparer {
               IjProjectPaths.toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
           .setPath(folder.getPath())
           .setIsTestSource(folder instanceof TestFolder)
-          .setIsResourceFolder(
-              (folder instanceof AndroidResourceFolder)
-                  || (folder instanceof JavaResourceFolder)
-                  || (folder instanceof JavaTestResourceFolder))
+          .setIsResourceFolder(folder.isResourceFolder())
           .setResourceFolderType(resourceFolderType)
           .setRelativeOutputPath(relativeOutputPath)
           .setPackagePrefix(packagePrefix)
