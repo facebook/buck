@@ -11,15 +11,17 @@ import java.util.Map;
 import java.util.HashMap;
 import org.apache.thrift.TEnum;
 
-public enum BuckCacheRequestType implements org.apache.thrift.TEnum {
+public enum FetchResultType implements org.apache.thrift.TEnum {
   UNKNOWN(0),
-  FETCH(100),
-  STORE(101),
-  MULTI_FETCH(102);
+  HIT(100),
+  MISS(101),
+  CONTAINS(102),
+  SKIPPED(103),
+  ERROR(104);
 
   private final int value;
 
-  private BuckCacheRequestType(int value) {
+  private FetchResultType(int value) {
     this.value = value;
   }
 
@@ -34,16 +36,20 @@ public enum BuckCacheRequestType implements org.apache.thrift.TEnum {
    * Find a the enum type by its integer value, as defined in the Thrift IDL.
    * @return null if the value is not found.
    */
-  public static BuckCacheRequestType findByValue(int value) { 
+  public static FetchResultType findByValue(int value) { 
     switch (value) {
       case 0:
         return UNKNOWN;
       case 100:
-        return FETCH;
+        return HIT;
       case 101:
-        return STORE;
+        return MISS;
       case 102:
-        return MULTI_FETCH;
+        return CONTAINS;
+      case 103:
+        return SKIPPED;
+      case 104:
+        return ERROR;
       default:
         return null;
     }

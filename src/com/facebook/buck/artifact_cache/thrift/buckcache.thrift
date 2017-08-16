@@ -14,6 +14,7 @@ enum BuckCacheRequestType {
   UNKNOWN = 0,
   FETCH = 100,
   STORE = 101,
+  MULTI_FETCH = 102,
 }
 
 struct RuleKey {
@@ -75,6 +76,42 @@ struct BuckCacheFetchResponse {
   100: optional binary payload;
 }
 
+enum FetchResultType {
+  UNKNOWN = 0,
+  HIT = 100,
+  MISS = 101,
+  // CONTAINS indicates that the cache contains an artifact for the key, but
+  // could not return it in this request due to resource constraints. The key
+  // should be requested again (possibly in a single-key request to ensure
+  // resources are available to service the request).
+  CONTAINS = 102
+  // SKIPPED indicates that, due to resource constraints, no information about
+  // the requested key was looked up. The key should be requested again.
+  SKIPPED = 103,
+  ERROR = 104,
+}
+
+struct FetchResult {
+  1: optional FetchResultType resultType;
+  2: optional ArtifactMetadata metadata;
+  3: optional FetchDebugInfo debugInfo;
+
+  // If this field is not present then the payload is passed via a different
+  // out of band method.
+  100: optional binary payload;
+}
+
+struct BuckCacheMultiFetchRequest {
+  1: optional list<RuleKey> ruleKeys;
+  2: optional string repository;
+  3: optional string scheduleType;
+  4: optional bool distributedBuildModeEnabled;
+}
+
+struct BuckCacheMultiFetchResponse {
+  1: optional list<FetchResult> results;
+}
+
 struct PayloadInfo {
   1: optional i64 sizeBytes;
 }
@@ -85,6 +122,7 @@ struct BuckCacheRequest {
   100: optional list<PayloadInfo> payloads;
   101: optional BuckCacheFetchRequest fetchRequest;
   102: optional BuckCacheStoreRequest storeRequest;
+  103: optional BuckCacheMultiFetchRequest multiFetchRequest;
 }
 
 struct BuckCacheResponse {
@@ -96,4 +134,5 @@ struct BuckCacheResponse {
   100: optional list<PayloadInfo> payloads;
   101: optional BuckCacheFetchResponse fetchResponse;
   102: optional BuckCacheStoreResponse storeResponse;
+  103: optional BuckCacheMultiFetchResponse multiFetchResponse;
 }
