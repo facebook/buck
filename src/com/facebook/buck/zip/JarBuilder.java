@@ -20,15 +20,21 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_
 
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +72,7 @@ public class JarBuilder {
   private Predicate<? super CustomZipEntry> removeEntryPredicate = entry -> false;
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private Set<String> alreadyAddedEntries = new HashSet<>();
+  private Map<String, Set<String>> services = new HashMap<>();
 
   public JarBuilder setObserver(Observer observer) {
     this.observer = observer;
@@ -141,11 +148,23 @@ public class JarBuilder {
 
       addEntriesToJar(sortedEntries, jar);
 
+      addServices(jar);
+
       if (mainClass != null && !classPresent(mainClass)) {
         throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
       }
 
       return 0;
+    }
+  }
+
+  private void addServices(CustomJarOutputStream jar) throws IOException {
+    Joiner joiner = Joiner.on("\n");
+    for (String entryName : services.keySet()) {
+      CustomZipEntry entry = new CustomZipEntry(entryName);
+      jar.putNextEntry(entry);
+      jar.write(joiner.join(services.get(entryName)).getBytes());
+      jar.closeEntry();
     }
   }
 
@@ -235,6 +254,18 @@ public class JarBuilder {
       return;
     }
 
+    // Collect all services together for later merging and addition to the output jar
+    if (isService(entryName)) {
+      try (InputStream entryInputStream =
+          Preconditions.checkNotNull(entrySupplier.getInputStreamSupplier().get())) {
+        Set<String> existingServices =
+            services.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
+        existingServices.add(
+            CharStreams.toString(new InputStreamReader(entryInputStream, Charsets.UTF_8)));
+      }
+      return;
+    }
+
     jar.putNextEntry(entry);
     try (InputStream entryInputStream = entrySupplier.getInputStreamSupplier().get()) {
       if (entryInputStream != null) {
@@ -243,6 +274,10 @@ public class JarBuilder {
       }
     }
     jar.closeEntry();
+  }
+
+  private boolean isService(String entryName) {
+    return entryName.startsWith("META-INF/services/") && !entryName.endsWith("/");
   }
 
   private void mkdirs(String name, CustomJarOutputStream jar) throws IOException {
