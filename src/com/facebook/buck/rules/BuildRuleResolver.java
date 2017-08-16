@@ -107,10 +107,20 @@ public class BuildRuleResolver {
     return Iterables.unmodifiableIterable(buildRuleIndex.values());
   }
 
+  /**
+   * Returns the {@code BuildRule} associated with the given {@code BuildTarget} if it is already
+   * present.
+   */
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
     return Optional.ofNullable(buildRuleIndex.get(buildTarget));
   }
 
+  /**
+   * Returns the {@code BuildRule} associated with the given {@code BuildTarget} if it is already
+   * present, casting it to an expected type.
+   *
+   * @throws HumanReadableException if the {@code BuildRule} is not an instance of the given class.
+   */
   public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
     return getRuleOptional(buildTarget)
         .map(
@@ -125,11 +135,22 @@ public class BuildRuleResolver {
             });
   }
 
-  /** Returns the {@link BuildRule} with the {@code buildTarget}. */
+  /**
+   * Returns the {@code BuildRule} associated with the {@code buildTarget}.
+   *
+   * @throws HumanReadableException if no BuildRule is associated with the {@code BuildTarget}.
+   */
   public BuildRule getRule(BuildTarget buildTarget) {
     return getRuleOptional(buildTarget).orElseThrow(() -> unresolvableRuleException(buildTarget));
   }
 
+  /**
+   * Returns the {@code BuildRule} associated with the {@code buildTarget}, casting it to an
+   * expected type.
+   *
+   * @throws HumanReadableException if no rule is associated with the {@code BuildTarget}, or if the
+   *     rule is not an instance of the given class.
+   */
   public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
     return getRuleOptionalWithType(buildTarget, cls)
         .orElseThrow(() -> unresolvableRuleException(buildTarget));
