@@ -111,7 +111,7 @@ public class ScalaTestDescription
                 resolver,
                 cellRoots,
                 config)
-            .setArgs((ScalaLibraryDescription.CoreArg) args);
+            .setArgs(args);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return scalaLibraryBuilder.buildAbi();
