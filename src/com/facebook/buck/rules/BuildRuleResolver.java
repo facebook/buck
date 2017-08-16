@@ -107,20 +107,32 @@ public class BuildRuleResolver {
     return Iterables.unmodifiableIterable(buildRuleIndex.values());
   }
 
-  private <T> T fromNullable(BuildTarget target, @Nullable T rule) {
-    if (rule == null) {
-      throw new HumanReadableException("Rule for target '%s' could not be resolved.", target);
-    }
-    return rule;
+  public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+    return Optional.ofNullable(buildRuleIndex.get(buildTarget));
+  }
+
+  public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
+    return getRuleOptional(buildTarget)
+        .map(
+            rule -> {
+              if (cls.isInstance(rule)) {
+                return cls.cast(rule);
+              } else {
+                throw new HumanReadableException(
+                    "Rule for target '%s' is present but not of expected type %s (got %s)",
+                    buildTarget, cls, rule.getClass());
+              }
+            });
   }
 
   /** Returns the {@link BuildRule} with the {@code buildTarget}. */
   public BuildRule getRule(BuildTarget buildTarget) {
-    return fromNullable(buildTarget, buildRuleIndex.get(buildTarget));
+    return getRuleOptional(buildTarget).orElseThrow(() -> unresolvableRuleException(buildTarget));
   }
 
-  public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-    return Optional.ofNullable(buildRuleIndex.get(buildTarget));
+  public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
+    return getRuleOptionalWithType(buildTarget, cls)
+        .orElseThrow(() -> unresolvableRuleException(buildTarget));
   }
 
   /**
@@ -199,25 +211,6 @@ public class BuildRuleResolver {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
-    BuildRule rule = buildRuleIndex.get(buildTarget);
-    if (rule != null) {
-      if (cls.isInstance(rule)) {
-        return Optional.of((T) rule);
-      } else {
-        throw new HumanReadableException(
-            "Rule for target '%s' is present but not of expected type %s (got %s)",
-            buildTarget, cls, rule.getClass());
-      }
-    }
-    return Optional.empty();
-  }
-
-  public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
-    return fromNullable(buildTarget, getRuleOptionalWithType(buildTarget, cls).orElse(null));
-  }
-
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {
     return getAllRulesStream(targets).toImmutableSortedSet(Ordering.natural());
   }
@@ -253,5 +246,9 @@ public class BuildRuleResolver {
   @Nullable
   public BuckEventBus getEventBus() {
     return eventBus;
+  }
+
+  private HumanReadableException unresolvableRuleException(BuildTarget target) {
+    return new HumanReadableException("Rule for target '%s' could not be resolved.", target);
   }
 }
