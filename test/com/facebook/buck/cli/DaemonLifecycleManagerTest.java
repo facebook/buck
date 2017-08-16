@@ -21,9 +21,12 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -130,6 +133,7 @@ public class DaemonLifecycleManagerTest {
   @Test
   public void testAppleSdkChangesParserInvalidated() throws IOException, InterruptedException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     Optional<Path> appleDeveloperDirectory = getAppleDeveloperDir(buckConfig);

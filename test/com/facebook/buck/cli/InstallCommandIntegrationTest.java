@@ -50,6 +50,7 @@ public class InstallCommandIntegrationTest {
   @Test
   public void appleBundleInstallsInIphoneSimulator() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);
@@ -68,6 +69,7 @@ public class InstallCommandIntegrationTest {
   @Test
   public void appleBundleInstallsAndRunsInIphoneSimulator() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);
@@ -83,6 +85,7 @@ public class InstallCommandIntegrationTest {
   public void appleBundleInstallsAndRunsInIphoneSimulatorWithDwarfDebugging()
       throws IOException, InterruptedException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsBuildAndInstallToDevice());
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);
