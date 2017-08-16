@@ -22,10 +22,13 @@ import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.JarEntryContainer;
 import com.facebook.buck.zip.JarEntrySupplier;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharStreams;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +78,59 @@ public class JarBuilderTest {
               "D",
               "Dog",
               "Foo"),
+          jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
+    }
+  }
+
+  @Test
+  public void testMergesServicesFromAllContainers() throws IOException {
+    File tempFile = temporaryFolder.newFile();
+    try (TestJarEntryContainer container1 = new TestJarEntryContainer("Container1");
+        TestJarEntryContainer container2 = new TestJarEntryContainer("Container2");
+        TestJarEntryContainer container3 = new TestJarEntryContainer("Container3")) {
+      new JarBuilder()
+          .addEntryContainer(
+              container1.addEntry("META-INF/services/com.example.Foo1", "com.example.Bar2"))
+          .addEntryContainer(
+              container2
+                  .addEntry("META-INF/services/com.example.Foo1", "com.example.Bar1")
+                  .addEntry("META-INF/services/com.example.Foo2", "com.example.Bar3")
+                  .addEntry("META-INF/services/com.example.Foo2", "com.example.Bar4"))
+          .addEntryContainer(
+              container3
+                  .addEntry("META-INF/services/com.example.Foo2", "com.example.Bar3")
+                  .addEntry("META-INF/services/foo/bar", "bar"))
+          .createJarFile(tempFile.toPath());
+    }
+
+    try (JarFile jarFile = new JarFile(tempFile)) {
+
+      // Test ordering
+      assertEquals(
+          "com.example.Bar2\ncom.example.Bar1",
+          CharStreams.toString(
+              new InputStreamReader(
+                  jarFile.getInputStream(jarFile.getEntry("META-INF/services/com.example.Foo1")),
+                  Charsets.UTF_8)));
+
+      // Test duplication
+      assertEquals(
+          "com.example.Bar3\ncom.example.Bar4",
+          CharStreams.toString(
+              new InputStreamReader(
+                  jarFile.getInputStream(jarFile.getEntry("META-INF/services/com.example.Foo2")),
+                  Charsets.UTF_8)));
+
+      // Test non service files
+      assertEquals(
+          ImmutableList.of(
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "META-INF/services/",
+              "META-INF/services/foo/",
+              "META-INF/services/com.example.Foo1",
+              "META-INF/services/foo/bar",
+              "META-INF/services/com.example.Foo2"),
           jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
     }
   }
