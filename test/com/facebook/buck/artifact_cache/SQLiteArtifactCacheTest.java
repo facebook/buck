@@ -391,6 +391,26 @@ public class SQLiteArtifactCacheTest {
   }
 
   @Test
+  public void testOneLevelCache() throws IOException, SQLException {
+    artifactCache = cache(Optional.empty());
+    writeFileArtifact(fileA);
+
+    artifactCache.store(
+        ArtifactInfo.builder()
+            .addRuleKeys(ruleKeyA)
+            .putMetadata(BuildInfo.MetadataKey.TARGET, "foo")
+            .build(),
+        BorrowablePath.notBorrowablePath(fileA));
+
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    assertEquals(CacheResultType.HIT, result.getType());
+    assertThat(result.getMetadata(), Matchers.hasKey(BuildInfo.MetadataKey.TARGET));
+    assertEquals(result.getMetadata().get(BuildInfo.MetadataKey.TARGET), "foo");
+    assertEquals(result.getArtifactSizeBytes(), Files.size(fileA));
+    assertArrayEquals(Files.readAllBytes(output.get()), Files.readAllBytes(fileA));
+  }
+
+  @Test
   public void testMarshalMetadata() throws IOException {
     byte[] expected = new byte[4];
     assertThat(marshalMetadata(ImmutableMap.of()), Matchers.equalTo(expected));

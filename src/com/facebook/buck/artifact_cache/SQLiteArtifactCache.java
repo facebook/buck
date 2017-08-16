@@ -28,6 +28,7 @@ import com.facebook.buck.sqlite.SQLiteUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -130,16 +131,21 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    CacheResult artifactFetchResult = maybeFetchArtifact(ruleKey, output);
-    if (artifactFetchResult.getType() == CacheResultType.HIT
-        || artifactFetchResult.getType() == CacheResultType.ERROR) {
-      return artifactFetchResult;
+    CacheResult artifactResult = fetchContent(ruleKey, output);
+    CacheResult metadataResult = fetchMetadata(ruleKey, output);
+
+    if (artifactResult.getType().isSuccess() && metadataResult.getType().isSuccess()) {
+      return CacheResult.hit(
+          name, CACHE_MODE, metadataResult.getMetadata(), artifactResult.getArtifactSizeBytes());
+    } else if (artifactResult.getType() == CacheResultType.HIT
+        || artifactResult.getType() == CacheResultType.ERROR) {
+      return artifactResult;
     } else {
-      return fetchMetadata(ruleKey, output);
+      return metadataResult;
     }
   }
 
-  private CacheResult maybeFetchArtifact(RuleKey contentHash, LazyPath output) {
+  private CacheResult fetchContent(RuleKey contentHash, LazyPath output) {
     CacheResult result =
         CacheResult.error(
             name,
@@ -217,12 +223,20 @@ public class SQLiteArtifactCache implements ArtifactCache {
       return Futures.immediateFuture(null);
     }
 
-    if (info.getMetadata().containsKey(TwoLevelArtifactCacheDecorator.METADATA_KEY)) {
-      return Futures.transformAsync(storeMetadata(info), result -> removeOldMetadata());
-    } else {
-      return Futures.transformAsync(
-          storeContent(info.getRuleKeys(), content), result -> removeOldContent());
+    ListenableFuture<Void> metadataResult = Futures.immediateFuture(null);
+    if (!info.getMetadata().isEmpty()) {
+      metadataResult = Futures.transformAsync(storeMetadata(info), result -> removeOldMetadata());
     }
+
+    ListenableFuture<Void> contentResult = Futures.immediateFuture(null);
+    if (!info.getMetadata().containsKey(TwoLevelArtifactCacheDecorator.METADATA_KEY)) {
+      contentResult =
+          Futures.transformAsync(
+              storeContent(info.getRuleKeys(), content), result -> removeOldContent());
+    }
+
+    return Futures.transform(
+        Futures.allAsList(metadataResult, contentResult), Functions.constant(null));
   }
 
   private ListenableFuture<Void> storeMetadata(ArtifactInfo info) {
@@ -249,6 +263,10 @@ public class SQLiteArtifactCache implements ArtifactCache {
       ImmutableSet<RuleKey> contentHashes, BorrowablePath content) {
     try {
       ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
+      if (toStore.size() == 0) {
+        return Futures.immediateFuture(null);
+      }
+
       long size = filesystem.getFileSize(content.getPath());
       if (size <= maxInlinedBytes) {
         // artifact is small enough to inline in the database
