@@ -255,6 +255,19 @@ public class Cell {
    */
   public ProjectBuildFileParser createBuildFileParser(
       TypeCoercerFactory typeCoercerFactory, Console console, BuckEventBus eventBus) {
+    return createBuildFileParser(
+        typeCoercerFactory, console, eventBus, /* enableProfiling */ false);
+  }
+
+  /**
+   * Same as @{{@link #createBuildFileParser(TypeCoercerFactory, Console, BuckEventBus)}} but
+   * provides a way to configure whether parse profiling should be enabled
+   */
+  public ProjectBuildFileParser createBuildFileParser(
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      boolean enableProfiling) {
 
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
@@ -271,6 +284,7 @@ public class Cell {
 
     return new ProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
+            .setEnableProfiling(enableProfiling)
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
             .setCellName(getCanonicalName().orElse(""))

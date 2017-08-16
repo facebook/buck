@@ -85,6 +85,11 @@ abstract class AbstractProjectBuildFileParserOptions {
     return false;
   }
 
+  @Value.Default
+  public boolean getEnableProfiling() {
+    return false;
+  }
+
   abstract Optional<Long> getWatchmanQueryTimeoutMs();
 
   abstract List<String> getBuildFileImportWhitelist();

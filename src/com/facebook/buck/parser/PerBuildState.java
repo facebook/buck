@@ -177,10 +177,8 @@ public class PerBuildState implements AutoCloseable {
   }
 
   private ProjectBuildFileParser createBuildFileParser(Cell cell) {
-    ProjectBuildFileParser parser =
-        cell.createBuildFileParser(this.parser.getTypeCoercerFactory(), console, eventBus);
-    parser.setEnableProfiling(enableProfiling);
-    return parser;
+    return cell.createBuildFileParser(
+        this.parser.getTypeCoercerFactory(), console, eventBus, enableProfiling);
   }
 
   private void register(Cell cell) {

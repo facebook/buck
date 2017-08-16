@@ -93,7 +93,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private boolean isInitialized;
   private boolean isClosed;
 
-  private boolean enableProfiling;
   @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
   @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
@@ -150,12 +149,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
             });
   }
 
-  public void setEnableProfiling(boolean enableProfiling) {
-    ensureNotClosed();
-    ensureNotInitialized();
-    this.enableProfiling = enableProfiling;
-  }
-
   @VisibleForTesting
   public boolean isClosed() {
     return isClosed;
@@ -163,10 +156,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
   private void ensureNotClosed() {
     Preconditions.checkState(!isClosed);
-  }
-
-  private void ensureNotInitialized() {
-    Preconditions.checkState(!isInitialized);
   }
 
   /**
@@ -257,7 +246,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     argBuilder.add(getPathToBuckPy(options.getDescriptions()).toString());
 
-    if (enableProfiling) {
+    if (options.getEnableProfiling()) {
       argBuilder.add("--profile");
     }
 
@@ -750,7 +739,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       throws IOException {
     if (buckPythonProgram == null) {
       buckPythonProgram =
-          BuckPythonProgram.newInstance(typeCoercerFactory, descriptions, !enableProfiling);
+          BuckPythonProgram.newInstance(
+              typeCoercerFactory, descriptions, !options.getEnableProfiling());
     }
     return buckPythonProgram.getExecutablePath();
   }
