@@ -21,6 +21,7 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.sqlite.RetryBusyHandler;
@@ -152,10 +153,10 @@ public class SQLiteArtifactCache implements ArtifactCache {
             CACHE_MODE,
             String.format("Artifact fetch(%s, %s) stopped unexpectedly", contentHash, output));
     try {
-      ResultSet rs = db.selectContent(contentHash);
-      if (rs.next()) {
-        byte[] artifact = rs.getBytes(1);
-        String filepath = rs.getString(2);
+      Optional<Content> content = db.selectContent(contentHash);
+      if (content.isPresent()) {
+        byte[] artifact = content.get().artifact;
+        String filepath = content.get().filepath;
 
         if (Objects.nonNull(artifact)) {
           // artifact was inlined into the database as a blob
@@ -169,7 +170,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
           return result = CacheResult.miss();
         }
 
-        long size = rs.getLong(3);
+        long size = content.get().size;
         db.accessContent(contentHash);
 
         return result = CacheResult.hit(name, CACHE_MODE, ImmutableMap.of(), size);
@@ -195,13 +196,12 @@ public class SQLiteArtifactCache implements ArtifactCache {
             CACHE_MODE,
             String.format("Metadata fetch(%s, %s) stopped unexpectedly", ruleKey, output));
     try {
-      ResultSet rs = db.selectMetadata(ruleKey);
-      if (rs.next()) {
-        byte[] metadata = rs.getBytes(1);
+      Optional<byte[]> metadata = db.selectMetadata(ruleKey);
+      if (metadata.isPresent()) {
         db.accessMetadata(ruleKey);
         output.get(); // for MultiArtifactCache, force evaluation of the output path
 
-        return result = CacheResult.hit(name, CACHE_MODE, unmarshalMetadata(metadata), 0);
+        return result = CacheResult.hit(name, CACHE_MODE, unmarshalMetadata(metadata.get()), 0);
       }
 
       return result = CacheResult.miss();
@@ -296,10 +296,10 @@ public class SQLiteArtifactCache implements ArtifactCache {
     ImmutableSet.Builder<RuleKey> builder = ImmutableSet.builder();
     for (RuleKey contentHash : contentHashes) {
       // if the content already exists in the cache, skip it
-      ResultSet existingArtifact = db.selectContent(contentHash);
-      if (existingArtifact.next()) {
-        byte[] inlined = existingArtifact.getBytes(1);
-        String artifactPath = existingArtifact.getString(2);
+      Optional<Content> existingArtifact = db.selectContent(contentHash);
+      if (existingArtifact.isPresent()) {
+        byte[] inlined = existingArtifact.get().artifact;
+        String artifactPath = existingArtifact.get().filepath;
 
         if (Objects.nonNull(inlined) || filesystem.exists(filesystem.resolve(artifactPath))) {
           db.accessContent(contentHash);
@@ -400,30 +400,14 @@ public class SQLiteArtifactCache implements ArtifactCache {
     }
 
     try {
-      ResultSet artifacts = db.selectContentByTime();
-      while (totalSizeBytes > maxBytesAfterDeletion.get() && artifacts.next()) {
-        String filepath = artifacts.getString(1);
-        long sizeBytes = artifacts.getLong(2);
+      Pair<Iterable<String>, Timestamp> contentToEvict =
+          db.getContentToEvict(totalSizeBytes - maxBytesAfterDeletion.get());
 
-        // from database constraint, exactly one of filepath/artifact is null
-        if (Objects.nonNull(filepath)) {
-          LOG.verbose("Deleting path [%s] of total size [%d] bytes.", filepath, sizeBytes);
-          Path filePathInFS = filesystem.resolve(filepath);
-          MoreFiles.deleteRecursivelyIfExists(filePathInFS);
-        } else {
-          LOG.verbose("Deleting inlined artifact of size [%d] bytes.", sizeBytes);
-        }
-
-        totalSizeBytes -= sizeBytes;
+      for (String filepath : contentToEvict.getFirst()) {
+        MoreFiles.deleteRecursivelyIfExists(filesystem.resolve(filepath));
       }
 
-      Timestamp evictionCutoff;
-      if (artifacts.next()) {
-        evictionCutoff = artifacts.getTimestamp(3);
-      } else {
-        evictionCutoff = Timestamp.from(Instant.now());
-      }
-
+      Timestamp evictionCutoff = contentToEvict.getSecond();
       int deleted = db.deleteContent(evictionCutoff);
       LOG.verbose("Deleted %d cached artifacts last accessed before %s", deleted, evictionCutoff);
     } catch (IOException | SQLException e) {
@@ -617,14 +601,18 @@ public class SQLiteArtifactCache implements ArtifactCache {
       BusyHandler.setHandler(connection, new RetryBusyHandler());
     }
 
-    private synchronized ResultSet selectMetadata(RuleKey ruleKey) throws SQLException {
+    private synchronized Optional<byte[]> selectMetadata(RuleKey ruleKey) throws SQLException {
       fetchMetadata.setBytes(1, getBytes(ruleKey));
-      return fetchMetadata.executeQuery();
+      ResultSet rs = fetchMetadata.executeQuery();
+      return rs.next() ? Optional.of(rs.getBytes(1)) : Optional.empty();
     }
 
-    private synchronized ResultSet selectContent(RuleKey contentHash) throws SQLException {
+    private synchronized Optional<Content> selectContent(RuleKey contentHash) throws SQLException {
       fetchContent.setBytes(1, getBytes(contentHash));
-      return fetchContent.executeQuery();
+      ResultSet rs = fetchContent.executeQuery();
+      return rs.next()
+          ? Optional.of(new Content(rs.getBytes(1), rs.getString(2), rs.getLong(3)))
+          : Optional.empty();
     }
 
     private synchronized void accessMetadata(RuleKey ruleKey) throws SQLException {
@@ -693,8 +681,35 @@ public class SQLiteArtifactCache implements ArtifactCache {
       return rs.getLong(1);
     }
 
-    private synchronized ResultSet selectContentByTime() throws SQLException {
-      return selectContentByTime.executeQuery();
+    private synchronized Pair<Iterable<String>, Timestamp> getContentToEvict(long minToDelete)
+        throws SQLException {
+      ImmutableList.Builder<String> filepaths = ImmutableList.builder();
+      long deleted = 0;
+
+      ResultSet artifacts = selectContentByTime.executeQuery();
+      while (deleted < minToDelete && artifacts.next()) {
+        String filepath = artifacts.getString(1);
+        long sizeBytes = artifacts.getLong(2);
+
+        // from database constraint, exactly one of filepath/artifact is null
+        if (Objects.nonNull(filepath)) {
+          LOG.verbose("Deleting path [%s] of total size [%d] bytes.", filepath, sizeBytes);
+          filepaths.add(filepath);
+        } else {
+          LOG.verbose("Deleting inlined artifact of size [%d] bytes.", sizeBytes);
+        }
+
+        deleted += sizeBytes;
+      }
+
+      Timestamp evictionCutoff;
+      if (artifacts.next()) {
+        evictionCutoff = artifacts.getTimestamp(3);
+      } else {
+        evictionCutoff = Timestamp.from(Instant.now());
+      }
+
+      return new Pair<>(filepaths.build(), evictionCutoff);
     }
 
     private static byte[] getBytes(RuleKey ruleKey) {
@@ -707,6 +722,18 @@ public class SQLiteArtifactCache implements ArtifactCache {
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
+    }
+  }
+
+  private static class Content {
+    private final byte[] artifact;
+    private final String filepath;
+    private final long size;
+
+    Content(byte[] artifact, String filepath, long size) {
+      this.artifact = artifact;
+      this.filepath = filepath;
+      this.size = size;
     }
   }
 }
