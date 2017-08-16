@@ -195,20 +195,17 @@ public class HalideLibraryDescription
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
     buildTarget =
         LinkerMapMode.restoreLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
-    CxxBinary cxxBinary =
-        new CxxBinary(
-            buildTarget,
-            projectFilesystem,
-            params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
-            ruleResolver,
-            cxxPlatform,
-            cxxLinkAndCompileRules.getBinaryRule(),
-            cxxLinkAndCompileRules.executable,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            buildTarget.withoutFlavors(cxxPlatforms.getFlavors()));
-    ruleResolver.addToIndex(cxxBinary);
-    return cxxBinary;
+    return new CxxBinary(
+        buildTarget,
+        projectFilesystem,
+        params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+        ruleResolver,
+        cxxPlatform,
+        cxxLinkAndCompileRules.getBinaryRule(),
+        cxxLinkAndCompileRules.executable,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
+        buildTarget.withoutFlavors(cxxPlatforms.getFlavors()));
   }
 
   private BuildRule createHalideStaticLibrary(
