@@ -164,7 +164,6 @@ abstract class DDescriptionUtils {
 
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
-      BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathResolver pathResolver,
       SourceList sources) {
@@ -172,9 +171,9 @@ abstract class DDescriptionUtils {
     return new SymlinkTree(
         target,
         projectFilesystem,
-        BuildTargets.getGenPath(projectFilesystem, baseBuildTarget, "%s"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s"),
         MoreMaps.transformKeys(
-            sources.toNameMap(baseBuildTarget, pathResolver, "srcs"),
+            sources.toNameMap(target, pathResolver, "srcs"),
             MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())));
   }
 
