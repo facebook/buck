@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -282,7 +283,7 @@ public class Cell {
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new ProjectBuildFileParser(
+    return new PythonDslProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
             .setEnableProfiling(enableProfiling)
             .setProjectRoot(getFilesystem().getRootPath())

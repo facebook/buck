@@ -25,8 +25,8 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -60,7 +60,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class ProjectBuildFileParserTest {
+public class PythonDslProjectBuildFileParserTest {
 
   private Cell cell;
 
@@ -99,7 +99,7 @@ public class ProjectBuildFileParserTest {
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccess()) {
       buildFileParser.initIfNeeded();
       // close() is called implicitly at the end of this block. It must not throw.
@@ -111,7 +111,7 @@ public class ProjectBuildFileParserTest {
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsError()) {
       buildFileParser.initIfNeeded();
       // close() is called implicitly at the end of this block. It must throw.
@@ -136,7 +136,7 @@ public class ProjectBuildFileParserTest {
     }
     EventListener eventListener = new EventListener();
     buckEventBus.register(eventListener);
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
             buckEventBus)) {
       buildFileParser.initIfNeeded();
@@ -172,7 +172,7 @@ public class ProjectBuildFileParserTest {
     }
     EventListener eventListener = new EventListener();
     buckEventBus.register(eventListener);
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
             buckEventBus, "This is a warning", "parser")) {
       buildFileParser.initIfNeeded();
@@ -206,7 +206,7 @@ public class ProjectBuildFileParserTest {
     }
     EventListener eventListener = new EventListener();
     buckEventBus.register(eventListener);
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
             buckEventBus, "This is a watchman warning", "watchman")) {
       buildFileParser.initIfNeeded();
@@ -236,7 +236,7 @@ public class ProjectBuildFileParserTest {
     }
     EventListener eventListener = new EventListener();
     buckEventBus.register(eventListener);
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithError(
             buckEventBus, "This is an error", "parser")) {
       buildFileParser.initIfNeeded();
@@ -263,7 +263,7 @@ public class ProjectBuildFileParserTest {
             + "java_test(name=*@!&#(!@&*()\n"
             + "               ^");
 
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
             BuckEventBusForTests.newInstance(new FakeClock(0)),
             "This is an error",
@@ -303,7 +303,7 @@ public class ProjectBuildFileParserTest {
             + "Syntax error on line 23:\n"
             + "java_test(name=*@!&#(!@&*()");
 
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
             BuckEventBusForTests.newInstance(new FakeClock(0)),
             "This is an error",
@@ -354,7 +354,7 @@ public class ProjectBuildFileParserTest {
             + "def some_helper_method(!@87*@!#\n"
             + "                       ^");
 
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
             buckEventBus,
             "This is an error",
@@ -406,7 +406,7 @@ public class ProjectBuildFileParserTest {
             + "    lets_divide_by_zero()\n"
             + "\n");
 
-    try (ProjectBuildFileParser buildFileParser =
+    try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
             BuckEventBusForTests.newInstance(new FakeClock(0)),
             "This is an error",
@@ -450,8 +450,8 @@ public class ProjectBuildFileParserTest {
       this.buildRuleTypes = buildRuleTypes;
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsError() {
-      return new TestProjectBuildFileParser(
+    public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsError() {
+      return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
               params ->
@@ -461,8 +461,8 @@ public class ProjectBuildFileParserTest {
           BuckEventBusForTests.newInstance());
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccess() {
-      return new TestProjectBuildFileParser(
+    public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccess() {
+      return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
               params ->
@@ -472,9 +472,9 @@ public class ProjectBuildFileParserTest {
           BuckEventBusForTests.newInstance());
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
-        BuckEventBus buckEventBus) {
-      return new TestProjectBuildFileParser(
+    public PythonDslProjectBuildFileParser
+        createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(BuckEventBus buckEventBus) {
+      return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
               params ->
@@ -484,9 +484,9 @@ public class ProjectBuildFileParserTest {
           buckEventBus);
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithWarning(
+    public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithWarning(
         BuckEventBus buckEventBus, final String warning, final String source) {
-      return new TestProjectBuildFileParser(
+      return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
               params ->
@@ -502,9 +502,9 @@ public class ProjectBuildFileParserTest {
           buckEventBus);
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithError(
+    public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsSuccessWithError(
         BuckEventBus buckEventBus, final String error, final String source) {
-      return new TestProjectBuildFileParser(
+      return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
               params ->
@@ -520,12 +520,12 @@ public class ProjectBuildFileParserTest {
           buckEventBus);
     }
 
-    public ProjectBuildFileParser createNoopParserThatAlwaysReturnsErrorWithException(
+    public PythonDslProjectBuildFileParser createNoopParserThatAlwaysReturnsErrorWithException(
         BuckEventBus buckEventBus,
         final String error,
         final String source,
         final ImmutableMap<String, Object> exception) {
-      return new TestProjectBuildFileParser(
+      return new TestPythonDslProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
               params ->
@@ -548,8 +548,8 @@ public class ProjectBuildFileParserTest {
           buckEventBus);
     }
 
-    private class TestProjectBuildFileParser extends ProjectBuildFileParser {
-      public TestProjectBuildFileParser(
+    private class TestPythonDslProjectBuildFileParser extends PythonDslProjectBuildFileParser {
+      public TestPythonDslProjectBuildFileParser(
           String pythonInterpreter, ProcessExecutor processExecutor, BuckEventBus buckEventBus) {
         super(
             ProjectBuildFileParserOptions.builder()

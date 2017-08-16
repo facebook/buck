@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -340,7 +341,7 @@ public class ParsePipelineTest {
         targetNodeParsePipelineCache;
     private final RawNodeParsePipelineCache rawNodeParsePipelineCache;
     private final ListeningExecutorService executorService;
-    private final Set<ProjectBuildFileParser> projectBuildFileParsers;
+    private final Set<PythonDslProjectBuildFileParser> projectBuildFileParsers;
 
     public Fixture(
         String scenario,
@@ -368,7 +369,7 @@ public class ParsePipelineTest {
                 ProjectBuildFileParser buildFileParser =
                     input.createBuildFileParser(coercerFactory, console, eventBus);
                 synchronized (projectBuildFileParsers) {
-                  projectBuildFileParsers.add(buildFileParser);
+                  projectBuildFileParsers.add((PythonDslProjectBuildFileParser) buildFileParser);
                 }
                 return buildFileParser;
               },
@@ -423,11 +424,11 @@ public class ParsePipelineTest {
     }
 
     private void waitForParsersToClose() throws InterruptedException {
-      Iterable<ProjectBuildFileParser> parserSnapshot;
+      Iterable<PythonDslProjectBuildFileParser> parserSnapshot;
       synchronized (projectBuildFileParsers) {
         parserSnapshot = ImmutableSet.copyOf(projectBuildFileParsers);
       }
-      waitForAll(parserSnapshot, ProjectBuildFileParser::isClosed);
+      waitForAll(parserSnapshot, PythonDslProjectBuildFileParser::isClosed);
     }
 
     @Override
@@ -439,7 +440,7 @@ public class ParsePipelineTest {
       executorService.shutdown();
       assertThat(executorService.awaitTermination(5, TimeUnit.SECONDS), is(true));
       synchronized (projectBuildFileParsers) {
-        for (ProjectBuildFileParser parser : projectBuildFileParsers) {
+        for (PythonDslProjectBuildFileParser parser : projectBuildFileParsers) {
           assertThat(parser.isClosed(), is(true));
         }
       }

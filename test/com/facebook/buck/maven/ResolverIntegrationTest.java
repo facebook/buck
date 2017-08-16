@@ -33,8 +33,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
@@ -76,7 +76,7 @@ public class ResolverIntegrationTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
-  private static ProjectBuildFileParser buildFileParser;
+  private static PythonDslProjectBuildFileParser buildFileParser;
   private static Path repo;
   private Path buckRepoRoot;
   private Path thirdParty;
@@ -108,7 +108,7 @@ public class ResolverIntegrationTest {
             new RemoteFileDescription(new ExplodingDownloader()), new PrebuiltJarDescription());
 
     buildFileParser =
-        new ProjectBuildFileParser(
+        new PythonDslProjectBuildFileParser(
             ProjectBuildFileParserOptions.builder()
                 .setProjectRoot(filesystem.getRootPath())
                 .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter().toString())
