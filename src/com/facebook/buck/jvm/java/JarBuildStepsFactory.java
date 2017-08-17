@@ -188,6 +188,23 @@ public class JarBuildStepsFactory
             .setShouldTrackClassUsage(trackClassUsage)
             .build();
 
+    ResourcesParameters resourcesParameters =
+        ResourcesParameters.builder()
+            .setResources(this.resources)
+            .setResourcesRoot(this.resourcesRoot)
+            .build();
+
+    Optional<JarParameters> jarParameters =
+        outputJar.map(
+            output ->
+                JarParameters.builder()
+                    .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
+                    .setManifestFile(
+                        manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
+                    .setJarPath(output)
+                    .setRemoveEntryPredicate(classesToRemoveFromJar)
+                    .build());
+
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
@@ -205,10 +222,7 @@ public class JarBuildStepsFactory
             context,
             this.ruleFinder,
             target,
-            ResourcesParameters.builder()
-                .setResources(this.resources)
-                .setResourcesRoot(this.resourcesRoot)
-                .build(),
+            resourcesParameters,
             compilerParameters.getOutputDirectory()));
 
     steps.addAll(
@@ -220,7 +234,7 @@ public class JarBuildStepsFactory
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
-    if (!this.srcs.isEmpty()) {
+    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       if (compilerParameters.shouldTrackClassUsage()) {
         buildableContext.recordArtifact(compilerParameters.getDepFilePath());
       }
@@ -240,13 +254,6 @@ public class JarBuildStepsFactory
                   projectFilesystem,
                   compilerParameters.getWorkingDirectory())));
 
-      JarParameters jarParameters =
-          JarParameters.builder()
-              .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
-              .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
-              .setJarPath(outputJar.get())
-              .setRemoveEntryPredicate(classesToRemoveFromJar)
-              .build();
       compileToJarStepFactory.createCompileToJarStep(
           context,
           target,
@@ -255,25 +262,17 @@ public class JarBuildStepsFactory
           projectFilesystem,
           compilerParameters,
           postprocessClassesCommands,
-          jarParameters,
+          jarParameters.get(),
           steps,
           buildableContext);
     }
 
-    if (outputJar.isPresent()) {
+    if (jarParameters.isPresent()) {
       // No source files, only resources
-      if (this.srcs.isEmpty()) {
-        compileToJarStepFactory.createJarStep(
-            projectFilesystem,
-            JarParameters.builder()
-                .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
-                .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
-                .setJarPath(outputJar.get())
-                .setRemoveEntryPredicate(classesToRemoveFromJar)
-                .build(),
-            steps);
+      if (compilerParameters.getSourceFilePaths().isEmpty()) {
+        compileToJarStepFactory.createJarStep(projectFilesystem, jarParameters.get(), steps);
       }
-      buildableContext.recordArtifact(outputJar.get());
+      buildableContext.recordArtifact(jarParameters.get().getJarPath());
     }
   }
 
