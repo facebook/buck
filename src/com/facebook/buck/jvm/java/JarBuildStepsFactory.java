@@ -237,12 +237,7 @@ public class JarBuildStepsFactory
       Optional<Path> generatedCodeDirectory =
           JavaLibraryRules.getAnnotationPath(projectFilesystem, target);
 
-      compileToJarStepFactory.createCompileToJarStep(
-          context,
-          target,
-          context.getSourcePathResolver(),
-          this.ruleFinder,
-          projectFilesystem,
+      CompilerParameters compilerParameters =
           CompilerParameters.builder()
               .setClasspathEntriesSourcePaths(
                   compileTimeClasspathSourcePaths, context.getSourcePathResolver())
@@ -253,14 +248,23 @@ public class JarBuildStepsFactory
               .setShouldTrackClassUsage(trackClassUsage)
               .setDepFilePath(depFileRelativePath)
               .setPathToSourcesList(pathToSrcsList)
-              .build(),
-          postprocessClassesCommands,
+              .build();
+      JarParameters jarParameters =
           JarParameters.builder()
               .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
               .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
               .setJarPath(outputJar.get())
               .setRemoveEntryPredicate(classesToRemoveFromJar)
-              .build(),
+              .build();
+      compileToJarStepFactory.createCompileToJarStep(
+          context,
+          target,
+          context.getSourcePathResolver(),
+          this.ruleFinder,
+          projectFilesystem,
+          compilerParameters,
+          postprocessClassesCommands,
+          jarParameters,
           steps,
           buildableContext);
     }

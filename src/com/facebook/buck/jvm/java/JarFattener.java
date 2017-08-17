@@ -187,11 +187,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JavacToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
 
-    compileStepFactory.createCompileStep(
-        context,
-        getBuildTarget(),
-        context.getSourcePathResolver(),
-        getProjectFilesystem(),
+    CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
@@ -202,20 +198,25 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setGeneratedCodeDirectory(Optional.empty())
             .setOutputDirectory(fatJarDir)
             .setPathToSourcesList(pathToSrcsList)
-            .build(),
+            .build();
+    compileStepFactory.createCompileStep(
+        context,
+        getBuildTarget(),
+        context.getSourcePathResolver(),
+        getProjectFilesystem(),
+        compilerParameters,
         steps,
         buildableContext);
 
     steps.add(zipStep);
-    steps.add(
-        new JarDirectoryStep(
-            getProjectFilesystem(),
-            JarParameters.builder()
-                .setJarPath(output)
-                .setEntriesToJar(ImmutableSortedSet.of(zipped))
-                .setMainClass(Optional.of(FatJarMain.class.getName()))
-                .setMergeManifests(true)
-                .build()));
+    JarParameters jarParameters =
+        JarParameters.builder()
+            .setJarPath(output)
+            .setEntriesToJar(ImmutableSortedSet.of(zipped))
+            .setMainClass(Optional.of(FatJarMain.class.getName()))
+            .setMergeManifests(true)
+            .build();
+    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
 
     buildableContext.recordArtifact(output);
 

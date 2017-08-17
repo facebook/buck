@@ -111,24 +111,26 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     // Don't invoke javac if we don't have any java files.
     if (!javaSourceFiles.isEmpty()) {
+      CompilerParameters javacParameters =
+          CompilerParameters.builder()
+              .from(parameters)
+              .setClasspathEntries(
+                  ImmutableSortedSet.<Path>naturalOrder()
+                      .add(outputDirectory)
+                      .addAll(
+                          Optional.ofNullable(extraClassPath.apply(buildContext))
+                              .orElse(ImmutableList.of()))
+                      .addAll(declaredClasspathEntries)
+                      .build())
+              .setSourceFilePaths(javaSourceFiles)
+              .build();
       new JavacToJarStepFactory(javac, javacOptions, amender)
           .createCompileStep(
               buildContext,
               invokingRule,
               resolver,
               filesystem,
-              CompilerParameters.builder()
-                  .from(parameters)
-                  .setClasspathEntries(
-                      ImmutableSortedSet.<Path>naturalOrder()
-                          .add(outputDirectory)
-                          .addAll(
-                              Optional.ofNullable(extraClassPath.apply(buildContext))
-                                  .orElse(ImmutableList.of()))
-                          .addAll(declaredClasspathEntries)
-                          .build())
-                  .setSourceFilePaths(javaSourceFiles)
-                  .build(),
+              javacParameters,
               steps,
               buildableContext);
     }

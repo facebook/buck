@@ -244,11 +244,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 pathToSrcsList.getParent())));
 
     // Compile the .java files.
-    compileStepFactory.createCompileStep(
-        context,
-        getBuildTarget(),
-        context.getSourcePathResolver(),
-        getProjectFilesystem(),
+    CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths)
@@ -259,20 +255,25 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
             .setOutputDirectory(rDotJavaClassesFolder)
             .setPathToSourcesList(pathToSrcsList)
-            .build(),
+            .build();
+    compileStepFactory.createCompileStep(
+        context,
+        getBuildTarget(),
+        context.getSourcePathResolver(),
+        getProjectFilesystem(),
+        compilerParameters,
         steps,
         buildableContext);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
 
-    steps.add(
-        new JarDirectoryStep(
-            getProjectFilesystem(),
-            JarParameters.builder()
-                .setJarPath(outputJar)
-                .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
-                .setMergeManifests(true)
-                .setHashEntries(true)
-                .build()));
+    JarParameters jarParameters =
+        JarParameters.builder()
+            .setJarPath(outputJar)
+            .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
+            .setMergeManifests(true)
+            .setHashEntries(true)
+            .build();
+    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));
