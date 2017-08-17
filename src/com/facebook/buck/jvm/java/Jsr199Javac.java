@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import javax.tools.JavaCompiler;
 
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
@@ -74,7 +73,7 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
+      Path workingDirectory,
       JavacCompilationMode compilationMode) {
     return new Jsr199JavacInvocation(
         this::createCompiler,

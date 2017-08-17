@@ -68,8 +68,8 @@ public class JavacStepTest {
         new JavacStep(
             Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
+            Paths.get("generated"),
+            Paths.get("working"),
             ImmutableSortedSet.of(),
             Paths.get("pathToSrcsList"),
             ImmutableSortedSet.of(),
@@ -117,8 +117,8 @@ public class JavacStepTest {
         new JavacStep(
             Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
+            Paths.get("generated"),
+            Paths.get("working"),
             ImmutableSortedSet.of(),
             Paths.get("pathToSrcsList"),
             ImmutableSortedSet.of(),
@@ -171,8 +171,8 @@ public class JavacStepTest {
         new JavacStep(
             Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
+            Paths.get("generated"),
+            Paths.get("working"),
             ImmutableSortedSet.of(),
             Paths.get("pathToSrcsList"),
             ImmutableSortedSet.of(),
@@ -223,8 +223,8 @@ public class JavacStepTest {
         new JavacStep(
             Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
+            Paths.get("generated"),
+            Paths.get("working"),
             ImmutableSortedSet.of(),
             Paths.get("pathToSrcsList"),
             ImmutableSortedSet.of(),

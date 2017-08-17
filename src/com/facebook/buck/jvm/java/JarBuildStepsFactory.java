@@ -179,15 +179,24 @@ public class JarBuildStepsFactory
       boolean trackClassUsage,
       ImmutableList.Builder<Step> steps) {
 
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntriesSourcePaths(
+                compileTimeClasspathSourcePaths, context.getSourcePathResolver())
+            .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
+            .setStandardPaths(target, projectFilesystem)
+            .setShouldTrackClassUsage(trackClassUsage)
+            .build();
+
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
-    Path outputDirectory = DefaultJavaLibrary.getClassesDir(target, projectFilesystem);
-
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), projectFilesystem, outputDirectory)));
+                context.getBuildCellRootPath(),
+                projectFilesystem,
+                compilerParameters.getOutputDirectory())));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     steps.add(
@@ -200,58 +209,40 @@ public class JarBuildStepsFactory
                 .setResources(this.resources)
                 .setResourcesRoot(this.resourcesRoot)
                 .build(),
-            outputDirectory));
+            compilerParameters.getOutputDirectory()));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 projectFilesystem,
-                DefaultJavaLibrary.getOutputJarDirPath(target, projectFilesystem))));
+                CompilerParameters.getOutputJarDirPath(target, projectFilesystem))));
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!this.srcs.isEmpty()) {
-      Path depFileRelativePath = getDepFileRelativePath(target);
-      if (trackClassUsage) {
-        Preconditions.checkNotNull(depFileRelativePath);
-        buildableContext.recordArtifact(depFileRelativePath);
+      if (compilerParameters.shouldTrackClassUsage()) {
+        buildableContext.recordArtifact(compilerParameters.getDepFilePath());
       }
 
       // This adds the javac command, along with any supporting commands.
-      Path pathToSrcsList = BuildTargets.getGenPath(projectFilesystem, target, "__%s__srcs");
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), projectFilesystem, pathToSrcsList.getParent())));
-
-      Path scratchDir =
-          BuildTargets.getGenPath(projectFilesystem, target, "lib__%s____working_directory");
+                  context.getBuildCellRootPath(),
+                  projectFilesystem,
+                  compilerParameters.getPathToSourcesList().getParent())));
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), projectFilesystem, scratchDir)));
-      Optional<Path> workingDirectory = Optional.of(scratchDir);
+                  context.getBuildCellRootPath(),
+                  projectFilesystem,
+                  compilerParameters.getWorkingDirectory())));
 
-      Optional<Path> generatedCodeDirectory =
-          JavaLibraryRules.getAnnotationPath(projectFilesystem, target);
-
-      CompilerParameters compilerParameters =
-          CompilerParameters.builder()
-              .setClasspathEntriesSourcePaths(
-                  compileTimeClasspathSourcePaths, context.getSourcePathResolver())
-              .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
-              .setWorkingDirectory(workingDirectory)
-              .setGeneratedCodeDirectory(generatedCodeDirectory)
-              .setOutputDirectory(outputDirectory)
-              .setShouldTrackClassUsage(trackClassUsage)
-              .setDepFilePath(depFileRelativePath)
-              .setPathToSourcesList(pathToSrcsList)
-              .build();
       JarParameters jarParameters =
           JarParameters.builder()
-              .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+              .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
               .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
               .setJarPath(outputJar.get())
               .setRemoveEntryPredicate(classesToRemoveFromJar)
@@ -275,7 +266,7 @@ public class JarBuildStepsFactory
         compileToJarStepFactory.createJarStep(
             projectFilesystem,
             JarParameters.builder()
-                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
                 .setManifestFile(manifestFile.map(context.getSourcePathResolver()::getAbsolutePath))
                 .setJarPath(outputJar.get())
                 .setRemoveEntryPredicate(classesToRemoveFromJar)
@@ -313,7 +304,7 @@ public class JarBuildStepsFactory
   }
 
   private Path getDepFileRelativePath(BuildTarget buildTarget) {
-    return DefaultJavaLibrary.getOutputJarDirPath(buildTarget, projectFilesystem)
+    return CompilerParameters.getOutputJarDirPath(buildTarget, projectFilesystem)
         .resolve("used-classes.json");
   }
 

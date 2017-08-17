@@ -175,30 +175,24 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             fatJarDir);
 
-    Path pathToSrcsList =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths.build())
+            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setOutputDirectory(fatJarDir)
+            .build();
+
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                pathToSrcsList.getParent())));
+                compilerParameters.getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
 
-    CompilerParameters compilerParameters =
-        CompilerParameters.builder()
-            .setClasspathEntries(ImmutableSortedSet.of())
-            .setSourceFilePaths(javaSourceFilePaths.build())
-            .setWorkingDirectory(
-                Optional.of(
-                    BuildTargets.getAnnotationPath(
-                        getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
-            .setGeneratedCodeDirectory(Optional.empty())
-            .setOutputDirectory(fatJarDir)
-            .setPathToSourcesList(pathToSrcsList)
-            .build();
     compileStepFactory.createCompileStep(
         context,
         getBuildTarget(),

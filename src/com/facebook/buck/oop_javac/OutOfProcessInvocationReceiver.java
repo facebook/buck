@@ -123,10 +123,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
                 .map(s -> Paths.get(s))
                 .iterator());
     Path pathToSrcsList = Paths.get(pathToSrcsListAsString);
-    Optional<Path> workingDirectory = Optional.empty();
-    if (workingDirectoryAsString != null) {
-      workingDirectory = Optional.of(Paths.get(workingDirectoryAsString));
-    }
+    Path workingDirectory = Paths.get(workingDirectoryAsString);
 
     List<JavacPluginJsr199Fields> deserializedFields =
         pluginFields

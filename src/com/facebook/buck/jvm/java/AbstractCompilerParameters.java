@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
@@ -41,11 +43,11 @@ abstract class AbstractCompilerParameters {
 
   public abstract Path getOutputDirectory();
 
-  public abstract Optional<Path> getGeneratedCodeDirectory();
+  public abstract Path getGeneratedCodeDirectory();
 
-  public abstract Optional<Path> getWorkingDirectory();
+  public abstract Path getWorkingDirectory();
 
-  public abstract Optional<Path> getDepFilePath();
+  public abstract Path getDepFilePath();
 
   public abstract Path getPathToSourcesList();
 
@@ -54,7 +56,33 @@ abstract class AbstractCompilerParameters {
     return false;
   }
 
+  public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes");
+  }
+
+  public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
+    return BuildTargets.getGenPath(filesystem, target, "lib__%s__output");
+  }
+
+  public static Optional<Path> getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return Optional.of(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
+  }
+
   public abstract static class Builder {
+    public CompilerParameters.Builder setStandardPaths(
+        BuildTarget target, ProjectFilesystem projectFilesystem) {
+      CompilerParameters.Builder builder = (CompilerParameters.Builder) this;
+
+      return builder
+          .setWorkingDirectory(
+              BuildTargets.getGenPath(projectFilesystem, target, "lib__%s____working_directory"))
+          .setGeneratedCodeDirectory(getAnnotationPath(projectFilesystem, target).get())
+          .setDepFilePath(
+              getOutputJarDirPath(target, projectFilesystem).resolve("used-classes.json"))
+          .setPathToSourcesList(BuildTargets.getGenPath(projectFilesystem, target, "__%s__srcs"))
+          .setOutputDirectory(getClassesDir(target, projectFilesystem));
+    }
+
     public CompilerParameters.Builder setSourceFileSourcePaths(
         ImmutableSortedSet<SourcePath> srcs,
         ProjectFilesystem projectFilesystem,

@@ -20,7 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
@@ -693,7 +693,7 @@ public class TestRunning {
       Path classesItem = null;
 
       if (useIntermediateClassesDir) {
-        classesItem = DefaultJavaLibrary.getClassesDir(rule.getBuildTarget(), filesystem);
+        classesItem = CompilerParameters.getClassesDir(rule.getBuildTarget(), filesystem);
       } else {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {

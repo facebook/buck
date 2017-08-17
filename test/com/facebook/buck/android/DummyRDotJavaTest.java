@@ -143,8 +143,8 @@ public class DummyRDotJavaTest {
                 new JavacStep(
                         rDotJavaBinFolder,
                         NoOpClassUsageFileWriter.instance(),
-                        Optional.empty(),
-                        Optional.empty(),
+                        Paths.get("generated"),
+                        Paths.get("working"),
                         javaSourceFiles,
                         BuildTargets.getGenPath(
                             filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),

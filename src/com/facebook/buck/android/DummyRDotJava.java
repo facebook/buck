@@ -234,28 +234,21 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToJarOutputDir)));
 
-    Path pathToSrcsList =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths)
+            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setOutputDirectory(rDotJavaClassesFolder)
+            .build();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                pathToSrcsList.getParent())));
+                compilerParameters.getPathToSourcesList().getParent())));
 
     // Compile the .java files.
-    CompilerParameters compilerParameters =
-        CompilerParameters.builder()
-            .setClasspathEntries(ImmutableSortedSet.of())
-            .setSourceFilePaths(javaSourceFilePaths)
-            .setWorkingDirectory(Optional.empty())
-            .setGeneratedCodeDirectory(
-                Optional.of(
-                    BuildTargets.getAnnotationPath(
-                        getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
-            .setOutputDirectory(rDotJavaClassesFolder)
-            .setPathToSourcesList(pathToSrcsList)
-            .build();
     compileStepFactory.createCompileStep(
         context,
         getBuildTarget(),

@@ -73,8 +73,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Optional<Path> workingDirectory = parameters.getWorkingDirectory();
-    Optional<Path> generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
+    Path workingDirectory = parameters.getWorkingDirectory();
+    Path generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
     Path outputDirectory = parameters.getOutputDirectory();
     Path pathToSrcsList = parameters.getPathToSourcesList();
 
@@ -89,13 +89,13 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     final ClassUsageFileWriter usedClassesFileWriter =
         parameters.shouldTrackClassUsage()
-            ? new DefaultClassUsageFileWriter(parameters.getDepFilePath().get())
+            ? new DefaultClassUsageFileWriter(parameters.getDepFilePath())
             : NoOpClassUsageFileWriter.instance();
     steps.add(
         new JavacStep(
             outputDirectory,
             usedClassesFileWriter,
-            generatingCode ? generatedCodeDirectory : Optional.empty(),
+            generatedCodeDirectory,
             workingDirectory,
             sourceFilePaths,
             pathToSrcsList,
@@ -145,8 +145,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildableContext buildableContext) {
     ImmutableSortedSet<Path> declaredClasspathEntries = compilerParameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = compilerParameters.getSourceFilePaths();
-    Optional<Path> workingDirectory = compilerParameters.getWorkingDirectory();
-    Optional<Path> generatedCodeDirectory = compilerParameters.getGeneratedCodeDirectory();
+    Path workingDirectory = compilerParameters.getWorkingDirectory();
+    Path generatedCodeDirectory = compilerParameters.getGeneratedCodeDirectory();
     Path outputDirectory = compilerParameters.getOutputDirectory();
     Path pathToSrcsList = compilerParameters.getPathToSourcesList();
 
@@ -171,13 +171,16 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
 
     if (isSpoolingToJarEnabled) {
       final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
-      // Javac requires that the root directory for generated sources already exists.
-      addAnnotationGenFolderStep(
-          generatedCodeDirectory, filesystem, steps, buildableContext, context);
+      boolean generatingCode = !buildTimeOptions.getAnnotationProcessingParams().isEmpty();
+      if (generatingCode) {
+        // Javac requires that the root directory for generated sources already exists.
+        addAnnotationGenFolderStep(
+            generatedCodeDirectory, filesystem, steps, buildableContext, context);
+      }
 
       final ClassUsageFileWriter usedClassesFileWriter =
           compilerParameters.shouldTrackClassUsage()
-              ? new DefaultClassUsageFileWriter(compilerParameters.getDepFilePath().get())
+              ? new DefaultClassUsageFileWriter(compilerParameters.getDepFilePath())
               : NoOpClassUsageFileWriter.instance();
       steps.add(
           new JavacStep(
@@ -212,18 +215,16 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   private static void addAnnotationGenFolderStep(
-      Optional<Path> annotationGenFolder,
+      Path annotationGenFolder,
       ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext,
       BuildContext buildContext) {
-    if (annotationGenFolder.isPresent()) {
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder.get())));
-      buildableContext.recordArtifact(annotationGenFolder.get());
-    }
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), filesystem, annotationGenFolder)));
+    buildableContext.recordArtifact(annotationGenFolder);
   }
 
   @VisibleForTesting

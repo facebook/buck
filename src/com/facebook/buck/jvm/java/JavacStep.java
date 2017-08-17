@@ -50,9 +50,9 @@ public class JavacStep implements Step {
 
   private final ClassUsageFileWriter usedClassesFileWriter;
 
-  private final Optional<Path> generatedCodeDirectory;
+  private final Path generatedCodeDirectory;
 
-  private final Optional<Path> workingDirectory;
+  private final Path workingDirectory;
 
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
 
@@ -79,8 +79,8 @@ public class JavacStep implements Step {
   public JavacStep(
       Path outputDirectory,
       ClassUsageFileWriter usedClassesFileWriter,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
+      Path generatedCodeDirectory,
+      Path workingDirectory,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       ImmutableSortedSet<Path> declaredClasspathEntries,
@@ -277,7 +277,7 @@ public class JavacStep implements Step {
       ProjectFilesystem filesystem,
       SourcePathResolver pathResolver,
       Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
+      Path generatedCodeDirectory,
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries) {
     final ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -310,8 +310,8 @@ public class JavacStep implements Step {
     // Specify the output directory.
     builder.add("-d").add(filesystem.resolve(outputDirectory).toString());
 
-    if (generatedCodeDirectory.isPresent()) {
-      builder.add("-s").add(filesystem.resolve(generatedCodeDirectory.get()).toString());
+    if (!javacOptions.getAnnotationProcessingParams().isEmpty()) {
+      builder.add("-s").add(filesystem.resolve(generatedCodeDirectory).toString());
     }
 
     // Build up and set the classpath.

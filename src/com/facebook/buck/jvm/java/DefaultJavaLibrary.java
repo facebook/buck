@@ -21,7 +21,6 @@ import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
@@ -203,10 +202,6 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.sourceAbi = sourceAbi;
   }
 
-  public static Path getOutputJarDirPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, target, "lib__%s__output");
-  }
-
   private Optional<SourcePath> sourcePathForOutputJar() {
     return Optional.ofNullable(jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget()));
   }
@@ -215,15 +210,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
     return Paths.get(
         String.format(
             "%s/%s.jar",
-            getOutputJarDirPath(target, filesystem), target.getShortNameAndFlavorPostfix()));
-  }
-
-  /**
-   * @return directory path relative to the project root where .class files will be generated. The
-   *     return value does not end with a slash.
-   */
-  public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes");
+            CompilerParameters.getOutputJarDirPath(target, filesystem),
+            target.getShortNameAndFlavorPostfix()));
   }
 
   @Override
@@ -288,7 +276,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return JavaLibraryRules.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
+    return CompilerParameters.getAnnotationPath(getProjectFilesystem(), getBuildTarget());
   }
 
   @Override

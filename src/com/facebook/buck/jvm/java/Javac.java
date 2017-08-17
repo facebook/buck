@@ -24,7 +24,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public interface Javac extends RuleKeyAppendable, Tool {
 
@@ -44,7 +43,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
+      Path workingDirectory,
       JavacCompilationMode compilationMode);
 
   String getDescription(

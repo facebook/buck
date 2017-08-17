@@ -50,10 +50,6 @@ public class JavaLibraryRules {
   /** Utility class: do not instantiate. */
   private JavaLibraryRules() {}
 
-  public static Optional<Path> getAnnotationPath(ProjectFilesystem filesystem, BuildTarget target) {
-    return Optional.of(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
-  }
-
   static void addAccumulateClassNamesStep(
       BuildTarget target,
       ProjectFilesystem filesystem,
