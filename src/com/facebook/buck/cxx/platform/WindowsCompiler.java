@@ -18,7 +18,7 @@ package com.facebook.buck.cxx.platform;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
-import java.io.InputStream;
+import java.util.Optional;
 
 public class WindowsCompiler extends DefaultCompiler {
 
@@ -68,7 +68,7 @@ public class WindowsCompiler extends DefaultCompiler {
   }
 
   @Override
-  public InputStream getErrorStream(ProcessExecutor.LaunchedProcess compilerProcess) {
-    return compilerProcess.getInputStream();
+  public Optional<String> getStderr(ProcessExecutor.Result result) {
+    return result.getStdout();
   }
 }

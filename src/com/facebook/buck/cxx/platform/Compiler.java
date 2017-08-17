@@ -19,7 +19,6 @@ package com.facebook.buck.cxx.platform;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -46,5 +45,5 @@ public interface Compiler extends Tool {
 
   boolean shouldSanitizeOutputBinary();
 
-  InputStream getErrorStream(ProcessExecutor.LaunchedProcess compilerProcess);
+  Optional<String> getStderr(ProcessExecutor.Result result);
 }

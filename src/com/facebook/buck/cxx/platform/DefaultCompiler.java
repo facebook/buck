@@ -26,7 +26,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -115,7 +114,7 @@ public abstract class DefaultCompiler implements Compiler {
   }
 
   @Override
-  public InputStream getErrorStream(ProcessExecutor.LaunchedProcess compilerProcess) {
-    return compilerProcess.getErrorStream();
+  public Optional<String> getStderr(ProcessExecutor.Result result) {
+    return result.getStderr();
   }
 }

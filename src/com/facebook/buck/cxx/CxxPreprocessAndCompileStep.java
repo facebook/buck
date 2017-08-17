@@ -28,16 +28,14 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -198,55 +196,41 @@ public class CxxPreprocessAndCompileStep implements Step {
 
     LOG.debug("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
 
-    // Start the process.
-    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
-    ProcessExecutor.LaunchedProcess process = executor.launchProcess(params);
+    ProcessExecutor.Result result =
+        new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
 
-    // We buffer error messages in memory, as these are typically small.
+    processResult(result, context);
+    return result.getExitCode();
+  }
+
+  private void processResult(ProcessExecutor.Result result, ExecutionContext context)
+      throws IOException {
+    String stdErr = compiler.getStderr(result).orElse("");
+    Stream<String> lines = MoreStrings.linesToList(stdErr).stream();
+
+    CxxErrorTransformer cxxErrorTransformer =
+        new CxxErrorTransformer(
+            filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
+
     String err;
-    int exitCode;
-
-    List<String> includeLines = Collections.emptyList();
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(compiler.getErrorStream(process)))) {
-      CxxErrorTransformer cxxErrorTransformer =
-          new CxxErrorTransformer(
-              filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
-
-      if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
-        Map<Boolean, List<String>> includesAndErrors =
-            reader
-                .lines()
-                .collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowIncludeLine));
-        includeLines =
-            includesAndErrors
-                .getOrDefault(true, Collections.emptyList())
-                .stream()
-                .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
-                .collect(Collectors.toList());
-        List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
-        err =
-            errorLines
-                .stream()
-                .map(cxxErrorTransformer::transformLine)
-                .collect(Collectors.joining("\n"));
-      } else {
-        err =
-            reader
-                .lines()
-                .map(cxxErrorTransformer::transformLine)
-                .collect(Collectors.joining("\n"));
-      }
-      exitCode = executor.waitForLaunchedProcess(process).getExitCode();
-    } catch (UncheckedIOException e) {
-      throw e.getCause();
-    } finally {
-      executor.destroyLaunchedProcess(process);
-      executor.waitForLaunchedProcess(process);
-    }
-
     if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
+      Map<Boolean, List<String>> includesAndErrors =
+          lines.collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowIncludeLine));
+      List<String> includeLines =
+          includesAndErrors
+              .getOrDefault(true, Collections.emptyList())
+              .stream()
+              .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
+              .collect(Collectors.toList());
       filesystem.writeLinesToPath(includeLines, depFile.get());
+      List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
+      err =
+          errorLines
+              .stream()
+              .map(cxxErrorTransformer::transformLine)
+              .collect(Collectors.joining("\n"));
+    } else {
+      err = lines.map(cxxErrorTransformer::transformLine).collect(Collectors.joining("\n"));
     }
 
     // If we generated any error output, print that to the console.
@@ -257,11 +241,9 @@ public class CxxPreprocessAndCompileStep implements Step {
               createConsoleEvent(
                   context,
                   compiler.getFlagsForColorDiagnostics().isPresent(),
-                  exitCode == 0 ? Level.WARNING : Level.SEVERE,
+                  result.getExitCode() == 0 ? Level.WARNING : Level.SEVERE,
                   err));
     }
-
-    return exitCode;
   }
 
   private static boolean isShowIncludeLine(String line) {

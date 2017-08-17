@@ -18,13 +18,21 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public final class MoreStrings {
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
+
+  // see java.util.Scanner.LINE_SEPARATOR_PATTERN
+  private static final String LINE_SEPARATOR_PATTERN = "\r\n|[\n\r\u2028\u2029\u0085]";
+
+  private static volatile Pattern separatorPattern;
 
   public static boolean isEmpty(CharSequence sequence) {
     return sequence.length() == 0;
@@ -116,5 +124,21 @@ public final class MoreStrings {
     return data.substring(0, keepFirstChars)
         + truncateMessage
         + data.substring(data.length() - keepLastChars);
+  }
+
+  private static Pattern separatorPattern() {
+    Pattern sp = separatorPattern;
+    if (sp == null) {
+      separatorPattern = sp = Pattern.compile(LINE_SEPARATOR_PATTERN);
+    }
+    return sp;
+  }
+
+  public static Iterable<String> lines(String data) {
+    return Splitter.on(separatorPattern()).split(data);
+  }
+
+  public static List<String> linesToList(String data) {
+    return Splitter.on(separatorPattern()).splitToList(data);
   }
 }
