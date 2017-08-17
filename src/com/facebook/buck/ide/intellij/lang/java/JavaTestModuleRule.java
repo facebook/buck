@@ -20,15 +20,14 @@ import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.CoreArg> {
 
@@ -47,17 +46,16 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
   @Override
   public void apply(TargetNode<JavaTestDescription.CoreArg, ?> target, ModuleBuildContext context) {
     Optional<Path> resourcesRoot = target.getConstructorArg().getResourcesRoot();
-    Predicate<Map.Entry<Path, Path>> folderInputIndexFilter = null;
+    ImmutableSet<Path> resourcePaths;
     if (resourcesRoot.isPresent()) {
-      folderInputIndexFilter =
-          addResourcesAndGetFilter(
-              ResourceFolderType.JAVA_TEST_RESOURCE,
-              target.getConstructorArg().getResources(),
-              resourcesRoot.get(),
-              context);
+      resourcePaths =
+          getResourcePaths(resourcesRoot.get(), target.getConstructorArg().getResources());
+      addResourceFolders(
+          IjResourceFolderType.JAVA_TEST_RESOURCE, resourcePaths, resourcesRoot.get(), context);
+    } else {
+      resourcePaths = ImmutableSet.of();
     }
-    addDepsAndTestSourcesWithFiltering(
-        target, true /* wantsPackagePrefix */, context, folderInputIndexFilter);
+    addDepsAndTestSources(target, true /* wantsPackagePrefix */, context, resourcePaths);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 

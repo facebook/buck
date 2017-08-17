@@ -18,24 +18,24 @@ package com.facebook.buck.ide.intellij.model.folders;
 
 import java.nio.file.Path;
 
-public enum ResourceFolderType {
+public enum IjResourceFolderType {
   JAVA_RESOURCE("java-resource", JavaResourceFolder.class) {
     @Override
     public ResourceFolderFactory getFactory() {
-      return JavaResourceFolder.getResourceFactory();
+      return JavaResourceFolder.FACTORY;
     }
   },
   JAVA_TEST_RESOURCE("java-test-resource", JavaTestResourceFolder.class) {
     @Override
     public ResourceFolderFactory getFactory() {
-      return JavaTestResourceFolder.getResourceFactory();
+      return JavaTestResourceFolder.FACTORY;
     }
   };
 
   private final String resourceType;
   private final Class<? extends ResourceFolder> folderClass;
 
-  ResourceFolderType(String resourceType, Class<? extends ResourceFolder> folderClass) {
+  IjResourceFolderType(String resourceType, Class<? extends ResourceFolder> folderClass) {
     this.resourceType = resourceType;
     this.folderClass = folderClass;
   }

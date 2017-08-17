@@ -20,9 +20,9 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.ide.intellij.lang.java.JavaPackagePathCache;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
-import com.facebook.buck.ide.intellij.model.folders.ResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
@@ -328,14 +328,9 @@ public class IjSourceRootSimplifier {
 
       FolderTypeWithPackageInfo typeForMerging = findBestFolderType(childrenToMerge);
 
-      if (typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_RESOURCE_FOLDER)
-          || typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_TEST_RESOURCE_FOLDER)) {
-        ResourceFolderType resourceFolderType =
-            (typeForMerging.equals(FolderTypeWithPackageInfo.JAVA_RESOURCE_FOLDER))
-                ? ResourceFolderType.JAVA_RESOURCE
-                : ResourceFolderType.JAVA_TEST_RESOURCE;
+      if (typeForMerging.isResourceFolder()) {
         return tryCreateNewParentFolderFromChildrenResourceFolders(
-            currentPath, childrenToMerge, resourceFolderType);
+            currentPath, childrenToMerge, typeForMerging);
       } else if (typeForMerging.wantsPackagePrefix()) {
         return tryCreateNewParentFolderFromChildrenWithPackage(
             typeForMerging, currentPath, childrenToMerge);
@@ -349,15 +344,13 @@ public class IjSourceRootSimplifier {
     private Optional<IjFolder> tryCreateNewParentFolderFromChildrenResourceFolders(
         Path currentPath,
         ImmutableCollection<IjFolder> children,
-        ResourceFolderType resourceFolderType) {
-      Preconditions.checkArgument(
-          resourceFolderType.equals(ResourceFolderType.JAVA_RESOURCE)
-              || resourceFolderType.equals(ResourceFolderType.JAVA_TEST_RESOURCE));
+        FolderTypeWithPackageInfo typeForMerging) {
+      IjResourceFolderType ijResourceFolderType = typeForMerging.getIjResourceFolderType();
 
       ImmutableList<IjFolder> childrenToMerge =
           children
               .stream()
-              .filter(resourceFolderType::isIjFolderInstance)
+              .filter(ijResourceFolderType::isIjFolderInstance)
               .collect(MoreCollectors.toImmutableList());
 
       if (childrenToMerge.isEmpty()) {
@@ -365,7 +358,7 @@ public class IjSourceRootSimplifier {
       }
 
       final Path resourcesRoot =
-          resourceFolderType.getResourcesRootFromFolder(childrenToMerge.get(0));
+          ijResourceFolderType.getResourcesRootFromFolder(childrenToMerge.get(0));
 
       // If merging would recurse above resources_root, don't merge.
       if (!currentPath.startsWith(resourcesRoot)) {
@@ -379,13 +372,13 @@ public class IjSourceRootSimplifier {
               .allMatch(
                   folder ->
                       Objects.equals(
-                          resourcesRoot, resourceFolderType.getResourcesRootFromFolder(folder)));
+                          resourcesRoot, ijResourceFolderType.getResourcesRootFromFolder(folder)));
       if (!childrenHaveSameResourcesRoot) {
         return Optional.empty();
       }
 
       IjFolder mergedFolder =
-          resourceFolderType
+          ijResourceFolderType
               .getFactory()
               .create(
                   currentPath,

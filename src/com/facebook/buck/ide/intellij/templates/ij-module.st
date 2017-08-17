@@ -59,7 +59,7 @@
         isTestSource="%generatedFolder.isTestSource%" generated="true" %\\%
         %if(generatedFolder.packagePrefix)%packagePrefix="%generatedFolder.packagePrefix%" %endif%%\\%
         %if(generatedFolder.isResourceFolder)%%\\%
-          type="%generatedFolder.resourceFolderType%" %\\%
+          type="%generatedFolder.ijResourceFolderType%" %\\%
           %if(generatedFolder.relativeOutputPath)%relativeOutputPath="%generatedFolder.relativeOutputPath%" %endif%%\\%
         %endif%/>
     </content>
@@ -70,7 +70,7 @@
         isTestSource="%folder.isTestSource%" %\\%
         %if(folder.packagePrefix)%packagePrefix="%folder.packagePrefix%" %endif%%\\%
         %if(folder.isResourceFolder)%%\\%
-          type="%folder.resourceFolderType%" %\\%
+          type="%folder.ijResourceFolderType%" %\\%
           %if(folder.relativeOutputPath)%relativeOutputPath="%folder.relativeOutputPath%" %endif%%\\%
         %endif%/>
 }%    </content>

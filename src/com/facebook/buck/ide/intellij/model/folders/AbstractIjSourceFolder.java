@@ -34,7 +34,7 @@ abstract class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
 
   public abstract boolean getIsResourceFolder();
 
-  public abstract ResourceFolderType getResourceFolderType();
+  public abstract IjResourceFolderType getIjResourceFolderType();
 
   @Nullable
   public abstract Path getRelativeOutputPath();

@@ -192,22 +192,15 @@ public class ModuleBuildContext {
 
     // If both are resource folders of different types, we merge them into a regular resource
     // folder.
-    if ((from.getClass().equals(JavaResourceFolder.class)
-            && to.getClass().equals(JavaTestResourceFolder.class))
-        || (to.getClass().equals(JavaResourceFolder.class)
-            && from.getClass().equals(JavaTestResourceFolder.class))) {
+    if (ResourceFolder.class.isInstance(from) || ResourceFolder.class.isInstance(to)) {
       Path resourcesRoot = ((ResourceFolder) to).getResourcesRoot();
-      return new JavaResourceFolder(to.getPath(), IjFolder.combineInputs(from, to), resourcesRoot);
+      return new JavaResourceFolder(to.getPath(), resourcesRoot, IjFolder.combineInputs(from, to));
     }
 
     // If one is a test folder and one is a resource folder, we merge them into a test folder. Note
     // that as per the comment for this function, this may not necessarily work correctly.
-    if ((from.getClass().equals(TestFolder.class)
-            && (to.getClass().equals(JavaTestResourceFolder.class)
-                || to.getClass().equals(JavaResourceFolder.class)))
-        || (to.getClass().equals(TestFolder.class)
-            && (from.getClass().equals(JavaTestResourceFolder.class)
-                || from.getClass().equals(JavaResourceFolder.class)))) {
+    if ((from.getClass().equals(TestFolder.class) && ResourceFolder.class.isInstance(to))
+        || (to.getClass().equals(TestFolder.class) && ResourceFolder.class.isInstance(from))) {
       return new TestFolder(
           to.getPath(),
           from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),

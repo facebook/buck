@@ -65,5 +65,7 @@ public abstract class ResourceFolder extends InclusiveFolder {
     return super.hashCode() ^ Objects.hashCode(resourcesRoot);
   }
 
-  public abstract ResourceFolderType getResourceFolderType();
+  public abstract IjResourceFolderType getResourceFolderType();
+
+  public abstract ResourceFolderFactory getResourceFactory();
 }
