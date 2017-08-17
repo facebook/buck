@@ -37,7 +37,8 @@
 {/call}
 
 {call buck.arg}
-    {param name: 'exe' /}
+    {param name: 'exe'/}
+    {param default: 'None'/}
     {param desc}
     A {call buck.build_target /} for a rule that outputs
     an executable, such as an <code>sh_binary</code>.
@@ -46,6 +47,7 @@
 
 {call buck.arg}
     {param name: 'platform_exe' /}
+    {{param default: '{}' /}}
     {param desc}
     <p>A mapping from platforms to {call buck.build_target /}.
         Allows to override <code>exe</code> per host platform.</p>
