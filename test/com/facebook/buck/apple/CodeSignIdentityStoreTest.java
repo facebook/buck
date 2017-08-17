@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -27,6 +28,7 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -64,6 +66,7 @@ public class CodeSignIdentityStoreTest {
 
   @Test
   public void testCodeSignIdentitiesCommandOverride() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir =
         TestDataHelper.getTestDataDirectory(this).resolve("code_sign_identity_store");
