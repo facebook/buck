@@ -16,6 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -44,4 +48,28 @@ abstract class AbstractCompilerParameters {
   public abstract Optional<Path> getDepFilePath();
 
   public abstract Path getPathToSourcesList();
+
+  public abstract static class Builder {
+    public CompilerParameters.Builder setSourceFileSourcePaths(
+        ImmutableSortedSet<SourcePath> srcs,
+        ProjectFilesystem projectFilesystem,
+        SourcePathResolver resolver) {
+      ImmutableSortedSet<Path> javaSrcs =
+          srcs.stream()
+              .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)))
+              .collect(MoreCollectors.toImmutableSortedSet());
+      return ((CompilerParameters.Builder) this).setSourceFilePaths(javaSrcs);
+    }
+
+    public CompilerParameters.Builder setClasspathEntriesSourcePaths(
+        ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
+        SourcePathResolver resolver) {
+      ImmutableSortedSet<Path> compileTimeClasspathPaths =
+          compileTimeClasspathSourcePaths
+              .stream()
+              .map(resolver::getAbsolutePath)
+              .collect(MoreCollectors.toImmutableSortedSet());
+      return ((CompilerParameters.Builder) this).setClasspathEntries(compileTimeClasspathPaths);
+    }
+  }
 }

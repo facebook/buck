@@ -195,14 +195,6 @@ public class JarBuildStepsFactory
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), projectFilesystem, outputDirectory)));
 
-    // We don't want to add provided to the declared or transitive deps, since they're only used at
-    // compile time.
-    ImmutableSortedSet<Path> compileTimeClasspathPaths =
-        this.compileTimeClasspathSourcePaths
-            .stream()
-            .map(context.getSourcePathResolver()::getAbsolutePath)
-            .collect(MoreCollectors.toImmutableSortedSet());
-
     // If there are resources, then link them to the appropriate place in the classes directory.
     steps.add(
         new CopyResourcesStep(
@@ -250,15 +242,6 @@ public class JarBuildStepsFactory
       Optional<Path> generatedCodeDirectory =
           JavaLibraryRules.getAnnotationPath(projectFilesystem, target);
 
-      ImmutableSortedSet<Path> javaSrcs =
-          this.srcs
-              .stream()
-              .map(
-                  src ->
-                      projectFilesystem.relativize(
-                          context.getSourcePathResolver().getAbsolutePath(src)))
-              .collect(MoreCollectors.toImmutableSortedSet());
-
       compileToJarStepFactory.createCompileToJarStep(
           context,
           target,
@@ -266,8 +249,9 @@ public class JarBuildStepsFactory
           this.ruleFinder,
           projectFilesystem,
           CompilerParameters.builder()
-              .setClasspathEntries(compileTimeClasspathPaths)
-              .setSourceFilePaths(javaSrcs)
+              .setClasspathEntriesSourcePaths(
+                  compileTimeClasspathSourcePaths, context.getSourcePathResolver())
+              .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
               .setWorkingDirectory(workingDirectory)
               .setGeneratedCodeDirectory(generatedCodeDirectory)
               .setOutputDirectory(outputDirectory)
