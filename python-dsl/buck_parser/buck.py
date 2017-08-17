@@ -591,6 +591,34 @@ class BuildFileProcessor(object):
         ):
             yield
 
+    def _merge_explicit_globals(self, src, dst, whitelist=None, whitelist_mapping=None):
+        # type: (types.ModuleType, Dict[str, Any], List[str], Dict[str, str]) -> None
+        """Copy explicitly requested global definitions from one globals dict to another.
+
+        If whitelist is set, only globals from the whitelist will be pulled in.
+        If whitelist_mapping is set, globals will be exported under the name of the keyword. For
+        example, foo="bar" would mean that a variable with name "bar" in imported file, will be
+        available as "foo" in current file.
+        """
+
+        if whitelist is not None:
+            for symbol in whitelist:
+                if symbol not in src.__dict__:
+                    raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
+                value = src.__dict__[symbol]
+                if self._freeze_globals:
+                    value = self._freeze(value)
+                dst[symbol] = value
+
+        if whitelist_mapping is not None:
+            for exported_name, symbol in whitelist_mapping.iteritems():
+                if symbol not in src.__dict__:
+                    raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
+                value = src.__dict__[symbol]
+                if self._freeze_globals:
+                    value = self._freeze(value)
+                dst[exported_name] = value
+
     def _merge_globals(self, mod, dst):
         # type: (types.ModuleType, Dict[str, Any]) -> None
         """Copy the global definitions from one globals dict to another.
@@ -601,6 +629,7 @@ class BuildFileProcessor(object):
 
         hidden = set([
             'include_defs',
+            'load',
         ])
 
         keys = getattr(mod, '__all__', mod.__dict__.keys())
@@ -766,6 +795,31 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.merge(inner_env)
 
+    def _load(self, name, *symbols, **symbol_kwargs):
+        # type: (str, *str, **kwargs) -> None
+        """Pull the symbols from the named include into the current caller's context.
+
+        This method is meant to be installed into the globals of any files or
+        includes that we process.
+        """
+        # Grab the current build context from the top of the stack.
+        build_env = self._current_build_env
+
+        # Resolve the named include to its path and process it to get its
+        # build context and module.
+        path = self._get_include_path(name)
+        inner_env, module = self._process_include(path, False)
+
+        # Look up the caller's stack frame and merge the include's globals
+        # into it's symbol table.
+        frame = get_caller_frame(skip=['_functools', __name__])
+        self._merge_explicit_globals(module, frame.f_globals, symbols, symbol_kwargs)
+
+        # Pull in the include's accounting of its own referenced includes
+        # into the current build context.
+        build_env.includes.add(path)
+        build_env.merge(inner_env)
+
     def _add_build_file_dep(self, name):
         """
         Explicitly specify a dependency on an external file.
@@ -912,6 +966,7 @@ class BuildFileProcessor(object):
                 'allow_unsafe_import': self._import_whitelist_manager.allow_unsafe_import,
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
+                'load': self._load,
             }
 
             # Don't include implicit includes if the current file being
