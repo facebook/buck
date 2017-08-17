@@ -258,7 +258,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     BuildTargets.getAnnotationPath(
                         getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
             .setOutputDirectory(rDotJavaClassesFolder)
-            .setDepFilePath(Optional.empty())
             .setPathToSourcesList(pathToSrcsList)
             .build(),
         steps,

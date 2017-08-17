@@ -201,7 +201,6 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         getProjectFilesystem(), getBuildTarget(), "__%s_gen__")))
             .setGeneratedCodeDirectory(Optional.empty())
             .setOutputDirectory(fatJarDir)
-            .setDepFilePath(Optional.empty())
             .setPathToSourcesList(pathToSrcsList)
             .build(),
         steps,

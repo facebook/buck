@@ -49,6 +49,11 @@ abstract class AbstractCompilerParameters {
 
   public abstract Path getPathToSourcesList();
 
+  @Value.Default
+  public boolean shouldTrackClassUsage() {
+    return false;
+  }
+
   public abstract static class Builder {
     public CompilerParameters.Builder setSourceFileSourcePaths(
         ImmutableSortedSet<SourcePath> srcs,

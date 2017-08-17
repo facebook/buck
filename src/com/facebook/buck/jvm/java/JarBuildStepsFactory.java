@@ -139,13 +139,7 @@ public class JarBuildStepsFactory
     ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(abiJarPath.get());
 
     addCompileToJarSteps(
-        buildTarget,
-        context,
-        buildableContext,
-        abiJarPath,
-        ImmutableList.of(),
-        Optional.empty(),
-        steps);
+        buildTarget, context, buildableContext, abiJarPath, ImmutableList.of(), false, steps);
 
     ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(null);
 
@@ -162,7 +156,7 @@ public class JarBuildStepsFactory
         buildableContext,
         getOutputJarPath(buildTarget),
         postprocessClassesCommands,
-        trackClassUsage ? Optional.of(getDepFileRelativePath(buildTarget)) : Optional.empty(),
+        trackClassUsage,
         steps);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
@@ -182,7 +176,7 @@ public class JarBuildStepsFactory
       BuildableContext buildableContext,
       Optional<Path> outputJar,
       ImmutableList<String> postprocessClassesCommands,
-      Optional<Path> depFileRelativePath,
+      boolean trackClassUsage,
       ImmutableList.Builder<Step> steps) {
 
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
@@ -218,9 +212,10 @@ public class JarBuildStepsFactory
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!this.srcs.isEmpty()) {
-      if (depFileRelativePath.isPresent()) {
+      Path depFileRelativePath = getDepFileRelativePath(target);
+      if (trackClassUsage) {
         Preconditions.checkNotNull(depFileRelativePath);
-        buildableContext.recordArtifact(depFileRelativePath.get());
+        buildableContext.recordArtifact(depFileRelativePath);
       }
 
       // This adds the javac command, along with any supporting commands.
@@ -255,6 +250,7 @@ public class JarBuildStepsFactory
               .setWorkingDirectory(workingDirectory)
               .setGeneratedCodeDirectory(generatedCodeDirectory)
               .setOutputDirectory(outputDirectory)
+              .setShouldTrackClassUsage(trackClassUsage)
               .setDepFilePath(depFileRelativePath)
               .setPathToSourcesList(pathToSrcsList)
               .build(),
@@ -292,8 +288,7 @@ public class JarBuildStepsFactory
     return DefaultClassUsageFileReader.loadFromFile(
         projectFilesystem,
         cellPathResolver,
-        projectFilesystem.getPathForRelativePath(
-            Preconditions.checkNotNull(getDepFileRelativePath(buildTarget))),
+        projectFilesystem.getPathForRelativePath(getDepFileRelativePath(buildTarget)),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver()));
   }
 
@@ -313,12 +308,9 @@ public class JarBuildStepsFactory
     }
   }
 
-  @Nullable
   private Path getDepFileRelativePath(BuildTarget buildTarget) {
-    return trackClassUsage
-        ? DefaultJavaLibrary.getOutputJarDirPath(buildTarget, projectFilesystem)
-            .resolve("used-classes.json")
-        : null;
+    return DefaultJavaLibrary.getOutputJarDirPath(buildTarget, projectFilesystem)
+        .resolve("used-classes.json");
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(

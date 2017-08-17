@@ -76,7 +76,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     Optional<Path> workingDirectory = parameters.getWorkingDirectory();
     Optional<Path> generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
     Path outputDirectory = parameters.getOutputDirectory();
-    Optional<Path> depFilePath = parameters.getDepFilePath();
     Path pathToSrcsList = parameters.getPathToSourcesList();
 
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
@@ -89,8 +88,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     }
 
     final ClassUsageFileWriter usedClassesFileWriter =
-        depFilePath.isPresent()
-            ? new DefaultClassUsageFileWriter(depFilePath.get())
+        parameters.shouldTrackClassUsage()
+            ? new DefaultClassUsageFileWriter(parameters.getDepFilePath().get())
             : NoOpClassUsageFileWriter.instance();
     steps.add(
         new JavacStep(
@@ -149,7 +148,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     Optional<Path> workingDirectory = compilerParameters.getWorkingDirectory();
     Optional<Path> generatedCodeDirectory = compilerParameters.getGeneratedCodeDirectory();
     Path outputDirectory = compilerParameters.getOutputDirectory();
-    Optional<Path> depFilePath = compilerParameters.getDepFilePath();
     Path pathToSrcsList = compilerParameters.getPathToSourcesList();
 
     Preconditions.checkArgument(jarParameters.getEntriesToJar().contains(outputDirectory));
@@ -178,8 +176,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
           generatedCodeDirectory, filesystem, steps, buildableContext, context);
 
       final ClassUsageFileWriter usedClassesFileWriter =
-          depFilePath.isPresent()
-              ? new DefaultClassUsageFileWriter(depFilePath.get())
+          compilerParameters.shouldTrackClassUsage()
+              ? new DefaultClassUsageFileWriter(compilerParameters.getDepFilePath().get())
               : NoOpClassUsageFileWriter.instance();
       steps.add(
           new JavacStep(
