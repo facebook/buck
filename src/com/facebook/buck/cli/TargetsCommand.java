@@ -163,7 +163,10 @@ public class TargetsCommand extends AbstractCommand {
   @Option(
     name = "--show-rulekey",
     aliases = {"--show_rulekey"},
-    usage = "Print the RuleKey of each rule after the rule name."
+    forbids = {"--show-target-hash"},
+    usage =
+        "Print the RuleKey of each rule after the rule name. "
+            + "Incompatible with '--show-target-hash'."
   )
   private boolean isShowRuleKey;
 
@@ -176,7 +179,10 @@ public class TargetsCommand extends AbstractCommand {
 
   @Option(
     name = "--show-target-hash",
-    usage = "Print a stable hash of each target after the target name."
+    forbids = {"--show-rulekey"},
+    usage =
+        "Print a stable hash of each target after the target name. "
+            + "Incompatible with '--show-rulekey'."
   )
   private boolean isShowTargetHash;
 
@@ -317,10 +323,6 @@ public class TargetsCommand extends AbstractCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (isShowRuleKey() && isShowTargetHash()) {
-      throw new HumanReadableException("Cannot show rule key and target hash at the same time.");
-    }
-
     try (CommandThreadManager pool =
         new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()))) {
       ListeningExecutorService executor = pool.getExecutor();
