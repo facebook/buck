@@ -31,7 +31,10 @@ java_library(
         ["*.java"],
         excludes = CACHE_HANDLER_SRCS + UTIL_SRCS,
     ),
-    resources = glob(["*.soy"]),
+    resources = glob([
+        "*.soy",
+        "resources/static/*.*",
+    ]),
     tests = [
         "//test/com/facebook/buck/httpserver:httpserver",
         "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
@@ -52,6 +55,7 @@ java_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/event/listener:CacheRateStatsKeeper",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/rules:build_event",

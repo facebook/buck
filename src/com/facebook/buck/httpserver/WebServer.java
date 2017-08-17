@@ -30,7 +30,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -56,7 +55,6 @@ public class WebServer {
 
   private Optional<Integer> port;
   private final ProjectFilesystem projectFilesystem;
-  private final String staticContentDirectory;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
   private final ArtifactCacheHandler artifactCacheHandler;
@@ -65,9 +63,8 @@ public class WebServer {
    * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">ephemeral
    *     port</a> will be assigned. Use {@link #getPort()} to find out which port is being used.
    */
-  public WebServer(int port, ProjectFilesystem projectFilesystem, String staticContentDirectory) {
+  public WebServer(int port, ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
-    this.staticContentDirectory = staticContentDirectory;
     this.port = Optional.empty();
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet();
@@ -129,9 +126,8 @@ public class WebServer {
 
     contextPathToHandler.put(INDEX_CONTEXT_PATH, new TemplateHandler(new IndexHandlerDelegate()));
 
-    ResourceHandler resourceHandler = new ResourceHandler();
-    resourceHandler.setResourceBase(staticContentDirectory);
-    contextPathToHandler.put(STATIC_CONTEXT_PATH, resourceHandler);
+    StaticResourcesHandler staticResourcesHandler = new StaticResourcesHandler();
+    contextPathToHandler.put(STATIC_CONTEXT_PATH, staticResourcesHandler);
 
     // Handlers for traces.
     BuildTraces buildTraces = new BuildTraces(projectFilesystem);
