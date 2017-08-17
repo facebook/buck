@@ -52,7 +52,13 @@ public class JavaLibraryDescription
         VersionPropagator<JavaLibraryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
-      ImmutableSet.of(Javadoc.DOC_JAR, JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
+      ImmutableSet.of(
+          Javadoc.DOC_JAR,
+          JavaLibrary.SRC_JAR,
+          JavaLibrary.MAVEN_JAR,
+          HasJavaAbi.CLASS_ABI_FLAVOR,
+          HasJavaAbi.SOURCE_ABI_FLAVOR,
+          HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   @VisibleForTesting private final JavacOptions defaultOptions;

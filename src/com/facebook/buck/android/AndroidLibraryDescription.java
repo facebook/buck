@@ -124,7 +124,10 @@ public class AndroidLibraryDescription
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return flavors.isEmpty()
         || flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR))
-        || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR));
+        || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR))
+        || flavors.equals(ImmutableSet.of(HasJavaAbi.CLASS_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(HasJavaAbi.SOURCE_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR));
   }
 
   @Override
