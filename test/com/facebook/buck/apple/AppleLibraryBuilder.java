@@ -200,4 +200,14 @@ public class AppleLibraryBuilder
     getArgForPopulating().setSwiftVersion(swiftVersion);
     return this;
   }
+
+  public AppleLibraryBuilder setXcodePrivateHeadersSymlinks(boolean xcodePrivateHeadersSymlinks) {
+    getArgForPopulating().setXcodePrivateHeadersSymlinks(Optional.of(xcodePrivateHeadersSymlinks));
+    return this;
+  }
+
+  public AppleLibraryBuilder setXcodePublicHeadersSymlinks(boolean xcodePublicHeadersSymlinks) {
+    getArgForPopulating().setXcodePublicHeadersSymlinks(Optional.of(xcodePublicHeadersSymlinks));
+    return this;
+  }
 }

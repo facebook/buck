@@ -903,4 +903,15 @@ public class AppleDescriptions {
         || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
   }
+
+  public static boolean targetNodeContainsSwiftSourceCode(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> node) {
+    for (Path inputPath : node.getInputs()) {
+      if (inputPath.toString().endsWith(".swift")) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }
