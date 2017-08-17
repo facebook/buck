@@ -305,7 +305,10 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "ProjectFilesystemDelegate",
         ChromeTraceEvent.Phase.METADATA,
-        ImmutableMap.of("class", "com.facebook.buck.io.DefaultProjectFilesystemDelegate"));
+        ImmutableMap.of(
+            "details",
+            String.format(
+                "DefaultProjectFilesystemDelegate{root=%s}", projectFilesystem.getRootPath())));
 
     assertNextResult(
         resultListCopy,

@@ -334,12 +334,9 @@ public class ProjectFilesystem {
     return projectRoot;
   }
 
-  /**
-   * @return the name of the underlying {@link ProjectFilesystemDelegate} via {@link
-   *     Class#getName()} for logging purposes.
-   */
-  public String getDelegateName() {
-    return delegate.getClass().getName();
+  /** @return details about the delegate suitable for writing to a log file. */
+  public String getDelegateDetails() {
+    return delegate.getDetailsForLogging();
   }
 
   /**

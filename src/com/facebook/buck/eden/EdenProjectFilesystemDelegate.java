@@ -70,6 +70,13 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   @Override
+  public String getDetailsForLogging() {
+    return String.format(
+        "EdenProjectFilesystemDelegate{mount=%s; disableSha1FastPath=%s}",
+        mount.getProjectRoot(), disableSha1FastPath);
+  }
+
+  @Override
   public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     return;
   }
