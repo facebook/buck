@@ -1352,7 +1352,7 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {param example_value: '3' /}
   {param description}
     In case buck is unable to download a file, it will retry specified number of times before
-    giving up.
+    giving up. By default it's not set, so Buck is not going to retry failed downloads.
   {/param}
 {/call}
 
