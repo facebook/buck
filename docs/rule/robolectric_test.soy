@@ -55,6 +55,14 @@ with Robolectric test runner. It extends from <code>java_test()</code> rule.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'extra_kotlinc_arguments' /}
+  {param default : '[]' /}
+  {param desc}
+  List of additional arguments to pass into the Kotlin compiler.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {/call} // close buck.rule

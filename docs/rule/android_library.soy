@@ -141,6 +141,14 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
+  {param name: 'extra_kotlinc_arguments' /}
+  {param default : '[]' /}
+  {param desc}
+  List of additional arguments to pass into the Kotlin compiler.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'exported_deps' /}
   {param default : '[]' /}
   {param desc}

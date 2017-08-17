@@ -41,8 +41,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescriptionArg>,
@@ -141,14 +141,12 @@ public class AndroidLibraryDescription
   }
 
   public interface CoreArg
-      extends JavaLibraryDescription.CoreArg, HasDepsQuery, HasProvidedDepsQuery {
+      extends JavaLibraryDescription.CoreArg, AndroidKotlinCoreArg, HasDepsQuery, HasProvidedDepsQuery {
     Optional<SourcePath> getManifest();
 
     Optional<String> getResourceUnionPackage();
 
     Optional<String> getFinalRName();
-
-    Optional<JvmLanguage> getLanguage();
   }
 
   @BuckStyleImmutable
