@@ -80,10 +80,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Optional<Path> workingDirectory = parameters.getWorkingDirectory();
-    Optional<Path> generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
     Path outputDirectory = parameters.getOutputDirectory();
-    Optional<Path> depFilePath = parameters.getDepFilePath();
     Path pathToSrcsList = parameters.getPathToSourcesList();
 
     // Don't invoke kotlinc if we don't have any kotlin files.
@@ -121,6 +118,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               resolver,
               filesystem,
               CompilerParameters.builder()
+                  .from(parameters)
                   .setClasspathEntries(
                       ImmutableSortedSet.<Path>naturalOrder()
                           .add(outputDirectory)
@@ -130,11 +128,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                           .addAll(declaredClasspathEntries)
                           .build())
                   .setSourceFilePaths(javaSourceFiles)
-                  .setWorkingDirectory(workingDirectory)
-                  .setGeneratedCodeDirectory(generatedCodeDirectory)
-                  .setOutputDirectory(outputDirectory)
-                  .setDepFilePath(depFilePath)
-                  .setPathToSourcesList(pathToSrcsList)
                   .build(),
               steps,
               buildableContext);
