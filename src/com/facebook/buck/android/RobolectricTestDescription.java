@@ -230,12 +230,12 @@ public class RobolectricTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRobolectricTestDescriptionArg extends JavaTestDescription.CoreArg {
+  interface AbstractRobolectricTestDescriptionArg
+      extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
+
     Optional<String> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
-
-    Optional<AndroidLibraryDescription.JvmLanguage> getLanguage();
 
     @Value.Default
     default boolean isUseOldStyleableFormat() {

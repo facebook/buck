@@ -94,6 +94,7 @@ RULES_SRCS = [
     "AndroidInstrumentationApkDescription.java",
     "AndroidInstrumentationTest.java",
     "AndroidInstrumentationTestDescription.java",
+    "AndroidKotlinCoreArg.java",
     "AndroidLibrary.java",
     "AndroidLibraryCompiler.java",
     "AndroidLibraryCompilerFactory.java",

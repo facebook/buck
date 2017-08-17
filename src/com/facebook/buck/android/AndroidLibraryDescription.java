@@ -141,14 +141,15 @@ public class AndroidLibraryDescription
   }
 
   public interface CoreArg
-      extends JavaLibraryDescription.CoreArg, HasDepsQuery, HasProvidedDepsQuery {
+      extends JavaLibraryDescription.CoreArg,
+          AndroidKotlinCoreArg,
+          HasDepsQuery,
+          HasProvidedDepsQuery {
     Optional<SourcePath> getManifest();
 
     Optional<String> getResourceUnionPackage();
 
     Optional<String> getFinalRName();
-
-    Optional<JvmLanguage> getLanguage();
   }
 
   @BuckStyleImmutable
