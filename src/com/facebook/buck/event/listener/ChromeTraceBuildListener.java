@@ -419,7 +419,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           "buck",
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getEventId().getValue().intern()),
           phase,
-          ImmutableMap.copyOf(Maps.transformValues(perfEvent.getEventInfo(), Object::toString)),
+          ImmutableMap.copyOf(perfEvent.getEventInfo()),
           perfEvent);
     } catch (ExecutionException e) {
       LOG.warn("Unable to log perf event " + perfEvent, e);
@@ -773,7 +773,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       String category,
       String name,
       ChromeTraceEvent.Phase phase,
-      ImmutableMap<String, String> arguments,
+      ImmutableMap<String, ? extends Object> arguments,
       final BuckEvent event) {
     final ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
