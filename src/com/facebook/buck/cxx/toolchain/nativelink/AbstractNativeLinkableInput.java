@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.toolchain.linker;
+package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;

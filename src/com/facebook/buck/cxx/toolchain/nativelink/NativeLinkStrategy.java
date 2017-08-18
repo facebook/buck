@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.platform;
+package com.facebook.buck.cxx.toolchain.nativelink;
 
 /**
  * The ways that other language (e.g. Python, Lua) binaries pull in native linkable dependencies.

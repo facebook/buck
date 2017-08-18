@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.platform;
+package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.cxx.platform.CxxPlatform;
 import java.util.Optional;
 
 /**

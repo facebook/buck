@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
