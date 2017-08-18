@@ -14,29 +14,44 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.FileContentsScrubber;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
+import java.util.Arrays;
 
-public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
+public class LcUuidContentsScrubber implements FileContentsScrubber {
 
-  private final ImmutableMap<Path, Path> cellRootMap;
-
-  OsoSymbolsContentsScrubber(ImmutableMap<Path, Path> cellRootMap) {
-    this.cellRootMap = cellRootMap;
-  }
+  private static final byte[] ZERO_UUID = new byte[16];
 
   @Override
   public void scrubFile(FileChannel file) throws IOException, ScrubException {
     if (!Machos.isMacho(file)) {
       return;
     }
+
+    long size = file.size();
+    MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
+
     try {
-      Machos.relativizeOsoSymbols(file, cellRootMap);
+      Machos.setUuid(map, ZERO_UUID);
+    } catch (Machos.MachoException e) {
+      throw new ScrubException(e.getMessage());
+    }
+    map.rewind();
+
+    Hasher hasher = Hashing.sha1().newHasher();
+    while (map.hasRemaining()) {
+      hasher.putByte(map.get());
+    }
+
+    map.rewind();
+    try {
+      Machos.setUuid(map, Arrays.copyOf(hasher.hash().asBytes(), 16));
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }

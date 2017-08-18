@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.SourcePathResolver;

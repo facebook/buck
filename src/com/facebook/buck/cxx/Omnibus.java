@@ -17,12 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
 import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
 import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.linker.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;

@@ -23,6 +23,8 @@ import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
 import com.facebook.buck.cxx.toolchain.SymbolNameTool;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;

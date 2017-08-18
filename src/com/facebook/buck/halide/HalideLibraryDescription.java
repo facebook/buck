@@ -31,7 +31,7 @@ import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;

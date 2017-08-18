@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.toolchain;
+package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.FileContentsScrubber;
 import com.google.common.base.Charsets;

@@ -14,10 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain.objectfile;
 
-import com.facebook.buck.cxx.toolchain.ObjectFileCommonModificationDate;
-import com.facebook.buck.cxx.toolchain.ObjectFileScrubbers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;

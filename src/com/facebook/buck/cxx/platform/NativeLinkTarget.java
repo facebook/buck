@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx.platform;
 
+import com.facebook.buck.cxx.toolchain.linker.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.linker.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import java.nio.file.Path;
 import java.util.Optional;

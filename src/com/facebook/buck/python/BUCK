@@ -84,6 +84,7 @@ java_immutables_library(
         ":support",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/platform:platform",
+        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/file:rules",
         "//src/com/facebook/buck/graph:graph",

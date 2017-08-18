@@ -16,7 +16,7 @@
 
 package com.facebook.buck.haskell;
 
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.BuildRule;
 
 /** An interface for rule which can provide interfaces files for a haskell compilation. */

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;

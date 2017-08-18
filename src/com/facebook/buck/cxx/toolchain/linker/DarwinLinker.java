@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain.linker;
 
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.Linkers;
+import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
+import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.io.FileScrubber;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

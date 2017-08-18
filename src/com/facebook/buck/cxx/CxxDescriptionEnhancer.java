@@ -17,11 +17,11 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.Linkers;
 import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
 import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.linker.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;

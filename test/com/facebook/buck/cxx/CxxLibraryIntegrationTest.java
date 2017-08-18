@@ -29,7 +29,7 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.ObjectFileScrubbers;
+import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

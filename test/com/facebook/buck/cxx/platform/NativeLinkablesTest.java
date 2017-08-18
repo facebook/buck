@@ -19,6 +19,8 @@ package com.facebook.buck.cxx.platform;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
