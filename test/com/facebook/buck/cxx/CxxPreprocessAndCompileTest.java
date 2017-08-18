@@ -22,11 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.platform.Compiler;
-import com.facebook.buck.cxx.platform.DefaultCompiler;
-import com.facebook.buck.cxx.platform.GccCompiler;
-import com.facebook.buck.cxx.platform.GccPreprocessor;
-import com.facebook.buck.cxx.platform.Preprocessor;
+import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.DefaultCompiler;
+import com.facebook.buck.cxx.toolchain.GccCompiler;
+import com.facebook.buck.cxx.toolchain.GccPreprocessor;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

@@ -16,18 +16,18 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Archiver;
-import com.facebook.buck.cxx.platform.CompilerProvider;
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
-import com.facebook.buck.cxx.platform.HeaderVerification;
-import com.facebook.buck.cxx.platform.LazyDelegatingArchiver;
-import com.facebook.buck.cxx.platform.LazyDelegatingSymbolNameTool;
 import com.facebook.buck.cxx.platform.LinkerProvider;
-import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.platform.PreprocessorProvider;
-import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
-import com.facebook.buck.cxx.platform.SymbolNameTool;
+import com.facebook.buck.cxx.toolchain.Archiver;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.LazyDelegatingArchiver;
+import com.facebook.buck.cxx.toolchain.LazyDelegatingSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.toolchain.SymbolNameTool;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;

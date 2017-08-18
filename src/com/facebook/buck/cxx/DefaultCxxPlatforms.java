@@ -16,17 +16,19 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Archiver;
-import com.facebook.buck.cxx.platform.BsdArchiver;
-import com.facebook.buck.cxx.platform.CompilerProvider;
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.CxxToolProvider;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
-import com.facebook.buck.cxx.platform.GnuArchiver;
 import com.facebook.buck.cxx.platform.LinkerProvider;
-import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.platform.PreprocessorProvider;
-import com.facebook.buck.cxx.platform.WindowsArchiver;
+import com.facebook.buck.cxx.toolchain.Archiver;
+import com.facebook.buck.cxx.toolchain.BsdArchiver;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.GnuArchiver;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.WindowsArchiver;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;

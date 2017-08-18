@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Preprocessor;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;

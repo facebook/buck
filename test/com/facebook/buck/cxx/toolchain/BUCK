@@ -1,0 +1,20 @@
+standard_java_test(
+    name = "toolchain",
+    deps = [
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/hashing:hashing",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/rules:rule_key",
+        "//src/com/facebook/buck/rules:source_path",
+        "//src/com/facebook/buck/rules:transformer",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/util/cache:cache",
+        "//test/com/facebook/buck/rules/keys:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:hamcrest-junit",
+        "//third-party/java/junit:junit",
+    ],
+)
