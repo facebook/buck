@@ -116,7 +116,16 @@ public class JsTestScenario {
       return this;
     }
 
-    Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
+    Builder libraryWithDeps(BuildTarget target, BuildTarget... libraryDependencies) {
+      nodes.add(
+          new JsLibraryBuilder(target, filesystem)
+              .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
+              .setWorker(workerTarget)
+              .build());
+      return this;
+    }
+
+    Builder libraryWithLibs(BuildTarget target, BuildTarget... libraryDependencies) {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
@@ -166,7 +175,7 @@ public class JsTestScenario {
       return this;
     }
 
-    JsTestScenario build() throws NoSuchBuildTargetException {
+    JsTestScenario build() {
       final TargetGraph graph = TargetGraphFactory.newInstance(nodes);
       final BuildRuleResolver resolver =
           new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());

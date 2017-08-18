@@ -36,13 +36,13 @@ public class JsLibraryBuilder
     super(libraryDescription, target, filesystem);
   }
 
-  JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
-    getArgForPopulating().setLibs(libs);
+  JsLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
-  JsLibraryBuilder setExtraArgs(String extraArgs) {
-    getArgForPopulating().setExtraArgs(Optional.of(extraArgs));
+  JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
+    getArgForPopulating().setLibs(libs);
     return this;
   }
 

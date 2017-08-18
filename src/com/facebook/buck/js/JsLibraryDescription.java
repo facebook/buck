@@ -32,6 +32,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -55,6 +56,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -124,7 +126,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     } else {
       return new LibraryBuilder(targetGraph, resolver, buildTarget, params, sourcesToFlavors)
           .setSources(args.getSrcs())
-          .setLibraryDependencies(args.getLibs())
+          .setLibraryDependencies(args.getLibs(), args.getDeps())
           .build(projectFilesystem, worker);
     }
   }
@@ -141,7 +143,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJsLibraryDescriptionArg extends CommonDescriptionArg {
+  interface AbstractJsLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
     Optional<String> getExtraArgs();
 
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
@@ -166,7 +168,7 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
 
     @Nullable private ImmutableList<JsFile> sourceFiles;
 
-    @Nullable private ImmutableList<BuildRule> libraryDependencies;
+    @Nullable private ImmutableList<JsLibrary> libraryDependencies;
 
     private LibraryBuilder(
         TargetGraph targetGraph,
@@ -200,19 +202,20 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     }
 
     private LibraryBuilder setLibraryDependencies(
-        ImmutableSortedSet<BuildTarget> libraryDependencies) {
+        ImmutableSortedSet<BuildTarget> libs, ImmutableSortedSet<BuildTarget> deps) {
 
       final BuildTarget[] targets =
-          libraryDependencies
-              .stream()
+          Stream.concat(libs.stream(), deps.stream())
               .map(t -> JsUtil.verifyIsJsLibraryTarget(t, baseTarget, targetGraph))
               .map(hasFlavors() ? this::addFlavorsToLibraryTarget : Function.identity())
               .toArray(BuildTarget[]::new);
 
-      final ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
+      final ImmutableList.Builder<JsLibrary> builder = ImmutableList.builder();
       for (BuildTarget target : targets) {
         // `requireRule()` needed for dependencies to flavored versions
-        builder.add(resolver.requireRule(target));
+        BuildRule rule = resolver.requireRule(target);
+        Preconditions.checkState(rule instanceof JsLibrary);
+        builder.add((JsLibrary) rule);
       }
       this.libraryDependencies = builder.build();
       return this;
