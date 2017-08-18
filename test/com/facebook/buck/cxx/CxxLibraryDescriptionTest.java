@@ -33,6 +33,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
@@ -1247,7 +1248,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     Archive lib = (Archive) libBuilder.build(resolver, filesystem, targetGraph);
-    assertThat(lib.getContents(), equalTo(Archive.Contents.THIN));
+    assertThat(lib.getContents(), equalTo(ArchiveContents.THIN));
   }
 
   @Test

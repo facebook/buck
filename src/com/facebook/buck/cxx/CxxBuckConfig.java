@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
@@ -274,10 +275,10 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "sandbox_sources", false);
   }
 
-  public Archive.Contents getArchiveContents() {
+  public ArchiveContents getArchiveContents() {
     return delegate
-        .getEnum(cxxSection, "archive_contents", Archive.Contents.class)
-        .orElse(Archive.Contents.NORMAL);
+        .getEnum(cxxSection, "archive_contents", ArchiveContents.class)
+        .orElse(ArchiveContents.NORMAL);
   }
 
   public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(BuildRuleType type) {

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.GnuArchiver;
@@ -101,7 +102,7 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
-                    Archive.Contents.NORMAL,
+                    ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
@@ -118,7 +119,7 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
-                    Archive.Contents.NORMAL,
+                    ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
@@ -136,7 +137,7 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
-                    Archive.Contents.NORMAL,
+                    ArchiveContents.NORMAL,
                     Paths.get("different"),
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
@@ -154,7 +155,7 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
-                    Archive.Contents.NORMAL,
+                    ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT,
                     ImmutableList.of(new FakeSourcePath("different")),
                     /* cacheable */ true));
@@ -172,7 +173,7 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
-                    Archive.Contents.NORMAL,
+                    ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
@@ -196,7 +197,7 @@ public class ArchiveTest {
             ImmutableList.of("-foo"),
             DEFAULT_RANLIB,
             ImmutableList.of("-bar"),
-            Archive.Contents.NORMAL,
+            ArchiveContents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.of(new FakeSourcePath("simple.o")),
             /* cacheable */ true);
@@ -245,7 +246,7 @@ public class ArchiveTest {
             ImmutableList.of(),
             DEFAULT_RANLIB,
             ImmutableList.of(),
-            Archive.Contents.NORMAL,
+            ArchiveContents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.of(
                 new FakeSourcePath("simple.o"),
