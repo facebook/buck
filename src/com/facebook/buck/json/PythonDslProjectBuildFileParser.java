@@ -54,7 +54,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -326,12 +325,12 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public List<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+  public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException {
     ImmutableList<Map<String, Object>> result = getAllRulesAndMetaRules(buildFile, processedBytes);
 
     // Strip out the __includes, __configs, and __env meta rules, which are the last rules.
-    return Collections.unmodifiableList(result.subList(0, result.size() - 3));
+    return result.subList(0, result.size() - 3);
   }
 
   /**

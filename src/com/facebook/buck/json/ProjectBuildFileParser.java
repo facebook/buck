@@ -19,7 +19,6 @@ package com.facebook.buck.json;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -31,8 +30,8 @@ public interface ProjectBuildFileParser extends AutoCloseable {
    *
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
-  List<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException;
+  ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
+      throws BuildFileParseException, InterruptedException, IOException;
 
   /**
    * Collect all rules from a particular build file, along with meta rules about the rules, for
@@ -42,7 +41,7 @@ public interface ProjectBuildFileParser extends AutoCloseable {
    */
   ImmutableList<Map<String, Object>> getAllRulesAndMetaRules(
       Path buildFile, AtomicLong processedBytes)
-      throws BuildFileParseException, InterruptedException;
+      throws BuildFileParseException, InterruptedException, IOException;
 
   /** Reports profile information captured while parsing build files. */
   void reportProfile() throws IOException;
