@@ -135,8 +135,33 @@ public class JarBuildStepsFactory
     Optional<Path> abiJarPath = getOutputJarPath(buildTarget);
     ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(abiJarPath.get());
 
-    addCompileToJarSteps(
-        buildTarget, context, buildableContext, abiJarPath, ImmutableList.of(), false, steps);
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntriesSourcePaths(
+                compileTimeClasspathSourcePaths, context.getSourcePathResolver())
+            .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
+            .setStandardPaths(buildTarget, projectFilesystem)
+            .setShouldTrackClassUsage(false)
+            .build();
+
+    ResourcesParameters resourcesParameters = getResourcesParameters();
+
+    Optional<JarParameters> jarParameters =
+        getJarParameters(context, buildTarget, compilerParameters);
+
+    CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
+    compileToJarStepFactory.createCompileToJarStep(
+        context,
+        buildTarget,
+        context.getSourcePathResolver(),
+        ruleFinder,
+        projectFilesystem,
+        compilerParameters,
+        resourcesParameters,
+        ImmutableList.of(),
+        jarParameters,
+        steps,
+        buildableContext);
 
     ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(null);
 
@@ -147,14 +172,33 @@ public class JarBuildStepsFactory
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    addCompileToJarSteps(
-        buildTarget,
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntriesSourcePaths(
+                compileTimeClasspathSourcePaths, context.getSourcePathResolver())
+            .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
+            .setStandardPaths(buildTarget, projectFilesystem)
+            .setShouldTrackClassUsage(trackClassUsage)
+            .build();
+
+    ResourcesParameters resourcesParameters = getResourcesParameters();
+
+    Optional<JarParameters> jarParameters =
+        getJarParameters(context, buildTarget, compilerParameters);
+
+    CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
+    compileToJarStepFactory.createCompileToJarStep(
         context,
-        buildableContext,
-        getOutputJarPath(buildTarget),
+        buildTarget,
+        context.getSourcePathResolver(),
+        ruleFinder,
+        projectFilesystem,
+        compilerParameters,
+        resourcesParameters,
         postprocessClassesCommands,
-        trackClassUsage,
-        steps);
+        jarParameters,
+        steps,
+        buildableContext);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         buildTarget,
@@ -167,32 +211,17 @@ public class JarBuildStepsFactory
     return steps.build();
   }
 
-  private void addCompileToJarSteps(
-      BuildTarget target,
-      BuildContext context,
-      BuildableContext buildableContext,
-      Optional<Path> outputJar,
-      ImmutableList<String> postprocessClassesCommands,
-      boolean trackClassUsage,
-      ImmutableList.Builder<Step> steps) {
+  protected ResourcesParameters getResourcesParameters() {
+    return ResourcesParameters.builder()
+        .setResources(this.resources)
+        .setResourcesRoot(this.resourcesRoot)
+        .build();
+  }
 
-    CompilerParameters compilerParameters =
-        CompilerParameters.builder()
-            .setClasspathEntriesSourcePaths(
-                compileTimeClasspathSourcePaths, context.getSourcePathResolver())
-            .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
-            .setStandardPaths(target, projectFilesystem)
-            .setShouldTrackClassUsage(trackClassUsage)
-            .build();
-
-    ResourcesParameters resourcesParameters =
-        ResourcesParameters.builder()
-            .setResources(this.resources)
-            .setResourcesRoot(this.resourcesRoot)
-            .build();
-
-    Optional<JarParameters> jarParameters =
-        outputJar.map(
+  protected Optional<JarParameters> getJarParameters(
+      BuildContext context, BuildTarget buildTarget, CompilerParameters compilerParameters) {
+    return getOutputJarPath(buildTarget)
+        .map(
             output ->
                 JarParameters.builder()
                     .setEntriesToJar(ImmutableSortedSet.of(compilerParameters.getOutputDirectory()))
@@ -201,20 +230,6 @@ public class JarBuildStepsFactory
                     .setJarPath(output)
                     .setRemoveEntryPredicate(classesToRemoveFromJar)
                     .build());
-
-    CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
-    compileToJarStepFactory.createCompileToJarStep(
-        context,
-        target,
-        context.getSourcePathResolver(),
-        ruleFinder,
-        projectFilesystem,
-        compilerParameters,
-        resourcesParameters,
-        postprocessClassesCommands,
-        jarParameters,
-        steps,
-        buildableContext);
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
