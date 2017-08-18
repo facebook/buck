@@ -74,6 +74,11 @@ public class IjProjectTemplateDataPreparer {
   private static final String ASSETS_FOLDER_TEMPLATE_PARAMETER = "asset_folder";
   private static final String PROGUARD_CONFIG_TEMPLATE_PARAMETER = "proguard_config";
   private static final String RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER = "res";
+  private static final String JAR_FILE_EXTENSION = ".jar";
+  private static final String MODULE_DIR = "$MODULE_DIR$/";
+  private static final String FILE_PREFIX = "file://";
+  private static final String JAR_PREFIX = "jar://";
+  private static final String JAR_SUFFIX = "!/";
 
   private static final String EMPTY_STRING = "";
 
@@ -515,20 +520,27 @@ public class IjProjectTemplateDataPreparer {
   }
 
   /**
-   * IntelliJ may not be able to find classes on the compiler output path if the jar_spool_mode is
-   * set to direct_to_jar.
+   * IntelliJ may not be able to find classes on the compiler output path if the jars are retrieved
+   * from the network cache.
    */
   private void addAndroidCompilerOutputPath(
       Map<String, Object> androidProperties, IjModule module, Path moduleBasePath) {
     // The compiler output path is relative to the project root
     Optional<Path> compilerOutputPath = module.getCompilerOutputPath();
     if (compilerOutputPath.isPresent()) {
-      Path relativeCompilerOutputPath = moduleBasePath.relativize(compilerOutputPath.get());
-      androidProperties.put(
-          "is_compiler_output_path_jar", compilerOutputPath.get().toString().endsWith(".jar"));
-      androidProperties.put(
-          "compiler_output_path",
-          "/" + MorePaths.pathWithUnixSeparators(relativeCompilerOutputPath));
+      String fullCompilerOutputPath;
+      String relativeOutputPath =
+          MODULE_DIR
+              + MorePaths.pathWithUnixSeparators(
+                  moduleBasePath.relativize(compilerOutputPath.get()));
+
+      if (compilerOutputPath.get().toString().endsWith(JAR_FILE_EXTENSION)) {
+        fullCompilerOutputPath = JAR_PREFIX + relativeOutputPath + JAR_SUFFIX;
+      } else {
+        fullCompilerOutputPath = FILE_PREFIX + relativeOutputPath;
+      }
+
+      androidProperties.put("compiler_output_path", fullCompilerOutputPath);
     }
   }
 
