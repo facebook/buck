@@ -17,10 +17,8 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableSet;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,16 +50,13 @@ public class SimctlListOutputParsing {
   private SimctlListOutputParsing() {}
 
   /**
-   * Parses each line of input from {@code reader}, adding any available simulators to {@code
+   * Parses each line of {@code output}, adding any available simulators to {@code
    * simulatorsBuilder}.
    */
-  public static void parseOutputFromReader(
-      Reader reader, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) throws IOException {
-    try (BufferedReader br = new BufferedReader(reader)) {
-      String line;
-      while ((line = br.readLine()) != null) {
-        parseLine(line, simulatorsBuilder);
-      }
+  public static void parseOutput(
+      String output, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) {
+    for (String line : MoreStrings.lines(output)) {
+      parseLine(line, simulatorsBuilder);
     }
   }
 
