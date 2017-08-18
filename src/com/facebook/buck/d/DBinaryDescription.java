@@ -18,8 +18,8 @@ package com.facebook.buck.d;
 
 import static com.facebook.buck.d.DDescriptionUtils.SOURCE_LINK_TREE;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
@@ -24,6 +23,7 @@ import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.cxx.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.WindowsLinker;
 import com.facebook.buck.file.WriteFile;

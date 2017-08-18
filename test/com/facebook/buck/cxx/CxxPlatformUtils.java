@@ -21,6 +21,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;

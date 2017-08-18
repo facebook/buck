@@ -14,19 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.toolchain.ArchiveContents;
-import com.facebook.buck.cxx.toolchain.Archiver;
-import com.facebook.buck.cxx.toolchain.BsdArchiver;
-import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.GnuArchiver;
-import com.facebook.buck.cxx.toolchain.HeaderVerification;
-import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
-import com.facebook.buck.cxx.toolchain.WindowsArchiver;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
