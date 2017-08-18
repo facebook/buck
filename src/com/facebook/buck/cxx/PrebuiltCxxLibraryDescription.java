@@ -20,7 +20,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
@@ -505,9 +505,8 @@ public class PrebuiltCxxLibraryDescription
           baseTarget, cxxPlatform.getFlavor());
     }
 
-    Optional<SharedLibraryInterfaceFactory> factory =
-        cxxPlatform.getSharedLibraryInterfaceFactory();
-    if (!factory.isPresent()) {
+    Optional<SharedLibraryInterfaceParams> params = cxxPlatform.getSharedLibraryInterfaceParams();
+    if (!params.isPresent()) {
       throw new HumanReadableException(
           "%s: C/C++ platform %s does not support shared library interfaces",
           baseTarget, cxxPlatform.getFlavor());
@@ -527,8 +526,7 @@ public class PrebuiltCxxLibraryDescription
             versionSubdir,
             args);
 
-    return factory
-        .get()
+    return SharedLibraryInterfaceFactoryResolver.resolveFactory(params.get())
         .createSharedInterfaceLibrary(
             baseTarget.withAppendedFlavors(
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
@@ -680,7 +678,7 @@ public class PrebuiltCxxLibraryDescription
       private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform, boolean link) {
         if (link
             && args.isSupportsSharedLibraryInterface()
-            && cxxPlatform.getSharedLibraryInterfaceFactory().isPresent()) {
+            && cxxPlatform.getSharedLibraryInterfaceParams().isPresent()) {
           BuildTarget target =
               buildTarget.withAppendedFlavors(
                   cxxPlatform.getFlavor(), Type.SHARED_INTERFACE.getFlavor());

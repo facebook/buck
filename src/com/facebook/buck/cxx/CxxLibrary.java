@@ -271,7 +271,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         BuildRule rule =
             requireBuildRule(
                 cxxPlatform.getFlavor(),
-                cxxPlatform.getSharedLibraryInterfaceFactory().isPresent()
+                cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
                     ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
                     : CxxLibraryDescription.Type.SHARED.getFlavor());
         linkerArgsBuilder.add(

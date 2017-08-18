@@ -21,12 +21,13 @@ import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.LazyDelegatingArchiver;
 import com.facebook.buck.cxx.toolchain.LazyDelegatingSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SymbolNameTool;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.log.Logger;
@@ -61,24 +62,24 @@ public class CxxPlatforms {
   // Utility class, do not instantiate.
   private CxxPlatforms() {}
 
-  private static Optional<SharedLibraryInterfaceFactory> getSharedLibraryInterfaceFactory(
+  private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
       CxxBuckConfig config, Platform platform) {
-    Optional<SharedLibraryInterfaceFactory> sharedLibraryInterfaceFactory = Optional.empty();
-    SharedLibraryInterfaceFactory.Type type = config.getSharedLibraryInterfaces();
-    if (type != SharedLibraryInterfaceFactory.Type.DISABLED) {
+    Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
+    SharedLibraryInterfaceParams.Type type = config.getSharedLibraryInterfaces();
+    if (type != SharedLibraryInterfaceParams.Type.DISABLED) {
       switch (platform) {
         case LINUX:
-          sharedLibraryInterfaceFactory =
+          sharedLibraryInterfaceParams =
               Optional.of(
-                  ElfSharedLibraryInterfaceFactory.of(
+                  ElfSharedLibraryInterfaceParams.of(
                       config.getToolProvider("objcopy").get(),
-                      type == SharedLibraryInterfaceFactory.Type.DEFINED_ONLY));
+                      type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
           // $CASES-OMITTED$
         default:
       }
     }
-    return sharedLibraryInterfaceFactory;
+    return sharedLibraryInterfaceParams;
   }
 
   public static CxxPlatform build(
@@ -161,7 +162,7 @@ public class CxxPlatforms {
               }
             }));
 
-    builder.setSharedLibraryInterfaceFactory(getSharedLibraryInterfaceFactory(config, platform));
+    builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
 
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);
@@ -320,9 +321,7 @@ public class CxxPlatforms {
       deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
-    cxxPlatform
-        .getSharedLibraryInterfaceFactory()
-        .ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
+    cxxPlatform.getSharedLibraryInterfaceParams().ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -57,5 +58,10 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
   @Override
   public Iterable<BuildTarget> getParseTimeDeps() {
     return getObjcopy().getParseTimeDeps();
+  }
+
+  public static ElfSharedLibraryInterfaceFactory from(ElfSharedLibraryInterfaceParams params) {
+    return ElfSharedLibraryInterfaceFactory.of(
+        params.getObjcopy(), params.isRemoveUndefinedSymbols());
   }
 }

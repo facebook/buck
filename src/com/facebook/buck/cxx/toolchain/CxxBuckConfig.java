@@ -286,11 +286,11 @@ public class CxxBuckConfig {
   }
 
   /** @return whether to enable shared library interfaces. */
-  public SharedLibraryInterfaceFactory.Type getSharedLibraryInterfaces() {
+  public SharedLibraryInterfaceParams.Type getSharedLibraryInterfaces() {
 
     // Check for an explicit setting.
-    Optional<SharedLibraryInterfaceFactory.Type> setting =
-        delegate.getEnum(cxxSection, "shlib_interfaces", SharedLibraryInterfaceFactory.Type.class);
+    Optional<SharedLibraryInterfaceParams.Type> setting =
+        delegate.getEnum(cxxSection, "shlib_interfaces", SharedLibraryInterfaceParams.Type.class);
     if (setting.isPresent()) {
       return setting.get();
     }
@@ -299,12 +299,12 @@ public class CxxBuckConfig {
     Optional<Boolean> oldSetting = delegate.getBoolean(cxxSection, "shared_library_interfaces");
     if (oldSetting.isPresent()) {
       return oldSetting.get()
-          ? SharedLibraryInterfaceFactory.Type.ENABLED
-          : SharedLibraryInterfaceFactory.Type.DISABLED;
+          ? SharedLibraryInterfaceParams.Type.ENABLED
+          : SharedLibraryInterfaceParams.Type.DISABLED;
     }
 
     // Default.
-    return SharedLibraryInterfaceFactory.Type.DISABLED;
+    return SharedLibraryInterfaceParams.Type.DISABLED;
   }
 
   @Value.Immutable

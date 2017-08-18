@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -643,9 +643,8 @@ public class CxxLibraryDescription
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform) {
 
-    Optional<SharedLibraryInterfaceFactory> factory =
-        cxxPlatform.getSharedLibraryInterfaceFactory();
-    if (!factory.isPresent()) {
+    Optional<SharedLibraryInterfaceParams> params = cxxPlatform.getSharedLibraryInterfaceParams();
+    if (!params.isPresent()) {
       throw new HumanReadableException(
           "%s: C/C++ platform %s does not support shared library interfaces",
           baseTarget, cxxPlatform.getFlavor());
@@ -658,8 +657,7 @@ public class CxxLibraryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    return factory
-        .get()
+    return SharedLibraryInterfaceFactoryResolver.resolveFactory(params.get())
         .createSharedInterfaceLibrary(
             baseTarget.withAppendedFlavors(
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),

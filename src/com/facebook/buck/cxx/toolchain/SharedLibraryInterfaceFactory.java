@@ -36,17 +36,4 @@ public interface SharedLibraryInterfaceFactory {
       SourcePath library);
 
   Iterable<BuildTarget> getParseTimeDeps();
-
-  /** The configured mode for shared library interfaces. */
-  enum Type {
-
-    /** Do not use shared library interfaces. */
-    DISABLED,
-
-    /** Use shared library interfaces for linking. */
-    ENABLED,
-
-    /** Strip undefined symbols from shared library interfaces, and use them for linking */
-    DEFINED_ONLY,
-  }
 }
