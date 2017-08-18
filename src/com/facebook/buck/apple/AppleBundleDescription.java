@@ -18,9 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

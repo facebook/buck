@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,25 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.InternalFlavor;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 
-public enum HeaderVisibility implements FlavorConvertible {
-  PUBLIC(InternalFlavor.of("public-header-visibility")),
-  PRIVATE(InternalFlavor.of("private-header-visibility")),
-  ;
+public class CxxFlavorSanitizer {
+  private CxxFlavorSanitizer() {}
 
-  private final Flavor flavor;
-
-  HeaderVisibility(Flavor flavor) {
-    this.flavor = flavor;
-  }
-
-  @Override
-  public Flavor getFlavor() {
-    return flavor;
+  public static String sanitize(String name) {
+    String fileName = Paths.get(name).getFileName().toString();
+    // The hash prevents collisions between "an/example.c", "an_example.c" etc.
+    return Flavor.replaceInvalidCharacters(fileName)
+        + Hashing.murmur3_32().hashString(name, StandardCharsets.UTF_8);
   }
 }

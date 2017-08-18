@@ -18,8 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

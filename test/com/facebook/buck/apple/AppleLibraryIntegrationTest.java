@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -26,8 +26,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

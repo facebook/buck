@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -34,6 +34,9 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;

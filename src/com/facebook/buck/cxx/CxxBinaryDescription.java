@@ -19,6 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -78,9 +82,7 @@ public class CxxBinaryDescription
     this.cxxPlatforms = cxxPlatforms;
   }
 
-  /**
-   * @return a {@link com.facebook.buck.cxx.HeaderSymlinkTree} for the headers of this C/C++ binary.
-   */
+  /** @return a {@link HeaderSymlinkTree} for the headers of this C/C++ binary. */
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,

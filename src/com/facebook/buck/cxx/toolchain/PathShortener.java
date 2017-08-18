@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.base.Preconditions;

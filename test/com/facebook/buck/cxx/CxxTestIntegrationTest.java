@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;

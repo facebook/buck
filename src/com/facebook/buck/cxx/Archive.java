@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

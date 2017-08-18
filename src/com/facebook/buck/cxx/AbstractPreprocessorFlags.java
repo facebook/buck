@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;

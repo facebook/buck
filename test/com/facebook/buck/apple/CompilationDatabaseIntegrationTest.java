@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;

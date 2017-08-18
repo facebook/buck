@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;

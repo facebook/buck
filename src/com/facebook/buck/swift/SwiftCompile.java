@@ -17,11 +17,11 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
