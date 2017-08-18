@@ -22,7 +22,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;

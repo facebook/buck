@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;

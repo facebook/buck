@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;

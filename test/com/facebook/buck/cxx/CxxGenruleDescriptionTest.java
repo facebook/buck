@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

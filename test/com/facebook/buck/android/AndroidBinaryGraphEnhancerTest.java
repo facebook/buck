@@ -31,7 +31,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.JavaLibrary;

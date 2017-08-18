@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

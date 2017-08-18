@@ -139,7 +139,7 @@ java_library(
         "//src/com/facebook/buck/zip:constants",
         "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/cli:FakeBuckConfig",
-        "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/jvm/java:javac-env",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",

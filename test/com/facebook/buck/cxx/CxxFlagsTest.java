@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;

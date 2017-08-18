@@ -14,21 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
-import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.GnuArchiver;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -65,10 +56,10 @@ public class CxxPlatformUtils {
   private static final CompilerProvider DEFAULT_COMPILER_PROVIDER =
       new CompilerProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC);
 
-  static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
+  public static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
       new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
-  static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
+  public static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
       new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
 
   public static final CxxPlatform DEFAULT_PLATFORM =
@@ -123,13 +114,13 @@ public class CxxPlatformUtils {
     return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 
-  public static CxxPreprocessables.HeaderMode getHeaderModeForDefaultPlatform(Path root)
+  public static HeaderMode getHeaderModeForDefaultPlatform(Path root)
       throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
-        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
-        : CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY;
+        ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+        : HeaderMode.SYMLINK_TREE_ONLY;
   }
 }

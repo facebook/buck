@@ -30,6 +30,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;

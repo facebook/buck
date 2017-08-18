@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

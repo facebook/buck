@@ -17,19 +17,16 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
@@ -49,36 +46,6 @@ import javax.annotation.Nonnull;
 public class CxxPreprocessables {
 
   private CxxPreprocessables() {}
-
-  public enum HeaderMode implements FlavorConvertible {
-
-    /** Creates the tree of symbolic links of headers. */
-    SYMLINK_TREE_ONLY,
-    /** Creates the header map that references the headers directly in the source tree. */
-    HEADER_MAP_ONLY,
-    /**
-     * Creates the tree of symbolic links of headers and creates the header map that references the
-     * symbolic links to the headers.
-     */
-    SYMLINK_TREE_WITH_HEADER_MAP,
-    ;
-
-    private final Flavor flavor;
-
-    HeaderMode() {
-      this.flavor =
-          InternalFlavor.of(
-              String.format(
-                  "%s-%s",
-                  CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getClass().getSimpleName()),
-                  CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, toString())));
-    }
-
-    @Override
-    public Flavor getFlavor() {
-      return flavor;
-    }
-  }
 
   public enum IncludeType {
 

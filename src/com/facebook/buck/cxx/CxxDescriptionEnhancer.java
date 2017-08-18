@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -107,22 +108,22 @@ public class CxxDescriptionEnhancer {
 
   private CxxDescriptionEnhancer() {}
 
-  public static CxxPreprocessables.HeaderMode getHeaderModeForPlatform(
+  public static HeaderMode getHeaderModeForPlatform(
       BuildRuleResolver resolver, CxxPlatform cxxPlatform, boolean shouldCreateHeadersSymlinks) {
     boolean useHeaderMap =
         (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps()
             && cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
     return !useHeaderMap
-        ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY
+        ? HeaderMode.SYMLINK_TREE_ONLY
         : (shouldCreateHeadersSymlinks
-            ? CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
-            : CxxPreprocessables.HeaderMode.HEADER_MAP_ONLY);
+            ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+            : HeaderMode.HEADER_MAP_ONLY);
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      CxxPreprocessables.HeaderMode mode,
+      HeaderMode mode,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
       Flavor... flavors) {

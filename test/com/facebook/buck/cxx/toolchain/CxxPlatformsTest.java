@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.equalTo;
@@ -25,17 +25,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.Archiver;
-import com.facebook.buck.cxx.toolchain.BsdArchiver;
-import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.GnuArchiver;
-import com.facebook.buck.cxx.toolchain.LazyDelegatingArchiver;
-import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.cxx.toolchain.WindowsArchiver;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.InternalFlavor;

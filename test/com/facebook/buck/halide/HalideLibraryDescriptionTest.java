@@ -24,10 +24,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;

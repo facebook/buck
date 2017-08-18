@@ -24,6 +24,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -153,7 +155,7 @@ public class CxxBinaryDescriptionTest {
     BuildTarget headerSymlinkTreeTarget =
         depTarget.withAppendedFlavors(
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
+            HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

@@ -20,8 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

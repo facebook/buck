@@ -25,6 +25,7 @@ import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

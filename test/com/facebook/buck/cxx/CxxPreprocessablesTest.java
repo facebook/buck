@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -198,7 +200,7 @@ public class CxxPreprocessablesTest {
     // Build our symlink tree rule using the helper method.
     HeaderSymlinkTree symlinkTree =
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-            target, filesystem, root, links, CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY);
+            target, filesystem, root, links, HeaderMode.SYMLINK_TREE_ONLY);
 
     // Verify that the symlink tree has no deps.  This is by design, since setting symlinks can
     // be done completely independently from building the source that the links point to and

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;

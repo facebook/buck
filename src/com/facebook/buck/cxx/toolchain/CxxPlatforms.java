@@ -14,21 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.cxx.toolchain.Archiver;
-import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
-import com.facebook.buck.cxx.toolchain.HeaderVerification;
-import com.facebook.buck.cxx.toolchain.LazyDelegatingArchiver;
-import com.facebook.buck.cxx.toolchain.LazyDelegatingSymbolNameTool;
-import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
-import com.facebook.buck.cxx.toolchain.SymbolNameTool;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;

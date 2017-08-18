@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -138,8 +140,8 @@ public class CxxLibraryDescription
   private static final FlavorDomain<HeaderVisibility> HEADER_VISIBILITY =
       FlavorDomain.from("C/C++ Header Visibility", HeaderVisibility.class);
 
-  private static final FlavorDomain<CxxPreprocessables.HeaderMode> HEADER_MODE =
-      FlavorDomain.from("C/C++ Header Mode", CxxPreprocessables.HeaderMode.class);
+  private static final FlavorDomain<HeaderMode> HEADER_MODE =
+      FlavorDomain.from("C/C++ Header Mode", HeaderMode.class);
 
   private final CxxBuckConfig cxxBuckConfig;
   private final Flavor defaultCxxFlavor;
@@ -485,7 +487,7 @@ public class CxxLibraryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      CxxPreprocessables.HeaderMode mode,
+      HeaderMode mode,
       CxxLibraryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -752,7 +754,7 @@ public class CxxLibraryDescription
       BuildTarget untypedBuildTarget = getUntypedBuildTarget(buildTarget);
       switch (type.get().getValue()) {
         case EXPORTED_HEADERS:
-          Optional<CxxPreprocessables.HeaderMode> mode = HEADER_MODE.getValue(buildTarget);
+          Optional<HeaderMode> mode = HEADER_MODE.getValue(buildTarget);
           if (mode.isPresent()) {
             return createExportedHeaderSymlinkTreeBuildRule(
                 untypedBuildTarget, projectFilesystem, resolver, mode.get(), args);
@@ -949,7 +951,7 @@ public class CxxLibraryDescription
    * <p>Use this function instead of constructing the BuildTarget manually.
    */
   public static Optional<CxxHeaders> queryMetadataCxxHeaders(
-      BuildRuleResolver resolver, BuildTarget baseTarget, CxxPreprocessables.HeaderMode mode) {
+      BuildRuleResolver resolver, BuildTarget baseTarget, HeaderMode mode) {
     return resolver.requireMetadata(
         baseTarget.withAppendedFlavors(MetadataType.CXX_HEADERS.getFlavor(), mode.getFlavor()),
         CxxHeaders.class);
@@ -991,7 +993,7 @@ public class CxxLibraryDescription
         {
           Optional<CxxHeaders> symlinkTree = Optional.empty();
           if (!args.getExportedHeaders().isEmpty()) {
-            CxxPreprocessables.HeaderMode mode = HEADER_MODE.getRequiredValue(buildTarget);
+            HeaderMode mode = HEADER_MODE.getRequiredValue(buildTarget);
             baseTarget = baseTarget.withoutFlavors(mode.getFlavor());
             symlinkTree =
                 Optional.of(

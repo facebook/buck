@@ -19,7 +19,7 @@ package com.facebook.buck.haskell;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.CommandTool;

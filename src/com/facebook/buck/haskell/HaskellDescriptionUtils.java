@@ -17,7 +17,6 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
@@ -28,6 +27,7 @@ import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;

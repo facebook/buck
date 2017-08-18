@@ -14,21 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx;
+package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.cxx.toolchain.Archiver;
-import com.facebook.buck.cxx.toolchain.BsdArchiver;
-import com.facebook.buck.cxx.toolchain.CompilerProvider;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.GnuArchiver;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.cxx.toolchain.WindowsArchiver;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;

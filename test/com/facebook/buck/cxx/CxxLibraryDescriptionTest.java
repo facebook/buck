@@ -36,6 +36,8 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -175,7 +177,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget sharedHeaderSymlinkTreeTarget =
         sharedDepTarget.withFlavors(
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
+            HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     BuildTarget depTarget = BuildTargetFactory.newInstance("//:dep");
     CxxLibraryBuilder depBuilder =
@@ -186,7 +188,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget headerSymlinkTreeTarget =
         depTarget.withAppendedFlavors(
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
+            HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -309,9 +311,7 @@ public class CxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
+                target, HeaderVisibility.PUBLIC, HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
@@ -330,9 +330,7 @@ public class CxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
+                target, HeaderVisibility.PUBLIC, HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
   }
 
   @Test
@@ -458,7 +456,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget headerSymlinkTreeTarget =
         depTarget.withAppendedFlavors(
             CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
-            CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
+            HeaderMode.SYMLINK_TREE_ONLY.getFlavor());
 
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -554,9 +552,7 @@ public class CxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
+                target, HeaderVisibility.PUBLIC, HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -574,9 +570,7 @@ public class CxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
+                target, HeaderVisibility.PUBLIC, HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
@@ -618,9 +612,7 @@ public class CxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
+                target, HeaderVisibility.PUBLIC, HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -638,9 +630,7 @@ public class CxxLibraryDescriptionTest {
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor()),
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
+                target, HeaderVisibility.PUBLIC, HeaderMode.SYMLINK_TREE_ONLY.getFlavor())));
   }
 
   @Test

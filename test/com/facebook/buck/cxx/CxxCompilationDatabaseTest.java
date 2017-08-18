@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccCompiler;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.io.ProjectFilesystem;
