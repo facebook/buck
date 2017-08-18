@@ -21,13 +21,10 @@ import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
-import java.nio.file.Path;
 
 /**
  * Jvm compiler abstraction for android. Implementations of this class are used in {@link
@@ -36,9 +33,6 @@ import java.nio.file.Path;
  */
 public abstract class AndroidLibraryCompiler
     implements ImplicitDepsInferringDescription<JvmLibraryArg> {
-
-  public static final Function<BuildContext, Iterable<Path>> ANDROID_CLASSPATH_FROM_CONTEXT =
-      context -> context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
 
   public abstract ConfiguredCompiler configure(
       JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver);

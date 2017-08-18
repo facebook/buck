@@ -29,7 +29,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -43,9 +42,6 @@ import java.util.Optional;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
-
-  public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
-      input -> ImmutableList.of();
 
   public final void createCompileToJarStep(
       BuildContext context,

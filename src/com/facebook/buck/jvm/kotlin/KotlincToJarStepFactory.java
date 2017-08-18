@@ -20,6 +20,7 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
@@ -32,7 +33,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,7 +47,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
-  private final Function<BuildContext, Iterable<Path>> extraClassPath;
+  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClassPath;
   private final Javac javac;
   private final JavacOptions javacOptions;
   private final JavacOptionsAmender amender;
@@ -55,7 +55,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   public KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
-      Function<BuildContext, Iterable<Path>> extraClassPath,
+      ExtraClasspathFromContextFunction extraClassPath,
       Javac javac,
       JavacOptions javacOptions,
       JavacOptionsAmender amender) {

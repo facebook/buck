@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,7 +46,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
-  private final Function<BuildContext, Iterable<Path>> extraClassPath;
+  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClassPath;
 
   public ScalacToJarStepFactory(
       Tool scalac,
@@ -60,7 +60,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
         configCompilerFlags,
         extraArguments,
         compilerPlugins,
-        EMPTY_EXTRA_CLASSPATH);
+        ExtraClasspathFromContextFunction.EMPTY);
   }
 
   public ScalacToJarStepFactory(
@@ -69,7 +69,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins,
-      Function<BuildContext, Iterable<Path>> extraClassPath) {
+      ExtraClasspathFromContextFunction extraClassPath) {
     this.scalac = scalac;
     this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;

@@ -59,7 +59,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
         scalaBuckConfig.getCompilerFlags(),
         arg.getExtraArguments(),
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
-        ANDROID_CLASSPATH_FROM_CONTEXT);
+        AndroidClasspathFromContextFunction.INSTANCE);
   }
 
   @Override

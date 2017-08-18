@@ -51,7 +51,7 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         ((AndroidKotlinCoreArg) args).getExtraKotlincArguments().orElse(ImmutableList.of()),
-        ANDROID_CLASSPATH_FROM_CONTEXT,
+        AndroidClasspathFromContextFunction.INSTANCE,
         getJavac(resolver, args),
         javacOptions,
         new BootClasspathAppender());

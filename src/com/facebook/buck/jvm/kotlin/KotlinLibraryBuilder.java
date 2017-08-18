@@ -16,11 +16,10 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.java.CompileToJarStepFactory.EMPTY_EXTRA_CLASSPATH;
-
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -83,7 +82,7 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       return new KotlincToJarStepFactory(
           Preconditions.checkNotNull(kotlinBuckConfig).getKotlinc(),
           extraKotlincArguments,
-          EMPTY_EXTRA_CLASSPATH,
+          ExtraClasspathFromContextFunction.EMPTY,
           getJavac(),
           Preconditions.checkNotNull(javacOptions),
           javacOptionsAmender);
