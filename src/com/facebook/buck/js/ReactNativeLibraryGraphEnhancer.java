@@ -56,15 +56,16 @@ public class ReactNativeLibraryGraphEnhancer {
       ReactNativePlatform platform) {
     Tool jsPackager = buckConfig.getPackager(resolver);
 
-    ImmutableList<String> packagerFlags;
+    ImmutableList.Builder<String> packagerFlags =
+        ImmutableList.<String>builder()
+            .add("--max-workers", Integer.toString(buckConfig.getMaxWorkers()));
+
     if (args.getPackagerFlags().isPresent()) {
       if (args.getPackagerFlags().get().isLeft()) {
-        packagerFlags = ImmutableList.copyOf(args.getPackagerFlags().get().getLeft().split("\\s+"));
+        packagerFlags.add(args.getPackagerFlags().get().getLeft().split("\\s+"));
       } else {
-        packagerFlags = args.getPackagerFlags().get().getRight();
+        packagerFlags.addAll(args.getPackagerFlags().get().getRight());
       }
-    } else {
-      packagerFlags = ImmutableList.of();
     }
 
     return new ReactNativeBundle(
@@ -85,7 +86,7 @@ public class ReactNativeLibraryGraphEnhancer {
         ReactNativeFlavors.isDevMode(baseBuildTarget),
         ReactNativeFlavors.exposeSourceMap(baseBuildTarget),
         args.getBundleName(),
-        packagerFlags,
+        packagerFlags.build(),
         jsPackager,
         platform);
   }
