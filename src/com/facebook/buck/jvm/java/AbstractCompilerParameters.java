@@ -23,9 +23,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -51,8 +53,16 @@ abstract class AbstractCompilerParameters {
 
   public abstract Path getPathToSourcesList();
 
+  @Nullable
+  public abstract Path getAbiJarPath();
+
   @Value.Default
   public boolean shouldTrackClassUsage() {
+    return false;
+  }
+
+  @Value.Default
+  public boolean shouldGenerateAbiJar() {
     return false;
   }
 
@@ -68,6 +78,16 @@ abstract class AbstractCompilerParameters {
     return Optional.of(BuildTargets.getAnnotationPath(filesystem, target, "__%s_gen__"));
   }
 
+  public static Path getAbiJarPath(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+    if (HasJavaAbi.isLibraryTarget(buildTarget)) {
+      buildTarget = HasJavaAbi.getSourceAbiJar(buildTarget);
+    }
+    Preconditions.checkArgument(HasJavaAbi.isSourceAbiTarget(buildTarget));
+
+    return BuildTargets.getGenPath(projectFilesystem, buildTarget, "lib__%s__output")
+        .resolve(String.format("%s-abi.jar", buildTarget.getShortName()));
+  }
+
   public abstract static class Builder {
     public CompilerParameters.Builder setStandardPaths(
         BuildTarget target, ProjectFilesystem projectFilesystem) {
@@ -80,7 +100,8 @@ abstract class AbstractCompilerParameters {
           .setDepFilePath(
               getOutputJarDirPath(target, projectFilesystem).resolve("used-classes.json"))
           .setPathToSourcesList(BuildTargets.getGenPath(projectFilesystem, target, "__%s__srcs"))
-          .setOutputDirectory(getClassesDir(target, projectFilesystem));
+          .setOutputDirectory(getClassesDir(target, projectFilesystem))
+          .setAbiJarPath(getAbiJarPath(target, projectFilesystem));
     }
 
     public CompilerParameters.Builder setSourceFileSourcePaths(

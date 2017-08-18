@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 public class JavacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
@@ -46,17 +45,12 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private JavacOptions javacOptions;
   @AddToRuleKey private final JavacOptionsAmender amender;
-  @Nullable private Path abiJar;
 
   public JavacToJarStepFactory(
       Javac javac, JavacOptions javacOptions, JavacOptionsAmender amender) {
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.amender = amender;
-  }
-
-  public void setCompileAbi(@Nullable Path abiJar) {
-    this.abiJar = abiJar;
   }
 
   @Override
@@ -93,7 +87,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             new ClasspathChecker(),
             parameters,
             Optional.empty(),
-            abiJar));
+            parameters.shouldGenerateAbiJar() ? parameters.getAbiJarPath() : null));
   }
 
   @Override
@@ -177,7 +171,9 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               new ClasspathChecker(),
               compilerParameters,
               Optional.of(jarParameters),
-              abiJar));
+              compilerParameters.shouldGenerateAbiJar()
+                  ? compilerParameters.getAbiJarPath()
+                  : null));
     } else {
       super.createCompileToJarStepImpl(
           context,

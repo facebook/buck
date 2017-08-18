@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -127,13 +126,10 @@ public class JarBuildStepsFactory
         ::contains;
   }
 
-  public synchronized ImmutableList<Step> getBuildStepsForAbiJar(
+  public ImmutableList<Step> getBuildStepsForAbiJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     Preconditions.checkState(producesJar());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    Optional<Path> abiJarPath = getOutputJarPath(buildTarget);
-    ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(abiJarPath.get());
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
@@ -142,6 +138,7 @@ public class JarBuildStepsFactory
             .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(false)
+            .setShouldGenerateAbiJar(true)
             .build();
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
@@ -163,12 +160,10 @@ public class JarBuildStepsFactory
         steps,
         buildableContext);
 
-    ((JavacToJarStepFactory) configuredCompiler).setCompileAbi(null);
-
     return steps.build();
   }
 
-  public synchronized ImmutableList<Step> getBuildStepsForLibraryJar(
+  public ImmutableList<Step> getBuildStepsForLibraryJar(
       BuildContext context, BuildableContext buildableContext, BuildTarget buildTarget) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -248,9 +243,7 @@ public class JarBuildStepsFactory
     }
 
     if (HasJavaAbi.isSourceAbiTarget(buildTarget)) {
-      return Optional.of(
-          BuildTargets.getGenPath(projectFilesystem, buildTarget, "lib__%s__output")
-              .resolve(String.format("%s-abi.jar", buildTarget.getShortName())));
+      return Optional.of(CompilerParameters.getAbiJarPath(buildTarget, projectFilesystem));
     } else if (HasJavaAbi.isLibraryTarget(buildTarget)) {
       return Optional.of(DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystem));
     } else {
