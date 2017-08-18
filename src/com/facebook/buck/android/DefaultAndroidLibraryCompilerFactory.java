@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -35,13 +36,16 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
 
   @Override
   public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.JvmLanguage language) {
+    ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
+        AndroidClasspathFromContextFunction.INSTANCE;
     switch (language) {
       case JAVA:
-        return new JavaAndroidLibraryCompiler(javaConfig);
+        return new JavaAndroidLibraryCompiler(javaConfig, extraClasspathFromContextFunction);
       case SCALA:
-        return new ScalaAndroidLibraryCompiler(scalaConfig);
+        return new ScalaAndroidLibraryCompiler(scalaConfig, extraClasspathFromContextFunction);
       case KOTLIN:
-        return new KotlinAndroidLibraryCompiler(kotlinBuckConfig, javaConfig);
+        return new KotlinAndroidLibraryCompiler(
+            kotlinBuckConfig, javaConfig, extraClasspathFromContextFunction);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }

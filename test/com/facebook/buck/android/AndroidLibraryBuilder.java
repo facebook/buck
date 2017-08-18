@@ -35,7 +35,9 @@ public class AndroidLibraryBuilder
         AndroidLibraryDescription, AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
-      language -> new JavaAndroidLibraryCompiler(DEFAULT_JAVA_CONFIG);
+      language ->
+          new JavaAndroidLibraryCompiler(
+              DEFAULT_JAVA_CONFIG, AndroidClasspathFromContextFunction.INSTANCE);
 
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(

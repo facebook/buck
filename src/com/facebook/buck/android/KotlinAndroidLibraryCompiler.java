@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -32,12 +33,16 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
 
   public KotlinAndroidLibraryCompiler(
-      KotlinBuckConfig kotlinBuckConfig, JavaBuckConfig javaBuckConfig) {
+      KotlinBuckConfig kotlinBuckConfig,
+      JavaBuckConfig javaBuckConfig,
+      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
     super();
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
   }
 
   @Override
@@ -51,7 +56,7 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         ((AndroidKotlinCoreArg) args).getExtraKotlincArguments().orElse(ImmutableList.of()),
-        AndroidClasspathFromContextFunction.INSTANCE,
+        extraClasspathFromContextFunction,
         getJavac(resolver, args),
         javacOptions);
   }

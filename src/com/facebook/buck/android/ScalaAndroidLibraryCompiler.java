@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -31,10 +32,13 @@ import javax.annotation.Nullable;
 
 public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   private final ScalaBuckConfig scalaBuckConfig;
+  private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
   private @Nullable Tool scalac;
 
-  public ScalaAndroidLibraryCompiler(ScalaBuckConfig config) {
+  public ScalaAndroidLibraryCompiler(
+      ScalaBuckConfig config, ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
     this.scalaBuckConfig = config;
+    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
   }
 
   private Tool getScalac(BuildRuleResolver resolver) {
@@ -59,7 +63,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
         scalaBuckConfig.getCompilerFlags(),
         arg.getExtraArguments(),
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
-        AndroidClasspathFromContextFunction.INSTANCE);
+        extraClasspathFromContextFunction);
   }
 
   @Override
