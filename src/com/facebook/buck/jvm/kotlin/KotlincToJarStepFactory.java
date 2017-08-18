@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -50,21 +49,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ExtraClasspathFromContextFunction extraClassPath;
   private final Javac javac;
   private final JavacOptions javacOptions;
-  private final JavacOptionsAmender amender;
 
   public KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ExtraClasspathFromContextFunction extraClassPath,
       Javac javac,
-      JavacOptions javacOptions,
-      JavacOptionsAmender amender) {
+      JavacOptions javacOptions) {
     this.kotlinc = kotlinc;
     this.extraArguments = extraArguments;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.amender = amender;
   }
 
   @Override
@@ -124,7 +120,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(javac, javacOptions, amender)
+      new JavacToJarStepFactory(javac, javacOptions, extraClassPath)
           .createCompileStep(
               buildContext,
               invokingRule,
@@ -138,8 +134,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
-    JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
-    return buildTimeOptions.getBootclasspath();
+    return javacOptions.withBootclasspathFromContext(extraClassPath, context).getBootclasspath();
   }
 
   @Override

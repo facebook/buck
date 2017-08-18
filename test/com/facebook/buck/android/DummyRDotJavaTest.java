@@ -25,8 +25,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
@@ -98,7 +98,7 @@ public class DummyRDotJavaTest {
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
@@ -195,7 +195,7 @@ public class DummyRDotJavaTest {
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),

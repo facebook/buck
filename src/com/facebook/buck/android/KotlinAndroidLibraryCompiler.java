@@ -53,8 +53,7 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
         ((AndroidKotlinCoreArg) args).getExtraKotlincArguments().orElse(ImmutableList.of()),
         AndroidClasspathFromContextFunction.INSTANCE,
         getJavac(resolver, args),
-        javacOptions,
-        new BootClasspathAppender());
+        javacOptions);
   }
 
   private Javac getJavac(BuildRuleResolver resolver, JvmLibraryArg arg) {

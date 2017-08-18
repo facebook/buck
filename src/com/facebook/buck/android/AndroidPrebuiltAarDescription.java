@@ -206,7 +206,7 @@ public class AndroidPrebuiltAarDescription
         new JavacToJarStepFactory(
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,
-            new BootClasspathAppender()),
+            AndroidClasspathFromContextFunction.INSTANCE),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()));
   }

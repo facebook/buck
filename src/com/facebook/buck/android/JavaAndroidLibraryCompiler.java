@@ -38,7 +38,7 @@ public class JavaAndroidLibraryCompiler extends AndroidLibraryCompiler {
       JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 
     return new JavacToJarStepFactory(
-        getJavac(resolver, arg), javacOptions, new BootClasspathAppender());
+        getJavac(resolver, arg), javacOptions, AndroidClasspathFromContextFunction.INSTANCE);
   }
 
   private Javac getJavac(BuildRuleResolver resolver, JvmLibraryArg arg) {

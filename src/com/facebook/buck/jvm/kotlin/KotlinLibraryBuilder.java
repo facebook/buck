@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
-import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -82,10 +81,9 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       return new KotlincToJarStepFactory(
           Preconditions.checkNotNull(kotlinBuckConfig).getKotlinc(),
           extraKotlincArguments,
-          ExtraClasspathFromContextFunction.EMPTY,
+          extraClasspathFromContextFunction,
           getJavac(),
-          Preconditions.checkNotNull(javacOptions),
-          javacOptionsAmender);
+          Preconditions.checkNotNull(javacOptions));
     }
   }
 }

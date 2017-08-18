@@ -70,7 +70,8 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected RemoveClassesPatternsMatcher classesToRemoveFromJar =
       RemoveClassesPatternsMatcher.EMPTY;
-  protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
+  protected ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
+      ExtraClasspathFromContextFunction.EMPTY;
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
@@ -148,8 +149,9 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setJavacOptionsAmender(JavacOptionsAmender amender) {
-    javacOptionsAmender = amender;
+  public DefaultJavaLibraryBuilder setExtraClasspathFromContextFunction(
+      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
     return this;
   }
 
@@ -560,7 +562,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected ConfiguredCompiler buildConfiguredCompiler() {
       return new JavacToJarStepFactory(
-          getJavac(), Preconditions.checkNotNull(javacOptions), javacOptionsAmender);
+          getJavac(), Preconditions.checkNotNull(javacOptions), extraClasspathFromContextFunction);
     }
 
     protected final JarBuildStepsFactory getJarBuildStepsFactory() {

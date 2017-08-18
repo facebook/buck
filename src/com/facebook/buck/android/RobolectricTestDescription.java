@@ -180,7 +180,7 @@ public class RobolectricTestDescription
                             args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA))
                         .configure(args, Preconditions.checkNotNull(javacOptions), resolver))
                 .setJavacOptions(javacOptions)
-                .setJavacOptionsAmender(new BootClasspathAppender())
+                .setExtraClasspathFromContextFunction(AndroidClasspathFromContextFunction.INSTANCE)
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());
 
