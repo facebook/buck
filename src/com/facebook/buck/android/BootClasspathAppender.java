@@ -18,8 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -28,16 +28,15 @@ import java.util.List;
 
 class BootClasspathAppender implements JavacOptionsAmender {
 
+  @AddToRuleKey
+  @SuppressWarnings("unused")
+  private final String bootclasspath = "android";
+
   private static String androidBootclasspath(AndroidPlatformTarget platform) {
     List<Path> bootclasspathEntries = platform.getBootclasspathEntries();
     Preconditions.checkState(
         !bootclasspathEntries.isEmpty(), "There should be entries for the bootclasspath");
     return Joiner.on(File.pathSeparator).join(bootclasspathEntries);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("bootclasspath", "android");
   }
 
   @Override
