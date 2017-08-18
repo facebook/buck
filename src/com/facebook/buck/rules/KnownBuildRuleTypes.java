@@ -45,7 +45,6 @@ import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.ApplePackageDescription;
 import com.facebook.buck.apple.AppleResourceDescription;
@@ -58,6 +57,7 @@ import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.DownloadConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -253,16 +253,15 @@ public class KnownBuildRuleTypes {
     AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
-    ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
-        AppleCxxPlatforms.buildAppleCxxPlatforms(
-            sdkEnvironment.getAppleSdkPaths(),
-            sdkEnvironment.getAppleToolchains(),
-            filesystem,
+    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
+        AppleCxxPlatformsProvider.create(
             config,
-            swiftBuckConfig);
-    checkApplePlaforms(appleCxxPlatforms);
+            filesystem,
+            sdkEnvironment.getAppleSdkPaths(),
+            sdkEnvironment.getAppleToolchains());
+
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
+        appleCxxPlatformsProvider.getAppleCxxPlatforms();
 
     ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
     for (Flavor flavor : platformFlavorsToAppleCxxPlatforms.getFlavors()) {
@@ -697,25 +696,6 @@ public class KnownBuildRuleTypes {
     builder.register(VersionedAliasDescription.of());
 
     return builder;
-  }
-
-  private static void checkApplePlaforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
-    Map<Flavor, AppleCxxPlatform> platformsMap = new HashMap<>();
-    for (AppleCxxPlatform platform : appleCxxPlatforms) {
-      Flavor flavor = platform.getFlavor();
-      if (platformsMap.containsKey(flavor)) {
-        AppleCxxPlatform otherPlatform = platformsMap.get(flavor);
-        throw new HumanReadableException(
-            "There are two conflicting SDKs providing the same platform \"%s\":\n"
-                + "- %s\n"
-                + "- %s\n\n"
-                + "Please try to remove one of them.",
-            flavor.getName(),
-            platform.getAppleSdkPaths().getSdkPath(),
-            otherPlatform.getAppleSdkPaths().getSdkPath());
-      }
-      platformsMap.put(flavor, platform);
-    }
   }
 
   public static class Builder {
