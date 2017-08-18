@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
@@ -25,6 +26,8 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -44,7 +47,90 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
   public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
       input -> ImmutableList.of();
 
-  public void createCompileToJarStep(
+  public final void createCompileToJarStep(
+      BuildContext context,
+      BuildTarget target,
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      ProjectFilesystem projectFilesystem,
+      CompilerParameters compilerParameters,
+      ResourcesParameters resourcesParameters,
+      ImmutableList<String> postprocessClassesCommands,
+      Optional<JarParameters> jarParameters,
+      /* output params */
+      ImmutableList.Builder<Step> steps,
+      BuildableContext buildableContext) {
+    // Always create the output directory, even if there are no .java files to compile because there
+    // might be resources that need to be copied there.
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                projectFilesystem,
+                compilerParameters.getOutputDirectory())));
+
+    // If there are resources, then link them to the appropriate place in the classes directory.
+    steps.add(
+        new CopyResourcesStep(
+            projectFilesystem,
+            context,
+            ruleFinder,
+            target,
+            resourcesParameters,
+            compilerParameters.getOutputDirectory()));
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                projectFilesystem,
+                CompilerParameters.getOutputJarDirPath(target, projectFilesystem))));
+
+    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // into the built jar.
+    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+      if (compilerParameters.shouldTrackClassUsage()) {
+        buildableContext.recordArtifact(compilerParameters.getDepFilePath());
+      }
+
+      // This adds the javac command, along with any supporting commands.
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  projectFilesystem,
+                  compilerParameters.getPathToSourcesList().getParent())));
+
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  projectFilesystem,
+                  compilerParameters.getWorkingDirectory())));
+
+      createCompileToJarStepImpl(
+          context,
+          target,
+          resolver,
+          ruleFinder,
+          projectFilesystem,
+          compilerParameters,
+          postprocessClassesCommands,
+          jarParameters.get(),
+          steps,
+          buildableContext);
+    }
+
+    if (jarParameters.isPresent()) {
+      // No source files, only resources
+      if (compilerParameters.getSourceFilePaths().isEmpty()) {
+        createJarStep(projectFilesystem, jarParameters.get(), steps);
+      }
+      buildableContext.recordArtifact(jarParameters.get().getJarPath());
+    }
+  }
+
+  protected void createCompileToJarStepImpl(
       BuildContext context,
       BuildTarget target,
       SourcePathResolver resolver,

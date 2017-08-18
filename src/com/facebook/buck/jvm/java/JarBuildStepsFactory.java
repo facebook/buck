@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -33,8 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -206,74 +203,18 @@ public class JarBuildStepsFactory
                     .build());
 
     CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
-    // Always create the output directory, even if there are no .java files to compile because there
-    // might be resources that need to be copied there.
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                compilerParameters.getOutputDirectory())));
-
-    // If there are resources, then link them to the appropriate place in the classes directory.
-    steps.add(
-        new CopyResourcesStep(
-            projectFilesystem,
-            context,
-            this.ruleFinder,
-            target,
-            resourcesParameters,
-            compilerParameters.getOutputDirectory()));
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                projectFilesystem,
-                CompilerParameters.getOutputJarDirPath(target, projectFilesystem))));
-
-    // Only run javac if there are .java files to compile or we need to shovel the manifest file
-    // into the built jar.
-    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      if (compilerParameters.shouldTrackClassUsage()) {
-        buildableContext.recordArtifact(compilerParameters.getDepFilePath());
-      }
-
-      // This adds the javac command, along with any supporting commands.
-      steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  projectFilesystem,
-                  compilerParameters.getPathToSourcesList().getParent())));
-
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  projectFilesystem,
-                  compilerParameters.getWorkingDirectory())));
-
-      compileToJarStepFactory.createCompileToJarStep(
-          context,
-          target,
-          context.getSourcePathResolver(),
-          this.ruleFinder,
-          projectFilesystem,
-          compilerParameters,
-          postprocessClassesCommands,
-          jarParameters.get(),
-          steps,
-          buildableContext);
-    }
-
-    if (jarParameters.isPresent()) {
-      // No source files, only resources
-      if (compilerParameters.getSourceFilePaths().isEmpty()) {
-        compileToJarStepFactory.createJarStep(projectFilesystem, jarParameters.get(), steps);
-      }
-      buildableContext.recordArtifact(jarParameters.get().getJarPath());
-    }
+    compileToJarStepFactory.createCompileToJarStep(
+        context,
+        target,
+        context.getSourcePathResolver(),
+        ruleFinder,
+        projectFilesystem,
+        compilerParameters,
+        resourcesParameters,
+        postprocessClassesCommands,
+        jarParameters,
+        steps,
+        buildableContext);
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(

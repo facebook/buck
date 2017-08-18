@@ -117,7 +117,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   @Override
-  public void createCompileToJarStep(
+  public void createCompileToJarStepImpl(
       BuildContext context,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
@@ -179,7 +179,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               Optional.of(jarParameters),
               abiJar));
     } else {
-      super.createCompileToJarStep(
+      super.createCompileToJarStepImpl(
           context,
           invokingRule,
           resolver,
