@@ -24,6 +24,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacStep;
@@ -141,14 +142,7 @@ public class DummyRDotJavaTest {
             .add(String.format("mkdir -p %s", genFolder))
             .add(
                 new JavacStep(
-                        rDotJavaBinFolder,
                         NoOpClassUsageFileWriter.instance(),
-                        Paths.get("generated"),
-                        Paths.get("working"),
-                        javaSourceFiles,
-                        BuildTargets.getGenPath(
-                            filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
-                        /* declared classpath */ ImmutableSortedSet.of(),
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
@@ -157,7 +151,18 @@ public class DummyRDotJavaTest {
                         pathResolver,
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
-                        /* jarParameters */ Optional.empty(),
+                        CompilerParameters.builder()
+                            .setOutputDirectory(rDotJavaBinFolder)
+                            .setGeneratedCodeDirectory(Paths.get("generated"))
+                            .setWorkingDirectory(Paths.get("working"))
+                            .setDepFilePath(Paths.get("depFile"))
+                            .setSourceFilePaths(javaSourceFiles)
+                            .setPathToSourcesList(
+                                BuildTargets.getGenPath(
+                                    filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"))
+                            .setClasspathEntries(ImmutableSortedSet.of())
+                            .build(),
+                        Optional.empty(),
                         null)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))

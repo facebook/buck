@@ -35,7 +35,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -70,21 +69,13 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
-
-    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
-    Path workingDirectory = parameters.getWorkingDirectory();
-    Path generatedCodeDirectory = parameters.getGeneratedCodeDirectory();
-    Path outputDirectory = parameters.getOutputDirectory();
-    Path pathToSrcsList = parameters.getPathToSourcesList();
-
     final JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
 
     boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
     if (generatingCode) {
       // Javac requires that the root directory for generated sources already exist.
       addAnnotationGenFolderStep(
-          generatedCodeDirectory, filesystem, steps, buildableContext, context);
+          parameters.getGeneratedCodeDirectory(), filesystem, steps, buildableContext, context);
     }
 
     final ClassUsageFileWriter usedClassesFileWriter =
@@ -93,19 +84,14 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             : NoOpClassUsageFileWriter.instance();
     steps.add(
         new JavacStep(
-            outputDirectory,
             usedClassesFileWriter,
-            generatedCodeDirectory,
-            workingDirectory,
-            sourceFilePaths,
-            pathToSrcsList,
-            declaredClasspathEntries,
             javac,
             buildTimeOptions,
             invokingRule,
             resolver,
             filesystem,
             new ClasspathChecker(),
+            parameters,
             Optional.empty(),
             abiJar));
   }
@@ -143,14 +129,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
-    ImmutableSortedSet<Path> declaredClasspathEntries = compilerParameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = compilerParameters.getSourceFilePaths();
-    Path workingDirectory = compilerParameters.getWorkingDirectory();
-    Path generatedCodeDirectory = compilerParameters.getGeneratedCodeDirectory();
-    Path outputDirectory = compilerParameters.getOutputDirectory();
-    Path pathToSrcsList = compilerParameters.getPathToSourcesList();
-
-    Preconditions.checkArgument(jarParameters.getEntriesToJar().contains(outputDirectory));
+    Preconditions.checkArgument(
+        jarParameters.getEntriesToJar().contains(compilerParameters.getOutputDirectory()));
 
     String spoolMode = javacOptions.getSpoolMode().name();
     // In order to use direct spooling to the Jar:
@@ -175,7 +155,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       if (generatingCode) {
         // Javac requires that the root directory for generated sources already exists.
         addAnnotationGenFolderStep(
-            generatedCodeDirectory, filesystem, steps, buildableContext, context);
+            compilerParameters.getGeneratedCodeDirectory(),
+            filesystem,
+            steps,
+            buildableContext,
+            context);
       }
 
       final ClassUsageFileWriter usedClassesFileWriter =
@@ -184,19 +168,14 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               : NoOpClassUsageFileWriter.instance();
       steps.add(
           new JavacStep(
-              outputDirectory,
               usedClassesFileWriter,
-              generatedCodeDirectory,
-              workingDirectory,
-              sourceFilePaths,
-              pathToSrcsList,
-              declaredClasspathEntries,
               javac,
               buildTimeOptions,
               invokingRule,
               resolver,
               filesystem,
               new ClasspathChecker(),
+              compilerParameters,
               Optional.of(jarParameters),
               abiJar));
     } else {
