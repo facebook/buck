@@ -271,7 +271,8 @@ public class HaskellLibraryDescription
                 ruleFinder,
                 platform,
                 args,
-                deps);
+                deps,
+                hsProfile);
         libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
         break;
       case STATIC:
@@ -456,7 +457,8 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps) {
+      ImmutableSet<BuildRule> deps,
+      boolean hsProfile) {
     HaskellCompileRule compileRule =
         requireCompileRule(
             target,
@@ -469,7 +471,7 @@ public class HaskellLibraryDescription
             args,
             deps,
             Linker.LinkableDepType.SHARED,
-            false);
+            hsProfile);
 
     String name =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
@@ -491,7 +493,7 @@ public class HaskellLibraryDescription
         Linker.LinkableDepType.SHARED,
         outputPath,
         Optional.of(name),
-        false);
+        hsProfile);
   }
 
   private HaskellLinkRule requireSharedLibrary(
@@ -503,7 +505,8 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps) {
+      ImmutableSet<BuildRule> deps,
+      boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -526,7 +529,8 @@ public class HaskellLibraryDescription
             ruleFinder,
             platform,
             args,
-            deps));
+            deps,
+            hsProfile));
   }
 
   @Override
@@ -580,7 +584,7 @@ public class HaskellLibraryDescription
               args,
               deps,
               depType,
-              false);
+              args.isEnableProfiling());
         case SHARED:
           return requireSharedLibrary(
               baseTarget,
@@ -591,7 +595,8 @@ public class HaskellLibraryDescription
               ruleFinder,
               platform.get(),
               args,
-              deps);
+              deps,
+              args.isEnableProfiling());
         case STATIC_PIC:
         case STATIC:
           return requireStaticLibrary(
@@ -607,7 +612,7 @@ public class HaskellLibraryDescription
               type.get().getValue() == Type.STATIC
                   ? Linker.LinkableDepType.STATIC
                   : Linker.LinkableDepType.STATIC_PIC,
-              false);
+              args.isEnableProfiling());
       }
 
       throw new IllegalStateException(
@@ -684,7 +689,7 @@ public class HaskellLibraryDescription
                     args,
                     allDeps.get(resolver, cxxPlatform),
                     type,
-                    false);
+                    args.isEnableProfiling());
             linkArgs =
                 args.getLinkWhole() || forceLinkWhole
                     ? cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg())
@@ -701,7 +706,8 @@ public class HaskellLibraryDescription
                     ruleFinder,
                     platforms.getValue(cxxPlatform.getFlavor()),
                     args,
-                    allDeps.get(resolver, cxxPlatform));
+                    allDeps.get(resolver, cxxPlatform),
+                    args.isEnableProfiling());
             linkArgs = ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));
             break;
           default:
@@ -731,7 +737,8 @@ public class HaskellLibraryDescription
                 ruleFinder,
                 platforms.getValue(cxxPlatform.getFlavor()),
                 args,
-                allDeps.get(resolver, cxxPlatform));
+                allDeps.get(resolver, cxxPlatform),
+                args.isEnableProfiling());
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
@@ -816,6 +823,11 @@ public class HaskellLibraryDescription
     @Value.Default
     default NativeLinkable.Linkage getPreferredLinkage() {
       return NativeLinkable.Linkage.ANY;
+    }
+
+    @Value.Default
+    default boolean isEnableProfiling() {
+      return false;
     }
   }
 }

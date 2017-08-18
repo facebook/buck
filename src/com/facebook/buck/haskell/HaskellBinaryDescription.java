@@ -235,7 +235,7 @@ public class HaskellBinaryDescription
                     .toImmutableSet(),
                 platform,
                 depType,
-                false,
+                args.isEnableProfiling(),
                 args.getMain(),
                 Optional.empty(),
                 args.getCompilerFlags(),
@@ -271,7 +271,7 @@ public class HaskellBinaryDescription
             depType,
             outputPath,
             Optional.empty(),
-            false);
+            args.isEnableProfiling());
 
     return new HaskellBinary(
         buildTarget,
@@ -372,5 +372,10 @@ public class HaskellBinaryDescription
     Optional<Linker.LinkableDepType> getLinkStyle();
 
     Optional<Flavor> getPlatform();
+
+    @Value.Default
+    default boolean isEnableProfiling() {
+      return false;
+    }
   }
 }

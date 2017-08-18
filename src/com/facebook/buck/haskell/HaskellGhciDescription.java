@@ -221,7 +221,7 @@ public class HaskellGhciDescription
               HaskellCompileInput ci =
                   ((HaskellCompileDep) rule)
                       .getCompileInput(
-                          platform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
+                          platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
@@ -307,7 +307,7 @@ public class HaskellGhciDescription
             firstOrderHaskellPackages.build(),
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
-            args.getEnableProfiling(),
+            args.isEnableProfiling(),
             platform.getGhciScriptTemplate().get(),
             platform.getGhciBinutils().get(),
             platform.getGhciGhc().get(),
@@ -354,7 +354,7 @@ public class HaskellGhciDescription
     }
 
     @Value.Default
-    default boolean getEnableProfiling() {
+    default boolean isEnableProfiling() {
       return false;
     }
 

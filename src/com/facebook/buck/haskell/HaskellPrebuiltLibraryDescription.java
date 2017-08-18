@@ -43,7 +43,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -86,28 +85,28 @@ public class HaskellPrebuiltLibraryDescription
       public HaskellCompileInput getCompileInput(
           HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile) {
 
-        ImmutableCollection<SourcePath> libs = null;
+        // Build the package.
+        HaskellPackage.Builder pkgBuilder =
+            HaskellPackage.builder()
+                .setInfo(
+                    HaskellPackageInfo.of(
+                        getBuildTarget().getShortName(), args.getVersion(), args.getId()))
+                .setPackageDb(args.getDb())
+                .addAllInterfaces(args.getImportDirs());
         if (Linker.LinkableDepType.SHARED == depType) {
-          libs = args.getSharedLibs().values();
+          pkgBuilder.addAllLibraries(args.getSharedLibs().values());
         } else {
-          if (hsProfile) {
-            libs = args.getProfiledStaticLibs();
-          } else {
-            libs = args.getStaticLibs();
+          pkgBuilder.addAllLibraries(args.getStaticLibs());
+          // If profiling is enabled, we also include their libs in the same package.
+          if (args.isEnableProfiling() || hsProfile) {
+            pkgBuilder.addAllLibraries(args.getProfiledStaticLibs());
           }
         }
+        HaskellPackage pkg = pkgBuilder.build();
 
         return HaskellCompileInput.builder()
             .addAllFlags(args.getExportedCompilerFlags())
-            .addPackages(
-                HaskellPackage.builder()
-                    .setInfo(
-                        HaskellPackageInfo.of(
-                            getBuildTarget().getShortName(), args.getVersion(), args.getId()))
-                    .setPackageDb(args.getDb())
-                    .addAllInterfaces(args.getImportDirs())
-                    .addAllLibraries(libs)
-                    .build())
+            .addPackages(pkg)
             .build();
       }
 
@@ -133,7 +132,9 @@ public class HaskellPrebuiltLibraryDescription
           builder.addAllArgs(SourcePathArg.from(args.getSharedLibs().values()));
         } else {
           Linker linker = cxxPlatform.getLd().resolve(resolver);
-          ImmutableList<Arg> libArgs = SourcePathArg.from(args.getStaticLibs());
+          ImmutableList<Arg> libArgs =
+              SourcePathArg.from(
+                  args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());
           if (forceLinkWhole) {
             libArgs =
                 RichStream.from(libArgs)
@@ -204,5 +205,10 @@ public class HaskellPrebuiltLibraryDescription
 
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getCxxHeaderDirs();
+
+    @Value.Default
+    default boolean isEnableProfiling() {
+      return false;
+    }
   }
 }
