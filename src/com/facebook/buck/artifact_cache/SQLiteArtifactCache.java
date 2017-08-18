@@ -555,8 +555,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
       connection
           .createStatement()
           .executeUpdate(
-              "CREATE TABLE IF NOT EXISTS content"
-                  + "(sha1 BLOB PRIMARY KEY NOT NULL,"
+              "CREATE TABLE IF NOT EXISTS content "
+                  + "(sha1 BLOB PRIMARY KEY NOT NULL, "
                   + "artifact BLOB, filepath TEXT, "
                   + "size INTEGER, "
                   + "created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
