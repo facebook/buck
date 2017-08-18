@@ -98,30 +98,41 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     buckEventBus.post(startEvent);
     ImmutableList<Map<String, Object>> rules = ImmutableList.of();
     try {
-      // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
-      // configured for terminals that support it.
-      PrintingEventHandler eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
-      BuildFileAST buildFileAst =
-          BuildFileAST.parseBuildFile(
-              ParserInputSource.create(fileSystem.getPath(buildFile.toString())), eventHandler);
-      ImmutableList.Builder<Map<String, Object>> builder = ImmutableList.builder();
-      try (Mutability mutability = Mutability.create("BUCK")) {
-        Environment env = Environment.builder(mutability).build();
-        env.setup("include_defs", INCLUDE_DEFS);
-        setupBuckRules(buildFile, builder, env);
-        boolean exec = buildFileAst.exec(env, eventHandler);
-        if (!exec) {
-          throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
-        }
-        rules = builder.build();
-        LOG.verbose("Got rules: %s", rules);
-        LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
-      }
+      rules = parseBuildRules(buildFile);
+      LOG.verbose("Got rules: %s", rules);
+      LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
     } finally {
       // TODO(ttsugrii): think about reporting processed bytes and profiling support
       buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rules, 0L, Optional.empty()));
     }
     return rules;
+  }
+
+  /**
+   * Parses and returns build rules defined in {@code buildFile}.
+   *
+   * @param buildFile The build file to parse.
+   * @return The build rules defined in {@code buildFile}.
+   */
+  public ImmutableList<Map<String, Object>> parseBuildRules(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
+    // configured for terminals that support it.
+    PrintingEventHandler eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
+    BuildFileAST buildFileAst =
+        BuildFileAST.parseBuildFile(
+            ParserInputSource.create(fileSystem.getPath(buildFile.toString())), eventHandler);
+    ImmutableList.Builder<Map<String, Object>> builder = ImmutableList.builder();
+    try (Mutability mutability = Mutability.create("BUCK")) {
+      Environment env = Environment.builder(mutability).build();
+      env.setup("include_defs", INCLUDE_DEFS);
+      setupBuckRules(buildFile, builder, env);
+      boolean exec = buildFileAst.exec(env, eventHandler);
+      if (!exec) {
+        throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
+      }
+      return builder.build();
+    }
   }
 
   /**
