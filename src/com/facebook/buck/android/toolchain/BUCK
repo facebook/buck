@@ -1,0 +1,17 @@
+java_library(
+    name = "toolchain",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android:config",
+        "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+    ],
+)
