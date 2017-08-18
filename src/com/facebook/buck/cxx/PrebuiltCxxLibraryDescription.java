@@ -610,8 +610,6 @@ public class PrebuiltCxxLibraryDescription
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-    final boolean headerOnly = args.getHeaderOnly().orElse(false);
-    final boolean forceStatic = args.getForceStatic().orElse(false);
     return new PrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
 
       private final Map<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
@@ -844,7 +842,7 @@ public class PrebuiltCxxLibraryDescription
         linkerArgsBuilder.addAll(
             StringArg.from(Preconditions.checkNotNull(getExportedLinkerFlags(cxxPlatform))));
 
-        if (!headerOnly) {
+        if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
             Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
             final SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true);
@@ -912,9 +910,9 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        if (headerOnly) {
+        if (args.isHeaderOnly()) {
           return Linkage.ANY;
-        } else if (forceStatic) {
+        } else if (args.isForceStatic()) {
           return Linkage.STATIC;
         } else if (args.getPreferredLinkage().orElse(Linkage.ANY) != Linkage.ANY) {
           return args.getPreferredLinkage().get();
@@ -947,7 +945,7 @@ public class PrebuiltCxxLibraryDescription
 
         String resolvedSoname = getSoname(cxxPlatform);
         ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
-        if (!headerOnly && !args.isProvided()) {
+        if (!args.isHeaderOnly() && !args.isProvided()) {
           SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, false);
           solibs.put(resolvedSoname, sharedLibrary);
         }
@@ -1047,7 +1045,10 @@ public class PrebuiltCxxLibraryDescription
 
     Optional<String> getLibDir();
 
-    Optional<Boolean> getHeaderOnly();
+    @Value.Default
+    default boolean isHeaderOnly() {
+      return false;
+    }
 
     @Value.Default
     default SourceList getExportedHeaders() {
@@ -1071,7 +1072,10 @@ public class PrebuiltCxxLibraryDescription
       return false;
     }
 
-    Optional<Boolean> getForceStatic();
+    @Value.Default
+    default boolean isForceStatic() {
+      return false;
+    }
 
     Optional<NativeLinkable.Linkage> getPreferredLinkage();
 

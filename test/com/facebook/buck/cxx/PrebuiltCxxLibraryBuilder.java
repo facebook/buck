@@ -80,7 +80,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderOnly(boolean headerOnly) {
-    getArgForPopulating().setHeaderOnly(Optional.of(headerOnly));
+    getArgForPopulating().setHeaderOnly(headerOnly);
     return this;
   }
 
@@ -105,7 +105,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setForceStatic(boolean forceStatic) {
-    getArgForPopulating().setForceStatic(Optional.of(forceStatic));
+    getArgForPopulating().setForceStatic(forceStatic);
     return this;
   }
 
