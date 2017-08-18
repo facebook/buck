@@ -20,7 +20,7 @@ import com.facebook.buck.io.FileAttributesScrubber;
 import java.nio.file.Path;
 
 /** Resets the file's last modification date. */
-public class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
+class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
 
   @Override
   public void scrubFileWithPath(Path path) {

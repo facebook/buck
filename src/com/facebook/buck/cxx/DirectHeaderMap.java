@@ -36,7 +36,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
-public class DirectHeaderMap extends HeaderSymlinkTree {
+class DirectHeaderMap extends HeaderSymlinkTree {
 
   private static final Logger LOG = Logger.get(DirectHeaderMap.class);
 

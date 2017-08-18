@@ -23,7 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 
-public class CxxLocationMacroExpander extends LocationMacroExpander {
+class CxxLocationMacroExpander extends LocationMacroExpander {
 
   private final CxxPlatform platform;
 

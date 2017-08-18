@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
-public class CxxLinkStep extends ShellStep {
+class CxxLinkStep extends ShellStep {
 
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> linker;

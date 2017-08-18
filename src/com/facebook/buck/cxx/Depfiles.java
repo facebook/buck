@@ -41,7 +41,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 
 /** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
-public class Depfiles {
+class Depfiles {
 
   private Depfiles() {}
 

@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceFactory;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.util.HumanReadableException;
 
-public class SharedLibraryInterfaceFactoryResolver {
+class SharedLibraryInterfaceFactoryResolver {
 
   public static SharedLibraryInterfaceFactory resolveFactory(SharedLibraryInterfaceParams params) {
     switch (params.getKind()) {

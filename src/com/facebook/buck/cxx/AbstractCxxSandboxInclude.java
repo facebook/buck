@@ -22,13 +22,13 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
+@BuckStylePackageVisibleImmutable
 abstract class AbstractCxxSandboxInclude extends CxxHeaders {
 
   @Override

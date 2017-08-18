@@ -28,7 +28,7 @@ import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 
 /** A base class for {@link Arg}s which wrap a {@link FrameworkPath}. */
-public abstract class FrameworkPathArg implements Arg {
+abstract class FrameworkPathArg implements Arg {
 
   protected final ImmutableCollection<FrameworkPath> frameworkPaths;
 

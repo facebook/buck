@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleImmutable;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -27,7 +27,7 @@ import org.immutables.value.Value;
  * they may add data for diagnostics or logging.
  */
 @Value.Immutable
-@BuckStyleImmutable
+@BuckStylePackageVisibleImmutable
 abstract class AbstractCxxLogInfo {
   /** The (fully-flavored) target being built. */
   public abstract Optional<BuildTarget> getTarget();

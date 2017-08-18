@@ -42,7 +42,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 
 /** Create an object archive with ar. */
-public class ArchiveStep implements Step {
+class ArchiveStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;

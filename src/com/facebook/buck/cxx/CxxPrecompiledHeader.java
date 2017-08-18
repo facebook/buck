@@ -78,7 +78,7 @@ import java.util.function.Predicate;
  * (effectively) random unique IDs, they are not amenable to the InputBasedRuleKey optimization when
  * used to compile another file.
  */
-public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
+class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   // Fields that are added to rule key as is.

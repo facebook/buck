@@ -38,7 +38,7 @@ import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.stream.Stream;
 
-public class CxxInferCaptureTransitive extends AbstractBuildRule
+class CxxInferCaptureTransitive extends AbstractBuildRule
     implements HasRuntimeDeps, HasPostBuildSteps {
 
   private ImmutableSet<CxxInferCapture> captureRules;

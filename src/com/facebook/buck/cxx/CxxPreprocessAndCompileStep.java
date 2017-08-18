@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** A step that preprocesses and/or compiles C/C++ sources in a single step. */
-public class CxxPreprocessAndCompileStep implements Step {
+class CxxPreprocessAndCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompileStep.class);
 

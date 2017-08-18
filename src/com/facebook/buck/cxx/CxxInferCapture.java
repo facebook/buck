@@ -48,7 +48,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 /** Generate the CFG for a source file */
-public class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
+class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsDependencyFileRuleKey {
 
   @AddToRuleKey private final InferBuckConfig inferConfig;

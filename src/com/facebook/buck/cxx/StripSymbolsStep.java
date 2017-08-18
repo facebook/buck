@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class StripSymbolsStep implements Step {
+class StripSymbolsStep implements Step {
   private final Path input;
   private final ImmutableList<String> stripCommandPrefix;
   private final ImmutableMap<String, String> stripEnvironment;

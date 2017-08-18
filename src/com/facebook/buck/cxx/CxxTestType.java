@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 /** Enumerate the C/C++ testing frameworks we support. */
-public enum CxxTestType {
+enum CxxTestType {
   GTEST,
   BOOST,
 }
