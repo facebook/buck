@@ -17,14 +17,15 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 
 /**
- * Factory providing implementations of {@link AndroidLibraryCompiler} for the specified {@code
+ * Factory providing implementations of {@link ConfiguredCompilerFactory} for the specified {@code
  * language}. {@link AndroidLibraryDescription} uses this factory to handle multiple JVM languages.
  * Implementations should provide a compiler implementation for every {@link JvmLanguage}. See
  * {@link DefaultAndroidLibraryCompiler}
  */
 public interface AndroidLibraryCompilerFactory {
 
-  AndroidLibraryCompiler getCompiler(JvmLanguage language);
+  ConfiguredCompilerFactory getCompiler(JvmLanguage language);
 }

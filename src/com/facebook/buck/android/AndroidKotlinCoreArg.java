@@ -15,11 +15,9 @@
  */
 package com.facebook.buck.android;
 
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
 import java.util.Optional;
 
-public interface AndroidKotlinCoreArg {
+public interface AndroidKotlinCoreArg extends KotlinLibraryDescription.CoreArg {
   Optional<AndroidLibraryDescription.JvmLanguage> getLanguage();
-
-  Optional<ImmutableList<String>> getExtraKotlincArguments();
 }

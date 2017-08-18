@@ -139,8 +139,7 @@ public class AndroidLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
         .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA))
-        .findDepsForTargetFromConstructorArgs(
-            buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+        .addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
   public interface CoreArg

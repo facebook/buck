@@ -14,28 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.jvm.scala.ScalaBuckConfig;
-import com.facebook.buck.jvm.scala.ScalacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import javax.annotation.Nullable;
 
-public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
+public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final ScalaBuckConfig scalaBuckConfig;
   private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
   private @Nullable Tool scalac;
 
-  public ScalaAndroidLibraryCompiler(
+  public ScalaConfiguredCompilerFactory(
       ScalaBuckConfig config, ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
     this.scalaBuckConfig = config;
     this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
@@ -67,10 +65,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   }
 
   @Override
-  public void findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      JvmLibraryArg constructorArg,
+  public void addTargetDeps(
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 

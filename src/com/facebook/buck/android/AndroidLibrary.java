@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
@@ -191,7 +192,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Nullable private AndroidLibraryCompiler androidCompiler;
+      @Nullable private ConfiguredCompilerFactory androidCompiler;
       @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
       @Override
@@ -295,7 +296,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             .configure(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
       }
 
-      protected AndroidLibraryCompiler getAndroidCompiler() {
+      protected ConfiguredCompilerFactory getAndroidCompiler() {
         if (androidCompiler == null) {
           androidCompiler = compilerFactory.getCompiler(language);
         }
