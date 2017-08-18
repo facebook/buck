@@ -18,11 +18,11 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfHeader;
-import com.facebook.buck.cxx.elf.ElfSection;
-import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
-import com.facebook.buck.cxx.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
+import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;

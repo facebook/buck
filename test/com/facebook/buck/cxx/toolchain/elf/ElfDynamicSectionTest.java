@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.elf;
+package com.facebook.buck.cxx.toolchain.elf;
 
 import static org.junit.Assert.assertThat;
 
@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class ElfVerNeedTest {
+public class ElfDynamicSectionTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -42,24 +42,22 @@ public class ElfVerNeedTest {
   }
 
   @Test
-  public void test() throws IOException {
+  public void testParse() throws IOException {
     try (FileChannel channel = FileChannel.open(workspace.resolve("libfoo.so"))) {
       MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
       ElfSection stringTable =
           elf.getMandatorySectionByName(channel.toString(), ".dynstr").getSection();
       ElfSection section =
-          elf.getMandatorySectionByName(channel.toString(), ".gnu.version_r").getSection();
-      assertThat(section.header.sh_type, Matchers.is(ElfSectionHeader.SHType.SHT_GNU_VERNEED));
-      ElfVerNeed verNeed = ElfVerNeed.parse(elf.header.ei_class, section.body);
-      assertThat(verNeed.entries, Matchers.hasSize(1));
+          elf.getMandatorySectionByName(channel.toString(), ".dynamic").getSection();
+      ElfDynamicSection dynamicSection =
+          ElfDynamicSection.parse(ElfHeader.EIClass.ELFCLASS64, section.body);
       assertThat(
-          stringTable.lookupString(verNeed.entries.get(0).getFirst().vn_file),
+          stringTable.lookupString(
+              dynamicSection
+                  .lookup(ElfDynamicSection.DTag.DT_NEEDED)
+                  .orElseThrow(AssertionError::new)),
           Matchers.equalTo("libc.so.6"));
-      assertThat(verNeed.entries.get(0).getSecond(), Matchers.hasSize(1));
-      assertThat(
-          stringTable.lookupString(verNeed.entries.get(0).getSecond().get(0).vna_name),
-          Matchers.equalTo("GLIBC_2.2.5"));
     }
   }
 }

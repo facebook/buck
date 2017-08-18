@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.elf;
+package com.facebook.buck.cxx.toolchain.elf;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

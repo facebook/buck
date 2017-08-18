@@ -19,8 +19,8 @@ package com.facebook.buck.cxx.toolchain;
 import static com.facebook.buck.cxx.toolchain.DebugSectionProperty.COMPRESSED;
 import static com.facebook.buck.cxx.toolchain.DebugSectionProperty.STRINGS;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.ByteBuffer;
