@@ -143,7 +143,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
   }
 
   /** @return a processor for the GNU version definition section. */
-  private Optional<SectionUsingDynamicStrings> getVerdefProcessor(Elf elf) throws IOException {
+  private Optional<SectionUsingDynamicStrings> getVerdefProcessor(Elf elf) {
     return elf.getSectionByName(VERDEF)
         .map(ElfSectionLookupResult::getSection)
         .map(

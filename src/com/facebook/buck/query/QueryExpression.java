@@ -84,7 +84,7 @@ public abstract class QueryExpression {
   public abstract void traverse(Visitor visitor);
 
   /** Returns a set of all targets referenced from literals within this query expression. */
-  public ImmutableSet<QueryTarget> getTargets(QueryEnvironment env) throws QueryException {
+  public ImmutableSet<QueryTarget> getTargets(QueryEnvironment env) {
     QueryTargetCollector collector = new QueryTargetCollector(env);
     traverse(collector);
     return collector.getTargets();

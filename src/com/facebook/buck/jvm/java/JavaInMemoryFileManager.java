@@ -204,7 +204,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return results;
   }
 
-  public ImmutableSet<String> writeToJar(JarBuilder jarBuilder) throws IOException {
+  public ImmutableSet<String> writeToJar(JarBuilder jarBuilder) {
     for (JarFileObject fileObject : fileForOutputPaths.values()) {
       fileObject.writeToJar(jarBuilder, jarPath.toString());
     }
@@ -216,8 +216,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return location != CLASS_OUTPUT;
   }
 
-  private JavaFileObject getJavaMemoryFileObject(JavaFileObject.Kind kind, String path)
-      throws IOException {
+  private JavaFileObject getJavaMemoryFileObject(JavaFileObject.Kind kind, String path) {
     return fileForOutputPaths.computeIfAbsent(
         path, p -> new JavaInMemoryFileObject(getUriPath(p), p, kind));
   }

@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -258,7 +257,7 @@ public class FileSystemMap<T> {
    * @param path The path to fetch.
    * @return The value associated with the path.
    */
-  public T get(Path path) throws IOException {
+  public T get(Path path) {
     Entry<T> maybe = map.get(path);
     // get() and remove() shouldn't overlap, but for performance reason (to hold the root lock for
     // less time), we opted for allowing overlap provided that *the entry creation is atomic*.

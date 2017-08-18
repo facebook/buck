@@ -371,7 +371,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   private Optional<ListenableFuture<Void>> discoverNewTargetsConcurrently(
       BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Void>> jobsCache)
-      throws InterruptedException, QueryException, BuildFileParseException, BuildTargetException {
+      throws BuildFileParseException, BuildTargetException {
     ListenableFuture<Void> job = jobsCache.get(buildTarget);
     if (job != null) {
       return Optional.empty();
@@ -455,12 +455,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
       throws QueryException {
-    try {
-      OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
-      return getTargetsFromTargetNodes(report.owners.keySet());
-    } catch (BuildFileParseException | IOException e) {
-      throw new QueryException(e, "Could not parse build targets.\n%s", e.getMessage());
-    }
+    OwnersReport report = ownersReportBuilder.build(buildFileTrees, executor, files);
+    return getTargetsFromTargetNodes(report.owners.keySet());
   }
 
   @Override

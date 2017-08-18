@@ -44,11 +44,11 @@ public class ResourcesExoHelper {
     this.resourcesInfo = resourcesInfo;
   }
 
-  public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+  public ImmutableMap<Path, Path> getFilesToInstall() {
     return ExopackageUtil.applyFilenameFormat(getResourceFilesByHash(), RESOURCES_DIR, "%s.apk");
   }
 
-  public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+  public ImmutableMap<Path, String> getMetadataToInstall() {
     return ImmutableMap.of(
         RESOURCES_DIR.resolve("metadata.txt"),
         getResourceMetadataContents(getResourceFilesByHash()));

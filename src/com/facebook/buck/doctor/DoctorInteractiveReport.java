@@ -63,7 +63,7 @@ public class DoctorInteractiveReport extends AbstractReport {
   }
 
   @Override
-  public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
+  public ImmutableSet<BuildLogEntry> promptForBuildSelection() {
     return buildLogEntries;
   }
 

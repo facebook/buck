@@ -49,8 +49,7 @@ public abstract class SimpleMacroExpander
   }
 
   public abstract String expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
-      throws MacroException;
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver);
 
   @Override
   public final ImmutableList<BuildRule> extractBuildTimeDepsFrom(
@@ -61,8 +60,7 @@ public abstract class SimpleMacroExpander
 
   @SuppressWarnings("unused")
   public ImmutableList<BuildRule> extractBuildTimeDepsFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return ImmutableList.of();
   }
 
@@ -75,8 +73,7 @@ public abstract class SimpleMacroExpander
 
   @SuppressWarnings("unused")
   public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return Optional.empty();
   }
 
@@ -96,6 +93,5 @@ public abstract class SimpleMacroExpander
       BuildTarget target,
       CellPathResolver cellNames,
       ImmutableCollection.Builder<BuildTarget> buildDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder)
-      throws MacroException {}
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 }

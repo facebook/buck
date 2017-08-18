@@ -496,7 +496,7 @@ public class InstallCommand extends BuildCommand {
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       SourcePathResolver pathResolver)
-      throws IOException, NoSuchBuildTargetException {
+      throws IOException {
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
     final Path helperPath;

@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 
@@ -31,15 +30,13 @@ public class StringExpander extends SimpleMacroExpander {
 
   @Override
   public String expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return toReturn;
   }
 
   @Override
   public Object extractRuleKeyAppendablesFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver)
-      throws MacroException {
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return toReturn;
   }
 }

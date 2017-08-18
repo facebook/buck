@@ -125,7 +125,7 @@ public class MetadataChecker {
     }
   }
 
-  public static void checkAndCleanIfNeeded(Cell rootCell) throws IOException, InterruptedException {
+  public static void checkAndCleanIfNeeded(Cell rootCell) throws IOException {
     try {
       checkAndCleanIfNeededInner(rootCell);
     } catch (ClosedByInterruptException e) {

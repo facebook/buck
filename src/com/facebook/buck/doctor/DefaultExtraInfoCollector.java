@@ -82,7 +82,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
       Iterable<String> command,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
-      throws IOException, InterruptedException, ExtraInfoExecutionException {
+      throws InterruptedException, ExtraInfoExecutionException {
 
     ProcessExecutor.Result extraInfoResult;
     try {

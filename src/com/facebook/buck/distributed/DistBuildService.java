@@ -193,18 +193,14 @@ public class DistBuildService implements Closeable {
         "%d files are required to be uploaded. Now checking which ones are already present...",
         requiredFiles.size());
 
-    try {
-      return Futures.transform(
-          uploadMissingFilesAsync(requiredFiles, executorService),
-          uploadCount -> {
-            distBuildClientStats.setMissingFilesUploadedCount(uploadCount);
-            distBuildClientStats.stopUploadMissingFilesTimer();
-            return null;
-          },
-          executorService);
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to upload missing source files.", e);
-    }
+    return Futures.transform(
+        uploadMissingFilesAsync(requiredFiles, executorService),
+        uploadCount -> {
+          distBuildClientStats.setMissingFilesUploadedCount(uploadCount);
+          distBuildClientStats.stopUploadMissingFilesTimer();
+          return null;
+        },
+        executorService);
   }
 
   /**
@@ -220,8 +216,7 @@ public class DistBuildService implements Closeable {
    * @throws IOException
    */
   private ListenableFuture<Integer> uploadMissingFilesAsync(
-      final List<PathInfo> absPathsAndHashes, final ListeningExecutorService executorService)
-      throws IOException {
+      final List<PathInfo> absPathsAndHashes, final ListeningExecutorService executorService) {
 
     Map<String, PathInfo> sha1ToPathInfo = new HashMap<>();
     for (PathInfo file : absPathsAndHashes) {
@@ -465,8 +460,7 @@ public class DistBuildService implements Closeable {
       final ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
       DistBuildClientStatsTracker distBuildClientStats,
-      ListeningExecutorService executorService)
-      throws IOException {
+      ListeningExecutorService executorService) {
     distBuildClientStats.startUploadBuckDotFilesTimer();
     ListenableFuture<List<Path>> pathsFuture =
         executorService.submit(

@@ -41,7 +41,7 @@ public class CachingQueryEvaluator implements QueryEvaluator {
   }
 
   @VisibleForTesting
-  public boolean isPresent(QueryExpression exp) throws ExecutionException, QueryException {
+  public boolean isPresent(QueryExpression exp) {
     return Objects.nonNull(cache.getIfPresent(exp));
   }
 }

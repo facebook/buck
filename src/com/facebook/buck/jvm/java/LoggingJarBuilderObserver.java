@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.JarBuilder;
 import com.facebook.buck.zip.JarEntrySupplier;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 
@@ -31,7 +30,7 @@ public class LoggingJarBuilderObserver implements JarBuilder.Observer {
   }
 
   @Override
-  public void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier) throws IOException {
+  public void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier) {
     CustomZipEntry entry = entrySupplier.getEntry();
     eventSink.reportEvent(
         determineSeverity(entry),
@@ -42,7 +41,7 @@ public class LoggingJarBuilderObserver implements JarBuilder.Observer {
   }
 
   @Override
-  public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) throws IOException {
+  public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) {
     String entryName = entrySupplier.getEntry().getName();
     entryName = JarBuilder.pathToClassName(entryName);
     eventSink.reportEvent(Level.FINE, "%s is excluded from the Jar", entryName);

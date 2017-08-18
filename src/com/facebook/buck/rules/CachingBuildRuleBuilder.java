@@ -630,8 +630,7 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
-      final CacheResult cacheResult, final ListeningExecutorService service)
-      throws StepFailedException, InterruptedException {
+      final CacheResult cacheResult, final ListeningExecutorService service) {
     if (SupportsPipelining.isSupported(rule)) {
       return pipelinesRunner.runPipelineStartingAt((SupportsPipelining<?>) rule, service);
     } else {
@@ -1008,8 +1007,7 @@ class CachingBuildRuleBuilder {
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           final RuleKey ruleKey,
           final ArtifactCache artifactCache,
-          final ProjectFilesystem filesystem)
-          throws IOException {
+          final ProjectFilesystem filesystem) {
     if (!rule.isCacheable()) {
       return Futures.immediateFuture(CacheResult.ignored());
     }
@@ -1368,7 +1366,7 @@ class CachingBuildRuleBuilder {
 
   // Fetch an artifact from the cache using manifest-based caching.
   private ListenableFuture<Optional<BuildResult>> performManifestBasedCacheFetch(
-      RuleKeyAndInputs manifestKey) throws IOException {
+      RuleKeyAndInputs manifestKey) {
     Preconditions.checkArgument(useManifestCaching());
 
     final LazyPath tempFile =

@@ -106,8 +106,7 @@ public class AppleCxxPlatforms {
       Optional<ImmutableMap<String, AppleToolchain>> toolchains,
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
-      SwiftBuckConfig swiftBuckConfig)
-      throws IOException {
+      SwiftBuckConfig swiftBuckConfig) {
     if (!sdkPaths.isPresent() || !toolchains.isPresent()) {
       return ImmutableList.of();
     }

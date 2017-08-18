@@ -1318,8 +1318,7 @@ public final class Main {
     return new Pair<>(daemonForParser.getTypeCoercerFactory(), daemonForParser.getParser());
   }
 
-  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon)
-      throws IOException {
+  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon) {
     return daemon.getFileHashCaches();
   }
 
@@ -1633,7 +1632,7 @@ public final class Main {
     private static final ScheduledExecutorService housekeepingExecutorService =
         Executors.newSingleThreadScheduledExecutor();
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
       try {
         daemonizeIfPossible();
         if (isSessionLeader) {

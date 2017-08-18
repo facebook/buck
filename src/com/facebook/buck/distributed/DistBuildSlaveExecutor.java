@@ -134,7 +134,7 @@ public class DistBuildSlaveExecutor {
         coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId());
   }
 
-  private CoordinatorModeRunner newCoordinatorMode(int coordinatorPort) throws IOException {
+  private CoordinatorModeRunner newCoordinatorMode(int coordinatorPort) {
     BuildTargetsQueue queue =
         BuildTargetsQueue.newQueue(
             Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
@@ -232,8 +232,7 @@ public class DistBuildSlaveExecutor {
     return cachingBuildEngineDelegate;
   }
 
-  private StackedFileHashCache createStackOfDefaultFileHashCache()
-      throws InterruptedException, IOException {
+  private StackedFileHashCache createStackOfDefaultFileHashCache() throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder = ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
 

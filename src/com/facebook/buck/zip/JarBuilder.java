@@ -50,17 +50,15 @@ public class JarBuilder {
     Observer IGNORING =
         new Observer() {
           @Override
-          public void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier)
-              throws IOException {}
+          public void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier) {}
 
           @Override
-          public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier)
-              throws IOException {}
+          public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) {}
         };
 
-    void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier) throws IOException;
+    void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier);
 
-    void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) throws IOException;
+    void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier);
   }
 
   private Observer observer = Observer.IGNORING;

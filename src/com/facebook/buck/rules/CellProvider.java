@@ -89,8 +89,7 @@ public final class CellProvider {
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment)
-      throws IOException {
+      SdkEnvironment sdkEnvironment) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
         new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());

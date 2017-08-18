@@ -148,7 +148,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   public ListenableFuture<TargetNode<?, ?>> getTargetNodeJob(BuildTarget target)
-      throws BuildFileParseException, BuildTargetException {
+      throws BuildTargetException {
     Cell owningCell = getCell(target);
 
     return targetNodeParsePipeline.getNodeJob(owningCell, target, parseProcessedBytes);

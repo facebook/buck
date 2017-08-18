@@ -128,7 +128,7 @@ public class TestRunning {
       final StepRunner stepRunner,
       BuildContext buildContext,
       SourcePathRuleFinder ruleFinder)
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException, InterruptedException {
 
     ImmutableSet<JavaLibrary> rulesUnderTestForCoverage;
     // If needed, we first run instrumentation on the class files.

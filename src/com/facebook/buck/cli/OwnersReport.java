@@ -193,8 +193,7 @@ final class OwnersReport {
     OwnersReport build(
         ImmutableMap<Cell, BuildFileTree> buildFileTrees,
         ListeningExecutorService executor,
-        Iterable<String> arguments)
-        throws IOException, BuildFileParseException {
+        Iterable<String> arguments) {
       ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
       final Path rootPath = rootCellFilesystem.getRootPath();
       Preconditions.checkState(rootPath.isAbsolute());

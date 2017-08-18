@@ -85,7 +85,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  private boolean isExternalSymlink(Path relPath) throws IOException {
+  private boolean isExternalSymlink(Path relPath) {
     return !projectFilesystem
         .getPathRelativeToProjectRoot(findSafeRealPath(projectFilesystem.resolve(relPath)))
         .isPresent();
