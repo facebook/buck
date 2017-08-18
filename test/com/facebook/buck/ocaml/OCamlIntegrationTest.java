@@ -35,7 +35,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxSourceRuleFactoryHelper;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

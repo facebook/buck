@@ -30,7 +30,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;

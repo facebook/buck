@@ -26,7 +26,7 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;

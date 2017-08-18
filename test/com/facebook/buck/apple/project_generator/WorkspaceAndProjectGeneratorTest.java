@@ -41,7 +41,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.halide.HalideBuckConfig;

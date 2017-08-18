@@ -17,7 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;

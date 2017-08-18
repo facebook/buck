@@ -5,7 +5,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/cxx/platform:platform",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/model:model",

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.Preprocessor;

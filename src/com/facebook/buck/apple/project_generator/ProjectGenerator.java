@@ -75,7 +75,7 @@ import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;

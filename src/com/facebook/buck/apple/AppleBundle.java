@@ -23,7 +23,7 @@ import com.dd.plist.NSString;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.NativeTestable;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;

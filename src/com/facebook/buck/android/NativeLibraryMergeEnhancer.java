@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.cxx.elf.ElfSymbolTable;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;

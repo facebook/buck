@@ -18,7 +18,7 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;

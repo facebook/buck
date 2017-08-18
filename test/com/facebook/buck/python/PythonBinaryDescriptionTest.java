@@ -25,7 +25,7 @@ import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.MorePaths;

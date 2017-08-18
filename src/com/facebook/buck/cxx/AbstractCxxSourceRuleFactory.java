@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;

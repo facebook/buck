@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Archiver;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileCommonModificationDate;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.ProjectFilesystem;

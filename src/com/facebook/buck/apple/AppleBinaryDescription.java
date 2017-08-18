@@ -26,7 +26,7 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

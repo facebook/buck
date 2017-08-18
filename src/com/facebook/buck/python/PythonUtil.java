@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.OmnibusLibraries;
 import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;

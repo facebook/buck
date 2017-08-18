@@ -71,7 +71,7 @@ import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;

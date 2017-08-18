@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.GnuArchiver;
