@@ -28,6 +28,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -129,6 +130,17 @@ public class JsTestScenario {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
+              .setWorker(workerTarget)
+              .build());
+      return this;
+    }
+
+    Builder library(
+        BuildTarget target, Query libraryDependenciesQuery, BuildTarget... libraryDependencies) {
+      nodes.add(
+          new JsLibraryBuilder(target, filesystem)
+              .setDepsQuery(libraryDependenciesQuery)
+              .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
               .setWorker(workerTarget)
               .build());
       return this;

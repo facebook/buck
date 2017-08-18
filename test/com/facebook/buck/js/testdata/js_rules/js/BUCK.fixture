@@ -105,3 +105,10 @@ js_bundle(
     visibility = ['PUBLIC'],
 )
 
+js_library(
+    name = 'lib-with-deps-query',
+    deps = [':build-target-output'],
+    deps_query = 'deps(//js/native-js:widgets)',
+    worker = ':packager_worker',
+)
+

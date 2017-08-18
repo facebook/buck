@@ -32,12 +32,14 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.Hint;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -47,6 +49,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Weigher;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,7 +63,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-public class JsLibraryDescription implements Description<JsLibraryDescriptionArg>, Flavored {
+public class JsLibraryDescription
+    implements Description<JsLibraryDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<JsLibraryDescription.AbstractJsLibraryDescriptionArg> {
 
   static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(JsFlavors.PLATFORM_DOMAIN, JsFlavors.OPTIMIZATION_DOMAIN);
@@ -124,9 +130,22 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
               file.get(),
               worker);
     } else {
+      Stream<BuildTarget> deps = args.getDeps().stream();
+      if (args.getDepsQuery().isPresent()) {
+        // We allow the `deps_query` to contain different kinds of build targets, but filter out
+        // all targets that don't refer to a JsLibrary rule.
+        // That prevents users from having to wrap every query into "kind(js_library, ...)".
+        Stream<BuildTarget> jsLibraryTargetsInQuery =
+            args.getDepsQuery()
+                .get()
+                .getResolvedQuery()
+                .stream()
+                .filter(target -> JsUtil.isJsLibraryTarget(target, targetGraph));
+        deps = Stream.concat(deps, jsLibraryTargetsInQuery);
+      }
       return new LibraryBuilder(targetGraph, resolver, buildTarget, params, sourcesToFlavors)
           .setSources(args.getSrcs())
-          .setLibraryDependencies(args.getLibs(), args.getDeps())
+          .setLibraryDependencies(args.getLibs(), deps)
           .build(projectFilesystem, worker);
     }
   }
@@ -141,9 +160,23 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     return Optional.of(FLAVOR_DOMAINS);
   }
 
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractJsLibraryDescriptionArg arg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    if (arg.getDepsQuery().isPresent()) {
+      extraDepsBuilder.addAll(
+          QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, arg.getDepsQuery().get())
+              .iterator());
+    }
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJsLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractJsLibraryDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
     Optional<String> getExtraArgs();
 
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
@@ -202,10 +235,10 @@ public class JsLibraryDescription implements Description<JsLibraryDescriptionArg
     }
 
     private LibraryBuilder setLibraryDependencies(
-        ImmutableSortedSet<BuildTarget> libs, ImmutableSortedSet<BuildTarget> deps) {
+        ImmutableSortedSet<BuildTarget> libs, Stream<BuildTarget> deps) {
 
       final BuildTarget[] targets =
-          Stream.concat(libs.stream(), deps.stream())
+          Stream.concat(libs.stream(), deps)
               .map(t -> JsUtil.verifyIsJsLibraryTarget(t, baseTarget, targetGraph))
               .map(hasFlavors() ? this::addFlavorsToLibraryTarget : Function.identity())
               .toArray(BuildTarget[]::new);

@@ -27,11 +27,16 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UserFlavor;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -152,6 +157,60 @@ public class JsLibraryDescriptionTest {
                         fileTarget.getFlavors().contains(platformFlavor)))
             .count();
     assertNotEquals(0, numFileDeps);
+  }
+
+  @Test
+  public void supportsDepsQuery() {
+    BuildTarget a = BuildTargetFactory.newInstance("//query-deps:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//query-deps:b");
+    BuildTarget c = BuildTargetFactory.newInstance("//query-deps:c");
+    BuildTarget l = BuildTargetFactory.newInstance("//query-deps:l");
+    BuildTarget x = BuildTargetFactory.newInstance("//query-deps:x");
+
+    JsTestScenario scenario =
+        scenarioBuilder
+            .libraryWithDeps(a)
+            .libraryWithDeps(b)
+            .libraryWithDeps(c, b)
+            .appleLibraryWithDeps(l, a, c)
+            .bundleWithDeps(x, l)
+            .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
+            .library(target, Query.of(String.format("deps(%s)", x)))
+            .build();
+
+    TargetNode<?, ?> node = scenario.targetGraph.get(target);
+    assertThat(x, in(node.getBuildDeps()));
+
+    JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b, c));
+    assertThat(deps, everyItem(in(lib.getBuildDeps())));
+    assertEquals(
+        deps.stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSortedSet()),
+        lib.getLibraryDependencies());
+  }
+
+  @Test
+  public void supportsDepsAndDepsQuery() {
+    BuildTarget a = BuildTargetFactory.newInstance("//query:dep");
+    BuildTarget b = BuildTargetFactory.newInstance("//direct:dep");
+
+    JsTestScenario scenario =
+        scenarioBuilder
+            .libraryWithDeps(a)
+            .libraryWithDeps(b)
+            .library(target, Query.of(a.toString()), b)
+            .build();
+
+    JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b));
+    assertThat(deps, everyItem(in(lib.getBuildDeps())));
+    assertEquals(
+        deps.stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSortedSet()),
+        lib.getLibraryDependencies());
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source) {
