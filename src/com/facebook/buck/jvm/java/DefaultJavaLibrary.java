@@ -206,7 +206,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
     return Optional.ofNullable(jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget()));
   }
 
-  static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
+  public static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
     return Paths.get(
         String.format(
             "%s/%s.jar",

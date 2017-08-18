@@ -525,6 +525,8 @@ public class IjProjectTemplateDataPreparer {
     if (compilerOutputPath.isPresent()) {
       Path relativeCompilerOutputPath = moduleBasePath.relativize(compilerOutputPath.get());
       androidProperties.put(
+          "is_compiler_output_path_jar", compilerOutputPath.get().toString().endsWith(".jar"));
+      androidProperties.put(
           "compiler_output_path",
           "/" + MorePaths.pathWithUnixSeparators(relativeCompilerOutputPath));
     }
