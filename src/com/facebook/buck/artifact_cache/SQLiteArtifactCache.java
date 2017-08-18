@@ -16,6 +16,8 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
@@ -57,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import org.sqlite.BusyHandler;
 import org.sqlite.SQLiteConfig;
 
@@ -81,6 +84,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
   private final String name;
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
+  private final BuckEventBus eventBus;
   private final Optional<Long> maxCacheSizeBytes;
   private final Optional<Long> maxBytesAfterDeletion;
   private final long maxInlinedBytes;
@@ -96,6 +100,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
       String name,
       ProjectFilesystem filesystem,
       Path cacheDir,
+      BuckEventBus eventBus,
       Optional<Long> maxCacheSizeBytes,
       Optional<Long> maxInlinedSizeBytes,
       CacheReadMode cacheMode)
@@ -103,6 +108,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
+    this.eventBus = eventBus;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.maxBytesAfterDeletion =
         maxCacheSizeBytes.map(size -> (long) (size * MAX_BYTES_TRIM_RATIO));
@@ -225,14 +231,12 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
     ListenableFuture<Void> metadataResult = Futures.immediateFuture(null);
     if (!info.getMetadata().isEmpty()) {
-      metadataResult = Futures.transformAsync(storeMetadata(info), result -> removeOldMetadata());
+      metadataResult = storeMetadata(info);
     }
 
     ListenableFuture<Void> contentResult = Futures.immediateFuture(null);
     if (!info.getMetadata().containsKey(TwoLevelArtifactCacheDecorator.METADATA_KEY)) {
-      contentResult =
-          Futures.transformAsync(
-              storeContent(info.getRuleKeys(), content), result -> removeOldContent());
+      contentResult = storeContent(info.getRuleKeys(), content);
     }
 
     return Futures.transform(
@@ -370,7 +374,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   /** Removes metadata older than a computed eviction time. */
-  private ListenableFuture<Void> removeOldMetadata() {
+  @VisibleForTesting
+  ListenableFuture<Void> removeOldMetadata() {
     Timestamp evictionTime = Timestamp.from(Instant.now().minus(DEFAULT_EVICTION_TIME));
     try {
       int deleted = db.deleteMetadata(evictionTime);
@@ -383,7 +388,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   /** Deletes files that haven't been accessed recently from the directory cache. */
-  private ListenableFuture<Void> removeOldContent() {
+  @VisibleForTesting
+  ListenableFuture<Void> removeOldContent() {
     if (!maxCacheSizeBytes.isPresent()) {
       return Futures.immediateFuture(null);
     }
@@ -424,6 +430,12 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "sqlite_cache_clean")) {
+      Futures.allAsList(removeOldMetadata(), removeOldContent()).get();
+    } catch (ExecutionException | InterruptedException e) {
+      LOG.error("Failed to clean SQLite cache");
+    }
+
     db.close();
   }
 

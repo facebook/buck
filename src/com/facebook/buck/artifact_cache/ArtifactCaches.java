@@ -494,6 +494,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               "sqlite",
               projectFilesystem,
               cacheDir,
+              buckEventBus,
               cacheConfig.getMaxSizeBytes(),
               cacheConfig.getMaxInlinedSizeBytes(),
               cacheConfig.getCacheReadMode());
