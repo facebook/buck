@@ -74,11 +74,6 @@ public class IjProjectTemplateDataPreparer {
   private static final String ASSETS_FOLDER_TEMPLATE_PARAMETER = "asset_folder";
   private static final String PROGUARD_CONFIG_TEMPLATE_PARAMETER = "proguard_config";
   private static final String RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER = "res";
-  private static final String JAR_FILE_EXTENSION = ".jar";
-  private static final String MODULE_DIR = "$MODULE_DIR$/";
-  private static final String FILE_PREFIX = "file://";
-  private static final String JAR_PREFIX = "jar://";
-  private static final String JAR_SUFFIX = "!/";
 
   private static final String EMPTY_STRING = "";
 
@@ -528,19 +523,9 @@ public class IjProjectTemplateDataPreparer {
     // The compiler output path is relative to the project root
     Optional<Path> compilerOutputPath = module.getCompilerOutputPath();
     if (compilerOutputPath.isPresent()) {
-      String fullCompilerOutputPath;
-      String relativeOutputPath =
-          MODULE_DIR
-              + MorePaths.pathWithUnixSeparators(
-                  moduleBasePath.relativize(compilerOutputPath.get()));
-
-      if (compilerOutputPath.get().toString().endsWith(JAR_FILE_EXTENSION)) {
-        fullCompilerOutputPath = JAR_PREFIX + relativeOutputPath + JAR_SUFFIX;
-      } else {
-        fullCompilerOutputPath = FILE_PREFIX + relativeOutputPath;
-      }
-
-      androidProperties.put("compiler_output_path", fullCompilerOutputPath);
+      androidProperties.put(
+          "compiler_output_path",
+          IjProjectPaths.toModuleDirRelativeString(compilerOutputPath.get(), moduleBasePath));
     }
   }
 
