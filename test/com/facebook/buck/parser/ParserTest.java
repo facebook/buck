@@ -484,8 +484,7 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Target //java/com/facebook:baz (type genrule) does not currently support flavors "
-            + "(tried [src])");
+        "The following flavor(s) are not supported on target //java/com/facebook:baz:\n" + "src.");
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
