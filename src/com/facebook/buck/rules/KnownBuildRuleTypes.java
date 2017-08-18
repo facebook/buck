@@ -155,7 +155,7 @@ import com.facebook.buck.shell.ShTestDescription;
 import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -263,15 +263,8 @@ public class KnownBuildRuleTypes {
     FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
         appleCxxPlatformsProvider.getAppleCxxPlatforms();
 
-    ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
-    for (Flavor flavor : platformFlavorsToAppleCxxPlatforms.getFlavors()) {
-      platformFlavorsToAppleCxxPlatforms
-          .getValue(flavor)
-          .getSwiftPlatform()
-          .ifPresent(swiftPlatform -> swiftPlatforms.put(flavor, swiftPlatform));
-    }
-    FlavorDomain<SwiftPlatform> platformFlavorsToSwiftPlatforms =
-        new FlavorDomain<>("Swift Platform", swiftPlatforms.build());
+    SwiftPlatformsProvider swiftPlatformsProvider =
+        SwiftPlatformsProvider.create(appleCxxPlatformsProvider);
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -441,7 +434,10 @@ public class KnownBuildRuleTypes {
 
     SwiftLibraryDescription swiftLibraryDescription =
         new SwiftLibraryDescription(
-            cxxBuckConfig, swiftBuckConfig, cxxPlatforms, platformFlavorsToSwiftPlatforms);
+            cxxBuckConfig,
+            swiftBuckConfig,
+            cxxPlatforms,
+            swiftPlatformsProvider.getSwiftCxxPlatforms());
     builder.register(swiftLibraryDescription);
 
     AppleConfig appleConfig = config.getView(AppleConfig.class);
