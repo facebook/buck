@@ -118,7 +118,7 @@ public class MaterializerProjectFileHashCacheTest {
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
     BuildJobStateFileHashEntry dirAFileHashEntry = new BuildJobStateFileHashEntry();
     dirAFileHashEntry.setPath(unixPath(relativePathDirA));
-    dirAFileHashEntry.setHashCode("aa");
+    dirAFileHashEntry.setSha1("aa");
     dirAFileHashEntry.setIsDirectory(true);
     dirAFileHashEntry.setChildren(
         ImmutableList.of(unixPath(relativePathDirAb), unixPath(relativePathFileAe)));
@@ -130,7 +130,7 @@ public class MaterializerProjectFileHashCacheTest {
 
     BuildJobStateFileHashEntry dirAbFileHashEntry = new BuildJobStateFileHashEntry();
     dirAbFileHashEntry.setPath(unixPath(relativePathDirAb));
-    dirAbFileHashEntry.setHashCode("abab");
+    dirAbFileHashEntry.setSha1("abab");
     dirAbFileHashEntry.setIsDirectory(true);
     dirAbFileHashEntry.setChildren(
         ImmutableList.of(unixPath(relativePathFileAbc), unixPath(relativePathDirAbd)));
@@ -142,7 +142,7 @@ public class MaterializerProjectFileHashCacheTest {
 
     BuildJobStateFileHashEntry fileAbcFileHashEntry = new BuildJobStateFileHashEntry();
     fileAbcFileHashEntry.setPath(unixPath(relativePathFileAbc));
-    fileAbcFileHashEntry.setHashCode("abcabc");
+    fileAbcFileHashEntry.setSha1("abcabc");
     fileAbcFileHashEntry.setContents(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
     fileAbcFileHashEntry.setIsDirectory(false);
     fileAbcFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
@@ -153,7 +153,7 @@ public class MaterializerProjectFileHashCacheTest {
 
     BuildJobStateFileHashEntry dirAbdFileHashEntry = new BuildJobStateFileHashEntry();
     dirAbdFileHashEntry.setPath(unixPath(relativePathDirAbd));
-    dirAbdFileHashEntry.setHashCode("abdabd");
+    dirAbdFileHashEntry.setSha1("abdabd");
     dirAbdFileHashEntry.setIsDirectory(true);
     dirAbdFileHashEntry.setChildren(ImmutableList.of());
     dirAbdFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
@@ -164,7 +164,7 @@ public class MaterializerProjectFileHashCacheTest {
 
     BuildJobStateFileHashEntry fileAeFileHashEntry = new BuildJobStateFileHashEntry();
     fileAeFileHashEntry.setPath(unixPath(relativePathFileAe));
-    fileAeFileHashEntry.setHashCode("aeae");
+    fileAeFileHashEntry.setSha1("aeae");
     fileAeFileHashEntry.setContents(FILE_CONTENTS_TWO.getBytes(StandardCharsets.UTF_8));
     fileAeFileHashEntry.setIsDirectory(false);
     fileAeFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
@@ -265,7 +265,7 @@ public class MaterializerProjectFileHashCacheTest {
 
     BuildJobStateFileHashEntry realFileHashEntry = new BuildJobStateFileHashEntry();
     realFileHashEntry.setPath(unixPath(relativeRealFile));
-    realFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    realFileHashEntry.setSha1(EXAMPLE_HASHCODE.toString());
     realFileHashEntry.setContents(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
     realFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
@@ -368,7 +368,7 @@ public class MaterializerProjectFileHashCacheTest {
     symlinkFileHashEntry.setRootSymLink(unixPath(relativeSymlinkRoot));
     symlinkFileHashEntry.setRootSymLinkTarget(unixPath(externalDir.getRoot().toPath()));
     symlinkFileHashEntry.setPath(unixPath(relativeSymlink));
-    symlinkFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    symlinkFileHashEntry.setSha1(EXAMPLE_HASHCODE.toString());
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
     fileHashes.addToEntries(symlinkFileHashEntry);
 

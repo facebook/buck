@@ -41,7 +41,7 @@ public class LocalFsContentsProviderTest {
   public void setUp() {
     cacheRootDir = tempDir.getRoot().toPath();
     entry = new BuildJobStateFileHashEntry();
-    entry.setHashCode("1237987abc");
+    entry.setSha1("1237987abc");
     targetAbsPath = cacheRootDir.resolve("topspin.file.txt");
   }
 

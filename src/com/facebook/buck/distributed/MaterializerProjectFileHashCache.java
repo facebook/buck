@@ -240,7 +240,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   private void integrityCheck(Path relPath) throws IOException {
     Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
     BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
-    if (fileHashEntry == null || !fileHashEntry.isSetHashCode()) {
+    if (fileHashEntry == null || !fileHashEntry.isSetSha1()) {
       return;
     }
 
@@ -249,12 +249,12 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
             delegate.get(relPath),
             "File materialization failed. Delegate FileHashCache returned null HashCode for [%s].",
             relPath);
-    if (!computedHash.toString().equals(fileHashEntry.getHashCode())) {
+    if (!computedHash.toString().equals(fileHashEntry.getSha1())) {
       throw new HumanReadableException(
           "SHA1 of materialized file (at [%s]) does not match the SHA1 sent by buck client.\n"
               + "Computed SHA1: %s\n"
               + "Expected SHA1: %s",
-          relPath, computedHash.toString(), fileHashEntry.getHashCode());
+          relPath, computedHash.toString(), fileHashEntry.getSha1());
     }
   }
 

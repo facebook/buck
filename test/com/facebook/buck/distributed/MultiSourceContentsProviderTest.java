@@ -52,7 +52,7 @@ public class MultiSourceContentsProviderTest {
         new MultiSourceContentsProvider(
             mockProvider, new FileMaterializationStatsTracker(), Optional.empty())) {
       BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
-      entry.setHashCode("1234");
+      entry.setSha1("1234");
       entry.setContents(FILE_CONTENTS);
       Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
       Assert.assertFalse(Files.isRegularFile(targetAbsPath));
@@ -66,7 +66,7 @@ public class MultiSourceContentsProviderTest {
   @Test
   public void serverIsUsedWhenInlineIsMissing() throws InterruptedException, IOException {
     BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
-    entry.setHashCode("1234");
+    entry.setSha1("1234");
     Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
     EasyMock.expect(
             mockProvider.materializeFileContents(EasyMock.eq(entry), EasyMock.eq(targetAbsPath)))

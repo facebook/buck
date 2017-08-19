@@ -177,14 +177,14 @@ public class DistBuildService implements Closeable {
           continue;
         }
 
-        if (!file.isSetHashCode()) {
+        if (!file.isSetSha1()) {
           throw new RuntimeException(
               String.format("Missing content hash for path [%s].", file.path.getPath()));
         }
 
         PathInfo pathInfo = new PathInfo();
         pathInfo.setPath(cellFilesystem.resolve(file.getPath().getPath()).toString());
-        pathInfo.setContentHash(file.getHashCode());
+        pathInfo.setContentHash(file.getSha1());
         requiredFiles.add(pathInfo);
       }
     }

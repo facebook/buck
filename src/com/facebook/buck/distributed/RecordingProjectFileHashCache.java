@@ -290,7 +290,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       fileHashEntry.setArchiveMemberPath(memberRelPath.get());
     }
     if (hashCode.isPresent()) {
-      fileHashEntry.setHashCode(hashCode.get().toString());
+      fileHashEntry.setSha1(hashCode.get().toString());
     }
     if (!isDirectory && !pathIsAbsolute && isRealPathInsideProject) {
       Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();

@@ -195,7 +195,7 @@ public class DistBuildServiceTest {
       filesystems.get(i / 2).writeContentsToPath(content, Paths.get(path.toString()));
 
       files[i] = new BuildJobStateFileHashEntry();
-      files[i].setHashCode(Integer.toString(i));
+      files[i].setSha1(Integer.toString(i));
       files[i].setPath(new PathWithUnixSeparators().setPath(path.toString()));
     }
 

@@ -102,13 +102,13 @@ public class ServerContentsProviderTest {
     replay(statsTracker);
 
     Future<byte[]> future1, future2, future3;
-    future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH1));
-    future2 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH2));
+    future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH1));
+    future2 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH2));
     fakeExecutor.drain();
     future1.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     future2.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-    future3 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH3));
+    future3 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH3));
     fakeExecutor.drain();
     future3.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
@@ -153,11 +153,11 @@ public class ServerContentsProviderTest {
     replay(statsTracker);
 
     Future<byte[]> future1, future2, future3, future4, future5;
-    future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH1));
-    future2 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH2));
-    future3 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH3));
-    future4 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH4));
-    future5 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setHashCode(HASH5));
+    future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH1));
+    future2 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH2));
+    future3 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH3));
+    future4 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH4));
+    future5 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH5));
     // We should not need to drain the scheduler.
     // Scheduler is only supposed to be used for periodic cleanup.
     future1.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

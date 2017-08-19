@@ -147,14 +147,14 @@ public class ServerContentsProvider implements FileContentsProvider {
   @VisibleForTesting
   Future<byte[]> fetchFileContentsAsync(BuildJobStateFileHashEntry entry) {
     Preconditions.checkState(
-        entry.isSetHashCode(), String.format("File hash missing for file [%s]", entry.getPath()));
+        entry.isSetSha1(), String.format("File hash missing for file [%s]", entry.getPath()));
 
     Future<byte[]> future;
     synchronized (multiFetchLock) {
-      hashCodesToFetch.add(entry.getHashCode());
+      hashCodesToFetch.add(entry.getSha1());
       future =
           multiFetchFuture.thenApply(
-              resultMap -> Preconditions.checkNotNull(resultMap).get(entry.getHashCode()));
+              resultMap -> Preconditions.checkNotNull(resultMap).get(entry.getSha1()));
     }
 
     // If the buffer has maxed out, fetch right away.

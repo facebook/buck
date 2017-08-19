@@ -39,7 +39,7 @@ struct BuildJobStateBuildTarget {
 struct BuildJobStateFileHashEntry {
   1: optional PathWithUnixSeparators path;
   2: optional string archiveMemberPath; // Only present if this is a path to an archive member.
-  3: optional string hashCode; // The SHA1 hash of the content.
+  3: optional string sha1; // The SHA1 hash of the content.
   4: optional bool isDirectory;
   // The paths to source files are relative, the paths to tools, SDKs, etc.. are absolute.
   5: optional bool pathIsAbsolute;
