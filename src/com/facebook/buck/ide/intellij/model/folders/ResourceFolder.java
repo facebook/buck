@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 public abstract class ResourceFolder extends InclusiveFolder {
   @Nullable protected final Path resourcesRoot;
 
-  ResourceFolder(Path path, ImmutableSortedSet<Path> inputs, @Nullable Path resourcesRoot) {
+  ResourceFolder(Path path, @Nullable Path resourcesRoot, ImmutableSortedSet<Path> inputs) {
     super(path, false, inputs);
     this.resourcesRoot = resourcesRoot;
   }

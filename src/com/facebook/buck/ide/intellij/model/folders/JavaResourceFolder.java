@@ -18,13 +18,15 @@ package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 public class JavaResourceFolder extends ResourceFolder {
 
   public static final ResourceFolderFactory FACTORY = JavaResourceFolder::new;
 
-  public JavaResourceFolder(Path path, Path resourcesRoot, ImmutableSortedSet<Path> inputs) {
-    super(path, inputs, resourcesRoot);
+  public JavaResourceFolder(
+      Path path, @Nullable Path resourcesRoot, ImmutableSortedSet<Path> inputs) {
+    super(path, resourcesRoot, inputs);
   }
 
   @Override
@@ -37,6 +39,7 @@ public class JavaResourceFolder extends ResourceFolder {
     throw new UnsupportedOperationException();
   }
 
+  @Override
   public ResourceFolderFactory getResourceFactory() {
     return FACTORY;
   }

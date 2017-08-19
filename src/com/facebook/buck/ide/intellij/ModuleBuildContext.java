@@ -22,7 +22,6 @@ import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
-import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
@@ -192,7 +191,7 @@ public class ModuleBuildContext {
 
     // If both are resource folders of different types, we merge them into a regular resource
     // folder.
-    if (ResourceFolder.class.isInstance(from) || ResourceFolder.class.isInstance(to)) {
+    if (ResourceFolder.class.isInstance(from) && ResourceFolder.class.isInstance(to)) {
       Path resourcesRoot = ((ResourceFolder) to).getResourcesRoot();
       return new JavaResourceFolder(to.getPath(), resourcesRoot, IjFolder.combineInputs(from, to));
     }
