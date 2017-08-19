@@ -124,7 +124,7 @@ public class ServerHealthManager {
     }
   }
 
-  private Optional<URI> calculateBestServer() throws NoHealthyServersException {
+  private Optional<URI> calculateBestServer() {
     ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
     Map<URI, PerServerData.Builder> allPerServerData = new HashMap<>();
     try {

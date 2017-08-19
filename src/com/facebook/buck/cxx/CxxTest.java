@@ -55,7 +55,7 @@ import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
-public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
+abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, BinaryBuildRule {
 
   @AddToRuleKey private final ImmutableMap<String, String> env;

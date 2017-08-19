@@ -53,6 +53,7 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.WatchmanOverflowEvent;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
@@ -108,7 +109,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final Path tracePath;
   private final OutputStream traceStream;
   private final JsonGenerator jsonGenerator;
-  private final InvocationInfo invocationInfo;
+  private final Path logDirectoryPath;
   private final ChromeTraceBuckConfig config;
 
   private final ExecutorService outputExecutor;
@@ -131,7 +132,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       final TimeZone timeZone,
       ChromeTraceBuckConfig config)
       throws IOException {
-    this.invocationInfo = invocationInfo;
+    this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.dateFormat =
@@ -146,36 +147,39 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.config = config;
     this.outputExecutor =
         MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
-    TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo);
+    TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo.getBuildId());
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
     this.jsonGenerator = ObjectMappers.createGenerator(this.traceStream);
 
     this.jsonGenerator.writeStartArray();
-    addProcessMetadataEvent();
+    addProcessMetadataEvent(invocationInfo);
+    addProjectFilesystemDelegateMetadataEvent(projectFilesystem);
   }
 
-  private void addProcessMetadataEvent() {
-    submitTraceEvent(
-        new ChromeTraceEvent(
-            "buck",
-            "process_name",
-            ChromeTraceEvent.Phase.METADATA,
-            /* processId */ 0,
-            /* threadId */ 0,
-            /* microTime */ 0,
-            /* microThreadUserTime */ 0,
-            ImmutableMap.of("name", "buck")));
+  private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
+    writeChromeTraceMetadataEvent(
+        "process_name",
+        ImmutableMap.<String, Object>builder()
+            .put("user_args", invocationInfo.getUnexpandedCommandArgs())
+            .put("is_daemon", invocationInfo.getIsDaemon())
+            .put("timestamp", invocationInfo.getTimestampMillis())
+            .build());
+  }
+
+  private void addProjectFilesystemDelegateMetadataEvent(ProjectFilesystem projectFilesystem) {
+    writeChromeTraceMetadataEvent(
+        "ProjectFilesystemDelegate",
+        ImmutableMap.of("details", projectFilesystem.getDelegateDetails()));
   }
 
   @VisibleForTesting
   void deleteOldTraces() {
-    if (!projectFilesystem.exists(invocationInfo.getLogDirectoryPath())) {
+    if (!projectFilesystem.exists(logDirectoryPath)) {
       return;
     }
 
-    Path traceDirectory =
-        projectFilesystem.getPathForRelativePath(invocationInfo.getLogDirectoryPath());
+    Path traceDirectory = projectFilesystem.getPathForRelativePath(logDirectoryPath);
 
     try {
       for (Path path :
@@ -193,14 +197,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
   }
 
-  private TracePathAndStream createPathAndStream(InvocationInfo invocationInfo) {
+  private TracePathAndStream createPathAndStream(BuildId buildId) {
     String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
-    String traceName =
-        String.format("build.%s.%s.trace", filenameTime, invocationInfo.getBuildId());
+    String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
     if (config.getCompressTraces()) {
       traceName = traceName + ".gz";
     }
-    Path tracePath = invocationInfo.getLogDirectoryPath().resolve(traceName);
+    Path tracePath = logDirectoryPath.resolve(traceName);
     try {
       projectFilesystem.createParentDirs(tracePath);
       OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
@@ -416,7 +419,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           "buck",
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getEventId().getValue().intern()),
           phase,
-          ImmutableMap.copyOf(Maps.transformValues(perfEvent.getEventInfo(), Object::toString)),
+          ImmutableMap.copyOf(perfEvent.getEventInfo()),
           perfEvent);
     } catch (ExecutionException e) {
       LOG.warn("Unable to log perf event " + perfEvent, e);
@@ -759,11 +762,18 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
   }
 
+  @Subscribe
+  public void onWatchmanOverflow(WatchmanOverflowEvent event) {
+    writeChromeTraceMetadataEvent(
+        "watchman_overflow",
+        ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
+  }
+
   private void writeChromeTraceEvent(
       String category,
       String name,
       ChromeTraceEvent.Phase phase,
-      ImmutableMap<String, String> arguments,
+      ImmutableMap<String, ? extends Object> arguments,
       final BuckEvent event) {
     final ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
@@ -774,6 +784,22 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             event.getThreadId(),
             TimeUnit.NANOSECONDS.toMicros(event.getNanoTime()),
             TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime()),
+            arguments);
+    submitTraceEvent(chromeTraceEvent);
+  }
+
+  private void writeChromeTraceMetadataEvent(
+      String name, ImmutableMap<String, ? extends Object> arguments) {
+    long timestampInMicroseconds = TimeUnit.MILLISECONDS.toMicros(clock.currentTimeMillis());
+    ChromeTraceEvent chromeTraceEvent =
+        new ChromeTraceEvent(
+            /* category */ "buck",
+            name,
+            ChromeTraceEvent.Phase.METADATA,
+            /* processId */ 0,
+            /* threadId */ 0,
+            /* microTime */ timestampInMicroseconds,
+            /* microThreadUserTime */ timestampInMicroseconds,
             arguments);
     submitTraceEvent(chromeTraceEvent);
   }
@@ -800,9 +826,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     }
 
     Path fullPath = projectFilesystem.resolve(tracePath);
-    Path logFile =
-        projectFilesystem.resolve(
-            invocationInfo.getLogDirectoryPath().resolve("upload-build-trace.log"));
+    Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
     LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
 
     try {

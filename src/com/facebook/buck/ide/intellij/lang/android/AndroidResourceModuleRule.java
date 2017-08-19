@@ -85,6 +85,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
       context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 
     context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);

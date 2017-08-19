@@ -19,7 +19,6 @@ package com.facebook.buck.gwt;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -31,6 +30,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -69,7 +69,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final Path outputFile;
   @AddToRuleKey private final ImmutableSortedSet<String> modules;
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
   @AddToRuleKey private final ImmutableList<String> vmArgs;
   @AddToRuleKey private final Style style;
   @AddToRuleKey private final boolean draftCompile;
@@ -86,7 +86,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedSet<String> modules,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       List<String> vmArgs,
       Style style,
       boolean draftCompile,
@@ -154,7 +154,8 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           protected ImmutableList<String> getShellCommandInternal(
               ExecutionContext executionContext) {
             ImmutableList.Builder<String> javaArgsBuilder = ImmutableList.builder();
-            javaArgsBuilder.add(javaRuntimeLauncher.getCommand());
+            javaArgsBuilder.addAll(
+                javaRuntimeLauncher.getCommandPrefix(context.getSourcePathResolver()));
             javaArgsBuilder.add("-Dgwt.normalizeTimestamps=true");
             javaArgsBuilder.addAll(vmArgs);
             javaArgsBuilder.add(

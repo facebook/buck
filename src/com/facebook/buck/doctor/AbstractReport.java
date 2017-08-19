@@ -79,10 +79,9 @@ public abstract class AbstractReport {
     this.watchmanDiagReportCollector = watchmanDiagReportCollector;
   }
 
-  protected abstract ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException;
+  protected abstract ImmutableSet<BuildLogEntry> promptForBuildSelection();
 
-  protected Optional<SourceControlInfo> getSourceControlInfo()
-      throws IOException, InterruptedException {
+  protected Optional<SourceControlInfo> getSourceControlInfo() throws InterruptedException {
     Optional<FullVersionControlStats> versionControlStatsOptional =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FULL);
     if (!versionControlStatsOptional.isPresent()) {
@@ -99,7 +98,7 @@ public abstract class AbstractReport {
             versionControlStats.getPathsChangedInWorkingDirectory()));
   }
 
-  protected abstract Optional<UserReport> getUserReport() throws IOException;
+  protected abstract Optional<UserReport> getUserReport();
 
   protected abstract Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
       throws IOException, InterruptedException;

@@ -57,10 +57,10 @@ public class JsBundleDescriptionTest {
   public void setUp() throws NoSuchBuildTargetException {
     scenarioBuilder = JsTestScenario.builder();
     scenarioBuilder
-        .library(level2)
-        .library(level1_1, level2)
-        .library(level1_2, level2)
-        .library(directDependencyTarget, level1_1, level1_2)
+        .libraryWithLibs(level2)
+        .libraryWithLibs(level1_1, level2)
+        .libraryWithLibs(level1_2, level2)
+        .libraryWithLibs(directDependencyTarget, level1_1, level1_2)
         .bundleWithDeps(bundleTarget, directDependencyTarget);
     scenario = scenarioBuilder.build();
   }
@@ -158,7 +158,7 @@ public class JsBundleDescriptionTest {
     final JsTestScenario testScenario =
         builder
             .appleLibraryWithDeps(firstLevelA, level1_1)
-            .library(secondLevelA)
+            .libraryWithLibs(secondLevelA)
             .appleLibraryWithDeps(secondLevelB, level1_2, secondLevelA)
             .appleLibraryWithDeps(firstLevelB, secondLevelB)
             .bundleWithDeps(bundleTarget, firstLevelA, firstLevelB)

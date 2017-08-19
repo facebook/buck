@@ -94,7 +94,7 @@ public class BuildTargetsQueueTest {
                 .build(resolver),
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
                 .build(resolver));
-    resolver.addAllToIndex(buildRules);
+    buildRules.forEach(resolver::addToIndex);
     return resolver;
   }
 
@@ -120,7 +120,7 @@ public class BuildTargetsQueueTest {
             JavaLibraryBuilder.createBuilder(left).addDep(leaf).build(resolver),
             JavaLibraryBuilder.createBuilder(right).addDep(leaf).build(resolver),
             JavaLibraryBuilder.createBuilder(root).addDep(left).addDep(right).build(resolver));
-    resolver.addAllToIndex(buildRules);
+    buildRules.forEach(resolver::addToIndex);
     return resolver;
   }
 }

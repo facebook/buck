@@ -84,7 +84,7 @@ public class JUnitStepTest {
             /* testRuleTimeoutMs */ Optional.empty(),
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of(),
-            new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
+            ImmutableList.of("/foo/bar/custom/java"),
             args);
 
     ExecutionContext executionContext =
@@ -151,7 +151,7 @@ public class JUnitStepTest {
             /* testRuleTimeoutMs */ Optional.empty(),
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of("FOO", "BAR"),
-            new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
+            ImmutableList.of("/foo/bar/custom/java"),
             args);
 
     ImmutableMap<String, String> observedEnvironment =
@@ -201,7 +201,7 @@ public class JUnitStepTest {
             /* testRuleTimeoutMs */ Optional.empty(),
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of(),
-            new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
+            ImmutableList.of("/foo/bar/custom/java"),
             args);
 
     TestConsole console = new TestConsole(Verbosity.ALL);

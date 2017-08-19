@@ -35,7 +35,7 @@ import java.util.SortedSet;
  * actually doing that refactoring is non-trivial. It cannot actually be built (nor even depended
  * on), but the CxxInferEnhancer relies on being able to look it up.
  */
-public class CxxInferCaptureRulesAggregator extends NoopBuildRule {
+class CxxInferCaptureRulesAggregator extends NoopBuildRule {
 
   private final ImmutableSet<CxxInferCapture> captureRules;
   private final ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatingRules;

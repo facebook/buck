@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class FileMaterializationStatsTracker {
   private AtomicInteger filesMaterializedFromLocalCacheCount = new AtomicInteger(0);
   private AtomicInteger filesMaterializedFromCASCount = new AtomicInteger(0);
+  private AtomicInteger fullBufferCasMultiFetchCount = new AtomicInteger(0);
+  private AtomicInteger periodicCasMultiFetchCount = new AtomicInteger(0);
+  private AtomicLong timeSpentInMultiFetchNetworkCallsMs = new AtomicLong(0);
 
   // Note: this is the total time spent by all threads; multiple threads can be downloading
   // files from the CAS at the same time.
@@ -34,6 +37,16 @@ public class FileMaterializationStatsTracker {
   public void recordRemoteFileMaterialized(long elapsedMillis) {
     filesMaterializedFromCASCount.incrementAndGet();
     totalTimeSpentMaterializingFilesFromCASMillis.addAndGet(elapsedMillis);
+  }
+
+  public void recordFullBufferCasMultiFetch(long elapsedMillis) {
+    fullBufferCasMultiFetchCount.incrementAndGet();
+    timeSpentInMultiFetchNetworkCallsMs.addAndGet(elapsedMillis);
+  }
+
+  public void recordPeriodicCasMultiFetch(long elapsedMillis) {
+    periodicCasMultiFetchCount.incrementAndGet();
+    timeSpentInMultiFetchNetworkCallsMs.addAndGet(elapsedMillis);
   }
 
   public int getFilesMaterializedFromLocalCacheCount() {
@@ -52,11 +65,26 @@ public class FileMaterializationStatsTracker {
     return totalTimeSpentMaterializingFilesFromCASMillis.get();
   }
 
+  public int getFullBufferCasMultiFetchCount() {
+    return fullBufferCasMultiFetchCount.get();
+  }
+
+  public int getPeriodicCasMultiFetchCount() {
+    return periodicCasMultiFetchCount.get();
+  }
+
+  public long getTimeSpentInMultiFetchNetworkCallsMs() {
+    return timeSpentInMultiFetchNetworkCallsMs.get();
+  }
+
   public FileMaterializationStats getFileMaterializationStats() {
     return new FileMaterializationStats()
         .setTotalFilesMaterializedCount(getTotalFilesMaterializedCount())
         .setFilesMaterializedFromCASCount(getFilesMaterializedFromCASCount())
         .setTotalTimeSpentMaterializingFilesFromCASMillis(
-            getTotalTimeSpentMaterializingFilesFromCASMillis());
+            getTotalTimeSpentMaterializingFilesFromCASMillis())
+        .setFullBufferCasMultiFetchCount(getFullBufferCasMultiFetchCount())
+        .setPeriodicCasMultiFetchCount(getPeriodicCasMultiFetchCount())
+        .setTimeSpentInMultiFetchNetworkCallsMs(getTimeSpentInMultiFetchNetworkCallsMs());
   }
 }

@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -30,10 +29,13 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class CommandAliasBuilder
@@ -42,31 +44,40 @@ public class CommandAliasBuilder
         CommandAlias> {
 
   private static final CommandAliasDescription aliasBinaryDescription =
-      new CommandAliasDescription();
+      new CommandAliasDescription(Platform.UNKNOWN);
+  private final CommandAliasDescription commandAliasDescription;
   private final Set<TargetNode<?, ?>> nodes;
+  private final ImmutableSortedMap.Builder<Platform, BuildTarget> platformExeBuilder =
+      ImmutableSortedMap.naturalOrder();
 
-  private CommandAliasBuilder(BuildTarget target, Set<TargetNode<?, ?>> nodes) {
-    super(aliasBinaryDescription, target);
+  private CommandAliasBuilder(
+      BuildTarget target, CommandAliasDescription description, Set<TargetNode<?, ?>> nodes) {
+    super(description, target);
+    this.commandAliasDescription = description;
     this.nodes = nodes;
   }
 
   public CommandAliasBuilder(BuildTarget target) {
-    this(target, new LinkedHashSet<>());
+    this(target, aliasBinaryDescription);
+  }
+
+  public CommandAliasBuilder(BuildTarget target, CommandAliasDescription description) {
+    this(target, description, new LinkedHashSet<>());
   }
 
   public CommandAliasBuilder subBuilder(BuildTarget target) {
-    return new CommandAliasBuilder(target, nodes);
+    return new CommandAliasBuilder(target, commandAliasDescription, nodes);
   }
 
   public CommandAliasBuilder setExe(BuildTarget exe) {
-    nodes.add(GenruleBuilder.newGenruleBuilder(exe, filesystem).setOut("out").build());
+    addBuildRule(exe);
     getArgForPopulating().setExe(exe);
     return this;
   }
 
-  public CommandAliasBuilder setExe(BuildTarget exe, TargetNode<?, ?> commandNode) {
+  public CommandAliasBuilder setExe(TargetNode<?, ?> commandNode) {
     nodes.add(commandNode);
-    getArgForPopulating().setExe(exe);
+    getArgForPopulating().setExe(commandNode.getBuildTarget());
     return this;
   }
 
@@ -92,6 +103,20 @@ public class CommandAliasBuilder
     return this;
   }
 
+  public CommandAliasBuilder setPlatformExe(Map<Platform, BuildTarget> platformExe) {
+    platformExe.values().forEach(this::addBuildRule);
+    platformExeBuilder.putAll(platformExe);
+    getArgForPopulating().setPlatformExe(platformExeBuilder.build());
+    return this;
+  }
+
+  public CommandAliasBuilder setPlatformExe(Platform platform, TargetNode<?, ?> commandNode) {
+    nodes.add(commandNode);
+    platformExeBuilder.put(platform, commandNode.getBuildTarget());
+    getArgForPopulating().setPlatformExe(platformExeBuilder.build());
+    return this;
+  }
+
   public CommandAliasBuilder addTarget(BuildTarget target) {
     return addTarget(
         GenruleBuilder.newGenruleBuilder(target, filesystem).setOut("arbitrary-file").build());
@@ -102,29 +127,38 @@ public class CommandAliasBuilder
     return this;
   }
 
-  public BuildResult buildResult() throws NoSuchBuildTargetException {
+  public BuildResult buildResult() {
     nodes.add(build());
     TargetGraph graph = TargetGraphFactory.newInstance(nodes);
     BuildRuleResolver resolver =
         new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
-    return new BuildResult((CommandAlias) resolver.requireRule(getTarget()), resolver);
+    return new BuildResult(
+        (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver);
+  }
+
+  public BuildTarget addBuildRule(BuildTarget target) {
+    nodes.add(GenruleBuilder.newGenruleBuilder(target, filesystem).setOut("out").build());
+    return target;
   }
 
   public static class BuildResult {
     private final CommandAlias commandAlias;
     private final SourcePathResolver sourcePathResolver;
     private final BuildRuleResolver resolver;
+    private final CommandAliasDescriptionArg arg;
     private final SourcePathRuleFinder ruleFinder;
 
-    BuildResult(CommandAlias commandAlias, BuildRuleResolver resolver) {
+    BuildResult(
+        CommandAlias commandAlias, CommandAliasDescriptionArg arg, BuildRuleResolver resolver) {
       this.commandAlias = commandAlias;
+      this.arg = arg;
       ruleFinder = new SourcePathRuleFinder(resolver);
       sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
       this.resolver = resolver;
     }
 
-    CommandAlias aliasBinary() {
+    CommandAlias commandAlias() {
       return commandAlias;
     }
 
@@ -132,13 +166,17 @@ public class CommandAliasBuilder
       return sourcePathResolver;
     }
 
-    public Path pathOf(BuildTarget target) throws NoSuchBuildTargetException {
+    public Path pathOf(BuildTarget target) {
       return sourcePathResolver.getAbsolutePath(
           resolver.requireRule(target).getSourcePathToOutput());
     }
 
     public BuildRuleResolver resolver() {
       return resolver;
+    }
+
+    public CommandAliasDescriptionArg arg() {
+      return arg;
     }
 
     public SourcePathRuleFinder ruleFinder() {

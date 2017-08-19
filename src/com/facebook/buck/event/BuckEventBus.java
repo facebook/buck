@@ -23,16 +23,8 @@ import java.io.Closeable;
  *
  * <p>This interface exists only to break circular Buck target dependencies.
  */
-public interface BuckEventBus extends Closeable {
-  void post(BuckEvent event);
-
-  void post(BuckEvent event, BuckEvent atTime);
-
-  void postWithoutConfiguring(BuckEvent event);
-
-  void register(Object object);
-
+public interface BuckEventBus extends Closeable, EventDispatcher {
   BuildId getBuildId();
 
-  void timestamp(BuckEvent event);
+  void register(Object object);
 }

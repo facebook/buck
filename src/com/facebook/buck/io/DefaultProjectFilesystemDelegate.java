@@ -40,6 +40,11 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   }
 
   @Override
+  public String getDetailsForLogging() {
+    return String.format("DefaultProjectFilesystemDelegate{root=%s}", root);
+  }
+
+  @Override
   public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     return;
   }

@@ -48,9 +48,6 @@ public class ThriftCoordinatorServer implements Closeable {
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
 
-  // TODO(ruibm): Find some heuristic to compute this.
-  private static final int MAX_TARGETS_ALLOCATED_PER_MINION = 2;
-
   private final MinionWorkloadAllocator allocator;
   private final int port;
   private final CoordinatorServiceHandler handler;
@@ -63,14 +60,15 @@ public class ThriftCoordinatorServer implements Closeable {
   @Nullable private TThreadedSelectorServer server;
   @Nullable private Thread serverThread;
 
-  public ThriftCoordinatorServer(int port, BuildTargetsQueue queue, StampedeId stampedeId) {
+  public ThriftCoordinatorServer(
+      int port, BuildTargetsQueue queue, StampedeId stampedeId, int maxBuildNodesPerMinion) {
     this.stampedeId = stampedeId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
-    this.allocator = new MinionWorkloadAllocator(queue, MAX_TARGETS_ALLOCATED_PER_MINION);
+    this.allocator = new MinionWorkloadAllocator(queue, maxBuildNodesPerMinion);
     this.port = port;
     this.handler = new CoordinatorServiceHandler();
-    this.processor = new CoordinatorService.Processor<CoordinatorService.Iface>(handler);
+    this.processor = new CoordinatorService.Processor<>(handler);
   }
 
   public ThriftCoordinatorServer start() throws IOException {

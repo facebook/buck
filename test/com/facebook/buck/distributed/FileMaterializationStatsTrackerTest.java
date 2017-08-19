@@ -36,9 +36,20 @@ public class FileMaterializationStatsTrackerTest {
     Assert.assertEquals(2, tracker.getFilesMaterializedFromCASCount());
     Assert.assertEquals(30, tracker.getTotalTimeSpentMaterializingFilesFromCASMillis());
 
+    tracker.recordPeriodicCasMultiFetch(50);
+    tracker.recordPeriodicCasMultiFetch(75);
+    tracker.recordFullBufferCasMultiFetch(100);
+
+    Assert.assertEquals(2, tracker.getPeriodicCasMultiFetchCount());
+    Assert.assertEquals(1, tracker.getFullBufferCasMultiFetchCount());
+    Assert.assertEquals(225, tracker.getTimeSpentInMultiFetchNetworkCallsMs());
+
     FileMaterializationStats stats = tracker.getFileMaterializationStats();
     Assert.assertEquals(5, stats.getTotalFilesMaterializedCount());
     Assert.assertEquals(2, stats.getFilesMaterializedFromCASCount());
-    Assert.assertEquals(30, tracker.getTotalTimeSpentMaterializingFilesFromCASMillis());
+    Assert.assertEquals(30, stats.getTotalTimeSpentMaterializingFilesFromCASMillis());
+    Assert.assertEquals(2, stats.getPeriodicCasMultiFetchCount());
+    Assert.assertEquals(1, stats.getFullBufferCasMultiFetchCount());
+    Assert.assertEquals(225, stats.getTimeSpentInMultiFetchNetworkCallsMs());
   }
 }

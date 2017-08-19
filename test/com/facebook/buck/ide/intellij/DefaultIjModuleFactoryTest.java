@@ -398,6 +398,31 @@ public class DefaultIjModuleFactoryTest {
   }
 
   @Test
+  public void testScalaLibrary() {
+    IjModuleFactory factory = createIjModuleFactory();
+
+    TargetNode<?, ?> scalaLib =
+        FauxKotlinLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//scala/com/example/base:base"))
+            .addSrc(Paths.get("scala/com/example/base/File.scala"))
+            .build();
+
+    Path moduleBasePath = Paths.get("scala/com/example/base");
+    IjModule module =
+        factory.createModule(moduleBasePath, ImmutableSet.of(scalaLib), Collections.emptySet());
+
+    assertEquals(moduleBasePath, module.getModuleBasePath());
+    assertFalse(module.getAndroidFacet().isPresent());
+    assertEquals(1, module.getFolders().size());
+    assertEquals(ImmutableSet.of(scalaLib.getBuildTarget()), module.getTargets());
+
+    IjFolder folder = module.getFolders().iterator().next();
+    assertEquals(Paths.get("scala/com/example/base"), folder.getPath());
+    assertFalse(folder instanceof TestFolder);
+    assertFalse(folder.getWantsPackagePrefix());
+  }
+
+  @Test
   public void testJavaLibraryInRoot() {
     IjModuleFactory factory = createIjModuleFactory();
 

@@ -88,8 +88,8 @@ public final class CellProvider {
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
-      throws IOException {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      SdkEnvironment sdkEnvironment) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
         new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());
@@ -174,7 +174,8 @@ public final class CellProvider {
                     watchman,
                     buckConfig,
                     knownBuildRuleTypesFactory,
-                    cellProvider);
+                    cellProvider,
+                    sdkEnvironment);
               }
             },
         cellProvider -> {
@@ -190,13 +191,15 @@ public final class CellProvider {
               watchman,
               rootConfig,
               knownBuildRuleTypesFactory,
-              cellProvider);
+              cellProvider,
+              sdkEnvironment);
         });
   }
 
   public static CellProvider createForDistributedBuild(
       ImmutableMap<Path, DistBuildCellParams> cellParams,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      SdkEnvironment sdkEnvironment) {
     return new CellProvider(
         cellProvider ->
             CacheLoader.from(
@@ -212,7 +215,8 @@ public final class CellProvider {
                       Watchman.NULL_WATCHMAN,
                       cellParam.getConfig(),
                       knownBuildRuleTypesFactory,
-                      cellProvider);
+                      cellProvider,
+                      sdkEnvironment);
                 }),
         null);
   }

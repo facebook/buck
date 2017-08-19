@@ -22,14 +22,13 @@ import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -50,7 +49,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -96,8 +94,7 @@ public class AndroidInstrumentationApkDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidInstrumentationApkDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidInstrumentationApkDescriptionArg args) {
     BuildRule installableApk = resolver.getRule(args.getApk());
     if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
@@ -123,7 +120,6 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
-    Path primaryDexPath = AndroidBinary.getPrimaryDexPath(buildTarget, projectFilesystem);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
@@ -144,7 +140,6 @@ public class AndroidInstrumentationApkDescription
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
             /* shouldPreDex */ false,
-            primaryDexPath,
             DexSplitMode.NO_SPLIT,
             rulesToExcludeFromDex
                 .stream()
@@ -153,6 +148,7 @@ public class AndroidInstrumentationApkDescription
             resourcesToExclude,
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),
+            /* noAutoVersionResources */ false,
             javaBuckConfig,
             JavacFactory.create(ruleFinder, javaBuckConfig, null),
             javacOptions,

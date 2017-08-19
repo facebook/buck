@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
@@ -41,7 +43,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Assume;
 import org.junit.Before;
@@ -193,9 +197,49 @@ public class AndroidResourceFilterIntegrationTest {
         workspace.getPath(
             BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
-    zipInspector.assertFileExists("res/drawable/test_tiny_black.png");
-    zipInspector.assertFileExists("res/drawable/test_tiny_something.png");
-    zipInspector.assertFileExists("res/drawable/test_tiny_white.png");
+    zipInspector.assertFileExists("res/drawable/tiny_black.xml");
+    zipInspector.assertFileExists("res/drawable/tiny_new.xml");
+    zipInspector.assertFileDoesNotExist("res/drawable/tiny_black.png");
+
+    Path rDotJavaPath =
+        workspace.getPath(
+            Paths.get(
+                BuildTargets.getScratchPath(
+                        filesystem,
+                        BuildTargetFactory.newInstance(
+                            "//apps/sample:app_post_filter_cmd#generate_rdot_java"),
+                        "__%s_rdotjava_src__")
+                    .toString(),
+                "com",
+                "sample",
+                "R.java"));
+
+    // Make sure the generated R.java contains both resources and that they're in the
+    // R.custom_drawables array.
+    List<String> lines = filesystem.readLines(rDotJavaPath);
+    String tinyBlackId = null;
+    String tinyNewId = null;
+    boolean foundCustomDrawables = false;
+    Pattern idPattern = Pattern.compile("\\s+public static final int (.+)=(.+);");
+    for (String line : lines) {
+      Matcher matcher = idPattern.matcher(line);
+      if (matcher.matches()) {
+        String name = matcher.group(1);
+        String id = matcher.group(2);
+        if ("tiny_black".equals(name)) {
+          tinyBlackId = id;
+        } else if ("tiny_new".equals(name)) {
+          tinyNewId = id;
+        }
+      } else if (line.contains("custom_drawables")) {
+        assertNotNull(tinyBlackId);
+        assertNotNull(tinyNewId);
+        assertTrue(line.contains(tinyBlackId));
+        assertTrue(line.contains(tinyNewId));
+        foundCustomDrawables = true;
+      }
+    }
+    assertTrue("Didn't find custom_drawables line", foundCustomDrawables);
   }
 
   @Test

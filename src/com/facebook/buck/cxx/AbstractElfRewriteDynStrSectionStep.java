@@ -18,20 +18,20 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfDynamicSection;
-import com.facebook.buck.cxx.elf.ElfSection;
-import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
-import com.facebook.buck.cxx.elf.ElfStringTable;
-import com.facebook.buck.cxx.elf.ElfSymbolTable;
-import com.facebook.buck.cxx.elf.ElfVerDef;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
+import com.facebook.buck.cxx.toolchain.elf.ElfStringTable;
+import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.toolchain.elf.ElfVerDef;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +51,7 @@ import org.immutables.value.Value;
  * after removing symbols from the dynamic symbol table to compact the string table.
  */
 @Value.Immutable
-@BuckStyleTuple
+@BuckStylePackageVisibleTuple
 abstract class AbstractElfRewriteDynStrSectionStep implements Step {
 
   private static final String DYNAMIC = ".dynamic";
@@ -143,7 +143,7 @@ abstract class AbstractElfRewriteDynStrSectionStep implements Step {
   }
 
   /** @return a processor for the GNU version definition section. */
-  private Optional<SectionUsingDynamicStrings> getVerdefProcessor(Elf elf) throws IOException {
+  private Optional<SectionUsingDynamicStrings> getVerdefProcessor(Elf elf) {
     return elf.getSectionByName(VERDEF)
         .map(ElfSectionLookupResult::getSection)
         .map(

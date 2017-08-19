@@ -90,6 +90,7 @@ public class BgProcessKiller {
 
   private BgProcessKiller() {}
 
+  @GuardedBy("BgProcessKiller.class")
   private static void checkArmedStatus() {
     if (armed) {
       BuckIsDyingException e =
@@ -114,7 +115,7 @@ public class BgProcessKiller {
    * Use this method instead of {@link NuProcessBuilder#start} in order to properly synchronize with
    * signal handling.
    */
-  public static synchronized NuProcess startProcess(NuProcessBuilder pb) throws IOException {
+  public static synchronized NuProcess startProcess(NuProcessBuilder pb) {
     checkArmedStatus();
     return pb.start();
   }

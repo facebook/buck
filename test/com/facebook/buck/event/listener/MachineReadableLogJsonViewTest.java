@@ -188,6 +188,7 @@ public class MachineReadableLogJsonViewTest {
             PerfTimesStats.builder()
                 .setPythonTimeMs(4L)
                 .setInitTimeMs(8L)
+                .setSparseRefreshTimeMs(11L)
                 .setProcessingTimeMs(15L)
                 .setActionGraphTimeMs(16L)
                 .setBuildTimeMs(23L)
@@ -202,6 +203,7 @@ public class MachineReadableLogJsonViewTest {
             + "\"pythonTimeMs\":4,"
             + "\"initTimeMs\":8,"
             + "\"parseTimeMs\":0,"
+            + "\"sparseRefreshTimeMs\":11,"
             + "\"processingTimeMs\":15,"
             + "\"actionGraphTimeMs\":16,"
             + "\"rulekeyTimeMs\":0,"

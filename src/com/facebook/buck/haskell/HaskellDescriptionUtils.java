@@ -17,7 +17,6 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
@@ -26,19 +25,20 @@ import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
-import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -85,15 +85,15 @@ public class HaskellDescriptionUtils {
       final BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
-      final CxxPlatform cxxPlatform,
-      HaskellConfig haskellConfig,
+      HaskellPlatform platform,
       final Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
-      HaskellSources sources)
-      throws NoSuchBuildTargetException {
+      HaskellSources sources) {
+
+    CxxPlatform cxxPlatform = platform.getCxxPlatform();
 
     final Map<BuildTarget, ImmutableList<String>> depFlags = new TreeMap<>();
     final Map<BuildTarget, ImmutableList<SourcePath>> depIncludes = new TreeMap<>();
@@ -101,17 +101,17 @@ public class HaskellDescriptionUtils {
         ImmutableSortedMap.naturalOrder();
     final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
 
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> ruleDeps = empty;
         if (rule instanceof HaskellCompileDep) {
           HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
-          ruleDeps = haskellCompileDep.getCompileDeps(cxxPlatform);
+          ruleDeps = haskellCompileDep.getCompileDeps(platform);
           HaskellCompileInput compileInput =
-              haskellCompileDep.getCompileInput(cxxPlatform, depType, hsProfile);
+              haskellCompileDep.getCompileInput(platform, depType, hsProfile);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
           depIncludes.put(rule.getBuildTarget(), compileInput.getIncludes());
 
@@ -146,7 +146,7 @@ public class HaskellDescriptionUtils {
 
     ImmutableList<String> compileFlags =
         ImmutableList.<String>builder()
-            .addAll(haskellConfig.getCompilerFlags())
+            .addAll(platform.getCompilerFlags())
             .addAll(flags)
             .addAll(Iterables.concat(depFlags.values()))
             .build();
@@ -162,8 +162,8 @@ public class HaskellDescriptionUtils {
         projectFilesystem,
         baseParams,
         ruleFinder,
-        haskellConfig.getCompiler().resolve(resolver),
-        haskellConfig.getHaskellVersion(),
+        platform.getCompiler().resolve(resolver),
+        platform.getHaskellVersion(),
         compileFlags,
         ppFlags,
         cxxPlatform,
@@ -182,13 +182,13 @@ public class HaskellDescriptionUtils {
 
   protected static BuildTarget getCompileBuildTarget(
       BuildTarget target,
-      CxxPlatform cxxPlatform,
+      HaskellPlatform platform,
       Linker.LinkableDepType depType,
       boolean hsProfile) {
 
     target =
         target.withFlavors(
-            cxxPlatform.getFlavor(),
+            platform.getFlavor(),
             InternalFlavor.of("objects-" + depType.toString().toLowerCase().replace('_', '-')));
 
     if (hsProfile) {
@@ -205,17 +205,15 @@ public class HaskellDescriptionUtils {
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
-      CxxPlatform cxxPlatform,
-      HaskellConfig haskellConfig,
+      HaskellPlatform platform,
       Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
-      HaskellSources srcs)
-      throws NoSuchBuildTargetException {
+      HaskellSources srcs) {
 
-    BuildTarget target = getCompileBuildTarget(buildTarget, cxxPlatform, depType, hsProfile);
+    BuildTarget target = getCompileBuildTarget(buildTarget, platform, depType, hsProfile);
 
     // If this rule has already been generated, return it.
     Optional<HaskellCompileRule> existing =
@@ -232,8 +230,7 @@ public class HaskellDescriptionUtils {
             resolver,
             ruleFinder,
             deps,
-            cxxPlatform,
-            haskellConfig,
+            platform,
             depType,
             hsProfile,
             main,
@@ -252,8 +249,7 @@ public class HaskellDescriptionUtils {
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      HaskellConfig haskellConfig,
+      HaskellPlatform platform,
       Linker.LinkType linkType,
       ImmutableList<Arg> linkerFlags,
       Iterable<Arg> linkerInputs,
@@ -262,16 +258,15 @@ public class HaskellDescriptionUtils {
       Linker.LinkableDepType depType,
       Path outputPath,
       Optional<String> soname,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
 
-    Tool linker = haskellConfig.getLinker().resolve(resolver);
+    Tool linker = platform.getLinker().resolve(resolver);
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     // Add the base flags from the `.buckconfig` first.
-    argsBuilder.addAll(StringArg.from(haskellConfig.getLinkerFlags()));
+    argsBuilder.addAll(StringArg.from(platform.getLinkerFlags()));
 
     // Pass in the appropriate flags to link a shared library.
     if (linkType.equals(Linker.LinkType.SHARED)) {
@@ -282,7 +277,7 @@ public class HaskellDescriptionUtils {
                   StringArg.from(
                       MoreIterables.zipAndConcat(
                           Iterables.cycle("-optl"),
-                          cxxPlatform.getLd().resolve(resolver).soname(name)))));
+                          platform.getCxxPlatform().getLd().resolve(resolver).soname(name)))));
     }
 
     // Add in extra flags passed into this function.
@@ -292,11 +287,11 @@ public class HaskellDescriptionUtils {
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkable nativeLinkable :
-        NativeLinkables.getNativeLinkables(cxxPlatform, deps, depType).values()) {
-      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+        NativeLinkables.getNativeLinkables(platform.getCxxPlatform(), deps, depType).values()) {
+      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(platform.getCxxPlatform());
       NativeLinkableInput input =
           nativeLinkable.getNativeLinkableInput(
-              cxxPlatform,
+              platform.getCxxPlatform(),
               NativeLinkables.getLinkStyle(link, depType),
               linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
               ImmutableSet.of());
@@ -330,8 +325,7 @@ public class HaskellDescriptionUtils {
                 RichStream.from(deps)
                     .filter(BuildRule.class)
                     .toImmutableSortedSet(Ordering.natural()),
-                cxxPlatform,
-                haskellConfig,
+                platform,
                 depType,
                 hsProfile,
                 Optional.empty(),
@@ -347,8 +341,8 @@ public class HaskellDescriptionUtils {
                 emptyArchiveTarget,
                 projectFilesystem,
                 ruleFinder,
-                cxxPlatform,
-                Archive.Contents.NORMAL,
+                platform.getCxxPlatform(),
+                ArchiveContents.NORMAL,
                 BuildTargets.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
                 emptyCompiledModule.getObjects(),
                 /* cacheable */ true));
@@ -376,25 +370,25 @@ public class HaskellDescriptionUtils {
             outputPath,
             args,
             linkerArgs,
-            haskellConfig.shouldCacheLinks()));
+            platform.shouldCacheLinks()));
   }
 
   /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */
   public static void getParseTimeDeps(
-      HaskellConfig haskellConfig,
-      Iterable<CxxPlatform> cxxPlatforms,
-      ImmutableCollection.Builder<BuildTarget> depsBuilder) {
+      Iterable<HaskellPlatform> platforms, ImmutableCollection.Builder<BuildTarget> depsBuilder) {
+    RichStream.from(platforms)
+        .forEach(
+            platform -> {
 
-    // Since this description generates haskell link rules, make sure the parsed includes any
-    // of the linkers parse time deps.
-    depsBuilder.addAll(haskellConfig.getLinker().getParseTimeDeps());
+              // Since this description generates haskell link/compile/package rules, make sure the
+              // parser includes deps for these tools.
+              depsBuilder.addAll(platform.getCompiler().getParseTimeDeps());
+              depsBuilder.addAll(platform.getLinker().getParseTimeDeps());
+              depsBuilder.addAll(platform.getPackager().getParseTimeDeps());
 
-    // Since this description generates haskell compile rules, make sure the parsed includes any
-    // of the compilers parse time deps.
-    depsBuilder.addAll(haskellConfig.getCompiler().getParseTimeDeps());
-
-    // We use the C/C++ linker's Linker object to find out how to pass in the soname, so just add
-    // all C/C++ platform parse time deps.
-    depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms));
+              // We use the C/C++ linker's Linker object to find out how to pass in the soname, so just
+              // add all C/C++ platform parse time deps.
+              depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
+            });
   }
 }

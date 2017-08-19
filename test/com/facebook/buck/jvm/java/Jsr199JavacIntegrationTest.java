@@ -139,7 +139,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                Optional.empty(),
+                Paths.get("working"),
                 JavacCompilationMode.FULL)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -189,7 +189,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                Optional.empty(),
+                Paths.get("working"),
                 JavacCompilationMode.FULL)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -212,7 +212,7 @@ public class Jsr199JavacIntegrationTest {
 
     @Override
     public int run(InputStream in, OutputStream out, OutputStream err, String... arguments) {
-      throw new UnsupportedOperationException("abcdef");
+      throw new OutOfMemoryError("abcdef");
     }
 
     @Override
@@ -225,7 +225,7 @@ public class Jsr199JavacIntegrationTest {
         DiagnosticListener<? super JavaFileObject> diagnosticListener,
         Locale locale,
         Charset charset) {
-      throw new UnsupportedOperationException("abcdef");
+      throw new OutOfMemoryError("abcdef");
     }
 
     @Override
@@ -236,7 +236,7 @@ public class Jsr199JavacIntegrationTest {
         Iterable<String> options,
         Iterable<String> classes,
         Iterable<? extends JavaFileObject> compilationUnits) {
-      throw new UnsupportedOperationException("abcdef");
+      throw new OutOfMemoryError("abcdef");
     }
   }
 
@@ -288,11 +288,11 @@ public class Jsr199JavacIntegrationTest {
               ImmutableList.of(),
               SOURCE_PATHS,
               pathToSrcsList,
-              Optional.empty(),
+              Paths.get("working"),
               JavacCompilationMode.FULL)
           .buildClasses();
       fail("Did not expect compilation to succeed");
-    } catch (UnsupportedOperationException ex) {
+    } catch (OutOfMemoryError ex) {
       if (ex.toString().contains("abcdef")) {
         caught = true;
       }

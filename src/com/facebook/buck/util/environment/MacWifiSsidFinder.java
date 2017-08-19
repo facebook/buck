@@ -35,8 +35,7 @@ public class MacWifiSsidFinder {
   public interface CoreWlan extends Library {}
 
   // Need to hold on to an instance of this library so CoreWLAN.framework is kept resident.
-  public static final CoreWlan CORE_WLAN_INSTANCE =
-      (CoreWlan) Native.loadLibrary("CoreWLAN", CoreWlan.class);
+  public static final CoreWlan CORE_WLAN_INSTANCE = Native.loadLibrary("CoreWLAN", CoreWlan.class);
 
   /** Finds the SSID of the default Wi-Fi interface using Mac OS X APIs. */
   public static Optional<String> findCurrentSsid() {

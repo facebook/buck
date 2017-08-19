@@ -16,13 +16,14 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -33,76 +34,93 @@ public class UnexpectedFlavorException extends HumanReadableException {
       ImmutableSet.of(
           PatternAndMessage.of(
               Pattern.compile("android-*"),
-              "Make sure you have the Android SDK/NDK installed and set up. See "
+              "Please make sure you have the Android SDK/NDK installed and set up. See "
                   + "https://buckbuild.com/setup/install.html#locate-android-sdk"),
           PatternAndMessage.of(
               Pattern.compile("macosx*"),
-              "Make sure you have the Mac OSX SDK installed and set up."),
+              "Please make sure you have the Mac OSX SDK installed and set up."),
           PatternAndMessage.of(
               Pattern.compile("iphoneos*"),
-              "Make sure you have the iPhone SDK installed and set up."),
+              "Please make sure you have the iPhone SDK installed and set up."),
           PatternAndMessage.of(
               Pattern.compile("iphonesimulator*"),
-              "Make sure you have the iPhone Simulator installed and set up."),
+              "Please make sure you have the iPhone Simulator installed and set up."),
           PatternAndMessage.of(
               Pattern.compile("watchos*"),
-              "Make sure you have the Apple Watch SDK installed and set up."),
+              "Please make sure you have the Apple Watch SDK installed and set up."),
           PatternAndMessage.of(
               Pattern.compile("watchsimulator*"),
-              "Make sure you have the Watch Simulator installed and set up."),
+              "Please make sure you have the Watch Simulator installed and set up."),
           PatternAndMessage.of(
               Pattern.compile("appletvos*"),
-              "Make sure you have the Apple TV SDK installed and set up."),
+              "Please make sure you have the Apple TV SDK installed and set up."),
           PatternAndMessage.of(
               Pattern.compile("appletvsimulator*"),
-              "Make sure you have the Apple TV Simulator installed and set up."));
+              "Plase make sure you have the Apple TV Simulator installed and set up."));
 
   private UnexpectedFlavorException(String message) {
     super(message);
   }
 
-  public static UnexpectedFlavorException createWithSuggestions(Cell cell, BuildTarget target) {
+  public static UnexpectedFlavorException createWithSuggestions(
+      Flavored flavored, Cell cell, BuildTarget target) {
+    ImmutableSet<Flavor> invalidFlavors = getInvalidFlavors(flavored, target);
     // Get the specific message
-    String exceptionMessage = createDefaultMessage(cell, target);
+    String exceptionMessage = createDefaultMessage(target, invalidFlavors);
     // Get some suggestions on how to solve it.
-    String suggestions = "";
     Optional<ImmutableSet<PatternAndMessage>> configMessagesForFlavors =
         cell.getBuckConfig().getUnexpectedFlavorsMessages();
 
-    for (Flavor flavor : target.getFlavors()) {
+    ImmutableList.Builder<String> suggestionsBuilder = ImmutableList.builder();
+    for (Flavor flavor : invalidFlavors) {
       boolean foundInConfig = false;
       if (configMessagesForFlavors.isPresent()) {
         for (PatternAndMessage flavorPattern : configMessagesForFlavors.get()) {
           if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
             foundInConfig = true;
-            suggestions += flavor.getName() + " : " + flavorPattern.getMessage() + "\n";
+            suggestionsBuilder.add("- " + flavor.getName() + ": " + flavorPattern.getMessage());
           }
         }
       }
       if (!foundInConfig) {
         for (PatternAndMessage flavorPattern : suggestedMessagesForFlavors) {
           if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
-            suggestions += flavor.getName() + " : " + flavorPattern.getMessage() + "\n";
+            suggestionsBuilder.add("- " + flavor.getName() + ": " + flavorPattern.getMessage());
           }
         }
       }
     }
+    ImmutableList<String> suggestions = suggestionsBuilder.build();
 
+    exceptionMessage +=
+        String.format(
+            "\n\n"
+                + "- Please check the spelling of the flavor(s).\n"
+                + "- If the spelling is correct, please check that the related SDK has been installed.");
     if (!suggestions.isEmpty()) {
-      exceptionMessage +=
-          "\nHere are some things you can try to get the following "
-              + "flavors to work::\n"
-              + suggestions;
+      exceptionMessage += "\n" + String.join(", ", suggestions);
     }
 
     return new UnexpectedFlavorException(exceptionMessage);
   }
 
-  private static String createDefaultMessage(Cell cell, BuildTarget target) {
-    return "Unrecognized flavor in target "
-        + target
-        + " while parsing "
-        + UnflavoredBuildTarget.BUILD_TARGET_PREFIX
-        + MorePaths.pathWithUnixSeparators(target.getBasePath().resolve(cell.getBuildFileName()));
+  private static ImmutableSet<Flavor> getInvalidFlavors(Flavored flavored, BuildTarget target) {
+    ImmutableSet.Builder<Flavor> builder = ImmutableSet.builder();
+    for (Flavor flavor : target.getFlavors()) {
+      if (!flavored.hasFlavors(ImmutableSet.of(flavor))) {
+        builder.add(flavor);
+      }
+    }
+    return builder.build();
+  }
+
+  private static String createDefaultMessage(
+      BuildTarget target, ImmutableSet<Flavor> invalidFlavors) {
+    ImmutableSet<String> invalidFlavorsStr =
+        invalidFlavors.stream().map(Flavor::toString).collect(MoreCollectors.toImmutableSet());
+    String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
+    return String.format(
+        "The following flavor(s) are not supported on target %s:\n%s.",
+        target, invalidFlavorsDisplayStr);
   }
 }

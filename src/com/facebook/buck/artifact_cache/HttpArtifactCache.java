@@ -16,7 +16,6 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
@@ -51,20 +50,19 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected CacheResult fetchImpl(
-      RuleKey ruleKey, LazyPath output, final Finished.Builder eventBuilder) throws IOException {
-
+  protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+    FetchResult.Builder resultBuilder = FetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
     try (HttpResponse response =
         fetchClient.makeRequest("/artifacts/key/" + ruleKey.toString(), requestBuilder)) {
-      eventBuilder.getFetchBuilder().setResponseSizeBytes(response.contentLength());
+      resultBuilder.setResponseSizeBytes(response.contentLength());
 
       try (DataInputStream input =
           new DataInputStream(new FullyReadOnCloseInputStream(response.getBody()))) {
 
         if (response.statusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
           LOG.info("fetch(%s, %s): cache miss", response.requestUrl(), ruleKey);
-          return CacheResult.miss();
+          return resultBuilder.setCacheResult(CacheResult.miss()).build();
         }
 
         if (response.statusCode() != HttpURLConnection.HTTP_OK) {
@@ -72,62 +70,64 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
               String.format(
                   "unexpected server response: [%d:%s]",
                   response.statusCode(), response.statusMessage());
-          reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
-          eventBuilder.getFetchBuilder().setErrorMessage(msg);
-          return CacheResult.error(name, mode, msg);
+          reportFailureWithFormatKey("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         // Setup a temporary file, which sits next to the destination, to write to and
         // make sure all parent dirs exist.
         Path file = output.get();
-        projectFilesystem.createParentDirs(file);
+        getProjectFilesystem().createParentDirs(file);
         Path temp =
-            projectFilesystem.createTempFile(
-                file.getParent(), file.getFileName().toString(), ".tmp");
+            getProjectFilesystem()
+                .createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
 
         FetchResponseReadResult fetchedData;
-        try (OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
+        try (OutputStream tempFileOutputStream = getProjectFilesystem().newFileOutputStream(temp)) {
           fetchedData =
               HttpArtifactCacheBinaryProtocol.readFetchResponse(input, tempFileOutputStream);
         }
 
-        eventBuilder
-            .setTarget(ArtifactCacheEvent.getTarget(fetchedData.getMetadata()))
-            .getFetchBuilder()
+        resultBuilder
+            .setBuildTarget(ArtifactCacheEvent.getTarget(fetchedData.getMetadata()))
             .setResponseSizeBytes(fetchedData.getResponseSizeBytes())
             .setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
 
         // Verify that we were one of the rule keys that stored this artifact.
         if (!fetchedData.getRuleKeys().contains(ruleKey)) {
           String msg = "incorrect key name";
-          reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
-          eventBuilder.getFetchBuilder().setErrorMessage(msg);
-          return CacheResult.error(name, mode, msg);
+          reportFailureWithFormatKey("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         // Now form the checksum on the file we got and compare it to the checksum form the
         // the HTTP header.  If it's incorrect, log this and return a miss.
         if (!fetchedData.getExpectedHashCode().equals(fetchedData.getActualHashCode())) {
           String msg = "artifact had invalid checksum";
-          reportFailure("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
-          projectFilesystem.deleteFileAtPath(temp);
-          eventBuilder.getFetchBuilder().setErrorMessage(msg);
-          return CacheResult.error(name, mode, msg);
+          reportFailureWithFormatKey("fetch(%s, %s): %s", response.requestUrl(), ruleKey, msg);
+          getProjectFilesystem().deleteFileAtPath(temp);
+          return resultBuilder.setCacheResult(CacheResult.error(getName(), getMode(), msg)).build();
         }
 
         // Finally, move the temp file into it's final place.
-        projectFilesystem.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+        getProjectFilesystem().move(temp, file, StandardCopyOption.REPLACE_EXISTING);
 
         LOG.info("fetch(%s, %s): cache hit", response.requestUrl(), ruleKey);
-        return CacheResult.hit(
-            name, mode, fetchedData.getMetadata(), fetchedData.getResponseSizeBytes());
+        return resultBuilder
+            .setCacheResult(
+                CacheResult.hit(
+                    getName(),
+                    getMode(),
+                    fetchedData.getMetadata(),
+                    fetchedData.getResponseSizeBytes()))
+            .build();
       }
     }
   }
 
   @Override
-  protected void storeImpl(ArtifactInfo info, final Path file, final Finished.Builder eventBuilder)
-      throws IOException {
+  protected StoreResult storeImpl(ArtifactInfo info, final Path file) throws IOException {
+    StoreResult.Builder resultBuilder = StoreResult.builder();
 
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
@@ -137,11 +137,11 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             new ByteSource() {
               @Override
               public InputStream openStream() throws IOException {
-                return projectFilesystem.newFileInputStream(file);
+                return getProjectFilesystem().newFileInputStream(file);
               }
             });
 
-    eventBuilder.getStoreBuilder().setRequestSizeBytes(storeRequest.getContentLength());
+    resultBuilder.setRequestSizeBytes(storeRequest.getContentLength());
 
     // Wrap the file into a `RequestBody` which uses `ProjectFilesystem`.
     builder.put(
@@ -159,9 +159,8 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
           @Override
           public void writeTo(BufferedSink bufferedSink) throws IOException {
             StoreWriteResult writeResult = storeRequest.write(bufferedSink.outputStream());
-            eventBuilder
-                .getStoreBuilder()
-                .setArtifactContentHash(writeResult.getArtifactContentHashCode().toString());
+            resultBuilder.setArtifactContentHash(
+                writeResult.getArtifactContentHashCode().toString());
           }
         });
 
@@ -169,7 +168,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
     try (HttpResponse response = storeClient.makeRequest("/artifacts/key", builder)) {
       final boolean requestFailed = response.statusCode() != HttpURLConnection.HTTP_ACCEPTED;
       if (requestFailed) {
-        reportFailure(
+        reportFailureWithFormatKey(
             "store(%s, %s): unexpected response: [%d:%s].",
             response.requestUrl(),
             info.getRuleKeys(),
@@ -177,7 +176,8 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             response.statusMessage());
       }
 
-      eventBuilder.getStoreBuilder().setWasStoreSuccessful(!requestFailed);
+      resultBuilder.setWasStoreSuccessful(!requestFailed);
     }
+    return resultBuilder.build();
   }
 }

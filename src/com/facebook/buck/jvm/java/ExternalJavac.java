@@ -179,7 +179,7 @@ public class ExternalJavac implements Javac {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
+      Path workingDirectory,
       JavacCompilationMode compilationMode) {
     return new Invocation() {
       @Override
@@ -202,10 +202,7 @@ public class ExternalJavac implements Javac {
         try {
           expandedSources =
               getExpandedSourcePaths(
-                  context.getProjectFilesystem(),
-                  invokingRule,
-                  javaSourceFilePaths,
-                  workingDirectory);
+                  context.getProjectFilesystem(), javaSourceFilePaths, workingDirectory);
         } catch (IOException e) {
           throw new HumanReadableException(
               "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
@@ -261,9 +258,8 @@ public class ExternalJavac implements Javac {
 
   private ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
-      BuildTarget invokingRule,
       ImmutableSet<Path> javaSourceFilePaths,
-      Optional<Path> workingDirectory)
+      Path workingDirectory)
       throws InterruptedException, IOException {
 
     // Add sources file or sources list to command
@@ -273,17 +269,11 @@ public class ExternalJavac implements Javac {
       if (pathString.endsWith(".java")) {
         sources.add(path);
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        if (!workingDirectory.isPresent()) {
-          throw new HumanReadableException(
-              "Attempting to compile target %s which specified a .src.zip input %s but no "
-                  + "working directory was specified.",
-              invokingRule.toString(), path);
-        }
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ImmutableList<Path> zipPaths =
             Unzip.extractZipFile(
                 projectFilesystem.resolve(path),
-                projectFilesystem.resolve(workingDirectory.get()),
+                projectFilesystem.resolve(workingDirectory),
                 Unzip.ExistingFileMode.OVERWRITE);
         sources.addAll(
             zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());

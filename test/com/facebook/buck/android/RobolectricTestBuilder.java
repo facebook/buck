@@ -20,8 +20,11 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
+import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import java.util.Optional;
@@ -31,6 +34,12 @@ public class RobolectricTestBuilder
         RobolectricTestDescriptionArg.Builder, RobolectricTestDescriptionArg,
         RobolectricTestDescription, RobolectricTest> {
 
+  public static final AndroidLibraryCompilerFactory DEFAULT_ANDROID_COMPILER_FACTORY =
+      new DefaultAndroidLibraryCompilerFactory(
+          DEFAULT_JAVA_CONFIG,
+          new ScalaBuckConfig(FakeBuckConfig.builder().build()),
+          new KotlinBuckConfig(FakeBuckConfig.builder().build()));
+
   private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new RobolectricTestDescription(
@@ -38,7 +47,8 @@ public class RobolectricTestBuilder
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.empty(),
-            null),
+            null,
+            DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
   }
 
@@ -49,7 +59,8 @@ public class RobolectricTestBuilder
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             /* testRuleTimeoutMs */ Optional.empty(),
-            null),
+            null,
+            DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
         filesystem);
   }

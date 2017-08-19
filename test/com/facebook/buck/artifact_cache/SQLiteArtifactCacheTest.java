@@ -26,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,6 +104,7 @@ public class SQLiteArtifactCacheTest {
         "sqlite",
         filesystem,
         cacheDir,
+        BuckEventBusForTests.newInstance(),
         maxCacheSizeBytes,
         Optional.of(MAX_INLINED_BYTES),
         CacheReadMode.READWRITE);
@@ -142,7 +145,8 @@ public class SQLiteArtifactCacheTest {
     artifactCache = cache(Optional.of(0L));
     assertEquals(
         CacheResultType.MISS,
-        artifactCache.fetch(ruleKeyA, LazyPath.ofInstance(emptyFile)).getType());
+        Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, LazyPath.ofInstance(emptyFile)))
+            .getType());
   }
 
   @Test
@@ -150,7 +154,8 @@ public class SQLiteArtifactCacheTest {
     artifactCache = cache(Optional.of(0L));
     assertEquals(
         CacheResultType.MISS,
-        artifactCache.fetch(contentHashA, LazyPath.ofInstance(fileA)).getType());
+        Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, LazyPath.ofInstance(fileA)))
+            .getType());
   }
 
   @Test
@@ -166,7 +171,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyA));
 
-    CacheResult result = artifactCache.fetch(ruleKeyA, output);
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), result.getMetadata().get(METADATA_KEY));
@@ -194,7 +199,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyA));
 
-    CacheResult result = artifactCache.fetch(ruleKeyA, output);
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashB.toString(), result.getMetadata().get(METADATA_KEY));
@@ -209,7 +214,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashA));
 
-    CacheResult result = artifactCache.fetch(contentHashA, output);
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
     assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
@@ -224,7 +229,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.contains(contentHashA));
 
-    CacheResult result = artifactCache.fetch(contentHashA, output);
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
     assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
@@ -241,7 +246,7 @@ public class SQLiteArtifactCacheTest {
 
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashA));
 
-    CacheResult result = artifactCache.fetch(contentHashA, output);
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
     assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
@@ -263,7 +268,7 @@ public class SQLiteArtifactCacheTest {
   }
 
   @Test
-  public void testDeleteMetadata() throws IOException, SQLException {
+  public void testDeleteMetadata() throws Exception {
     artifactCache = cache(Optional.of(0L));
     Timestamp time = Timestamp.from(Instant.now().minus(Duration.ofDays(8)));
 
@@ -276,11 +281,14 @@ public class SQLiteArtifactCacheTest {
         ArtifactInfo.builder().addRuleKeys(ruleKeyC).putMetadata(METADATA_KEY, "foo").build(),
         BorrowablePath.notBorrowablePath(emptyFile));
 
+    assertThat(artifactCache.metadataRuleKeys(), Matchers.hasSize(3));
+
+    artifactCache.removeOldMetadata().get();
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyC));
   }
 
   @Test
-  public void testNoStoreMisses() throws IOException, SQLException {
+  public void testNoStoreMisses() throws Exception {
     artifactCache = cache(Optional.of(0L));
     Timestamp time = Timestamp.from(Instant.now().minus(Duration.ofDays(7)));
 
@@ -294,12 +302,15 @@ public class SQLiteArtifactCacheTest {
 
     artifactCache.store(artifactInfoC, BorrowablePath.notBorrowablePath(emptyFile));
 
+    // remove fileA and fileB and stop when size limit reached, leaving fileC
+    artifactCache.removeOldContent().get();
+
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.empty());
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashC));
   }
 
   @Test
-  public void testDeleteNothingAfterStore() throws IOException, SQLException {
+  public void testDeleteNothingAfterStore() throws Exception {
     artifactCache = cache(Optional.of(4 * MAX_INLINED_BYTES));
 
     writeFileArtifact(fileA);
@@ -310,13 +321,14 @@ public class SQLiteArtifactCacheTest {
     artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB));
     artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC));
 
+    artifactCache.removeOldContent().get();
     assertThat(
         artifactCache.directoryFileContentHashes(),
         Matchers.containsInAnyOrder(contentHashA, contentHashB, contentHashC));
   }
 
   @Test
-  public void testDeleteNothingAfterStoreNoLimit() throws IOException, SQLException {
+  public void testDeleteNothingAfterStoreNoLimit() throws Exception {
     artifactCache = cache(Optional.empty());
 
     writeFileArtifact(fileA);
@@ -327,13 +339,14 @@ public class SQLiteArtifactCacheTest {
     artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB));
     artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC));
 
+    artifactCache.removeOldContent().get();
     assertThat(
         artifactCache.directoryFileContentHashes(),
         Matchers.containsInAnyOrder(contentHashA, contentHashB, contentHashC));
   }
 
   @Test
-  public void testDeleteAfterStoreWhenFull() throws IOException, SQLException {
+  public void testDeleteAfterStoreWhenFull() throws Exception {
     artifactCache = cache(Optional.of(2 * MAX_INLINED_BYTES));
 
     writeInlinedArtifact(fileA);
@@ -353,10 +366,20 @@ public class SQLiteArtifactCacheTest {
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.hasSize(1));
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.hasSize(1));
 
+    // cache is within limits, so nothing evicted
+    artifactCache.removeOldContent().get();
+    assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.hasSize(1));
+    assertThat(artifactCache.directoryFileContentHashes(), Matchers.hasSize(1));
+
     // add fileC, causing cache to exceed max size
     artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC));
     ImmutableList<RuleKey> filesNotDeleted = artifactCache.directoryFileContentHashes();
     int remaining = filesNotDeleted.size() + artifactCache.inlinedArtifactContentHashes().size();
+    assertEquals(remaining, 3);
+
+    artifactCache.removeOldContent().get();
+    filesNotDeleted = artifactCache.directoryFileContentHashes();
+    remaining = filesNotDeleted.size() + artifactCache.inlinedArtifactContentHashes().size();
     assertThat(remaining, Matchers.lessThan(3));
     assertThat(filesNotDeleted, Matchers.hasItem(contentHashC));
   }
@@ -371,20 +394,40 @@ public class SQLiteArtifactCacheTest {
             .build(),
         BorrowablePath.notBorrowablePath(emptyFile));
 
-    CacheResult resultA = artifactCache.fetch(ruleKeyA, output);
+    CacheResult resultA = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
     assertEquals(CacheResultType.HIT, resultA.getType());
     assertThat(resultA.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), resultA.getMetadata().get(METADATA_KEY));
 
-    CacheResult resultB = artifactCache.fetch(ruleKeyB, output);
+    CacheResult resultB = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyB, output));
     assertEquals(CacheResultType.HIT, resultB.getType());
     assertThat(resultB.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), resultB.getMetadata().get(METADATA_KEY));
 
-    CacheResult resultC = artifactCache.fetch(ruleKeyA, output);
+    CacheResult resultC = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
     assertEquals(CacheResultType.HIT, resultC.getType());
     assertThat(resultC.getMetadata(), Matchers.hasKey(METADATA_KEY));
     assertEquals(contentHashA.toString(), resultC.getMetadata().get(METADATA_KEY));
+  }
+
+  @Test
+  public void testOneLevelCache() throws IOException, SQLException {
+    artifactCache = cache(Optional.empty());
+    writeFileArtifact(fileA);
+
+    artifactCache.store(
+        ArtifactInfo.builder()
+            .addRuleKeys(ruleKeyA)
+            .putMetadata(BuildInfo.MetadataKey.TARGET, "foo")
+            .build(),
+        BorrowablePath.notBorrowablePath(fileA));
+
+    CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(ruleKeyA, output));
+    assertEquals(CacheResultType.HIT, result.getType());
+    assertThat(result.getMetadata(), Matchers.hasKey(BuildInfo.MetadataKey.TARGET));
+    assertEquals(result.getMetadata().get(BuildInfo.MetadataKey.TARGET), "foo");
+    assertEquals(result.getArtifactSizeBytes(), Files.size(fileA));
+    assertArrayEquals(Files.readAllBytes(output.get()), Files.readAllBytes(fileA));
   }
 
   @Test

@@ -16,19 +16,16 @@
 
 package com.facebook.buck.haskell;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.BuildRule;
 
 /** An interface for rule which can provide interfaces files for a haskell compilation. */
 public interface HaskellCompileDep {
 
   /** @return a list of deps needed to compile this rule. */
-  Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform);
+  Iterable<BuildRule> getCompileDeps(HaskellPlatform platform);
 
   /** @return the {@link HaskellCompileInput} object that contributes to compilation. */
   HaskellCompileInput getCompileInput(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType depType, boolean hsProfile)
-      throws NoSuchBuildTargetException;
+      HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile);
 }

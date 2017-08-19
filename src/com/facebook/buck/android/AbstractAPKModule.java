@@ -15,14 +15,14 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.rules.RuleKeyAppendable;
+import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAPKModule {
+@BuckStyleTuple
+abstract class AbstractAPKModule implements RuleKeyAppendable, Comparable<AbstractAPKModule> {
   public abstract String getName();
 
   @Value.Derived
@@ -39,5 +39,17 @@ abstract class AbstractAPKModule {
     }
   }
 
-  public abstract ImmutableSet<BuildTarget> getBuildTargets();
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    sink.setReflectively("name", getName());
+  }
+
+  @Override
+  public int compareTo(AbstractAPKModule o) {
+    if (this == o) {
+      return 0;
+    }
+
+    return getName().compareTo(o.getName());
+  }
 }

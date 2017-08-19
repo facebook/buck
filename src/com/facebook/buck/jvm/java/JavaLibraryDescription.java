@@ -21,13 +21,13 @@ import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasProvidedDeps;
 import com.facebook.buck.rules.HasSrcs;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.Hint;
@@ -52,7 +52,13 @@ public class JavaLibraryDescription
         VersionPropagator<JavaLibraryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
-      ImmutableSet.of(Javadoc.DOC_JAR, JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
+      ImmutableSet.of(
+          Javadoc.DOC_JAR,
+          JavaLibrary.SRC_JAR,
+          JavaLibrary.MAVEN_JAR,
+          HasJavaAbi.CLASS_ABI_FLAVOR,
+          HasJavaAbi.SOURCE_ABI_FLAVOR,
+          HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   @VisibleForTesting private final JavacOptions defaultOptions;
@@ -80,8 +86,7 @@ public class JavaLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JavaLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JavaLibraryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
@@ -199,7 +204,8 @@ public class JavaLibraryDescription
     }
   }
 
-  public interface CoreArg extends JvmLibraryArg, HasDeclaredDeps, HasSrcs, HasTests {
+  public interface CoreArg
+      extends JvmLibraryArg, HasDeclaredDeps, HasProvidedDeps, HasSrcs, HasTests {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getResources();
 
@@ -210,14 +216,13 @@ public class JavaLibraryDescription
     @Hint(isInput = false)
     Optional<Path> getResourcesRoot();
 
+    Optional<SourcePath> getUnbundledResourcesRoot();
+
     Optional<SourcePath> getManifestFile();
 
     Optional<String> getMavenCoords();
 
     Optional<SourcePath> getMavenPomTemplate();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<BuildTarget> getProvidedDeps();
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getExportedDeps();

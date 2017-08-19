@@ -18,7 +18,6 @@ package com.facebook.buck.graphql;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -46,8 +45,7 @@ public class GraphqlLibraryDescription implements Description<GraphqlLibraryDesc
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      GraphqlLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      GraphqlLibraryDescriptionArg args) {
 
     return new GraphqlLibrary(buildTarget, projectFilesystem, params, args.getSrcs());
   }

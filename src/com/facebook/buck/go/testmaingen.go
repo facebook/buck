@@ -284,6 +284,19 @@ func (t *testFuncs) ReleaseTag(want string) bool {
 	return false
 }
 
+// ImportPath returns the import path of the package being tested, if it is within GOPATH.
+// This is printed by the testing package when running benchmarks.
+func (t *testFuncs) ImportPath() string {
+	pkg := t.Package.ImportPath
+	if strings.HasPrefix(pkg, "_/") {
+		return ""
+	}
+	if pkg == "command-line-arguments" {
+		return ""
+	}
+	return pkg
+}
+
 // Covered returns a string describing which packages are being tested for coverage.
 // If the covered package is the same as the tested package, it returns the empty string.
 // Otherwise it is a comma-separated human-readable list of packages beginning with
@@ -417,6 +430,8 @@ var examples = []testing.InternalExample{
 {{end}}
 }
 
+// testDeps is a copy of the stdlib testing/testdeps.TestDeps but is included
+// here for older Go versions.
 type testDeps struct{}
 
 var matchPat string
@@ -447,6 +462,10 @@ func (testDeps) WriteHeapProfile(w io.Writer) error {
 
 func (testDeps) WriteProfileTo(name string, w io.Writer, debug int) error {
 	return pprof.Lookup(name).WriteTo(w, debug)
+}
+
+func (testDeps) ImportPath() string {
+	return {{.ImportPath | printf "%q"}}
 }
 
 {{if .CoverEnabled}}

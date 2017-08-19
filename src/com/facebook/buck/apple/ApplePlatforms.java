@@ -16,8 +16,9 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.util.HumanReadableException;
@@ -30,14 +31,16 @@ public class ApplePlatforms {
   /** Only works with thin binaries. */
   static CxxPlatform getCxxPlatformForBuildTarget(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       BuildTarget target) {
-    return cxxPlatformFlavorDomain.getValue(target).orElse(defaultCxxPlatform);
+    return cxxPlatformFlavorDomain
+        .getValue(target)
+        .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor));
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
       Optional<MultiarchFileInfo> fatBinaryInfo) {
@@ -46,7 +49,7 @@ public class ApplePlatforms {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          getCxxPlatformForBuildTarget(cxxPlatformFlavorDomain, defaultCxxPlatform, target);
+          getCxxPlatformForBuildTarget(cxxPlatformFlavorDomain, defaultCxxFlavor, target);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {

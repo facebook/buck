@@ -33,7 +33,7 @@ MORE_PATHS_SRCS = [
 ]
 
 java_library(
-    name = "MorePaths.java",
+    name = "more-paths",
     srcs = MORE_PATHS_SRCS,
     visibility = [
         "PUBLIC",
@@ -61,6 +61,7 @@ java_library(
     deps = [
         ":DefaultProjectFilesystemDelegate",
         ":ProjectFilesystemDelegate",
+        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/eden:eden",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:process_executor",
@@ -179,9 +180,9 @@ java_immutables_library(
     ),
     exported_deps = [
         ":BuckPaths",
-        ":MorePaths.java",
         ":ProjectFilesystemDelegate",
         ":ProjectFilesystemDelegateFactory",
+        ":more-paths",
     ],
     tests = [
         "//test/com/facebook/buck/io:io",
@@ -194,7 +195,6 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:constants",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",

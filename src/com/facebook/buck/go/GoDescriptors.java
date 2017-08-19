@@ -17,7 +17,7 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -70,8 +69,7 @@ abstract class GoDescriptors {
       final BuildRuleResolver resolver,
       final GoPlatform platform,
       Iterable<BuildTarget> targets,
-      boolean includeSelf)
-      throws NoSuchBuildTargetException {
+      boolean includeSelf) {
     FluentIterable<GoLinkable> linkables =
         FluentIterable.from(targets)
             .transformAndConcat(
@@ -81,11 +79,7 @@ abstract class GoDescriptors {
                     BuildTarget flavoredTarget =
                         input.withAppendedFlavors(
                             platform.getFlavor(), TRANSITIVE_LINKABLES_FLAVOR);
-                    try {
-                      return resolver.requireMetadata(flavoredTarget, ImmutableSet.class).get();
-                    } catch (NoSuchBuildTargetException ex) {
-                      throw new RuntimeException(ex);
-                    }
+                    return resolver.requireMetadata(flavoredTarget, ImmutableSet.class).get();
                   }
                 });
     if (includeSelf) {
@@ -112,8 +106,7 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       GoPlatform platform,
-      Iterable<BuildTarget> deps)
-      throws NoSuchBuildTargetException {
+      Iterable<BuildTarget> deps) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -199,8 +192,7 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
-      GoPlatform platform)
-      throws NoSuchBuildTargetException {
+      GoPlatform platform) {
     BuildTarget libraryTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("compile"), platform.getFlavor());
     GoCompile library =
@@ -262,8 +254,7 @@ abstract class GoDescriptors {
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams sourceParams,
-      BuildRuleResolver resolver)
-      throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver) {
 
     Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(resolver);
     if (configTool.isPresent()) {
@@ -273,7 +264,7 @@ abstract class GoDescriptors {
     // TODO(mikekap): Make a single test main gen, rather than one per test. The generator itself
     // doesn't vary per test.
     BuildRule generator =
-        resolver.computeIfAbsentThrowing(
+        resolver.computeIfAbsent(
             sourceBuildTarget.withFlavors(InternalFlavor.of("make-test-main-gen")),
             generatorTarget -> {
               WriteFile writeFile =
@@ -326,8 +317,7 @@ abstract class GoDescriptors {
   }
 
   private static GoLinkable requireGoLinkable(
-      BuildTarget sourceRule, BuildRuleResolver resolver, GoPlatform platform, BuildTarget target)
-      throws NoSuchBuildTargetException {
+      BuildTarget sourceRule, BuildRuleResolver resolver, GoPlatform platform, BuildTarget target) {
     Optional<GoLinkable> linkable =
         resolver.requireMetadata(
             target.withAppendedFlavors(platform.getFlavor()), GoLinkable.class);
@@ -343,12 +333,11 @@ abstract class GoDescriptors {
       final BuildTarget sourceTarget,
       final BuildRuleResolver resolver,
       final GoPlatform platform,
-      Iterable<BuildTarget> targets)
-      throws NoSuchBuildTargetException {
+      Iterable<BuildTarget> targets) {
     final ImmutableSet.Builder<GoLinkable> linkables = ImmutableSet.builder();
-    new AbstractBreadthFirstThrowingTraversal<BuildTarget, NoSuchBuildTargetException>(targets) {
+    new AbstractBreadthFirstTraversal<BuildTarget>(targets) {
       @Override
-      public Iterable<BuildTarget> visit(BuildTarget target) throws NoSuchBuildTargetException {
+      public Iterable<BuildTarget> visit(BuildTarget target) {
         GoLinkable linkable = requireGoLinkable(sourceTarget, resolver, platform, target);
         linkables.add(linkable);
         return linkable.getExportedDeps();

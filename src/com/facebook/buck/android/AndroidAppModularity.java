@@ -93,6 +93,8 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
             Optional.empty(),
             /*skipProguard*/ true));
 
+    buildableContext.recordArtifact(metadataFile);
+
     return steps.build();
   }
 

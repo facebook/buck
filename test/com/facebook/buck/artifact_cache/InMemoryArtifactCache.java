@@ -50,8 +50,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
     return service.submit(() -> fetch(ruleKey, output));
   }
 
-  @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+  private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     Artifact artifact = artifacts.get(ruleKey);
     if (artifact == null) {
       return CacheResult.miss();

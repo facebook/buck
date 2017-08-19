@@ -37,7 +37,7 @@ import java.util.Optional;
  * This step takes a list of args, stringify, escape them (if escaper is present), and finally store
  * to a file {@link #argFilePath}.
  */
-public class CxxWriteArgsToFileStep implements Step {
+class CxxWriteArgsToFileStep implements Step {
 
   private final Path argFilePath;
   private final ImmutableList<String> argFileContents;

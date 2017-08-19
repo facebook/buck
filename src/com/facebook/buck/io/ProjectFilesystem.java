@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.CustomZipEntry;
@@ -156,9 +155,8 @@ public class ProjectFilesystem {
 
   /**
    * This constructor is restricted to {@code protected} because it is generally best to let {@link
-   * ProjectFilesystemDelegateFactory#newInstance(Path, Path, String, AutoSparseConfig)} create an
-   * appropriate delegate. Currently, the only case in which we need to override this behavior is in
-   * unit tests.
+   * ProjectFilesystemDelegateFactory#newInstance(Path, Path, String, Config)} create an appropriate
+   * delegate. Currently, the only case in which we need to override this behavior is in unit tests.
    */
   protected ProjectFilesystem(
       Path root, ProjectFilesystemDelegate delegate, boolean windowsSymlinks) {
@@ -181,7 +179,7 @@ public class ProjectFilesystem {
             root,
             getConfiguredBuckPaths(root, config).getBuckOut(),
             config.getValue("version_control", "hg_cmd").orElse("hg"),
-            AutoSparseConfig.of(config)),
+            config),
         config.getBooleanValue("project", "windows_symlinks", false));
   }
 
@@ -334,6 +332,11 @@ public class ProjectFilesystem {
 
   public final Path getRootPath() {
     return projectRoot;
+  }
+
+  /** @return details about the delegate suitable for writing to a log file. */
+  public String getDelegateDetails() {
+    return delegate.getDetailsForLogging();
   }
 
   /**

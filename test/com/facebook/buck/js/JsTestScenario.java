@@ -28,6 +28,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.FakeWorkerBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -67,17 +69,23 @@ public class JsTestScenario {
 
   JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps)
       throws NoSuchBuildTargetException {
-    return createBundle(target, deps, Either.ofLeft(ImmutableSet.of()));
+    return createBundle(target, builder -> builder.setDeps(deps));
+  }
+
+  JsBundle createBundle(String target, Function<JsBundleBuilder, JsBundleBuilder> setUp)
+      throws NoSuchBuildTargetException {
+    return createBundle(target, Either.ofLeft(ImmutableSet.of()), setUp);
   }
 
   private JsBundle createBundle(
       String target,
-      ImmutableSortedSet<BuildTarget> deps,
-      Either<ImmutableSet<String>, String> entry)
+      Either<ImmutableSet<String>, String> entry,
+      Function<JsBundleBuilder, JsBundleBuilder> setUp)
       throws NoSuchBuildTargetException {
-    return new JsBundleBuilder(
-            BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem)
-        .setDeps(deps)
+    return setUp
+        .apply(
+            new JsBundleBuilder(
+                BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem))
         .build(resolver, targetGraph);
   }
 
@@ -109,10 +117,30 @@ public class JsTestScenario {
       return this;
     }
 
-    Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
+    Builder libraryWithDeps(BuildTarget target, BuildTarget... libraryDependencies) {
+      nodes.add(
+          new JsLibraryBuilder(target, filesystem)
+              .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
+              .setWorker(workerTarget)
+              .build());
+      return this;
+    }
+
+    Builder libraryWithLibs(BuildTarget target, BuildTarget... libraryDependencies) {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
+              .setWorker(workerTarget)
+              .build());
+      return this;
+    }
+
+    Builder library(
+        BuildTarget target, Query libraryDependenciesQuery, BuildTarget... libraryDependencies) {
+      nodes.add(
+          new JsLibraryBuilder(target, filesystem)
+              .setDepsQuery(libraryDependenciesQuery)
+              .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
               .setWorker(workerTarget)
               .build());
       return this;
@@ -159,7 +187,7 @@ public class JsTestScenario {
       return this;
     }
 
-    JsTestScenario build() throws NoSuchBuildTargetException {
+    JsTestScenario build() {
       final TargetGraph graph = TargetGraphFactory.newInstance(nodes);
       final BuildRuleResolver resolver =
           new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());

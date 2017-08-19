@@ -25,6 +25,7 @@ import org.junit.Test;
 public class CoordinatorAndMinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+  private static final int MAX_BUILD_NODES_PER_MINION = 21;
 
   @Test
   public void testDiamondGraphRun()
@@ -33,7 +34,11 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
     int port = ThriftCoordinatorServerIntegrationTest.findRandomOpenPortOnAllLocalInterfaces();
     CoordinatorModeRunner coordinator =
         new CoordinatorModeRunner(
-            port, BuildTargetsQueueTest.createDiamondDependencyQueue(), STAMPEDE_ID);
+            port,
+            BuildTargetsQueueTest.createDiamondDependencyQueue(),
+            STAMPEDE_ID,
+            (address, port1) -> {},
+            MAX_BUILD_NODES_PER_MINION);
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
     MinionModeRunner minion = new MinionModeRunner("localhost", port, localBuilder, STAMPEDE_ID);

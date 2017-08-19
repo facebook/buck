@@ -123,6 +123,13 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
+  public void testLibraryWithDepsQuery() throws IOException {
+    workspace.runBuckBuild("//js:lib-with-deps-query").assertSuccess();
+
+    workspace.verify(Paths.get("with_deps_query.expected"), genPath);
+  }
+
+  @Test
   public void testBundleBuild() throws IOException {
     workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#ios").assertSuccess();
 

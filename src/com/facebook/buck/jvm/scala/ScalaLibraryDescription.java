@@ -18,28 +18,19 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.HasDeclaredDeps;
-import com.facebook.buck.rules.HasSrcs;
-import com.facebook.buck.rules.HasTests;
-import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.util.Optional;
 import org.immutables.value.Value;
 
 public class ScalaLibraryDescription
@@ -66,8 +57,7 @@ public class ScalaLibraryDescription
       BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      ScalaLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      ScalaLibraryDescriptionArg args) {
     ScalaLibraryBuilder scalaLibraryBuilder =
         new ScalaLibraryBuilder(
                 targetGraph,
@@ -97,23 +87,10 @@ public class ScalaLibraryDescription
     Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
   }
 
-  // Note: scala does not have a exported_deps because scala needs the transitive closure of
-  // dependencies to compile. deps is effectively exported_deps.
-  interface CoreArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests {
-    @Value.NaturalOrder
-    ImmutableSortedSet<SourcePath> getResources();
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
 
+    @Override
     ImmutableList<String> getExtraArguments();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<BuildTarget> getProvidedDeps();
-
-    @Hint(isInput = false)
-    Optional<Path> getResourcesRoot();
-
-    Optional<SourcePath> getManifestFile();
-
-    Optional<String> getMavenCoords();
   }
 
   @BuckStyleImmutable

@@ -213,26 +213,31 @@ public class WatchmanWatcher {
       throws IOException, InterruptedException {
     // Speculatively set to false
     AtomicBoolean filesHaveChanged = new AtomicBoolean(false);
-    for (Path cellPath : queries.keySet()) {
-      WatchmanQuery query = queries.get(cellPath);
-      WatchmanCursor cursor = cursors.get(cellPath);
-      if (query != null && cursor != null) {
-        try (SimplePerfEvent.Scope perfEvent =
-            SimplePerfEvent.scope(
-                buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
-          postEvents(
-              buckEventBus,
-              freshInstanceAction,
-              cellPath,
-              query,
-              cursor,
-              filesHaveChanged,
-              perfEvent);
+    buckEventBus.post(WatchmanStatusEvent.started());
+    try {
+      for (Path cellPath : queries.keySet()) {
+        WatchmanQuery query = queries.get(cellPath);
+        WatchmanCursor cursor = cursors.get(cellPath);
+        if (query != null && cursor != null) {
+          try (SimplePerfEvent.Scope perfEvent =
+              SimplePerfEvent.scope(
+                  buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath)) {
+            postEvents(
+                buckEventBus,
+                freshInstanceAction,
+                cellPath,
+                query,
+                cursor,
+                filesHaveChanged,
+                perfEvent);
+          }
         }
       }
-    }
-    if (!filesHaveChanged.get()) {
-      buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
+      if (!filesHaveChanged.get()) {
+        buckEventBus.post(WatchmanStatusEvent.zeroFileChanges());
+      }
+    } finally {
+      buckEventBus.post(WatchmanStatusEvent.finished());
     }
   }
 

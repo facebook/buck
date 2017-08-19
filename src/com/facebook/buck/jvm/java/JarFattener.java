@@ -73,7 +73,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
   @AddToRuleKey private final ImmutableMap<String, SourcePath> nativeLibraries;
-  @AddToRuleKey private final JavaRuntimeLauncher javaRuntimeLauncher;
+  // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
+  // rule key.
+  private final Tool javaRuntimeLauncher;
   private final Path output;
 
   public JarFattener(
@@ -84,7 +86,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
-      JavaRuntimeLauncher javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher) {
     super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
@@ -173,42 +175,42 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             fatJarDir);
 
-    Path pathToSrcsList =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths.build())
+            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setOutputDirectory(fatJarDir)
+            .build();
+
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                pathToSrcsList.getParent())));
+                compilerParameters.getPathToSourcesList().getParent())));
 
-    CompileToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
+    JavacToJarStepFactory compileStepFactory =
+        new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
 
     compileStepFactory.createCompileStep(
         context,
-        javaSourceFilePaths.build(),
         getBuildTarget(),
         context.getSourcePathResolver(),
         getProjectFilesystem(),
-        /* classpathEntries */ ImmutableSortedSet.of(),
-        fatJarDir,
-        /* workingDir */ Optional.empty(),
-        Optional.of(
-            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
-        Optional.empty(),
-        pathToSrcsList,
+        compilerParameters,
         steps,
         buildableContext);
 
     steps.add(zipStep);
-    steps.add(
-        new JarDirectoryStep(
-            getProjectFilesystem(),
-            output,
-            ImmutableSortedSet.of(zipped),
-            /* mainClass */ FatJarMain.class.getName(),
-            /* manifestFile */ null));
+    JarParameters jarParameters =
+        JarParameters.builder()
+            .setJarPath(output)
+            .setEntriesToJar(ImmutableSortedSet.of(zipped))
+            .setMainClass(Optional.of(FatJarMain.class.getName()))
+            .setMergeManifests(true)
+            .build();
+    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
 
     buildableContext.recordArtifact(output);
 
@@ -257,8 +259,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(javaRuntimeLauncher.getCommand())
+    return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();

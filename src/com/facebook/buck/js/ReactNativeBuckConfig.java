@@ -52,4 +52,8 @@ public class ReactNativeBuckConfig {
     }
     return packagerWorker.get();
   }
+
+  public int getMaxWorkers() {
+    return Math.max(1, delegate.getNumThreads() * 3 / 4);
+  }
 }

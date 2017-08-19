@@ -20,6 +20,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.model.BuildTarget;
@@ -136,10 +137,12 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            temp.resolve("classes.jar"),
-            context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar),
-            /* mainClass */ null,
-            /* manifestFile */ null));
+            JarParameters.builder()
+                .setJarPath(temp.resolve("classes.jar"))
+                .setEntriesToJar(
+                    context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar))
+                .setMergeManifests(true)
+                .build()));
 
     // move native libs into tmp folder under jni/
     if (assembledNativeLibs.isPresent()) {

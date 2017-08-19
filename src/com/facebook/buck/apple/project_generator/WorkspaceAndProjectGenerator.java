@@ -25,8 +25,8 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
@@ -78,6 +78,7 @@ public class WorkspaceAndProjectGenerator {
   private final Cell rootCell;
   private final TargetGraph projectGraph;
   private final AppleDependenciesCache dependenciesCache;
+  private final ProjectGenerationStateCache projGenerationStateCache;
   private final XcodeWorkspaceConfigDescriptionArg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
   private final FocusedModuleTargetMatcher focusModules;
@@ -117,6 +118,7 @@ public class WorkspaceAndProjectGenerator {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.dependenciesCache = new AppleDependenciesCache(projectGraph);
+    this.projGenerationStateCache = new ProjectGenerationStateCache();
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
@@ -401,6 +403,7 @@ public class WorkspaceAndProjectGenerator {
             new ProjectGenerator(
                 projectGraph,
                 dependenciesCache,
+                projGenerationStateCache,
                 rules,
                 projectCell,
                 projectDirectory,
@@ -452,6 +455,7 @@ public class WorkspaceAndProjectGenerator {
         new ProjectGenerator(
             projectGraph,
             dependenciesCache,
+            projGenerationStateCache,
             targetsInRequiredProjects,
             rootCell,
             outputDirectory.getParent(),

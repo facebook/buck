@@ -84,10 +84,13 @@ public class JsUtil {
         .collect(Collectors.joining(" "));
   }
 
+  static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {
+    return targetGraph.get(target).getDescription() instanceof JsLibraryDescription;
+  }
+
   static BuildTarget verifyIsJsLibraryTarget(
       BuildTarget target, BuildTarget parent, TargetGraph targetGraph) {
-    Description<?> targetDescription = targetGraph.get(target).getDescription();
-    if (targetDescription.getClass() != JsLibraryDescription.class) {
+    if (!isJsLibraryTarget(target, targetGraph)) {
       throw new HumanReadableException(
           "%s target '%s' can only depend on js_library targets, but one of its dependencies, "
               + "'%s', is of type %s.",

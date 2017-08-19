@@ -16,31 +16,30 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.HeaderSymlinkTree;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -114,8 +113,7 @@ public class CxxLuaExtensionDescription
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      CxxLuaExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLuaExtensionDescriptionArg args) {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -218,8 +216,7 @@ public class CxxLuaExtensionDescription
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      CxxLuaExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxLuaExtensionDescriptionArg args) {
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
           ruleResolver, args, cxxPlatform, buildTarget, projectFilesystem);
@@ -277,8 +274,7 @@ public class CxxLuaExtensionDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final CxxLuaExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final CxxLuaExtensionDescriptionArg args) {
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
@@ -304,7 +300,7 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public SourcePath getExtension(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      public SourcePath getExtension(CxxPlatform cxxPlatform) {
         BuildRule rule =
             resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
         return Preconditions.checkNotNull(rule.getSourcePathToOutput());
@@ -323,8 +319,7 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
         return NativeLinkableInput.builder()
             .addAllArgs(
                 getExtensionArgs(

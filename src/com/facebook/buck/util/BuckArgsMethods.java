@@ -27,11 +27,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
@@ -80,8 +80,8 @@ public class BuckArgsMethods {
    * @param projectRoot path against which any {@code @args} path arguments will be resolved.
    * @return args array with AT-files expanded.
    */
-  public static String[] expandAtFiles(String[] args, Path projectRoot) {
-    return Arrays.stream(args)
+  public static ImmutableList<String> expandAtFiles(Iterable<String> args, Path projectRoot) {
+    return StreamSupport.stream(args.spliterator(), /* parallel */ false)
         .flatMap(
             arg -> {
               if (arg.startsWith("@")) {
@@ -107,7 +107,7 @@ public class BuckArgsMethods {
                 return ImmutableList.of(arg).stream();
               }
             })
-        .toArray(String[]::new);
+        .collect(MoreCollectors.toImmutableList());
   }
 
   /**

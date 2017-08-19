@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.verify;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -126,7 +127,15 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"), javaBuckConfig)
             .addDep(sublibNode.getBuildTarget())
             .build();
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode);
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
+    AndroidLibraryBuilder ruleBuilder =
+        AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addDep(libNode.getBuildTarget())
+            .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"));
+    TargetNode<AndroidLibraryDescriptionArg, AndroidLibraryDescription> rule = ruleBuilder.build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode, rule);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
@@ -138,13 +147,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
         resolver.addToIndex(
             new FakeBuildRule(libNode.getBuildTarget(), ImmutableSortedSet.of(sublibRule)));
 
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-
-    BuildRule javaLibrary =
-        AndroidLibraryBuilder.createBuilder(target, javaBuckConfig)
-            .addDep(libNode.getBuildTarget())
-            .setDepsQuery(Query.of("filter('.*lib', deps($declared_deps))"))
-            .build(resolver, targetGraph);
+    BuildRule javaLibrary = ruleBuilder.build(resolver, targetGraph);
 
     assertThat(javaLibrary.getBuildDeps(), Matchers.hasItems(libRule, sublibRule));
     // The bottom rule should be filtered since it does not match the regex
@@ -200,7 +203,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void bootClasspathAppenderAddsLibsFromAndroidPlatformTarget() {
+  public void androidClasspathFromContextFunctionAddsLibsFromAndroidPlatformTarget() {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     List<Path> entries =
         ImmutableList.of(
@@ -211,13 +214,14 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     replay(androidPlatformTarget);
 
-    BootClasspathAppender appender = new BootClasspathAppender();
+    ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
+        AndroidClasspathFromContextFunction.INSTANCE;
 
     JavacOptions options =
         JavacOptions.builder().setSourceLevel("1.7").setTargetLevel("1.7").build();
     JavacOptions updated =
-        appender.amend(
-            options,
+        options.withBootclasspathFromContext(
+            extraClasspathFromContextFunction,
             FakeBuildContext.NOOP_CONTEXT.withAndroidPlatformTargetSupplier(
                 Suppliers.ofInstance(androidPlatformTarget)));
 

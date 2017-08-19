@@ -18,13 +18,12 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -65,8 +64,7 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<LanguageExtensions> languageExtensions) {
     Archive archive =
         (Archive)
             buildRuleResolver.requireRule(
@@ -87,7 +85,7 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
     return ImmutableMap.of();
   }
 
-  public DIncludes getIncludes() throws NoSuchBuildTargetException {
+  public DIncludes getIncludes() {
     buildRuleResolver.requireRule(
         getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE));
     return includes;

@@ -24,8 +24,9 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
+import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
@@ -97,7 +98,7 @@ public class DummyRDotJavaTest {
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
@@ -141,14 +142,7 @@ public class DummyRDotJavaTest {
             .add(String.format("mkdir -p %s", genFolder))
             .add(
                 new JavacStep(
-                        rDotJavaBinFolder,
                         NoOpClassUsageFileWriter.instance(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        javaSourceFiles,
-                        BuildTargets.getGenPath(
-                            filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"),
-                        /* declared classpath */ ImmutableSortedSet.of(),
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                             .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
@@ -157,7 +151,18 @@ public class DummyRDotJavaTest {
                         pathResolver,
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
-                        /* directToJarOutputSettings */ Optional.empty(),
+                        CompilerParameters.builder()
+                            .setOutputDirectory(rDotJavaBinFolder)
+                            .setGeneratedCodeDirectory(Paths.get("generated"))
+                            .setWorkingDirectory(Paths.get("working"))
+                            .setDepFilePath(Paths.get("depFile"))
+                            .setSourceFilePaths(javaSourceFiles)
+                            .setPathToSourcesList(
+                                BuildTargets.getGenPath(
+                                    filesystem, dummyRDotJava.getBuildTarget(), "__%s__srcs"))
+                            .setClasspathEntries(ImmutableSortedSet.of())
+                            .build(),
+                        Optional.empty(),
                         null)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
@@ -190,7 +195,7 @@ public class DummyRDotJavaTest {
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, JavacOptionsAmender.IDENTITY),
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathFromContextFunction.EMPTY),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),

@@ -17,13 +17,18 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.rules.CommandTool;
+import com.google.common.collect.ImmutableList;
 
 public class JavaCompilationConstants {
 
   public static final JavaBuckConfig DEFAULT_JAVA_CONFIG =
       JavaBuckConfig.of(FakeBuckConfig.builder().build());
 
-  public static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaOptions.builder().build();
+  public static final ImmutableList<String> DEFAULT_JAVA_COMMAND_PREFIX = ImmutableList.of("java");
+
+  public static final JavaOptions DEFAULT_JAVA_OPTIONS =
+      JavaOptions.of(new CommandTool.Builder().addArg("java").build());
 
   public static final JavacOptions DEFAULT_JAVAC_OPTIONS =
       JavacOptions.builderForUseInJavaBuckConfig().setSourceLevel("7").setTargetLevel("7").build();

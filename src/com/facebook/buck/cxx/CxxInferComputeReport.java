@@ -40,7 +40,7 @@ import java.util.SortedSet;
  * Merge all the json reports together into one and emit a list of results dirs of each capture and
  * analysis target involved for the analysis itself.
  */
-public class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSteps {
+class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSteps {
 
   private CxxInferAnalyze analysisToReport;
   private ProjectFilesystem projectFilesystem;

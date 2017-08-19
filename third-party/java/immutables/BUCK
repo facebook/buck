@@ -13,6 +13,7 @@ java_annotation_processor(
 prebuilt_jar(
     name = "immutables",
     binary_jar = "value-2.4.6.jar",
+    source_jar = "value-2.4.6-sources.jar",
     licenses = [
         "COPYING",
     ],

@@ -17,21 +17,21 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class HaskellBuckConfig implements HaskellConfig {
+public class HaskellBuckConfig {
 
-  private static final String SECTION = "haskell";
+  private static final Integer DEFAULT_MAJOR_VERSION = 7;
+  private static final String SECTION_PREFIX = "haskell";
 
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
@@ -41,8 +41,8 @@ public class HaskellBuckConfig implements HaskellConfig {
     this.finder = finder;
   }
 
-  private Optional<ImmutableList<String>> getFlags(String field) {
-    Optional<String> value = delegate.getValue(SECTION, field);
+  private Optional<ImmutableList<String>> getFlags(String section, String field) {
+    Optional<String> value = delegate.getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
@@ -53,129 +53,56 @@ public class HaskellBuckConfig implements HaskellConfig {
     return Optional.of(split.build());
   }
 
-  @VisibleForTesting
-  protected Optional<Path> getSystemCompiler() {
-    return finder.getOptionalExecutable(Paths.get("ghc"), delegate.getEnvironment());
+  private ToolProvider getTool(String section, String configName, String systemName) {
+    return delegate
+        .getToolProvider(section, configName)
+        .orElseGet(
+            () ->
+                SystemToolProvider.builder()
+                    .setExecutableFinder(finder)
+                    .setName(Paths.get(systemName))
+                    .setEnvironment(delegate.getEnvironment())
+                    .setSource(String.format(".buckconfig (%s.%s)", section, configName))
+                    .build());
   }
 
-  @Override
-  public ToolProvider getCompiler() {
-    Optional<ToolProvider> configuredCompiler = delegate.getToolProvider(SECTION, "compiler");
-    if (configuredCompiler.isPresent()) {
-      return configuredCompiler.get();
-    }
-
-    Optional<Path> systemCompiler = getSystemCompiler();
-    if (systemCompiler.isPresent()) {
-      return new ConstantToolProvider(new HashedFileTool(systemCompiler.get()));
-    }
-
-    throw new HumanReadableException(
-        "No Haskell compiler found in .buckconfig (%s.compiler) or on system", SECTION);
+  private HaskellPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
+    return HaskellPlatform.builder()
+        .setHaskellVersion(
+            HaskellVersion.of(
+                delegate
+                    .getInteger(section, "compiler_major_version")
+                    .orElse(DEFAULT_MAJOR_VERSION)))
+        .setCompiler(getTool(section, "compiler", "ghc"))
+        .setCompilerFlags(getFlags(section, "compiler_flags").orElse(ImmutableList.of()))
+        .setLinker(getTool(section, "linker", "ghc"))
+        .setLinkerFlags(getFlags(section, "linker_flags").orElse(ImmutableList.of()))
+        .setPackager(getTool(section, "packager", "ghc-pkg"))
+        .setShouldCacheLinks(delegate.getBooleanValue(section, "cache_links", true))
+        .setShouldUsedOldBinaryOutputLocation(
+            delegate.getBoolean(section, "old_binary_output_location"))
+        .setPackageNamePrefix(delegate.getValue(section, "package_name_prefix"))
+        .setGhciScriptTemplate(() -> delegate.getRequiredPath(section, "ghci_script_template"))
+        .setGhciBinutils(() -> delegate.getRequiredPath(section, "ghci_binutils_path"))
+        .setGhciGhc(() -> delegate.getRequiredPath(section, "ghci_ghc_path"))
+        .setGhciLib(() -> delegate.getRequiredPath(section, "ghci_lib_path"))
+        .setGhciCxx(() -> delegate.getRequiredPath(section, "ghci_cxx_path"))
+        .setGhciCc(() -> delegate.getRequiredPath(section, "ghci_cc_path"))
+        .setGhciCpp(() -> delegate.getRequiredPath(section, "ghci_cpp_path"))
+        .setCxxPlatform(cxxPlatform)
+        .build();
   }
 
-  private static final Integer DEFAULT_MAJOR_VERSION = 7;
-
-  @Override
-  public HaskellVersion getHaskellVersion() {
-    Optional<Integer> majorVersion = delegate.getInteger(SECTION, "compiler_major_version");
-    return HaskellVersion.of(majorVersion.orElse(DEFAULT_MAJOR_VERSION));
-  }
-
-  @Override
-  public ImmutableList<String> getCompilerFlags() {
-    return getFlags("compiler_flags").orElse(ImmutableList.of());
-  }
-
-  @Override
-  public ToolProvider getLinker() {
-    Optional<ToolProvider> configuredLinker = delegate.getToolProvider(SECTION, "linker");
-    if (configuredLinker.isPresent()) {
-      return configuredLinker.get();
-    }
-
-    Optional<Path> systemLinker = getSystemCompiler();
-    if (systemLinker.isPresent()) {
-      return new ConstantToolProvider(new HashedFileTool(systemLinker.get()));
-    }
-
-    throw new HumanReadableException(
-        "No Haskell linker found in .buckconfig (%s.linker) or on system", SECTION);
-  }
-
-  @Override
-  public ImmutableList<String> getLinkerFlags() {
-    return getFlags("linker_flags").orElse(ImmutableList.of());
-  }
-
-  @VisibleForTesting
-  protected Optional<Path> getSystemPackager() {
-    return finder.getOptionalExecutable(Paths.get("ghc-pkg"), delegate.getEnvironment());
-  }
-
-  @Override
-  public ToolProvider getPackager() {
-    Optional<ToolProvider> configuredPackager = delegate.getToolProvider(SECTION, "packager");
-    if (configuredPackager.isPresent()) {
-      return configuredPackager.get();
-    }
-
-    Optional<Path> systemPackager = getSystemPackager();
-    if (systemPackager.isPresent()) {
-      return new ConstantToolProvider(new HashedFileTool(systemPackager.get()));
-    }
-
-    throw new HumanReadableException(
-        "No Haskell packager found in .buckconfig (%s.compiler) or on system", SECTION);
-  }
-
-  @Override
-  public boolean shouldCacheLinks() {
-    return delegate.getBooleanValue(SECTION, "cache_links", true);
-  }
-
-  @Override
-  public Optional<Boolean> shouldUsedOldBinaryOutputLocation() {
-    return delegate.getBoolean(SECTION, "old_binary_output_location");
-  }
-
-  @Override
-  public Path getGhciScriptTemplate() {
-    return delegate.getRequiredPath(SECTION, "ghci_script_template");
-  }
-
-  @Override
-  public Path getGhciBinutils() {
-    return delegate.getRequiredPath(SECTION, "ghci_binutils_path");
-  }
-
-  @Override
-  public Path getGhciGhc() {
-    return delegate.getRequiredPath(SECTION, "ghci_ghc_path");
-  }
-
-  @Override
-  public Path getGhciLib() {
-    return delegate.getRequiredPath(SECTION, "ghci_lib_path");
-  }
-
-  @Override
-  public Path getGhciCxx() {
-    return delegate.getRequiredPath(SECTION, "ghci_cxx_path");
-  }
-
-  @Override
-  public Path getGhciCc() {
-    return delegate.getRequiredPath(SECTION, "ghci_cc_path");
-  }
-
-  @Override
-  public Path getGhciCpp() {
-    return delegate.getRequiredPath(SECTION, "ghci_cpp_path");
-  }
-
-  @Override
-  public Optional<String> getPackageNamePrefix() {
-    return delegate.getValue(SECTION, "package_name_prefix");
+  public ImmutableList<HaskellPlatform> getPlatforms(Iterable<CxxPlatform> cxxPlatforms) {
+    return RichStream.from(cxxPlatforms)
+        .map(
+            cxxPlatform ->
+                // We special case the "default" C/C++ platform to just use the "haskell" section.
+                cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
+                    ? getPlatform(SECTION_PREFIX, cxxPlatform)
+                    : getPlatform(
+                        String.format("%s#%s", SECTION_PREFIX, cxxPlatform.getFlavor()),
+                        cxxPlatform))
+        .toImmutableList();
   }
 }

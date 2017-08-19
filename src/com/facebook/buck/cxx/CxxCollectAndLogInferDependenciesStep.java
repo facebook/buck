@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public final class CxxCollectAndLogInferDependenciesStep implements Step {
+final class CxxCollectAndLogInferDependenciesStep implements Step {
 
   private Optional<CxxInferAnalyze> analysisRule;
   private Optional<CxxInferCaptureTransitive> captureOnlyRule;

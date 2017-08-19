@@ -341,7 +341,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Preconditions.checkNotNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
             resourceUnion,
-            isGrayscaleImageProcessingEnabled));
+            isGrayscaleImageProcessingEnabled,
+            MiniAapt.ResourceCollectionType.R_DOT_TXT));
     return steps.build();
   }
 

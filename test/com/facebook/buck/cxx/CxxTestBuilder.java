@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -46,7 +48,7 @@ public class CxxTestBuilder
     super(
         new CxxTestDescription(
             cxxBuckConfig,
-            defaultCxxPlatform,
+            defaultCxxPlatform.getFlavor(),
             cxxPlatforms,
             /* testRuleTimeoutMs */ Optional.empty()),
         target);

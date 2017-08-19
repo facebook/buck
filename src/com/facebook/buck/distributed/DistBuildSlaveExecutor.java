@@ -64,6 +64,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -74,6 +75,7 @@ import javax.annotation.Nullable;
 
 public class DistBuildSlaveExecutor {
   private static final Logger LOG = Logger.get(DistBuildSlaveExecutor.class);
+  private static final String LOCALHOST_ADDRESS = "localhost";
 
   private final DistBuildExecutorArgs args;
 
@@ -101,16 +103,21 @@ public class DistBuildSlaveExecutor {
         break;
 
       case COORDINATOR:
-        runner = newCoordinatorMode();
+        runner = newCoordinatorMode(getFreePortForCoordinator());
         break;
 
       case MINION:
-        runner = newMinionMode(localBuilder);
+        runner =
+            newMinionMode(
+                localBuilder, args.getRemoteCoordinatorAddress(), args.getRemoteCoordinatorPort());
         break;
 
       case COORDINATOR_AND_MINION:
+        int localCoordinatorPort = getFreePortForCoordinator();
         runner =
-            new CoordinatorAndMinionModeRunner(newCoordinatorMode(), newMinionMode(localBuilder));
+            new CoordinatorAndMinionModeRunner(
+                newCoordinatorMode(localCoordinatorPort),
+                newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
         break;
 
       default:
@@ -121,20 +128,30 @@ public class DistBuildSlaveExecutor {
     return runner.runAndReturnExitCode();
   }
 
-  private MinionModeRunner newMinionMode(LocalBuilder localBuilder) {
+  private MinionModeRunner newMinionMode(
+      LocalBuilder localBuilder, String coordinatorAddress, int coordinatorPort) {
     return new MinionModeRunner(
-        args.getCoordinatorAddress(),
-        args.getCoordinatorPort(),
-        localBuilder,
-        args.getStampedeId());
+        coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId());
   }
 
-  private CoordinatorModeRunner newCoordinatorMode() {
+  private CoordinatorModeRunner newCoordinatorMode(int coordinatorPort) {
     BuildTargetsQueue queue =
         BuildTargetsQueue.newQueue(
             Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
             fullyQualifiedNameToBuildTarget(args.getState().getRemoteState().getTopLevelTargets()));
-    return new CoordinatorModeRunner(args.getCoordinatorPort(), queue, args.getStampedeId());
+    Optional<String> minionQueue = args.getDistBuildConfig().getMinionQueue();
+    Preconditions.checkArgument(
+        minionQueue.isPresent(),
+        "Minion queue name is missing to be able to run in Coordinator mode.");
+    CoordinatorModeRunner.EventListener listener =
+        new CoordinatorAndMinionInfoSetter(
+            args.getDistBuildService(), args.getStampedeId(), minionQueue.get());
+    return new CoordinatorModeRunner(
+        coordinatorPort,
+        queue,
+        args.getStampedeId(),
+        listener,
+        args.getDistBuildConfig().getMaxBuildNodesPerMinion());
   }
 
   private TargetGraph createTargetGraph() throws IOException, InterruptedException {
@@ -215,8 +232,7 @@ public class DistBuildSlaveExecutor {
     return cachingBuildEngineDelegate;
   }
 
-  private StackedFileHashCache createStackOfDefaultFileHashCache()
-      throws InterruptedException, IOException {
+  private StackedFileHashCache createStackOfDefaultFileHashCache() throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder = ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
 
@@ -250,7 +266,7 @@ public class DistBuildSlaveExecutor {
             args.getRemoteRootCellConfig().getEnvironment(),
             androidConfig.getBuildToolsVersion(),
             androidConfig.getNdkVersion());
-    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig, args.getBuckEventBus());
+    return new AndroidPlatformTargetSupplier(dirResolver, androidConfig);
   }
 
   private List<BuildTarget> fullyQualifiedNameToBuildTarget(Iterable<String> buildTargets) {
@@ -308,6 +324,13 @@ public class DistBuildSlaveExecutor {
     return targetGraphCodec;
   }
 
+  public static int getFreePortForCoordinator() throws IOException {
+    // Passing argument 0 to ServerSocket will allocate a new free random port.
+    try (ServerSocket socket = new ServerSocket(0)) {
+      return socket.getLocalPort();
+    }
+  }
+
   private class LocalBuilderImpl implements LocalBuilder {
     private final BuckConfig distBuildConfig;
     private final CachingBuildEngineBuckConfig engineConfig;
@@ -333,7 +356,6 @@ public class DistBuildSlaveExecutor {
       try (CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   Preconditions.checkNotNull(cachingBuildEngineDelegate),
-                  args.getExecutorService(),
                   args.getExecutorService(),
                   new DefaultStepRunner(),
                   engineConfig.getBuildEngineMode(),

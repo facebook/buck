@@ -17,12 +17,15 @@
 package com.facebook.buck.js;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomainException;
+import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -30,16 +33,20 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.WorkerShellStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Collection;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 
 public class JsBundleWorkerJobArgsTest {
+  private static final Pattern OUT_FILE_PATTERN = Pattern.compile("--out\\s+(\\S+)");
   private JsTestScenario scenario;
   private BuildContext context;
   private FakeBuildableContext fakeBuildableContext;
@@ -55,44 +62,77 @@ public class JsBundleWorkerJobArgsTest {
 
   @Test
   public void testFileRamBundleFlavor() throws NoSuchBuildTargetException {
-    final JsBundle bundle =
+    JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_FILES), ImmutableSortedSet.of());
 
-    assertThat(
-        getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
-        startsWith("bundle --files-rambundle "));
+    assertThat(getJobArgs(bundle), startsWith("bundle --files-rambundle "));
   }
 
   @Test
   public void testIndexedRamBundleFlavor() throws NoSuchBuildTargetException {
-    final JsBundle bundle =
+    JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors("//:arbitrary", JsFlavors.RAM_BUNDLE_INDEXED),
             ImmutableSortedSet.of());
 
-    assertThat(
-        getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
-        startsWith("bundle --indexed-rambundle "));
+    assertThat(getJobArgs(bundle), startsWith("bundle --indexed-rambundle "));
   }
 
   @Test(expected = FlavorDomainException.class)
   public void testMultipleRamBundleFlavorsFail() throws NoSuchBuildTargetException {
-    final JsBundle bundle =
+    JsBundle bundle =
         scenario.createBundle(
             targetWithFlavors(
                 "//:arbitrary", JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RAM_BUNDLE_INDEXED),
             ImmutableSortedSet.of());
 
-    getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext));
+    getJobArgs(bundle);
   }
 
   @Test
   public void testBuildRootIsPassed() throws NoSuchBuildTargetException {
-    final JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
+    JsBundle bundle = scenario.createBundle("//:arbitrary", ImmutableSortedSet.of());
     assertThat(
-        getJobArgs(bundle.getBuildSteps(context, fakeBuildableContext)),
+        getJobArgs(bundle),
         containsString(String.format(" --root %s ", scenario.filesystem.getRootPath())));
+  }
+
+  @Test
+  public void testBundleNameCanBeSet() throws NoSuchBuildTargetException {
+    String bundleName = "a-bundle-name.jsbundle";
+    JsBundle bundle =
+        scenario.createBundle("//:arbitrary", builder -> builder.setBundleName(bundleName));
+
+    assertThat(getOutFile(bundle), equalTo(bundleName));
+  }
+
+  @Test
+  public void testBundleNameIsFlavorSpecific() throws NoSuchBuildTargetException {
+    String bundleName = "flavored.js";
+    JsBundle bundle =
+        scenario.createBundle(
+            "//:arbitrary#the-flavor",
+            builder ->
+                builder.setBundleNameForFlavor(
+                    ImmutableList.of(new Pair<>(InternalFlavor.of("the-flavor"), bundleName))));
+
+    assertThat(getOutFile(bundle), equalTo(bundleName));
+  }
+
+  @Test
+  public void testFirstMatchingFlavorSetsBundleName() throws NoSuchBuildTargetException {
+    String bundleName = "for-ios.js";
+    JsBundle bundle =
+        scenario.createBundle(
+            "//:arbitrary#arbitrary,release,ios",
+            builder ->
+                builder.setBundleNameForFlavor(
+                    ImmutableList.of(
+                        new Pair<>(JsFlavors.IOS, bundleName),
+                        new Pair<>(JsFlavors.RELEASE, "other-name"))));
+
+    assertThat(getOutFile(bundle), equalTo(bundleName));
   }
 
   private static String targetWithFlavors(String target, Flavor... flavors) {
@@ -101,8 +141,8 @@ public class JsBundleWorkerJobArgsTest {
         .getFullyQualifiedName();
   }
 
-  private static String getJobArgs(Collection<Step> steps) {
-    return RichStream.from(steps)
+  private String getJobArgs(JsBundle bundle) {
+    return RichStream.from(bundle.getBuildSteps(context, fakeBuildableContext))
         .filter(WorkerShellStep.class)
         .findFirst()
         .orElseThrow(
@@ -110,5 +150,13 @@ public class JsBundleWorkerJobArgsTest {
                 new HumanReadableException("build steps don't contain a WorkerShellStep instance"))
         .getWorkerJobParamsToUse(Platform.UNKNOWN)
         .getJobArgs();
+  }
+
+  private String getOutFile(JsBundle bundle) {
+    String jobArgs = getJobArgs(bundle);
+    Matcher matcher = OUT_FILE_PATTERN.matcher(jobArgs);
+    Preconditions.checkState(
+        matcher.find(), "worker job arguments don't contain `--out ...` (got `%s`)", jobArgs);
+    return Paths.get(matcher.group(1)).getFileName().toString();
   }
 }

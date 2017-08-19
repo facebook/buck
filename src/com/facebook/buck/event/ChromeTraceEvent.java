@@ -59,7 +59,7 @@ public class ChromeTraceEvent {
   private final long threadId;
   private final long microTime;
   private final long microThreadUserTime;
-  private final ImmutableMap<String, String> args;
+  private final ImmutableMap<String, ? extends Object> args;
 
   public ChromeTraceEvent(
       @JsonProperty("cat") String category,
@@ -69,7 +69,7 @@ public class ChromeTraceEvent {
       @JsonProperty("tid") long threadId,
       @JsonProperty("ts") long microTime,
       @JsonProperty("tts") long microThreadUserTime,
-      @JsonProperty("args") ImmutableMap<String, String> args) {
+      @JsonProperty("args") ImmutableMap<String, ? extends Object> args) {
     this.category = category;
     this.name = name;
     this.phase = phase;
@@ -111,7 +111,7 @@ public class ChromeTraceEvent {
   }
 
   @JsonProperty("args")
-  public ImmutableMap<String, String> getArgs() {
+  public ImmutableMap<String, ? extends Object> getArgs() {
     return args;
   }
 

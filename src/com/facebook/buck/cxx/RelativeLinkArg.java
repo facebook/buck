@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class RelativeLinkArg implements Arg {
+class RelativeLinkArg implements Arg {
 
   private final PathSourcePath library;
   private final ImmutableList<String> link;

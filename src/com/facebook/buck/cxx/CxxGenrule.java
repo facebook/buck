@@ -16,11 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -48,7 +47,7 @@ public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements
     return output;
   }
 
-  public SourcePath getGenrule(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+  public SourcePath getGenrule(CxxPlatform cxxPlatform) {
     Genrule rule =
         (Genrule)
             resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));

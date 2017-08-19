@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.windowspipe;
 
+import com.sun.jna.Library;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -26,11 +27,9 @@ import com.sun.jna.win32.W32APIOptions;
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("checkstyle:methodname")
-public interface WindowsNamedPipeLibrary extends WinNT {
+public interface WindowsNamedPipeLibrary extends WinNT, Library {
   WindowsNamedPipeLibrary INSTANCE =
-      (WindowsNamedPipeLibrary)
-          Native.loadLibrary(
-              "kernel32", WindowsNamedPipeLibrary.class, W32APIOptions.UNICODE_OPTIONS);
+      Native.loadLibrary("kernel32", WindowsNamedPipeLibrary.class, W32APIOptions.UNICODE_OPTIONS);
 
   boolean GetOverlappedResult(
       HANDLE hFile, Pointer lpOverlapped, IntByReference lpNumberOfBytesTransferred, boolean wait);

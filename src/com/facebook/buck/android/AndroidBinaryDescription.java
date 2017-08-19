@@ -27,7 +27,7 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -43,7 +43,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -165,8 +164,7 @@ public class AndroidBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidBinaryDescriptionArg args) {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             Optional.ofNullable(resolver.getEventBus()),
@@ -266,12 +264,12 @@ public class AndroidBinaryDescription
               ImmutableSet.copyOf(args.getCpuFilters()),
               args.isBuildStringSourceMap(),
               shouldPreDex,
-              AndroidBinary.getPrimaryDexPath(buildTarget, projectFilesystem),
               dexSplitMode,
               args.getNoDx(),
               /* resourcesToExclude */ ImmutableSet.of(),
               args.isSkipCrunchPngs(),
               args.isIncludesVectorDrawables(),
+              args.isNoAutoVersionResources(),
               javaBuckConfig,
               JavacFactory.create(ruleFinder, javaBuckConfig, null),
               javacOptions,
@@ -573,6 +571,11 @@ public class AndroidBinaryDescription
 
     @Value.Default
     default boolean isIncludesVectorDrawables() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isNoAutoVersionResources() {
       return false;
     }
 

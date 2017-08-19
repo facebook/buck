@@ -40,7 +40,7 @@ public class MainOutOfProcessJavac implements AutoCloseable {
   private final OutOfProcessInvocationReceiver receiver;
   private boolean handshakePerformed = false;
 
-  public MainOutOfProcessJavac() throws IOException {
+  public MainOutOfProcessJavac() {
     this.receiver = new OutOfProcessInvocationReceiver(Console.createNullConsole());
 
     this.protocol = new WorkerProcessProtocolZero.CommandReceiver(System.out, System.in);

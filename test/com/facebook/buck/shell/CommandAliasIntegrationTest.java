@@ -17,12 +17,10 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,7 +30,6 @@ public class CommandAliasIntegrationTest {
 
   @Test
   public void invokesNestedToolWithSubPath() throws IOException {
-    assumeFalse(Platform.detect() == Platform.WINDOWS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "command_alias", tmp).setUp();
 
@@ -40,6 +37,7 @@ public class CommandAliasIntegrationTest {
         workspace.runBuckCommand("run", "//:outer", "extra arg").assertSuccess().getStdout();
 
     assertEquals(
-        String.join("\n", "BUCK", "echo.sh", "1", "second arg", "extra arg", "1 2", ""), stdout);
+        String.join("\n", "BUCK", "echo.bat", "echo.sh", "1", "second arg", "extra arg", "1 2", ""),
+        stdout);
   }
 }

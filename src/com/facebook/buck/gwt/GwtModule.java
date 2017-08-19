@@ -20,6 +20,8 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CopyResourcesStep;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
+import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -35,6 +37,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * {@link com.facebook.buck.rules.BuildRule} whose output file is a JAR containing the .java files
@@ -85,17 +88,20 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             context,
             ruleFinder,
             getBuildTarget(),
-            filesForGwtModule,
-            tempJarFolder,
-            context.getJavaPackageFinder()));
+            ResourcesParameters.builder()
+                .setResources(filesForGwtModule)
+                .setResourcesRoot(Optional.empty())
+                .build(),
+            tempJarFolder));
 
     steps.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            outputFile,
-            /* entriesToJar */ ImmutableSortedSet.of(tempJarFolder),
-            /* mainClass */ null,
-            /* manifestFile */ null));
+            JarParameters.builder()
+                .setJarPath(outputFile)
+                .setEntriesToJar(ImmutableSortedSet.of(tempJarFolder))
+                .setMergeManifests(true)
+                .build()));
 
     buildableContext.recordArtifact(outputFile);
 

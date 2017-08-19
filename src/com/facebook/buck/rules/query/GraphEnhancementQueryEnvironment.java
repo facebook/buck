@@ -194,7 +194,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .map(
             queryTarget -> {
               Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
-              return resolver.get().getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+              return resolver.get().requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
             })
         .filter(rule -> rule instanceof JavaLibrary)
         .map(rule -> (JavaLibrary) rule)

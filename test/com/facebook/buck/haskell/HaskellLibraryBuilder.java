@@ -16,10 +16,9 @@
 
 package com.facebook.buck.haskell;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -34,19 +33,12 @@ public class HaskellLibraryBuilder
         HaskellLibraryDescription, HaskellLibrary> {
 
   public HaskellLibraryBuilder(
-      BuildTarget target,
-      HaskellConfig haskellConfig,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new HaskellLibraryDescription(haskellConfig, cxxBuckConfig, cxxPlatforms), target);
+      BuildTarget target, FlavorDomain<HaskellPlatform> platforms, CxxBuckConfig cxxBuckConfig) {
+    super(new HaskellLibraryDescription(platforms, cxxBuckConfig), target);
   }
 
   public HaskellLibraryBuilder(BuildTarget target) {
-    this(
-        target,
-        FakeHaskellConfig.DEFAULT,
-        CxxPlatformUtils.DEFAULT_CONFIG,
-        CxxPlatformUtils.DEFAULT_PLATFORMS);
+    this(target, HaskellTestUtils.DEFAULT_PLATFORMS, CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public HaskellLibraryBuilder setSrcs(SourceList srcs) {

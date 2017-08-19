@@ -30,6 +30,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.NetworkEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -108,6 +109,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable protected volatile ProjectGenerationEvent.Started projectGenerationStarted;
   @Nullable protected volatile ProjectGenerationEvent.Finished projectGenerationFinished;
 
+  @Nullable protected volatile WatchmanStatusEvent.Started watchmanStarted;
+  @Nullable protected volatile WatchmanStatusEvent.Finished watchmanFinished;
+
   protected ConcurrentLinkedDeque<ParseEvent.Started> parseStarted;
   protected ConcurrentLinkedDeque<ParseEvent.Finished> parseFinished;
 
@@ -168,6 +172,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
     this.projectGenerationStarted = null;
     this.projectGenerationFinished = null;
+
+    this.watchmanStarted = null;
+    this.watchmanFinished = null;
 
     this.parseStarted = new ConcurrentLinkedDeque<>();
     this.parseFinished = new ConcurrentLinkedDeque<>();
@@ -312,6 +319,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       @Nullable BuckEvent startEvent,
       @Nullable BuckEvent finishedEvent,
       Optional<Double> progress,
+      Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     if (startEvent == null) {
       return UNFINISHED_EVENT_PAIR;
@@ -322,7 +330,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             .setFinish(Optional.ofNullable(finishedEvent))
             .build();
     return logEventPair(
-        prefix, suffix, currentMillis, offsetMs, ImmutableList.of(pair), progress, lines);
+        prefix, suffix, currentMillis, offsetMs, ImmutableList.of(pair), progress, minimum, lines);
   }
 
   /**
@@ -361,6 +369,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       long offsetMs,
       Collection<EventPair> eventPairs,
       Optional<Double> progress,
+      Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     if (eventPairs.isEmpty()) {
       return UNFINISHED_EVENT_PAIR;
@@ -378,6 +387,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       if (progress.isPresent()) {
         progress = Optional.of(1.0);
       }
+    }
+    if (minimum.isPresent() && elapsedTimeMs < minimum.get()) {
+      return elapsedTimeMs;
     }
     parseLine += formatElapsedTime(elapsedTimeMs);
     if (progress.isPresent()) {
@@ -562,6 +574,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       progressEstimator.get().didFinishParsing();
     }
     aggregateFinishedEvent(buckFilesProcessing, finished);
+  }
+
+  @Subscribe
+  public void watchmanStarted(WatchmanStatusEvent.Started started) {
+    watchmanStarted = started;
+  }
+
+  @Subscribe
+  public void watchmanFinished(WatchmanStatusEvent.Finished finished) {
+    watchmanFinished = finished;
   }
 
   @Subscribe

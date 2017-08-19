@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,11 +35,11 @@ public class VerbosityParser {
 
   private VerbosityParser() {}
 
-  public static Verbosity parse(String... args) {
-    for (int i = 0; i < args.length && !"--".equals(args[i]); i++) {
-      String arg = args[i];
-      if ((VERBOSE_LONG_ARG.equals(arg) || VERBOSE_SHORT_ARG.equals(arg)) && i < args.length - 1) {
-        String nextArg = args[i + 1];
+  public static Verbosity parse(ImmutableList<String> args) {
+    for (int i = 0; i < args.size() && !"--".equals(args.get(i)); i++) {
+      String arg = args.get(i);
+      if ((VERBOSE_LONG_ARG.equals(arg) || VERBOSE_SHORT_ARG.equals(arg)) && i < args.size() - 1) {
+        String nextArg = args.get(i + 1);
         int verbosityLevel = Integer.parseInt(nextArg, /* radix */ 10);
         return getVerbosityForLevel(verbosityLevel);
       }

@@ -16,33 +16,33 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.HeaderSymlinkTree;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.Linkers;
-import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -64,7 +64,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -74,7 +73,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -85,14 +83,25 @@ public class CxxPythonExtensionDescription
             CxxPythonExtensionDescription.AbstractCxxPythonExtensionDescriptionArg>,
         VersionPropagator<CxxPythonExtensionDescriptionArg> {
 
-  private enum Type {
-    EXTENSION,
+  public enum Type implements FlavorConvertible {
+    EXTENSION(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    SANDBOX_TREE(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
+    ;
+
+    private final Flavor flavor;
+
+    Type(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
   }
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
-      new FlavorDomain<>(
-          "C/C++ Library Type",
-          ImmutableMap.of(CxxDescriptionEnhancer.SHARED_FLAVOR, Type.EXTENSION));
+      FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
@@ -145,8 +154,7 @@ public class CxxPythonExtensionDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
-      ImmutableSet<BuildRule> deps)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<BuildRule> deps) {
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -277,8 +285,7 @@ public class CxxPythonExtensionDescription
       CellPathResolver cellRoots,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
-      CxxPythonExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      CxxPythonExtensionDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
@@ -335,33 +342,32 @@ public class CxxPythonExtensionDescription
       BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      final CxxPythonExtensionDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final CxxPythonExtensionDescriptionArg args) {
 
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
-    if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
-      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
-          ruleResolver, args, platform.get().getValue(), buildTarget, projectFilesystem);
-    }
-    // See if we're building a particular "type" of this library, and if so, extract
-    // it as an enum.
-    final Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    final Optional<Map.Entry<Flavor, PythonPlatform>> pythonPlatform =
-        pythonPlatforms.getFlavorAndValue(buildTarget);
+    // See if we're building a particular "type" of this library, and if so, extract it as an enum.
+    final Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
+    if (type.isPresent()) {
 
-    // If we *are* building a specific type of this lib, call into the type specific
-    // rule builder methods.  Currently, we only support building a shared lib from the
-    // pre-existing static lib, which we do here.
-    if (type.isPresent() && platform.isPresent() && pythonPlatform.isPresent()) {
-      Preconditions.checkState(type.get().getValue() == Type.EXTENSION);
-      return createExtensionBuildRule(
-          buildTarget,
-          projectFilesystem,
-          ruleResolver,
-          cellRoots,
-          pythonPlatform.get().getValue(),
-          platform.get().getValue(),
-          args);
+      // If we *are* building a specific type of this lib, call into the type specific rule builder
+      // methods.
+      switch (type.get()) {
+        case SANDBOX_TREE:
+          return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
+              ruleResolver,
+              args,
+              cxxPlatforms.getRequiredValue(buildTarget),
+              buildTarget,
+              projectFilesystem);
+        case EXTENSION:
+          return createExtensionBuildRule(
+              buildTarget,
+              projectFilesystem,
+              ruleResolver,
+              cellRoots,
+              pythonPlatforms.getRequiredValue(buildTarget),
+              cxxPlatforms.getRequiredValue(buildTarget),
+              args);
+      }
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
@@ -374,8 +380,7 @@ public class CxxPythonExtensionDescription
     return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
 
       @Override
-      protected BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      protected BuildRule getExtension(PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
         return ruleResolver.requireRule(
             getBuildTarget()
                 .withAppendedFlavors(
@@ -402,8 +407,7 @@ public class CxxPythonExtensionDescription
 
       @Override
       public PythonPackageComponents getPythonPackageComponents(
-          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform) {
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform);
         SourcePath output = extension.getSourcePathToOutput();
         return PythonPackageComponents.of(
@@ -437,8 +441,7 @@ public class CxxPythonExtensionDescription
           }
 
           @Override
-          public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
-              throws NoSuchBuildTargetException {
+          public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
             return NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(

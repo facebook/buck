@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.ObjectFileCommonModificationDate;
+import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileCommonModificationDate;
 import com.facebook.buck.io.FileAttributesScrubber;
 import java.nio.file.Path;
 
 /** Resets the file's last modification date. */
-public class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
+class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
 
   @Override
   public void scrubFileWithPath(Path path) {

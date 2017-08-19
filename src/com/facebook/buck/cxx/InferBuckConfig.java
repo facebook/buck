@@ -40,8 +40,8 @@ public class InferBuckConfig implements RuleKeyAppendable {
 
   private BuckConfig delegate;
 
-  private Supplier<Tool> clangCompiler;
-  private Supplier<Tool> clangPlugin;
+  private Supplier<? extends Tool> clangCompiler;
+  private Supplier<? extends Tool> clangPlugin;
   private Supplier<VersionedTool> inferVersion;
 
   private static final String INFER_SECTION_PREFIX = "infer";

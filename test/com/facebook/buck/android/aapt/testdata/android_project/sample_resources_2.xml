@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="hello">Hello, <xliff:g id="name">%s</xliff:g>!
+    </string>
+    <plurals name="people">
+        <item quantity="zero">ignore1</item>
+        <item quantity="many">ignore2</item>
+    </plurals>
+    <skip/>
+    <integer name="number">100</integer>
+    <dimen name="dimension">100sp</dimen>
+    <declare-styleable name="MyNiceView">
+        <attr name="titleText"/>
+        <attr name="subtitleText" format="string"/>
+        <attr name="complexAttr">
+            <enum name="shouldBeIgnored" value="0"/>
+            <enum name="alsoIgnore" value="1"/>
+            <flag name="uselessFlag" value="0x00"/>
+        </attr>
+        <attr name="android:layout_gravity"/>
+        <item name="should_be_ignored"/>
+    </declare-styleable>
+    <eat-comment/>
+    <item type="id" name="some_id"/>
+    <style name="Widget.Theme">
+        <item name="ignoreMe"/>
+    </style>
+</resources>

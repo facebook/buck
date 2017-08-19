@@ -18,17 +18,14 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.AbstractCxxLibrary;
-import com.facebook.buck.cxx.platform.NativeLinkStrategy;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -48,25 +45,17 @@ public class LuaBuckConfig implements LuaConfig {
     this.finder = finder;
   }
 
-  @VisibleForTesting
-  protected Optional<Path> getSystemLua() {
-    return finder.getOptionalExecutable(Paths.get("lua"), delegate.getEnvironment());
-  }
-
   @Override
-  public Tool getLua(BuildRuleResolver resolver) {
-    Optional<Tool> configuredLua = delegate.getTool(SECTION, "lua", resolver);
-    if (configuredLua.isPresent()) {
-      return configuredLua.get();
-    }
-
-    Optional<Path> systemLua = getSystemLua();
-    if (systemLua.isPresent()) {
-      return new HashedFileTool(systemLua.get());
-    }
-
-    throw new HumanReadableException(
-        "No lua interpreter found in .buckconfig (%s.lua) or on system", SECTION);
+  public ToolProvider getLua() {
+    return delegate
+        .getToolProvider(SECTION, "lua")
+        .orElseGet(
+            () ->
+                SystemToolProvider.builder()
+                    .setExecutableFinder(finder)
+                    .setName(Paths.get("lua"))
+                    .setEnvironment(delegate.getEnvironment())
+                    .build());
   }
 
   @Override

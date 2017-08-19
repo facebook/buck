@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.BuckVersionUtil;
@@ -44,7 +43,6 @@ import com.facebook.buck.event.listener.DistBuildClientEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -52,7 +50,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -84,6 +81,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
@@ -91,7 +89,6 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Function;
@@ -115,7 +112,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -665,10 +662,7 @@ public class BuildCommand extends AbstractCommand {
                 distBuildLogStateTracker,
                 buckVersion,
                 distBuildClientStats,
-                Executors.newScheduledThreadPool(
-                    1,
-                    new CommandThreadFactory(
-                        DistBuildClientExecutor.class.getName() + "Scheduler")));
+                params.getScheduledExecutor());
         distBuildResult =
             build.executeAndPrintFailuresToEventBus(
                 executorService,
@@ -791,35 +785,30 @@ public class BuildCommand extends AbstractCommand {
               new DefaultRuleKeyFactory(
                   fieldLoader, params.getFileHashCache(), pathResolver, ruleFinder));
     }
-    params.getConsole().getStdOut().println("The outputs are:");
     for (BuildTarget buildTarget : buildTargets) {
-      try {
-        BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-        Optional<Path> outputPath =
-            TargetsCommand.getUserFacingOutputPath(
-                    pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
-                .map(
-                    path ->
-                        showFullOutput || showFullJsonOutput
-                            ? path
-                            : params.getCell().getFilesystem().relativize(path));
-        if (showJsonOutput || showFullJsonOutput) {
-          sortedJsonOutputs.put(
-              rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
-        } else {
-          params
-              .getConsole()
-              .getStdOut()
-              .printf(
-                  "%s%s%s\n",
-                  rule.getFullyQualifiedName(),
-                  showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
-                  showOutput || showFullOutput
-                      ? " " + outputPath.map(Object::toString).orElse("")
-                      : "");
-        }
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+      BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
+      Optional<Path> outputPath =
+          TargetsCommand.getUserFacingOutputPath(
+                  pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
+              .map(
+                  path ->
+                      showFullOutput || showFullJsonOutput
+                          ? path
+                          : params.getCell().getFilesystem().relativize(path));
+      if (showJsonOutput || showFullJsonOutput) {
+        sortedJsonOutputs.put(
+            rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
+      } else {
+        params
+            .getConsole()
+            .getStdOut()
+            .printf(
+                "%s%s%s\n",
+                rule.getFullyQualifiedName(),
+                showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
+                showOutput || showFullOutput
+                    ? " " + outputPath.map(Object::toString).orElse("")
+                    : "");
       }
     }
 
@@ -926,9 +915,7 @@ public class BuildCommand extends AbstractCommand {
     MetadataChecker.checkAndCleanIfNeeded(params.getCell());
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
         rootCellBuckConfig.getView(CachingBuildEngineBuckConfig.class);
-    try (CommandThreadManager artifactFetchService =
-            getArtifactFetchService(params.getBuckConfig(), executor);
-        RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+    try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(
                 params,
                 new RuleKeyCacheRecycler.SettingsAffectingCache(
@@ -937,7 +924,6 @@ public class BuildCommand extends AbstractCommand {
             new CachingBuildEngine(
                 cachingBuildEngineDelegate,
                 executor,
-                artifactFetchService.getExecutor(),
                 new DefaultStepRunner(),
                 getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                 cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
@@ -990,17 +976,6 @@ public class BuildCommand extends AbstractCommand {
     return ImmutableList.of();
   }
 
-  protected CommandThreadManager getArtifactFetchService(
-      BuckConfig config, WeightedListeningExecutorService executor) {
-    return new CommandThreadManager(
-        "cache-fetch",
-        executor.getSemaphore(),
-        ResourceAmounts.ZERO,
-        Math.min(
-            config.getMaximumResourceAmounts().getNetworkIO(),
-            (int) new ArtifactCacheBuckConfig(config).getThreadPoolSize()));
-  }
-
   @Override
   public boolean isReadOnly() {
     return false;
@@ -1034,21 +1009,16 @@ public class BuildCommand extends AbstractCommand {
     return versionedTargetGraph.isPresent() ? versionedTargetGraph.get() : unversionedTargetGraph;
   }
 
-  private void initDistBuildClientEventListener() {
-    if (useDistributedBuild && distBuildClientEventListener == null) {
-      distBuildClientEventListener = new DistBuildClientEventListener();
-    }
-  }
-
   @Override
-  public Iterable<BuckEventListener> getEventListeners() {
-    initDistBuildClientEventListener();
-    ImmutableList.Builder<BuckEventListener> listenerBuilder = ImmutableList.builder();
-    if (distBuildClientEventListener != null) {
-      listenerBuilder.add(distBuildClientEventListener);
+  public Iterable<BuckEventListener> getEventListeners(
+      Map<ExecutorPool, ListeningExecutorService> executorPool,
+      ScheduledExecutorService scheduledExecutorService) {
+    ImmutableList.Builder<BuckEventListener> listeners = ImmutableList.builder();
+    if (useDistributedBuild) {
+      distBuildClientEventListener = new DistBuildClientEventListener();
+      listeners.add(distBuildClientEventListener);
     }
-
-    return listenerBuilder.build();
+    return listeners.build();
   }
 
   public static class ActionGraphCreationException extends Exception {

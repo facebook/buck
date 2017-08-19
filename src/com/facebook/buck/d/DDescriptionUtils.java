@@ -16,13 +16,13 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -112,8 +111,7 @@ abstract class DDescriptionUtils {
       ImmutableList<String> compilerFlags,
       SourceList sources,
       ImmutableList<String> linkerFlags,
-      DIncludes includes)
-      throws NoSuchBuildTargetException {
+      DIncludes includes) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -166,7 +164,6 @@ abstract class DDescriptionUtils {
 
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
-      BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathResolver pathResolver,
       SourceList sources) {
@@ -174,9 +171,9 @@ abstract class DDescriptionUtils {
     return new SymlinkTree(
         target,
         projectFilesystem,
-        BuildTargets.getGenPath(projectFilesystem, baseBuildTarget, "%s"),
+        BuildTargets.getGenPath(projectFilesystem, target, "%s"),
         MoreMaps.transformKeys(
-            sources.toNameMap(baseBuildTarget, pathResolver, "srcs"),
+            sources.toNameMap(target, pathResolver, "srcs"),
             MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())));
   }
 
@@ -219,10 +216,9 @@ abstract class DDescriptionUtils {
       ImmutableList<String> compilerFlags,
       String name,
       SourcePath src,
-      DIncludes includes)
-      throws NoSuchBuildTargetException {
+      DIncludes includes) {
     return (DCompileBuildRule)
-        buildRuleResolver.computeIfAbsentThrowing(
+        buildRuleResolver.computeIfAbsent(
             compileTarget,
             ignored -> {
               Tool compiler = dBuckConfig.getDCompiler();
@@ -281,8 +277,7 @@ abstract class DDescriptionUtils {
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       SourceList sources,
-      DIncludes includes)
-      throws NoSuchBuildTargetException {
+      DIncludes includes) {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :
         sources.toNameMap(baseBuildTarget, sourcePathResolver, "srcs").entrySet()) {

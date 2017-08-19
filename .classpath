@@ -5,10 +5,10 @@
 	<classpathentry kind="src" path="src-gen"/>
 	<classpathentry excluding="**/BUCK|**/testdata/**|com/facebook/buck/event/listener/noos/" kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="third-party/java/android/common-24.2.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/android/layoutlib-api-24.2.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/android/sdk-common-24.2.3.jar"/>
-	<classpathentry kind="lib" path="third-party/java/android/sdklib.jar"/>
+	<classpathentry kind="lib" path="third-party/java/android/common-25.3.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/android/layoutlib-api-25.3.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/android/sdk-common-25.3.0.jar"/>
+	<classpathentry kind="lib" path="third-party/java/android/sdklib-25.3.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/aether/aether-api-1.0.2.v20150114.jar" sourcepath="third-party/java/aether/aether-api-1.0.2.v20150114-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar" sourcepath="third-party/java/aether/aether-connector-basic-1.0.2.v20150114-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/aether/aether-impl-1.0.0.v20140518.jar" sourcepath="third-party/java/aether/aether-impl-1.0.0.v20140518-sources.jar"/>
@@ -46,8 +46,8 @@
 	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.core-0.7.7.201606060606.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.report-0.7.7.201606060606.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jetty/jetty-all-9.2.10.v20150310.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jna/jna-4.2.0.jar" sourcepath="third-party/java/jna/jna-4.2.0-sources.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jna/jna-platform-4.2.0.jar" sourcepath="third-party/java/jna/jna-platform-4.2.0-sources.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jna/jna-4.4.0.jar" sourcepath="third-party/java/jna/jna-4.4.0-sources.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jna/jna-platform-4.4.0.jar" sourcepath="third-party/java/jna/jna-platform-4.4.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jsr/javax.inject-1.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jsr/jsr305.jar"/>
 	<classpathentry kind="lib" path="third-party/java/junit/junit-4.12.jar" sourcepath="third-party/java/junit/junit-4.12-sources.jar"/>
@@ -75,7 +75,7 @@
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-interpolation-1.21.jar"/>
 	<classpathentry kind="lib" path="third-party/java/plexus/plexus-utils-3.0.20.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jimfs/jimfs-1.1.jar"/>
-	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.9.3.jar"/>
+	<classpathentry kind="lib" path="third-party/java/thrift/libthrift-0.10.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.contenttype_3.5.100.v20160418-1621.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.jobs_3.8.0.v20160319-0610.jar"/>
 	<classpathentry kind="lib" path="third-party/java/eclipse/org.eclipse.core.resources_3.11.0.v20160422-0304.jar"/>

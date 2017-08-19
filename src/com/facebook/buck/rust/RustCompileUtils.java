@@ -18,18 +18,16 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.Linkers;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -95,8 +93,7 @@ public class RustCompileUtils {
       Linker.LinkableDepType depType,
       boolean rpath,
       ImmutableSortedSet<SourcePath> sources,
-      SourcePath rootModule)
-      throws NoSuchBuildTargetException {
+      SourcePath rootModule) {
     SortedSet<BuildRule> ruledeps = params.getBuildDeps();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
@@ -234,8 +231,7 @@ public class RustCompileUtils {
       CrateType crateType,
       Linker.LinkableDepType depType,
       ImmutableSortedSet<SourcePath> sources,
-      SourcePath rootModule)
-      throws NoSuchBuildTargetException {
+      SourcePath rootModule) {
     BuildTarget target = getCompileBuildTarget(buildTarget, cxxPlatform, crateType);
 
     // If this rule has already been generated, return it.
@@ -305,8 +301,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> srcs,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
-      boolean isCheck)
-      throws NoSuchBuildTargetException {
+      boolean isCheck) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -484,13 +479,12 @@ public class RustCompileUtils {
    * @return a mapping of library name to the library {@link SourcePath}.
    */
   public static Map<String, SourcePath> getTransitiveRustSharedLibraries(
-      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs) {
     ImmutableSortedMap.Builder<String, SourcePath> libs = ImmutableSortedMap.naturalOrder();
 
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(inputs) {
+    new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         Set<BuildRule> deps = ImmutableSet.of();
         if (rule instanceof RustLinkable) {
           deps = rule.getBuildDeps();
@@ -517,8 +511,7 @@ public class RustCompileUtils {
       String crate,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
-      ImmutableSortedSet<SourcePath> srcs)
-      throws NoSuchBuildTargetException {
+      ImmutableSortedSet<SourcePath> srcs) {
 
     ImmutableSortedSet<SourcePath> fixedSrcs =
         CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, srcs);

@@ -86,14 +86,14 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
         .getDiagnosticData()
         .ifPresent(
             diagData -> {
-              synchronized (diagKeysLock) {
-                diagData.diagnosticKeys.forEach(
-                    result -> {
-                      String line = String.format("%s %s", result.ruleKey, result.diagKey);
+              diagData.diagnosticKeys.forEach(
+                  result -> {
+                    String line = String.format("%s %s", result.ruleKey, result.diagKey);
+                    synchronized (diagKeysLock) {
                       diagKeys.add(line);
                       diagKeysSize += line.length();
-                    });
-              }
+                    }
+                  });
               flushDiagKeysIfNeeded();
 
               rulesInfo.put(

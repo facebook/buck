@@ -110,10 +110,12 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     JarDirectoryStep mergeOutputsStep =
         new JarDirectoryStep(
             getProjectFilesystem(),
-            pathToOutput,
-            toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps),
-            /* mainClass */ null,
-            /* manifestFile */ null);
+            JarParameters.builder()
+                .setJarPath(pathToOutput)
+                .setEntriesToJar(
+                    toOutputPaths(context.getSourcePathResolver(), traversedDeps.packagedDeps))
+                .setMergeManifests(true)
+                .build());
     return ImmutableList.of(mkOutputDirStep, mergeOutputsStep);
   }
 

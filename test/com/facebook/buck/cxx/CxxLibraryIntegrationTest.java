@@ -25,9 +25,15 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.ObjectFileScrubbers;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -66,6 +72,7 @@ public class CxxLibraryIntegrationTest {
   @Test
   public void appleBinaryBuildsOnApplePlatform() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_cxx_library", tmp);
@@ -76,6 +83,7 @@ public class CxxLibraryIntegrationTest {
   @Test
   public void appleLibraryBuildsOnApplePlatform() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_cxx_library", tmp);
@@ -290,9 +298,8 @@ public class CxxLibraryIntegrationTest {
   private void assumeSymLinkTreeWithHeaderMap(Path rootPath)
       throws InterruptedException, IOException {
     // We can only disable symlink trees if header map is supported.
-    CxxPreprocessables.HeaderMode headerMode =
-        CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
-    assumeTrue(headerMode == CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
+    HeaderMode headerMode = CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
+    assumeTrue(headerMode == HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
   }
 
   @Test

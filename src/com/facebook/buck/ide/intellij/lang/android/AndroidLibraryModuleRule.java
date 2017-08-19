@@ -53,6 +53,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
       context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 
     context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));

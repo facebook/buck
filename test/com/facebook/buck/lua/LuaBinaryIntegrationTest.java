@@ -26,10 +26,10 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkStrategy;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -58,6 +58,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -100,9 +101,9 @@ public class LuaBinaryIntegrationTest {
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that a Lua interpreter is available on the system.
-    LuaBuckConfig fakeConfig =
-        new LuaBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    Optional<Path> luaOptional = fakeConfig.getSystemLua();
+    ExecutableFinder finder = new ExecutableFinder();
+    Optional<Path> luaOptional =
+        finder.getOptionalExecutable(Paths.get("lua"), ImmutableMap.copyOf(System.getenv()));
     assumeTrue(luaOptional.isPresent());
     lua = luaOptional.get();
 

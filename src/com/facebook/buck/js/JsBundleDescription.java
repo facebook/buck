@@ -30,7 +30,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -92,8 +92,7 @@ public class JsBundleDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JsBundleDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JsBundleDescriptionArg args) {
 
     final ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
 
@@ -153,13 +152,15 @@ public class JsBundleDescription
           resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
     }
 
+    String bundleName = getBundleName(args, buildTarget.getFlavors());
+
     return new JsBundle(
         buildTarget,
         projectFilesystem,
         paramsWithLibraries,
         libraries,
         entryPoints,
-        args.getBundleName(),
+        bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
   }
 
@@ -167,8 +168,7 @@ public class JsBundleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      Optional<String> rDotJavaPackage)
-      throws NoSuchBuildTargetException {
+      Optional<String> rDotJavaPackage) {
     final BuildTarget bundleTarget =
         buildTarget
             .withAppendedFlavors(JsFlavors.FORCE_JS_BUNDLE)
@@ -194,8 +194,7 @@ public class JsBundleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      JsBundle jsBundle)
-      throws NoSuchBuildTargetException {
+      JsBundle jsBundle) {
 
     final BuildTarget resourceTarget = buildTarget.withAppendedFlavors(JsFlavors.ANDROID_RESOURCES);
     final BuildRule resource = resolver.requireRule(resourceTarget);
@@ -216,8 +215,7 @@ public class JsBundleDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       JsBundle jsBundle,
-      String rDotJavaPackage)
-      throws NoSuchBuildTargetException {
+      String rDotJavaPackage) {
 
     BuildRuleParams params =
         new BuildRuleParams(
@@ -260,6 +258,7 @@ public class JsBundleDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractJsBundleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+
     Either<ImmutableSet<String>, String> getEntry();
 
     @Value.Default
@@ -267,10 +266,22 @@ public class JsBundleDescription
       return getName() + ".js";
     }
 
+    ImmutableList<Pair<Flavor, String>> getBundleNameForFlavor();
+
     BuildTarget getWorker();
 
     /** For R.java */
     Optional<String> getAndroidPackage();
+  }
+
+  private static String getBundleName(
+      JsBundleDescriptionArg args, ImmutableSortedSet<Flavor> flavors) {
+    for (Pair<Flavor, String> nameForFlavor : args.getBundleNameForFlavor()) {
+      if (flavors.contains(nameForFlavor.getFirst())) {
+        return nameForFlavor.getSecond();
+      }
+    }
+    return args.getBundleName();
   }
 
   private static class TransitiveLibraryDependencies {
@@ -323,13 +334,9 @@ public class JsBundleDescription
     }
 
     private JsLibrary requireLibrary(BuildTarget target) {
-      try {
-        BuildRule rule = resolver.requireRule(target.withAppendedFlavors(extraFlavors));
-        Preconditions.checkState(rule instanceof JsLibrary);
-        return (JsLibrary) rule;
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(e);
-      }
+      BuildRule rule = resolver.requireRule(target.withAppendedFlavors(extraFlavors));
+      Preconditions.checkState(rule instanceof JsLibrary);
+      return (JsLibrary) rule;
     }
 
     private Iterable<BuildTarget> getLibraryDependencies(JsLibrary library) {

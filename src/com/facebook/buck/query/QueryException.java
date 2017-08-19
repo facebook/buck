@@ -29,6 +29,10 @@ public class QueryException extends Exception implements ExceptionWithHumanReada
     this(String.format(humanReadableFormatString, args));
   }
 
+  public QueryException(Throwable cause, String message) {
+    super(message, cause);
+  }
+
   public QueryException(Throwable cause, String humanReadableFormatString, Object... args) {
     super(String.format(humanReadableFormatString, args), cause);
   }

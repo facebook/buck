@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedSet;
 
-public class CxxInferAnalyze extends AbstractBuildRule {
+class CxxInferAnalyze extends AbstractBuildRule {
 
   private final Path resultsDir;
   private final Path reportFile;

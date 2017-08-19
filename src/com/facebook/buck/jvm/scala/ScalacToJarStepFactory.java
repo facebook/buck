@@ -17,7 +17,9 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
@@ -30,7 +32,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,14 +39,14 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
+public class ScalacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
   @AddToRuleKey private final Tool scalac;
   private final BuildRule scalaLibraryTarget;
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
-  private final Function<BuildContext, Iterable<Path>> extraClassPath;
+  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClassPath;
 
   public ScalacToJarStepFactory(
       Tool scalac,
@@ -59,7 +60,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implemen
         configCompilerFlags,
         extraArguments,
         compilerPlugins,
-        EMPTY_EXTRA_CLASSPATH);
+        ExtraClasspathFromContextFunction.EMPTY);
   }
 
   public ScalacToJarStepFactory(
@@ -68,7 +69,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implemen
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins,
-      Function<BuildContext, Iterable<Path>> extraClassPath) {
+      ExtraClasspathFromContextFunction extraClassPath) {
     this.scalac = scalac;
     this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
@@ -84,19 +85,17 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implemen
   @Override
   public void createCompileStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> classpathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
-      /* out params */
+      CompilerParameters parameters,
+      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
+
+    ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputDirectory();
 
     steps.add(
         new ScalacStep(
@@ -126,7 +125,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory implemen
   }
 
   @Override
-  protected Tool getCompiler() {
+  public Tool getCompiler() {
     return scalac;
   }
 

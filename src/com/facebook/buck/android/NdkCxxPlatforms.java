@@ -16,22 +16,22 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.DefaultLinkerProvider;
-import com.facebook.buck.cxx.ElfSharedLibraryInterfaceFactory;
-import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.platform.CompilerProvider;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.CxxToolProvider;
-import com.facebook.buck.cxx.platform.GnuArchiver;
-import com.facebook.buck.cxx.platform.GnuLinker;
-import com.facebook.buck.cxx.platform.HeaderVerification;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.LinkerProvider;
-import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.platform.PreprocessorProvider;
-import com.facebook.buck.cxx.platform.SharedLibraryInterfaceFactory;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
+import com.facebook.buck.cxx.toolchain.GnuArchiver;
+import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
+import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.GnuLinker;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -650,14 +650,14 @@ public class NdkCxxPlatforms {
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")
         .setObjectFileExtension("o")
-        .setSharedLibraryInterfaceFactory(
-            config.getSharedLibraryInterfaces() != SharedLibraryInterfaceFactory.Type.DISABLED
+        .setSharedLibraryInterfaceParams(
+            config.getSharedLibraryInterfaces() != SharedLibraryInterfaceParams.Type.DISABLED
                 ? Optional.of(
-                    ElfSharedLibraryInterfaceFactory.of(
+                    ElfSharedLibraryInterfaceParams.of(
                         new ConstantToolProvider(
                             getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
                         config.getSharedLibraryInterfaces()
-                            == SharedLibraryInterfaceFactory.Type.DEFINED_ONLY))
+                            == SharedLibraryInterfaceParams.Type.DEFINED_ONLY))
                 : Optional.empty())
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());

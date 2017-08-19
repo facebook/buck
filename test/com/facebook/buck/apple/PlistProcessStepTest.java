@@ -26,6 +26,7 @@ import com.dd.plist.NSString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -62,6 +63,29 @@ public class PlistProcessStepTest {
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     thrown.expect(IOException.class);
     thrown.expectMessage(containsString("not a property list"));
+    plistProcessStep.execute(executionContext);
+  }
+
+  @Test
+  public void testFailsWithEmptyFileInput() throws Exception {
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    PlistProcessStep plistProcessStep =
+        new PlistProcessStep(
+            projectFilesystem,
+            INPUT_PATH,
+            Optional.empty(),
+            OUTPUT_PATH,
+            ImmutableMap.of(),
+            ImmutableMap.of(),
+            PlistProcessStep.OutputFormat.XML);
+
+    projectFilesystem.writeContentsToPath("", INPUT_PATH);
+
+    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        containsString("input.plist: the content of the plist is invalid or empty."));
     plistProcessStep.execute(executionContext);
   }
 

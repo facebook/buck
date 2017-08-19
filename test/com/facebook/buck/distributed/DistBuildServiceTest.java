@@ -35,10 +35,15 @@ import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
+import com.facebook.buck.distributed.thrift.EnqueueMinionsRequest;
+import com.facebook.buck.distributed.thrift.EnqueueMinionsResponse;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveFinishedStatsResponse;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.FetchBuildSlaveStatusResponse;
+import com.facebook.buck.distributed.thrift.FetchSourceFilesRequest;
+import com.facebook.buck.distributed.thrift.FetchSourceFilesResponse;
+import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
@@ -47,6 +52,8 @@ import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsResponse;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
+import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
+import com.facebook.buck.distributed.thrift.SetCoordinatorResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
@@ -58,6 +65,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -187,7 +195,7 @@ public class DistBuildServiceTest {
       filesystems.get(i / 2).writeContentsToPath(content, Paths.get(path.toString()));
 
       files[i] = new BuildJobStateFileHashEntry();
-      files[i].setHashCode(Integer.toString(i));
+      files[i].setSha1(Integer.toString(i));
       files[i].setPath(new PathWithUnixSeparators().setPath(path.toString()));
     }
 
@@ -321,6 +329,44 @@ public class DistBuildServiceTest {
 
     Assert.assertTrue(job.isSetStampedeId());
     Assert.assertEquals(job.getStampedeId(), id);
+  }
+
+  @Test
+  public void canFetchSourceFiles() throws IOException {
+    ImmutableList<String> hashCodes = ImmutableList.of("a", "b", "c");
+    ImmutableList<String> fileContents = ImmutableList.of("1", "2", "3");
+    List<FileInfo> fileInfo = new ArrayList<>(hashCodes.size());
+    for (int i = 0; i < hashCodes.size(); ++i) {
+      FileInfo f = new FileInfo();
+      f.setContentHash(hashCodes.get(i));
+      f.setContent(fileContents.get(i).getBytes(StandardCharsets.UTF_8));
+      fileInfo.add(f);
+    }
+
+    FrontendRequest expectedRequest =
+        new FrontendRequest()
+            .setType(FrontendRequestType.FETCH_SRC_FILES)
+            .setFetchSourceFilesRequest(new FetchSourceFilesRequest().setContentHashes(hashCodes));
+    FrontendResponse response =
+        new FrontendResponse()
+            .setType(FrontendRequestType.FETCH_SRC_FILES)
+            .setWasSuccessful(true)
+            .setFetchSourceFilesResponse(new FetchSourceFilesResponse().setFiles(fileInfo));
+    EasyMock.expect(frontendService.makeRequest(expectedRequest)).andReturn(response).once();
+
+    EasyMock.replay(frontendService);
+
+    ImmutableMap<String, byte[]> result = distBuildService.multiFetchSourceFiles(hashCodes);
+    Assert.assertEquals(hashCodes.size(), result.keySet().size());
+    for (int i = 0; i < hashCodes.size(); ++i) {
+      String hashCode = hashCodes.get(i);
+      String content = fileContents.get(i);
+
+      Assert.assertTrue(result.containsKey(hashCode));
+      Assert.assertArrayEquals(content.getBytes(StandardCharsets.UTF_8), result.get(hashCode));
+    }
+
+    EasyMock.verify(frontendService);
   }
 
   @Test
@@ -614,5 +660,55 @@ public class DistBuildServiceTest {
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId(id);
     return stampedeId;
+  }
+
+  @Test
+  public void testSetCoordinator() throws IOException {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response =
+        new FrontendResponse()
+            .setWasSuccessful(true)
+            .setType(FrontendRequestType.SET_COORDINATOR)
+            .setSetCoordinatorResponse(new SetCoordinatorResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
+        .andReturn(response)
+        .once();
+    EasyMock.replay(frontendService);
+
+    StampedeId stampedeId = createStampedeId("super kewl");
+    int port = 4284;
+    String address = "very nice address indeed";
+    distBuildService.setCoordinator(stampedeId, port, address);
+    Assert.assertEquals(FrontendRequestType.SET_COORDINATOR, request.getValue().getType());
+    SetCoordinatorRequest coordinatorRequest = request.getValue().getSetCoordinatorRequest();
+    Assert.assertEquals(stampedeId, coordinatorRequest.getStampedeId());
+    Assert.assertEquals(port, coordinatorRequest.getCoordinatorPort());
+    Assert.assertEquals(address, coordinatorRequest.getCoordinatorHostname());
+    EasyMock.verify(frontendService);
+  }
+
+  @Test
+  public void testEnqueueMinions() throws IOException {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response =
+        new FrontendResponse()
+            .setWasSuccessful(true)
+            .setType(FrontendRequestType.ENQUEUE_MINIONS)
+            .setEnqueueMinionsResponse(new EnqueueMinionsResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
+        .andReturn(response)
+        .once();
+    EasyMock.replay(frontendService);
+
+    StampedeId stampedeId = createStampedeId("minions, here I come");
+    int minionCount = 21;
+    String minionQueueName = "a_happy_place_indeed";
+    distBuildService.enqueueMinions(stampedeId, minionCount, minionQueueName);
+    Assert.assertEquals(FrontendRequestType.ENQUEUE_MINIONS, request.getValue().getType());
+    EnqueueMinionsRequest minionsRequest = request.getValue().getEnqueueMinionsRequest();
+    Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());
+    Assert.assertEquals(minionCount, minionsRequest.getNumberOfMinions());
+    Assert.assertEquals(minionQueueName, minionsRequest.getMinionQueue());
+    EasyMock.verify(frontendService);
   }
 }

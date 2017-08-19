@@ -12,15 +12,27 @@ import sys
 
 def main():
     build_data_path = sys.argv[1]
+    rjson_path = sys.argv[2]
     with open(build_data_path) as f:
         in_to_out_map = json.load(f)['res_dir_map']
     for outdir in in_to_out_map.values():
-        for root, dirs, files in os.walk(outdir):
-            for name in files:
-                if not 'app_icon' in name:
-                    path = os.path.join(root, name)
-                    newpath = os.path.join(root, 'test_' + name)
-                    os.rename(path, newpath)
+        tiny_black = os.path.join(outdir, 'drawable', 'tiny_black.png')
+        if os.path.isfile(tiny_black):
+            os.unlink(tiny_black)
+            tiny_black_xml = os.path.join(outdir, 'drawable', 'tiny_black.xml')
+            with open(tiny_black_xml, 'w') as f:
+                f.write('<xml/>')
+            new_xml = os.path.join(outdir, 'drawable', 'tiny_new.xml')
+            with open(new_xml, 'w') as f:
+                f.write('<xml/>')
+    with open(rjson_path, 'w') as f:
+        json.dump(
+        {
+            "com.sample": [
+                "int drawable tiny_black 0x7f010001 #",
+                "int drawable tiny_new 0x7f010002 #",
+            ],
+        }, f)
 
 if __name__ == '__main__':
   main()

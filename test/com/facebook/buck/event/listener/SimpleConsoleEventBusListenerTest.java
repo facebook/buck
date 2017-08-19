@@ -57,12 +57,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
-  private static final String BUILD_ID = "123";
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
-  private static final String BUILD_ID_OUTPUT = "Build ID: 123\n";
   private static final String FINISHED_DOWNLOAD_STRING =
       "[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)";
 
@@ -88,7 +86,6 @@ public class SimpleConsoleEventBusListenerTest {
             TestResultSummaryVerbosity.of(false, false),
             Locale.US,
             logPath,
-            BUILD_ID,
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()), System.getProperties()));
 
@@ -97,7 +94,7 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testSimpleBuild() {
-    String expectedOutput = BUILD_ID_OUTPUT;
+    String expectedOutput = "";
     assertOutput(expectedOutput, console);
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
@@ -213,7 +210,7 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testJobSummaryIsDisplayed() {
-    String expectedOutput = BUILD_ID_OUTPUT;
+    String expectedOutput = "";
     assertOutput(expectedOutput, console);
 
     BuildEvent.RuleCountCalculated ruleCountCalculated =
@@ -242,7 +239,7 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testBuildTimeDoesNotDisplayNegativeOffset() {
-    String expectedOutput = BUILD_ID_OUTPUT;
+    String expectedOutput = "";
     assertOutput(expectedOutput, console);
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");

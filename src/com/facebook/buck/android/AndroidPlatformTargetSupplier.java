@@ -16,8 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.log.Logger;
 import com.google.common.base.Supplier;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -30,20 +29,18 @@ import javax.annotation.Nullable;
 // of its getCacheName() method in its RuleKey.
 
 public class AndroidPlatformTargetSupplier implements Supplier<AndroidPlatformTarget> {
+  private static final Logger LOG = Logger.get(AndroidPlatformTargetSupplier.class);
   private final AndroidDirectoryResolver androidDirectoryResolver;
   private final AndroidBuckConfig androidBuckConfig;
-  private final BuckEventBus eventBus;
 
   @Nullable private AndroidPlatformTarget androidPlatformTarget;
   @Nullable private RuntimeException exception;
 
   public AndroidPlatformTargetSupplier(
       final AndroidDirectoryResolver androidDirectoryResolver,
-      final AndroidBuckConfig androidBuckConfig,
-      final BuckEventBus eventBus) {
+      final AndroidBuckConfig androidBuckConfig) {
     this.androidDirectoryResolver = androidDirectoryResolver;
     this.androidBuckConfig = androidBuckConfig;
-    this.eventBus = eventBus;
   }
 
   @Override
@@ -60,9 +57,7 @@ public class AndroidPlatformTargetSupplier implements Supplier<AndroidPlatformTa
       androidPlatformTargetId = target.get();
     } else {
       androidPlatformTargetId = AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET;
-      eventBus.post(
-          ConsoleEvent.fine(
-              "No Android platform target specified. Using default: %s", androidPlatformTargetId));
+      LOG.debug("No Android platform target specified. Using default: %s", androidPlatformTargetId);
     }
 
     try {

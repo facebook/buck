@@ -20,12 +20,12 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +36,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -106,7 +105,7 @@ public class AppleTestDescription
   private final AppleLibraryDescription appleLibraryDescription;
   private final FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
-  private final CxxPlatform defaultCxxPlatform;
+  private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
@@ -117,7 +116,7 @@ public class AppleTestDescription
       AppleLibraryDescription appleLibraryDescription,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
@@ -126,7 +125,7 @@ public class AppleTestDescription
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
-    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
@@ -157,8 +156,7 @@ public class AppleTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AppleTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AppleTestDescriptionArg args) {
     AppleDebugFormat debugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
@@ -179,7 +177,7 @@ public class AppleTestDescription
     }
     extraFlavorsBuilder.add(debugFormat.getFlavor());
     if (addDefaultPlatform) {
-      extraFlavorsBuilder.add(defaultCxxPlatform.getFlavor());
+      extraFlavorsBuilder.add(defaultCxxFlavor);
     }
 
     Optional<MultiarchFileInfo> multiarchFileInfo =
@@ -195,7 +193,9 @@ public class AppleTestDescription
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          cxxPlatformFlavorDomain.getValue(buildTarget).orElse(defaultCxxPlatform);
+          cxxPlatformFlavorDomain
+              .getValue(buildTarget)
+              .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor));
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
@@ -249,7 +249,7 @@ public class AppleTestDescription
     AppleBundle bundle =
         AppleDescriptions.createAppleBundle(
             cxxPlatformFlavorDomain,
-            defaultCxxPlatform,
+            defaultCxxFlavor,
             appleCxxPlatformFlavorDomain,
             targetGraph,
             buildTarget.withAppendedFlavors(
@@ -371,8 +371,7 @@ public class AppleTestDescription
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
       BuildTarget libraryTarget,
-      ImmutableSortedSet<BuildTarget> extraCxxDeps)
-      throws NoSuchBuildTargetException {
+      ImmutableSortedSet<BuildTarget> extraCxxDeps) {
     BuildTarget existingLibraryTarget =
         libraryTarget
             .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, CxxStrip.RULE_FLAVOR)
@@ -417,6 +416,7 @@ public class AppleTestDescription
     if (xctoolZipTarget.isPresent()) {
       extraDepsBuilder.add(xctoolZipTarget.get());
     }
+    extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
     appleLibraryDescription.findDepsForTargetFromConstructorArgs(
         buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
@@ -427,8 +427,7 @@ public class AppleTestDescription
       BuildTarget testHostAppBuildTarget,
       AppleDebugFormat debugFormat,
       Iterable<Flavor> additionalFlavors,
-      ImmutableList<CxxPlatform> cxxPlatforms)
-      throws NoSuchBuildTargetException {
+      ImmutableList<CxxPlatform> cxxPlatforms) {
     BuildRule rule =
         resolver.requireRule(
             testHostAppBuildTarget.withAppendedFlavors(
@@ -471,8 +470,7 @@ public class AppleTestDescription
       CellPathResolver cellRoots,
       AppleTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     return appleLibraryDescription.createMetadataForLibrary(
         buildTarget, resolver, cellRoots, selectedVersions, args, metadataClass);
   }

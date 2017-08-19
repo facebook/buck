@@ -19,9 +19,13 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
+import com.facebook.buck.step.ExecutorPool;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Map;
 import java.util.OptionalInt;
+import java.util.concurrent.ScheduledExecutorService;
 
 public interface Command {
 
@@ -54,7 +58,9 @@ public interface Command {
   LogConfigSetup getLogConfig();
 
   /** If any of these listeners also extends Closeable, it will be closed by Main. */
-  Iterable<BuckEventListener> getEventListeners();
+  Iterable<BuckEventListener> getEventListeners(
+      Map<ExecutorPool, ListeningExecutorService> executorPool,
+      ScheduledExecutorService scheduledExecutorService);
 
   void printUsage(PrintStream stream);
 }

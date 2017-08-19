@@ -19,26 +19,25 @@ package com.facebook.buck.halide;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.CxxLinkAndCompileRules;
-import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -131,8 +130,7 @@ public class HalideLibraryDescription
       ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langCompilerFlags,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
-      ImmutableList<String> includeDirs)
-      throws NoSuchBuildTargetException {
+      ImmutableList<String> includeDirs) {
 
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(buildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -197,20 +195,17 @@ public class HalideLibraryDescription
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
     buildTarget =
         LinkerMapMode.restoreLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
-    CxxBinary cxxBinary =
-        new CxxBinary(
-            buildTarget,
-            projectFilesystem,
-            params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
-            ruleResolver,
-            cxxPlatform,
-            cxxLinkAndCompileRules.getBinaryRule(),
-            cxxLinkAndCompileRules.executable,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
-            buildTarget.withoutFlavors(cxxPlatforms.getFlavors()));
-    ruleResolver.addToIndex(cxxBinary);
-    return cxxBinary;
+    return new CxxBinary(
+        buildTarget,
+        projectFilesystem,
+        params.copyAppendingExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
+        ruleResolver,
+        cxxPlatform,
+        cxxLinkAndCompileRules.getBinaryRule(),
+        cxxLinkAndCompileRules.executable,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
+        buildTarget.withoutFlavors(cxxPlatforms.getFlavors()));
   }
 
   private BuildRule createHalideStaticLibrary(
@@ -220,8 +215,7 @@ public class HalideLibraryDescription
       BuildRuleResolver ruleResolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
-      HalideLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      HalideLibraryDescriptionArg args) {
 
     if (!isPlatformSupported(args, platform)) {
       return new NoopBuildRuleWithDeclaredAndExtraDeps(buildTarget, projectFilesystem, params);
@@ -274,8 +268,7 @@ public class HalideLibraryDescription
       BuildRuleResolver resolver,
       CxxPlatform platform,
       Optional<ImmutableList<String>> compilerInvocationFlags,
-      Optional<String> functionName)
-      throws NoSuchBuildTargetException {
+      Optional<String> functionName) {
     CxxBinary halideCompiler =
         (CxxBinary) resolver.requireRule(buildTarget.withFlavors(HALIDE_COMPILER_FLAVOR));
 
@@ -297,8 +290,7 @@ public class HalideLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      HalideLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      HalideLibraryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
@@ -333,7 +325,7 @@ public class HalideLibraryDescription
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       final ImmutableSortedSet<BuildTarget> compilerDeps = args.getCompilerDeps();
       return createHalideCompiler(
-          buildTarget.withAppendedFlavors(HALIDE_COMPILE_FLAVOR),
+          buildTarget,
           projectFilesystem,
           params.withDeclaredDeps(resolver.getAllRules(compilerDeps)).withoutExtraDeps(),
           resolver,

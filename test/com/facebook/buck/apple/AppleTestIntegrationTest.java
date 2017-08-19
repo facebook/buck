@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -62,11 +62,12 @@ public class AppleTestIntegrationTest {
   @Before
   public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
   }
 
   @Test
   public void testAppleTestHeaderSymlinkTree() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -91,7 +92,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testInfoPlistFromExportRule() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -124,7 +124,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testSetsFrameworkSearchPathAndLinksCorrectly() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -157,7 +156,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testInfoPlistVariableSubstitutionWorksCorrectly() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -181,7 +179,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testDefaultPlatformBuilds() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_default_platform", tmp);
@@ -204,7 +201,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testLinkedAsMachOBundleWithNoDylibDeps() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_deps", tmp);
@@ -257,7 +253,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testWithResourcesCopiesResourceFilesAndDirs() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_resources", tmp);
@@ -280,7 +275,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void shouldRefuseToRunAppleTestIfXctestNotPresent() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
     workspace.setUp();
@@ -295,7 +289,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void successOnTestPassing() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
     workspace.setUp();
@@ -309,7 +302,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void skipsXCUITests() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xcuitest", tmp);
     workspace.setUp();
@@ -323,7 +315,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void slowTestShouldFailWithTimeout() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "slow_xc_tests_per_rule_timeout", tmp);
@@ -338,7 +329,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void exitCodeIsCorrectOnTestFailure() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest_failure", tmp);
     workspace.setUp();
@@ -356,7 +346,6 @@ public class AppleTestIntegrationTest {
 
   @Test(timeout = 180000)
   public void successOnAppTestPassing() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);
     workspace.setUp();
@@ -370,7 +359,6 @@ public class AppleTestIntegrationTest {
 
   @Test(timeout = 180000)
   public void testWithHostAppWithDsym() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);
     workspace.setUp();
@@ -412,7 +400,6 @@ public class AppleTestIntegrationTest {
 
   @Test(timeout = 180000)
   public void exitCodeIsCorrectOnAppTestFailure() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_test_with_host_app_failure", tmp);
@@ -433,7 +420,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void successOnOsxLogicTestPassing() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_osx_logic_test", tmp);
     workspace.setUp();
@@ -448,7 +434,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void buckTestOnLibTargetRunsTestTarget() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_osx_logic_test", tmp);
     workspace.setUp();
@@ -463,7 +448,6 @@ public class AppleTestIntegrationTest {
 
   @Test(timeout = 180000)
   public void successForAppTestWithXib() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_compiled_resources", tmp);
@@ -479,7 +463,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void successOnTestPassingWithFbXcTestZipTarget() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_test_fbxctest_zip_target", tmp);
@@ -524,7 +507,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void environmentOverrideAffectsXctoolTest() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     // Our version of xctool doesn't pass through any environment variables, so just see if xctool
     // itself crashes.
@@ -550,7 +532,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void environmentOverrideAffectsXctestTest() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_env", tmp);
     workspace.setUp();
@@ -573,7 +554,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void appleTestWithoutTestHostShouldSupportMultiarch() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
     workspace.setUp();
@@ -605,7 +585,6 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
     workspace.setUp();
@@ -653,7 +632,6 @@ public class AppleTestIntegrationTest {
 
   @Test(timeout = 180000)
   public void appleTestWithTestHostShouldSupportMultiarch() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);
     workspace.setUp();

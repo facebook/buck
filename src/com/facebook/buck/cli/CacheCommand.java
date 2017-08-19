@@ -284,7 +284,8 @@ public class CacheCommand extends AbstractCommand {
       statusString = "Fetching";
       // TODO(skotch): don't use intermediate files, that just slows us down
       // instead, unzip from the ~/buck-cache/ directly
-      CacheResult success = cache.fetch(ruleKey, LazyPath.ofInstance(artifact));
+      CacheResult success =
+          Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(artifact)));
       cacheResult = cacheResultToString(success);
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {

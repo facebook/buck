@@ -19,26 +19,73 @@ package com.facebook.buck.haskell;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class HaskellTestUtils {
 
+  public static final HaskellPlatform DEFAULT_PLATFORM =
+      HaskellPlatform.builder()
+          .setCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setHaskellVersion(HaskellVersion.of(8))
+          .setShouldCacheLinks(true)
+          .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+          .setGhciScriptTemplate(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciBinutils(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciGhc(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciLib(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciCc(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciCxx(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .setGhciCpp(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
+          .build();
+
+  public static final FlavorDomain<HaskellPlatform> DEFAULT_PLATFORMS =
+      FlavorDomain.of("Haskell Platform", DEFAULT_PLATFORM);
+
   private HaskellTestUtils() {}
 
   /** Assume that we can find a haskell compiler on the system. */
   static HaskellVersion assumeSystemCompiler() throws IOException, InterruptedException {
-    HaskellBuckConfig fakeConfig =
-        new HaskellBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder());
-    Optional<Path> compilerOptional = fakeConfig.getSystemCompiler();
+    ExecutableFinder executableFinder = new ExecutableFinder();
+    Optional<Path> compilerOptional =
+        executableFinder.getOptionalExecutable(
+            Paths.get("ghc"), ImmutableMap.copyOf(System.getenv()));
     assumeTrue(compilerOptional.isPresent());
 
     // Find the major version of the haskell compiler.

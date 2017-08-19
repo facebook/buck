@@ -31,8 +31,6 @@
         <option name="height" value="1577"/>
     </component>
 <component name="ChangeListManager">
-    <ignored path="$PROJECT_DIR$/buck-out/"/>
-    <ignored path="$PROJECT_DIR$/modules/dep1/res/values-en/"/>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true"/>
   </component>
 </project>

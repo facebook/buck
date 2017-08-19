@@ -57,7 +57,7 @@ java_library(
     visibility = [
         "//test/com/facebook/buck/testrunner:testrunner",
     ],
-    deps = ["//third-party/java/ddmlib:ddmlib"],
+    deps = ["//third-party/java/android:ddmlib"],
 )
 
 java_library(

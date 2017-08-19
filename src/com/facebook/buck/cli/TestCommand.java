@@ -82,7 +82,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
@@ -303,11 +302,6 @@ public class TestCommand extends BuildCommand {
           new DefaultStepRunner(),
           buildContext,
           ruleFinder);
-    } catch (ExecutionException e) {
-      params
-          .getBuckEventBus()
-          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
     }
   }
 
@@ -498,23 +492,17 @@ public class TestCommand extends BuildCommand {
       MetadataChecker.checkAndCleanIfNeeded(params.getCell());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
-      try (CommandThreadManager artifactFetchService =
-              getArtifactFetchService(params.getBuckConfig(), pool.getExecutor());
-          RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
-              getDefaultRuleKeyCacheScope(
-                  params,
-                  new RuleKeyCacheRecycler.SettingsAffectingCache(
-                      params.getBuckConfig().getKeySeed(),
-                      actionGraphAndResolver.getActionGraph()))) {
+      try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+          getDefaultRuleKeyCacheScope(
+              params,
+              new RuleKeyCacheRecycler.SettingsAffectingCache(
+                  params.getBuckConfig().getKeySeed(), actionGraphAndResolver.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
                     pool.getExecutor(),
-                    artifactFetchService == null
-                        ? pool.getExecutor()
-                        : artifactFetchService.getExecutor(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                     cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

@@ -31,8 +31,8 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.StripStyle;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -74,6 +74,8 @@ public class AppleBundleIntegrationTest {
   @Before
   public void setUp() throws InterruptedException {
     filesystem = new ProjectFilesystem(tmp.getRoot());
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
   }
 
   private boolean checkCodeSigning(Path absoluteBundlePath)
@@ -120,7 +122,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void testDisablingBundleCaching() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -137,28 +138,24 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void simpleApplicationBundle() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     runSimpleApplicationBundleTestWithBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
   }
 
   @Test
   public void simpleApplicationBundleWithLinkerMapDoesNotAffectOutput()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     runSimpleApplicationBundleTestWithBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
   }
 
   @Test
   public void simpleApplicationBundleWithoutLinkerMapDoesNotAffectOutput()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     runSimpleApplicationBundleTestWithBuildTarget(
         "//:DemoApp#iphonesimulator-x86_64,no-debug,no-linkermap");
   }
 
   @Test
   public void simpleApplicationBundleWithCodeSigning() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
@@ -211,7 +208,6 @@ public class AppleBundleIntegrationTest {
   }
 
   private void assertTargetCodesignToolIsUsedFor(String fullyQualifiedName) throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
@@ -238,7 +234,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void simpleApplicationBundleWithDryRunCodeSigning() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
@@ -281,7 +276,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void simpleApplicationBundleWithEmbeddedFrameworks() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
@@ -321,7 +315,6 @@ public class AppleBundleIntegrationTest {
   @Test
   public void simpleApplicationBundleWithCodeSigningAndEntitlements()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
@@ -359,7 +352,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void simpleApplicationBundleWithFatBinary() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_fat_application_bundle_no_debug", tmp);
@@ -393,7 +385,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void bundleHasOutputPath() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -415,7 +406,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void extensionBundle() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_extension", tmp);
     workspace.setUp();
@@ -445,7 +435,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appBundleWithExtensionBundleDependency() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_app_with_extension", tmp);
     workspace.setUp();
@@ -473,7 +462,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void bundleBinaryHasDsymBundle() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_dwarf_and_dsym", tmp);
@@ -520,7 +508,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void bundleBinaryHasLinkerMapFile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_dwarf_and_dsym", tmp);
@@ -558,7 +545,6 @@ public class AppleBundleIntegrationTest {
   }
 
   public String runSimpleBuildWithDefinedStripStyle(StripStyle stripStyle) throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -618,7 +604,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appBundleWithResources() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);
     workspace.setUp();
@@ -636,7 +621,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -654,7 +638,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void defaultPlatformInBuckConfig() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "default_platform_in_buckconfig_app_bundle", tmp);
@@ -684,7 +667,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void defaultPlatformInBuckConfigWithFlavorSpecified() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "default_platform_in_buckconfig_flavored_app_bundle", tmp);
@@ -710,7 +692,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appleAssetCatalogsAreIncludedInBundle() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_asset_catalogs_are_included_in_bundle", tmp);
@@ -730,7 +711,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appleAssetCatalogsWithMoreThanOneAppIconOrLaunchImageShouldFail() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("At most one asset catalog in the dependencies of");
@@ -746,7 +726,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appleBundleDoesNotPropagateIncludeFrameworkFlavors() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_app_with_extension", tmp);
     workspace.setUp();
@@ -779,7 +758,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void infoPlistSubstitutionsAreApplied() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "application_bundle_with_substitutions", tmp);
@@ -816,7 +794,6 @@ public class AppleBundleIntegrationTest {
   @Test
   public void infoPlistSubstitutionsAreAppliedToEntitlements()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
@@ -854,7 +831,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void productNameChangesBundleAndBinaryNames() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "application_bundle_with_product_name", tmp);
@@ -880,7 +856,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void infoPlistWithUnrecognizedVariableFails() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "application_bundle_with_invalid_substitutions", tmp);
@@ -891,7 +866,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void resourcesAreCompiled() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_compiled_resources", tmp);
@@ -920,7 +894,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void watchApplicationBundle() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace =
@@ -957,7 +930,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void legacyWatchApplicationBundle() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     ProjectWorkspace workspace =
@@ -996,7 +968,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void copiesFrameworkBundleIntoFrameworkDirectory() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
     ProjectWorkspace workspace =
@@ -1023,7 +994,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void onlyIncludesResourcesInBundlesWhichStaticallyLinkThem() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
 
@@ -1054,7 +1024,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void testTargetOutputForAppleBundle() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
@@ -1092,7 +1061,6 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void resourcesFromOtherCellsCanBeProperlyIncluded() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "bundle_with_resources_from_other_cells", tmp);
@@ -1104,7 +1072,6 @@ public class AppleBundleIntegrationTest {
   @Test
   public void bundleTraversesAppleResourceResourcesFromDepsForAdditionalResources()
       throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_resources_from_deps", tmp);

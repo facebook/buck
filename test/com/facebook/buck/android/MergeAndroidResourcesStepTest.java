@@ -100,6 +100,7 @@ public class MergeAndroidResourcesStepTest {
             entriesBuilder.buildFilePathToPackageNameSet(),
             Optional.empty(),
             ImmutableMap.of(),
+            Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             entriesBuilder.getProjectFilesystem(),
             false);
@@ -169,6 +170,7 @@ public class MergeAndroidResourcesStepTest {
             entriesBuilder.buildFilePathToPackageNameSet(),
             Optional.empty(),
             ImmutableMap.of(),
+            Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             entriesBuilder.getProjectFilesystem(),
             false);
@@ -288,6 +290,7 @@ public class MergeAndroidResourcesStepTest {
                     .setRes(new FakeSourcePath("c/res"))
                     .setRDotJavaPackage("com.res.c")
                     .build()),
+        Optional.empty(),
         /* bannedDuplicateResourceTypes */ EnumSet.of(RType.STRING),
         entriesBuilder.getProjectFilesystem(),
         false);
@@ -395,6 +398,7 @@ public class MergeAndroidResourcesStepTest {
             Paths.get("output"),
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            /* filteredResourcesProvider */ Optional.empty(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false);
@@ -478,6 +482,7 @@ public class MergeAndroidResourcesStepTest {
             Paths.get("output"),
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
+            /* filteredResourcesProvider */ Optional.empty(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false);
@@ -755,6 +760,7 @@ public class MergeAndroidResourcesStepTest {
             Paths.get("output"),
             true,
             rtypes,
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             /* useOldStyleableFormat */ false);

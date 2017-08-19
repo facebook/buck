@@ -23,8 +23,7 @@ import com.sun.jna.win32.W32APIOptions;
 /** Utility class to bridge native windows FS calls to Java using JNA. */
 public interface WindowsFSLibrary extends Library {
   WindowsFSLibrary INSTANCE =
-      (WindowsFSLibrary)
-          Native.loadLibrary("kernel32", WindowsFSLibrary.class, W32APIOptions.UNICODE_OPTIONS);
+      Native.loadLibrary("kernel32", WindowsFSLibrary.class, W32APIOptions.UNICODE_OPTIONS);
 
   int SYMBOLIC_LINK_FLAG_DIRECTORY = 1;
   int SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE = 2;

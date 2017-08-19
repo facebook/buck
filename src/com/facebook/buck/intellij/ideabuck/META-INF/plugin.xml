@@ -20,123 +20,135 @@
     ]]></description>
 
   <change-notes><![CDATA[
+<h3>3.2</h3>
+<ul>
+  <li>Fixed HTML formatting of these change-notes</li>
+</ul>
 
-  <ul>
-      <li>
-        <b>3.2</b>
-        
-      </li>
+<h3>3.1</h3>
+<ul>
+  <li>Detect new package creation, and mark it as a source folder.</li>
+  <li>Remove the default folding of large arrays.</li>
+</ul>
 
-      <li>
-        <b>3.1</b>
-	      Detect new package creation, and mark it as a source folder.
-	      Remove the default folding of large arrays.
-      </li>
+<h3>3.0</h3>
+<ul>
+  <li>Make plugin compatible with IntelliJ 2017.1.</li>
+</ul>
 
-      <li>
-        <b>3.0</b>
-          Make plugin compatible with IntelliJ 2017.1.
-      </li>
+<h3>2.9</h3>
+<ul>
+  <li>Add an ability to run tests from editor.</li>
+  <li>Find adb based on ANDROID_SDK environment variable.</li>
+  <li>Fold BUCK files.</li>
+</ul>
 
-      <li>
-        <b>2.9</b>
-          Add an ability to run tests from editor.
-          Find adb based on ANDROID_SDK environment variable.
-          Fold BUCK files.
-      </li>
-      <li>
-        <b>2.8</b>
-	      Detect resource creation in a Project View's <tt>/res</tt> directory, and moves the new
-	      file to an Android resource module.
-      </li>
+<h3>2.8</h3>
+<ul>
+  <li>Detect resource creation in a Project View's <tt>/res</tt> directory,
+    and moves the new file to an Android resource module.</li>
+</ul>
 
-      <li>
-        <b>2.7.8</b>
-	      Fixed issues with Buck files showing syntax errors when using the glob function.
-      </li>
-      <li>
-        <b>2.7.7</b>
-	      Fix a bug with buck command never finishes. This solves the problem with not showing
-	      targets in "Choose Buck Target" pop-up.
-	      Use buck config to determine Buck file name (default is BUCK).
-      </li>
-      <li>
-        <b>2.7.6</b>
-	      Change pasting formatting to have double-quotes and four-space indents.
-      </li>
-      <li>
-        <b>2.7.5</b>
-          Fix go-to-definition to recognize both single- and double-quoted strings.
-          Fix how the icon gets initialized for the buck tool window.
-      </li>
-      <li>
-        <b>2.7.4</b>
-          Added support for pasting multiple targets in a Buck file.
-          Fixed issues with whitespace when pasting target(s) in a Buck file.
-      </li>
-      <li>
-        <b>2.7.3</b>
-          Removed restriction on IDEA version.
-          Added test run configuration.
-      </li>
-      <li>
-        <b>2.7.2</b>
-          Fixed a bug with NullPointerException in BuckEventsQueue.
-          Fixed multiple edge cases with autodeps logic.
-      </li>
-      <li>
-        <b>2.7.1</b>
-          Updated upper-bound of plugin to 2016.2.
-      </li>
-      <li>
-        <b>2.7.0</b>
-          Sending events for Buck plugin IntelliJ actions.
-          Added adb select path to Tools.
-      </li>
+<h3>2.7.8</h3>
+<ul>
+  <li>Fixed issues with Buck files showing syntax errors when using
+    the glob function.</li>
+</ul>
 
-      <li>
-        <b>2.6</b>
-          Improved server connect/disconnect.
-          Moved actions from the UI thread.
-          Fixed some compatibility issues.
-      </li>
-      <li>
-        <b>2.5</b>
-          Updated buck icons.
-          Made all existing paths in a Buck file clickable.
-          Improved grammar.
-          Show popup on how to enable the toolbar.
-          Disable choose target if indexing not over.
-      </li>
-      <li>
-        <b>2.4</b>
-          Added the plugin to the toolbar.
-          Show successful/failed notification on action finished.
-          Automatically find buck executable.
-          Added install debugging.
-          Minor bug fixes
-      </li>
+<h3>2.7.7</h3>
+<ul>
+  <li>Fix a bug with buck command never finishes. This solves the problem
+    with not showing targets in "Choose Buck Target" pop-up.</li>
+  <li>Use buck config to determine Buck file name (default is BUCK).</li>
+</ul>
 
-       <li>
-        <b>2.3</b>
-          Updated with the new buck API.
-          Fixed old commands to work with Buck.
-      </li>
+<h3>2.7.6</h3>
+<ul>
+  <li>Change pasting formatting to have double-quotes and four-space
+    indents.</li>
+</ul>
 
-      <li>
-        <b>2.2</b>
-        Fetch build status via websocket.
-        Publish build status notifications.
-      </li>
+<h3>2.7.5</h3>
+<ul>
+  <li>Fix go-to-definition to recognize both single- and double-quoted
+    strings.</li>
+  <li>Fix how the icon gets initialized for the buck tool window.</li>
+</ul>
 
-      <li>
-        <b>1.1</b>
-      1. Formatter for buck file
-      2. Buck dependencies sorter
-      3. Annotator for wrong buck dependency target
-      4. Line commenter
-      </li>
-   </ul>
+<h3>2.7.4</h3>
+<ul>
+  <li>Added support for pasting multiple targets in a Buck file.</li>
+  <li>Fixed issues with whitespace when pasting target(s) in a
+    Buck file.</li>
+</ul>
+
+<h3>2.7.3</h3>
+<ul>
+  <li>Removed restriction on IDEA version.</li>
+  <li>Added test run configuration.</li>
+</ul>
+
+<h3>2.7.2</h3>
+<ul>
+  <li>Fixed a bug with NullPointerException in BuckEventsQueue.</li>
+  <li>Fixed multiple edge cases with autodeps logic.</li>
+</ul>
+
+<h3>2.7.1</h3>
+<ul>
+  <li>Updated upper-bound of plugin to 2016.2.</li>
+</ul>
+
+<h3>2.7.0</h3>
+<ul>
+  <li>Sending events for Buck plugin IntelliJ actions.</li>
+  <li>Added adb select path to Tools.</li>
+</ul>
+
+<h3>2.6</h3>
+<ul>
+  <li>Improved server connect/disconnect.</li>
+  <li>Moved actions from the UI thread.</li>
+  <li>Fixed some compatibility issues.</li>
+</ul>
+
+<h3>2.5</h3>
+<ul>
+  <li>Updated buck icons.</li>
+  <li>Made all existing paths in a Buck file clickable.</li>
+  <li>Improved grammar.</li>
+  <li>Show popup on how to enable the toolbar.</li>
+  <li>Disable choose target if indexing not over.</li>
+</ul>
+
+<h3>2.4</h3>
+<ul>
+  <li>Added the plugin to the toolbar.</li>
+  <li>Show successful/failed notification on action finished.</li>
+  <li>Automatically find buck executable.</li>
+  <li>Added install debugging.</li>
+  <li>Minor bug fixes.</li>
+</ul>
+
+<h3>2.3</h3>
+<ul>
+  <li>Updated with the new buck API.</li>
+  <li>Fixed old commands to work with Buck.</li>
+</ul>
+
+<h3>2.2</h3>
+<ul>
+  <li>Fetch build status via websocket.</li>
+  <li>Publish build status notifications.</li>
+</ul>
+
+<h3>1.1</h3>
+<ul>
+  <li>Formatter for buck file.</li>
+  <li>Buck dependencies sorter.</li>
+  <li>Annotator for wrong buck dependency target.</li>
+  <li>Line commenter.</li>
+</ul>
     ]]>
   </change-notes>
 

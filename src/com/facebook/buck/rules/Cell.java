@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -56,6 +58,7 @@ public class Cell {
   private final BuckConfig config;
   private final CellProvider cellProvider;
   private final Supplier<KnownBuildRuleTypes> knownBuildRuleTypesSupplier;
+  @Nullable private final SdkEnvironment sdkEnvironment;
 
   private final int hashCode;
 
@@ -67,7 +70,8 @@ public class Cell {
       Watchman watchman,
       BuckConfig config,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      CellProvider cellProvider) {
+      CellProvider cellProvider,
+      @Nullable SdkEnvironment sdkEnvironment) {
 
     this.knownRoots = knownRoots;
     this.canonicalName = canonicalName;
@@ -75,6 +79,7 @@ public class Cell {
     this.watchman = watchman;
     this.config = config;
     this.cellProvider = cellProvider;
+    this.sdkEnvironment = sdkEnvironment;
 
     // Stampede needs the Cell before it can materialize all the files required by
     // knownBuildRuleTypesFactory (specifically java/javac), and as such we need to load this
@@ -113,6 +118,18 @@ public class Cell {
 
   public KnownBuildRuleTypes getKnownBuildRuleTypes() {
     return knownBuildRuleTypesSupplier.get();
+  }
+
+  public boolean isCompatibleForCaching(Cell other) {
+    return Objects.equals(this, other) && isSameSdkEnvironment(other);
+  }
+
+  private boolean isSameSdkEnvironment(Cell other) {
+    return Objects.equals(sdkEnvironment, other.getSdkEnvironment());
+  }
+
+  public SdkEnvironment getSdkEnvironment() {
+    return sdkEnvironment;
   }
 
   public BuckConfig getBuckConfig() {
@@ -239,6 +256,19 @@ public class Cell {
    */
   public ProjectBuildFileParser createBuildFileParser(
       TypeCoercerFactory typeCoercerFactory, Console console, BuckEventBus eventBus) {
+    return createBuildFileParser(
+        typeCoercerFactory, console, eventBus, /* enableProfiling */ false);
+  }
+
+  /**
+   * Same as @{{@link #createBuildFileParser(TypeCoercerFactory, Console, BuckEventBus)}} but
+   * provides a way to configure whether parse profiling should be enabled
+   */
+  public ProjectBuildFileParser createBuildFileParser(
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      boolean enableProfiling) {
 
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
@@ -253,11 +283,13 @@ public class Cell {
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new ProjectBuildFileParser(
+    return new PythonDslProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
+            .setEnableProfiling(enableProfiling)
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
             .setCellName(getCanonicalName().orElse(""))
+            .setFreezeGlobals(parserConfig.getFreezeGlobals())
             .setPythonInterpreter(pythonInterpreter)
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())

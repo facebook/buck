@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class HeaderPathNormalizer {
+class HeaderPathNormalizer {
 
   private final SourcePathResolver pathResolver;
 
@@ -194,6 +194,10 @@ public class HeaderPathNormalizer {
     }
 
     public Builder addPrefixHeader(SourcePath sourcePath) {
+      return addHeader(sourcePath);
+    }
+
+    public Builder addBridgingHeader(SourcePath sourcePath) {
       return addHeader(sourcePath);
     }
 

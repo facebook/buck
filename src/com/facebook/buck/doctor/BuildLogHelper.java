@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.stream.Stream;
 
 /** Methods for finding and inspecting buck log files. */
 public class BuildLogHelper {
@@ -80,12 +81,16 @@ public class BuildLogHelper {
     Path machineReadableLogFile =
         logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
     if (projectFilesystem.isFile(machineReadableLogFile)) {
-      String invocationInfoLine =
-          Files.lines(projectFilesystem.resolve(machineReadableLogFile))
-              .filter(line -> line.startsWith(PREFIX_INVOCATION_INFO))
-              .map(line -> line.substring(PREFIX_INVOCATION_INFO.length()))
-              .findFirst()
-              .get();
+      String invocationInfoLine;
+      try (Stream<String> logLines =
+          Files.lines(projectFilesystem.resolve(machineReadableLogFile))) {
+        invocationInfoLine =
+            logLines
+                .filter(line -> line.startsWith(PREFIX_INVOCATION_INFO))
+                .map(line -> line.substring(PREFIX_INVOCATION_INFO.length()))
+                .findFirst()
+                .get();
+      }
 
       // TODO(mikath): Keep this for a while for compatibility for commandArgs, then replace with
       // a proper ObjectMapper deserialization of InvocationInfo.

@@ -25,6 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuckPyFunction;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -109,16 +111,26 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(ImmutableSet.copyOf(target.getFlavors()))) {
-          throw UnexpectedFlavorException.createWithSuggestions(cell, target);
+          throw UnexpectedFlavorException.createWithSuggestions(
+              (Flavored) description, cell, target);
         }
       } else {
         LOG.warn(
             "Target %s (type %s) must implement the Flavored interface "
                 + "before we can check if it supports flavors: %s",
             unflavoredBuildTarget, buildRuleType, target.getFlavors());
+        ImmutableSet<String> invalidFlavorsStr =
+            target
+                .getFlavors()
+                .stream()
+                .map(Flavor::toString)
+                .collect(MoreCollectors.toImmutableSet());
+        String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);
         throw new HumanReadableException(
-            "Target %s (type %s) does not currently support flavors (tried %s)",
-            unflavoredBuildTarget, buildRuleType, target.getFlavors());
+            "The following flavor(s) are not supported on target %s:\n"
+                + "%s.\n\n"
+                + "Please try to remove them when referencing this target.",
+            unflavoredBuildTarget, invalidFlavorsDisplayStr);
       }
     }
 

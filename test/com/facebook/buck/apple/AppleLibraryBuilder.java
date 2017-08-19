@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
@@ -193,6 +193,21 @@ public class AppleLibraryBuilder
 
   public AppleLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
+    return this;
+  }
+
+  public AppleLibraryBuilder setSwiftVersion(Optional<String> swiftVersion) {
+    getArgForPopulating().setSwiftVersion(swiftVersion);
+    return this;
+  }
+
+  public AppleLibraryBuilder setXcodePrivateHeadersSymlinks(boolean xcodePrivateHeadersSymlinks) {
+    getArgForPopulating().setXcodePrivateHeadersSymlinks(Optional.of(xcodePrivateHeadersSymlinks));
+    return this;
+  }
+
+  public AppleLibraryBuilder setXcodePublicHeadersSymlinks(boolean xcodePublicHeadersSymlinks) {
+    getArgForPopulating().setXcodePublicHeadersSymlinks(Optional.of(xcodePublicHeadersSymlinks));
     return this;
   }
 }

@@ -148,10 +148,10 @@ public class DistBuildClientExecutorTest {
     state.addToTopLevelTargets("awesome-node");
 
     BuildJobStateFileHashEntry file1 = new BuildJobStateFileHashEntry();
-    file1.setHashCode("abcd");
+    file1.setSha1("abcd");
 
     BuildJobStateFileHashEntry file2 = new BuildJobStateFileHashEntry();
-    file1.setHashCode("xkcd");
+    file1.setSha1("xkcd");
 
     BuildJobStateFileHashes cellFilehashes = new BuildJobStateFileHashes();
     cellFilehashes.setCellIndex(42);

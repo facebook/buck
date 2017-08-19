@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -78,7 +78,7 @@ import java.util.function.Predicate;
  * (effectively) random unique IDs, they are not amenable to the InputBasedRuleKey optimization when
  * used to compile another file.
  */
-public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
+class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   // Fields that are added to rule key as is.
@@ -200,7 +200,7 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
       BuildContext context, CellPathResolver cellPathResolver) throws IOException {
     try {
       return ImmutableList.<SourcePath>builder()
-          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(readDepFileLines(context)))
+          .addAll(preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context)))
           .add(input)
           .build();
     } catch (Depfiles.HeaderVerificationException e) {
@@ -217,13 +217,13 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
     return getSuffixedOutput(pathResolver, ".dep");
   }
 
-  public ImmutableList<Path> readDepFileLines(BuildContext context)
+  private ImmutableList<Path> getDependencies(BuildContext context)
       throws IOException, Depfiles.HeaderVerificationException {
     try {
       return depFileCache.get(
           context,
           () ->
-              Depfiles.parseAndOutputBuckCompatibleDepfile(
+              Depfiles.parseAndVerifyDependencies(
                   context.getEventBus(),
                   getProjectFilesystem(),
                   preprocessorDelegate.getHeaderPathNormalizer(),
@@ -231,7 +231,8 @@ public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraD
                   getDepFilePath(context.getSourcePathResolver()),
                   // TODO(10194465): This uses relative path so as to get relative paths in the dep file
                   getRelativeInputPath(context.getSourcePathResolver()),
-                  output));
+                  output,
+                  compilerDelegate.getDependencyTrackingMode()));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);

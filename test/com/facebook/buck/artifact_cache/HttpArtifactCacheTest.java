@@ -25,7 +25,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
@@ -38,6 +37,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
@@ -96,12 +96,6 @@ public class HttpArtifactCacheTest {
     }
   }
 
-  private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
-    HttpArtifactCacheEvent.Started started =
-        ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(new RuleKey("1234"));
-    return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
-  }
-
   /**
    * Helper for creating simple HttpService instances from lambda functions.
    *
@@ -139,6 +133,7 @@ public class HttpArtifactCacheTest {
             .setProjectFilesystem(new FakeProjectFilesystem())
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
+            .setHttpFetchExecutorService(DIRECT_EXECUTOR_SERVICE)
             .setErrorTextTemplate(ERROR_TEXT_TEMPLATE)
             .setDistributedBuildModeEnabled(false);
   }
@@ -163,9 +158,10 @@ public class HttpArtifactCacheTest {
             }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     CacheResult result =
-        cache.fetch(
-            new RuleKey("00000000000000000000000000000000"),
-            LazyPath.ofInstance(Paths.get("output/file")));
+        Futures.getUnchecked(
+            cache.fetchAsync(
+                new RuleKey("00000000000000000000000000000000"),
+                LazyPath.ofInstance(Paths.get("output/file"))));
     assertEquals(result.getType(), CacheResultType.MISS);
     assertTrue("response wasn't fully read!", responseList.get(0).body().source().exhausted());
     cache.close();
@@ -200,7 +196,8 @@ public class HttpArtifactCacheTest {
             }));
 
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
     assertEquals(result.cacheError().orElse(""), CacheResultType.HIT, result.getType());
     assertEquals(Optional.of(data), filesystem.readFileIfItExists(output));
     assertEquals(result.artifactSizeBytes(), Optional.of(filesystem.getFileSize(output)));
@@ -232,7 +229,7 @@ public class HttpArtifactCacheTest {
                       .build());
             }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    cache.fetch(ruleKey, LazyPath.ofInstance(Paths.get("output/file")));
+    Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(Paths.get("output/file"))));
     cache.close();
   }
 
@@ -262,7 +259,8 @@ public class HttpArtifactCacheTest {
             }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Path output = Paths.get("output/file");
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
     assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
     assertTrue("response wasn't fully read!", responseList.get(0).body().source().exhausted());
@@ -295,7 +293,8 @@ public class HttpArtifactCacheTest {
             }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Path output = Paths.get("output/file");
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
     assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
     assertTrue("response wasn't fully read!", responseList.get(0).body().source().exhausted());
@@ -313,7 +312,9 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Path output = Paths.get("output/file");
     CacheResult result =
-        cache.fetch(new RuleKey("00000000000000000000000000000000"), LazyPath.ofInstance(output));
+        Futures.getUnchecked(
+            cache.fetchAsync(
+                new RuleKey("00000000000000000000000000000000"), LazyPath.ofInstance(output)));
     assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
     cache.close();
@@ -366,8 +367,7 @@ public class HttpArtifactCacheTest {
               return new OkHttpResponseWrapper(response);
             })));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    cache.storeImpl(
-        ArtifactInfo.builder().addRuleKeys(ruleKey).build(), output, createFinishedEventBuilder());
+    cache.storeImpl(ArtifactInfo.builder().addRuleKeys(ruleKey).build(), output);
     assertTrue(hasCalled.get());
     cache.close();
   }
@@ -385,8 +385,7 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     cache.storeImpl(
         ArtifactInfo.builder().addRuleKeys(new RuleKey("00000000000000000000000000000000")).build(),
-        output,
-        createFinishedEventBuilder());
+        output);
     cache.close();
   }
 
@@ -423,10 +422,7 @@ public class HttpArtifactCacheTest {
               return new OkHttpResponseWrapper(response);
             })));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    cache.storeImpl(
-        ArtifactInfo.builder().addRuleKeys(ruleKey1, ruleKey2).build(),
-        output,
-        createFinishedEventBuilder());
+    cache.storeImpl(ArtifactInfo.builder().addRuleKeys(ruleKey1, ruleKey2).build(), output);
     assertThat(stored, Matchers.containsInAnyOrder(ruleKey1, ruleKey2));
     cache.close();
   }
@@ -458,7 +454,8 @@ public class HttpArtifactCacheTest {
             })));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Path output = Paths.get("output/file");
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
     assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
     cache.close();
@@ -489,7 +486,8 @@ public class HttpArtifactCacheTest {
               return new OkHttpResponseWrapper(response);
             })));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
     assertEquals(CacheResultType.HIT, result.getType());
     assertEquals(metadata, result.getMetadata());
     cache.close();
@@ -539,7 +537,8 @@ public class HttpArtifactCacheTest {
                 }));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Path output = Paths.get("output/file");
-    CacheResult result = cache.fetch(ruleKey, LazyPath.ofInstance(output));
+    CacheResult result =
+        Futures.getUnchecked(cache.fetchAsync(ruleKey, LazyPath.ofInstance(output)));
     assertEquals(CacheResultType.ERROR, result.getType());
     assertEquals(Optional.empty(), filesystem.readFileIfItExists(output));
     assertTrue(consoleEventReceived.get());

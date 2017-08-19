@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -73,6 +72,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final BuildTarget originalBuildTarget;
   private final Optional<Arg> postFilterResourcesCmd;
   private final boolean exopackageForResources;
+  private final boolean noAutoVersionResources;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -92,7 +92,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean includesVectorDrawables,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
       ManifestEntries manifestEntries,
-      Optional<Arg> postFilterResourcesCmd) {
+      Optional<Arg> postFilterResourcesCmd,
+      boolean noAutoVersionResources) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleResolver = ruleResolver;
@@ -112,6 +113,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.manifestEntries = manifestEntries;
     this.originalBuildTarget = originalBuildTarget;
     this.postFilterResourcesCmd = postFilterResourcesCmd;
+    this.noAutoVersionResources = noAutoVersionResources;
   }
 
   @Value.Immutable
@@ -137,7 +139,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   public AndroidBinaryResourcesGraphEnhancementResult enhance(
-      AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+      AndroidPackageableCollection packageableCollection) {
     ImmutableList.Builder<BuildRule> enhancedDeps = ImmutableList.builder();
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
@@ -294,8 +296,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
   private Aapt2Link createAapt2Link(
       AndroidPackageableCollection.ResourceDetails resourceDetails,
-      Optional<FilteredResourcesProvider> filteredResourcesProvider)
-      throws NoSuchBuildTargetException {
+      Optional<FilteredResourcesProvider> filteredResourcesProvider) {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     if (filteredResourcesProvider.isPresent()) {
       Optional<BuildRule> resourceFilterRule =
@@ -333,7 +334,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         manifest,
-        manifestEntries);
+        manifestEntries,
+        noAutoVersionResources);
   }
 
   private GenerateRDotJava createGenerateRDotJava(

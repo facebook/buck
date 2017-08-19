@@ -16,10 +16,9 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -68,8 +67,7 @@ public class OcamlLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      OcamlLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      OcamlLibraryDescriptionArg args) {
 
     ImmutableList<OcamlSource> srcs = args.getSrcs();
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> flags = ImmutableList.builder();

@@ -27,8 +27,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ThrowingPrintWriter;
-import com.facebook.buck.util.xml.XmlDomParser;
+import com.facebook.buck.util.xml.DocumentLocation;
+import com.facebook.buck.util.xml.PositionalXmlHandler;
+import com.facebook.buck.util.xml.XmlDomParserWithLineNumbers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -49,6 +52,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -83,14 +87,20 @@ public class MiniAapt implements Step {
   private static final ImmutableMap<String, RType> RESOURCE_TYPES = getResourceTypes();
   private static final ImmutableSet<String> IGNORED_TAGS = ImmutableSet.of("eat-comment", "skip");
 
+  public enum ResourceCollectionType {
+    R_DOT_TXT,
+    ANDROID_RESOURCE_INDEX,
+  }
+
   private final SourcePathResolver resolver;
   private final ProjectFilesystem filesystem;
   private final SourcePath resDirectory;
-  private final Path pathToTextSymbolsFile;
+  private final Path pathToOutputFile;
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
-  private final AaptResourceCollector resourceCollector;
+  private final ResourceCollector resourceCollector;
   private final boolean resourceUnion;
   private final boolean isGrayscaleImageProcessingEnabled;
+  private final ResourceCollectionType resourceCollectionType;
 
   public MiniAapt(
       SourcePathResolver resolver,
@@ -105,25 +115,39 @@ public class MiniAapt implements Step {
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
         /* resourceUnion */ false,
-        /* isGrayscaleImageProcessingEnabled */ false);
+        /* isGrayscaleImageProcessingEnabled */ false,
+        ResourceCollectionType.R_DOT_TXT);
   }
 
   public MiniAapt(
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
-      Path pathToTextSymbolsFile,
+      Path pathToOutputFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
       boolean resourceUnion,
-      boolean isGrayscaleImageProcessingEnabled) {
+      boolean isGrayscaleImageProcessingEnabled,
+      ResourceCollectionType resourceCollectionType) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
-    this.pathToTextSymbolsFile = pathToTextSymbolsFile;
+    this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
-    this.resourceCollector = new AaptResourceCollector();
     this.resourceUnion = resourceUnion;
     this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
+    this.resourceCollectionType = resourceCollectionType;
+
+    switch (resourceCollectionType) {
+      case R_DOT_TXT:
+        this.resourceCollector = new RDotTxtResourceCollector();
+        break;
+      case ANDROID_RESOURCE_INDEX:
+        this.resourceCollector = new AndroidResourceIndexCollector();
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Invalid resource collector type: " + resourceCollectionType);
+    }
   }
 
   private static XPathExpression createExpression(String expressionStr) {
@@ -146,7 +170,7 @@ public class MiniAapt implements Step {
   }
 
   @VisibleForTesting
-  AaptResourceCollector getResourceCollector() {
+  ResourceCollector getResourceCollector() {
     return resourceCollector;
   }
 
@@ -178,13 +202,25 @@ public class MiniAapt implements Step {
       resourceUnion();
     }
 
-    try (ThrowingPrintWriter writer =
-        new ThrowingPrintWriter(filesystem.newFileOutputStream(pathToTextSymbolsFile))) {
-      Set<RDotTxtEntry> sortedResources =
-          ImmutableSortedSet.copyOf(Ordering.natural(), resourceCollector.getResources());
-      for (RDotTxtEntry entry : sortedResources) {
-        writer.printf("%s %s %s %s\n", entry.idType, entry.type, entry.name, entry.idValue);
+    if (resourceCollectionType == ResourceCollectionType.R_DOT_TXT) {
+      RDotTxtResourceCollector rDotTxtResourceCollector =
+          (RDotTxtResourceCollector) resourceCollector;
+      try (ThrowingPrintWriter writer =
+          new ThrowingPrintWriter(filesystem.newFileOutputStream(pathToOutputFile))) {
+        Set<RDotTxtEntry> sortedResources =
+            ImmutableSortedSet.copyOf(Ordering.natural(), rDotTxtResourceCollector.getResources());
+        for (RDotTxtEntry entry : sortedResources) {
+          writer.printf("%s %s %s %s\n", entry.idType, entry.type, entry.name, entry.idValue);
+        }
       }
+    }
+    if (resourceCollectionType == ResourceCollectionType.ANDROID_RESOURCE_INDEX) {
+      AndroidResourceIndexCollector androidResourceIndexCollector =
+          (AndroidResourceIndexCollector) resourceCollector;
+
+      ObjectMappers.WRITER.writeValue(
+          filesystem.newFileOutputStream(pathToOutputFile),
+          androidResourceIndexCollector.getResourceIndex());
     }
 
     return StepExecutionResult.SUCCESS;
@@ -290,7 +326,8 @@ public class MiniAapt implements Step {
       if (rType == RType.DRAWABLE) {
         processDrawables(filesystem, resourceFile);
       } else {
-        resourceCollector.addIntResourceIfNotPresent(rType, resourceName);
+        resourceCollector.addIntResourceIfNotPresent(
+            rType, resourceName, resourceFile, DocumentLocation.of(0, 0));
       }
     }
   }
@@ -314,12 +351,16 @@ public class MiniAapt implements Step {
       isGrayscaleImage = filename.endsWith(".g.png");
     }
 
+    DocumentLocation location = DocumentLocation.of(0, 0);
     if (isCustomDrawable) {
-      resourceCollector.addCustomDrawableResourceIfNotPresent(RType.DRAWABLE, resourceName);
+      resourceCollector.addCustomDrawableResourceIfNotPresent(
+          RType.DRAWABLE, resourceName, resourceFile, location);
     } else if (isGrayscaleImage) {
-      resourceCollector.addGrayscaleImageResourceIfNotPresent(RType.DRAWABLE, resourceName);
+      resourceCollector.addGrayscaleImageResourceIfNotPresent(
+          RType.DRAWABLE, resourceName, resourceFile, location);
     } else {
-      resourceCollector.addIntResourceIfNotPresent(RType.DRAWABLE, resourceName);
+      resourceCollector.addIntResourceIfNotPresent(
+          RType.DRAWABLE, resourceName, resourceFile, location);
     }
   }
 
@@ -404,15 +445,17 @@ public class MiniAapt implements Step {
         }
 
         RType rType = Preconditions.checkNotNull(RESOURCE_TYPES.get(resourceType));
-        addToResourceCollector(node, rType);
+        addToResourceCollector(node, rType, valuesFile);
       }
     }
   }
 
-  private void addToResourceCollector(Node node, RType rType) throws ResourceParseException {
+  private void addToResourceCollector(Node node, RType rType, Path file)
+      throws ResourceParseException {
     String resourceName = sanitizeName(extractNameAttribute(node));
-    if (rType.equals(RType.STYLEABLE)) {
+    DocumentLocation location = extractDocumentLocation(node);
 
+    if (rType.equals(RType.STYLEABLE)) {
       int count = 0;
       for (Node attrNode = node.getFirstChild();
           attrNode != null;
@@ -428,16 +471,19 @@ public class MiniAapt implements Step {
             IdType.INT,
             String.format("%s_%s", resourceName, attrName),
             Integer.toString(count++),
-            resourceName);
+            resourceName,
+            file,
+            extractDocumentLocation(node));
 
         if (!rawAttrName.startsWith("android:")) {
-          resourceCollector.addIntResourceIfNotPresent(RType.ATTR, attrName);
+          resourceCollector.addIntResourceIfNotPresent(
+              RType.ATTR, attrName, file, extractDocumentLocation(node));
         }
       }
 
-      resourceCollector.addIntArrayResourceIfNotPresent(rType, resourceName, count);
+      resourceCollector.addIntArrayResourceIfNotPresent(rType, resourceName, count, file, location);
     } else {
-      resourceCollector.addIntResourceIfNotPresent(rType, resourceName);
+      resourceCollector.addIntResourceIfNotPresent(rType, resourceName, file, location);
     }
   }
 
@@ -472,8 +518,10 @@ public class MiniAapt implements Step {
         }
         Preconditions.checkState(resourceName.startsWith(ID_DEFINITION_PREFIX));
 
+        Element ownerElement = ((Attr) nodesWithIds.item(i)).getOwnerElement();
+        DocumentLocation location = extractDocumentLocation(ownerElement);
         resourceCollector.addIntResourceIfNotPresent(
-            RType.ID, resourceName.substring(ID_DEFINITION_PREFIX.length()));
+            RType.ID, resourceName.substring(ID_DEFINITION_PREFIX.length()), xmlFile, location);
       }
 
       NodeList nodesUsingIds = (NodeList) ANDROID_ID_USAGE.evaluate(dom, XPathConstants.NODESET);
@@ -504,7 +552,7 @@ public class MiniAapt implements Step {
   private static Document parseXml(Path filepath, InputStream inputStream)
       throws IOException, ResourceParseException {
     try {
-      return XmlDomParser.parse(inputStream);
+      return XmlDomParserWithLineNumbers.parse(inputStream);
     } catch (SAXException e) {
       throw new ResourceParseException(
           "Error parsing xml file '%s': %s.", filepath, e.getMessage());
@@ -537,12 +585,27 @@ public class MiniAapt implements Step {
         || AaptStep.isSilentlyIgnored(path);
   }
 
+  /**
+   * Extracts document location saved by XmlDomParserWithLineNumbers
+   *
+   * @param node a DOM node
+   * @return the document location stored in node
+   */
+  private DocumentLocation extractDocumentLocation(Node node) {
+    return (DocumentLocation) node.getUserData(PositionalXmlHandler.LOCATION_USER_DATA_KEY);
+  }
+
   @VisibleForTesting
   ImmutableSet<RDotTxtEntry> verifyReferences(
       ProjectFilesystem filesystem, ImmutableSet<RDotTxtEntry> references) throws IOException {
+    if (resourceCollectionType == ResourceCollectionType.ANDROID_RESOURCE_INDEX) {
+      return ImmutableSet.of(); // we don't check dependencies to generate this index
+    }
+
+    RDotTxtResourceCollector castResourceCollector = (RDotTxtResourceCollector) resourceCollector;
     ImmutableSet.Builder<RDotTxtEntry> unresolved = ImmutableSet.builder();
     ImmutableSet.Builder<RDotTxtEntry> definitionsBuilder = ImmutableSet.builder();
-    definitionsBuilder.addAll(resourceCollector.getResources());
+    definitionsBuilder.addAll(castResourceCollector.getResources());
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
           filesystem

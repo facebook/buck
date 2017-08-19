@@ -22,21 +22,21 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.cxx.DefaultLinkerProvider;
-import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.platform.BsdArchiver;
-import com.facebook.buck.cxx.platform.CompilerProvider;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.CxxToolProvider;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
-import com.facebook.buck.cxx.platform.HeaderVerification;
-import com.facebook.buck.cxx.platform.LinkerProvider;
-import com.facebook.buck.cxx.platform.Linkers;
-import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.BsdArchiver;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
@@ -86,12 +86,8 @@ public class AppleCxxPlatforms {
 
   private static final String USR_BIN = "usr/bin";
 
-  public static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
-      ProjectFilesystem filesystem,
-      BuckConfig buckConfig,
-      SwiftBuckConfig swiftBuckConfig,
-      ProcessExecutor processExecutor)
-      throws IOException {
+  public static Optional<Path> getAppleDeveloperDirectory(
+      BuckConfig buckConfig, ProcessExecutor processExecutor) {
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     Supplier<Optional<Path>> appleDeveloperDirectorySupplier =
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor);
@@ -100,17 +96,23 @@ public class AppleCxxPlatforms {
       LOG.error(
           "Developer directory is set to %s, but is not a directory",
           appleDeveloperDirectory.get());
+      return Optional.empty();
+    }
+    return appleDeveloperDirectory;
+  }
+
+  public static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
+      Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> sdkPaths,
+      Optional<ImmutableMap<String, AppleToolchain>> toolchains,
+      ProjectFilesystem filesystem,
+      BuckConfig buckConfig,
+      SwiftBuckConfig swiftBuckConfig) {
+    if (!sdkPaths.isPresent() || !toolchains.isPresent()) {
       return ImmutableList.of();
     }
 
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     ImmutableList.Builder<AppleCxxPlatform> appleCxxPlatformsBuilder = ImmutableList.builder();
-    ImmutableMap<String, AppleToolchain> toolchains =
-        AppleToolchainDiscovery.discoverAppleToolchains(
-            appleDeveloperDirectory, appleConfig.getExtraToolchainPaths());
-
-    ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths =
-        AppleSdkDiscovery.discoverAppleSdkPaths(
-            appleDeveloperDirectory, appleConfig.getExtraPlatformPaths(), toolchains, appleConfig);
 
     Optional<String> swiftVersion = swiftBuckConfig.getVersion();
     Optional<AppleToolchain> swiftToolChain;
@@ -119,6 +121,7 @@ public class AppleCxxPlatforms {
           swiftVersion.map(AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
       swiftToolChain =
           toolchains
+              .get()
               .values()
               .stream()
               .filter(input -> input.getIdentifier().equals(swiftToolChainName.get()))
@@ -129,25 +132,27 @@ public class AppleCxxPlatforms {
 
     XcodeToolFinder xcodeToolFinder = new XcodeToolFinder();
     XcodeBuildVersionCache xcodeBuildVersionCache = new XcodeBuildVersionCache();
-    sdkPaths.forEach(
-        (sdk, appleSdkPaths) -> {
-          String targetSdkVersion =
-              appleConfig.getTargetSdkVersion(sdk.getApplePlatform()).orElse(sdk.getVersion());
-          LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
-          for (String architecture : sdk.getArchitectures()) {
-            appleCxxPlatformsBuilder.add(
-                buildWithExecutableChecker(
-                    filesystem,
-                    sdk,
-                    targetSdkVersion,
-                    architecture,
-                    appleSdkPaths,
-                    buckConfig,
-                    xcodeToolFinder,
-                    xcodeBuildVersionCache,
-                    swiftToolChain));
-          }
-        });
+    sdkPaths
+        .get()
+        .forEach(
+            (sdk, appleSdkPaths) -> {
+              String targetSdkVersion =
+                  appleConfig.getTargetSdkVersion(sdk.getApplePlatform()).orElse(sdk.getVersion());
+              LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
+              for (String architecture : sdk.getArchitectures()) {
+                appleCxxPlatformsBuilder.add(
+                    buildWithExecutableChecker(
+                        filesystem,
+                        sdk,
+                        targetSdkVersion,
+                        architecture,
+                        appleSdkPaths,
+                        buckConfig,
+                        xcodeToolFinder,
+                        xcodeBuildVersionCache,
+                        swiftToolChain));
+              }
+            });
     return appleCxxPlatformsBuilder.build();
   }
 

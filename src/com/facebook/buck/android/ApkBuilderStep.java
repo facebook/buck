@@ -21,7 +21,6 @@ import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -70,7 +69,7 @@ public class ApkBuilderStep implements Step {
   private final Path pathToKeystore;
   private final Supplier<KeystoreProperties> keystorePropertiesSupplier;
   private final boolean debugMode;
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  private final ImmutableList<String> javaRuntimeLauncher;
 
   /**
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
@@ -93,7 +92,7 @@ public class ApkBuilderStep implements Step {
       Path pathToKeystore,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
-      JavaRuntimeLauncher javaRuntimeLauncher) {
+      ImmutableList<String> javaRuntimeLauncher) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -198,8 +197,8 @@ public class ApkBuilderStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
+    args.addAll(javaRuntimeLauncher);
     args.add(
-        javaRuntimeLauncher.getCommand(),
         "-classpath",
         // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
         // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".

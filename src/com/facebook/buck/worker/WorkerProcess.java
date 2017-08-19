@@ -152,7 +152,11 @@ public class WorkerProcess implements Closeable {
             MoreStrings.truncatePretty(filesystem.readFileIfItExists(this.stdErr).orElse(""))
                 .trim()
                 .replace("\n", "\nstderr: ");
-        LOG.error("stderr: %s", workerStderr);
+        LOG.error(
+            "Worker process "
+                + Joiner.on(' ').join(processParams.getCommand())
+                + " failed. stderr: %s",
+            workerStderr);
       } catch (Throwable t) {
         LOG.error(t, "Couldn't read stderr on failing close!");
       }

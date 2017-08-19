@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.macho;
 
-import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -24,9 +24,11 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleDescriptions;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.CodeSigning;
-import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -78,24 +80,28 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
   @Test
   public void testAbsolutifyingPathsForIntel64Bit() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     Flavor platformFlavor = InternalFlavor.of("iphonesimulator-x86_64");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForIntel32Bit() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     Flavor platformFlavor = InternalFlavor.of("iphonesimulator-i386");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForArm64Bit() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     Flavor platformFlavor = InternalFlavor.of("iphoneos-arm64");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }
 
   @Test
   public void testAbsolutifyingPathsForArm32Bit() throws IOException, InterruptedException {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     Flavor platformFlavor = InternalFlavor.of("iphoneos-armv7");
     runAndCheckAbsolutificationWithPlatformFlavor(platformFlavor);
   }

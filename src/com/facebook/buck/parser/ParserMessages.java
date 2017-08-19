@@ -16,13 +16,15 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 
 public class ParserMessages {
   protected ParserMessages() {}
 
-  public static HumanReadableException createReadableExceptionWithWhenSuffix(
+  private static HumanReadableException createReadableGenericExceptionWithWhenSuffix(
       BuildTarget buildTarget, BuildTarget parseDep, Exception exceptionInput) {
     return new HumanReadableException(
         exceptionInput,
@@ -30,5 +32,20 @@ public class ParserMessages {
         exceptionInput.getMessage(),
         parseDep,
         buildTarget);
+  }
+
+  public static HumanReadableException createReadableExceptionWithWhenSuffix(
+      BuildTarget buildTarget, BuildTarget parseDep, BuildFileParseException exceptionInput) {
+    return createReadableGenericExceptionWithWhenSuffix(buildTarget, parseDep, exceptionInput);
+  }
+
+  public static HumanReadableException createReadableExceptionWithWhenSuffix(
+      BuildTarget buildTarget, BuildTarget parseDep, BuildTargetException exceptionInput) {
+    return createReadableGenericExceptionWithWhenSuffix(buildTarget, parseDep, exceptionInput);
+  }
+
+  public static HumanReadableException createReadableExceptionWithWhenSuffix(
+      BuildTarget buildTarget, BuildTarget parseDep, HumanReadableException exceptionInput) {
+    return createReadableGenericExceptionWithWhenSuffix(buildTarget, parseDep, exceptionInput);
   }
 }

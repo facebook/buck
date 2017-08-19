@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.google.common.base.Preconditions;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -62,7 +61,7 @@ class ClassVisitorDriverFromElement {
     innerClassesTable = new InnerClassesTable(descriptorFactory, accessFlagsUtils);
   }
 
-  public void driveVisitor(Element fullElement, ClassVisitor visitor) throws IOException {
+  public void driveVisitor(Element fullElement, ClassVisitor visitor) {
     fullElement.accept(new ElementVisitorAdapter(), visitor);
     visitor.visitEnd();
   }

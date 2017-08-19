@@ -18,16 +18,15 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
-import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -36,7 +35,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -163,17 +162,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       language = androidArgs.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
 
       if (androidArgs.getProvidedDepsQuery().isPresent()) {
+        Query providedDepsQuery = androidArgs.getProvidedDepsQuery().get();
+        Preconditions.checkNotNull(providedDepsQuery.getResolvedQuery());
         setProvidedDeps(
             RichStream.from(args.getProvidedDeps())
-                .concat(
-                    QueryUtils.resolveDepQuery(
-                            initialBuildTarget,
-                            androidArgs.getProvidedDepsQuery().get(),
-                            buildRuleResolver,
-                            cellRoots,
-                            targetGraph,
-                            args.getProvidedDeps())
-                        .map(BuildRule::getBuildTarget))
+                .concat(providedDepsQuery.getResolvedQuery().stream())
                 .toImmutableSortedSet(Ordering.natural()));
       }
       return setManifestFile(androidArgs.getManifest());
@@ -199,13 +192,13 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Nullable private AndroidLibraryCompiler androidCompiler;
+      @Nullable private ConfiguredCompilerFactory androidCompiler;
       @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
       @Override
-      protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+      protected DefaultJavaLibrary build() {
         return new AndroidLibrary(
-            initialBuildTarget,
+            libraryTarget,
             projectFilesystem,
             getFinalParams(),
             sourcePathResolver,
@@ -221,11 +214,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       }
 
       @Override
-      protected JarBuildStepsFactory buildJarBuildStepsFactory() throws NoSuchBuildTargetException {
+      protected JarBuildStepsFactory buildJarBuildStepsFactory() {
         return new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
-            getCompileStepFactory(),
+            getConfiguredCompiler(),
             srcs,
             resources,
             resourcesRoot,
@@ -247,17 +240,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
         if (graphEnhancer == null) {
-          BuildTarget buildTarget = initialBuildTarget;
-          if (HasJavaAbi.isAbiTarget(initialBuildTarget)) {
-            buildTarget = HasJavaAbi.getLibraryTarget(buildTarget);
-          }
-
           final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = buildQueriedDepsSupplier();
           final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier =
               buildExportedDepsSupplier();
           graphEnhancer =
               new AndroidLibraryGraphEnhancer(
-                  buildTarget,
+                  libraryTarget,
                   projectFilesystem,
                   initialParams.withExtraDeps(
                       () ->
@@ -279,13 +267,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         return args.getDepsQuery().isPresent()
             ? Suppliers.memoize(
                 () ->
-                    QueryUtils.resolveDepQuery(
-                            initialBuildTarget,
-                            args.getDepsQuery().get(),
-                            buildRuleResolver,
-                            cellRoots,
-                            targetGraph,
-                            args.getDeps())
+                    Preconditions.checkNotNull(args.getDepsQuery().get().getResolvedQuery())
+                        .stream()
+                        .map(buildRuleResolver::getRule)
                         .collect(MoreCollectors.toImmutableList()))
             : ImmutableList::of;
       }
@@ -307,12 +291,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       }
 
       @Override
-      protected CompileToJarStepFactory buildCompileStepFactory() {
+      protected ConfiguredCompiler buildConfiguredCompiler() {
         return getAndroidCompiler()
-            .compileToJar(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
+            .configure(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
       }
 
-      protected AndroidLibraryCompiler getAndroidCompiler() {
+      protected ConfiguredCompilerFactory getAndroidCompiler() {
         if (androidCompiler == null) {
           androidCompiler = compilerFactory.getCompiler(language);
         }

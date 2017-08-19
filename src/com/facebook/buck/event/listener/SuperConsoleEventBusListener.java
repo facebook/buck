@@ -31,7 +31,6 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRuleCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -274,18 +273,27 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
-    // If we have not yet started processing the BUCK files, show parse times
-    if (parseStarted.isEmpty() && parseFinished.isEmpty()) {
-      logEventPair(
-          "PARSING BUCK FILES",
-          /* suffix */ Optional.empty(),
-          currentTimeMillis,
-          /* offsetMs */ 0L,
-          projectBuildFileParseStarted,
-          projectBuildFileParseFinished,
-          getEstimatedProgressOfProcessingBuckFiles(),
-          lines);
-    }
+    logEventPair(
+        "PROCESSING FILESYSTEM CHANGES",
+        Optional.empty(),
+        currentTimeMillis,
+        /* offsetMs */ 0L,
+        watchmanStarted,
+        watchmanFinished,
+        Optional.empty(),
+        Optional.of(1000L),
+        lines);
+
+    logEventPair(
+        "PARSING BUCK FILES",
+        /* suffix */ Optional.empty(),
+        currentTimeMillis,
+        /* offsetMs */ 0L,
+        projectBuildFileParseStarted,
+        projectBuildFileParseFinished,
+        getEstimatedProgressOfProcessingBuckFiles(),
+        Optional.empty(),
+        lines);
 
     long parseTime =
         logEventPair(
@@ -295,6 +303,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             /* offsetMs */ 0L,
             buckFilesProcessing.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
+            Optional.empty(),
             lines);
 
     logEventPair(
@@ -305,6 +314,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         projectGenerationStarted,
         projectGenerationFinished,
         getEstimatedProgressOfGeneratingProjectFiles(),
+        Optional.empty(),
         lines);
 
     logEventPair(
@@ -314,6 +324,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         /* offsetMs */ 0L,
         autoSparseState.values(),
         /* progress*/ Optional.empty(),
+        Optional.empty(),
         lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
@@ -339,6 +350,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               this.distBuildStarted,
               this.distBuildFinished,
               getApproximateDistBuildProgress(),
+              Optional.empty(),
               lines);
 
       if (distBuildMs == UNFINISHED_EVENT_PAIR) {
@@ -377,6 +389,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             this.buildStarted,
             this.buildFinished,
             getApproximateBuildProgress(),
+            Optional.empty(),
             lines);
 
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
@@ -402,6 +415,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             testRunStarted.get(),
             testRunFinished.get(),
             Optional.empty(),
+            Optional.empty(),
             lines);
 
     if (testRunTime == UNFINISHED_EVENT_PAIR) {
@@ -424,6 +438,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         0L,
         installStarted,
         installFinished,
+        Optional.empty(),
         Optional.empty(),
         lines);
 
@@ -683,16 +698,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (finished.getInvocationType() == ArtifactCacheEvent.InvocationType.SYNCHRONOUS) {
       threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
     }
-  }
-
-  @Subscribe
-  public void cacheCheckStarted(BuildRuleCacheEvent.CacheStepStarted started) {
-    threadsToRunningStep.put(started.getThreadId(), Optional.of(started));
-  }
-
-  @Subscribe
-  public void cacheCheckFinished(BuildRuleCacheEvent.CacheStepFinished finished) {
-    threadsToRunningStep.put(finished.getThreadId(), Optional.empty());
   }
 
   @Subscribe

@@ -16,7 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -79,7 +80,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderOnly(boolean headerOnly) {
-    getArgForPopulating().setHeaderOnly(Optional.of(headerOnly));
+    getArgForPopulating().setHeaderOnly(headerOnly);
     return this;
   }
 
@@ -104,7 +105,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setForceStatic(boolean forceStatic) {
-    getArgForPopulating().setForceStatic(Optional.of(forceStatic));
+    getArgForPopulating().setForceStatic(forceStatic);
     return this;
   }
 

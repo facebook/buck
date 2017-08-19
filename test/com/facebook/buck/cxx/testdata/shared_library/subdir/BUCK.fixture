@@ -3,3 +3,17 @@ cxx_library(
   srcs = ['library.cpp'],
   visibility = ['PUBLIC'],
 )
+
+cxx_library(
+  name = 'library1',
+  soname = 'liblibrary.$(ext)',
+  srcs = ['library.cpp'],
+  visibility = ['PUBLIC'],
+)
+
+cxx_library(
+  name = 'library2',
+  soname = 'liblibrary.$(ext)',
+  srcs = ['library.cpp'],
+  visibility = ['PUBLIC'],
+)

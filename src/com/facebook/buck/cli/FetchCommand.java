@@ -115,7 +115,6 @@ public class FetchCommand extends BuildCommand {
               new CachingBuildEngine(
                   localCachingBuildEngineDelegate,
                   pool.getExecutor(),
-                  pool.getExecutor(),
                   new DefaultStepRunner(),
                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

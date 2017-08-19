@@ -48,6 +48,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -336,10 +337,6 @@ public class ProjectWorkspace {
             .omitEmptyStrings()
             .splitToList(buildResult.getStdout());
 
-    // Skip the first line, which is just "The outputs are:".
-    assertThat(lines.get(0), Matchers.equalTo("The outputs are:"));
-    lines = lines.subList(1, lines.size());
-
     Splitter lineSplitter = Splitter.on(' ').trimResults();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (String line : lines) {
@@ -403,8 +400,7 @@ public class ProjectWorkspace {
       throws IOException, InterruptedException {
     List<String> command =
         ImmutableList.<String>builder()
-            .add(
-                JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher().getCommand())
+            .addAll(JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX)
             .addAll(vmArgs)
             .add("-jar")
             .add(jar.toString())
@@ -559,7 +555,7 @@ public class ProjectWorkspace {
               CommandMode.TEST,
               WatchmanWatcher.FreshInstanceAction.NONE,
               System.nanoTime(),
-              args);
+              ImmutableList.copyOf(args));
     } catch (InterruptedException e) {
       e.printStackTrace(stderr);
       exitCode = Main.FAIL_EXIT_CODE;
@@ -712,18 +708,24 @@ public class ProjectWorkspace {
     DefaultAndroidDirectoryResolver directoryResolver =
         new DefaultAndroidDirectoryResolver(
             filesystem.getRootPath().getFileSystem(), env, Optional.empty(), Optional.empty());
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+    BuckConfig buckConfig =
+        new BuckConfig(
+            config,
+            filesystem,
+            Architecture.detect(),
+            Platform.detect(),
+            env,
+            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+    SdkEnvironment sdkEnvironment =
+        SdkEnvironment.create(buckConfig, processExecutor, directoryResolver);
     return CellProvider.createForLocalBuild(
             filesystem,
             Watchman.NULL_WATCHMAN,
-            new BuckConfig(
-                config,
-                filesystem,
-                Architecture.detect(),
-                Platform.detect(),
-                env,
-                new DefaultCellPathResolver(filesystem.getRootPath(), config)),
+            buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(new DefaultProcessExecutor(console), directoryResolver))
+            new KnownBuildRuleTypesFactory(processExecutor, directoryResolver, sdkEnvironment),
+            sdkEnvironment)
         .getCellByPath(filesystem.getRootPath());
   }
 

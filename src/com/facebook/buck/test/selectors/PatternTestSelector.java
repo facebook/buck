@@ -68,7 +68,7 @@ public class PatternTestSelector implements TestSelector {
     } else {
       remainder = rawSelectorString;
     }
-    // Reuse univeral inclusion
+    // Reuse universal inclusion
     if (remainder.equals("#")) {
       return isInclusive ? INCLUDE_EVERYTHING : EXCLUDE_EVERYTHING;
     }

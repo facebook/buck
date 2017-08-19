@@ -26,8 +26,8 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPreprocessables;
-import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -128,7 +128,7 @@ public class SwiftOSXBinaryIntegrationTest {
                 filesystem,
                 target.withFlavors(),
                 HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP.getFlavor()));
+                HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP.getFlavor()));
     Path buckModuleMap = headerMapSymlinkTreePath.resolve("buck.modulemap");
     Optional<String> fileContent = filesystem.readFileIfItExists(buckModuleMap);
     assertThat(fileContent.isPresent(), equalTo(true));
@@ -160,7 +160,7 @@ public class SwiftOSXBinaryIntegrationTest {
                 filesystem,
                 target.withFlavors(),
                 HeaderVisibility.PUBLIC,
-                CxxPreprocessables.HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP.getFlavor()));
+                HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP.getFlavor()));
     Path buckModuleMap = headerMapSymlinkTreePath.resolve("buck.modulemap");
     Optional<String> fileContentOptional = filesystem.readFileIfItExists(buckModuleMap);
     assertThat(fileContentOptional.isPresent(), equalTo(true));

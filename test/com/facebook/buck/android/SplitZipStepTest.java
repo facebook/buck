@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -30,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import java.io.BufferedOutputStream;
@@ -114,8 +114,7 @@ public class SplitZipStepTest {
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
-    ImmutableSet<APKModule> requires =
-        ImmutableSet.of(APKModule.builder().setName("dependency").build());
+    ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency"));
     try {
       SplitZipStep.writeMetaList(
           writer, "module", requires, ImmutableList.of(outJar), DexStore.JAR);
@@ -181,8 +180,10 @@ public class SplitZipStepTest {
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            new APKModuleGraph(null, (BuildTarget) null, null),
-            /* pathToReportDir */ Paths.get(""));
+            /* pathToReportDir */
+            ImmutableSortedMap.of(),
+            null,
+            Paths.get(""));
 
     Predicate<String> requiredInPrimaryZipPredicate =
         splitZipStep.createRequiredInPrimaryZipPredicate(
@@ -273,8 +274,10 @@ public class SplitZipStepTest {
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            new APKModuleGraph(null, (BuildTarget) null, null),
-            /* pathToReportDir */ Paths.get(""));
+            /* pathToReportDir */
+            ImmutableSortedMap.of(),
+            null,
+            Paths.get(""));
 
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
@@ -350,8 +353,10 @@ public class SplitZipStepTest {
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            new APKModuleGraph(null, (BuildTarget) null, null),
-            /* pathToReportDir */ Paths.get(""));
+            /* pathToReportDir */
+            ImmutableSortedMap.of(),
+            null,
+            Paths.get(""));
 
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(

@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -53,20 +54,20 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private StandardJavaFileManager delegate;
   private Set<String> directoryPaths;
   private Map<String, JarFileObject> fileForOutputPaths;
-  private RemoveClassesPatternsMatcher classesToRemoveFromJar;
+  private Predicate<? super String> removeClassesPredicate;
 
   private int FILENAME_LENGTH_LIMIT = 255;
 
   public JavaInMemoryFileManager(
       StandardJavaFileManager standardManager,
       Path jarPath,
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
+      Predicate<? super String> removeClassesPredicate) {
     super(standardManager);
     this.delegate = standardManager;
     this.jarPath = jarPath;
     this.directoryPaths = new HashSet<>();
     this.fileForOutputPaths = new HashMap<>();
-    this.classesToRemoveFromJar = classesToRemoveFromJar;
+    this.removeClassesPredicate = removeClassesPredicate;
   }
 
   /**
@@ -111,7 +112,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
       throw new IOException(String.format("%s (File name too long)", path));
     }
     // If the class is to be removed from the Jar create a NoOp FileObject.
-    if (classesToRemoveFromJar.shouldRemoveClass(className)) {
+    if (removeClassesPredicate.test(className)) {
       LOG.info(
           "%s was excluded from the Jar because it matched a remove_classes pattern.",
           className.toString());
@@ -203,7 +204,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return results;
   }
 
-  public ImmutableSet<String> writeToJar(JarBuilder jarBuilder) throws IOException {
+  public ImmutableSet<String> writeToJar(JarBuilder jarBuilder) {
     for (JarFileObject fileObject : fileForOutputPaths.values()) {
       fileObject.writeToJar(jarBuilder, jarPath.toString());
     }
@@ -215,8 +216,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     return location != CLASS_OUTPUT;
   }
 
-  private JavaFileObject getJavaMemoryFileObject(JavaFileObject.Kind kind, String path)
-      throws IOException {
+  private JavaFileObject getJavaMemoryFileObject(JavaFileObject.Kind kind, String path) {
     return fileForOutputPaths.computeIfAbsent(
         path, p -> new JavaInMemoryFileObject(getUriPath(p), p, kind));
   }

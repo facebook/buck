@@ -33,6 +33,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -169,6 +170,42 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try {
+      invokeCompiler();
+
+      debugLogDiagnostics();
+
+      if (buildSuccessful()) {
+        context
+            .getUsedClassesFileWriter()
+            .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
+      } else {
+        reportDiagnosticsToUser();
+        return 1;
+      }
+
+      if (!context.getDirectToJarParameters().isPresent()) {
+        return 0;
+      }
+
+      return newJarBuilder()
+          .createJarFile(
+              Preconditions.checkNotNull(
+                  context
+                      .getProjectFilesystem()
+                      .getPathForRelativePath(
+                          context.getDirectToJarParameters().get().getJarPath())));
+    } catch (IOException e) {
+      LOG.error(e);
+      throw new HumanReadableException("IOException during compilation: ", e.getMessage());
+    } finally {
+      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
+      // be using it.
+      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
+    }
+  }
+
+  public void invokeCompiler() throws IOException {
+    try {
       // Invoke the compilation and inspect the result.
       BuckJavacTaskProxy javacTask = getJavacTask();
       if (!frontendRunAttempted) {
@@ -183,39 +220,27 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       if (buildSuccessful()) {
         javacTask.generate();
       }
-
-      debugLogDiagnostics();
-
-      if (buildSuccessful()) {
-        context
-            .getUsedClassesFileWriter()
-            .writeFile(context.getProjectFilesystem(), context.getCellPathResolver());
-      } else {
-        reportDiagnosticsToUser();
-        return 1;
+    } catch (Throwable t) {
+      // When invoking JavacTask.compile, javac itself catches all exceptions. (See the catch
+      // blocks beginning at
+      // http://hg.openjdk.java.net/jdk8u/jdk8u/langtools/file/9986bf97a48d/src/share/classes/com/sun/tools/javac/main/Main.java#l539)
+      // This replicates some of that logic.
+      switch (t.getClass().getName()) {
+        case "java.io.IOException":
+        case "java.lang.OutOfMemoryError":
+        case "java.lang.StackOverflowError":
+        case "com.sun.tools.javac.util.FatalError":
+          Throwables.propagateIfPossible(t, IOException.class);
+          throw new AssertionError("Should never get here.");
+        case "com.sun.tools.javac.processing.AnnotationProcessingError":
+        case "com.sun.tools.javac.util.ClientCodeException":
+        case "com.sun.tools.javac.util.PropagatedException":
+          Throwables.propagateIfPossible(t.getCause(), IOException.class);
+          throw new RuntimeException(t.getCause());
+        default:
+          // An error should already have been reported, so we need not do anything.
+          return;
       }
-
-      if (!context.getDirectToJarOutputSettings().isPresent()) {
-        return 0;
-      }
-
-      return newJarBuilder()
-          .createJarFile(
-              Preconditions.checkNotNull(
-                  context
-                      .getProjectFilesystem()
-                      .getPathForRelativePath(
-                          context
-                              .getDirectToJarOutputSettings()
-                              .get()
-                              .getDirectToJarOutputPath())));
-    } catch (IOException e) {
-      LOG.error(e);
-      throw new HumanReadableException("IOException during compilation: ", e.getMessage());
-    } finally {
-      // Clear the tracing interface so we have no chance of leaking it to code that shouldn't
-      // be using it.
-      BuckTracing.clearCurrentThreadTracingInterfaceFromJsr199Javac();
     }
   }
 
@@ -273,17 +298,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       addCloseable(standardFileManager);
 
       StandardJavaFileManager fileManager;
-      if (context.getDirectToJarOutputSettings().isPresent()) {
+      if (context.getDirectToJarParameters().isPresent()) {
         Path directToJarPath =
             context
                 .getProjectFilesystem()
-                .getPathForRelativePath(
-                    context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath());
+                .getPathForRelativePath(context.getDirectToJarParameters().get().getJarPath());
         inMemoryFileManager =
             new JavaInMemoryFileManager(
                 standardFileManager,
                 directToJarPath,
-                context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+                context.getDirectToJarParameters().get().getRemoveEntryPredicate());
         addCloseable(inMemoryFileManager);
         fileManager = inMemoryFileManager;
       } else {
@@ -367,18 +391,16 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
         .setEntriesToJar(
             context
-                .getDirectToJarOutputSettings()
+                .getDirectToJarParameters()
                 .get()
                 .getEntriesToJar()
                 .stream()
                 .map(context.getProjectFilesystem()::resolve))
-        .setMainClass(context.getDirectToJarOutputSettings().get().getMainClass().orElse(null))
-        .setManifestFile(
-            context.getDirectToJarOutputSettings().get().getManifestFile().orElse(null))
+        .setMainClass(context.getDirectToJarParameters().get().getMainClass().orElse(null))
+        .setManifestFile(context.getDirectToJarParameters().get().getManifestFile().orElse(null))
         .setShouldMergeManifests(true)
         .setRemoveEntryPredicate(
-            context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar()
-                ::shouldRemoveClass);
+            context.getDirectToJarParameters().get().getRemoveEntryPredicate());
   }
 
   @Override

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,7 +36,7 @@ public class SimctlListOutputParsingTest {
 
     try (InputStream in = getClass().getResourceAsStream("testdata/simctl-list.txt");
         InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-      SimctlListOutputParsing.parseOutputFromReader(reader, simulatorsBuilder);
+      SimctlListOutputParsing.parseOutput(CharStreams.toString(reader), simulatorsBuilder);
     }
 
     ImmutableSet<AppleSimulator> expected =

@@ -60,6 +60,19 @@ public class DistBuildConfig {
   private static final String BUILD_LABEL = "build_label";
   private static final String DEFAULT_BUILD_LABEL = "";
 
+  private static final String MINION_QUEUE = "minion_queue";
+
+  private static final String MAX_BUILD_NODES_PER_MINION = "max_build_nodes_per_minion";
+  private static final int DEFAULT_MAX_BUILD_NODES_PER_MINION = 100;
+
+  private static final String SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS =
+      "source_file_multi_fetch_buffer_period_ms";
+  private static final String SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE =
+      "source_file_multi_fetch_max_buffer_size";
+
+  private static final String MATERIALIZE_SOURCE_FILES_ON_DEMAND =
+      "materialize_source_files_on_demand";
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -76,6 +89,18 @@ public class DistBuildConfig {
 
   public BuckConfig getBuckConfig() {
     return buckConfig;
+  }
+
+  public Optional<Long> getSourceFileMultiFetchBufferPeriodMs() {
+    return buckConfig.getLong(STAMPEDE_SECTION, SOURCE_FILE_MULTI_FETCH_BUFFER_PERIOD_MS);
+  }
+
+  public Optional<Integer> getSourceFileMultiFetchMaxBufferSize() {
+    return buckConfig.getInteger(STAMPEDE_SECTION, SOURCE_FILE_MULTI_FETCH_MAX_BUFFER_SIZE);
+  }
+
+  public boolean materializeSourceFilesOnDemand() {
+    return buckConfig.getBooleanValue(STAMPEDE_SECTION, MATERIALIZE_SOURCE_FILES_ON_DEMAND, true);
   }
 
   public Optional<ImmutableList<String>> getOptionalPathWhitelist() {
@@ -125,6 +150,16 @@ public class DistBuildConfig {
     return buckConfig
         .getInteger(STAMPEDE_SECTION, NUMBER_OF_MINIONS)
         .orElse(NUMBER_OF_MINIONS_DEFAULT_VALUE);
+  }
+
+  public Optional<String> getMinionQueue() {
+    return buckConfig.getValue(STAMPEDE_SECTION, MINION_QUEUE);
+  }
+
+  public int getMaxBuildNodesPerMinion() {
+    return buckConfig
+        .getInteger(STAMPEDE_SECTION, MAX_BUILD_NODES_PER_MINION)
+        .orElse(DEFAULT_MAX_BUILD_NODES_PER_MINION);
   }
 
   public String getRepository() {

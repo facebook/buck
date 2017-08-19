@@ -19,20 +19,28 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
 /** A java-specific "view" of BuckConfig. */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
+
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
+  private static final JavaOptions DEFAULT_JAVA_OPTIONS =
+      JavaOptions.of(new CommandTool.Builder().addArg("java").build());
 
   private final BuckConfig delegate;
 
@@ -51,15 +59,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavaOptions getDefaultJavaOptions() {
-    return JavaOptions.builder().setJavaPath(getPathToExecutable("java")).build();
+    return getToolForExecutable("java").map(JavaOptions::of).orElse(DEFAULT_JAVA_OPTIONS);
   }
 
   public JavaOptions getDefaultJavaOptionsForTests() {
-    Optional<Path> javaTestPath = getPathToExecutable("java_for_tests");
-    if (javaTestPath.isPresent()) {
-      return JavaOptions.builder().setJavaPath(javaTestPath).build();
-    }
-    return getDefaultJavaOptions();
+    return getToolForExecutable("java_for_tests")
+        .map(JavaOptions::of)
+        .orElseGet(this::getDefaultJavaOptions);
   }
 
   public JavacOptions getDefaultJavacOptions() {
@@ -186,6 +192,30 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       return Optional.of(file.toPath());
     }
     return Optional.empty();
+  }
+
+  private Optional<Tool> getToolForExecutable(String executableName) {
+    return delegate
+        // Make sure to pass `false` for `isCellRootRelative` so that we get a relative path back,
+        // instead of an absolute one.  Otherwise, we can't preserve the original value.
+        .getPath("tools", executableName, false)
+        .map(
+            path -> {
+              if (!Files.isExecutable(
+                  delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(path))) {
+                throw new HumanReadableException(executableName + " is not executable: " + path);
+              }
+
+              // Build the tool object.  For absolute paths, just add the raw string and avoid
+              // hashing the contents, as this would require all users to have identical system
+              // binaries, when what we probably only care about is the version.
+              return new CommandTool.Builder()
+                  .addArg(
+                      path.isAbsolute()
+                          ? StringArg.of(path.toString())
+                          : SourcePathArg.of(delegate.getSourcePath(path)))
+                  .build();
+            });
   }
 
   public boolean shouldCacheBinaries() {

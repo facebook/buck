@@ -20,6 +20,7 @@ import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
@@ -39,13 +40,13 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
-    CacheResult fetchResult = delegate.fetch(ruleKey, output);
+    CacheResult fetchResult = Futures.getUnchecked(delegate.fetchAsync(ruleKey, output));
     eventBus.post(eventFactory.newFetchFinishedEvent(started, fetchResult));
-    return fetchResult;
+    return Futures.immediateFuture(fetchResult);
   }
 
   @Override

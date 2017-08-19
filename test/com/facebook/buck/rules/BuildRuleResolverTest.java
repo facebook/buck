@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -58,34 +57,6 @@ public class BuildRuleResolverTest {
       assertEquals(
           "A build rule for this target has already been created: " + target, e.getMessage());
     }
-  }
-
-  @Test
-  public void testAddIterableToBuildRuleResolver() throws Exception {
-    BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
-    // Create an iterable of some build rules.
-    // We don't use the buildRuleResolver so they're not added automatically.
-    ImmutableSortedSet<BuildRule> buildRules =
-        ImmutableSortedSet.of(
-            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:bar"))
-                .build(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())),
-            JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:baz"))
-                .build(
-                    new BuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-
-    // Check that we get back the rules we added from the function.
-    ImmutableSortedSet<BuildRule> added = buildRuleResolver.addAllToIndex(buildRules);
-    assertEquals(buildRules, added);
-
-    // Test that we actually added the rules.
-    ImmutableSortedSet<BuildRule> all =
-        ImmutableSortedSet.copyOf(buildRuleResolver.getBuildRules());
-    assertEquals(buildRules, all);
   }
 
   @Test

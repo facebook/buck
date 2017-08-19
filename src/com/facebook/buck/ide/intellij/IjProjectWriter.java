@@ -20,12 +20,9 @@ import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
-import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,10 +51,8 @@ public class IjProjectWriter {
 
     writeProjectSettings(cleaner, projectConfig);
 
-    ImmutableList.Builder<ContentRoot> contentRootBuilder = ImmutableList.builder();
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      contentRootBuilder.addAll(contentRoots);
       Path generatedModuleFile = writeModule(module, contentRoots);
       cleaner.doNotDelete(generatedModuleFile);
     }
@@ -68,8 +63,7 @@ public class IjProjectWriter {
     Path indexFile = writeModulesIndex();
     cleaner.doNotDelete(indexFile);
 
-    Path workspaceFile =
-        writeWorkspace(projectFilesystem.resolve(projectIdeaConfigDir), contentRootBuilder.build());
+    Path workspaceFile = writeWorkspace(projectFilesystem.resolve(projectIdeaConfigDir));
     cleaner.doNotDelete(workspaceFile);
   }
 
@@ -206,19 +200,9 @@ public class IjProjectWriter {
     return path;
   }
 
-  private Path writeWorkspace(Path projectIdeaConfigDir, ImmutableList<ContentRoot> contentRoots)
-      throws IOException {
-    ImmutableSortedSet<String> excludedPaths =
-        contentRoots
-            .stream()
-            .flatMap(contentRoot -> contentRoot.getFolders().stream())
-            .filter(ijSourceFolder -> ExcludeFolder.FOLDER_IJ_NAME.equals(ijSourceFolder.getType()))
-            .map(IjSourceFolder::getPath)
-            .map(Object::toString)
-            .collect(MoreCollectors.toImmutableSortedSet());
-
+  private Path writeWorkspace(Path projectIdeaConfigDir) throws IOException {
     WorkspaceUpdater workspaceUpdater = new WorkspaceUpdater(projectIdeaConfigDir);
-    workspaceUpdater.updateOrCreateWorkspace(excludedPaths);
+    workspaceUpdater.updateOrCreateWorkspace();
 
     return Paths.get(workspaceUpdater.getWorkspaceFile().toString());
   }

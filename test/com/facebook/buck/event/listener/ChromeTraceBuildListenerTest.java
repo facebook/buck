@@ -105,8 +105,8 @@ public class ChromeTraceBuildListenerTest {
             .setSubCommand("no_sub_command")
             .setIsDaemon(false)
             .setSuperConsoleEnabled(false)
-            .setCommandArgs("no sub command")
-            .setUnexpandedCommandArgs("no sub command")
+            .setUnexpandedCommandArgs(ImmutableList.of("@mode/arglist", "--foo", "--bar"))
+            .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
             .build();
     durationTracker = new BuildRuleDurationTracker();
   }
@@ -272,11 +272,17 @@ public class ChromeTraceBuildListenerTest {
         SimplePerfEvent.scope(
             eventBus,
             PerfEventId.of("planning"),
-            ImmutableMap.<String, Object>of("nefarious", "true"))) {
+            ImmutableMap.<String, Object>of("nefarious", true))) {
       try (final SimplePerfEvent.Scope scope2 =
           SimplePerfEvent.scope(eventBus, PerfEventId.of("scheming"))) {
-        scope2.appendFinishedInfo("success", "false");
+        scope2.appendFinishedInfo("success", false);
       }
+      scope1.appendFinishedInfo(
+          "extras",
+          ImmutableList.<ImmutableMap<String, Object>>of(
+              ImmutableMap.of("boolean", true),
+              ImmutableMap.of("string", "ok"),
+              ImmutableMap.of("int", 42)));
     }
 
     eventBus.post(BuildEvent.finished(buildEventStarted, 0));
@@ -295,7 +301,20 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "process_name",
         ChromeTraceEvent.Phase.METADATA,
-        ImmutableMap.of("name", "buck"));
+        ImmutableMap.<String, Object>builder()
+            .put("user_args", ImmutableList.of("@mode/arglist", "--foo", "--bar"))
+            .put("is_daemon", false)
+            .put("timestamp", invocationInfo.getTimestampMillis())
+            .build());
+
+    assertNextResult(
+        resultListCopy,
+        "ProjectFilesystemDelegate",
+        ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.of(
+            "details",
+            String.format(
+                "DefaultProjectFilesystemDelegate{root=%s}", projectFilesystem.getRootPath())));
 
     assertNextResult(
         resultListCopy,
@@ -411,17 +430,23 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "planning",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of("nefarious", "true"));
+        ImmutableMap.of("nefarious", true));
 
     assertNextResult(resultListCopy, "scheming", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
 
     assertNextResult(
-        resultListCopy,
-        "scheming",
-        ChromeTraceEvent.Phase.END,
-        ImmutableMap.of("success", "false"));
+        resultListCopy, "scheming", ChromeTraceEvent.Phase.END, ImmutableMap.of("success", false));
 
-    assertNextResult(resultListCopy, "planning", ChromeTraceEvent.Phase.END, emptyArgs);
+    assertNextResult(
+        resultListCopy,
+        "planning",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of(
+            "extras",
+            ImmutableList.<ImmutableMap<String, Object>>of(
+                ImmutableMap.of("boolean", true),
+                ImmutableMap.of("string", "ok"),
+                ImmutableMap.of("int", 42))));
 
     assertNextResult(resultListCopy, "build", ChromeTraceEvent.Phase.END, emptyArgs);
 
@@ -440,7 +465,7 @@ public class ChromeTraceBuildListenerTest {
       List<ChromeTraceEvent> resultList,
       String expectedName,
       ChromeTraceEvent.Phase expectedPhase,
-      ImmutableMap<String, String> expectedArgs) {
+      ImmutableMap<String, ? extends Object> expectedArgs) {
     assertTrue(resultList.size() > 0);
     assertEquals(expectedName, resultList.get(0).getName());
     assertEquals(expectedPhase, resultList.get(0).getPhase());

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -24,13 +23,14 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxToolFlags;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
-import com.facebook.buck.cxx.platform.Preprocessor;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -40,7 +40,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -150,8 +149,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      SwiftLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      SwiftLibraryDescriptionArg args) {
 
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
@@ -281,6 +279,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
           args.getModuleName().orElse(buildTarget.getShortName()),
           BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
           args.getSrcs(),
+          args.getVersion(),
           RichStream.from(args.getCompilerFlags())
               .map(
                   f ->
@@ -303,6 +302,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
         resolver,
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
+        args.getBridgingHeader(),
         args.getFrameworks(),
         args.getLibraries(),
         args.getSupportedPlatformsRegex(),
@@ -316,8 +316,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildTarget buildTarget,
       SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
-      Optional<String> soname)
-      throws NoSuchBuildTargetException {
+      Optional<String> soname) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -377,8 +376,7 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxLibraryDescription.CommonArg args)
-      throws NoSuchBuildTargetException {
+      CxxLibraryDescription.CommonArg args) {
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
@@ -426,6 +424,8 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     Optional<String> getModuleName();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
+
+    Optional<String> getVersion();
 
     @Value.NaturalOrder
     ImmutableSortedSet<FrameworkPath> getFrameworks();

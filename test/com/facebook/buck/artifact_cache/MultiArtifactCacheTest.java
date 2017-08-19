@@ -51,10 +51,9 @@ public class MultiArtifactCacheTest {
 
   // An cache which always returns errors from fetching.
   class ErroringArtifactCache extends NoopArtifactCache {
-
     @Override
-    public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-      return CacheResult.error("cache", ArtifactCacheMode.http, "error");
+    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+      return Futures.immediateFuture(CacheResult.error("cache", ArtifactCacheMode.http, "error"));
     }
   }
 
@@ -68,7 +67,7 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should fail",
         CacheResultType.MISS,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
 
     dummyArtifactCache1.store(
         ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
@@ -76,7 +75,7 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
 
     dummyArtifactCache1.reset();
     dummyArtifactCache2.reset();
@@ -86,7 +85,7 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should succeed after store",
         CacheResultType.HIT,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
 
     multiArtifactCache.close();
   }
@@ -116,8 +115,10 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "This cache is PASSTHROUGH, store on the mulit-cache should not write to it",
         CacheResultType.MISS,
-        dummyArtifactCache1.fetch(dummyRuleKey, dummyFile).getType());
-    assertEquals(CacheResultType.HIT, dummyArtifactCache2.fetch(dummyRuleKey, dummyFile).getType());
+        Futures.getUnchecked(dummyArtifactCache1.fetchAsync(dummyRuleKey, dummyFile)).getType());
+    assertEquals(
+        CacheResultType.HIT,
+        Futures.getUnchecked(dummyArtifactCache2.fetchAsync(dummyRuleKey, dummyFile)).getType());
 
     multiArtifactCache.close();
   }
@@ -145,11 +146,11 @@ public class MultiArtifactCacheTest {
     assertEquals(
         "Fetch should find artifact that's present in one of the caches.",
         CacheResultType.HIT,
-        multiArtifactCache.fetch(dummyRuleKey, dummyFile).getType());
+        Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, dummyFile)).getType());
     assertEquals(
         "Fetch should have propagated the artifact.",
         CacheResultType.HIT,
-        dummyArtifactCache1.fetch(dummyRuleKey, dummyFile).getType());
+        Futures.getUnchecked(dummyArtifactCache1.fetchAsync(dummyRuleKey, dummyFile)).getType());
 
     multiArtifactCache.close();
   }
@@ -187,7 +188,11 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+    public ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
+      return Futures.immediateFuture(fetch(ruleKey, output));
+    }
+
+    private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
       if (ruleKey.equals(storedKey.get())) {
         try {
           filesystem.touch(output.get());
@@ -241,7 +246,8 @@ public class MultiArtifactCacheTest {
 
     fakeReadOnlyCache.storedKey.set(dummyRuleKey);
 
-    multiArtifactCache.fetch(dummyRuleKey, LazyPath.ofInstance(fetchFile));
+    Futures.getUnchecked(
+        multiArtifactCache.fetchAsync(dummyRuleKey, LazyPath.ofInstance(fetchFile)));
 
     assertThat(
         "The .get() call should not delete the path it's fetching.",
@@ -255,7 +261,7 @@ public class MultiArtifactCacheTest {
   public void preserveErrorsFromInnerCache() throws InterruptedException, IOException {
     ErroringArtifactCache inner = new ErroringArtifactCache();
     MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.of(inner));
-    CacheResult result = cache.fetch(dummyRuleKey, dummyFile);
+    CacheResult result = Futures.getUnchecked(cache.fetchAsync(dummyRuleKey, dummyFile));
     assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.http)));
     assertSame(result.getType(), CacheResultType.ERROR);
     cache.close();
@@ -274,9 +280,9 @@ public class MultiArtifactCacheTest {
     cache2.store(
         ArtifactInfo.builder().addRuleKeys(dummyRuleKey).setMetadata(metadata).build(),
         new byte[0]);
-    multiArtifactCache.fetch(dummyRuleKey, output);
+    Futures.getUnchecked(multiArtifactCache.fetchAsync(dummyRuleKey, output));
 
-    CacheResult result = cache1.fetch(dummyRuleKey, output);
+    CacheResult result = Futures.getUnchecked(cache1.fetchAsync(dummyRuleKey, output));
     assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));
     assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.dir)));
     assertThat(result.getMetadata(), Matchers.equalTo(metadata));
@@ -299,7 +305,7 @@ public class MultiArtifactCacheTest {
         new byte[0]);
     multiArtifactCache.fetchAsync(dummyRuleKey, output).get();
 
-    CacheResult result = cache1.fetch(dummyRuleKey, output);
+    CacheResult result = Futures.getUnchecked(cache1.fetchAsync(dummyRuleKey, output));
     assertThat(result.getType(), Matchers.equalTo(CacheResultType.HIT));
     assertThat(result.cacheMode(), Matchers.equalTo(Optional.of(ArtifactCacheMode.dir)));
     assertThat(result.getMetadata(), Matchers.equalTo(metadata));

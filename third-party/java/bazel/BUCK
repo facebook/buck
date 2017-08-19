@@ -1,0 +1,6 @@
+prebuilt_jar(
+    name = "skylark-lang",
+    binary_jar = "skylark-lang_deploy.jar",
+    licenses = ["LICENSE"],
+    visibility = ["PUBLIC"],
+)

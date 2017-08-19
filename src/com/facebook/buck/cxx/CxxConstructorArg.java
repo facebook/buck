@@ -16,12 +16,14 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.HasDeclaredDeps;
+import com.facebook.buck.rules.HasDefaultPlatform;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -38,6 +40,7 @@ public interface CxxConstructorArg
     extends CommonDescriptionArg,
         HasDeclaredDeps,
         HasDefaultFlavors,
+        HasDefaultPlatform,
         HasTests,
         HasSystemFrameworkAndLibraries {
   @Value.NaturalOrder

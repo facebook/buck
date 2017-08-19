@@ -18,14 +18,13 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.relinker.NativeRelinker;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -50,6 +49,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -127,9 +127,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private boolean populateMapWithLinkables(
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> builder,
+      Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableMap,
       NdkCxxPlatforms.TargetCpuType targetCpuType,
       NdkCxxPlatform platform)
-      throws NoSuchBuildTargetException {
+      throws HumanReadableException {
 
     boolean hasNativeLibs = false;
 
@@ -140,13 +141,20 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         ImmutableMap<String, SourcePath> solibs =
             nativeLinkable.getSharedLibraries(platform.getCxxPlatform());
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
-          builder.put(
+          AndroidLinkableMetadata metadata =
               AndroidLinkableMetadata.builder()
                   .setSoName(entry.getKey())
                   .setTargetCpuType(targetCpuType)
                   .setApkModule(linkableEntry.getKey())
-                  .build(),
-              entry.getValue());
+                  .build();
+          builder.put(metadata, entry.getValue());
+          if (nativeLinkableMap.containsKey(metadata)) {
+            throw new HumanReadableException(
+                "Two libraries in the dependencies have the same output filename: %s:\n"
+                    + "Those libraries are  %s and %s",
+                metadata.getSoName(), nativeLinkable, nativeLinkableMap.get(metadata));
+          }
+          nativeLinkableMap.put(metadata, nativeLinkable);
           hasNativeLibs = true;
         }
       }
@@ -155,7 +163,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   }
 
   public AndroidNativeLibsGraphEnhancementResult enhance(
-      AndroidPackageableCollection packageableCollection) throws NoSuchBuildTargetException {
+      AndroidPackageableCollection packageableCollection) {
     @SuppressWarnings("PMD.PrematureDeclaration")
     AndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
         AndroidNativeLibsGraphEnhancementResult.builder();
@@ -214,21 +222,32 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder =
         ImmutableMap.builder();
 
+    Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableLibsMap = new HashMap<>();
+    Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableLibsAssetsMap = new HashMap<>();
     for (NdkCxxPlatforms.TargetCpuType targetCpuType :
         getFilteredPlatforms(nativePlatforms, cpuFilters)) {
       NdkCxxPlatform platform = nativePlatforms.get(targetCpuType);
       // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
-      populateMapWithLinkables(nativeLinkables, nativeLinkableLibsBuilder, targetCpuType, platform);
       populateMapWithLinkables(
-          nativeLinkablesAssets, nativeLinkableLibsAssetsBuilder, targetCpuType, platform);
+          nativeLinkables,
+          nativeLinkableLibsBuilder,
+          nativeLinkableLibsMap,
+          targetCpuType,
+          platform);
+      populateMapWithLinkables(
+          nativeLinkablesAssets,
+          nativeLinkableLibsAssetsBuilder,
+          nativeLinkableLibsAssetsMap,
+          targetCpuType,
+          platform);
     }
     // Adds a cxxruntime linkable to the nativeLinkableLibsBuilder for every platform that needs it.
-    addCxxRuntimeLinkables(nativeLinkableLibsBuilder, nativeLinkableLibsAssetsBuilder);
+    ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets =
+        nativeLinkableLibsAssetsBuilder.build();
+    addCxxRuntimeLinkables(nativeLinkableLibsBuilder, nativeLinkableLibsAssets);
 
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibs =
         nativeLinkableLibsBuilder.build();
-    ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets =
-        nativeLinkableLibsAssetsBuilder.build();
 
     if (relinkerMode == RelinkerMode.ENABLED
         && (!nativeLinkableLibs.isEmpty() || !nativeLinkableLibsAssets.isEmpty())) {
@@ -310,9 +329,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   private void addCxxRuntimeLinkables(
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsBuilder,
-      ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder) {
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets) {
     RichStream.from(nativeLinkableLibsBuilder.build().keySet())
-        .concat(RichStream.from(nativeLinkableLibsAssetsBuilder.build().keySet()))
+        .concat(RichStream.from(nativeLinkableLibsAssets.keySet()))
         .map(AndroidLinkableMetadata::getTargetCpuType)
         .distinct()
         .forEach(

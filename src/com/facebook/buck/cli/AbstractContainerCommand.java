@@ -19,13 +19,17 @@ package com.facebook.buck.cli;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
+import com.facebook.buck.step.ExecutorPool;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.ScheduledExecutorService;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
@@ -139,10 +143,12 @@ public abstract class AbstractContainerCommand implements Command {
   }
 
   @Override
-  public Iterable<BuckEventListener> getEventListeners() {
+  public Iterable<BuckEventListener> getEventListeners(
+      Map<ExecutorPool, ListeningExecutorService> executorPool,
+      ScheduledExecutorService scheduledExecutorService) {
     if (!getSubcommand().isPresent()) {
       return ImmutableList.of();
     }
-    return getSubcommand().get().getEventListeners();
+    return getSubcommand().get().getEventListeners(executorPool, scheduledExecutorService);
   }
 }

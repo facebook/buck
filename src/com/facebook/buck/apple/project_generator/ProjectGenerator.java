@@ -68,15 +68,15 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -99,7 +99,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -124,6 +123,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.swift.SwiftCommonArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
@@ -155,6 +155,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -240,6 +241,7 @@ public class ProjectGenerator {
 
   private final TargetGraph targetGraph;
   private final AppleDependenciesCache dependenciesCache;
+  private final ProjectGenerationStateCache projGenerationStateCache;
   private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
   private final Path outputDirectory;
@@ -283,6 +285,7 @@ public class ProjectGenerator {
   public ProjectGenerator(
       TargetGraph targetGraph,
       AppleDependenciesCache dependenciesCache,
+      ProjectGenerationStateCache projGenerationStateCache,
       Set<BuildTarget> initialTargets,
       Cell cell,
       Path outputDirectory,
@@ -301,6 +304,7 @@ public class ProjectGenerator {
       SwiftBuckConfig swiftBuckConfig) {
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
+    this.projGenerationStateCache = projGenerationStateCache;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectCell = cell;
     this.projectFilesystem = cell.getFilesystem();
@@ -875,7 +879,7 @@ public class ProjectGenerator {
                 buildRuleResolverForNode.apply(targetGraph.get(locationMacroTarget));
             try {
               resolver.requireRule(locationMacroTarget);
-            } catch (NoSuchBuildTargetException | TargetGraph.NoSuchNodeException e) {
+            } catch (TargetGraph.NoSuchNodeException e) {
               throw new MacroException(
                   String.format(
                       "couldn't find rule referenced by location macro: %s", e.getMessage()),
@@ -923,6 +927,7 @@ public class ProjectGenerator {
 
     TargetNode<?, ?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
     final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
+    final boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftCode(targetNode);
 
     String buildTargetName = getProductNameForBuildTarget(buildTarget);
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
@@ -934,6 +939,15 @@ public class ProjectGenerator {
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
+
+    Optional<String> swiftVersion =
+        (arg instanceof SwiftCommonArg)
+            ? ((SwiftCommonArg) arg).getSwiftVersion()
+            : Optional.empty();
+    final boolean hasSwiftVersionArg = swiftVersion.isPresent();
+    if (!swiftVersion.isPresent()) {
+      swiftVersion = swiftBuckConfig.getVersion();
+    }
 
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
@@ -1135,8 +1149,13 @@ public class ProjectGenerator {
             "SWIFT_OBJC_BRIDGING_HEADER",
             Joiner.on('/').join("$(SRCROOT)", bridgingHeaderPath.toString()));
       }
-      Optional<String> swiftVersion = swiftBuckConfig.getVersion();
+
       swiftVersion.ifPresent(s -> extraSettingsBuilder.put("SWIFT_VERSION", s));
+
+      if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+        extraSettingsBuilder.put(
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTarget));
+      }
 
       Optional<SourcePath> prefixHeaderOptional =
           getPrefixHeaderSourcePath(targetNode.getConstructorArg());
@@ -1159,6 +1178,19 @@ public class ProjectGenerator {
 
       defaultSettingsBuilder.put(
           "REPO_ROOT", projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+      if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+        // We need to be able to control the directory where Xcode places the derived sources, so
+        // that the Obj-C Generated Header can be included in the header map and imported through
+        // a framework-style import like <Module/Module-Swift.h>
+        Path derivedSourcesDir =
+            getDerivedSourcesDirectoryForBuildTarget(buildTarget, projectFilesystem);
+        Path derivedSourceDirRelativeToProjectRoot =
+            getRelativeToProjectPathForTargetNode(targetNode, derivedSourcesDir);
+
+        defaultSettingsBuilder.put(
+            "DERIVED_FILE_DIR", derivedSourceDirRelativeToProjectRoot.toString());
+      }
+
       defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode, buildTarget));
       bundle.ifPresent(
           bundleNode ->
@@ -1197,6 +1229,9 @@ public class ProjectGenerator {
         appendConfigsBuilder.put(
             "HEADER_SEARCH_PATHS",
             Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)));
+        if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+          appendConfigsBuilder.put("SWIFT_INCLUDE_PATHS", "$BUILT_PRODUCTS_DIR");
+        }
 
         Iterable<String> otherCFlags =
             Iterables.concat(
@@ -1310,6 +1345,7 @@ public class ProjectGenerator {
     // -- phases
     createHeaderSymlinkTree(
         getPublicCxxHeaders(targetNode),
+        getSwiftPublicHeaderMapEntriesForTarget(targetNode, isFocusedOnTarget, hasSwiftVersionArg),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || isHeaderMapDisabled(),
@@ -1317,6 +1353,7 @@ public class ProjectGenerator {
     if (isFocusedOnTarget) {
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
+          ImmutableMap.of(),
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
           arg.getXcodePrivateHeadersSymlinks()
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
@@ -1493,24 +1530,20 @@ public class ProjectGenerator {
               (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
       ImmutableSortedMap<String, SourcePath> cxxHeaders =
           AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
-              this::resolveSourcePath, headerPathPrefix, arg);
+              targetNode.getBuildTarget(), this::resolveSourcePath, headerPathPrefix, arg);
       return convertMapKeysToPaths(cxxHeaders);
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-      try {
-        return ImmutableSortedMap.copyOf(
-            CxxDescriptionEnhancer.parseExportedHeaders(
-                targetNode.getBuildTarget(),
-                resolver,
-                ruleFinder,
-                pathResolver,
-                Optional.empty(),
-                arg));
-      } catch (NoSuchBuildTargetException e) {
-        throw new RuntimeException(e);
-      }
+      return ImmutableSortedMap.copyOf(
+          CxxDescriptionEnhancer.parseExportedHeaders(
+              targetNode.getBuildTarget(),
+              resolver,
+              ruleFinder,
+              pathResolver,
+              Optional.empty(),
+              arg));
     }
   }
 
@@ -1523,24 +1556,20 @@ public class ProjectGenerator {
               (AppleNativeTargetDescriptionArg) arg, targetNode.getBuildTarget());
       ImmutableSortedMap<String, SourcePath> cxxHeaders =
           AppleDescriptions.convertAppleHeadersToPrivateCxxHeaders(
-              this::resolveSourcePath, headerPathPrefix, arg);
+              targetNode.getBuildTarget(), this::resolveSourcePath, headerPathPrefix, arg);
       return convertMapKeysToPaths(cxxHeaders);
     } else {
       BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-      try {
-        return ImmutableSortedMap.copyOf(
-            CxxDescriptionEnhancer.parseHeaders(
-                targetNode.getBuildTarget(),
-                resolver,
-                ruleFinder,
-                pathResolver,
-                Optional.empty(),
-                arg));
-      } catch (NoSuchBuildTargetException e) {
-        throw new RuntimeException(e);
-      }
+      return ImmutableSortedMap.copyOf(
+          CxxDescriptionEnhancer.parseHeaders(
+              targetNode.getBuildTarget(),
+              resolver,
+              ruleFinder,
+              pathResolver,
+              Optional.empty(),
+              arg));
     }
   }
 
@@ -1816,6 +1845,7 @@ public class ProjectGenerator {
 
   private void createHeaderSymlinkTree(
       Map<Path, SourcePath> contents,
+      ImmutableMap<Path, Path> nonSourcePaths,
       Path headerSymlinkTreeRoot,
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap)
@@ -1831,6 +1861,10 @@ public class ProjectGenerator {
       Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
       Path existing = projectFilesystem.resolve(resolveSourcePath(entry.getValue()));
       resolvedContentsBuilder.put(link, existing);
+    }
+    for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
+      Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
+      resolvedContentsBuilder.put(link, entry.getValue());
     }
     ImmutableSortedMap<Path, Path> resolvedContents = resolvedContentsBuilder.build();
 
@@ -1868,20 +1902,36 @@ public class ProjectGenerator {
           if (shouldCreateHeadersSymlinks) {
             headerMapBuilder.add(
                 entry.getKey().toString(),
-                Paths.get("../../")
-                    .resolve(projectCell.getRoot().getFileName())
-                    .resolve(headerSymlinkTreeRoot)
-                    .resolve(entry.getKey()));
+                getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
           } else {
             headerMapBuilder.add(
                 entry.getKey().toString(),
                 projectFilesystem.resolve(resolveSourcePath(entry.getValue())));
           }
         }
+
+        for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {
+          if (shouldCreateHeadersSymlinks) {
+            headerMapBuilder.add(
+                entry.getKey().toString(),
+                getHeaderMapRelativeSymlinkPathForEntry(entry, headerSymlinkTreeRoot));
+          } else {
+            headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
+          }
+        }
+
         projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
       }
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
+  }
+
+  private Path getHeaderMapRelativeSymlinkPathForEntry(
+      Map.Entry<Path, ?> entry, Path headerSymlinkTreeRoot) {
+    return Paths.get("../../")
+        .resolve(projectCell.getRoot().getFileName())
+        .resolve(headerSymlinkTreeRoot)
+        .resolve(entry.getKey());
   }
 
   private HashCode getHeaderSymlinkTreeHashCode(
@@ -2140,15 +2190,79 @@ public class ProjectGenerator {
     return buildTarget.getShortName();
   }
 
+  private static Path getDerivedSourcesDirectoryForBuildTarget(
+      BuildTarget buildTarget, ProjectFilesystem fs) {
+    String fullTargetName = buildTarget.getFullyQualifiedName();
+    byte[] utf8Bytes = fullTargetName.getBytes(Charset.forName("UTF-8"));
+
+    Hasher hasher = Hashing.sha1().newHasher();
+    hasher.putBytes(utf8Bytes);
+
+    String targetSha1Hash = hasher.hash().toString();
+    String targetFolderName = buildTarget.getShortName() + "-" + targetSha1Hash;
+
+    Path xcodeDir = fs.getBuckPaths().getXcodeDir();
+    Path derivedSourcesDir = xcodeDir.resolve("derived-sources").resolve(targetFolderName);
+
+    return derivedSourcesDir;
+  }
+
+  private static String getSwiftObjCGeneratedHeaderName(BuildTarget buildTarget) {
+    return getProductNameForBuildTarget(buildTarget) + "-Swift.h";
+  }
+
+  private static Path getSwiftObjCGeneratedHeaderPath(
+      BuildTarget buildTarget, ProjectFilesystem fs) {
+    Path derivedSourcesDir = getDerivedSourcesDirectoryForBuildTarget(buildTarget, fs);
+    return derivedSourcesDir.resolve(getSwiftObjCGeneratedHeaderName(buildTarget));
+  }
+
+  private ImmutableMap<Path, Path> getSwiftPublicHeaderMapEntriesForTarget(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> node,
+      boolean isFocusedOnTarget,
+      boolean hasSwiftVersionArg) {
+
+    if (!isFocusedOnTarget || !hasSwiftVersionArg) {
+      return ImmutableMap.of();
+    }
+
+    Optional<TargetNode<AppleNativeTargetDescriptionArg, ?>> maybeAppleNode =
+        node.castArg(AppleNativeTargetDescriptionArg.class);
+    if (!maybeAppleNode.isPresent()) {
+      return ImmutableMap.of();
+    }
+
+    TargetNode<? extends AppleNativeTargetDescriptionArg, ?> appleNode = maybeAppleNode.get();
+    if (!projGenerationStateCache.targetContainsSwiftCode(appleNode)) {
+      return ImmutableMap.of();
+    }
+
+    BuildTarget buildTarget = appleNode.getBuildTarget();
+    Path headerPrefix =
+        AppleDescriptions.getHeaderPathPrefix(appleNode.getConstructorArg(), buildTarget);
+    Path relativePath = headerPrefix.resolve(getSwiftObjCGeneratedHeaderName(buildTarget));
+
+    ImmutableSortedMap.Builder<Path, Path> builder = ImmutableSortedMap.naturalOrder();
+    builder.put(
+        relativePath,
+        getSwiftObjCGeneratedHeaderPath(buildTarget, projectFilesystem).toAbsolutePath());
+
+    return builder.build();
+  }
+
+  private Path getRelativeToProjectPathForTargetNode(TargetNode<?, ?> targetNode, Path path) {
+    Path cellRoot =
+        MorePaths.relativize(
+            projectFilesystem.getRootPath(), targetNode.getBuildTarget().getCellPath());
+    return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(path));
+  }
+
   /** @param targetNode Must have a header symlink tree or an exception will be thrown. */
   private Path getHeaderSymlinkTreeRelativePath(
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode,
       HeaderVisibility headerVisibility) {
     Path treeRoot = getPathToHeaderSymlinkTree(targetNode, headerVisibility);
-    Path cellRoot =
-        MorePaths.relativize(
-            projectFilesystem.getRootPath(), targetNode.getBuildTarget().getCellPath());
-    return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
+    return getRelativeToProjectPathForTargetNode(targetNode, treeRoot);
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {

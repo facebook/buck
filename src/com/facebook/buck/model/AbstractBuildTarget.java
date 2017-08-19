@@ -47,11 +47,9 @@ abstract class AbstractBuildTarget implements Comparable<AbstractBuildTarget> {
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();
 
-  @Value.Parameter
   public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
 
   @Value.NaturalOrder
-  @Value.Parameter
   public abstract SortedSet<Flavor> getFlavors();
 
   @Value.Check

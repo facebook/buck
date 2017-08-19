@@ -56,6 +56,7 @@ import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */
 public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  @AddToRuleKey private final boolean noAutoVersion;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
@@ -68,7 +69,8 @@ public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<Aapt2Compile> compileRules,
       ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      boolean noAutoVersion) {
     super(
         buildTarget,
         projectFilesystem,
@@ -83,6 +85,7 @@ public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
+    this.noAutoVersion = noAutoVersion;
   }
 
   @Override
@@ -195,7 +198,9 @@ public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         builder.add("-v");
       }
 
-      builder.add("--no-auto-version");
+      if (noAutoVersion) {
+        builder.add("--no-auto-version");
+      }
       builder.add("--auto-add-overlay");
 
       builder.add("-o", getResourceApkPath().toString());

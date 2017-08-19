@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 
 public class FakeInvocationInfoFactory {
@@ -27,6 +28,6 @@ public class FakeInvocationInfoFactory {
 
   public static InvocationInfo create() {
     return InvocationInfo.of(
-        new BuildId(), false, false, "test", new String[0], new String[0], Paths.get(""));
+        new BuildId(), false, false, "test", ImmutableList.of(), ImmutableList.of(), Paths.get(""));
   }
 }

@@ -27,7 +27,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
@@ -50,7 +49,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
+      Path workingDirectory,
       JavacCompilationMode compilationMode) {
 
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
@@ -68,7 +67,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
             options,
             javaSourceFilePaths.stream().map(Path::toString).collect(Collectors.toList()),
             pathToSrcsList.toString(),
-            workingDirectory.isPresent() ? workingDirectory.get().toString() : null,
+            workingDirectory.toString(),
             pluginFields
                 .stream()
                 .map(JavacPluginJsr199FieldsSerializer::serialize)

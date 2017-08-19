@@ -120,8 +120,16 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     return getBinPath().resolve("libs");
   }
 
+  public SourcePath getSourcePathToNativeLibsDir() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToNativeLibsDir());
+  }
+
   public Path getPathToNativeLibsAssetsDir() {
     return getBinPath().resolve("assetLibs");
+  }
+
+  public SourcePath getSourcePathToNativeLibsAssetsDir() {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToNativeLibsAssetsDir());
   }
 
   /**

@@ -28,6 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,14 +58,15 @@ public class LocalFsContentsProvider implements FileContentsProvider {
   @Override
   public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
-    RuleKey key = new RuleKey(entry.getHashCode());
-    CacheResult cacheResult = dirCache.fetch(key, LazyPath.ofInstance(targetAbsPath));
+    RuleKey key = new RuleKey(entry.getSha1());
+    CacheResult cacheResult =
+        Futures.getUnchecked(dirCache.fetchAsync(key, LazyPath.ofInstance(targetAbsPath)));
     return cacheResult.getType() == CacheResultType.HIT;
   }
 
   public void writeFileAndGetInputStream(BuildJobStateFileHashEntry entry, Path absPath)
       throws IOException {
-    RuleKey key = new RuleKey(entry.getHashCode());
+    RuleKey key = new RuleKey(entry.getSha1());
     ArtifactInfo artifactInfo = ArtifactInfo.builder().setRuleKeys(ImmutableList.of(key)).build();
     BorrowablePath nonBorrowablePath = BorrowablePath.notBorrowablePath(absPath);
     try {
@@ -73,4 +75,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
       throw new IOException("Failed to store artifact to DirCache.", e);
     }
   }
+
+  @Override
+  public void close() {}
 }

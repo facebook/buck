@@ -20,9 +20,11 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.util.HumanReadableException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,7 +37,7 @@ public class AppleInfoPlistParsing {
   private AppleInfoPlistParsing() {}
 
   /** Extracts the bundle ID (CFBundleIdentifier) from an Info.plist, returning it if present. */
-  public static Optional<String> getBundleIdFromPlistStream(InputStream inputStream)
+  public static Optional<String> getBundleIdFromPlistStream(Path plistPath, InputStream inputStream)
       throws IOException {
     NSDictionary infoPlist;
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
@@ -47,6 +49,9 @@ public class AppleInfoPlistParsing {
           | SAXException
           | UnsupportedOperationException e) {
         throw new IOException(e);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new HumanReadableException(
+            plistPath.toString() + ": the content of the plist is invalid or empty.");
       }
     }
     NSObject bundleId = infoPlist.objectForKey("CFBundleIdentifier");

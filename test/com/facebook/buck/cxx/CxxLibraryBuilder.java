@@ -17,8 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -47,7 +49,7 @@ public class CxxLibraryBuilder
     super(
         new CxxLibraryDescription(
             cxxBuckConfig,
-            CxxPlatformUtils.build(cxxBuckConfig),
+            CxxPlatformUtils.build(cxxBuckConfig).getFlavor(),
             new InferBuckConfig(FakeBuckConfig.builder().build()),
             cxxPlatforms),
         target);

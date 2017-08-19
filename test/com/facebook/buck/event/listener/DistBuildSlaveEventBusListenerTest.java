@@ -471,7 +471,10 @@ public class DistBuildSlaveEventBusListenerTest {
         new FileMaterializationStats()
             .setTotalFilesMaterializedCount(NUM_TOTAL_FILES_MATERIALIZED)
             .setFilesMaterializedFromCASCount(NUM_FILES_MATERIALIZED_FROM_CAS)
-            .setTotalTimeSpentMaterializingFilesFromCASMillis(FILE_MATERIALIZATION_TIME_MS);
+            .setTotalTimeSpentMaterializingFilesFromCASMillis(FILE_MATERIALIZATION_TIME_MS)
+            .setFullBufferCasMultiFetchCount(2)
+            .setPeriodicCasMultiFetchCount(1)
+            .setTimeSpentInMultiFetchNetworkCallsMs(128);
 
     BuildSlavePerStageTimingStats timingStats =
         new BuildSlavePerStageTimingStats()
@@ -507,6 +510,9 @@ public class DistBuildSlaveEventBusListenerTest {
     // Test updates to file materialization stats are included.
     fileMaterializationStatsTracker.recordLocalFileMaterialized();
     fileMaterializationStatsTracker.recordRemoteFileMaterialized(FILE_MATERIALIZATION_TIME_MS);
+    fileMaterializationStatsTracker.recordPeriodicCasMultiFetch(50);
+    fileMaterializationStatsTracker.recordFullBufferCasMultiFetch(40);
+    fileMaterializationStatsTracker.recordFullBufferCasMultiFetch(38);
     // Test updates to timing stats are included.
     slaveStatsTracker.setElapsedTimeMillis(
         SlaveEvents.ACTION_GRAPH_CREATION_TIME, ACTION_GRAPH_CREATION_TIME_MS);

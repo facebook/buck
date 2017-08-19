@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.cxx.platform.NativeLinkable.Linkage.STATIC;
+import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -58,8 +58,9 @@ public class SwiftDescriptions {
 
     output.setName(args.getName());
     output.setSrcs(filterSwiftSources(sourcePathResolver, args.getSrcs()));
-    if (args instanceof HasSwiftCompilerFlags) {
-      output.setCompilerFlags(((HasSwiftCompilerFlags) args).getSwiftCompilerFlags());
+    if (args instanceof SwiftCommonArg) {
+      output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
+      output.setVersion(((SwiftCommonArg) args).getSwiftVersion());
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }

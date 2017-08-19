@@ -37,10 +37,39 @@
 {/call}
 
 {call buck.arg}
-    {param name: 'exe' /}
+    {param name: 'exe'/}
+    {param default: 'None'/}
     {param desc}
     A {call buck.build_target /} for a rule that outputs
     an executable, such as an <code>sh_binary</code>.
+    {/param}
+{/call}
+
+{call buck.arg}
+    {param name: 'platform_exe' /}
+    {{param default: '{}' /}}
+    {param desc}
+    <p>A mapping from platforms to {call buck.build_target /}.
+        Allows to override <code>exe</code> per host platform.</p>
+
+    <p>If present, <code>exe</code> will be used as a fallback on host platforms that are not
+        specified in <code>platform_exe</code>.</p>
+
+    <p>It is possible to omit <code>exe</code> when providing <code>platform_exe</code>.
+        In that case, the build will fail if the command is invoked on a platform not specified in
+        the mapping.</p>
+
+    <p>Valid platforms are all values of the{sp}
+        <a href="https://buckbuild.com/javadoc/com/facebook/buck/util/environment/Platform.html">
+            <code>Platform</code> enum
+        </a>:
+    </p>
+    <ul>
+        <li><code>FREEBSD</code></li>
+        <li><code>LINUX</code></li>
+        <li><code>MACOS</code></li>
+        <li><code>WINDOWS</code></li>
+    </ul>
     {/param}
 {/call}
 
@@ -116,6 +145,34 @@ command_alias(
     name = "run",
     exe = ":yarn",
     args = ["run"],
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# Platform specific commands
+
+export_file(
+    name = "node-windows",
+    src = "windows/node.exe",
+)
+
+export_file(
+    name = "node-linux",
+    src = "linux/node",
+)
+
+export_file(
+    name = "node-macos",
+    src = "macos/node",
+)
+
+command_alias(
+    name = "node",
+    platform_exe = {
+        "windows": ":node-windows",
+        "linux": ":node-linux",
+        "macos": ":node-macos",
+    },
 )
 </pre>{/literal}
 

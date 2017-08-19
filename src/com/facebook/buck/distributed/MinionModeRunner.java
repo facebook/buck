@@ -96,7 +96,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
     }
   }
 
-  public static String generateNewMinionId() throws UnknownHostException {
+  public static String generateNewMinionId() {
     String hostname = "Unknown";
     try {
       InetAddress addr;

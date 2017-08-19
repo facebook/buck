@@ -26,7 +26,7 @@ import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

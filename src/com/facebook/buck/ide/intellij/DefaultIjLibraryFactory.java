@@ -18,17 +18,20 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
+import com.facebook.buck.android.UnzipAar;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactory;
 import com.facebook.buck.ide.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -154,6 +157,18 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
           .ifPresent(
               sourcePath -> library.addSourceJars(libraryFactoryResolver.getPath(sourcePath)));
       arg.getJavadocUrl().ifPresent(library::addJavadocUrls);
+
+      Path aarUnpackPath =
+          BuildTargets.getScratchPath(
+              targetNode.getFilesystem(),
+              targetNode
+                  .getBuildTarget()
+                  .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
+              UnzipAar.getAarUnzipPathFormat());
+
+      // Based on https://developer.android.com/studio/projects/android-library.html#aar-contents,
+      // the AAR library is required to have a resources folder.
+      library.addClassPaths(Paths.get(aarUnpackPath.toString(), "res"));
     }
   }
 

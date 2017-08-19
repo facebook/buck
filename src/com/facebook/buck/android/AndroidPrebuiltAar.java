@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
@@ -53,7 +53,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
-      CompileToJarStepFactory compileStepFactory,
+      ConfiguredCompiler configuredCompiler,
       Iterable<PrebuiltJar> exportedDeps,
       ZipArchiveDependencySupplier abiClasspath) {
     super(
@@ -65,7 +65,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
-            compileStepFactory,
+            configuredCompiler,
             /* srcs */ ImmutableSortedSet.of(),
             /* resources */ ImmutableSortedSet.of(),
             /* resourcesRoot */ Optional.empty(),

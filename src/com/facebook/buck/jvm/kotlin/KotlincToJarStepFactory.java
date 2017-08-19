@@ -18,10 +18,11 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -31,7 +32,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,64 +39,64 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory implements AddsToRuleKey {
+public class KotlincToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
   private static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
+  private static final PathOrGlobMatcher KOTLIN_PATH_MATCHER = new PathOrGlobMatcher("**.kt");
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
-  private final Function<BuildContext, Iterable<Path>> extraClassPath;
+  @AddToRuleKey private final ExtraClasspathFromContextFunction extraClassPath;
   private final Javac javac;
   private final JavacOptions javacOptions;
-  private final JavacOptionsAmender amender;
 
   public KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
-      Function<BuildContext, Iterable<Path>> extraClassPath,
+      ExtraClasspathFromContextFunction extraClassPath,
       Javac javac,
-      JavacOptions javacOptions,
-      JavacOptionsAmender amender) {
+      JavacOptions javacOptions) {
     this.kotlinc = kotlinc;
     this.extraArguments = extraArguments;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.amender = amender;
   }
 
   @Override
   public void createCompileStep(
       BuildContext buildContext,
-      ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> generatedCodeDirectory,
-      Optional<Path> workingDirectory,
-      Optional<Path> depFilePath,
-      Path pathToSrcsList,
-      /* out params */
+      CompilerParameters parameters,
+      /* output params */
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
 
-    steps.add(
-        new KotlincStep(
-            invokingRule,
-            outputDirectory,
-            sourceFilePaths,
-            pathToSrcsList,
-            ImmutableSortedSet.<Path>naturalOrder()
-                .addAll(
-                    Optional.ofNullable(extraClassPath.apply(buildContext))
-                        .orElse(ImmutableList.of()))
-                .addAll(declaredClasspathEntries)
-                .build(),
-            kotlinc,
-            extraArguments,
-            filesystem));
+    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputDirectory();
+    Path pathToSrcsList = parameters.getPathToSourcesList();
+
+    // Don't invoke kotlinc if we don't have any kotlin files.
+    if (sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)) {
+      steps.add(
+          new KotlincStep(
+              invokingRule,
+              outputDirectory,
+              sourceFilePaths,
+              pathToSrcsList,
+              ImmutableSortedSet.<Path>naturalOrder()
+                  .addAll(
+                      Optional.ofNullable(extraClassPath.apply(buildContext))
+                          .orElse(ImmutableList.of()))
+                  .addAll(declaredClasspathEntries)
+                  .build(),
+              kotlinc,
+              extraArguments,
+              filesystem));
+    }
 
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
@@ -107,26 +107,26 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory impleme
 
     // Don't invoke javac if we don't have any java files.
     if (!javaSourceFiles.isEmpty()) {
-      new JavacToJarStepFactory(javac, javacOptions, amender)
+      CompilerParameters javacParameters =
+          CompilerParameters.builder()
+              .from(parameters)
+              .setClasspathEntries(
+                  ImmutableSortedSet.<Path>naturalOrder()
+                      .add(outputDirectory)
+                      .addAll(
+                          Optional.ofNullable(extraClassPath.apply(buildContext))
+                              .orElse(ImmutableList.of()))
+                      .addAll(declaredClasspathEntries)
+                      .build())
+              .setSourceFilePaths(javaSourceFiles)
+              .build();
+      new JavacToJarStepFactory(javac, javacOptions, extraClassPath)
           .createCompileStep(
               buildContext,
-              javaSourceFiles,
               invokingRule,
               resolver,
               filesystem,
-              // We need to add the kotlin class files to the classpath. (outputDirectory).
-              ImmutableSortedSet.<Path>naturalOrder()
-                  .add(outputDirectory)
-                  .addAll(
-                      Optional.ofNullable(extraClassPath.apply(buildContext))
-                          .orElse(ImmutableList.of()))
-                  .addAll(declaredClasspathEntries)
-                  .build(),
-              outputDirectory,
-              generatedCodeDirectory,
-              workingDirectory,
-              depFilePath,
-              pathToSrcsList,
+              javacParameters,
               steps,
               buildableContext);
     }
@@ -134,12 +134,11 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory impleme
 
   @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
-    JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
-    return buildTimeOptions.getBootclasspath();
+    return javacOptions.withBootclasspathFromContext(extraClassPath, context).getBootclasspath();
   }
 
   @Override
-  protected Tool getCompiler() {
+  public Tool getCompiler() {
     return kotlinc;
   }
 }

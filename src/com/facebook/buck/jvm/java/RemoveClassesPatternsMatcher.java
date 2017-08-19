@@ -19,10 +19,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
-public class RemoveClassesPatternsMatcher implements AddsToRuleKey {
+public class RemoveClassesPatternsMatcher implements AddsToRuleKey, Predicate<Object> {
   public static final RemoveClassesPatternsMatcher EMPTY =
       new RemoveClassesPatternsMatcher(ImmutableSet.of());
 
@@ -32,7 +33,7 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey {
     this.patterns = patterns;
   }
 
-  public boolean shouldRemoveClass(ZipEntry entry) {
+  private boolean shouldRemoveClass(ZipEntry entry) {
     if (patterns.isEmpty() || !entry.getName().endsWith(".class")) {
       return false;
     }
@@ -40,7 +41,7 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey {
     return shouldRemoveClass(pathToClassName(entry.getName()));
   }
 
-  public boolean shouldRemoveClass(String className) {
+  private boolean shouldRemoveClass(String className) {
     if (patterns.isEmpty()) {
       return false;
     }
@@ -61,5 +62,14 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey {
 
   private static String pathToClassName(String classFilePath) {
     return classFilePath.replace('/', '.').replace(".class", "");
+  }
+
+  @Override
+  public boolean test(Object o) {
+    if (o instanceof ZipEntry) {
+      return shouldRemoveClass((ZipEntry) o);
+    } else {
+      return shouldRemoveClass((String) o);
+    }
   }
 }

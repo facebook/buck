@@ -30,15 +30,20 @@ public class KnownBuildRuleTypesFactory {
 
   private final ProcessExecutor executor;
   private final AndroidDirectoryResolver directoryResolver;
+  private final SdkEnvironment sdkEnvironment;
 
   public KnownBuildRuleTypesFactory(
-      ProcessExecutor executor, AndroidDirectoryResolver directoryResolver) {
+      ProcessExecutor executor,
+      AndroidDirectoryResolver directoryResolver,
+      SdkEnvironment sdkEnvironment) {
     this.executor = executor;
     this.directoryResolver = directoryResolver;
+    this.sdkEnvironment = sdkEnvironment;
   }
 
   public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
       throws IOException, InterruptedException {
-    return KnownBuildRuleTypes.createInstance(config, filesystem, executor, directoryResolver);
+    return KnownBuildRuleTypes.createInstance(
+        config, filesystem, executor, directoryResolver, sdkEnvironment);
   }
 }

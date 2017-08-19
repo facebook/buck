@@ -20,13 +20,12 @@ import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -44,7 +43,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,8 +66,7 @@ public class HaskellPrebuiltLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final HaskellPrebuiltLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final HaskellPrebuiltLibraryDescriptionArg args) {
     return new PrebuiltHaskellLibrary(buildTarget, projectFilesystem, params) {
 
       private final LoadingCache<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>
@@ -77,7 +74,7 @@ public class HaskellPrebuiltLibraryDescription
               CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
 
       @Override
-      public Iterable<BuildRule> getCompileDeps(CxxPlatform cxxPlatform) {
+      public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
         return RichStream.from(args.getDeps())
             .map(resolver::getRule)
             .filter(HaskellCompileDep.class::isInstance)
@@ -86,31 +83,30 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          CxxPlatform cxxPlatform, Linker.LinkableDepType depType, boolean hsProfile)
-          throws NoSuchBuildTargetException {
+          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile) {
 
-        ImmutableCollection<SourcePath> libs = null;
+        // Build the package.
+        HaskellPackage.Builder pkgBuilder =
+            HaskellPackage.builder()
+                .setInfo(
+                    HaskellPackageInfo.of(
+                        getBuildTarget().getShortName(), args.getVersion(), args.getId()))
+                .setPackageDb(args.getDb())
+                .addAllInterfaces(args.getImportDirs());
         if (Linker.LinkableDepType.SHARED == depType) {
-          libs = args.getSharedLibs().values();
+          pkgBuilder.addAllLibraries(args.getSharedLibs().values());
         } else {
-          if (hsProfile) {
-            libs = args.getProfiledStaticLibs();
-          } else {
-            libs = args.getStaticLibs();
+          pkgBuilder.addAllLibraries(args.getStaticLibs());
+          // If profiling is enabled, we also include their libs in the same package.
+          if (args.isEnableProfiling() || hsProfile) {
+            pkgBuilder.addAllLibraries(args.getProfiledStaticLibs());
           }
         }
+        HaskellPackage pkg = pkgBuilder.build();
 
         return HaskellCompileInput.builder()
             .addAllFlags(args.getExportedCompilerFlags())
-            .addPackages(
-                HaskellPackage.builder()
-                    .setInfo(
-                        HaskellPackageInfo.of(
-                            getBuildTarget().getShortName(), args.getVersion(), args.getId()))
-                    .setPackageDb(args.getDb())
-                    .addAllInterfaces(args.getImportDirs())
-                    .addAllLibraries(libs)
-                    .build())
+            .addPackages(pkg)
             .build();
       }
 
@@ -129,15 +125,16 @@ public class HaskellPrebuiltLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(SourcePathArg.from(args.getSharedLibs().values()));
         } else {
           Linker linker = cxxPlatform.getLd().resolve(resolver);
-          ImmutableList<Arg> libArgs = SourcePathArg.from(args.getStaticLibs());
+          ImmutableList<Arg> libArgs =
+              SourcePathArg.from(
+                  args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());
           if (forceLinkWhole) {
             libArgs =
                 RichStream.from(libArgs)
@@ -165,8 +162,7 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         for (SourcePath headerDir : args.getCxxHeaderDirs()) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
@@ -176,7 +172,7 @@ public class HaskellPrebuiltLibraryDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
     };
@@ -209,5 +205,10 @@ public class HaskellPrebuiltLibraryDescription
 
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getCxxHeaderDirs();
+
+    @Value.Default
+    default boolean isEnableProfiling() {
+      return false;
+    }
   }
 }
