@@ -16,7 +16,7 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../buck-out/bin/lib_without_manifest/lib__src_release__classes" />
+    <output url="jar://$MODULE_DIR$/../buck-out/gen/lib_without_manifest/lib__src_release__output/src_release.jar!/" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../buck-out/android/lib_without_manifest/gen">
       <sourceFolder url="file://$MODULE_DIR$/../buck-out/android/lib_without_manifest/gen" isTestSource="false" />

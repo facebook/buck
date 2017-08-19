@@ -15,7 +15,7 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../../buck-out/bin/java/code/modules/tip/lib__tip__classes" />
+    <output url="jar://$MODULE_DIR$/../../../buck-out/gen/java/code/modules/tip/lib__tip__output/tip.jar!/" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules/gen" isTestSource="false" />
