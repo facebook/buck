@@ -394,6 +394,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
     getBuildTraceURLLine(lines);
+    getBuildTimeLine(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
       MultiStateRenderer renderer =
@@ -457,6 +458,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
                 port.get(),
                 buildFinished.getBuildId()));
       }
+    }
+  }
+
+  private void getBuildTimeLine(ImmutableList.Builder<String> lines) {
+    if (buildStarted != null & buildFinished != null) {
+      long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
+      lines.add("    Total time: " + formatElapsedTime(durationMs));
     }
   }
 
