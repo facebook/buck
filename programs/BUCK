@@ -119,7 +119,9 @@ python_binary(
         ":bucklib",
         ":subprocutils",
     ],
-    visibility = ['PUBLIC'],
+    visibility = [
+        "//scripts/packages/debian:debian"
+    ],
 )
 
 python_binary(
@@ -130,7 +132,9 @@ python_binary(
         ":bucklib",
         ":subprocutils",
     ],
-    visibility = ['PUBLIC'],
+    visibility = [
+        "//scripts/packages/debian:debian"
+    ],
 )
 
 python_test(
