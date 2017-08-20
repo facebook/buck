@@ -117,19 +117,10 @@ public class JsTestScenario {
       return this;
     }
 
-    public Builder libraryWithDeps(BuildTarget target, BuildTarget... libraryDependencies) {
+    public Builder library(BuildTarget target, BuildTarget... libraryDependencies) {
       nodes.add(
           new JsLibraryBuilder(target, filesystem)
               .setDeps(ImmutableSortedSet.copyOf(libraryDependencies))
-              .setWorker(workerTarget)
-              .build());
-      return this;
-    }
-
-    public Builder libraryWithLibs(BuildTarget target, BuildTarget... libraryDependencies) {
-      nodes.add(
-          new JsLibraryBuilder(target, filesystem)
-              .setLibs(ImmutableSortedSet.copyOf(libraryDependencies))
               .setWorker(workerTarget)
               .build());
       return this;
