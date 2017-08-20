@@ -91,6 +91,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -1034,11 +1035,13 @@ public class ProjectGenerator {
       collectBuildScriptDependencies(
           targetGraph.getAll(targetNode.getDeclaredDeps()), preScriptPhases, postScriptPhases);
       if (isFocusedOnTarget) {
-        mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
+        mutator.setPreBuildRunScriptPhasesFromTargetNodes(
+            preScriptPhases.build(), buildRuleResolverForNode);
         if (copyFilesPhases.isPresent()) {
           mutator.setCopyFilesPhases(copyFilesPhases.get());
         }
-        mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
+        mutator.setPostBuildRunScriptPhasesFromTargetNodes(
+            postScriptPhases.build(), buildRuleResolverForNode);
       }
     }
 
@@ -1771,7 +1774,8 @@ public class ProjectGenerator {
       ImmutableList.Builder<TargetNode<?, ?>> preRules,
       ImmutableList.Builder<TargetNode<?, ?>> postRules) {
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription) {
+      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription
+          || targetNode.getDescription() instanceof JsBundleDescription) {
         postRules.add(targetNode);
         requiredBuildTargetsBuilder.add(targetNode.getBuildTarget());
       } else if (targetNode.getDescription() instanceof XcodePostbuildScriptDescription) {
