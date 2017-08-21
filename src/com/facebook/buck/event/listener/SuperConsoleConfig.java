@@ -24,6 +24,7 @@ public class SuperConsoleConfig {
 
   private static final String SECTION_NAME = "ui";
   private static final int DEFAULT_THREAD_LINE_LIMIT = 10;
+  private static final long DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS = 0;
 
   private final BuckConfig delegate;
 
@@ -46,6 +47,12 @@ public class SuperConsoleConfig {
 
   public boolean shouldAlwaysSortThreadsByTime() {
     return delegate.getBooleanValue(SECTION_NAME, "always_sort_threads_by_time", false);
+  }
+
+  public long getBuildRuleMinimumDurationMillis() {
+    return delegate
+        .getLong(SECTION_NAME, "build_rule_minimum_duration_millis")
+        .orElse(DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS);
   }
 
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {

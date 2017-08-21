@@ -139,6 +139,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int threadLineLimitOnWarning;
   private final int threadLineLimitOnError;
   private final boolean shouldAlwaysSortThreadsByTime;
+  private final long buildRuleMinimumDurationMillis;
 
   private final DateFormat dateFormat;
   private int lastNumLinesPrinted;
@@ -194,6 +195,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.threadLineLimitOnWarning = config.getThreadLineLimitOnWarning();
     this.threadLineLimitOnError = config.getThreadLineLimitOnError();
     this.shouldAlwaysSortThreadsByTime = config.shouldAlwaysSortThreadsByTime();
+    this.buildRuleMinimumDurationMillis = config.getBuildRuleMinimumDurationMillis();
 
     this.dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
     this.dateFormat.setTimeZone(timeZone);
@@ -402,6 +404,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              buildRuleMinimumDurationMillis,
               threadsToRunningStep,
               buildRuleThreadTracker);
       renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
