@@ -912,6 +912,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             sparse_summary.getIncludeRulesAdded(), sparse_summary.getFilesAdded()));
   }
 
+  @Override
+  protected String formatElapsedTime(long elapsedTimeMs) {
+    long minutes = elapsedTimeMs / 60_000L;
+    long seconds = elapsedTimeMs / 1000 - (minutes * 60);
+    long milliseconds = elapsedTimeMs % 1000;
+    if (elapsedTimeMs >= 60_000L) {
+      return String.format("%02d:%02d.%d min", minutes, seconds, milliseconds / 100);
+    } else {
+      return String.format("%d.%d sec", seconds, milliseconds / 100);
+    }
+  }
+
   @VisibleForTesting
   Optional<String> getParsingStatus() {
     return parsingStatus;
