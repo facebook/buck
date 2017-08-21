@@ -17,16 +17,14 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.UserIdFetcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -86,27 +84,28 @@ public class AppleCoreSimulatorServiceController {
         "Getting status of service %s with %s", coreSimulatorServiceName, launchctlPrintCommand);
     ProcessExecutorParams launchctlPrintParams =
         ProcessExecutorParams.builder().setCommand(launchctlPrintCommand).build();
-    ProcessExecutor.LaunchedProcess launchctlPrintProcess =
-        processExecutor.launchProcess(launchctlPrintParams);
+    ProcessExecutor.Result launchctlPrintResult =
+        processExecutor.launchAndExecute(launchctlPrintParams);
     Optional<Path> result = Optional.empty();
-    try (InputStreamReader stdoutReader =
-            new InputStreamReader(launchctlPrintProcess.getInputStream(), StandardCharsets.UTF_8);
-        BufferedReader bufferedStdoutReader = new BufferedReader(stdoutReader)) {
-      String line;
-      while ((line = bufferedStdoutReader.readLine()) != null) {
-        Matcher matcher = LAUNCHCTL_PRINT_PATH_PATTERN.matcher(line);
-        if (matcher.matches()) {
-          String path = matcher.group(1);
-          LOG.debug("Found path of service %s: %s", coreSimulatorServiceName, path);
-          result = Optional.of(Paths.get(path));
-          break;
-        }
-      }
-    } finally {
-      processExecutor.destroyLaunchedProcess(launchctlPrintProcess);
-      processExecutor.waitForLaunchedProcess(launchctlPrintProcess);
+    if (launchctlPrintResult.getExitCode() != LAUNCHCTL_EXIT_SUCCESS) {
+      LOG.error(
+          launchctlPrintResult.getMessageForUnexpectedResult(launchctlPrintCommand.toString()));
+      return result;
     }
-
+    String output =
+        launchctlPrintResult
+            .getStdout()
+            .orElseThrow(() -> new IllegalStateException("stdout should be captured"));
+    Iterable<String> lines = MoreStrings.lines(output);
+    for (String line : lines) {
+      Matcher matcher = LAUNCHCTL_PRINT_PATH_PATTERN.matcher(line);
+      if (matcher.matches()) {
+        String path = matcher.group(1);
+        LOG.debug("Found path of service %s: %s", coreSimulatorServiceName, path);
+        result = Optional.of(Paths.get(path));
+        break;
+      }
+    }
     return result;
   }
 
@@ -116,29 +115,29 @@ public class AppleCoreSimulatorServiceController {
     LOG.debug("Getting list of services with %s", launchctlListCommand);
     ProcessExecutorParams launchctlListParams =
         ProcessExecutorParams.builder().setCommand(launchctlListCommand).build();
-    ProcessExecutor.LaunchedProcess launchctlListProcess =
-        processExecutor.launchProcess(launchctlListParams);
+    ProcessExecutor.Result launchctlListResult =
+        processExecutor.launchAndExecute(launchctlListParams);
+    if (launchctlListResult.getExitCode() != LAUNCHCTL_EXIT_SUCCESS) {
+      LOG.error(launchctlListResult.getMessageForUnexpectedResult(launchctlListCommand.toString()));
+      return ImmutableSet.of();
+    }
+    String output =
+        launchctlListResult
+            .getStdout()
+            .orElseThrow(() -> new IllegalStateException("stdout should be captured"));
+    Iterable<String> lines = MoreStrings.lines(output);
     ImmutableSet.Builder<String> resultBuilder = ImmutableSet.builder();
-    try (InputStreamReader stdoutReader =
-            new InputStreamReader(launchctlListProcess.getInputStream(), StandardCharsets.UTF_8);
-        BufferedReader bufferedStdoutReader = new BufferedReader(stdoutReader)) {
-      String line;
-      while ((line = bufferedStdoutReader.readLine()) != null) {
-        Matcher launchctlListOutputMatcher = LAUNCHCTL_LIST_OUTPUT_PATTERN.matcher(line);
-        if (launchctlListOutputMatcher.matches()) {
-          String serviceName = launchctlListOutputMatcher.group(3);
-          Matcher serviceNameMatcher = serviceNamePattern.matcher(serviceName);
-          if (serviceNameMatcher.find()) {
-            LOG.debug("Found matching service name: %s", serviceName);
-            resultBuilder.add(serviceName);
-          }
+    for (String line : lines) {
+      Matcher launchctlListOutputMatcher = LAUNCHCTL_LIST_OUTPUT_PATTERN.matcher(line);
+      if (launchctlListOutputMatcher.matches()) {
+        String serviceName = launchctlListOutputMatcher.group(3);
+        Matcher serviceNameMatcher = serviceNamePattern.matcher(serviceName);
+        if (serviceNameMatcher.find()) {
+          LOG.debug("Found matching service name: %s", serviceName);
+          resultBuilder.add(serviceName);
         }
       }
-    } finally {
-      processExecutor.destroyLaunchedProcess(launchctlListProcess);
-      processExecutor.waitForLaunchedProcess(launchctlListProcess);
     }
-
     return resultBuilder.build();
   }
 
