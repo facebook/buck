@@ -4543,6 +4543,52 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testSwiftDependencyBuildPhase() throws IOException {
+    BuildTarget fooBuildTarget = BuildTargetFactory.newInstance(rootPath, "//baz", "foo");
+    BuildTarget barBuildTarget = BuildTargetFactory.newInstance(rootPath, "//baz", "bar");
+
+    TargetNode<?, ?> fooNode =
+        AppleLibraryBuilder.createBuilder(fooBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setXcodePublicHeadersSymlinks(false)
+            .setXcodePrivateHeadersSymlinks(false)
+            .build();
+    TargetNode<?, ?> barNode =
+        AppleLibraryBuilder.createBuilder(barBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Bar.swift"))))
+            .setDeps(ImmutableSortedSet.of(fooBuildTarget))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setXcodePublicHeadersSymlinks(false)
+            .setXcodePrivateHeadersSymlinks(false)
+            .build();
+
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions = optionsBuilder.build();
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(fooNode, barNode), projectGeneratorOptions);
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject pbxProject = projectGenerator.getGeneratedProject();
+    PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//baz:bar");
+
+    ImmutableSet<PBXBuildPhase> fakeDepPhases =
+        FluentIterable.from(pbxTarget.getBuildPhases())
+            .filter(
+                phase -> {
+                  return phase
+                      .getName()
+                      .equals(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
+                })
+            .toSet();
+    assertThat(fakeDepPhases.size(), equalTo(1));
+  }
+
+  @Test
   public void testMergedHeaderMap() throws IOException {
     BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
     BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");

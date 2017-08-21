@@ -928,7 +928,8 @@ public class ProjectGenerator {
 
     TargetNode<?, ?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
     final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
-    final boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftCode(targetNode);
+    final boolean containsSwiftCode =
+        projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
     String buildTargetName = getProductNameForBuildTarget(buildTarget);
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
@@ -1022,6 +1023,37 @@ public class ProjectGenerator {
                 .map(this::collectRecursiveLibraryDependencies)
                 .orElse(ImmutableSet.of());
         mutator.setArchives(Sets.difference(targetNodeDeps, excludedDeps));
+      }
+
+      if (!includeFrameworks && isFocusedOnTarget) {
+        // If the current target, which is non-shared (e.g., static lib), depends on other focused
+        // targets which include Swift code, we must ensure those are treated as dependencies so
+        // that Xcode builds the targets in the correct order. Unfortunately, those deps can be
+        // part of other projects which would require cross-project references.
+        //
+        // Thankfully, there's an easy workaround because we can just create a phony copy phase
+        // which depends on the outputs of the deps (i.e., the static libs). The copy phase
+        // will effectively say "Copy libX.a from Products Dir into Products Dir" which is a nop.
+        // To be on the safe side, we're explicitly marking the copy phase as only running for
+        // deployment postprocessing (i.e., "Copy only when installing") which is activated
+        // via Product -> Archive in Xcode.
+        ImmutableSet<PBXFileReference> swiftDeps =
+            collectRecursiveLibraryDependenciesWithSwiftSources(targetNode);
+        if (!swiftDeps.isEmpty()) {
+          CopyFilePhaseDestinationSpec.Builder destSpecBuilder =
+              CopyFilePhaseDestinationSpec.builder();
+          destSpecBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
+          PBXCopyFilesBuildPhase copyFiles = new PBXCopyFilesBuildPhase(destSpecBuilder.build());
+          copyFiles.setRunOnlyForDeploymentPostprocessing(Optional.of(Boolean.TRUE));
+          copyFiles.setName(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
+
+          for (PBXFileReference fileRef : swiftDeps) {
+            PBXBuildFile buildFile = new PBXBuildFile(fileRef);
+            copyFiles.getFiles().add(buildFile);
+          }
+
+          mutator.setSwiftDependenciesBuildPhase(copyFiles);
+        }
       }
 
       // TODO(Task #3772930): Go through all dependencies of the rule
@@ -2237,7 +2269,7 @@ public class ProjectGenerator {
     }
 
     TargetNode<? extends AppleNativeTargetDescriptionArg, ?> appleNode = maybeAppleNode.get();
-    if (!projGenerationStateCache.targetContainsSwiftCode(appleNode)) {
+    if (!projGenerationStateCache.targetContainsSwiftSourceCode(appleNode)) {
       return ImmutableMap.of();
     }
 
@@ -2600,18 +2632,34 @@ public class ProjectGenerator {
                     .orElse(ImmutableList.of()));
   }
 
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependenciesWithOptions(
+      TargetNode<?, ?> targetNode, boolean containsSwiftSources) {
+
+    FluentIterable<TargetNode<?, ?>> libsWithSources =
+        FluentIterable.from(
+                AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    targetGraph,
+                    Optional.of(dependenciesCache),
+                    AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                    targetNode,
+                    AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
+            .filter(this::isLibraryWithSourcesToCompile);
+
+    if (containsSwiftSources) {
+      libsWithSources = libsWithSources.filter(this::isLibraryWithSwiftSources);
+    }
+
+    return libsWithSources.transform(this::getLibraryFileReference).toSet();
+  }
+
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
       TargetNode<?, ?> targetNode) {
-    return FluentIterable.from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                targetGraph,
-                Optional.of(dependenciesCache),
-                AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                targetNode,
-                AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
-        .filter(this::isLibraryWithSourcesToCompile)
-        .transform(this::getLibraryFileReference)
-        .toSet();
+    return collectRecursiveLibraryDependenciesWithOptions(targetNode, false);
+  }
+
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependenciesWithSwiftSources(
+      TargetNode<?, ?> targetNode) {
+    return collectRecursiveLibraryDependenciesWithOptions(targetNode, true);
   }
 
   private SourceTreePath getProductsSourceTreePath(TargetNode<?, ?> targetNode) {
@@ -2816,6 +2864,16 @@ public class ProjectGenerator {
       return false;
     }
     return (library.get().getConstructorArg().getSrcs().size() != 0);
+  }
+
+  private boolean isLibraryWithSwiftSources(TargetNode<?, ?> input) {
+    Optional<TargetNode<CxxLibraryDescription.CommonArg, ?>> library =
+        getLibraryNode(targetGraph, input);
+    if (!library.isPresent()) {
+      return false;
+    }
+
+    return projGenerationStateCache.targetContainsSwiftSourceCode(library.get());
   }
 
   /** @return product type of a bundle containing a dylib. */

@@ -136,6 +136,7 @@ class NewNativeTargetProjectMutator {
   private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
+  private Optional<PBXBuildPhase> swiftDependenciesBuildPhase = Optional.empty();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer, Function<SourcePath, Path> sourcePathResolver) {
@@ -229,6 +230,11 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setSwiftDependenciesBuildPhase(PBXBuildPhase buildPhase) {
+    this.swiftDependenciesBuildPhase = Optional.of(buildPhase);
+    return this;
+  }
+
   public NewNativeTargetProjectMutator setRecursiveResources(
       Set<AppleResourceDescriptionArg> recursiveResources) {
     this.recursiveResources = ImmutableSet.copyOf(recursiveResources);
@@ -306,6 +312,7 @@ class NewNativeTargetProjectMutator {
       addResourcesBuildPhase(target, targetGroup);
       target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
       addRunScriptBuildPhases(target, postBuildRunScriptPhases);
+      addSwiftDependenciesBuildPhase(target);
 
       optTargetGroup = Optional.of(targetGroup);
     } else {
@@ -533,6 +540,10 @@ class NewNativeTargetProjectMutator {
     for (PBXFileReference archive : archives) {
       frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
     }
+  }
+
+  private void addSwiftDependenciesBuildPhase(PBXNativeTarget target) {
+    swiftDependenciesBuildPhase.ifPresent(buildPhase -> target.getBuildPhases().add(buildPhase));
   }
 
   private void addResourcesFileReference(PBXGroup targetGroup) {

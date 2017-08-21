@@ -25,7 +25,7 @@ public class ProjectGenerationStateCache {
   private final IdentityHashMap<TargetNode<?, ?>, Boolean> targetSwiftCodeCache =
       new IdentityHashMap<TargetNode<?, ?>, Boolean>();
 
-  public boolean targetContainsSwiftCode(
+  public boolean targetContainsSwiftSourceCode(
       TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
     Boolean containsSwiftCode = targetSwiftCodeCache.get(targetNode);
     if (containsSwiftCode == null) {
