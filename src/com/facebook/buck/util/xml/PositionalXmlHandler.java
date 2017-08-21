@@ -111,7 +111,7 @@ public class PositionalXmlHandler extends DefaultHandler {
       return null;
     }
 
-    return DocumentLocation.of(locator.getLineNumber(), locator.getColumnNumber());
+    return DocumentLocation.of(locator.getLineNumber() - 1, locator.getColumnNumber() - 1);
   }
 
   @Nullable
