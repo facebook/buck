@@ -50,6 +50,7 @@ public class BuildRuleResolver {
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
 
+  @VisibleForTesting
   public BuildRuleResolver(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     this(targetGraph, buildRuleGenerator, null);
