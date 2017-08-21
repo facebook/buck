@@ -1260,7 +1260,8 @@ public class ProjectGenerator {
                         buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
 
         ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
-        appendConfigsBuilder.putAll(getFrameworkAndLibrarySearchPathConfigs(targetNode));
+        appendConfigsBuilder.putAll(
+            getFrameworkAndLibrarySearchPathConfigs(targetNode, includeFrameworks));
         appendConfigsBuilder.put(
             "HEADER_SEARCH_PATHS",
             Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)));
@@ -1444,7 +1445,7 @@ public class ProjectGenerator {
   }
 
   private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
-      TargetNode<?, ?> node) {
+      TargetNode<?, ?> node, boolean includeFrameworks) {
     HashSet<String> frameworkSearchPaths = new HashSet<>();
     frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> librarySearchPaths = new HashSet<>();
@@ -1516,6 +1517,22 @@ public class ProjectGenerator {
                         }
                       });
             });
+
+    if (includeFrameworks) {
+      // When Xcode compiles static Swift libs, it will include linker commands (LC_LINKER_OPTION)
+      // that will be carried over for the final binary to link to the appropriate Swift overlays
+      // and libs. This means that the final binary must be able to locate the Swift libs in the
+      // library search path. If an Xcode target includes Swift, Xcode will automatically append
+      // the Swift lib folder when invoking the linker. Unfortunately, this will not happen if
+      // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
+      // Xcode does to make sure binaries link successfully if they use Swift directly or
+      // transitively.
+      ImmutableSet<PBXFileReference> swiftDeps =
+          collectRecursiveLibraryDependenciesWithSwiftSources(node);
+      if (swiftDeps.size() > 0) {
+        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
+      }
+    }
 
     ImmutableMap.Builder<String, String> results =
         ImmutableMap.<String, String>builder()

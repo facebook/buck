@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.project_generator;
 
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -4495,6 +4496,36 @@ public class ProjectGeneratorTest {
         buildSettings.get("DERIVED_FILE_DIR"));
     assertThat(
         buildSettings.get("SWIFT_INCLUDE_PATHS"), equalTo("$(inherited) $BUILT_PRODUCTS_DIR"));
+  }
+
+  @Test
+  public void testGeneratedProjectForAppleBinaryUsingAppleLibraryWithSwiftSources()
+      throws IOException {
+    BuildTarget libBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    BuildTarget binBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    TargetNode<?, ?> binNode =
+        AppleBinaryBuilder.createBuilder(binBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(ImmutableSortedSet.of(libBuildTarget))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode, binNode));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(binBuildTarget, target, "Debug");
+    assertThat(
+        buildSettings.get("LIBRARY_SEARCH_PATHS"),
+        containsString("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME"));
   }
 
   @Test
