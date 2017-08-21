@@ -10,3 +10,4 @@ Local modifications:
  - Fixed prebuilt package resolution when pexs have '#' in the name.
  - Added the ability to not hash the contents of the pex (used for in-place builds).
  - Added support for directory resources
+ - Back-ported Python 3.6 compatibility commit c5ab73fd4d8e816e21a89d48c8d0c8095ef5a49c
