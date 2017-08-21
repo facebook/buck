@@ -1650,7 +1650,11 @@ public class SuperConsoleEventBusListenerTest {
             Optional.empty(),
             Locale.US,
             logPath,
-            timeZone);
+            timeZone,
+            0L,
+            0L,
+            1000L,
+            false);
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -2408,7 +2412,11 @@ public class SuperConsoleEventBusListenerTest {
             Optional.empty(),
             Locale.US,
             logPath,
-            timeZone);
+            timeZone,
+            0L,
+            0L,
+            1000L,
+            false);
     eventBus.register(listener);
     return listener;
   }

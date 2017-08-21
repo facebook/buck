@@ -525,7 +525,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
-    projectBuildFileParseStarted = started;
+    if (projectBuildFileParseStarted == null) {
+      projectBuildFileParseStarted = started;
+    }
   }
 
   @Subscribe

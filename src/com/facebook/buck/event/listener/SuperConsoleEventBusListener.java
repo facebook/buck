@@ -31,6 +31,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -46,6 +47,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -152,6 +154,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Object distBuildSlaveTrackerLock = new Object();
 
+  private long minimumDurationMillisecondsToShowParse;
+  private long minimumDurationMillisecondsToShowActionGraph;
+  private long minimumDurationMillisecondsToShowWatchman;
+  private boolean hideEmptyDownload;
+
   @GuardedBy("distBuildSlaveTrackerLock")
   private final Map<RunId, BuildSlaveStatus> distBuildSlaveTracker;
 
@@ -165,6 +172,37 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Locale locale,
       Path testLogPath,
       TimeZone timeZone) {
+    this(
+        config,
+        console,
+        clock,
+        summaryVerbosity,
+        executionEnvironment,
+        webServer,
+        locale,
+        testLogPath,
+        timeZone,
+        500L,
+        500L,
+        1000L,
+        true);
+  }
+
+  @VisibleForTesting
+  public SuperConsoleEventBusListener(
+      SuperConsoleConfig config,
+      Console console,
+      Clock clock,
+      TestResultSummaryVerbosity summaryVerbosity,
+      ExecutionEnvironment executionEnvironment,
+      Optional<WebServer> webServer,
+      Locale locale,
+      Path testLogPath,
+      TimeZone timeZone,
+      long minimumDurationMillisecondsToShowParse,
+      long minimumDurationMillisecondsToShowActionGraph,
+      long minimumDurationMillisecondsToShowWatchman,
+      boolean hideEmptyDownload) {
     super(console, clock, locale, executionEnvironment);
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
@@ -196,6 +234,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.threadLineLimitOnError = config.getThreadLineLimitOnError();
     this.shouldAlwaysSortThreadsByTime = config.shouldAlwaysSortThreadsByTime();
     this.buildRuleMinimumDurationMillis = config.getBuildRuleMinimumDurationMillis();
+    this.minimumDurationMillisecondsToShowParse = minimumDurationMillisecondsToShowParse;
+    this.minimumDurationMillisecondsToShowActionGraph =
+        minimumDurationMillisecondsToShowActionGraph;
+    this.minimumDurationMillisecondsToShowWatchman = minimumDurationMillisecondsToShowWatchman;
+    this.hideEmptyDownload = hideEmptyDownload;
 
     this.dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
     this.dateFormat.setTimeZone(timeZone);
@@ -283,7 +326,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         watchmanStarted,
         watchmanFinished,
         Optional.empty(),
-        Optional.of(1000L),
+        Optional.of(this.minimumDurationMillisecondsToShowWatchman),
         lines);
 
     logEventPair(
@@ -294,7 +337,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         projectBuildFileParseStarted,
         projectBuildFileParseFinished,
         getEstimatedProgressOfProcessingBuckFiles(),
-        Optional.empty(),
+        Optional.of(this.minimumDurationMillisecondsToShowParse),
         lines);
 
     long parseTime =
@@ -305,7 +348,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             /* offsetMs */ 0L,
             buckFilesProcessing.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
-            Optional.empty(),
+            Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
 
     logEventPair(
@@ -370,7 +413,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     // TODO(shivanker): Add a similar source file upload line for distributed build.
-    lines.add(getNetworkStatsLine(buildFinished));
+    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
+    if (bytesDownloaded.getFirst() > 0 || !this.hideEmptyDownload) {
+      lines.add(getNetworkStatsLine(buildFinished));
+    }
 
     // Check to see if the build encompasses the time spent parsing. This is true for runs of
     // buck build but not so for runs of e.g. buck project. If so, subtract parse times
