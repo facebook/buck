@@ -66,11 +66,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -95,15 +97,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
   @VisibleForTesting static final String EMOJI_BUNNY = "\uD83D\uDC07";
-  @VisibleForTesting static final String EMOJI_SNAIL = "\uD83D\uDC0C";
-  @VisibleForTesting static final String EMOJI_WHALE = "\uD83D\uDC33";
-  @VisibleForTesting static final String EMOJI_BEACH = "\uD83C\uDFD6";
   @VisibleForTesting static final String EMOJI_DESERT = "\uD83C\uDFDD";
   @VisibleForTesting static final String EMOJI_ROLODEX = "\uD83D\uDCC7";
-
-  @VisibleForTesting
-  static final Optional<String> NEW_DAEMON_INSTANCE_MSG =
-      createParsingMessage(EMOJI_WHALE, "New buck daemon");
 
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
@@ -161,6 +156,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @GuardedBy("distBuildSlaveTrackerLock")
   private final Map<RunId, BuildSlaveStatus> distBuildSlaveTracker;
+
+  private final Set<String> actionGraphCacheMessage = new HashSet<>();
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -342,7 +339,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long parseTime =
         logEventPair(
             "CREATING ACTION GRAPH",
-            /* suffix */ parsingStatus,
+            /* suffix */ Optional.empty(),
             currentTimeMillis,
             /* offsetMs */ 0L,
             actionGraphEvents.values(),
@@ -879,53 +876,79 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     logEvents.add(ConsoleEvent.severe(line));
   }
 
+  private void printInfoDirectlyOnce(String line) {
+    if (!actionGraphCacheMessage.contains(line)) {
+      logEvents.add(ConsoleEvent.info(line));
+      actionGraphCacheMessage.add(line);
+    }
+  }
+
   @Subscribe
   @SuppressWarnings("unused")
   public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
-    parsingStatus =
-        isZeroFileChanges
-            ? createParsingMessage(EMOJI_BEACH, "(Watchman reported no changes)")
-            : createParsingMessage(EMOJI_BUNNY, "");
+    // We don't need to report when it's fast.
+    if (isZeroFileChanges) {
+      LOG.debug("Action graph cache hit: Watchman reported no changes");
+    } else {
+      LOG.debug("Action graph cache hit");
+    }
+    parsingStatus = Optional.of("actionGraphCacheHit");
   }
 
   @Subscribe
   public void watchmanOverflow(WatchmanStatusEvent.Overflow event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, event.getReason());
+    printInfoDirectlyOnce(
+        "Action graph will be rebuilt because there was an issue with watchman:\n"
+            + event.getReason());
+    parsingStatus = Optional.of("watchmanOverflow: " + event.getReason());
+  }
+
+  private void printFileAddedOrRemoved() {
+    printInfoDirectlyOnce("Action graph will be rebuilt because files have been added or removed.");
   }
 
   @Subscribe
+  @SuppressWarnings("unused")
   public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File added: " + event.getFilename());
+    LOG.debug("Watchman notified about file addition: " + event.getFilename());
+    printFileAddedOrRemoved();
+    parsingStatus = Optional.of("watchmanFileCreation");
   }
 
   @Subscribe
+  @SuppressWarnings("unused")
   public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed: " + event.getFilename());
+    LOG.debug("Watchman notified about file deletion: " + event.getFilename());
+    printFileAddedOrRemoved();
+    parsingStatus = Optional.of("watchmanFileDeletion");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void watchmanZeroFileChanges(WatchmanStatusEvent.ZeroFileChanges event) {
     isZeroFileChanges = true;
-    parsingStatus = createParsingMessage(EMOJI_BEACH, "Watchman reported no changes");
+    parsingStatus = Optional.of("watchmanZeroFileChanges");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void daemonNewInstance(DaemonEvent.NewDaemonInstance event) {
-    parsingStatus = NEW_DAEMON_INSTANCE_MSG;
+    printInfoDirectlyOnce("Buck is creating the action graph.");
+    parsingStatus = Optional.of("daemonNewInstance");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
-    parsingStatus = createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation");
+    printInfoDirectlyOnce("Action graph will be rebuilt because symlinks are used.");
+    parsingStatus = Optional.of("symlinkInvalidation");
   }
 
   @Subscribe
+  @SuppressWarnings("unused")
   public void envVariableChange(ParsingEvent.EnvVariableChange event) {
-    parsingStatus =
-        createParsingMessage(EMOJI_SNAIL, "Environment variable changes: " + event.getDiff());
+    printInfoDirectlyOnce("Action graph will be rebuilt because environment variables changed.");
+    parsingStatus = Optional.of("envVariableChange");
   }
 
   @VisibleForTesting

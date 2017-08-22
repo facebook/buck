@@ -47,6 +47,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
+  boolean disabledWarningShown = false;
+
   public WatchmanTransportClient(Console console, Clock clock, Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
     this.console = console;
@@ -89,6 +91,22 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     listeningExecutorService.shutdown();
   }
 
+  private synchronized void showDisabledWarning(Console console, long timeoutNanos) {
+    if (disabledWarningShown) {
+      return;
+    }
+    if (timeoutNanos < 0) {
+      timeoutNanos = 0;
+    }
+    disabledWarningShown = true;
+    console
+        .getStdErr()
+        .getRawStream()
+        .format(
+            "Timed out after %d sec waiting for watchman query. Disabling watchman.\n",
+            TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
+  }
+
   private Optional<Map<String, Object>> waitForQueryNotifyingUserIfSlow(
       ListenableFuture<Optional<Map<String, Object>>> future,
       long timeoutNanos,
@@ -101,7 +119,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     } catch (TimeoutException e) {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
-        console.getStdErr().getRawStream().format("Waiting for Watchman query [%s]...\n", query);
+        LOG.debug("Waiting for Watchman query [%s]...", query);
+        console.getStdErr().getRawStream().format("Waiting for watchman query...\n");
         try {
           return future.get(remainingNanos, TimeUnit.NANOSECONDS);
         } catch (TimeoutException te) {
@@ -111,12 +130,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       LOG.warn(
           "Watchman did not respond within %d ms, disabling.",
           TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
-      console
-          .getStdErr()
-          .getRawStream()
-          .format(
-              "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
-              TimeUnit.NANOSECONDS.toMillis(timeoutNanos), query);
+      showDisabledWarning(console, timeoutNanos);
       return Optional.empty();
     }
   }

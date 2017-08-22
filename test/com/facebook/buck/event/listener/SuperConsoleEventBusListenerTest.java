@@ -16,12 +16,8 @@
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_BUNNY;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_DESERT;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_ROLODEX;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_SNAIL;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_WHALE;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.NEW_DAEMON_INSTANCE_MSG;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.createParsingMessage;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -2088,42 +2084,34 @@ public class SuperConsoleEventBusListenerTest {
 
     // new daemon instance & action graph cache miss
     eventBus.post(DaemonEvent.newDaemonInstance());
-    assertEquals(NEW_DAEMON_INSTANCE_MSG, listener.getParsingStatus());
+    assertEquals("daemonNewInstance", listener.getParsingStatus().get());
     eventBus.post(ActionGraphEvent.Cache.miss(/* cacheWasEmpty */ true));
-    assertEquals(NEW_DAEMON_INSTANCE_MSG, listener.getParsingStatus());
+    assertEquals("daemonNewInstance", listener.getParsingStatus().get());
 
     // overflow scenario
     String overflowMessage = "and if you go chasing rabbits";
     eventBus.post(WatchmanStatusEvent.overflow(overflowMessage));
-    assertEquals(createParsingMessage(EMOJI_SNAIL, overflowMessage), listener.getParsingStatus());
+    assertEquals("watchmanOverflow: " + overflowMessage, listener.getParsingStatus().get());
 
     // file added scenario
     eventBus.post(WatchmanStatusEvent.fileCreation("and you know you're going to fall"));
-    assertEquals(
-        createParsingMessage(EMOJI_SNAIL, "File added: and you know you're going to fall"),
-        listener.getParsingStatus());
+    assertEquals("watchmanFileCreation", listener.getParsingStatus().get());
 
     // file removed scenario
     eventBus.post(WatchmanStatusEvent.fileDeletion("Tell 'em a hookah-smoking"));
-    assertEquals(
-        createParsingMessage(EMOJI_SNAIL, "File removed: Tell 'em a hookah-smoking"),
-        listener.getParsingStatus());
+    assertEquals("watchmanFileDeletion", listener.getParsingStatus().get());
 
     // symlink invalidation scenario
     eventBus.post(ParsingEvent.symlinkInvalidation("caterpillar has given you the call"));
-    assertEquals(
-        createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation"),
-        listener.getParsingStatus());
+    assertEquals("symlinkInvalidation", listener.getParsingStatus().get());
 
     // environmental change scenario
     eventBus.post(ParsingEvent.environmentalChange("WHITE_RABBIT=1"));
-    assertEquals(
-        createParsingMessage(EMOJI_SNAIL, "Environment variable changes: WHITE_RABBIT=1"),
-        listener.getParsingStatus());
+    assertEquals("envVariableChange", listener.getParsingStatus().get());
 
     // action graph cache hit scenario
     eventBus.post(ActionGraphEvent.Cache.hit());
-    assertEquals(createParsingMessage(EMOJI_BUNNY, ""), listener.getParsingStatus());
+    assertEquals("actionGraphCacheHit", listener.getParsingStatus().get());
   }
 
   @Test
