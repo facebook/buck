@@ -496,16 +496,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return lines.build();
   }
 
+  @SuppressWarnings("unused")
   private void getBuildTraceURLLine(ImmutableList.Builder<String> lines) {
     if (buildFinished != null && webServer.isPresent()) {
       Optional<Integer> port = webServer.get().getPort();
       if (port.isPresent()) {
-        lines.add(
-            String.format(
-                locale,
-                "    Details: http://localhost:%s/trace/%s",
-                port.get(),
-                buildFinished.getBuildId()));
+        LOG.debug(
+            "Build logs: http://localhost:%s/trace/%s", port.get(), buildFinished.getBuildId());
       }
     }
   }
