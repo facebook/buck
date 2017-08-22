@@ -171,6 +171,8 @@ public class AndroidBinaryDescription
             PerfEventId.of("AndroidBinaryDescription"),
             "target",
             buildTarget.toString())) {
+      params = params.withoutExtraDeps();
+
       // All of our supported flavors are constructed as side-effects
       // of the main target.
       for (Flavor flavor : FLAVORS) {
@@ -312,29 +314,11 @@ public class AndroidBinaryDescription
               .filter(JavaLibrary.class)
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
-      Optional<RedexOptions> redexOptions = getRedexOptions(buildTarget, resolver, cellRoots, args);
-
-      ImmutableSortedSet<BuildRule> redexExtraDeps =
-          redexOptions
-              .map(
-                  a ->
-                      a.getRedexExtraArgs()
-                          .stream()
-                          .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())))
-              .orElse(ImmutableSortedSet.of());
-
       AndroidBinary androidBinary =
           new AndroidBinary(
               buildTarget,
               projectFilesystem,
-              params
-                  .withExtraDeps(result.getFinalDeps())
-                  .copyAppendingExtraDeps(
-                      ruleFinder.filterBuildRuleInputs(
-                          result.getPackageableCollection().getProguardConfigs()))
-                  .copyAppendingExtraDeps(rulesToExcludeFromDex)
-                  .copyAppendingExtraDeps(redexExtraDeps),
+              params,
               ruleFinder,
               proGuardConfig.getProguardJarOverride(),
               proGuardConfig.getProguardMaxHeapSize(),
@@ -348,7 +332,7 @@ public class AndroidBinaryDescription
               args.getOptimizationPasses(),
               args.getProguardConfig(),
               args.isSkipProguard(),
-              redexOptions,
+              getRedexOptions(buildTarget, resolver, cellRoots, args),
               args.getResourceCompression(),
               args.getCpuFilters(),
               resourceFilter,

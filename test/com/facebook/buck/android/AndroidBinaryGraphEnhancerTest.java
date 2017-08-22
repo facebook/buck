@@ -120,9 +120,7 @@ public class AndroidBinaryGraphEnhancerTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
-            Suppliers.ofInstance(originalDeps),
-            Suppliers.ofInstance(originalDeps),
-            ImmutableSortedSet.of());
+            Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             apkTarget,

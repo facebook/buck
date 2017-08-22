@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
@@ -207,6 +208,8 @@ public class AndroidBinary extends AbstractBuildRule
       Optional<String> dxMaxHeapSize,
       boolean isCacheable) {
     super(buildTarget, projectFilesystem);
+    Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
+
     this.ruleFinder = ruleFinder;
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
@@ -224,7 +227,6 @@ public class AndroidBinary extends AbstractBuildRule
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
-    this.buildRuleParams = params;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -287,6 +289,12 @@ public class AndroidBinary extends AbstractBuildRule
             dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
             resourceCompressionMode.isCompressResources());
+    params =
+        params.withExtraDeps(
+            () ->
+                BuildableSupport.deriveDeps(this, ruleFinder)
+                    .collect(MoreCollectors.toImmutableSortedSet()));
+    this.buildRuleParams = params;
   }
 
   @Override

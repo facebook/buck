@@ -95,6 +95,7 @@ public class AndroidInstrumentationApkDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidInstrumentationApkDescriptionArg args) {
+    params = params.withoutExtraDeps();
     BuildRule installableApk = resolver.getRule(args.getApk());
     if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
@@ -177,9 +178,7 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
-        params
-            .withExtraDeps(enhancementResult.getFinalDeps())
-            .copyAppendingExtraDeps(rulesToExcludeFromDex),
+        params,
         ruleFinder,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),
