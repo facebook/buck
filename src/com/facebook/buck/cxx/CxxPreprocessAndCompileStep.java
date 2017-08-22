@@ -206,7 +206,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private void processResult(ProcessExecutor.Result result, ExecutionContext context)
       throws IOException {
     String stdErr = compiler.getStderr(result).orElse("");
-    Stream<String> lines = MoreStrings.linesToList(stdErr).stream();
+    Stream<String> lines = MoreStrings.lines(stdErr).stream();
 
     CxxErrorTransformer cxxErrorTransformer =
         new CxxErrorTransformer(
