@@ -190,6 +190,9 @@ public class DistBuildClientExecutor {
     distBuildService.setBuckVersion(stampedeId, buckVersion, distBuildClientStats);
     LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());
 
+    // Everything is now setup remotely to run the distributed build. No more local prep.
+    this.distBuildClientStats.stopLocalPreparationTimer();
+
     distBuildClientStats.startPerformDistributedBuildTimer();
     job = distBuildService.startBuild(stampedeId);
     LOG.info("Started job. Build status: " + job.getStatus().toString());

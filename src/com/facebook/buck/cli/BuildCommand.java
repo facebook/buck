@@ -394,8 +394,7 @@ public class BuildCommand extends AbstractCommand {
     BuildEvent.Started started = postBuildStartedEvent(params);
     int exitCode = 0;
     try {
-      ActionAndTargetGraphs graphs = createGraphs(params, executorService);
-      exitCode = executeBuildAndProcessResult(params, executorService, graphs);
+      exitCode = executeBuildAndProcessResult(params, executorService);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = 1;
@@ -456,19 +455,27 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private int executeBuildAndProcessResult(
-      CommandRunnerParams params,
-      WeightedListeningExecutorService executorService,
-      ActionAndTargetGraphs graphs)
-      throws IOException, InterruptedException {
+      CommandRunnerParams params, WeightedListeningExecutorService executorService)
+      throws IOException, InterruptedException, ActionGraphCreationException {
     int exitCode;
+    ActionAndTargetGraphs graphs = null;
     if (useDistributedBuild) {
+      DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
+      DistBuildClientStatsTracker distBuildClientStatsTracker =
+          new DistBuildClientStatsTracker(distBuildConfig.getBuildLabel());
+
+      distBuildClientStatsTracker.startLocalPreparationTimer();
+      distBuildClientStatsTracker.startLocalGraphConstructionTimer();
+
+      graphs = createGraphs(params, executorService);
+
+      distBuildClientStatsTracker.stopLocalGraphConstructionTimer();
+
       Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
           computeDistBuildState(params, graphs, executorService);
       BuildJobState jobState = stateAndCells.getFirst();
       DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
-      DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
-      DistBuildClientStatsTracker distBuildClientStatsTracker =
-          new DistBuildClientStatsTracker(distBuildConfig.getBuildLabel());
+
       try {
         exitCode =
             executeDistBuild(
@@ -496,6 +503,7 @@ public class BuildCommand extends AbstractCommand {
         }
       }
     } else {
+      graphs = createGraphs(params, executorService);
       exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
     }
     if (exitCode == 0) {

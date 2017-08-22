@@ -40,6 +40,10 @@ abstract class AbstractDistBuildClientStats {
 
   abstract Optional<Long> localBuildDurationMs();
 
+  abstract Optional<Long> localPreparationDurationMs();
+
+  abstract Optional<Long> localGraphConstructionDurationMs();
+
   abstract Optional<Long> performDistributedBuildDurationMs();
 
   abstract Optional<Long> createDistributedBuildDurationMs();

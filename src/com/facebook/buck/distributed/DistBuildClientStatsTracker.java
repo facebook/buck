@@ -27,6 +27,8 @@ import javax.annotation.concurrent.GuardedBy;
 public class DistBuildClientStatsTracker {
   @VisibleForTesting
   protected enum DistBuildClientStat {
+    LOCAL_PREPARATION, // Measures everything that happens before starting distributed build
+    LOCAL_GRAPH_CONSTRUCTION,
     PERFORM_DISTRIBUTED_BUILD,
     PERFORM_LOCAL_BUILD,
     CREATE_DISTRIBUTED_BUILD,
@@ -82,6 +84,12 @@ public class DistBuildClientStatsTracker {
           "No time was recorded for stat: " + DistBuildClientStat.PERFORM_LOCAL_BUILD);
     }
 
+    Preconditions.checkNotNull(
+        durationsMsByType.get(DistBuildClientStat.LOCAL_PREPARATION),
+        "No time was recorded for stat: " + DistBuildClientStat.LOCAL_PREPARATION);
+    Preconditions.checkNotNull(
+        durationsMsByType.get(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION),
+        "No time was recorded for stat: " + DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION);
     Preconditions.checkNotNull(
         durationsMsByType.get(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD),
         "No time was recorded for stat: " + DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD);
@@ -140,6 +148,10 @@ public class DistBuildClientStatsTracker {
       builder.setLocalBuildDurationMs(getDurationOrEmpty(DistBuildClientStat.PERFORM_LOCAL_BUILD));
     }
 
+    builder.setLocalPreparationDurationMs(
+        getDurationOrEmpty(DistBuildClientStat.LOCAL_PREPARATION));
+    builder.setLocalGraphConstructionDurationMs(
+        getDurationOrEmpty(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION));
     builder.setPerformDistributedBuildDurationMs(
         getDurationOrEmpty(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD));
     builder.setCreateDistributedBuildDurationMs(
@@ -248,6 +260,22 @@ public class DistBuildClientStatsTracker {
     stopTimer(DistBuildClientStat.MATERIALIZE_SLAVE_LOGS);
   }
 
+  public void startLocalPreparationTimer() {
+    startTimer(DistBuildClientStat.LOCAL_PREPARATION);
+  }
+
+  public void stopLocalPreparationTimer() {
+    stopTimer(DistBuildClientStat.LOCAL_PREPARATION, false);
+  }
+
+  public void startLocalGraphConstructionTimer() {
+    startTimer(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION);
+  }
+
+  public void stopLocalGraphConstructionTimer() {
+    stopTimer(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION, false);
+  }
+
   public boolean hasStampedeId() {
     return stampedeId.isPresent();
   }
@@ -271,6 +299,18 @@ public class DistBuildClientStatsTracker {
   }
 
   private synchronized void stopTimer(DistBuildClientStat stat) {
+
+    this.stopTimer(stat, true);
+  }
+
+  private synchronized void stopTimer(DistBuildClientStat stat, boolean checkStarted) {
+    // During testing, some tests call directly into DistBuildClientExecutor, which means that
+    // for the counters initialized in BuildCommand there is no start call. For everything else
+    // we should check start was called.
+    if (!checkStarted && !stopwatchesByType.containsKey(stat)) {
+      return;
+    }
+
     Preconditions.checkNotNull(
         stopwatchesByType.get(stat),
         "Cannot stop timer for stat: [" + stat + "] as it was not started.");
