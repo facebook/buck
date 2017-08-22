@@ -51,17 +51,20 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final TestResultFormatter testFormatter;
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
+  private final boolean hideSucceededRules;
 
   public SimpleConsoleEventBusListener(
       Console console,
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
+      boolean hideSucceededRules,
       Locale locale,
       Path testLogPath,
       ExecutionEnvironment executionEnvironment) {
     super(console, clock, locale, executionEnvironment);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
+    this.hideSucceededRules = hideSucceededRules;
 
     this.testFormatter =
         new TestResultFormatter(
@@ -228,7 +231,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             formatElapsedTime(finished.getDuration().getWallMillisDuration()),
             finished.getBuildRule().getFullyQualifiedName());
 
-    if (BUILT_LOCALLY.equals(finished.getSuccessType().orElse(null))
+    if ((BUILT_LOCALLY.equals(finished.getSuccessType().orElse(null)) && !hideSucceededRules)
         || console.getVerbosity().shouldPrintBinaryRunInformation()) {
       console.getStdErr().println(line);
     }

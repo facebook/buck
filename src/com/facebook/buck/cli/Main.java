@@ -1499,7 +1499,13 @@ public final class Main {
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(
-        console, clock, testResultSummaryVerbosity, locale, testLogPath, executionEnvironment);
+        console,
+        clock,
+        testResultSummaryVerbosity,
+        config.getHideSucceededRulesInLogMode(),
+        locale,
+        testLogPath,
+        executionEnvironment);
   }
 
   private boolean isSuperConsoleEnabled(Console console) {

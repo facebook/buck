@@ -66,34 +66,25 @@ public class SimpleConsoleEventBusListenerTest {
 
   private BuildRuleDurationTracker durationTracker;
 
+  private Clock fakeClock;
   private BuckEventBus eventBus;
   private TestConsole console;
+  Path logPath;
 
   @Before
   public void setUp() {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
-    Path logPath = vfs.getPath("log.txt");
+    logPath = vfs.getPath("log.txt");
     durationTracker = new BuildRuleDurationTracker();
 
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     eventBus = BuckEventBusForTests.newInstance(fakeClock);
     console = new TestConsole();
-
-    SimpleConsoleEventBusListener listener =
-        new SimpleConsoleEventBusListener(
-            console,
-            fakeClock,
-            TestResultSummaryVerbosity.of(false, false),
-            Locale.US,
-            logPath,
-            new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()), System.getProperties()));
-
-    eventBus.register(listener);
   }
 
   @Test
   public void testSimpleBuild() {
+    setupSimpleConsole(false);
     String expectedOutput = "";
     assertOutput(expectedOutput, console);
 
@@ -210,6 +201,7 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testJobSummaryIsDisplayed() {
+    setupSimpleConsole(false);
     String expectedOutput = "";
     assertOutput(expectedOutput, console);
 
@@ -239,6 +231,7 @@ public class SimpleConsoleEventBusListenerTest {
 
   @Test
   public void testBuildTimeDoesNotDisplayNegativeOffset() {
+    setupSimpleConsole(false);
     String expectedOutput = "";
     assertOutput(expectedOutput, console);
 
@@ -287,8 +280,83 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
   }
 
+  @Test
+  public void testSimpleHideSucceededBuild() {
+    setupSimpleConsole(true);
+    String expectedOutput = "";
+    assertOutput(expectedOutput, console);
+
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
+    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
+
+    final long threadId = 0;
+
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(buildEventStarted, 0L, TimeUnit.MILLISECONDS, threadId));
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(parseStarted, 0L, TimeUnit.MILLISECONDS, threadId));
+
+    assertOutput(expectedOutput, console);
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
+            400L,
+            TimeUnit.MILLISECONDS,
+            threadId));
+
+    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
+    assertOutput(expectedOutput, console);
+
+    BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(started, 600L, TimeUnit.MILLISECONDS, threadId));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildRuleEvent.finished(
+                started,
+                BuildRuleKeys.of(new RuleKey("aaaa")),
+                BuildRuleStatus.SUCCESS,
+                CacheResult.miss(),
+                Optional.empty(),
+                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
+            1000L,
+            TimeUnit.MILLISECONDS,
+            threadId));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
+
+    expectedOutput += "[-] BUILDING...FINISHED 0.8s\n" + FINISHED_DOWNLOAD_STRING + "\n";
+    assertOutput(expectedOutput, console);
+  }
+
   private void assertOutput(String expectedOutput, TestConsole console) {
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals(expectedOutput, console.getTextWrittenToStdErr());
+  }
+
+  private void setupSimpleConsole(boolean hideSucceededRules) {
+    SimpleConsoleEventBusListener listener =
+        new SimpleConsoleEventBusListener(
+            console,
+            fakeClock,
+            TestResultSummaryVerbosity.of(false, false),
+            hideSucceededRules,
+            Locale.US,
+            logPath,
+            new DefaultExecutionEnvironment(
+                ImmutableMap.copyOf(System.getenv()), System.getProperties()));
+
+    eventBus.register(listener);
   }
 }
