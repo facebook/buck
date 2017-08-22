@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.parser.ParseEvent;
@@ -89,8 +90,29 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             /* suffix */ Optional.empty(),
             clock.currentTimeMillis(),
             0L,
-            buckFilesProcessing.values(),
+            buckFilesParsingEvents.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
+            Optional.empty(),
+            lines));
+    printLines(lines);
+  }
+
+  @Override
+  @Subscribe
+  public void actionGraphFinished(ActionGraphEvent.Finished finished) {
+    super.actionGraphFinished(finished);
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    this.parseTime.set(
+        logEventPair(
+            "CREATING ACTION GRAPH",
+            /* suffix */ Optional.empty(),
+            clock.currentTimeMillis(),
+            0L,
+            actionGraphEvents.values(),
+            Optional.empty(),
             Optional.empty(),
             lines));
     printLines(lines);
@@ -108,7 +130,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     long buildStartedTime = buildStarted != null ? buildStarted.getTimestamp() : Long.MAX_VALUE;
     long buildFinishedTime = buildFinished != null ? buildFinished.getTimestamp() : currentMillis;
     Collection<EventPair> processingEvents =
-        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesProcessing.values());
+        getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
     long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
     logEventPair(
         "BUILDING",

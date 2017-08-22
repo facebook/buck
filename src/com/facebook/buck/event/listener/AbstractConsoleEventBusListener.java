@@ -118,7 +118,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected ConcurrentLinkedDeque<ActionGraphEvent.Started> actionGraphStarted;
   protected ConcurrentLinkedDeque<ActionGraphEvent.Finished> actionGraphFinished;
 
-  protected ConcurrentHashMap<EventKey, EventPair> buckFilesProcessing;
+  protected ConcurrentHashMap<EventKey, EventPair> actionGraphEvents;
+  protected ConcurrentHashMap<EventKey, EventPair> buckFilesParsingEvents;
 
   @Nullable protected volatile BuildEvent.Started buildStarted;
   @Nullable protected volatile BuildEvent.Finished buildFinished;
@@ -182,7 +183,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.actionGraphStarted = new ConcurrentLinkedDeque<>();
     this.actionGraphFinished = new ConcurrentLinkedDeque<>();
 
-    this.buckFilesProcessing = new ConcurrentHashMap<>();
+    this.actionGraphEvents = new ConcurrentHashMap<>();
+    this.buckFilesParsingEvents = new ConcurrentHashMap<>();
 
     this.autoSparseState = new ConcurrentHashMap<>();
 
@@ -528,11 +530,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (projectBuildFileParseStarted == null) {
       projectBuildFileParseStarted = started;
     }
+    aggregateStartedEvent(buckFilesParsingEvents, started);
   }
 
   @Subscribe
   public void projectBuildFileParseFinished(ProjectBuildFileParseEvents.Finished finished) {
     projectBuildFileParseFinished = finished;
+    aggregateFinishedEvent(buckFilesParsingEvents, finished);
   }
 
   @Subscribe
@@ -559,7 +563,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {
     parseStarted.add(started);
-    aggregateStartedEvent(buckFilesProcessing, started);
+    aggregateStartedEvent(buckFilesParsingEvents, started);
   }
 
   @Subscribe
@@ -575,7 +579,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       progressEstimator.get().didFinishParsing();
     }
-    aggregateFinishedEvent(buckFilesProcessing, finished);
+    aggregateFinishedEvent(buckFilesParsingEvents, finished);
   }
 
   @Subscribe
@@ -591,13 +595,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void actionGraphStarted(ActionGraphEvent.Started started) {
     actionGraphStarted.add(started);
-    aggregateStartedEvent(buckFilesProcessing, started);
+    aggregateStartedEvent(actionGraphEvents, started);
   }
 
   @Subscribe
   public void actionGraphFinished(ActionGraphEvent.Finished finished) {
     actionGraphFinished.add(finished);
-    aggregateFinishedEvent(buckFilesProcessing, finished);
+    aggregateFinishedEvent(actionGraphEvents, finished);
   }
 
   @Subscribe

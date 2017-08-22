@@ -149,7 +149,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     expectedOutput +=
         "BUILT  0.4s //banana:stand\n"
-            + "[-] BUILDING...FINISHED 0.8s\n"
+            + "[-] BUILDING...FINISHED 1.2s\n"
             + "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n"
             + FINISHED_DOWNLOAD_STRING
             + "\n";
@@ -275,6 +275,7 @@ public class SimpleConsoleEventBusListenerTest {
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
+    expectedOutput += "[-] CREATING ACTION GRAPH...FINISHED 0.2s\n";
     expectedOutput += "[-] BUILDING...FINISHED 0.1s\n";
     expectedOutput += FINISHED_DOWNLOAD_STRING + "\n";
     assertOutput(expectedOutput, console);
@@ -336,7 +337,7 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    expectedOutput += "[-] BUILDING...FINISHED 0.8s\n" + FINISHED_DOWNLOAD_STRING + "\n";
+    expectedOutput += "[-] BUILDING...FINISHED 1.2s\n" + FINISHED_DOWNLOAD_STRING + "\n";
     assertOutput(expectedOutput, console);
   }
 

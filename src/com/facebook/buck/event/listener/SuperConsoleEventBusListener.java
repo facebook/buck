@@ -334,19 +334,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         /* suffix */ Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
-        projectBuildFileParseStarted,
-        projectBuildFileParseFinished,
+        buckFilesParsingEvents.values(),
         getEstimatedProgressOfProcessingBuckFiles(),
         Optional.of(this.minimumDurationMillisecondsToShowParse),
         lines);
 
     long parseTime =
         logEventPair(
-            "PROCESSING BUCK FILES",
+            "CREATING ACTION GRAPH",
             /* suffix */ parsingStatus,
             currentTimeMillis,
             /* offsetMs */ 0L,
-            buckFilesProcessing.values(),
+            actionGraphEvents.values(),
             getEstimatedProgressOfProcessingBuckFiles(),
             Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
@@ -424,9 +423,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long buildStartedTime = buildStarted.getTimestamp();
     long buildFinishedTime =
         buildFinished != null ? buildFinished.getTimestamp() : currentTimeMillis;
+    Collection<EventPair> parsingEvents =
+        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesParsingEvents.values());
     Collection<EventPair> processingEvents =
-        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesProcessing.values());
-    long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
+        getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
+    long offsetMs =
+        getTotalCompletedTimeFromEventPairs(parsingEvents)
+            + getTotalCompletedTimeFromEventPairs(processingEvents);
 
     long totalBuildMs =
         logEventPair(
