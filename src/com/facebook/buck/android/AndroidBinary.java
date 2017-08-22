@@ -25,7 +25,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
 import com.facebook.buck.rules.HasInstallHelpers;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
@@ -71,8 +72,9 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class AndroidBinary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey,
+        HasDeclaredAndExtraDeps,
         HasClasspathEntries,
         HasRuntimeDeps,
         HasInstallableApk,
@@ -164,6 +166,8 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Tool javaRuntimeLauncher;
   private final boolean isCacheable;
 
+  private final BuildRuleParams buildRuleParams;
+
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
 
   AndroidBinary(
@@ -202,7 +206,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool javaRuntimeLauncher,
       Optional<String> dxMaxHeapSize,
       boolean isCacheable) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
@@ -220,6 +224,7 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
+    this.buildRuleParams = params;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -282,6 +287,26 @@ public class AndroidBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
             resourceCompressionMode.isCompressResources());
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildRuleParams.getBuildDeps();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getDeclaredDeps() {
+    return buildRuleParams.getDeclaredDeps().get();
+  }
+
+  @Override
+  public SortedSet<BuildRule> deprecatedGetExtraDeps() {
+    return buildRuleParams.getExtraDeps().get();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
+    return buildRuleParams.getTargetGraphOnlyDeps();
   }
 
   public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {
