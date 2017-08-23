@@ -110,6 +110,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     timeStatsTracker.startTimer(SlaveEvents.TOTAL_RUNTIME);
+    timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
     Console console = params.getConsole();
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       if (slaveEventListener != null) {
@@ -170,7 +171,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   multiSourceFileContentsProvider,
                   distBuildConfig);
 
-          int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
+          distBuildExecutor.createBuildEngineDelegate(timeStatsTracker);
+          timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
+
+          // All preparation work is done, so start building.
+          int returnCode = distBuildExecutor.buildAndReturnExitCode();
           multiSourceFileContentsProvider.close();
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 

@@ -483,7 +483,8 @@ public class DistBuildSlaveEventBusListenerTest {
             .setTargetGraphDeserializationTimeMillis(0)
             .setActionGraphCreationTimeMillis(ACTION_GRAPH_CREATION_TIME_MS)
             .setSourceFilePreloadTimeMillis(0)
-            .setTotalBuildtimeMillis(0);
+            .setTotalBuildtimeMillis(0)
+            .setDistBuildPreparationTimeMillis(0);
 
     BuildSlaveFinishedStats expectedFinishedStats = new BuildSlaveFinishedStats();
     expectedFinishedStats.setBuildSlaveStatus(status);

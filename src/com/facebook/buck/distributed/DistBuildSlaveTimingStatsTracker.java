@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class DistBuildSlaveTimingStatsTracker {
 
   public enum SlaveEvents {
+    DIST_BUILD_PREPARATION_TIME,
     DIST_BUILD_STATE_FETCH_TIME,
     DIST_BUILD_STATE_LOADING_TIME,
     SOURCE_FILE_PRELOAD_TIME,
@@ -57,6 +58,8 @@ public class DistBuildSlaveTimingStatsTracker {
 
   public BuildSlavePerStageTimingStats generateStats() {
     return new BuildSlavePerStageTimingStats()
+        .setDistBuildPreparationTimeMillis(
+            getElapsedTimeMs(SlaveEvents.DIST_BUILD_PREPARATION_TIME))
         .setDistBuildStateFetchTimeMillis(getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_FETCH_TIME))
         .setDistBuildStateLoadingTimeMillis(
             getElapsedTimeMs(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME))

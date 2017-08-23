@@ -89,9 +89,7 @@ public class DistBuildSlaveExecutor {
     this.args = args;
   }
 
-  public int buildAndReturnExitCode(DistBuildSlaveTimingStatsTracker tracker)
-      throws IOException, InterruptedException {
-    createBuildEngineDelegate(tracker);
+  public int buildAndReturnExitCode() throws IOException, InterruptedException {
     LocalBuilder localBuilder = new LocalBuilderImpl();
 
     DistBuildModeRunner runner = null;
@@ -211,7 +209,7 @@ public class DistBuildSlaveExecutor {
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate(
+  public DistBuildCachingEngineDelegate createBuildEngineDelegate(
       DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
