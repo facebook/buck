@@ -100,6 +100,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final Clock clock;
   protected final Ansi ansi;
   private final Locale locale;
+  protected final boolean showTextInAllCaps;
 
   protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
@@ -162,11 +163,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected Optional<DistBuildStatus> distBuildStatus = Optional.empty();
 
   public AbstractConsoleEventBusListener(
-      Console console, Clock clock, Locale locale, ExecutionEnvironment executionEnvironment) {
+      Console console,
+      Clock clock,
+      Locale locale,
+      ExecutionEnvironment executionEnvironment,
+      Boolean showTextInAllCaps) {
     this.console = console;
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
+    this.showTextInAllCaps = showTextInAllCaps;
 
     this.projectBuildFileParseStarted = null;
     this.projectBuildFileParseFinished = null;
@@ -298,6 +304,14 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return outEvents;
   }
 
+  protected String convertToAllCapsIfNeeded(String str) {
+    if (showTextInAllCaps) {
+      return str.toUpperCase();
+    } else {
+      return str;
+    }
+  }
+
   /**
    * Adds a line about a pair of start and finished events to lines.
    *
@@ -385,7 +399,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (stillRunning) {
       elapsedTimeMs += currentlyRunningTime;
     } else {
-      parseLine += "FINISHED ";
+      parseLine += convertToAllCapsIfNeeded("Finished ");
       if (progress.isPresent()) {
         progress = Optional.of(1.0);
       }
@@ -640,22 +654,31 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     String jobSummary = null;
     if (ruleCount.isPresent()) {
       List<String> columns = new ArrayList<>();
-      columns.add(String.format(locale, "%d/%d JOBS", numRulesCompleted.get(), ruleCount.get()));
+      columns.add(
+          String.format(
+              locale,
+              "%d/%d " + convertToAllCapsIfNeeded("Jobs"),
+              numRulesCompleted.get(),
+              ruleCount.get()));
       CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
           cacheRateStatsKeeper.getStats();
-      columns.add(String.format(locale, "%d UPDATED", cacheRateStats.getUpdatedRulesCount()));
+      columns.add(
+          String.format(
+              locale,
+              "%d " + convertToAllCapsIfNeeded("Updated"),
+              cacheRateStats.getUpdatedRulesCount()));
       if (ruleCount.orElse(0) > 0) {
         columns.add(
             String.format(
                 locale,
-                "%d [%.1f%%] CACHE MISS",
+                "%d [%.1f%%] " + convertToAllCapsIfNeeded("Cache miss"),
                 cacheRateStats.getCacheMissCount(),
                 cacheRateStats.getCacheMissRate()));
         if (cacheRateStats.getCacheErrorCount() > 0) {
           columns.add(
               String.format(
                   locale,
-                  "%d [%.1f%%] CACHE ERRORS",
+                  "%d [%.1f%%] " + convertToAllCapsIfNeeded("Cache errors"),
                   cacheRateStats.getCacheErrorCount(),
                   cacheRateStats.getCacheErrorRate()));
         }
@@ -667,7 +690,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String getNetworkStatsLine(@Nullable BuildEvent.Finished finishedEvent) {
-    String parseLine = (finishedEvent != null ? "[-] " : "[+] ") + "DOWNLOADING" + "...";
+    String parseLine =
+        (finishedEvent != null ? "[-] " : "[+] ") + convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
     if (finishedEvent != null) {
       Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();

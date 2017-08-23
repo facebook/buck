@@ -63,7 +63,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       Locale locale,
       Path testLogPath,
       ExecutionEnvironment executionEnvironment) {
-    super(console, clock, locale, executionEnvironment);
+    super(console, clock, locale, executionEnvironment, true);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.hideSucceededRules = hideSucceededRules;

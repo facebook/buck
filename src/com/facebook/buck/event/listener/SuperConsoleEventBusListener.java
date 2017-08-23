@@ -200,7 +200,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long minimumDurationMillisecondsToShowActionGraph,
       long minimumDurationMillisecondsToShowWatchman,
       boolean hideEmptyDownload) {
-    super(console, clock, locale, executionEnvironment);
+    super(console, clock, locale, executionEnvironment, false);
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
     this.webServer = webServer;
@@ -316,7 +316,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     logEventPair(
-        "PROCESSING FILESYSTEM CHANGES",
+        "Processing filesystem changes",
         Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
@@ -327,7 +327,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     logEventPair(
-        "PARSING BUCK FILES",
+        "Parsing buck files",
         /* suffix */ Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
@@ -338,7 +338,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long parseTime =
         logEventPair(
-            "CREATING ACTION GRAPH",
+            "Creating action graph",
             /* suffix */ Optional.empty(),
             currentTimeMillis,
             /* offsetMs */ 0L,
@@ -348,7 +348,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             lines);
 
     logEventPair(
-        "GENERATING PROJECT",
+        "Generating project",
         Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
@@ -359,7 +359,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     logEventPair(
-        "REFRESHING SPARSE CHECKOUT",
+        "Refreshing sparse checkout",
         createAutoSparseStatusMessage(autoSparseSummary),
         currentTimeMillis,
         /* offsetMs */ 0L,
@@ -430,7 +430,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long totalBuildMs =
         logEventPair(
-            "BUILDING",
+            "Building",
             getOptionalBuildLineSuffix(),
             currentTimeMillis,
             offsetMs, // parseTime,
@@ -458,7 +458,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long testRunTime =
         logEventPair(
-            "TESTING",
+            "Testing",
             renderTestSuffix(),
             currentTimeMillis,
             0, /* offsetMs */
@@ -482,7 +482,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     logEventPair(
-        "INSTALLING",
+        "Installing",
         /* suffix */ Optional.empty(),
         currentTimeMillis,
         0L,
