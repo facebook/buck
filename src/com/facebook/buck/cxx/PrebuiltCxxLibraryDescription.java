@@ -65,7 +65,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -128,28 +127,37 @@ public class PrebuiltCxxLibraryDescription
     return PrebuiltCxxLibraryDescriptionArg.class;
   }
 
-  @VisibleForTesting
-  static PrebuiltCxxLibraryPaths getPaths(
-      BuildTarget target,
-      Optional<String> versionSubDir,
-      ImmutableList<String> includeDirs,
-      Optional<String> libDir,
-      Optional<String> libName) {
-    return DeprecatedPrebuiltCxxLibraryPaths.builder()
-        .setTarget(target)
-        .setVersionSubdir(versionSubDir)
-        .setIncludeDirs(includeDirs)
-        .setLibDir(libDir)
-        .setLibName(libName)
-        .build();
-  }
-
   private static PrebuiltCxxLibraryPaths getPaths(
       BuildTarget target,
       AbstractPrebuiltCxxLibraryDescriptionArg args,
       Optional<String> versionSubDir) {
-    return getPaths(
-        target, versionSubDir, args.getIncludeDirs(), args.getLibDir(), args.getLibName());
+    if (args.isNewApiUsed() && args.isOldApiUsed()) {
+      throw new HumanReadableException("%s: cannot use both old and new APIs", target);
+    }
+    if (args.isOldApiUsed()) {
+      return DeprecatedPrebuiltCxxLibraryPaths.builder()
+          .setTarget(target)
+          .setVersionSubdir(versionSubDir)
+          .setIncludeDirs(args.getIncludeDirs().orElse(ImmutableList.of()))
+          .setLibDir(args.getLibDir())
+          .setLibName(args.getLibName())
+          .build();
+    }
+    return NewPrebuiltCxxLibraryPaths.builder()
+        .setTarget(target)
+        .setHeaderDirs(args.getHeaderDirs())
+        .setPlatformHeaderDirs(args.getPlatformHeaderDirs())
+        .setVersionedHeaderDirs(args.getVersionedHeaderDirs())
+        .setSharedLib(args.getSharedLib())
+        .setPlatformSharedLib(args.getPlatformSharedLib())
+        .setVersionedSharedLib(args.getVersionedSharedLib())
+        .setStaticLib(args.getStaticLib())
+        .setPlatformStaticLib(args.getPlatformStaticLib())
+        .setVersionedStaticLib(args.getVersionedStaticLib())
+        .setStaticPicLib(args.getStaticPicLib())
+        .setPlatformStaticPicLib(args.getPlatformStaticPicLib())
+        .setVersionedStaticPicLib(args.getVersionedStaticPicLib())
+        .build();
   }
 
   // Platform unlike most macro expanders needs access to the cxx build flavor.
@@ -235,6 +243,7 @@ public class PrebuiltCxxLibraryDescription
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Optional<String> versionSubDir,
       PrebuiltCxxLibraryDescriptionArg args) {
 
@@ -246,9 +255,11 @@ public class PrebuiltCxxLibraryDescription
 
     // Use the static PIC variant, if available.
     Optional<SourcePath> staticPicLibraryPath =
-        paths.getStaticPicLibrary(projectFilesystem, ruleResolver, cellRoots, cxxPlatform);
+        paths.getStaticPicLibrary(
+            projectFilesystem, ruleResolver, cellRoots, cxxPlatform, selectedVersions);
     Optional<SourcePath> staticLibraryPath =
-        paths.getStaticLibrary(projectFilesystem, ruleResolver, cellRoots, cxxPlatform);
+        paths.getStaticLibrary(
+            projectFilesystem, ruleResolver, cellRoots, cxxPlatform, selectedVersions);
     SourcePath library =
         staticPicLibraryPath.orElseGet(
             () ->
@@ -306,13 +317,14 @@ public class PrebuiltCxxLibraryDescription
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Optional<String> versionSubdir,
       PrebuiltCxxLibraryDescriptionArg args) {
 
     // If the shared library is prebuilt, just return a reference to it.
     PrebuiltCxxLibraryPaths paths = getPaths(target, args, versionSubdir);
     Optional<SourcePath> sharedLibraryPath =
-        paths.getSharedLibrary(filesystem, resolver, cellRoots, cxxPlatform);
+        paths.getSharedLibrary(filesystem, resolver, cellRoots, cxxPlatform, selectedVersions);
     if (sharedLibraryPath.isPresent()) {
       return sharedLibraryPath.get();
     }
@@ -332,6 +344,7 @@ public class PrebuiltCxxLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Optional<String> versionSubdir,
       PrebuiltCxxLibraryDescriptionArg args) {
 
@@ -353,7 +366,14 @@ public class PrebuiltCxxLibraryDescription
 
     SourcePath sharedLibrary =
         requireSharedLibrary(
-            baseTarget, resolver, cellRoots, projectFilesystem, cxxPlatform, versionSubdir, args);
+            baseTarget,
+            resolver,
+            cellRoots,
+            projectFilesystem,
+            cxxPlatform,
+            selectedVersions,
+            versionSubdir,
+            args);
 
     return SharedLibraryInterfaceFactoryResolver.resolveFactory(params.get())
         .createSharedInterfaceLibrary(
@@ -407,6 +427,7 @@ public class PrebuiltCxxLibraryDescription
             ruleResolver,
             cellRoots,
             platform.get().getValue(),
+            selectedVersions,
             versionSubdir,
             args);
       } else if (type.get().getValue() == Type.SHARED_INTERFACE) {
@@ -416,6 +437,7 @@ public class PrebuiltCxxLibraryDescription
             ruleResolver,
             cellRoots,
             platform.get().getValue(),
+            selectedVersions,
             versionSubdir,
             args);
       }
@@ -512,6 +534,7 @@ public class PrebuiltCxxLibraryDescription
             cellRoots,
             projectFilesystem,
             cxxPlatform,
+            selectedVersions,
             versionSubdir,
             args);
       }
@@ -522,7 +545,8 @@ public class PrebuiltCxxLibraryDescription
        */
       @Override
       Optional<SourcePath> getStaticLibrary(CxxPlatform cxxPlatform) {
-        return paths.getStaticLibrary(getProjectFilesystem(), ruleResolver, cellRoots, cxxPlatform);
+        return paths.getStaticLibrary(
+            getProjectFilesystem(), ruleResolver, cellRoots, cxxPlatform, selectedVersions);
       }
 
       /**
@@ -532,7 +556,8 @@ public class PrebuiltCxxLibraryDescription
       @Override
       Optional<SourcePath> getStaticPicLibrary(CxxPlatform cxxPlatform) {
         Optional<SourcePath> staticPicLibraryPath =
-            paths.getStaticPicLibrary(getProjectFilesystem(), ruleResolver, cellRoots, cxxPlatform);
+            paths.getStaticPicLibrary(
+                getProjectFilesystem(), ruleResolver, cellRoots, cxxPlatform, selectedVersions);
         // If a specific static-pic variant isn't available, then just use the static variant.
         return staticPicLibraryPath.isPresent()
             ? staticPicLibraryPath
@@ -563,7 +588,8 @@ public class PrebuiltCxxLibraryDescription
         builder.putAllPreprocessorFlags(getExportedPreprocessorFlags(cxxPlatform));
         builder.addAllFrameworks(args.getFrameworks());
         for (SourcePath includePath :
-            paths.getIncludeDirs(projectFilesystem, ruleResolver, cellRoots, cxxPlatform)) {
+            paths.getIncludeDirs(
+                projectFilesystem, ruleResolver, cellRoots, cxxPlatform, selectedVersions)) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includePath));
         }
         return builder.build();
@@ -791,7 +817,34 @@ public class PrebuiltCxxLibraryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltCxxLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
-    ImmutableList<String> getIncludeDirs();
+
+    // New API.
+    Optional<ImmutableList<SourcePath>> getHeaderDirs();
+
+    Optional<PatternMatchedCollection<ImmutableList<SourcePath>>> getPlatformHeaderDirs();
+
+    Optional<VersionMatchedCollection<ImmutableList<SourcePath>>> getVersionedHeaderDirs();
+
+    Optional<SourcePath> getSharedLib();
+
+    Optional<PatternMatchedCollection<SourcePath>> getPlatformSharedLib();
+
+    Optional<VersionMatchedCollection<SourcePath>> getVersionedSharedLib();
+
+    Optional<SourcePath> getStaticLib();
+
+    Optional<PatternMatchedCollection<SourcePath>> getPlatformStaticLib();
+
+    Optional<VersionMatchedCollection<SourcePath>> getVersionedStaticLib();
+
+    Optional<SourcePath> getStaticPicLib();
+
+    Optional<PatternMatchedCollection<SourcePath>> getPlatformStaticPicLib();
+
+    Optional<VersionMatchedCollection<SourcePath>> getVersionedStaticPicLib();
+
+    // Deprecated API.
+    Optional<ImmutableList<String>> getIncludeDirs();
 
     Optional<String> getLibName();
 
@@ -875,6 +928,28 @@ public class PrebuiltCxxLibraryDescription
     @Value.Default
     default boolean isSupportsSharedLibraryInterface() {
       return false;
+    }
+
+    default boolean isNewApiUsed() {
+      return getHeaderDirs().isPresent()
+          || getPlatformHeaderDirs().isPresent()
+          || getVersionedHeaderDirs().isPresent()
+          || getSharedLib().isPresent()
+          || getPlatformSharedLib().isPresent()
+          || getVersionedSharedLib().isPresent()
+          || getStaticLib().isPresent()
+          || getPlatformStaticLib().isPresent()
+          || getVersionedStaticLib().isPresent()
+          || getStaticPicLib().isPresent()
+          || getPlatformStaticPicLib().isPresent()
+          || getVersionedStaticPicLib().isPresent();
+    }
+
+    default boolean isOldApiUsed() {
+      return getVersionedSubDir().isPresent()
+          || getIncludeDirs().isPresent()
+          || getLibDir().isPresent()
+          || getLibName().isPresent();
     }
   }
 }

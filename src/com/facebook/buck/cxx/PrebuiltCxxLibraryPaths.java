@@ -23,8 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 /** Class abstracting extracting paths to prebuilt C/C++ library components via the user API. */
@@ -34,25 +36,29 @@ interface PrebuiltCxxLibraryPaths {
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform);
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   Optional<SourcePath> getStaticLibrary(
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform);
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   Optional<SourcePath> getStaticPicLibrary(
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform);
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   ImmutableList<SourcePath> getIncludeDirs(
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform);
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions);
 
   @SuppressWarnings("unused")
   default Optional<NativeLinkable.Linkage> getLinkage(

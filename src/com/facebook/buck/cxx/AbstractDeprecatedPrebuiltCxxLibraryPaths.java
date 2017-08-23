@@ -34,6 +34,7 @@ import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -163,7 +164,8 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
     return getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.SHARED);
   }
 
@@ -172,7 +174,8 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
     return getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC);
   }
 
@@ -181,7 +184,8 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
     return getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC_PIC);
   }
 
@@ -190,7 +194,8 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
     return RichStream.from(getIncludeDirs())
         .map(
             dir ->
@@ -205,9 +210,9 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform) {
     Optional<SourcePath> staticLibrary =
-        getStaticLibrary(filesystem, resolver, cellRoots, cxxPlatform);
+        getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC);
     Optional<SourcePath> staticPicLibrary =
-        getStaticPicLibrary(filesystem, resolver, cellRoots, cxxPlatform);
+        getLibrary(filesystem, resolver, cellRoots, cxxPlatform, LibType.STATIC_PIC);
     if (!staticLibrary.isPresent() && !staticPicLibrary.isPresent()) {
       return Optional.of(NativeLinkable.Linkage.SHARED);
     }

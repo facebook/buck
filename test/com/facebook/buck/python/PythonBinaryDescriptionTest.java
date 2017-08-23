@@ -504,7 +504,7 @@ public class PythonBinaryDescriptionTest {
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
             .setProvided(true)
-            .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
+            .setSharedLib(new FakeSourcePath("libpython2.so"));
 
     CxxPythonExtensionBuilder extensionBuilder =
         new CxxPythonExtensionBuilder(
@@ -737,6 +737,7 @@ public class PythonBinaryDescriptionTest {
               .setForceStatic(true);
       PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
           new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep2"))
+              .setStaticLib(new FakeSourcePath("libdep2.a"))
               .setForceStatic(true);
       PythonBuckConfig config =
           new PythonBuckConfig(
