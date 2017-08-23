@@ -748,6 +748,8 @@ public class BuildCommand extends AbstractCommand {
         exitCode = localBuildExitCode;
       }
 
+      distBuildClientStats.stopPostDistributedBuildLocalStepsTimer();
+
       params
           .getBuckEventBus()
           .post(new DistBuildClientStatsEvent(distBuildClientStats.generateStats()));

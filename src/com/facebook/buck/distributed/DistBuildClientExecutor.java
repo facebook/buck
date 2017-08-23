@@ -308,6 +308,8 @@ public class DistBuildClientExecutor {
       distBuildClientStats.stopPerformDistributedBuildTimer();
     }
 
+    distBuildClientStats.startPostDistributedBuildLocalStepsTimer();
+
     postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
     ListenableFuture<?> slaveFinishedStatsFuture =
         publishBuildSlaveFinishedStatsEvent(finalJob, eventBus, networkExecutorService);

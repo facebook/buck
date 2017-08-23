@@ -31,6 +31,7 @@ public class DistBuildClientStatsTracker {
     LOCAL_GRAPH_CONSTRUCTION,
     PERFORM_DISTRIBUTED_BUILD,
     PERFORM_LOCAL_BUILD,
+    POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
     CREATE_DISTRIBUTED_BUILD,
     UPLOAD_MISSING_FILES,
     UPLOAD_TARGET_GRAPH,
@@ -90,6 +91,9 @@ public class DistBuildClientStatsTracker {
     Preconditions.checkNotNull(
         durationsMsByType.get(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION),
         "No time was recorded for stat: " + DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION);
+    Preconditions.checkNotNull(
+        durationsMsByType.get(DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS),
+        "No time was recorded for stat: " + DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD);
     Preconditions.checkNotNull(
         durationsMsByType.get(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD),
         "No time was recorded for stat: " + DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD);
@@ -152,6 +156,8 @@ public class DistBuildClientStatsTracker {
         getDurationOrEmpty(DistBuildClientStat.LOCAL_PREPARATION));
     builder.setLocalGraphConstructionDurationMs(
         getDurationOrEmpty(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION));
+    builder.setPostDistBuildLocalStepsDurationMs(
+        getDurationOrEmpty(DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS));
     builder.setPerformDistributedBuildDurationMs(
         getDurationOrEmpty(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD));
     builder.setCreateDistributedBuildDurationMs(
@@ -274,6 +280,14 @@ public class DistBuildClientStatsTracker {
 
   public void stopLocalGraphConstructionTimer() {
     stopTimer(DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION, false);
+  }
+
+  public void startPostDistributedBuildLocalStepsTimer() {
+    startTimer(DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
+  }
+
+  public void stopPostDistributedBuildLocalStepsTimer() {
+    stopTimer(DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
   }
 
   public boolean hasStampedeId() {

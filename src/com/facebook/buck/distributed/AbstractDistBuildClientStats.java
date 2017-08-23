@@ -38,6 +38,8 @@ abstract class AbstractDistBuildClientStats {
 
   abstract Optional<Integer> localBuildExitCode();
 
+  abstract Optional<Long> postDistBuildLocalStepsDurationMs();
+
   abstract Optional<Long> localBuildDurationMs();
 
   abstract Optional<Long> localPreparationDurationMs();
