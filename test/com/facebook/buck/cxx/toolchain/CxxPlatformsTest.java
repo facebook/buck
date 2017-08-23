@@ -28,8 +28,11 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -67,7 +70,7 @@ public class CxxPlatformsTest {
                     new ConstantToolProvider(new HashedFileTool(Paths.get("borland")))))
             .setStrip(new HashedFileTool(Paths.get("borland")))
             .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
-            .setAr(new GnuArchiver(new HashedFileTool(Paths.get("borland"))))
+            .setAr(ArchiverProvider.from(new GnuArchiver(new HashedFileTool(Paths.get("borland")))))
             .setRanlib(new HashedFileTool(Paths.get("borland")))
             .setSharedLibraryExtension("so")
             .setSharedLibraryVersionedExtensionFormat(".so.%s")
@@ -191,12 +194,9 @@ public class CxxPlatformsTest {
                 .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
                 .build());
 
-    Archiver archiver = CxxPlatformUtils.build(buckConfig).getAr();
-    if (archiver instanceof LazyDelegatingArchiver) {
-      return ((LazyDelegatingArchiver) archiver).getDelegate();
-    } else {
-      return archiver;
-    }
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    return CxxPlatformUtils.build(buckConfig).getAr().resolve(ruleResolver);
   }
 
   @Test
@@ -213,24 +213,5 @@ public class CxxPlatformsTest {
         "WINDOWS archiver was not a GnuArchiver instance",
         getPlatformArchiver(Platform.WINDOWS),
         instanceOf(WindowsArchiver.class));
-  }
-
-  @Test
-  public void invalidArchiverOverrideFails() {
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "cxx",
-            ImmutableMap.of(
-                "ar", Paths.get("fake_path").toString(), "archiver_platform", "WRONG_PLATFORM"));
-
-    CxxBuckConfig buckConfig =
-        new CxxBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(sections)
-                .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
-                .build());
-
-    expectedException.expect(RuntimeException.class);
-    ((LazyDelegatingArchiver) CxxPlatformUtils.build(buckConfig).getAr()).getDelegate();
   }
 }

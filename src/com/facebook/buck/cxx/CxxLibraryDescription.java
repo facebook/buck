@@ -585,6 +585,7 @@ public class CxxLibraryDescription
     return Archive.from(
         staticTarget,
         projectFilesystem,
+        resolver,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),

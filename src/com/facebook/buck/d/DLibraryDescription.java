@@ -153,6 +153,7 @@ public class DLibraryDescription
     return Archive.from(
         staticTarget,
         projectFilesystem,
+        ruleResolver,
         ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
