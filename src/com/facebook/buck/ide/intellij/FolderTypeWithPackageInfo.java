@@ -61,8 +61,8 @@ public enum FolderTypeWithPackageInfo {
   FolderTypeWithPackageInfo(
       boolean wantsPackagePrefix,
       boolean isResourceFolder,
-      IJFolderFactory folderFactory,
-      ResourceFolderFactory resourceFolderFactory,
+      @Nullable IJFolderFactory folderFactory,
+      @Nullable ResourceFolderFactory resourceFolderFactory,
       Class<? extends IjFolder> folderTypeClass,
       @Nullable IjResourceFolderType ijResourceFolderType) {
     this.wantsPackagePrefix = wantsPackagePrefix;

@@ -61,9 +61,7 @@ public class IjSourceRootSimplifierTest {
 
   private static IjFolder buildJavaResourceFolder(String path, String resourcesRoot) {
     return new JavaResourceFolder(
-        Paths.get(path),
-        Paths.get(resourcesRoot),
-        ImmutableSortedSet.of());
+        Paths.get(path), Paths.get(resourcesRoot), ImmutableSortedSet.of());
   }
 
   private static JavaPackageFinder fakePackageFinder() {

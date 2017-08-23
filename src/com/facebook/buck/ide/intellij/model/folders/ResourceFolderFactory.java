@@ -18,8 +18,9 @@ package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /** Interface for factory classes which can create each type of resource folder. */
 public interface ResourceFolderFactory {
-  ResourceFolder create(Path path, Path resourcesRoot, ImmutableSortedSet<Path> inputs);
+  ResourceFolder create(Path path, @Nullable Path resourcesRoot, ImmutableSortedSet<Path> inputs);
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.ide.intellij.model.folders;
 
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 public enum IjResourceFolderType {
   JAVA_RESOURCE("java-resource", JavaResourceFolder.class) {
@@ -51,6 +52,7 @@ public enum IjResourceFolderType {
     return folderClass.isInstance(folder);
   }
 
+  @Nullable
   public Path getResourcesRootFromFolder(IjFolder folder) {
     return folderClass.cast(folder).getResourcesRoot();
   }
