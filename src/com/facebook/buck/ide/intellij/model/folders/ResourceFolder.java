@@ -49,6 +49,20 @@ public abstract class ResourceFolder extends InclusiveFolder {
   }
 
   @Override
+  public IjFolder merge(IjFolder otherFolder) {
+    if (equals(otherFolder)) {
+      return this;
+    }
+
+    ResourceFolder otherResourceFolder = (ResourceFolder) otherFolder;
+    return getResourceFactory()
+        .create(
+            otherResourceFolder.getPath(),
+            otherResourceFolder.getResourcesRoot(),
+            combineInputs(this, otherResourceFolder));
+  }
+
+  @Override
   public boolean canMergeWith(IjFolder other) {
     return super.canMergeWith(other)
         && Objects.equals(resourcesRoot, ((ResourceFolder) other).resourcesRoot);
