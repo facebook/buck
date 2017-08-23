@@ -17,15 +17,16 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -34,7 +35,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -124,8 +124,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     return HaskellDescriptionUtils.requireCompileRule(
         buildTarget,
         projectFilesystem,
@@ -154,8 +153,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     HaskellCompileRule compileRule =
         requireCompileRule(
             target,
@@ -172,6 +170,7 @@ public class HaskellLibraryDescription
     return Archive.from(
         target,
         projectFilesystem,
+        resolver,
         ruleFinder,
         platform.getCxxPlatform(),
         cxxBuckConfig.getArchiveContents(),
@@ -194,7 +193,7 @@ public class HaskellLibraryDescription
         // affect on build efficiency, and since this issue appears to only manifest by a size
         // mismatch with what is embedded in thin archives, just disable caching when using thin
         // archives.
-        /* cacheable */ cxxBuckConfig.getArchiveContents() != Archive.Contents.THIN);
+        /* cacheable */ cxxBuckConfig.getArchiveContents() != ArchiveContents.THIN);
   }
 
   private Archive requireStaticLibrary(
@@ -208,8 +207,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -258,8 +256,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
 
     ImmutableSortedSet<SourcePath> libraries;
     BuildRule library;
@@ -275,7 +272,8 @@ public class HaskellLibraryDescription
                 ruleFinder,
                 platform,
                 args,
-                deps);
+                deps,
+                hsProfile);
         libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
         break;
       case STATIC:
@@ -407,8 +405,7 @@ public class HaskellLibraryDescription
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
       Linker.LinkableDepType depType,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -461,8 +458,8 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<BuildRule> deps,
+      boolean hsProfile) {
     HaskellCompileRule compileRule =
         requireCompileRule(
             target,
@@ -475,7 +472,7 @@ public class HaskellLibraryDescription
             args,
             deps,
             Linker.LinkableDepType.SHARED,
-            false);
+            hsProfile);
 
     String name =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
@@ -497,7 +494,7 @@ public class HaskellLibraryDescription
         Linker.LinkableDepType.SHARED,
         outputPath,
         Optional.of(name),
-        false);
+        hsProfile);
   }
 
   private HaskellLinkRule requireSharedLibrary(
@@ -509,8 +506,8 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
-      ImmutableSet<BuildRule> deps)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<BuildRule> deps,
+      boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
@@ -533,7 +530,8 @@ public class HaskellLibraryDescription
             ruleFinder,
             platform,
             args,
-            deps));
+            deps,
+            hsProfile));
   }
 
   @Override
@@ -544,8 +542,7 @@ public class HaskellLibraryDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final HaskellLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final HaskellLibraryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -588,7 +585,7 @@ public class HaskellLibraryDescription
               args,
               deps,
               depType,
-              false);
+              args.isEnableProfiling());
         case SHARED:
           return requireSharedLibrary(
               baseTarget,
@@ -599,7 +596,8 @@ public class HaskellLibraryDescription
               ruleFinder,
               platform.get(),
               args,
-              deps);
+              deps,
+              args.isEnableProfiling());
         case STATIC_PIC:
         case STATIC:
           return requireStaticLibrary(
@@ -615,7 +613,7 @@ public class HaskellLibraryDescription
               type.get().getValue() == Type.STATIC
                   ? Linker.LinkableDepType.STATIC
                   : Linker.LinkableDepType.STATIC_PIC,
-              false);
+              args.isEnableProfiling());
       }
 
       throw new IllegalStateException(
@@ -633,8 +631,7 @@ public class HaskellLibraryDescription
 
       @Override
       public HaskellCompileInput getCompileInput(
-          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile)
-          throws NoSuchBuildTargetException {
+          HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile) {
         HaskellPackageRule rule =
             requirePackage(
                 getBaseBuildTarget(getBuildTarget()),
@@ -676,8 +673,7 @@ public class HaskellLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
         Iterable<com.facebook.buck.rules.args.Arg> linkArgs;
         switch (type) {
           case STATIC:
@@ -694,7 +690,7 @@ public class HaskellLibraryDescription
                     args,
                     allDeps.get(resolver, cxxPlatform),
                     type,
-                    false);
+                    args.isEnableProfiling());
             linkArgs =
                 args.getLinkWhole() || forceLinkWhole
                     ? cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg())
@@ -711,7 +707,8 @@ public class HaskellLibraryDescription
                     ruleFinder,
                     platforms.getValue(cxxPlatform.getFlavor()),
                     args,
-                    allDeps.get(resolver, cxxPlatform));
+                    allDeps.get(resolver, cxxPlatform),
+                    args.isEnableProfiling());
             linkArgs = ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));
             break;
           default:
@@ -726,8 +723,7 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(
@@ -742,7 +738,8 @@ public class HaskellLibraryDescription
                 ruleFinder,
                 platforms.getValue(cxxPlatform.getFlavor()),
                 args,
-                allDeps.get(resolver, cxxPlatform));
+                allDeps.get(resolver, cxxPlatform),
+                args.isEnableProfiling());
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
@@ -827,6 +824,11 @@ public class HaskellLibraryDescription
     @Value.Default
     default NativeLinkable.Linkage getPreferredLinkage() {
       return NativeLinkable.Linkage.ANY;
+    }
+
+    @Value.Default
+    default boolean isEnableProfiling() {
+      return false;
     }
   }
 }

@@ -74,7 +74,7 @@ class StubJarClassEntry extends StubJarEntry {
     writer.writeEntry(path, this::openInputStream);
   }
 
-  private InputStream openInputStream() throws IOException {
+  private InputStream openInputStream() {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
     visitor = new InnerClassSortingClassVisitor(stub.name, visitor);

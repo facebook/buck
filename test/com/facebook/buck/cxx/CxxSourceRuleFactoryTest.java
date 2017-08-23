@@ -26,10 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.CompilerProvider;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.CxxToolProvider;
-import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

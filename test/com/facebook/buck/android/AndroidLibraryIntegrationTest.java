@@ -75,6 +75,20 @@ public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
     result.assertSuccess();
   }
 
+  // TODO: When https://github.com/facebook/buck/issues/1371 is fixed, this test can use -Xplugin
+  @Test
+  public void testAndroidKotlinLibraryExtraArgumentsCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_extra_kotlinc_arguments");
+    result.assertFailure();
+    assertTrue(
+        result
+            .getStderr()
+            .contains("warning: flag is not supported by this version of the compiler: -Xplugin="));
+  }
+
   @Test
   @Ignore("https://github.com/facebook/buck/issues/1371")
   public void testAndroidKotlinLibraryMixedSourcesCompilation() throws Exception {

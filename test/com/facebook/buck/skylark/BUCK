@@ -1,0 +1,10 @@
+standard_java_test(
+    name = "skylark",
+    deps = [
+        "//src/com/facebook/buck/skylark:skylark",
+        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
+)

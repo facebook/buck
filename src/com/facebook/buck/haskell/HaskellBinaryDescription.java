@@ -19,9 +19,9 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.Linkers;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -30,7 +30,6 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -127,8 +126,7 @@ public class HaskellBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      HaskellBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      HaskellBinaryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -237,7 +235,7 @@ public class HaskellBinaryDescription
                     .toImmutableSet(),
                 platform,
                 depType,
-                false,
+                args.isEnableProfiling(),
                 args.getMain(),
                 Optional.empty(),
                 args.getCompilerFlags(),
@@ -273,7 +271,7 @@ public class HaskellBinaryDescription
             depType,
             outputPath,
             Optional.empty(),
-            false);
+            args.isEnableProfiling());
 
     return new HaskellBinary(
         buildTarget,
@@ -374,5 +372,10 @@ public class HaskellBinaryDescription
     Optional<Linker.LinkableDepType> getLinkStyle();
 
     Optional<Flavor> getPlatform();
+
+    @Value.Default
+    default boolean isEnableProfiling() {
+      return false;
+    }
   }
 }

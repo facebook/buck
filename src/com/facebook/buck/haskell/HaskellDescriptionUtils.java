@@ -17,7 +17,6 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.Archive;
-import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
@@ -26,19 +25,20 @@ import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
-import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -91,8 +91,7 @@ public class HaskellDescriptionUtils {
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
-      HaskellSources sources)
-      throws NoSuchBuildTargetException {
+      HaskellSources sources) {
 
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
 
@@ -102,11 +101,11 @@ public class HaskellDescriptionUtils {
         ImmutableSortedMap.naturalOrder();
     final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
         ImmutableSortedMap.naturalOrder();
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
 
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> ruleDeps = empty;
         if (rule instanceof HaskellCompileDep) {
           HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
@@ -212,8 +211,7 @@ public class HaskellDescriptionUtils {
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
-      HaskellSources srcs)
-      throws NoSuchBuildTargetException {
+      HaskellSources srcs) {
 
     BuildTarget target = getCompileBuildTarget(buildTarget, platform, depType, hsProfile);
 
@@ -260,8 +258,7 @@ public class HaskellDescriptionUtils {
       Linker.LinkableDepType depType,
       Path outputPath,
       Optional<String> soname,
-      boolean hsProfile)
-      throws NoSuchBuildTargetException {
+      boolean hsProfile) {
 
     Tool linker = platform.getLinker().resolve(resolver);
 
@@ -343,9 +340,10 @@ public class HaskellDescriptionUtils {
             Archive.from(
                 emptyArchiveTarget,
                 projectFilesystem,
+                resolver,
                 ruleFinder,
                 platform.getCxxPlatform(),
-                Archive.Contents.NORMAL,
+                ArchiveContents.NORMAL,
                 BuildTargets.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
                 emptyCompiledModule.getObjects(),
                 /* cacheable */ true));

@@ -15,7 +15,7 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../buck-out/bin/modules/dep1/lib__generated__classes" />
+    <output url="jar://$MODULE_DIR$/../../buck-out/gen/modules/dep1/lib__generated__output/generated.jar!/" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/dep1/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/dep1/gen" isTestSource="false" />

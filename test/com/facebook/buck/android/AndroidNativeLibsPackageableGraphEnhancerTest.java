@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
-import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -292,7 +292,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testDuplicateCxxLibrary() throws Exception {
 
     NdkCxxPlatform ndkCxxPlatform =

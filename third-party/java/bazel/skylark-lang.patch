@@ -1,0 +1,43 @@
+diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
+index d4e18ecf8..0beac7230 100644
+--- a/src/main/java/com/google/devtools/build/lib/BUILD
++++ b/src/main/java/com/google/devtools/build/lib/BUILD
+@@ -434,14 +434,34 @@ java_library(
+ #
+ # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
+ #
+-java_library(
++java_binary(
+     name = "skylark-lang",
++    srcs = glob([
++        "syntax/**/*.java",
++    ]) + glob(["events/*.java"]) + glob(["vfs/inmemoryfs/*.java"]) + glob([
++        "skylarkinterface/*.java",
++    ]),
+     visibility = ["//visibility:public"],
+-    exports = [
++    deps = [
++        "//src/main/java/com/google/devtools/build/lib/cmdline",
++        "//src/main/java/com/google/devtools/common/options",
++        "//third_party:asm",
++        "//third_party:asm-commons",
++        "//third_party:asm-util",
++        "//third_party:auto_value",
++        "//third_party:bytebuddy",
++        "//third_party:guava",
++        "//third_party:jsr305",
++        ":clock",
++        ":collect",
++        ":concurrent",
+         ":events",
+-        ":inmemoryfs",
++        ":io",
++        ":os_util",
++        ":preconditions",
+         ":skylarkinterface",
+-        ":syntax",
++        ":unix",
++        ":util",
+         ":vfs",
+     ],
+ )

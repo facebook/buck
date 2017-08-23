@@ -17,9 +17,9 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.DefaultLinkerProvider;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.LinkerProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;

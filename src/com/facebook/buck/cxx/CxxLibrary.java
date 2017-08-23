@@ -18,16 +18,16 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -151,8 +151,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   private CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility) {
     // Handle via metadata query.
     return CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
             ruleResolver, getBuildTarget(), cxxPlatform, headerVisibility)
@@ -160,14 +159,12 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
   }
 
   @Override
-  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
   }
 
@@ -225,8 +222,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   private NativeLinkableInput getNativeLinkableInputUncached(
-      CxxPlatform cxxPlatform, Linker.LinkableDepType type, boolean forceLinkWhole)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Linker.LinkableDepType type, boolean forceLinkWhole) {
 
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
@@ -276,7 +272,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         BuildRule rule =
             requireBuildRule(
                 cxxPlatform.getFlavor(),
-                cxxPlatform.getSharedLibraryInterfaceFactory().isPresent()
+                cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
                     ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
                     : CxxLibraryDescription.Type.SHARED.getFlavor());
         linkerArgsBuilder.add(
@@ -295,8 +291,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<LanguageExtensions> languageExtensions) {
     NativeLinkableCacheKey key =
         NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole);
     NativeLinkableInput input = nativeLinkableCache.get(key);
@@ -307,7 +302,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     return input;
   }
 
-  public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {
+  public BuildRule requireBuildRule(Flavor... flavors) {
     return ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
   }
 
@@ -336,8 +331,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     if (headerOnly.apply(cxxPlatform)) {
       return ImmutableMap.of();
     }

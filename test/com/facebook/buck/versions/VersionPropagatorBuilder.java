@@ -19,7 +19,6 @@ package com.facebook.buck.versions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -111,8 +110,7 @@ public class VersionPropagatorBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        VersionPropagatorDescriptionArg args)
-        throws NoSuchBuildTargetException {
+        VersionPropagatorDescriptionArg args) {
       throw new IllegalStateException();
     }
   }

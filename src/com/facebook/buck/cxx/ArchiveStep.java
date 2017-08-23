@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Archiver;
+import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -42,7 +42,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 
 /** Create an object archive with ar. */
-public class ArchiveStep implements Step {
+class ArchiveStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;

@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEngineBuildContext;
@@ -53,7 +52,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -188,15 +186,7 @@ public class Build implements Closeable {
         ImmutableList.copyOf(
             targetsToBuild
                 .stream()
-                .map(
-                    buildTarget -> {
-                      try {
-                        return getRuleResolver().requireRule(buildTarget);
-                      } catch (NoSuchBuildTargetException e) {
-                        throw new HumanReadableException(
-                            "No build rule found for target %s", buildTarget);
-                      }
-                    })
+                .map(buildTarget -> getRuleResolver().requireRule(buildTarget))
                 .collect(MoreCollectors.toImmutableSet()));
 
     // Calculate and post the number of rules that need to built.
@@ -225,7 +215,7 @@ public class Build implements Closeable {
         for (BuildResult result : results) {
           Throwable thrown = result.getFailure();
           if (thrown != null) {
-            throw new ExecutionException(thrown);
+            throw new BuildExecutionException(thrown, rulesToBuild, results);
           }
         }
       }
@@ -243,7 +233,46 @@ public class Build implements Closeable {
       }
       throw e;
     }
+    return createBuildExecutionResult(rulesToBuild, results);
+  }
 
+  /** Represents an exceptional situation that happened while building requested rules. */
+  private static class BuildExecutionException extends ExecutionException {
+    private final ImmutableList<BuildRule> rulesToBuild;
+    private final List<BuildResult> buildResults;
+
+    BuildExecutionException(
+        Throwable cause, ImmutableList<BuildRule> rulesToBuild, List<BuildResult> buildResults) {
+      super(cause);
+      this.rulesToBuild = rulesToBuild;
+      this.buildResults = buildResults;
+    }
+
+    /**
+     * Creates a build execution result that might be partial when interrupted before all build
+     * rules had a chance to run.
+     */
+    public BuildExecutionResult createBuildExecutionResult() {
+      // Insertion order matters
+      LinkedHashMap<BuildRule, Optional<BuildResult>> resultBuilder = new LinkedHashMap<>();
+      for (int i = 0, len = buildResults.size(); i < len; i++) {
+        BuildRule rule = rulesToBuild.get(i);
+        resultBuilder.put(rule, Optional.ofNullable(buildResults.get(i)));
+      }
+
+      return BuildExecutionResult.builder()
+          .setFailures(
+              buildResults
+                  .stream()
+                  .filter(input -> input.getSuccess() == null)
+                  .collect(Collectors.toList()))
+          .setResults(resultBuilder)
+          .build();
+    }
+  }
+
+  private BuildExecutionResult createBuildExecutionResult(
+      ImmutableList<BuildRule> rulesToBuild, List<BuildResult> results) {
     // Insertion order matters
     LinkedHashMap<BuildRule, Optional<BuildResult>> resultBuilder = new LinkedHashMap<>();
 
@@ -254,7 +283,11 @@ public class Build implements Closeable {
     }
 
     return BuildExecutionResult.builder()
-        .setFailures(FluentIterable.from(results).filter(input -> input.getSuccess() == null))
+        .setFailures(
+            results
+                .stream()
+                .filter(input -> input.getSuccess() == null)
+                .collect(Collectors.toList()))
         .setResults(resultBuilder)
         .build();
   }
@@ -312,24 +345,14 @@ public class Build implements Closeable {
             exitCode = 1;
           }
         }
+      } catch (BuildExecutionException e) {
+        if (pathToBuildReport.isPresent()) {
+          writePartialBuildReport(eventBus, pathToBuildReport.get(), e);
+        }
+        throw rootCauseOfBuildException(e);
       } catch (ExecutionException | RuntimeException e) {
         // This is likely a checked exception that was caught while building a build rule.
-        Throwable cause = e.getCause();
-        if (cause == null) {
-          Throwables.throwIfInstanceOf(e, RuntimeException.class);
-          throw new RuntimeException(e);
-        }
-        Throwables.throwIfInstanceOf(cause, IOException.class);
-        Throwables.throwIfInstanceOf(cause, StepFailedException.class);
-        Throwables.throwIfInstanceOf(cause, InterruptedException.class);
-        Throwables.throwIfInstanceOf(cause, ClosedByInterruptException.class);
-        Throwables.throwIfInstanceOf(cause, HumanReadableException.class);
-        if (cause instanceof ExceptionWithHumanReadableMessage) {
-          throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
-        }
-
-        LOG.debug(e, "Got an exception during the build.");
-        throw new RuntimeException(e);
+        throw rootCauseOfBuildException(e);
       }
     } catch (IOException e) {
       LOG.debug(e, "Got an exception during the build.");
@@ -342,6 +365,58 @@ public class Build implements Closeable {
     }
 
     return exitCode;
+  }
+
+  /**
+   * Returns a root cause of the build exception {@code e}.
+   *
+   * @param e The build exception.
+   * @return The root cause exception for why the build failed.
+   */
+  private RuntimeException rootCauseOfBuildException(Exception e)
+      throws IOException, StepFailedException, InterruptedException {
+    Throwable cause = e.getCause();
+    if (cause == null) {
+      Throwables.throwIfInstanceOf(e, RuntimeException.class);
+      return new RuntimeException(e);
+    }
+    Throwables.throwIfInstanceOf(cause, IOException.class);
+    Throwables.throwIfInstanceOf(cause, StepFailedException.class);
+    Throwables.throwIfInstanceOf(cause, InterruptedException.class);
+    Throwables.throwIfInstanceOf(cause, ClosedByInterruptException.class);
+    Throwables.throwIfInstanceOf(cause, HumanReadableException.class);
+    if (cause instanceof ExceptionWithHumanReadableMessage) {
+      return new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
+    }
+
+    LOG.debug(e, "Got an exception during the build.");
+    return new RuntimeException(e);
+  }
+
+  /**
+   * Writes build report for a build interrupted by execution exception.
+   *
+   * <p>In case {@code keepGoing} flag is not set, the build terminates without having all build
+   * results, but clients are still very much interested in finding out what exactly went wrong.
+   * {@link BuildExecutionException} captures partial build execution result, which can still be
+   * used to provide the most useful information about build result.
+   *
+   * @throws IOException
+   */
+  private void writePartialBuildReport(
+      BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) throws IOException {
+    // Note that pathToBuildReport is an absolute path that may exist outside of the project
+    // root, so it is not appropriate to use ProjectFilesystem to write the output.
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    BuildReport buildReport = new BuildReport(e.createBuildExecutionResult(), pathResolver);
+    String jsonBuildReport = buildReport.generateJsonBuildReport();
+    try {
+      Files.write(jsonBuildReport, pathToBuildReport.toFile(), Charsets.UTF_8);
+    } catch (IOException writeException) {
+      LOG.warn(writeException, "Failed to write the build report to %s", pathToBuildReport);
+      eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
+    }
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -95,7 +96,19 @@ public final class KnownBuildRuleTypesTestUtil {
                 .putAll(getPythonProcessMap(paths))
                 .build());
 
+    return createInstance(config, filesystem, executor, new FakeAndroidDirectoryResolver());
+  }
+
+  @VisibleForTesting
+  static KnownBuildRuleTypes createInstance(
+      BuckConfig config,
+      ProjectFilesystem filesystem,
+      ProcessExecutor processExecutor,
+      AndroidDirectoryResolver androidDirectoryResolver)
+      throws InterruptedException, IOException {
+    SdkEnvironment sdkEnvironment =
+        AbstractSdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
     return KnownBuildRuleTypes.createInstance(
-        config, filesystem, executor, new FakeAndroidDirectoryResolver());
+        config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
   }
 }

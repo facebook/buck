@@ -182,6 +182,7 @@ public class BuildThreadStateRendererTest {
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
+        0,
         runningSteps,
         new BuildRuleThreadTracker(buildEvents, ImmutableMap.of()));
   }

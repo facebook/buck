@@ -139,7 +139,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                Optional.empty(),
+                Paths.get("working"),
                 JavacCompilationMode.FULL)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -189,7 +189,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                Optional.empty(),
+                Paths.get("working"),
                 JavacCompilationMode.FULL)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -288,7 +288,7 @@ public class Jsr199JavacIntegrationTest {
               ImmutableList.of(),
               SOURCE_PATHS,
               pathToSrcsList,
-              Optional.empty(),
+              Paths.get("working"),
               JavacCompilationMode.FULL)
           .buildClasses();
       fail("Did not expect compilation to succeed");

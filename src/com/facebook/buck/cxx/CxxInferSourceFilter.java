@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class CxxInferSourceFilter {
+class CxxInferSourceFilter {
 
   private final Optional<Pattern> blacklistRegex;
 

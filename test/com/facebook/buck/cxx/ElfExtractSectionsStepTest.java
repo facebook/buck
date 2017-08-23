@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;

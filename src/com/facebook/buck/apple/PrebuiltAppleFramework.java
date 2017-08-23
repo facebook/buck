@@ -19,10 +19,10 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -158,8 +157,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getCxxPreprocessorInput(final CxxPlatform cxxPlatform) {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
     if (isPlatformSupported(cxxPlatform)) {
@@ -173,7 +171,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
@@ -223,8 +221,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<LanguageExtensions> languageExtensions) {
     Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
     NativeLinkableInput input = nativeLinkableCache.get(key);
     if (input == null) {
@@ -240,8 +237,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }
 }

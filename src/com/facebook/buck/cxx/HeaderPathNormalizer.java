@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class HeaderPathNormalizer {
+class HeaderPathNormalizer {
 
   private final SourcePathResolver pathResolver;
 

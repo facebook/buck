@@ -102,7 +102,7 @@ class ExopackageAgent {
   }
 
   private static void installAgentApk(
-      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) throws Exception {
+      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) {
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
       File apkPath = agentApkPath.toFile();
       boolean success =

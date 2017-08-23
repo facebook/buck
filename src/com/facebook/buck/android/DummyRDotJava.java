@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JarParameters;
@@ -233,42 +234,39 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToJarOutputDir)));
 
-    Path pathToSrcsList =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths)
+            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setOutputDirectory(rDotJavaClassesFolder)
+            .build();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                pathToSrcsList.getParent())));
+                compilerParameters.getPathToSourcesList().getParent())));
 
     // Compile the .java files.
     compileStepFactory.createCompileStep(
         context,
-        javaSourceFilePaths,
         getBuildTarget(),
         context.getSourcePathResolver(),
         getProjectFilesystem(),
-        /* declared classpath */ ImmutableSortedSet.of(),
-        rDotJavaClassesFolder,
-        Optional.of(
-            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
-        Optional.empty(),
-        Optional.empty(),
-        pathToSrcsList,
+        compilerParameters,
         steps,
         buildableContext);
     buildableContext.recordArtifact(rDotJavaClassesFolder);
 
-    steps.add(
-        new JarDirectoryStep(
-            getProjectFilesystem(),
-            JarParameters.builder()
-                .setJarPath(outputJar)
-                .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
-                .setMergeManifests(true)
-                .setHashEntries(true)
-                .build()));
+    JarParameters jarParameters =
+        JarParameters.builder()
+            .setJarPath(outputJar)
+            .setEntriesToJar(ImmutableSortedSet.of(rDotJavaClassesFolder))
+            .setMergeManifests(true)
+            .setHashEntries(true)
+            .build();
+    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
     buildableContext.recordArtifact(outputJar);
 
     steps.add(new CheckDummyRJarNotEmptyStep(javaSourceFilePaths));

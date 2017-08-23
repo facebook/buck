@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -27,7 +26,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.ForwardingProcessListener;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -131,11 +129,7 @@ public final class RunCommand extends AbstractCommand {
 
     Build build = buildCommand.getBuild();
     BuildRule targetRule;
-    try {
-      targetRule = build.getRuleResolver().requireRule(target);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e.getHumanReadableErrorMessage());
-    }
+    targetRule = build.getRuleResolver().requireRule(target);
     BinaryBuildRule binaryBuildRule = null;
     if (targetRule instanceof BinaryBuildRule) {
       binaryBuildRule = (BinaryBuildRule) targetRule;

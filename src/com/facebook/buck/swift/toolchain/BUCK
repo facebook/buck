@@ -1,0 +1,14 @@
+java_library(
+    name = "toolchain",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/apple:platform",
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/swift:platform",
+        "//third-party/java/guava:guava",
+    ],
+)

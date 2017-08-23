@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Compiler;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
-import com.facebook.buck.cxx.platform.DependencyTrackingMode;
+import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;

@@ -27,12 +27,16 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.model.UserFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,13 +48,13 @@ public class JsLibraryDescriptionTest {
   private BuildTarget target;
 
   @Before
-  public void setUp() throws NoSuchBuildTargetException {
+  public void setUp() {
     scenarioBuilder = JsTestScenario.builder();
     target = BuildTargetFactory.newInstance(String.format("//%s:target", targetDirectory));
   }
 
   @Test
-  public void subBasePathForSourceFiles() throws NoSuchBuildTargetException {
+  public void subBasePathForSourceFiles() {
     final String basePath = "base/path";
     final String filePath = String.format("%s/sub/file.js", targetDirectory);
     final JsTestScenario scenario = buildScenario(basePath, new FakeSourcePath(filePath));
@@ -61,7 +65,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void relativeBasePathForSourceFiles() throws NoSuchBuildTargetException {
+  public void relativeBasePathForSourceFiles() {
     final String basePath = "../base/path";
     final String filePath = String.format("%s/sub/file.js", targetDirectory);
     final JsTestScenario scenario = buildScenario(basePath, new FakeSourcePath(filePath));
@@ -71,7 +75,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void basePathReplacesBuildTargetSourcePath() throws NoSuchBuildTargetException {
+  public void basePathReplacesBuildTargetSourcePath() {
     final String basePath = "base/path.js";
     final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
@@ -83,7 +87,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void relativeBasePathReplacesBuildTargetSourcePath() throws NoSuchBuildTargetException {
+  public void relativeBasePathReplacesBuildTargetSourcePath() {
     final String basePath = "../path.js";
     final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
@@ -94,7 +98,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void buildTargetWithSubpathPair() throws NoSuchBuildTargetException {
+  public void buildTargetWithSubpathPair() {
     final String basePath = ".";
     final BuildTarget target = BuildTargetFactory.newInstance("//:node_modules");
     scenarioBuilder.arbitraryRule(target);
@@ -109,7 +113,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void propagatesReleaseAndPlatformFlavors() throws NoSuchBuildTargetException {
+  public void propagatesReleaseAndPlatformFlavors() {
     ImmutableSortedSet<UserFlavor> flavors =
         ImmutableSortedSet.of(JsFlavors.IOS, JsFlavors.RELEASE);
     BuildTarget withFlavors = this.target.withFlavors(flavors);
@@ -132,7 +136,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void doesNotpropagatePlatformFlavorsWithoutRelease() throws NoSuchBuildTargetException {
+  public void doesNotpropagatePlatformFlavorsWithoutRelease() {
     UserFlavor platformFlavor = JsFlavors.ANDROID;
     BuildTarget withPlatformFlavor = target.withFlavors(platformFlavor);
     JsTestScenario scenario =
@@ -155,13 +159,61 @@ public class JsLibraryDescriptionTest {
     assertNotEquals(0, numFileDeps);
   }
 
-  private JsTestScenario buildScenario(String basePath, SourcePath source)
-      throws NoSuchBuildTargetException {
+  @Test
+  public void supportsDepsQuery() {
+    BuildTarget a = BuildTargetFactory.newInstance("//query-deps:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//query-deps:b");
+    BuildTarget c = BuildTargetFactory.newInstance("//query-deps:c");
+    BuildTarget l = BuildTargetFactory.newInstance("//query-deps:l");
+    BuildTarget x = BuildTargetFactory.newInstance("//query-deps:x");
+
+    JsTestScenario scenario =
+        scenarioBuilder
+            .library(a)
+            .library(b)
+            .library(c, b)
+            .appleLibraryWithDeps(l, a, c)
+            .bundleWithDeps(x, l)
+            .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
+            .library(target, Query.of(String.format("deps(%s)", x)))
+            .build();
+
+    TargetNode<?, ?> node = scenario.targetGraph.get(target);
+    assertThat(x, in(node.getBuildDeps()));
+
+    JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b, c));
+    assertThat(deps, everyItem(in(lib.getBuildDeps())));
+    assertEquals(
+        deps.stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSortedSet()),
+        lib.getLibraryDependencies());
+  }
+
+  @Test
+  public void supportsDepsAndDepsQuery() {
+    BuildTarget a = BuildTargetFactory.newInstance("//query:dep");
+    BuildTarget b = BuildTargetFactory.newInstance("//direct:dep");
+
+    JsTestScenario scenario =
+        scenarioBuilder.library(a).library(b).library(target, Query.of(a.toString()), b).build();
+
+    JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
+    ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b));
+    assertThat(deps, everyItem(in(lib.getBuildDeps())));
+    assertEquals(
+        deps.stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSortedSet()),
+        lib.getLibraryDependencies());
+  }
+
+  private JsTestScenario buildScenario(String basePath, SourcePath source) {
     return scenarioBuilder.library(target, basePath, source).build();
   }
 
-  private JsTestScenario buildScenario(String basePath, Pair<SourcePath, String> source)
-      throws NoSuchBuildTargetException {
+  private JsTestScenario buildScenario(String basePath, Pair<SourcePath, String> source) {
     return scenarioBuilder.library(target, basePath, source).build();
   }
 

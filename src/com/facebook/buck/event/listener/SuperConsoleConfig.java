@@ -24,6 +24,7 @@ public class SuperConsoleConfig {
 
   private static final String SECTION_NAME = "ui";
   private static final int DEFAULT_THREAD_LINE_LIMIT = 10;
+  private static final long DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS = 0;
 
   private final BuckConfig delegate;
 
@@ -46,6 +47,20 @@ public class SuperConsoleConfig {
 
   public boolean shouldAlwaysSortThreadsByTime() {
     return delegate.getBooleanValue(SECTION_NAME, "always_sort_threads_by_time", false);
+  }
+
+  // It will hide build rules from super console when the duration is below this threshold.
+  // It will help with the ratio signal vs noise in super console and highlight things that
+  // are slower.
+  public long getBuildRuleMinimumDurationMillis() {
+    return delegate
+        .getLong(SECTION_NAME, "build_rule_minimum_duration_millis")
+        .orElse(DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS);
+  }
+
+  // When true, it will hide successful built rules when using the simple console.
+  public boolean getHideSucceededRulesInLogMode() {
+    return delegate.getBooleanValue(SECTION_NAME, "hide_succeeded_rules_in_log_mode", false);
   }
 
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {

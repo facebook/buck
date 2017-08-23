@@ -80,6 +80,7 @@ public class ProvisioningProfileMetadataTest {
 
   @Test
   public void testProvisioningProfileReadCommandOverride() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
 

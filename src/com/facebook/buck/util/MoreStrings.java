@@ -18,6 +18,9 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharSource;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -116,5 +119,9 @@ public final class MoreStrings {
     return data.substring(0, keepFirstChars)
         + truncateMessage
         + data.substring(data.length() - keepLastChars);
+  }
+
+  public static ImmutableList<String> lines(String data) throws IOException {
+    return CharSource.wrap(data).readLines();
   }
 }

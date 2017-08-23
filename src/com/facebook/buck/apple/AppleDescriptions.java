@@ -25,11 +25,11 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
-import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -37,7 +37,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -110,16 +109,18 @@ public class AppleDescriptions {
   }
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPublicCxxHeaders(
+      BuildTarget buildTarget,
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
       CxxLibraryDescription.CommonArg arg) {
     // The exported headers in the populated cxx constructor arg will contain exported headers from
     // the apple constructor arg with the public include style.
     return AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-        pathResolver, headerPathPrefix, arg.getExportedHeaders());
+        buildTarget, pathResolver, headerPathPrefix, arg.getExportedHeaders());
   }
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
+      BuildTarget buildTarget,
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
       CxxLibraryDescription.CommonArg arg) {
@@ -128,24 +129,27 @@ public class AppleDescriptions {
     return ImmutableSortedMap.<String, SourcePath>naturalOrder()
         .putAll(
             AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                pathResolver, arg.getHeaders()))
+                buildTarget, pathResolver, arg.getHeaders()))
         .putAll(
             AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                pathResolver, headerPathPrefix, arg.getHeaders()))
+                buildTarget, pathResolver, headerPathPrefix, arg.getHeaders()))
         .putAll(
             AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                pathResolver, arg.getExportedHeaders()))
+                buildTarget, pathResolver, arg.getExportedHeaders()))
         .build();
   }
 
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> parseAppleHeadersForUseFromOtherTargets(
-      Function<SourcePath, Path> pathResolver, Path headerPathPrefix, SourceList headers) {
+      BuildTarget buildTarget,
+      Function<SourcePath, Path> pathResolver,
+      Path headerPathPrefix,
+      SourceList headers) {
     if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. For use from other targets, prepend their names
       // with the header path prefix.
       return convertToFlatCxxHeaders(
-          headerPathPrefix, pathResolver, headers.getUnnamedSources().get());
+          buildTarget, headerPathPrefix, pathResolver, headers.getUnnamedSources().get());
     } else {
       // The user specified a map from include paths to header files. Just use the specified map.
       return headers.getNamedSources().get();
@@ -154,12 +158,12 @@ public class AppleDescriptions {
 
   @VisibleForTesting
   static ImmutableMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
-      Function<SourcePath, Path> pathResolver, SourceList headers) {
+      BuildTarget buildTarget, Function<SourcePath, Path> pathResolver, SourceList headers) {
     if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. Headers can be included from the same target
       // using only their file name without a prefix.
       return convertToFlatCxxHeaders(
-          Paths.get(""), pathResolver, headers.getUnnamedSources().get());
+          buildTarget, Paths.get(""), pathResolver, headers.getUnnamedSources().get());
     } else {
       // The user specified a map from include paths to header files. There is nothing we need to
       // add on top of the exported headers.
@@ -177,6 +181,7 @@ public class AppleDescriptions {
    */
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> convertToFlatCxxHeaders(
+      BuildTarget buildTarget,
       Path headerPathPrefix,
       Function<SourcePath, Path> sourcePathResolver,
       Set<SourcePath> headerPaths) {
@@ -188,12 +193,11 @@ public class AppleDescriptions {
       if (includeToFile.contains(key)) {
         ImmutableSortedMap<String, SourcePath> result = builder.build();
         throw new HumanReadableException(
-            "The same include path maps to multiple files:\n"
-                + "  Include path: %s\n"
-                + "  Conflicting files:\n"
-                + "    %s\n"
-                + "    %s",
-            key, headerPath, result.get(key));
+            "In target '%s', '%s' maps to the following header files:\n"
+                + "- %s\n"
+                + "- %s\n\n"
+                + "Please rename one of them or export one of them to a different path.",
+            buildTarget, key, headerPath, result.get(key));
       }
       includeToFile.add(key);
       builder.put(key, headerPath);
@@ -216,10 +220,10 @@ public class AppleDescriptions {
         ImmutableSortedMap.<String, SourcePath>naturalOrder()
             .putAll(
                 convertAppleHeadersToPublicCxxHeaders(
-                    resolver::getRelativePath, headerPathPrefix, arg))
+                    buildTarget, resolver::getRelativePath, headerPathPrefix, arg))
             .putAll(
                 convertAppleHeadersToPrivateCxxHeaders(
-                    resolver::getRelativePath, headerPathPrefix, arg))
+                    buildTarget, resolver::getRelativePath, headerPathPrefix, arg))
             .build();
 
     ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
@@ -268,11 +272,11 @@ public class AppleDescriptions {
     output.setHeaders(
         SourceList.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
-                resolver::getRelativePath, headerPathPrefix, arg)));
+                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
     output.setExportedHeaders(
         SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
-                resolver::getRelativePath, headerPathPrefix, arg)));
+                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)));
   }
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(
@@ -540,8 +544,7 @@ public class AppleDescriptions {
       ImmutableSortedSet<BuildTarget> tests,
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
-      boolean cacheable)
-      throws NoSuchBuildTargetException {
+      boolean cacheable) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
@@ -761,8 +764,7 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       ImmutableSet<Flavor> flavors,
       BuildRuleResolver resolver,
-      BuildTarget binary)
-      throws NoSuchBuildTargetException {
+      BuildTarget binary) {
 
     // Don't flavor genrule deps.
     if (targetGraph.get(binary).getDescription() instanceof AbstractGenruleDescription) {
@@ -900,5 +902,16 @@ public class AppleDescriptions {
         || flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
+  }
+
+  public static boolean targetNodeContainsSwiftSourceCode(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> node) {
+    for (Path inputPath : node.getInputs()) {
+      if (inputPath.toString().endsWith(".swift")) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

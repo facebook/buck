@@ -953,7 +953,7 @@ $ buck targets --resolve-alias app#src_jar
   {param example_value: '10kB' /}
   {param description}
     The maximum size for artifacts to be inlined ({call buckconfig.cache_mode /} must contain
-    {sp}<code>sqlite</code>).  The default size is 1kB.
+    {sp}<code>sqlite</code>).  The default size is 40B.
   {/param}
 {/call}
 
@@ -1352,7 +1352,7 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
   {param example_value: '3' /}
   {param description}
     In case buck is unable to download a file, it will retry specified number of times before
-    giving up.
+    giving up. By default it's not set, so Buck is not going to retry failed downloads.
   {/param}
 {/call}
 

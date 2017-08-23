@@ -17,7 +17,7 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../buck-out/bin/modules/aggregate_multiple_manifests_without_package/lib2/lib__lib2__classes" />
+    <output url="jar://$MODULE_DIR$/../../buck-out/gen/modules/aggregate_multiple_manifests_without_package/lib2/lib__lib2__output/lib2.jar!/" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/aggregate_multiple_manifests_without_package/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/aggregate_multiple_manifests_without_package/gen" isTestSource="false" />

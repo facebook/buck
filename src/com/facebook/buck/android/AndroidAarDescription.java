@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -26,7 +26,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -103,8 +102,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
       BuildRuleParams originalBuildRuleParams,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidAarDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidAarDescriptionArg args) {
 
     buildTarget.checkUnflavored();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -237,7 +235,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               JavacFactory.create(ruleFinder, javaBuckConfig, args),
               javacOptions,
               packageableCollection);
-      resolver.addAllToIndex(buildConfigRules);
+      buildConfigRules.forEach(resolver::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(
           buildConfigRules

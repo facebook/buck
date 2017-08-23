@@ -17,21 +17,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleCxxPlatforms;
-import com.facebook.buck.apple.AppleSdk;
-import com.facebook.buck.apple.AppleSdkDiscovery;
-import com.facebook.buck.apple.AppleSdkPaths;
-import com.facebook.buck.apple.AppleToolchain;
-import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Contain items used to construct a {@link KnownBuildRuleTypes} that are shared between all {@link
@@ -39,62 +28,22 @@ import java.util.Optional;
  */
 public class KnownBuildRuleTypesFactory {
 
-  private static final Logger LOG = Logger.get(KnownBuildRuleTypesFactory.class);
-
   private final ProcessExecutor executor;
   private final AndroidDirectoryResolver directoryResolver;
+  private final SdkEnvironment sdkEnvironment;
 
   public KnownBuildRuleTypesFactory(
-      ProcessExecutor executor, AndroidDirectoryResolver directoryResolver) {
+      ProcessExecutor executor,
+      AndroidDirectoryResolver directoryResolver,
+      SdkEnvironment sdkEnvironment) {
     this.executor = executor;
     this.directoryResolver = directoryResolver;
+    this.sdkEnvironment = sdkEnvironment;
   }
 
-  public KnownBuildRuleTypes create(
-      BuckConfig config, ProjectFilesystem filesystem, SdkEnvironment sdkEnvironment)
+  public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
       throws IOException, InterruptedException {
     return KnownBuildRuleTypes.createInstance(
         config, filesystem, executor, directoryResolver, sdkEnvironment);
-  }
-
-  public SdkEnvironment createSdkEnvironment(BuckConfig config) {
-    Optional<Path> appleDeveloperDir =
-        AppleCxxPlatforms.getAppleDeveloperDirectory(config, this.executor);
-
-    AppleConfig appleConfig = config.getView(AppleConfig.class);
-    Optional<ImmutableMap<String, AppleToolchain>> appleToolchains = Optional.empty();
-    try {
-      appleToolchains =
-          Optional.of(
-              AppleToolchainDiscovery.discoverAppleToolchains(
-                  appleDeveloperDir, appleConfig.getExtraToolchainPaths()));
-    } catch (IOException e) {
-      LOG.error(
-          e,
-          "Couldn't find the Apple build toolchain.\nPlease check that the SDK is installed properly.");
-    }
-
-    Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths = Optional.empty();
-    if (appleToolchains.isPresent()) {
-      try {
-        appleSdkPaths =
-            Optional.of(
-                AppleSdkDiscovery.discoverAppleSdkPaths(
-                    appleDeveloperDir,
-                    appleConfig.getExtraPlatformPaths(),
-                    appleToolchains.get(),
-                    appleConfig));
-      } catch (IOException e) {
-        LOG.error(
-            e, "Couldn't find the Apple SDK.\nPlease check that the SDK is installed properly.");
-      }
-    }
-
-    return SdkEnvironment.of(
-        appleSdkPaths,
-        appleToolchains,
-        directoryResolver.getSdkOrAbsent(),
-        directoryResolver.getNdkOrAbsent(),
-        directoryResolver.getNdkVersion());
   }
 }

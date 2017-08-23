@@ -21,7 +21,6 @@ import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -53,7 +52,13 @@ public class JavaLibraryDescription
         VersionPropagator<JavaLibraryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
-      ImmutableSet.of(Javadoc.DOC_JAR, JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
+      ImmutableSet.of(
+          Javadoc.DOC_JAR,
+          JavaLibrary.SRC_JAR,
+          JavaLibrary.MAVEN_JAR,
+          HasJavaAbi.CLASS_ABI_FLAVOR,
+          HasJavaAbi.SOURCE_ABI_FLAVOR,
+          HasJavaAbi.VERIFIED_SOURCE_ABI_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   @VisibleForTesting private final JavacOptions defaultOptions;
@@ -81,8 +86,7 @@ public class JavaLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JavaLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JavaLibraryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.

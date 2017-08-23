@@ -16,21 +16,19 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Preprocessor;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorConvertible;
-import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
@@ -50,36 +48,6 @@ import javax.annotation.Nonnull;
 public class CxxPreprocessables {
 
   private CxxPreprocessables() {}
-
-  public enum HeaderMode implements FlavorConvertible {
-
-    /** Creates the tree of symbolic links of headers. */
-    SYMLINK_TREE_ONLY,
-    /** Creates the header map that references the headers directly in the source tree. */
-    HEADER_MAP_ONLY,
-    /**
-     * Creates the tree of symbolic links of headers and creates the header map that references the
-     * symbolic links to the headers.
-     */
-    SYMLINK_TREE_WITH_HEADER_MAP,
-    ;
-
-    private final Flavor flavor;
-
-    HeaderMode() {
-      this.flavor =
-          InternalFlavor.of(
-              String.format(
-                  "%s-%s",
-                  CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, getClass().getSimpleName()),
-                  CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_HYPHEN, toString())));
-    }
-
-    @Override
-    public Flavor getFlavor() {
-      return flavor;
-    }
-  }
 
   public enum IncludeType {
 
@@ -137,8 +105,7 @@ public class CxxPreprocessables {
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       final CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> inputs,
-      final Predicate<Object> traverse)
-      throws NoSuchBuildTargetException {
+      final Predicate<Object> traverse) {
 
     // We don't really care about the order we get back here, since headers shouldn't
     // conflict.  However, we want something that's deterministic, so sort by build
@@ -146,9 +113,9 @@ public class CxxPreprocessables {
     final Map<BuildTarget, CxxPreprocessorInput> deps = new LinkedHashMap<>();
 
     // Build up the map of all C/C++ preprocessable dependencies.
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(inputs) {
+    new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         if (rule instanceof CxxPreprocessorDep) {
           CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
           deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform));
@@ -163,8 +130,7 @@ public class CxxPreprocessables {
   }
 
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      final CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs)
-      throws NoSuchBuildTargetException {
+      final CxxPlatform cxxPlatform, Iterable<? extends BuildRule> inputs) {
     return getTransitiveCxxPreprocessorInput(cxxPlatform, inputs, x -> true);
   }
 
@@ -200,8 +166,7 @@ public class CxxPreprocessables {
       BuildRuleResolver ruleResolver,
       CxxPlatform platform,
       HeaderVisibility headerVisibility,
-      IncludeType includeType)
-      throws NoSuchBuildTargetException {
+      IncludeType includeType) {
     BuildRule rule =
         ruleResolver.requireRule(
             target.withAppendedFlavors(
@@ -228,8 +193,7 @@ public class CxxPreprocessables {
       HeaderVisibility headerVisibility,
       IncludeType includeType,
       Multimap<CxxSource.Type, String> exportedPreprocessorFlags,
-      Iterable<FrameworkPath> frameworks)
-      throws NoSuchBuildTargetException {
+      Iterable<FrameworkPath> frameworks) {
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     if (hasHeaderSymlinkTree) {
       addHeaderSymlinkTree(
@@ -249,8 +213,8 @@ public class CxxPreprocessables {
         .build(
             new CacheLoader<CxxPlatform, ImmutableMap<BuildTarget, CxxPreprocessorInput>>() {
               @Override
-              public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(@Nonnull CxxPlatform key)
-                  throws NoSuchBuildTargetException {
+              public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
+                  @Nonnull CxxPlatform key) {
                 Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
                 builder.put(
                     preprocessorDep.getBuildTarget(), preprocessorDep.getCxxPreprocessorInput(key));

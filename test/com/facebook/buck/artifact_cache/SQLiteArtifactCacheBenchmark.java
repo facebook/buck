@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -131,6 +132,7 @@ public class SQLiteArtifactCacheBenchmark {
         "sqlite",
         filesystem,
         cacheDir,
+        BuckEventBusForTests.newInstance(),
         maxCacheSizeBytes,
         Optional.of(MAX_INLINED_BYTES),
         CacheReadMode.READWRITE);

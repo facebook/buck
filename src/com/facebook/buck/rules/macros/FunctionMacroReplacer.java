@@ -20,18 +20,19 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.model.MacroReplacer;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 
 /** A @{link MacroReplacer} wrapping a @{link Function}. */
 public class FunctionMacroReplacer implements MacroReplacer {
 
-  private final Function<String, String> function;
+  private final Function<ImmutableList<String>, String> function;
 
-  public FunctionMacroReplacer(Function<String, String> function) {
+  public FunctionMacroReplacer(Function<ImmutableList<String>, String> function) {
     this.function = function;
   }
 
   @Override
   public String replace(MacroMatchResult input) throws MacroException {
-    return function.apply(input.getMacroInput().get(0));
+    return function.apply(input.getMacroInput());
   }
 }

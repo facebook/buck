@@ -98,15 +98,17 @@ cxx_library(
 
 prebuilt_cxx_library(
   name = 'prebuilt_for_C',
-  lib_dir = 'prebuilt_for_C/$(platform)',
-  deps = [
+  supported_platforms_regex = 'android-x86',
+  platform_shared_lib = [
+    ('android-x86', 'prebuilt_for_C/android-x86/libprebuilt_for_C.so'),
   ],
 )
 
 prebuilt_cxx_library(
   name = 'prebuilt_for_F',
-  lib_dir = 'prebuilt_for_F/$(platform)',
-  deps = [
+  supported_platforms_regex = 'android-x86',
+  platform_shared_lib = [
+    ('android-x86', 'prebuilt_for_F/android-x86/libprebuilt_for_F.so'),
   ],
 )
 

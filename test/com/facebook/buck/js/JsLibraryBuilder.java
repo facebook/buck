@@ -22,6 +22,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.test.selectors.Nullable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,13 +37,13 @@ public class JsLibraryBuilder
     super(libraryDescription, target, filesystem);
   }
 
-  JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
-    getArgForPopulating().setLibs(libs);
+  JsLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
-  JsLibraryBuilder setExtraArgs(String extraArgs) {
-    getArgForPopulating().setExtraArgs(Optional.of(extraArgs));
+  JsLibraryBuilder setDepsQuery(Query query) {
+    getArgForPopulating().setDepsQuery(query);
     return this;
   }
 

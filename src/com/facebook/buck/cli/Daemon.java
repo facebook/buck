@@ -64,9 +64,6 @@ import java.util.concurrent.ConcurrentMap;
 final class Daemon implements Closeable {
   private static final Logger LOG = Logger.get(Daemon.class);
 
-  private static final String STATIC_CONTENT_DIRECTORY =
-      System.getProperty("buck.path_to_static_content", "webserver/static");
-
   private final Cell rootCell;
   private final TypeCoercerFactory typeCoercerFactory;
   private final Parser parser;
@@ -151,7 +148,7 @@ final class Daemon implements Closeable {
       BuckConfig config, ProjectFilesystem filesystem) {
     Optional<Integer> port = getValidWebServerPort(config);
     if (port.isPresent()) {
-      WebServer webServer = new WebServer(port.get(), filesystem, STATIC_CONTENT_DIRECTORY);
+      WebServer webServer = new WebServer(port.get(), filesystem);
       return Optional.of(webServer);
     } else {
       return Optional.empty();

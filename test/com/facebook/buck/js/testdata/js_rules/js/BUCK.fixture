@@ -29,7 +29,7 @@ js_library(
 js_library(
     name = 'fruit-salad',
     srcs = ['fruit-salad.js'],
-    libs = [':fruit', ':extras'],
+    deps = [':fruit', ':extras'],
     worker = ':packager_worker',
 )
 
@@ -103,5 +103,12 @@ js_bundle(
     android_package = 'com.sample',
     worker = ':packager_worker',
     visibility = ['PUBLIC'],
+)
+
+js_library(
+    name = 'lib-with-deps-query',
+    deps = [':build-target-output'],
+    deps_query = 'deps(//js/native-js:widgets)',
+    worker = ':packager_worker',
 )
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 
 /**
  * Utility class with methods working with {@link HeaderVisibility} in the context of Apple rules.

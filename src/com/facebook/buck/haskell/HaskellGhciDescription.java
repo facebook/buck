@@ -15,25 +15,24 @@
  */
 package com.facebook.buck.haskell;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
-import com.facebook.buck.cxx.platform.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -96,8 +95,7 @@ public class HaskellGhciDescription
     return ImmutableList.copyOf(nativeLinkableMap.values());
   }
 
-  private boolean isPrebuiltSO(NativeLinkable nativeLinkable, CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  private boolean isPrebuiltSO(NativeLinkable nativeLinkable, CxxPlatform cxxPlatform) {
 
     if (nativeLinkable instanceof PrebuiltCxxLibraryGroupDescription.CustomPrebuiltCxxLibrary) {
       return true;
@@ -124,9 +122,8 @@ public class HaskellGhciDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      ImmutableList<NativeLinkable> sortedNativeLinkables)
-      throws NoSuchBuildTargetException {
-    return resolver.computeIfAbsentThrowing(
+      ImmutableList<NativeLinkable> sortedNativeLinkables) {
+    return resolver.computeIfAbsent(
         BuildTarget.of(
             UnflavoredBuildTarget.of(
                 baseTarget.getCellPath(),
@@ -197,8 +194,7 @@ public class HaskellGhciDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       final CellPathResolver cellPathResolver,
-      HaskellGhciDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      HaskellGhciDescriptionArg args) {
 
     HaskellPlatform platform = getPlatform(buildTarget, args);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -216,16 +212,16 @@ public class HaskellGhciDescription
     ImmutableSet.Builder<HaskellPackage> haskellPackages = ImmutableSet.builder();
     ImmutableSet.Builder<HaskellPackage> prebuiltHaskellPackages = ImmutableSet.builder();
     ImmutableSet.Builder<HaskellPackage> firstOrderHaskellPackages = ImmutableSet.builder();
-    AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException> haskellVisitor =
-        new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+    AbstractBreadthFirstTraversal<BuildRule> haskellVisitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(deps) {
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
             ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
             if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
               HaskellCompileInput ci =
                   ((HaskellCompileDep) rule)
                       .getCompileInput(
-                          platform, Linker.LinkableDepType.STATIC, args.getEnableProfiling());
+                          platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
@@ -246,10 +242,10 @@ public class HaskellGhciDescription
     haskellVisitor.start();
 
     ImmutableSet.Builder<NativeLinkable> nativeLinkables = ImmutableSet.builder();
-    AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException> cxxVisitor =
-        new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+    AbstractBreadthFirstTraversal<BuildRule> cxxVisitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(deps) {
           @Override
-          public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
             ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
             if (rule instanceof CxxLibrary) {
               nativeLinkables.add((NativeLinkable) rule);
@@ -311,7 +307,7 @@ public class HaskellGhciDescription
             firstOrderHaskellPackages.build(),
             haskellPackages.build(),
             prebuiltHaskellPackages.build(),
-            args.getEnableProfiling(),
+            args.isEnableProfiling(),
             platform.getGhciScriptTemplate().get(),
             platform.getGhciBinutils().get(),
             platform.getGhciGhc().get(),
@@ -358,7 +354,7 @@ public class HaskellGhciDescription
     }
 
     @Value.Default
-    default boolean getEnableProfiling() {
+    default boolean isEnableProfiling() {
       return false;
     }
 

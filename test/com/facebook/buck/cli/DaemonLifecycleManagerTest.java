@@ -21,11 +21,16 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.Console;
@@ -130,6 +135,7 @@ public class DaemonLifecycleManagerTest {
   @Test
   public void testAppleSdkChangesParserInvalidated() throws IOException, InterruptedException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     Optional<Path> appleDeveloperDirectory = getAppleDeveloperDir(buckConfig);
@@ -162,8 +168,13 @@ public class DaemonLifecycleManagerTest {
             new FakeProcess(0, appleDeveloperDirectory.get().toString(), "")));
     FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
 
+    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
+
+    SdkEnvironment sdkEnvironment =
+        SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
     KnownBuildRuleTypesFactory factory =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, new FakeAndroidDirectoryResolver());
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
@@ -171,29 +182,54 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory)
+                .setSdkEnvironment(sdkEnvironment)
                 .build());
+
+    sdkEnvironment =
+        SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
+    factory =
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory)
+                .setSdkEnvironment(sdkEnvironment)
                 .build());
     assertEquals("Apple SDK should still be not found", daemon1, daemon2);
+
+    sdkEnvironment =
+        SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
+    factory =
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory)
+                .setSdkEnvironment(sdkEnvironment)
                 .build());
     assertNotEquals("Apple SDK should be found", daemon2, daemon3);
+
+    sdkEnvironment =
+        SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
+    factory =
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory)
+                .setSdkEnvironment(sdkEnvironment)
                 .build());
     assertEquals("Apple SDK should still be found", daemon3, daemon4);
   }
@@ -233,16 +269,20 @@ public class DaemonLifecycleManagerTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
+    SdkEnvironment sdkEnvironment1 =
+        SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidResolver1);
     KnownBuildRuleTypesFactory factory1 =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, androidResolver1);
+        new KnownBuildRuleTypesFactory(fakeProcessExecutor, androidResolver1, sdkEnvironment1);
     FakeAndroidDirectoryResolver androidResolver2 =
         new FakeAndroidDirectoryResolver(
             Optional.of(filesystem.getPath("/path/to/sdkv2")),
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
+    SdkEnvironment sdkEnvironment2 =
+        SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidResolver2);
     KnownBuildRuleTypesFactory factory2 =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, androidResolver2);
+        new KnownBuildRuleTypesFactory(fakeProcessExecutor, androidResolver2, sdkEnvironment2);
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
@@ -250,6 +290,7 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory1)
+                .setSdkEnvironment(sdkEnvironment1)
                 .build());
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
@@ -257,6 +298,7 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory1)
+                .setSdkEnvironment(sdkEnvironment1)
                 .build());
     assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
     Object daemon3 =
@@ -265,6 +307,7 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory2)
+                .setSdkEnvironment(sdkEnvironment2)
                 .build());
     assertNotEquals("Android SDK should be the other location", daemon2, daemon3);
     Object daemon4 =
@@ -273,6 +316,7 @@ public class DaemonLifecycleManagerTest {
                 .setBuckConfig(buckConfig)
                 .setFilesystem(filesystem)
                 .setKnownBuildRuleTypesFactory(factory2)
+                .setSdkEnvironment(sdkEnvironment2)
                 .build());
     assertEquals("Android SDK should be the same other location", daemon3, daemon4);
   }

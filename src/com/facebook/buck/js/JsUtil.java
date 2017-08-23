@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -30,7 +29,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
@@ -84,24 +82,8 @@ public class JsUtil {
         .collect(Collectors.joining(" "));
   }
 
-  static BuildTarget verifyIsJsLibraryTarget(
-      BuildTarget target, BuildTarget parent, TargetGraph targetGraph) {
-    Description<?> targetDescription = targetGraph.get(target).getDescription();
-    if (targetDescription.getClass() != JsLibraryDescription.class) {
-      throw new HumanReadableException(
-          "%s target '%s' can only depend on js_library targets, but one of its dependencies, "
-              + "'%s', is of type %s.",
-          buildRuleTypeForTarget(parent, targetGraph),
-          parent,
-          target,
-          buildRuleTypeForTarget(target, targetGraph));
-    }
-
-    return target;
-  }
-
-  private static String buildRuleTypeForTarget(BuildTarget target, TargetGraph targetGraph) {
-    return Description.getBuildRuleType(targetGraph.get(target).getDescription()).getName();
+  static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {
+    return targetGraph.get(target).getDescription() instanceof JsLibraryDescription;
   }
 
   static BuildRuleParams withWorkerDependencyOnly(

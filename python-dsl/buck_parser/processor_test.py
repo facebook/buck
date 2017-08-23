@@ -853,6 +853,157 @@ class BuckTest(unittest.TestCase):
             'parse',
             decoded_result['diagnostics'][0]['source'])
 
+    def test_explicitly_loaded_values_are_available(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 3',
+                'another_value = 4',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//DEFS", "value")',
+                'foo_rule(name="foo" + str(value), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with processor.with_builtins(__builtin__.__dict__):
+            result = processor.process(self.project_root, None, 'BUCK', [])
+            self.assertTrue(
+                [x for x in result if x.get('name', '') == 'foo3'],
+                "result should contain rule with name derived from an explicitly loaded value",
+            )
+
+    def test_globals_not_explicitly_loaded_are_not_available(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 3',
+                'another_value = 4',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'load("//DEFS", "value")',
+                'foo_rule(name="foo" + str(another_value), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with processor.with_builtins(__builtin__.__dict__):
+            self.assertRaises(
+                NameError,
+                lambda: processor.process(self.project_root, None, 'BUCK_fail', []))
+
+    def test_can_rename_loaded_global(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 3',
+                'another_value = 4',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK',
+            contents=(
+                'load("//DEFS", bar="value")',
+                'foo_rule(name="foo" + str(bar), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with processor.with_builtins(__builtin__.__dict__):
+            result = processor.process(self.project_root, None, 'BUCK', [])
+            self.assertTrue(
+                [x for x in result if x.get('name', '') == 'foo3'],
+                "result should contain rule with name derived from an explicitly loaded value",
+            )
+
+    def test_original_symbol_is_not_available_when_renamed(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents='value = 3',
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'load("//DEFS", bar="value")',
+                'foo_rule(name="foo" + str(value), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+        with processor.with_builtins(__builtin__.__dict__):
+            self.assertRaises(
+                NameError,
+                lambda: processor.process(self.project_root, None, 'BUCK_fail', []))
+
+    def test_cannot_load_non_existent_symbol(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 3',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'load("//DEFS", "bar")',
+                'foo_rule(name="foo" + str(bar), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+
+        expected_msg = '"bar" is not defined in ' + os.path.join(self.project_root, defs_file.path)
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaises(KeyError) as e:
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+            self.assertEqual(e.exception.message,
+                             expected_msg)
+
+    def test_cannot_load_non_existent_symbol_by_keyword(self):
+        defs_file = ProjectFile(
+            root=self.project_root,
+            path='DEFS',
+            contents=(
+                'value = 3',
+            )
+        )
+        build_file = ProjectFile(
+            self.project_root,
+            path='BUCK_fail',
+            contents=(
+                'load("//DEFS", value="bar")',
+                'foo_rule(name="foo" + str(value), srcs=[])',
+            )
+        )
+        self.write_files(defs_file, build_file)
+
+        processor = self.create_build_file_processor(extra_funcs=[foo_rule])
+
+        expected_msg = '"bar" is not defined in ' + os.path.join(self.project_root, defs_file.path)
+        with processor.with_builtins(__builtin__.__dict__):
+            with self.assertRaises(KeyError) as e:
+                processor.process(self.project_root, None, 'BUCK_fail', [])
+            self.assertEqual(e.exception.message, expected_msg)
+
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
         defs_file = ProjectFile(
             root=self.project_root,

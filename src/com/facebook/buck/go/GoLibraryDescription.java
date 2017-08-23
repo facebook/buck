@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -75,8 +74,7 @@ public class GoLibraryDescription
       CellPathResolver cellRoots,
       GoLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
@@ -117,8 +115,7 @@ public class GoLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      GoLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      GoLibraryDescriptionArg args) {
     Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (platform.isPresent()) {

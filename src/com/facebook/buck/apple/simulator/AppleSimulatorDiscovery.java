@@ -24,8 +24,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -66,20 +64,17 @@ public class AppleSimulatorDiscovery {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of(simctlPath.toString(), "list"))
             .build();
-    ProcessExecutor.LaunchedProcess simctlListProcess =
-        processExecutor.launchProcess(processExecutorParams);
+    ProcessExecutor.Result simctlListResult =
+        processExecutor.launchAndExecute(processExecutorParams);
+    if (simctlListResult.getExitCode() != 0) {
+      throw new IOException(simctlListResult.getMessageForUnexpectedResult("simctl list"));
+    }
+    String output =
+        simctlListResult
+            .getStdout()
+            .orElseThrow(() -> new IllegalStateException("stdout should be captured"));
     ImmutableSet.Builder<AppleSimulator> simulatorsBuilder = ImmutableSet.builder();
-
-    try (InputStreamReader stdoutReader =
-        new InputStreamReader(simctlListProcess.getInputStream(), StandardCharsets.UTF_8)) {
-      LOG.debug("Parsing output of xcrun simctl list...");
-      SimctlListOutputParsing.parseOutputFromReader(stdoutReader, simulatorsBuilder);
-    }
-
-    ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(simctlListProcess);
-    if (result.getExitCode() != 0) {
-      throw new IOException(result.getMessageForUnexpectedResult("simctl list"));
-    }
+    SimctlListOutputParsing.parseOutput(output, simulatorsBuilder);
     ImmutableSet<AppleSimulator> simulators = simulatorsBuilder.build();
     LOG.debug("Discovered simulators: %s", simulators);
     return simulators;

@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.Archiver;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.Archiver;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -26,6 +28,7 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -57,7 +60,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   @AddToRuleKey private ImmutableList<String> archiverFlags;
   @AddToRuleKey private final Tool ranlib;
   @AddToRuleKey private ImmutableList<String> ranlibFlags;
-  @AddToRuleKey private final Contents contents;
+  @AddToRuleKey private final ArchiveContents contents;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
@@ -77,13 +80,13 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<String> archiverFlags,
       Tool ranlib,
       ImmutableList<String> ranlibFlags,
-      Contents contents,
+      ArchiveContents contents,
       Path output,
       ImmutableList<SourcePath> inputs,
       boolean cacheable) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkState(
-        contents == Contents.NORMAL || archiver.supportsThinArchives(),
+        contents == ArchiveContents.NORMAL || archiver.supportsThinArchives(),
         "%s: archive tool for this platform does not support thin archives",
         getBuildTarget());
     Preconditions.checkArgument(
@@ -104,9 +107,10 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   public static Archive from(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
-      Contents contents,
+      ArchiveContents contents,
       Path output,
       ImmutableList<SourcePath> inputs,
       boolean cacheable) {
@@ -114,7 +118,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         target,
         projectFilesystem,
         ruleFinder,
-        platform.getAr(),
+        platform.getAr().resolve(resolver),
         platform.getArflags(),
         platform.getRanlib(),
         platform.getRanlibflags(),
@@ -138,7 +142,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       ImmutableList<String> arFlags,
       Tool ranlib,
       ImmutableList<String> ranlibFlags,
-      Contents contents,
+      ArchiveContents contents,
       Path output,
       ImmutableList<SourcePath> inputs,
       boolean cacheable) {
@@ -209,7 +213,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             archiver.getEnvironment(resolver),
             archiver.getCommandPrefix(resolver),
             archiverFlags,
-            archiver.getArchiveOptions(contents == Contents.THIN),
+            archiver.getArchiveOptions(contents == ArchiveContents.THIN),
             output,
             inputs
                 .stream()
@@ -246,7 +250,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
    */
   public Arg toArg() {
     SourcePath archive = getSourcePathToOutput();
-    return contents == Contents.NORMAL
+    return contents == ArchiveContents.NORMAL
         ? SourcePathArg.of(archive)
         : ThinArchiveArg.of(archive, inputs);
   }
@@ -261,20 +265,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
   }
 
-  public Contents getContents() {
+  public ArchiveContents getContents() {
     return contents;
-  }
-
-  /** How this archive packages its contents. */
-  public enum Contents {
-
-    /** This archive packages a copy of its inputs and can be used independently of its inputs. */
-    NORMAL,
-
-    /**
-     * This archive only packages the relative paths to its inputs and so can only be used when its
-     * inputs are available.
-     */
-    THIN,
   }
 }

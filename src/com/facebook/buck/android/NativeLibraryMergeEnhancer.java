@@ -16,19 +16,19 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfSection;
-import com.facebook.buck.cxx.elf.ElfSymbolTable;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -37,7 +37,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -122,8 +121,7 @@ class NativeLibraryMergeEnhancer {
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
-      ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets)
-      throws NoSuchBuildTargetException {
+      ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets) {
 
     NativeLibraryMergeEnhancementResult.Builder builder =
         NativeLibraryMergeEnhancementResult.builder();
@@ -327,8 +325,7 @@ class NativeLibraryMergeEnhancer {
       CxxPlatform anyAndroidCxxPlatform,
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership,
       ImmutableSortedMap.Builder<String, String> sonameMapBuilder,
-      ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder)
-      throws NoSuchBuildTargetException {
+      ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder) {
     for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
         linkableMembership.entrySet()) {
       Optional<String> mergedName = entry.getValue().getSoname();
@@ -641,7 +638,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     // TODO(dreiss): Maybe cache this and other methods?  Would have to be per-platform.
-    String getSoname(CxxPlatform platform) throws NoSuchBuildTargetException {
+    String getSoname(CxxPlatform platform) {
       if (constituents.isActuallyMerged()) {
         return constituents.getSoname().get();
       }
@@ -773,8 +770,7 @@ class NativeLibraryMergeEnhancer {
         final CxxPlatform cxxPlatform,
         final Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-        throws NoSuchBuildTargetException {
+        ImmutableSet<LanguageExtensions> languageExtensions) {
 
       // This path gets taken for a force-static library.
       if (type == Linker.LinkableDepType.STATIC_PIC) {
@@ -811,8 +807,7 @@ class NativeLibraryMergeEnhancer {
       return NativeLinkableInput.of(argsBuilder.build(), ImmutableList.of(), ImmutableList.of());
     }
 
-    private NativeLinkableInput getImmediateNativeLinkableInput(CxxPlatform cxxPlatform)
-        throws NoSuchBuildTargetException {
+    private NativeLinkableInput getImmediateNativeLinkableInput(CxxPlatform cxxPlatform) {
       final Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
@@ -855,8 +850,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-        throws NoSuchBuildTargetException {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
       if (getPreferredLinkage(cxxPlatform) == Linkage.STATIC) {
         return ImmutableMap.of();
       }

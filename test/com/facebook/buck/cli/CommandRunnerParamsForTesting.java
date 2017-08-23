@@ -35,15 +35,18 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
@@ -88,6 +91,10 @@ public class CommandRunnerParamsForTesting {
       Optional<WebServer> webServer)
       throws IOException, InterruptedException {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    ProcessExecutor processExecutor = new FakeProcessExecutor();
+    SdkEnvironment sdkEnvironment =
+        SdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
+
     return CommandRunnerParams.builder()
         .setConsole(console)
         .setBuildInfoStoreManager(new BuildInfoStoreManager())
@@ -116,6 +123,7 @@ public class CommandRunnerParamsForTesting {
         .setFileHashCache(new StackedFileHashCache(ImmutableList.of()))
         .setExecutors(
             ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()))
+        .setScheduledExecutor(new FakeExecutor())
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
         .setVersionControlStatsGenerator(
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
@@ -123,7 +131,9 @@ public class CommandRunnerParamsForTesting {
         .setInvocationInfo(Optional.empty())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
         .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(new FakeProcessExecutor(), androidDirectoryResolver))
+            new KnownBuildRuleTypesFactory(
+                processExecutor, androidDirectoryResolver, sdkEnvironment))
+        .setSdkEnvironment(sdkEnvironment)
         .build();
   }
 

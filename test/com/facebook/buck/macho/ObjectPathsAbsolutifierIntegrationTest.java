@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.macho;
 
-import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -27,8 +27,8 @@ import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.apple.CodeSigning;
-import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

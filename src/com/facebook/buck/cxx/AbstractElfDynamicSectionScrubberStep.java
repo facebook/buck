@@ -18,17 +18,17 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfDynamicSection;
-import com.facebook.buck.cxx.elf.ElfSection;
-import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
-import com.facebook.buck.cxx.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
+import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -44,7 +44,7 @@ import org.immutables.value.Value;
  * irrelevant at link time.
  */
 @Value.Immutable
-@BuckStyleTuple
+@BuckStylePackageVisibleTuple
 abstract class AbstractElfDynamicSectionScrubberStep implements Step {
 
   static final String SECTION = ".dynamic";

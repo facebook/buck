@@ -18,14 +18,14 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +41,7 @@ import org.immutables.value.Value;
  * A step which extracts specific sections from an ELF file and compacts them into a new ELF file.
  */
 @Value.Immutable
-@BuckStyleTuple
+@BuckStylePackageVisibleTuple
 abstract class AbstractElfCompactSectionsStep implements Step {
 
   private static final long SHF_ALLOC = 0x2L;

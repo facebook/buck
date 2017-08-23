@@ -34,6 +34,22 @@ android_library(
   ],
 )
 
+
+android_library(
+  name = 'lib_extra_kotlinc_arguments',
+  srcs = glob(['Activity.kt', 'Sample.kt', 'Sample2.kt']),
+  language = 'KOTLIN',
+  extra_kotlinc_arguments = [
+    '-Xplugin=',
+  ],
+  deps = [
+    # deps are intentionally left out to fail the test since -Xplugin is not available yet.
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 android_library(
   name = 'lib_mixed_sources',
   srcs = glob(['*.kt', 'JavaClass.java']),

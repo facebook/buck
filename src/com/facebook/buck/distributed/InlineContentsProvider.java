@@ -47,4 +47,7 @@ public class InlineContentsProvider implements FileContentsProvider {
     Files.createDirectories(absPath.getParent());
     return new BufferedOutputStream(new FileOutputStream(absPath.toFile()));
   }
+
+  @Override
+  public void close() {}
 }

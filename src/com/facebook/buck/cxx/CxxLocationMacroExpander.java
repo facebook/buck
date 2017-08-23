@@ -16,15 +16,14 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 
-public class CxxLocationMacroExpander extends LocationMacroExpander {
+class CxxLocationMacroExpander extends LocationMacroExpander {
 
   private final CxxPlatform platform;
 
@@ -37,12 +36,7 @@ public class CxxLocationMacroExpander extends LocationMacroExpander {
       throws MacroException {
     BuildRule rule = super.resolve(resolver, input);
     if (rule instanceof CxxGenrule) {
-      try {
-        rule =
-            resolver.requireRule(rule.getBuildTarget().withAppendedFlavors(platform.getFlavor()));
-      } catch (NoSuchBuildTargetException e) {
-        throw new MacroException(e.getMessage(), e);
-      }
+      rule = resolver.requireRule(rule.getBuildTarget().withAppendedFlavors(platform.getFlavor()));
     }
     return rule;
   }

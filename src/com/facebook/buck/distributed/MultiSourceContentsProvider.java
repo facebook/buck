@@ -33,14 +33,6 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
 
   public MultiSourceContentsProvider(
-      DistBuildService service,
-      FileMaterializationStatsTracker fileMaterializationStatsTracker,
-      Optional<Path> localCacheAbsPath)
-      throws InterruptedException, IOException {
-    this(new ServerContentsProvider(service), fileMaterializationStatsTracker, localCacheAbsPath);
-  }
-
-  public MultiSourceContentsProvider(
       FileContentsProvider serverContentProvider,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       Optional<Path> localCacheAbsPath)
@@ -87,5 +79,14 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
     }
 
     return false;
+  }
+
+  @Override
+  public void close() throws IOException {
+    serverProvider.close();
+    inlineProvider.close();
+    if (localFsProvider.isPresent()) {
+      localFsProvider.get().close();
+    }
   }
 }

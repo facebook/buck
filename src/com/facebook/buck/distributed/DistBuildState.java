@@ -31,6 +31,7 @@ import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DistBuildCellParams;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -96,7 +97,8 @@ public class DistBuildState {
       BuckConfig localBuckConfig, // e.g. the slave's .buckconfig
       BuildJobState jobState,
       Cell rootCell,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory)
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
+      SdkEnvironment sdkEnvironment)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
@@ -133,7 +135,7 @@ public class DistBuildState {
 
     CellProvider cellProvider =
         CellProvider.createForDistributedBuild(
-            rootCell.getBuckConfig(), cellParams.build(), knownBuildRuleTypesFactory);
+            cellParams.build(), knownBuildRuleTypesFactory, sdkEnvironment);
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
@@ -218,8 +220,9 @@ public class DistBuildState {
         new MaterializerProjectFileHashCache(decoratedCache, remoteFileHashes, provider);
 
     // Create all symlinks and touch all other files.
-    // TODO(alisdair): remove this once action graph doesn't read from file system.
-    materializer.preloadAllFiles();
+    DistBuildConfig remoteConfig = new DistBuildConfig(getRootCell().getBuckConfig());
+    boolean materializeAllFilesDuringPreload = !remoteConfig.materializeSourceFilesOnDemand();
+    materializer.preloadAllFiles(materializeAllFilesDuringPreload);
 
     return materializer;
   }

@@ -45,6 +45,8 @@ interface AbstractNetworkCacheArgs {
 
   BuckEventBus getBuckEventBus();
 
+  ListeningExecutorService getHttpFetchExecutorService();
+
   ListeningExecutorService getHttpWriteExecutorService();
 
   String getErrorTextTemplate();

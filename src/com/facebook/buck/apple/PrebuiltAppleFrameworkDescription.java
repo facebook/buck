@@ -17,15 +17,14 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.HasSystemFrameworkAndLibraries;
-import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -98,8 +97,7 @@ public class PrebuiltAppleFrameworkDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final PrebuiltAppleFrameworkDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final PrebuiltAppleFrameworkDescriptionArg args) {
     return new PrebuiltAppleFramework(
         buildTarget,
         projectFilesystem,
@@ -122,8 +120,7 @@ public class PrebuiltAppleFrameworkDescription
       CellPathResolver cellRoots,
       PrebuiltAppleFrameworkDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       BuildRule buildRule = resolver.requireRule(buildTarget);
       ImmutableSet<SourcePath> sourcePaths = ImmutableSet.of(buildRule.getSourcePathToOutput());

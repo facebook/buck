@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.google.common.base.Suppliers;
@@ -36,8 +35,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   @SuppressWarnings("unchecked")
   @Override
   public <T, U extends Description<T>> BuildRule transform(
-      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode)
-      throws NoSuchBuildTargetException {
+      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode) {
     U description = targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
 

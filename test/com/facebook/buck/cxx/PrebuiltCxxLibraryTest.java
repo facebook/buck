@@ -18,13 +18,15 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
@@ -51,11 +53,12 @@ public class PrebuiltCxxLibraryTest {
 
     GenruleBuilder genSrcBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_libx"))
-            .setOut("gen_libx")
+            .setOut("libx.a")
             .setCmd("something");
     BuildTarget target = BuildTargetFactory.newInstance("//:x");
     PrebuiltCxxLibraryBuilder builder =
-        new PrebuiltCxxLibraryBuilder(target).setLibName("x").setLibDir("$(location //:gen_libx)");
+        new PrebuiltCxxLibraryBuilder(target)
+            .setStaticLib(new DefaultBuildTargetSourcePath(genSrcBuilder.getTarget()));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
@@ -66,8 +69,7 @@ public class PrebuiltCxxLibraryTest {
 
     BuildRule genSrc = genSrcBuilder.build(resolver, filesystem, targetGraph);
     filesystem.writeContentsToPath(
-        "class Test {}",
-        pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()).resolve("libx.a"));
+        "class Test {}", pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()));
 
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, targetGraph);
     lib.getNativeLinkableInput(platform, Linker.LinkableDepType.STATIC);

@@ -25,7 +25,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
@@ -97,12 +96,6 @@ public class HttpArtifactCacheTest {
     }
   }
 
-  private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
-    HttpArtifactCacheEvent.Started started =
-        ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(new RuleKey("1234"));
-    return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
-  }
-
   /**
    * Helper for creating simple HttpService instances from lambda functions.
    *
@@ -140,6 +133,7 @@ public class HttpArtifactCacheTest {
             .setProjectFilesystem(new FakeProjectFilesystem())
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
+            .setHttpFetchExecutorService(DIRECT_EXECUTOR_SERVICE)
             .setErrorTextTemplate(ERROR_TEXT_TEMPLATE)
             .setDistributedBuildModeEnabled(false);
   }
@@ -373,8 +367,7 @@ public class HttpArtifactCacheTest {
               return new OkHttpResponseWrapper(response);
             })));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    cache.storeImpl(
-        ArtifactInfo.builder().addRuleKeys(ruleKey).build(), output, createFinishedEventBuilder());
+    cache.storeImpl(ArtifactInfo.builder().addRuleKeys(ruleKey).build(), output);
     assertTrue(hasCalled.get());
     cache.close();
   }
@@ -392,8 +385,7 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     cache.storeImpl(
         ArtifactInfo.builder().addRuleKeys(new RuleKey("00000000000000000000000000000000")).build(),
-        output,
-        createFinishedEventBuilder());
+        output);
     cache.close();
   }
 
@@ -430,10 +422,7 @@ public class HttpArtifactCacheTest {
               return new OkHttpResponseWrapper(response);
             })));
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
-    cache.storeImpl(
-        ArtifactInfo.builder().addRuleKeys(ruleKey1, ruleKey2).build(),
-        output,
-        createFinishedEventBuilder());
+    cache.storeImpl(ArtifactInfo.builder().addRuleKeys(ruleKey1, ruleKey2).build(), output);
     assertThat(stored, Matchers.containsInAnyOrder(ruleKey1, ruleKey2));
     cache.close();
   }

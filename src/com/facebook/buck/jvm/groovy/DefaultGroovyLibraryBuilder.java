@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -63,7 +63,7 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
 
   protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
     @Override
-    protected CompileToJarStepFactory buildCompileStepFactory() {
+    protected ConfiguredCompiler buildConfiguredCompiler() {
       return new GroovycToJarStepFactory(
           Preconditions.checkNotNull(groovyBuckConfig).getGroovyCompiler().get(),
           Optional.of(extraGroovycArguments),

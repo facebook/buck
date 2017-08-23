@@ -44,4 +44,7 @@ public interface ProjectFilesystemDelegate {
   boolean isSymlink(Path path);
 
   boolean exists(Path pathRelativeToProjectRoot, LinkOption... options);
+
+  /** @return details about this delegate suitable for writing to a log file. */
+  String getDetailsForLogging();
 }

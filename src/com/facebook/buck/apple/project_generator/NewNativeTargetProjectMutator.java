@@ -44,15 +44,23 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.CoreReactNativeLibraryArg;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.JsBundle;
+import com.facebook.buck.js.JsBundleDescription;
+import com.facebook.buck.js.JsBundleDescriptionArg;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArg;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -86,6 +94,7 @@ import org.stringtemplate.v4.ST;
  */
 class NewNativeTargetProjectMutator {
   private static final Logger LOG = Logger.get(NewNativeTargetProjectMutator.class);
+  private static final String JS_BUNDLE_TEMPLATE = "js-bundle.st";
   private static final String REACT_NATIVE_PACKAGE_TEMPLATE = "rn-package.st";
 
   public static class Result {
@@ -127,6 +136,7 @@ class NewNativeTargetProjectMutator {
   private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
   private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
   private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
+  private Optional<PBXBuildPhase> swiftDependenciesBuildPhase = Optional.empty();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer, Function<SourcePath, Path> sourcePathResolver) {
@@ -220,6 +230,11 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setSwiftDependenciesBuildPhase(PBXBuildPhase buildPhase) {
+    this.swiftDependenciesBuildPhase = Optional.of(buildPhase);
+    return this;
+  }
+
   public NewNativeTargetProjectMutator setRecursiveResources(
       Set<AppleResourceDescriptionArg> recursiveResources) {
     this.recursiveResources = ImmutableSet.copyOf(recursiveResources);
@@ -239,8 +254,9 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setPreBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?, ?>> nodes) {
-    preBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
+      Iterable<TargetNode<?, ?>> nodes,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+    preBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
     return this;
   }
 
@@ -256,8 +272,9 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setPostBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?, ?>> nodes) {
-    postBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
+      Iterable<TargetNode<?, ?>> nodes,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+    postBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
     return this;
   }
 
@@ -295,6 +312,7 @@ class NewNativeTargetProjectMutator {
       addResourcesBuildPhase(target, targetGroup);
       target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
       addRunScriptBuildPhases(target, postBuildRunScriptPhases);
+      addSwiftDependenciesBuildPhase(target);
 
       optTargetGroup = Optional.of(targetGroup);
     } else {
@@ -524,6 +542,10 @@ class NewNativeTargetProjectMutator {
     }
   }
 
+  private void addSwiftDependenciesBuildPhase(PBXNativeTarget target) {
+    swiftDependenciesBuildPhase.ifPresent(buildPhase -> target.getBuildPhases().add(buildPhase));
+  }
+
   private void addResourcesFileReference(PBXGroup targetGroup) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
@@ -665,7 +687,9 @@ class NewNativeTargetProjectMutator {
   }
 
   private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
-      Iterable<TargetNode<?, ?>> nodes) throws IllegalStateException {
+      Iterable<TargetNode<?, ?>> nodes,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode)
+      throws IllegalStateException {
     ImmutableList.Builder<PBXShellScriptBuildPhase> builder = ImmutableList.builder();
     for (TargetNode<?, ?> node : nodes) {
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
@@ -685,8 +709,11 @@ class NewNativeTargetProjectMutator {
                     .toSet());
         shellScriptBuildPhase.getOutputPaths().addAll(arg.getOutputs());
         shellScriptBuildPhase.setShellScript(arg.getCmd());
+      } else if (node.getDescription() instanceof JsBundleDescription) {
+        shellScriptBuildPhase.setShellScript(
+            generateXcodeShellScriptForJsBundle(node, buildRuleResolverForNode));
       } else if (node.getDescription() instanceof IosReactNativeLibraryDescription) {
-        shellScriptBuildPhase.setShellScript(generateXcodeShellScript(node));
+        shellScriptBuildPhase.setShellScript(generateXcodeShellScriptForReactNative(node));
       } else {
         // unreachable
         throw new IllegalStateException("Invalid rule type for shell script build phase");
@@ -703,7 +730,42 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private String generateXcodeShellScript(TargetNode<?, ?> targetNode) {
+  private String generateXcodeShellScriptForJsBundle(
+      TargetNode<?, ?> targetNode,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+    Preconditions.checkArgument(targetNode.getConstructorArg() instanceof JsBundleDescriptionArg);
+
+    ST template;
+    try {
+      template =
+          new ST(
+              Resources.toString(
+                  Resources.getResource(NewNativeTargetProjectMutator.class, JS_BUNDLE_TEMPLATE),
+                  Charsets.UTF_8));
+    } catch (IOException e) {
+      throw new RuntimeException("There was an error loading 'js-bundle.st' template", e);
+    }
+
+    JsBundleDescriptionArg args = (JsBundleDescriptionArg) targetNode.getConstructorArg();
+
+    template.add("bundle_name", args.getBundleName());
+    BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
+    BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
+
+    Preconditions.checkState(rule instanceof JsBundle);
+    JsBundle bundle = (JsBundle) rule;
+
+    SourcePath jsOutput = bundle.getSourcePathToOutput();
+    SourcePath resOutput = bundle.getSourcePathToResources();
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    template.add("built_bundle_path", sourcePathResolver.getAbsolutePath(jsOutput));
+    template.add("built_resources_path", sourcePathResolver.getAbsolutePath(resOutput));
+
+    return template.render();
+  }
+
+  private String generateXcodeShellScriptForReactNative(TargetNode<?, ?> targetNode) {
     Preconditions.checkArgument(targetNode.getConstructorArg() instanceof ReactNativeLibraryArg);
 
     ST template;

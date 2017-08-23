@@ -47,8 +47,7 @@ class FilesystemStubJarWriter implements StubJarWriter {
 
   @Override
   public void writeEntry(
-      Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier)
-      throws IOException {
+      Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier) {
     jarBuilder.addEntry(
         new JarEntrySupplier(
             new CustomZipEntry(MorePaths.pathWithUnixSeparators(relativePath)),

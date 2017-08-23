@@ -16,10 +16,10 @@
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.NdkCxxPlatforms;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;

@@ -17,16 +17,15 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.HeaderVisibility;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.PathShortener;
 import com.facebook.buck.cxx.PreprocessorFlags;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Preprocessor;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PathShortener;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -104,8 +103,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
-      PreprocessorFlags cxxDeps)
-      throws NoSuchBuildTargetException {
+      PreprocessorFlags cxxDeps) {
     super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;

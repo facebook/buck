@@ -17,13 +17,12 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -97,8 +96,7 @@ public class JavaTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      JavaTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      JavaTestDescriptionArg args) {
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
@@ -229,8 +227,7 @@ public class JavaTestDescription
         final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
         SourcePathRuleFinder ruleFinder,
-        CxxPlatform cxxPlatform)
-        throws NoSuchBuildTargetException {
+        CxxPlatform cxxPlatform) {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(buildTarget, projectFilesystem, params, cxxPlatform);
@@ -286,8 +283,7 @@ public class JavaTestDescription
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
-        CxxPlatform cxxPlatform)
-        throws NoSuchBuildTargetException {
+        CxxPlatform cxxPlatform) {
       return CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
           buildTarget,
           projectFilesystem,

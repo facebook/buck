@@ -142,7 +142,7 @@ public class MiniAapt implements Step {
         this.resourceCollector = new RDotTxtResourceCollector();
         break;
       case ANDROID_RESOURCE_INDEX:
-        this.resourceCollector = new AndroidResourceIndexCollector();
+        this.resourceCollector = new AndroidResourceIndexCollector(filesystem);
         break;
       default:
         throw new IllegalArgumentException(

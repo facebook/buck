@@ -95,9 +95,9 @@ public class AndroidResourceIndexMiniAaptTest {
     assertEquals(
         ImmutableSet.of(
             AndroidResourceIndexEntry.of(
-                RType.ID, "button1", 5, 42, Paths.get("sample_resources_1.xml")),
+                RType.ID, "button1", 4, 41, Paths.get("sample_resources_1.xml")),
             AndroidResourceIndexEntry.of(
-                RType.ID, "button3", 8, 56, Paths.get("sample_resources_1.xml"))),
+                RType.ID, "button3", 7, 55, Paths.get("sample_resources_1.xml"))),
         definitions);
   }
 
@@ -111,24 +111,24 @@ public class AndroidResourceIndexMiniAaptTest {
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(RType.STRING, "hello", 3, 26, valuesFile),
-            AndroidResourceIndexEntry.of(RType.PLURALS, "people", 5, 28, valuesFile),
-            AndroidResourceIndexEntry.of(RType.INTEGER, "number", 10, 28, valuesFile),
-            AndroidResourceIndexEntry.of(RType.DIMEN, "dimension", 11, 29, valuesFile),
-            AndroidResourceIndexEntry.of(RType.STYLEABLE, "MyNiceView", 12, 42, valuesFile),
+            AndroidResourceIndexEntry.of(RType.STRING, "hello", 2, 25, valuesFile),
+            AndroidResourceIndexEntry.of(RType.PLURALS, "people", 4, 27, valuesFile),
+            AndroidResourceIndexEntry.of(RType.INTEGER, "number", 9, 27, valuesFile),
+            AndroidResourceIndexEntry.of(RType.DIMEN, "dimension", 10, 28, valuesFile),
+            AndroidResourceIndexEntry.of(RType.STYLEABLE, "MyNiceView", 11, 41, valuesFile),
             AndroidResourceIndexEntry.of(
-                RType.STYLEABLE, "MyNiceView_titleText", 12, 42, valuesFile),
+                RType.STYLEABLE, "MyNiceView_titleText", 11, 41, valuesFile),
             AndroidResourceIndexEntry.of(
-                RType.STYLEABLE, "MyNiceView_subtitleText", 12, 42, valuesFile),
+                RType.STYLEABLE, "MyNiceView_subtitleText", 11, 41, valuesFile),
             AndroidResourceIndexEntry.of(
-                RType.STYLEABLE, "MyNiceView_complexAttr", 12, 42, valuesFile),
+                RType.STYLEABLE, "MyNiceView_complexAttr", 11, 41, valuesFile),
             AndroidResourceIndexEntry.of(
-                RType.STYLEABLE, "MyNiceView_android_layout_gravity", 12, 42, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "titleText", 12, 42, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "subtitleText", 12, 42, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "complexAttr", 12, 42, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ID, "some_id", 24, 37, valuesFile),
-            AndroidResourceIndexEntry.of(RType.STYLE, "Widget_Theme", 25, 32, valuesFile)),
+                RType.STYLEABLE, "MyNiceView_android_layout_gravity", 11, 41, valuesFile),
+            AndroidResourceIndexEntry.of(RType.ATTR, "titleText", 11, 41, valuesFile),
+            AndroidResourceIndexEntry.of(RType.ATTR, "subtitleText", 11, 41, valuesFile),
+            AndroidResourceIndexEntry.of(RType.ATTR, "complexAttr", 11, 41, valuesFile),
+            AndroidResourceIndexEntry.of(RType.ID, "some_id", 23, 36, valuesFile),
+            AndroidResourceIndexEntry.of(RType.STYLE, "Widget_Theme", 24, 31, valuesFile)),
         definitions);
   }
 

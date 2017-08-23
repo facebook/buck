@@ -16,15 +16,17 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -96,8 +98,7 @@ public final class CxxInferEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
-      InferBuckConfig inferBuckConfig)
-      throws NoSuchBuildTargetException {
+      InferBuckConfig inferBuckConfig) {
     return new CxxInferEnhancer(resolver, cxxBuckConfig, inferBuckConfig, cxxPlatform)
         .requireInferRule(target, cellRoots, filesystem, args);
   }
@@ -122,8 +123,7 @@ public final class CxxInferEnhancer {
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      CxxConstructorArg args)
-      throws NoSuchBuildTargetException {
+      CxxConstructorArg args) {
     Optional<InferFlavors> inferFlavor = INFER_FLAVOR_DOMAIN.getValue(buildTarget);
     Preconditions.checkArgument(
         inferFlavor.isPresent(), "Expected BuildRuleParams to contain infer flavor.");
@@ -148,8 +148,7 @@ public final class CxxInferEnhancer {
       BuildTarget target,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      CxxConstructorArg args)
-      throws NoSuchBuildTargetException {
+      CxxConstructorArg args) {
 
     CxxInferCaptureRulesAggregator aggregator =
         requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
@@ -164,8 +163,7 @@ public final class CxxInferEnhancer {
       BuildTarget target,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      CxxConstructorArg args)
-      throws NoSuchBuildTargetException {
+      CxxConstructorArg args) {
 
     BuildTarget cleanTarget = InferFlavors.targetWithoutAnyInferFlavor(target);
 
@@ -187,8 +185,7 @@ public final class CxxInferEnhancer {
       BuildTarget target,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      CxxConstructorArg args)
-      throws NoSuchBuildTargetException {
+      CxxConstructorArg args) {
 
     Flavor inferAnalyze = InferFlavors.INFER_ANALYZE.getFlavor();
 
@@ -219,8 +216,7 @@ public final class CxxInferEnhancer {
       BuildTarget target,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      CxxConstructorArg args)
-      throws NoSuchBuildTargetException {
+      CxxConstructorArg args) {
 
     Flavor inferCaptureOnly = InferFlavors.INFER_CAPTURE_ONLY.getFlavor();
 
@@ -249,7 +245,7 @@ public final class CxxInferEnhancer {
   }
 
   private ImmutableSet<CxxInferCaptureRulesAggregator> requireTransitiveCaptureAndAggregatingRules(
-      CxxConstructorArg args, Flavor requiredFlavor) throws NoSuchBuildTargetException {
+      CxxConstructorArg args, Flavor requiredFlavor) {
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
 
     return requireTransitiveDependentLibraries(
@@ -269,12 +265,11 @@ public final class CxxInferEnhancer {
       final CxxPlatform cxxPlatform,
       final Iterable<? extends BuildRule> deps,
       final Flavor requiredFlavor,
-      final Class<T> ruleClass)
-      throws NoSuchBuildTargetException {
+      final Class<T> ruleClass) {
     final ImmutableSet.Builder<T> depsBuilder = ImmutableSet.builder();
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       @Override
-      public Iterable<BuildRule> visit(BuildRule buildRule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule buildRule) {
         if (buildRule instanceof CxxLibrary) {
           CxxLibrary library = (CxxLibrary) buildRule;
           depsBuilder.add(
@@ -293,8 +288,7 @@ public final class CxxInferEnhancer {
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.CommonArg args,
       HeaderSymlinkTree headerSymlinkTree,
-      Optional<SymlinkTree> sandboxTree)
-      throws NoSuchBuildTargetException {
+      Optional<SymlinkTree> sandboxTree) {
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
@@ -324,8 +318,7 @@ public final class CxxInferEnhancer {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       ImmutableMap<String, CxxSource> sources,
-      CxxConstructorArg args)
-      throws NoSuchBuildTargetException {
+      CxxConstructorArg args) {
 
     InferFlavors.checkNoInferFlavors(target.getFlavors());
 

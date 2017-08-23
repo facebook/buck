@@ -34,13 +34,13 @@ import com.dd.plist.NSDictionary;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -233,7 +233,7 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         "/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar",
-        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
   }
 
   @Test
@@ -325,7 +325,7 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         "/Developer/Platforms/WatchOS.platform/Developer/usr/bin/ar",
-        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
   }
 
   @Test
@@ -419,7 +419,7 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         "/Developer/Platforms/AppleTVOS.platform/Developer/usr/bin/ar",
-        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
   }
 
   @Test

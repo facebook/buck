@@ -16,14 +16,15 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
+import static com.facebook.buck.d.DDescriptionUtils.SOURCE_LINK_TREE;
+
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -79,20 +80,19 @@ public class DBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
-      DBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      DBinaryDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
+    if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
+      return DDescriptionUtils.createSourceSymlinkTree(
+          buildTarget, projectFilesystem, pathResolver, args.getSrcs());
+    }
+
     SymlinkTree sourceTree =
-        buildRuleResolver.addToIndex(
-            DDescriptionUtils.createSourceSymlinkTree(
-                DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
-                buildTarget,
-                projectFilesystem,
-                pathResolver,
-                args.getSrcs()));
+        (SymlinkTree)
+            buildRuleResolver.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
     // Create a rule that actually builds the binary, and add that
     // rule to the index.

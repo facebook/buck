@@ -25,6 +25,7 @@ public class DistBuildClientStatsTrackerTest {
   private static final int DISTRIBUTED_BUILD_EXIT_CODE = 0;
   private static final int LOCAL_BUILD_EXIT_CODE = 1;
   private static final boolean IS_LOCAL_FALLBACK_BUILD_ENABLED = true;
+  private static final int POST_DISTRIBUTED_BUILD_LOCAL_STEPS_DURATION = 11;
   private static final int PERFORM_DISTRIBUTED_BUILD_DURATION = 1;
   private static final int PERFORM_LOCAL_BUILD_DURATION = 2;
   private static final int CREATE_DISTRIBUTED_BUILD_DURATION = 3;
@@ -33,6 +34,8 @@ public class DistBuildClientStatsTrackerTest {
   private static final int UPLOAD_BUCK_DOT_FILES_DURATION = 6;
   private static final int SET_BUCK_VERSION_DURATION = 7;
   private static final int MATERIALIZE_SLAVE_LOGS_DURATION = 8;
+  private static final int LOCAL_PREPARATION_DURATION = 9;
+  private static final int LOCAL_GRAPH_CONSTRUCTION_DURATION = 10;
   private static final int MISSING_FILES_UPLOADED_COUNT = 2001;
   private static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
   private static final String BUILD_LABEL = "unit_test";
@@ -92,6 +95,7 @@ public class DistBuildClientStatsTrackerTest {
     Assert.assertEquals(BUILD_LABEL, stats.buildLabel());
     Assert.assertTrue(stats.buckClientError());
 
+    Assert.assertFalse(stats.localPreparationDurationMs().isPresent());
     Assert.assertFalse(stats.performDistributedBuildDurationMs().isPresent());
     Assert.assertFalse(stats.createDistributedBuildDurationMs().isPresent());
     Assert.assertFalse(stats.uploadMissingFilesDurationMs().isPresent());
@@ -122,6 +126,10 @@ public class DistBuildClientStatsTrackerTest {
     tracker.setStampedeId(STAMPEDE_ID_ONE);
     tracker.setDistributedBuildExitCode(DISTRIBUTED_BUILD_EXIT_CODE);
     tracker.setIsLocalFallbackBuildEnabled(IS_LOCAL_FALLBACK_BUILD_ENABLED);
+    tracker.setDurationMs(LOCAL_PREPARATION, LOCAL_PREPARATION_DURATION);
+    tracker.setDurationMs(LOCAL_GRAPH_CONSTRUCTION, LOCAL_GRAPH_CONSTRUCTION_DURATION);
+    tracker.setDurationMs(
+        POST_DISTRIBUTED_BUILD_LOCAL_STEPS, POST_DISTRIBUTED_BUILD_LOCAL_STEPS_DURATION);
     tracker.setDurationMs(PERFORM_DISTRIBUTED_BUILD, PERFORM_DISTRIBUTED_BUILD_DURATION);
     tracker.setDurationMs(CREATE_DISTRIBUTED_BUILD, CREATE_DISTRIBUTED_BUILD_DURATION);
     tracker.setDurationMs(UPLOAD_MISSING_FILES, UPLOAD_MISSING_FILES_DURATION);
@@ -138,6 +146,10 @@ public class DistBuildClientStatsTrackerTest {
     Assert.assertEquals(IS_LOCAL_FALLBACK_BUILD_ENABLED, stats.isLocalFallbackBuildEnabled().get());
     Assert.assertEquals(DISTRIBUTED_BUILD_EXIT_CODE, (long) stats.distributedBuildExitCode().get());
     Assert.assertEquals(
+        LOCAL_GRAPH_CONSTRUCTION_DURATION, (long) stats.localGraphConstructionDurationMs().get());
+    Assert.assertEquals(
+        LOCAL_PREPARATION_DURATION, (long) stats.localPreparationDurationMs().get());
+    Assert.assertEquals(
         PERFORM_DISTRIBUTED_BUILD_DURATION, (long) stats.performDistributedBuildDurationMs().get());
     Assert.assertEquals(
         CREATE_DISTRIBUTED_BUILD_DURATION, (long) stats.createDistributedBuildDurationMs().get());
@@ -152,6 +164,9 @@ public class DistBuildClientStatsTrackerTest {
         MATERIALIZE_SLAVE_LOGS_DURATION, (long) stats.materializeSlaveLogsDurationMs().get());
     Assert.assertEquals(
         MISSING_FILES_UPLOADED_COUNT, (long) stats.missingFilesUploadedCount().get());
+    Assert.assertEquals(
+        POST_DISTRIBUTED_BUILD_LOCAL_STEPS_DURATION,
+        (long) stats.postDistBuildLocalStepsDurationMs().get());
     Assert.assertFalse(stats.buckClientError());
   }
 }

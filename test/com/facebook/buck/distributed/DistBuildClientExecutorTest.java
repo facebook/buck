@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
@@ -148,10 +149,10 @@ public class DistBuildClientExecutorTest {
     state.addToTopLevelTargets("awesome-node");
 
     BuildJobStateFileHashEntry file1 = new BuildJobStateFileHashEntry();
-    file1.setHashCode("abcd");
+    file1.setSha1("abcd");
 
     BuildJobStateFileHashEntry file2 = new BuildJobStateFileHashEntry();
-    file1.setHashCode("xkcd");
+    file1.setSha1("xkcd");
 
     BuildJobStateFileHashes cellFilehashes = new BuildJobStateFileHashes();
     cellFilehashes.setCellIndex(42);
@@ -537,6 +538,9 @@ public class DistBuildClientExecutorTest {
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
+    // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
+    // otherwise when we stop the timer it will fail with an exception about not being started.
+    distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
     distBuildClientExecutor.executeAndPrintFailuresToEventBus(
         directExecutor,
         fakeProjectFilesystem,

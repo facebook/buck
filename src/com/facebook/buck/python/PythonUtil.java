@@ -16,24 +16,23 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusLibraries;
 import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkStrategy;
-import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -106,8 +105,7 @@ public class PythonUtil {
       SourceList items,
       PatternMatchedCollection<SourceList> platformItems,
       Optional<VersionMatchedCollection<SourceList>> versionItems,
-      Optional<ImmutableMap<BuildTarget, Version>> versions)
-      throws NoSuchBuildTargetException {
+      Optional<ImmutableMap<BuildTarget, Version>> versions) {
     return CxxGenruleDescription.fixupSourcePaths(
         resolver,
         ruleFinder,
@@ -183,8 +181,7 @@ public class PythonUtil {
       final CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       final NativeLinkStrategy nativeLinkStrategy,
-      final ImmutableSet<BuildTarget> preloadDeps)
-      throws NoSuchBuildTargetException {
+      final ImmutableSet<BuildTarget> preloadDeps) {
 
     final PythonPackageComponents.Builder allComponents =
         new PythonPackageComponents.Builder(buildTarget);
@@ -199,12 +196,12 @@ public class PythonUtil {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(
+    new AbstractBreadthFirstTraversal<BuildRule>(
         Iterables.concat(deps, ruleResolver.getAllRules(preloadDeps))) {
       private final ImmutableList<BuildRule> empty = ImmutableList.of();
 
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> deps = empty;
         if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
@@ -334,8 +331,7 @@ public class PythonUtil {
   }
 
   static ImmutableSet<String> getPreloadNames(
-      BuildRuleResolver resolver, CxxPlatform cxxPlatform, Iterable<BuildTarget> preloadDeps)
-      throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, CxxPlatform cxxPlatform, Iterable<BuildTarget> preloadDeps) {
     ImmutableSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
     for (NativeLinkable nativeLinkable :
         FluentIterable.from(preloadDeps)

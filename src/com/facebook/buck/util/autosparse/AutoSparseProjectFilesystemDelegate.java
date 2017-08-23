@@ -54,6 +54,11 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
   }
 
   @Override
+  public String getDetailsForLogging() {
+    return String.format("AutoSparseProjectFilesystemDelegate{root=%s}", scRoot);
+  }
+
+  @Override
   public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     LOG.debug("Materialising the sparse profile");
     AutoSparseStateEvents.SparseRefreshStarted started =

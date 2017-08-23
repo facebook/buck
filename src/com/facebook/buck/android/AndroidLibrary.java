@@ -18,7 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
@@ -26,7 +27,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -192,11 +192,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Nullable private AndroidLibraryCompiler androidCompiler;
+      @Nullable private ConfiguredCompilerFactory androidCompiler;
       @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
       @Override
-      protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+      protected DefaultJavaLibrary build() {
         return new AndroidLibrary(
             libraryTarget,
             projectFilesystem,
@@ -214,11 +214,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       }
 
       @Override
-      protected JarBuildStepsFactory buildJarBuildStepsFactory() throws NoSuchBuildTargetException {
+      protected JarBuildStepsFactory buildJarBuildStepsFactory() {
         return new JarBuildStepsFactory(
             projectFilesystem,
             ruleFinder,
-            getCompileStepFactory(),
+            getConfiguredCompiler(),
             srcs,
             resources,
             resourcesRoot,
@@ -291,12 +291,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       }
 
       @Override
-      protected CompileToJarStepFactory buildCompileStepFactory() {
+      protected ConfiguredCompiler buildConfiguredCompiler() {
         return getAndroidCompiler()
-            .compileToJar(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
+            .configure(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
       }
 
-      protected AndroidLibraryCompiler getAndroidCompiler() {
+      protected ConfiguredCompilerFactory getAndroidCompiler() {
         if (androidCompiler == null) {
           androidCompiler = compilerFactory.getCompiler(language);
         }

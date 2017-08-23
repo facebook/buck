@@ -16,14 +16,13 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -90,8 +89,7 @@ public class GoTestDescription
       CellPathResolver cellRoots,
       GoTestDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     Optional<GoPlatform> platform = goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)
@@ -136,8 +134,7 @@ public class GoTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       ImmutableSet<SourcePath> srcs,
-      Path packageName)
-      throws NoSuchBuildTargetException {
+      Path packageName) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
             goBuckConfig, buildTarget, projectFilesystem, params, resolver);
@@ -167,8 +164,7 @@ public class GoTestDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      GoTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      GoTestDescriptionArg args) {
     GoPlatform platform =
         goBuckConfig
             .getPlatformFlavorDomain()
@@ -201,8 +197,7 @@ public class GoTestDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoTestDescriptionArg args,
-      GoPlatform platform)
-      throws NoSuchBuildTargetException {
+      GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
 
     BuildRule testLibrary =
@@ -234,8 +229,7 @@ public class GoTestDescription
   }
 
   private Path getGoPackageName(
-      BuildRuleResolver resolver, BuildTarget target, GoTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, BuildTarget target, GoTestDescriptionArg args) {
     target = target.withFlavors(); // remove flavors.
 
     if (args.getLibrary().isPresent()) {
@@ -278,8 +272,7 @@ public class GoTestDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       GoTestDescriptionArg args,
-      GoPlatform platform)
-      throws NoSuchBuildTargetException {
+      GoPlatform platform) {
     Path packageName = getGoPackageName(resolver, buildTarget, args);
     GoCompile testLibrary;
     if (args.getLibrary().isPresent()) {

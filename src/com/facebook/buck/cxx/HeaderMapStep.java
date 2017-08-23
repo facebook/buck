@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class HeaderMapStep implements Step {
+class HeaderMapStep implements Step {
 
   private static final Logger LOG = Logger.get(HeaderMapStep.class);
 

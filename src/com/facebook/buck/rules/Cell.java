@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -87,7 +88,7 @@ public class Cell {
         Suppliers.memoize(
             () -> {
               try {
-                return knownBuildRuleTypesFactory.create(config, filesystem, sdkEnvironment);
+                return knownBuildRuleTypesFactory.create(config, filesystem);
               } catch (IOException e) {
                 throw new RuntimeException(
                     String.format(
@@ -255,6 +256,19 @@ public class Cell {
    */
   public ProjectBuildFileParser createBuildFileParser(
       TypeCoercerFactory typeCoercerFactory, Console console, BuckEventBus eventBus) {
+    return createBuildFileParser(
+        typeCoercerFactory, console, eventBus, /* enableProfiling */ false);
+  }
+
+  /**
+   * Same as @{{@link #createBuildFileParser(TypeCoercerFactory, Console, BuckEventBus)}} but
+   * provides a way to configure whether parse profiling should be enabled
+   */
+  public ProjectBuildFileParser createBuildFileParser(
+      TypeCoercerFactory typeCoercerFactory,
+      Console console,
+      BuckEventBus eventBus,
+      boolean enableProfiling) {
 
     ParserConfig parserConfig = getBuckConfig().getView(ParserConfig.class);
 
@@ -269,8 +283,9 @@ public class Cell {
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new ProjectBuildFileParser(
+    return new PythonDslProjectBuildFileParser(
         ProjectBuildFileParserOptions.builder()
+            .setEnableProfiling(enableProfiling)
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
             .setCellName(getCanonicalName().orElse(""))

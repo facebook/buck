@@ -19,12 +19,12 @@ package com.facebook.buck.lua;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
-import com.facebook.buck.cxx.platform.NativeLinkStrategy;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -52,11 +52,11 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -453,7 +453,7 @@ public class LuaBinaryDescriptionTest {
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
             .setProvided(true)
-            .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
+            .setSharedLib(new FakeSourcePath("lipython2.so"));
 
     CxxPythonExtensionBuilder extensionBuilder =
         new CxxPythonExtensionBuilder(
@@ -477,7 +477,7 @@ public class LuaBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             python2Builder.build(), extensionBuilder.build(), binaryBuilder.build());
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     python2Builder.build(resolver, filesystem, targetGraph);

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -133,6 +134,19 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         throw e.getCause();
       }
     }
+  }
+
+  public JavacOptions withBootclasspathFromContext(
+      ExtraClasspathFromContextFunction extraClasspathFromContextFunction, BuildContext context) {
+    String extraClasspath =
+        Joiner.on(File.pathSeparator).join(extraClasspathFromContextFunction.apply(context));
+    JavacOptions options = (JavacOptions) this;
+
+    if (!extraClasspath.isEmpty()) {
+      return options.withBootclasspath(extraClasspath);
+    }
+
+    return options;
   }
 
   public void appendOptionsTo(

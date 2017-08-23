@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.project_generator;
 
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -69,13 +70,13 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderBuilder;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
@@ -90,7 +91,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -1320,27 +1320,25 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertThatHeaderMapWithoutSymLinksIsEmpty(Path root) throws IOException {
+  private HeaderMap getHeaderMapInDir(Path root) throws IOException {
     // Read the tree's header map.
     byte[] headerMapBytes;
     try (InputStream headerMapInputStream =
         projectFilesystem.newFileInputStream(root.resolve(".hmap"))) {
       headerMapBytes = ByteStreams.toByteArray(headerMapInputStream);
     }
-    HeaderMap headerMap = HeaderMap.deserialize(headerMapBytes);
+    return HeaderMap.deserialize(headerMapBytes);
+  }
+
+  private void assertThatHeaderMapWithoutSymLinksIsEmpty(Path root) throws IOException {
+    HeaderMap headerMap = getHeaderMapInDir(root);
     assertNotNull(headerMap);
     assertEquals(headerMap.getNumEntries(), 0);
   }
 
   private void assertThatHeaderMapWithoutSymLinksContains(
       Path root, ImmutableMap<String, String> content) throws IOException {
-    // Read the tree's header map.
-    byte[] headerMapBytes;
-    try (InputStream headerMapInputStream =
-        projectFilesystem.newFileInputStream(root.resolve(".hmap"))) {
-      headerMapBytes = ByteStreams.toByteArray(headerMapInputStream);
-    }
-    HeaderMap headerMap = HeaderMap.deserialize(headerMapBytes);
+    HeaderMap headerMap = getHeaderMapInDir(root);
     assertNotNull(headerMap);
     assertThat(headerMap.getNumEntries(), equalTo(content.size()));
     for (Map.Entry<String, String> entry : content.entrySet()) {
@@ -4387,11 +4385,7 @@ public class ProjectGeneratorTest {
             nodes,
             ImmutableSet.of(),
             input -> {
-              try {
-                resolver.requireRule(input.getBuildTarget());
-              } catch (NoSuchBuildTargetException e) {
-                throw new RuntimeException(e);
-              }
+              resolver.requireRule(input.getBuildTarget());
               return resolver;
             });
     projectGenerator.createXcodeProjects();
@@ -4479,6 +4473,153 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibrary() throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//Foo", "Bar");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
+
+    assertThat(buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo("Bar-Swift.h"));
+    assertNotNull(
+        "Location of Generated Obj-C Header must be known in advance",
+        buildSettings.get("DERIVED_FILE_DIR"));
+    assertThat(
+        buildSettings.get("SWIFT_INCLUDE_PATHS"), equalTo("$(inherited) $BUILT_PRODUCTS_DIR"));
+  }
+
+  @Test
+  public void testGeneratedProjectForAppleBinaryUsingAppleLibraryWithSwiftSources()
+      throws IOException {
+    BuildTarget libBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?, ?> libNode =
+        AppleLibraryBuilder.createBuilder(libBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+
+    BuildTarget binBuildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    TargetNode<?, ?> binNode =
+        AppleBinaryBuilder.createBuilder(binBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setDeps(ImmutableSortedSet.of(libBuildTarget))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode, binNode));
+    projectGenerator.createXcodeProjects();
+    PBXProject project = projectGenerator.getGeneratedProject();
+
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(binBuildTarget, target, "Debug");
+    assertThat(
+        buildSettings.get("LIBRARY_SEARCH_PATHS"),
+        containsString("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME"));
+  }
+
+  @Test
+  public void testSwiftObjCGenerateHeaderInHeaderMap() throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?, ?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setXcodePublicHeadersSymlinks(false)
+            .setXcodePrivateHeadersSymlinks(false)
+            .build();
+
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions = optionsBuilder.build();
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(ImmutableSet.of(node), projectGeneratorOptions);
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    String publicHeaderMapDir = "buck-out/gen/_p/CwkbTNOBmb-pub";
+    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo(publicHeaderMapDir)));
+
+    HeaderMap headerMap = getHeaderMapInDir(Paths.get(publicHeaderMapDir));
+    assertThat(headerMap.getNumEntries(), equalTo(1));
+
+    String objCGeneratedHeaderName = "lib-Swift.h";
+    String derivedSourcesUserDir =
+        "buck-out/xcode/derived-sources/lib-0b091b4cd38199b85fed37557a12c08fbbca9b32";
+    String objCGeneratedHeaderPathName = headerMap.lookup("lib/lib-Swift.h");
+    assertTrue(
+        objCGeneratedHeaderPathName.endsWith(
+            derivedSourcesUserDir + "/" + objCGeneratedHeaderName));
+
+    PBXProject pbxProject = projectGenerator.getGeneratedProject();
+    PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//foo:lib");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, pbxTarget, "Debug");
+
+    assertThat(buildSettings.get("DERIVED_FILE_DIR"), equalTo("../" + derivedSourcesUserDir));
+    assertThat(
+        buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo(objCGeneratedHeaderName));
+  }
+
+  @Test
+  public void testSwiftDependencyBuildPhase() throws IOException {
+    BuildTarget fooBuildTarget = BuildTargetFactory.newInstance(rootPath, "//baz", "foo");
+    BuildTarget barBuildTarget = BuildTargetFactory.newInstance(rootPath, "//baz", "bar");
+
+    TargetNode<?, ?> fooNode =
+        AppleLibraryBuilder.createBuilder(fooBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setXcodePublicHeadersSymlinks(false)
+            .setXcodePrivateHeadersSymlinks(false)
+            .build();
+    TargetNode<?, ?> barNode =
+        AppleLibraryBuilder.createBuilder(barBuildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Bar.swift"))))
+            .setDeps(ImmutableSortedSet.of(fooBuildTarget))
+            .setSwiftVersion(Optional.of("3.0"))
+            .setXcodePublicHeadersSymlinks(false)
+            .setXcodePrivateHeadersSymlinks(false)
+            .build();
+
+    ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
+    ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions = optionsBuilder.build();
+    ProjectGenerator projectGenerator =
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(fooNode, barNode), projectGeneratorOptions);
+
+    projectGenerator.createXcodeProjects();
+
+    PBXProject pbxProject = projectGenerator.getGeneratedProject();
+    PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//baz:bar");
+
+    ImmutableSet<PBXBuildPhase> fakeDepPhases =
+        FluentIterable.from(pbxTarget.getBuildPhases())
+            .filter(
+                phase -> {
+                  return phase
+                      .getName()
+                      .equals(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
+                })
+            .toSet();
+    assertThat(fakeDepPhases.size(), equalTo(1));
+  }
+
+  @Test
   public void testMergedHeaderMap() throws IOException {
     BuildTarget lib1Target = BuildTargetFactory.newInstance(rootPath, "//foo", "lib1");
     BuildTarget lib2Target = BuildTargetFactory.newInstance(rootPath, "//bar", "lib2");
@@ -4523,11 +4664,13 @@ public class ProjectGeneratorTest {
         TargetGraphFactory.newInstance(
             ImmutableSet.of(lib1Node, lib2Node, lib3Node, testNode, lib4Node));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
 
     ProjectGenerator projectGeneratorLib2 =
         new ProjectGenerator(
             targetGraph,
             cache,
+            projStateCache,
             ImmutableSet.of(lib2Target),
             projectCell,
             OUTPUT_DIRECTORY,
@@ -4570,6 +4713,7 @@ public class ProjectGeneratorTest {
         new ProjectGenerator(
             targetGraph,
             cache,
+            projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell,
             OUTPUT_DIRECTORY,
@@ -4657,9 +4801,11 @@ public class ProjectGeneratorTest {
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+    final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
     return new ProjectGenerator(
         targetGraph,
         cache,
+        projStateCache,
         initialBuildTargets,
         projectCell,
         OUTPUT_DIRECTORY,

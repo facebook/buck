@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 
 /** Created by agallagher on 9/18/16. */
 class OmnibusSharedOnlyNode extends OmnibusNode {

@@ -17,31 +17,171 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.facebook.buck.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
+import com.google.common.base.Stopwatch;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import javax.annotation.concurrent.GuardedBy;
 
 public class ServerContentsProvider implements FileContentsProvider {
-  private final DistBuildService service;
 
-  public ServerContentsProvider(DistBuildService service) {
+  private static final Logger LOG = Logger.get(ServerContentsProvider.class);
+
+  private static final long MULTI_FETCH_BUFFER_PERIOD_MS = 100;
+  private static final int MULTI_FETCH_BUFFER_MAX_SIZE = 8;
+  private static final long SERVER_FETCH_MAX_TIMEOUT_SECONDS = 15;
+
+  private final DistBuildService service;
+  private final int multiFetchBufferMaxSize;
+  private final FileMaterializationStatsTracker statsTracker;
+
+  private final Object multiFetchLock = new Object();
+
+  @GuardedBy("multiFetchLock")
+  private List<String> hashCodesToFetch;
+
+  @GuardedBy("multiFetchLock")
+  private CompletableFuture<Map<String, byte[]>> multiFetchFuture;
+
+  private ScheduledFuture<?> scheduledBufferProcessor;
+
+  public ServerContentsProvider(
+      DistBuildService service,
+      ScheduledExecutorService networkScheduler,
+      FileMaterializationStatsTracker statsTracker,
+      Optional<Long> multiFetchBufferPeriodMs,
+      Optional<Integer> multiFetchBufferMaxSize) {
+    this(
+        service,
+        networkScheduler,
+        statsTracker,
+        multiFetchBufferPeriodMs.orElse(MULTI_FETCH_BUFFER_PERIOD_MS),
+        multiFetchBufferMaxSize.orElse(MULTI_FETCH_BUFFER_MAX_SIZE));
+  }
+
+  public ServerContentsProvider(
+      DistBuildService service,
+      ScheduledExecutorService networkScheduler,
+      FileMaterializationStatsTracker statsTracker,
+      long multiFetchBufferPeriodMs,
+      int multiFetchBufferMaxSize) {
     this.service = service;
+    this.multiFetchBufferMaxSize = multiFetchBufferMaxSize;
+    this.statsTracker = statsTracker;
+
+    synchronized (multiFetchLock) {
+      hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
+      multiFetchFuture = new CompletableFuture<>();
+    }
+
+    scheduledBufferProcessor =
+        networkScheduler.scheduleAtFixedRate(
+            () -> {
+              Stopwatch stopwatch = Stopwatch.createStarted();
+              int numFilesFetched = this.processFileBuffer(false);
+              long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
+              if (numFilesFetched > 0) {
+                this.statsTracker.recordPeriodicCasMultiFetch(elapsedMs);
+              }
+            },
+            0,
+            multiFetchBufferPeriodMs,
+            TimeUnit.MILLISECONDS);
+  }
+
+  @Override
+  public void close() {
+    if (scheduledBufferProcessor.isCancelled() || scheduledBufferProcessor.isDone()) {
+      return;
+    }
+
+    if (!scheduledBufferProcessor.cancel(true)) {
+      // If the cancel failed, it must be some error,
+      // otherwise this future never completes on its own.
+      LOG.error("Unable to cancel scheduled task for processing the multi-fetch file buffer.");
+    }
+  }
+
+  private int processFileBuffer(boolean onlyIfBufferIsFull) {
+    List<String> hashCodes;
+    CompletableFuture<Map<String, byte[]>> resultFuture;
+
+    synchronized (multiFetchLock) {
+      if (onlyIfBufferIsFull && hashCodesToFetch.size() < multiFetchBufferMaxSize) {
+        return 0;
+      }
+
+      if (hashCodesToFetch.isEmpty()) {
+        return 0;
+      }
+
+      hashCodes = hashCodesToFetch;
+      hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
+      resultFuture = multiFetchFuture;
+      multiFetchFuture = new CompletableFuture<>();
+    }
+
+    try {
+      resultFuture.complete(service.multiFetchSourceFiles(hashCodes));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
+    return hashCodes.size();
+  }
+
+  @VisibleForTesting
+  Future<byte[]> fetchFileContentsAsync(BuildJobStateFileHashEntry entry) {
+    Preconditions.checkState(
+        entry.isSetSha1(), String.format("File hash missing for file [%s]", entry.getPath()));
+
+    Future<byte[]> future;
+    synchronized (multiFetchLock) {
+      hashCodesToFetch.add(entry.getSha1());
+      future =
+          multiFetchFuture.thenApply(
+              resultMap -> Preconditions.checkNotNull(resultMap).get(entry.getSha1()));
+    }
+
+    // If the buffer has maxed out, fetch right away.
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    int numFilesFetched = this.processFileBuffer(true);
+    long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
+    if (numFilesFetched > 0) {
+      statsTracker.recordFullBufferCasMultiFetch(elapsedMs);
+    }
+    return future;
   }
 
   @Override
   public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
-    Preconditions.checkState(
-        entry.isSetHashCode(), String.format("File hash missing for file [%s]", entry.getPath()));
+    try {
+      byte[] fileContents =
+          fetchFileContentsAsync(entry).get(SERVER_FETCH_MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      try (OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
+        outputStream.write(fileContents);
+      }
 
-    try (InputStream inputStream = service.fetchSourceFile(entry.getHashCode());
-        OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
-      ByteStreams.copy(inputStream, outputStream);
+    } catch (InterruptedException | ExecutionException e) {
+      LOG.error(e, "Unexpected error in fetching source file [%s]", entry.getPath());
+    } catch (TimeoutException e) {
+      throw new RuntimeException("Timed out while waiting to fetch the file from the server.", e);
     }
-
     return true;
   }
 }

@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -140,7 +139,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       } else {
         return printClasspath(params, targetGraph, targets);
       }
-    } catch (NoSuchBuildTargetException | VersionException e) {
+    } catch (VersionException e) {
       throw new HumanReadableException(e, MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }
@@ -170,7 +169,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   @VisibleForTesting
   int printClasspath(
       CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
-      throws NoSuchBuildTargetException, InterruptedException, VersionException {
+      throws InterruptedException, VersionException {
 
     if (params.getBuckConfig().getBuildVersions()) {
       targetGraph =
@@ -208,7 +207,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   @VisibleForTesting
   int printJsonClasspath(
       CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
-      throws IOException, NoSuchBuildTargetException, InterruptedException, VersionException {
+      throws IOException, InterruptedException, VersionException {
 
     if (params.getBuckConfig().getBuildVersions()) {
       targetGraph =

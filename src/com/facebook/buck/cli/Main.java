@@ -86,6 +86,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -147,6 +148,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGListeningAddress;
 import com.martiansoftware.nailgun.NGServer;
@@ -315,7 +317,9 @@ public final class Main {
 
   public interface KnownBuildRuleTypesFactoryFactory {
     KnownBuildRuleTypesFactory create(
-        ProcessExecutor processExecutor, AndroidDirectoryResolver androidDirectoryResolver);
+        ProcessExecutor processExecutor,
+        AndroidDirectoryResolver androidDirectoryResolver,
+        SdkEnvironment sdkEnvironment);
   }
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
@@ -601,6 +605,9 @@ public final class Main {
 
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
+      SdkEnvironment sdkEnvironment =
+          SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
+
       Clock clock;
       boolean enableThreadCpuTime =
           buckConfig.getBooleanValue("build", "enable_thread_cpu_time", true);
@@ -618,11 +625,17 @@ public final class Main {
               context, parserConfig, projectWatchList, clientEnvironment, console, clock)) {
 
         KnownBuildRuleTypesFactory factory =
-            knownBuildRuleTypesFactoryFactory.create(processExecutor, androidDirectoryResolver);
+            knownBuildRuleTypesFactoryFactory.create(
+                processExecutor, androidDirectoryResolver, sdkEnvironment);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
-                    filesystem, watchman, buckConfig, command.getConfigOverrides(), factory)
+                    filesystem,
+                    watchman,
+                    buckConfig,
+                    command.getConfigOverrides(),
+                    factory,
+                    sdkEnvironment)
                 .getCellByPath(filesystem.getRootPath());
 
         Optional<Daemon> daemon =
@@ -706,6 +719,9 @@ public final class Main {
         ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
+        ListeningExecutorService httpFetchExecutorService =
+            getHttpFetchExecutorService(
+                cacheBuckConfig, buckConfig.getMaximumResourceAmounts().getNetworkIO());
         ScheduledExecutorService counterAggregatorExecutor =
             Executors.newSingleThreadScheduledExecutor(
                 new CommandThreadFactory("CounterAggregatorThread"));
@@ -723,6 +739,11 @@ public final class Main {
             ExecutorPool.PROJECT,
             listeningDecorator(
                 MostExecutors.newMultiThreadExecutor("Project", buckConfig.getNumThreads())));
+
+        ScheduledExecutorService scheduledExecutorPool =
+            Executors.newScheduledThreadPool(
+                buckConfig.getNumThreadsForSchedulerPool(),
+                new CommandThreadFactory(getClass().getName() + "SchedulerThreadPool"));
 
         // Create and register the event buses that should listen to broadcast events.
         // If the build doesn't have a daemon create a new instance.
@@ -795,6 +816,7 @@ public final class Main {
                   filesystem,
                   executionEnvironment.getWifiSsid(),
                   httpWriteExecutorService,
+                  httpFetchExecutorService,
                   Optional.of(asyncCloseable));
 
           ProgressEstimator progressEstimator =
@@ -812,7 +834,10 @@ public final class Main {
 
           Iterable<BuckEventListener> commandEventListeners =
               command.getSubcommand().isPresent()
-                  ? command.getSubcommand().get().getEventListeners()
+                  ? command
+                      .getSubcommand()
+                      .get()
+                      .getEventListeners(executors, scheduledExecutorPool)
                   : ImmutableList.of();
 
           eventListeners =
@@ -1005,10 +1030,12 @@ public final class Main {
                         .setBuckConfig(buckConfig)
                         .setFileHashCache(fileHashCache)
                         .setExecutors(executors)
+                        .setScheduledExecutor(scheduledExecutorPool)
                         .setBuildEnvironmentDescription(buildEnvironmentDescription)
                         .setVersionedTargetGraphCache(versionedTargetGraphCache)
                         .setActionGraphCache(actionGraphCache)
                         .setKnownBuildRuleTypesFactory(factory)
+                        .setSdkEnvironment(sdkEnvironment)
                         .setInvocationInfo(Optional.of(invocationInfo))
                         .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
                         .setBuildInfoStoreManager(storeManager)
@@ -1059,6 +1086,8 @@ public final class Main {
           for (ExecutorPool p : executors.keySet()) {
             closeExecutorService(p.toString(), executors.get(p), EXECUTOR_SERVICES_TIMEOUT_SECONDS);
           }
+          closeExecutorService(
+              "ScheduledExecutorService", scheduledExecutorPool, EXECUTOR_SERVICES_TIMEOUT_SECONDS);
         }
         if (context.isPresent() && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
           context.get().in.close(); // Avoid client exit triggering client disconnection handling.
@@ -1219,6 +1248,14 @@ public final class Main {
     }
   }
 
+  private static ListeningExecutorService getHttpFetchExecutorService(
+      ArtifactCacheBuckConfig buckConfig, int maximumNetworkIOResources) {
+    return listeningDecorator(
+        MostExecutors.newMultiThreadExecutor(
+            new ThreadFactoryBuilder().setNameFormat("cache-fetch-%d").build(),
+            Math.min(maximumNetworkIOResources, (int) buckConfig.getThreadPoolSize())));
+  }
+
   private static ConsoleHandlerState.Writer createWriterForConsole(
       final AbstractConsoleEventBusListener console) {
     return new ConsoleHandlerState.Writer() {
@@ -1281,8 +1318,7 @@ public final class Main {
     return new Pair<>(daemonForParser.getTypeCoercerFactory(), daemonForParser.getParser());
   }
 
-  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon)
-      throws IOException {
+  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon) {
     return daemon.getFileHashCaches();
   }
 
@@ -1463,7 +1499,13 @@ public final class Main {
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(
-        console, clock, testResultSummaryVerbosity, locale, testLogPath, executionEnvironment);
+        console,
+        clock,
+        testResultSummaryVerbosity,
+        config.getHideSucceededRulesInLogMode(),
+        locale,
+        testLogPath,
+        executionEnvironment);
   }
 
   private boolean isSuperConsoleEnabled(Console console) {
@@ -1596,7 +1638,7 @@ public final class Main {
     private static final ScheduledExecutorService housekeepingExecutorService =
         Executors.newSingleThreadScheduledExecutor();
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
       try {
         daemonizeIfPossible();
         if (isSessionLeader) {

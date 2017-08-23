@@ -114,7 +114,7 @@ GENERATOR_SOURCE = [
     "HybridPayloadGenerator.java",
 ]
 
-java_library(
+java_immutables_library(
     name = "impl",
     srcs = glob(
         ["*.java"],
@@ -138,6 +138,7 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/slb:slb",

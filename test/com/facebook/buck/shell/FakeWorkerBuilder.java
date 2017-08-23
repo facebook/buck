@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -128,8 +127,7 @@ public class FakeWorkerBuilder
         BuildRuleParams params,
         BuildRuleResolver resolver,
         CellPathResolver cellRoots,
-        FakeWorkerDescriptionArg args)
-        throws NoSuchBuildTargetException {
+        FakeWorkerDescriptionArg args) {
       return new FakeWorkerTool(buildTarget, projectFilesystem, params);
     }
 

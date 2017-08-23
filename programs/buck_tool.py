@@ -58,7 +58,6 @@ EXPORTED_RESOURCES = [
     Resource("path_to_sh_binary_template"),
     Resource("jacoco_agent_jar"),
     Resource("report_generator_jar"),
-    Resource("path_to_static_content"),
     Resource("path_to_pex", executable=True),
     Resource("dx"),
     Resource("android_agent_path"),

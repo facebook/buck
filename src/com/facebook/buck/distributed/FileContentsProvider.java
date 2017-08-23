@@ -17,10 +17,11 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface FileContentsProvider {
+public interface FileContentsProvider extends Closeable {
   /**
    * @param entry to fetch the contents for.
    * @param targetAbsPath where the file should be written to.

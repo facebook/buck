@@ -20,13 +20,13 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkStrategy;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -504,7 +504,7 @@ public class PythonBinaryDescriptionTest {
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
             .setProvided(true)
-            .setExportedLinkerFlags(ImmutableList.of("-lpython2"));
+            .setSharedLib(new FakeSourcePath("libpython2.so"));
 
     CxxPythonExtensionBuilder extensionBuilder =
         new CxxPythonExtensionBuilder(
@@ -534,7 +534,7 @@ public class PythonBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             python2Builder.build(), extensionBuilder.build(), binaryBuilder.build());
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
@@ -737,6 +737,7 @@ public class PythonBinaryDescriptionTest {
               .setForceStatic(true);
       PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
           new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep2"))
+              .setStaticLib(new FakeSourcePath("libdep2.a"))
               .setForceStatic(true);
       PythonBuckConfig config =
           new PythonBuckConfig(

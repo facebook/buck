@@ -73,9 +73,7 @@ BUCK_CORE_RESOURCES = {
     "external_executor_jar": "//src/com/facebook/buck/step/external:executor",
 
     # TODO(#5448619): We currently don't have a great way of packaging up
-    # entire directories into a PEX file, so for now, we aren't pulling in
-    # the following resources.
-    #':path_to_static_content',
+    # entire directories into a PEX file.
 }
 
 python_library(

@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -62,7 +62,7 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
 
   protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
     @Override
-    protected CompileToJarStepFactory buildCompileStepFactory() {
+    protected ConfiguredCompiler buildConfiguredCompiler() {
       ScalaBuckConfig scalaBuckConfig =
           Preconditions.checkNotNull(ScalaLibraryBuilder.this.scalaBuckConfig);
 

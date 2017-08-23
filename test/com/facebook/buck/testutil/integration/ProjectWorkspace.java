@@ -48,6 +48,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -707,18 +708,24 @@ public class ProjectWorkspace {
     DefaultAndroidDirectoryResolver directoryResolver =
         new DefaultAndroidDirectoryResolver(
             filesystem.getRootPath().getFileSystem(), env, Optional.empty(), Optional.empty());
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+    BuckConfig buckConfig =
+        new BuckConfig(
+            config,
+            filesystem,
+            Architecture.detect(),
+            Platform.detect(),
+            env,
+            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+    SdkEnvironment sdkEnvironment =
+        SdkEnvironment.create(buckConfig, processExecutor, directoryResolver);
     return CellProvider.createForLocalBuild(
             filesystem,
             Watchman.NULL_WATCHMAN,
-            new BuckConfig(
-                config,
-                filesystem,
-                Architecture.detect(),
-                Platform.detect(),
-                env,
-                new DefaultCellPathResolver(filesystem.getRootPath(), config)),
+            buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(new DefaultProcessExecutor(console), directoryResolver))
+            new KnownBuildRuleTypesFactory(processExecutor, directoryResolver, sdkEnvironment),
+            sdkEnvironment)
         .getCellByPath(filesystem.getRootPath());
   }
 

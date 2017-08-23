@@ -19,12 +19,10 @@ package com.facebook.buck.rules;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -43,11 +41,6 @@ import javax.annotation.Nullable;
  */
 public class BuildRuleResolver {
 
-  @FunctionalInterface
-  public interface BuildRuleFunction {
-    BuildRule apply(BuildTarget target) throws NoSuchBuildTargetException;
-  }
-
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
 
@@ -57,6 +50,7 @@ public class BuildRuleResolver {
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
 
+  @VisibleForTesting
   public BuildRuleResolver(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     this(targetGraph, buildRuleGenerator, null);
@@ -80,14 +74,13 @@ public class BuildRuleResolver {
             .build(
                 new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
                   @Override
-                  public Optional<?> load(Pair<BuildTarget, Class<?>> key) throws Exception {
+                  public Optional<?> load(Pair<BuildTarget, Class<?>> key) {
                     TargetNode<?, ?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
                     return load(node, key.getSecond());
                   }
 
                   @SuppressWarnings("unchecked")
-                  private <T, U> Optional<U> load(TargetNode<T, ?> node, Class<U> metadataClass)
-                      throws NoSuchBuildTargetException {
+                  private <T, U> Optional<U> load(TargetNode<T, ?> node, Class<U> metadataClass) {
                     T arg = node.getConstructorArg();
                     if (metadataClass.isAssignableFrom(arg.getClass())) {
                       return Optional.of(metadataClass.cast(arg));
@@ -115,20 +108,53 @@ public class BuildRuleResolver {
     return Iterables.unmodifiableIterable(buildRuleIndex.values());
   }
 
-  private <T> T fromNullable(BuildTarget target, @Nullable T rule) {
-    if (rule == null) {
-      throw new HumanReadableException("Rule for target '%s' could not be resolved.", target);
-    }
-    return rule;
-  }
-
-  /** Returns the {@link BuildRule} with the {@code buildTarget}. */
-  public BuildRule getRule(BuildTarget buildTarget) {
-    return fromNullable(buildTarget, buildRuleIndex.get(buildTarget));
-  }
-
+  /**
+   * Returns the {@code BuildRule} associated with the given {@code BuildTarget} if it is already
+   * present.
+   */
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
     return Optional.ofNullable(buildRuleIndex.get(buildTarget));
+  }
+
+  /**
+   * Returns the {@code BuildRule} associated with the given {@code BuildTarget} if it is already
+   * present, casting it to an expected type.
+   *
+   * @throws HumanReadableException if the {@code BuildRule} is not an instance of the given class.
+   */
+  public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
+    return getRuleOptional(buildTarget)
+        .map(
+            rule -> {
+              if (cls.isInstance(rule)) {
+                return cls.cast(rule);
+              } else {
+                throw new HumanReadableException(
+                    "Rule for target '%s' is present but not of expected type %s (got %s)",
+                    buildTarget, cls, rule.getClass());
+              }
+            });
+  }
+
+  /**
+   * Returns the {@code BuildRule} associated with the {@code buildTarget}.
+   *
+   * @throws HumanReadableException if no BuildRule is associated with the {@code BuildTarget}.
+   */
+  public BuildRule getRule(BuildTarget buildTarget) {
+    return getRuleOptional(buildTarget).orElseThrow(() -> unresolvableRuleException(buildTarget));
+  }
+
+  /**
+   * Returns the {@code BuildRule} associated with the {@code buildTarget}, casting it to an
+   * expected type.
+   *
+   * @throws HumanReadableException if no rule is associated with the {@code BuildTarget}, or if the
+   *     rule is not an instance of the given class.
+   */
+  public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
+    return getRuleOptionalWithType(buildTarget, cls)
+        .orElseThrow(() -> unresolvableRuleException(buildTarget));
   }
 
   /**
@@ -138,10 +164,9 @@ public class BuildRuleResolver {
    * @param target target with which the BuildRule is associated.
    * @param mappingFunction function to compute the rule.
    * @return the current value associated with the rule
-   * @throws NoSuchBuildTargetException if the supplier does so.
    */
-  public BuildRule computeIfAbsentThrowing(BuildTarget target, BuildRuleFunction mappingFunction)
-      throws NoSuchBuildTargetException {
+  public BuildRule computeIfAbsent(
+      BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
     BuildRule rule = buildRuleIndex.get(target);
     if (rule != null) {
       return rule;
@@ -167,22 +192,13 @@ public class BuildRuleResolver {
     return rule;
   }
 
-  public BuildRule computeIfAbsent(
-      BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
-    try {
-      return computeIfAbsentThrowing(target, mappingFunction::apply);
-    } catch (NoSuchBuildTargetException e) {
-      throw new IllegalStateException("Supplier should not throw NoSuchBuildTargetException.", e);
-    }
-  }
-
   /**
    * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
    * with the target, compute it by transforming the {@code TargetNode} associated with this build
    * target using the {@link TargetNodeToBuildRuleTransformer} associated with this instance.
    */
-  public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
-    return computeIfAbsentThrowing(
+  public BuildRule requireRule(BuildTarget target) {
+    return computeIfAbsent(
         target,
         (ignored) -> {
           TargetNode<?, ?> node = targetGraph.get(target);
@@ -199,8 +215,7 @@ public class BuildRuleResolver {
         });
   }
 
-  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets)
-      throws NoSuchBuildTargetException {
+  public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets) {
     ImmutableSortedSet.Builder<BuildRule> rules = ImmutableSortedSet.naturalOrder();
     for (BuildTarget target : buildTargets) {
       rules.add(requireRule(target));
@@ -209,34 +224,13 @@ public class BuildRuleResolver {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass)
-      throws NoSuchBuildTargetException {
+  public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass) {
     try {
       return (Optional<T>)
           metadataCache.get(new Pair<BuildTarget, Class<?>>(target, metadataClass));
     } catch (ExecutionException e) {
-      Throwables.throwIfInstanceOf(e.getCause(), NoSuchBuildTargetException.class);
       throw new RuntimeException(e);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
-    BuildRule rule = buildRuleIndex.get(buildTarget);
-    if (rule != null) {
-      if (cls.isInstance(rule)) {
-        return Optional.of((T) rule);
-      } else {
-        throw new HumanReadableException(
-            "Rule for target '%s' is present but not of expected type %s (got %s)",
-            buildTarget, cls, rule.getClass());
-      }
-    }
-    return Optional.empty();
-  }
-
-  public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
-    return fromNullable(buildTarget, getRuleOptionalWithType(buildTarget, cls).orElse(null));
   }
 
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {
@@ -263,16 +257,12 @@ public class BuildRuleResolver {
     return buildRule;
   }
 
-  /** Adds an iterable of build rules to the index. */
-  public <T extends BuildRule, C extends Iterable<T>> C addAllToIndex(C buildRules) {
-    for (T buildRule : buildRules) {
-      addToIndex(buildRule);
-    }
-    return buildRules;
-  }
-
   @Nullable
   public BuckEventBus getEventBus() {
     return eventBus;
+  }
+
+  private HumanReadableException unresolvableRuleException(BuildTarget target) {
+    return new HumanReadableException("Rule for target '%s' could not be resolved.", target);
   }
 }

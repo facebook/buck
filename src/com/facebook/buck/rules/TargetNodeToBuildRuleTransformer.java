@@ -16,11 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-
 public interface TargetNodeToBuildRuleTransformer {
 
   <T, U extends Description<T>> BuildRule transform(
-      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode)
-      throws NoSuchBuildTargetException;
+      TargetGraph targetGraph, BuildRuleResolver ruleResolver, TargetNode<T, U> targetNode);
 }

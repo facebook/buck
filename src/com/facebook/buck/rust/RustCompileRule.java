@@ -17,7 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxPrepareForLinkStep;
-import com.facebook.buck.cxx.platform.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

@@ -1,4 +1,6 @@
+#include <stdio.h>
+
 extern int bar();
 int main() {
-    return bar();
+    printf("%d\n", bar());
 }

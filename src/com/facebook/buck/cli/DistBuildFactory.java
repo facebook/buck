@@ -24,9 +24,11 @@ import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
+import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
+import com.facebook.buck.distributed.ServerContentsProvider;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.slb.ClientSideSlb;
@@ -37,6 +39,7 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
 import okhttp3.OkHttpClient;
 
 public abstract class DistBuildFactory {
@@ -64,6 +67,24 @@ public abstract class DistBuildFactory {
             new LoadBalancedService(slb, client, params.getBuckEventBus())));
   }
 
+  public static FileContentsProvider createMultiSourceContentsProvider(
+      DistBuildService service,
+      DistBuildConfig distBuildConfig,
+      FileMaterializationStatsTracker fileMaterializationStatsTracker,
+      ScheduledExecutorService sourceFileMultiFetchScheduler,
+      Optional<Path> globalCacheDir)
+      throws IOException, InterruptedException {
+    return new MultiSourceContentsProvider(
+        new ServerContentsProvider(
+            service,
+            sourceFileMultiFetchScheduler,
+            fileMaterializationStatsTracker,
+            distBuildConfig.getSourceFileMultiFetchBufferPeriodMs(),
+            distBuildConfig.getSourceFileMultiFetchMaxBufferSize()),
+        fileMaterializationStatsTracker,
+        globalCacheDir);
+  }
+
   public static DistBuildSlaveExecutor createDistBuildExecutor(
       DistBuildState state,
       CommandRunnerParams params,
@@ -73,10 +94,8 @@ public abstract class DistBuildFactory {
       int coordinatorPort,
       String coordinatorAddress,
       Optional<StampedeId> stampedeId,
-      Optional<Path> globalCacheDir,
-      FileMaterializationStatsTracker fileMaterializationStatsTracker,
-      DistBuildConfig distBuildConfig)
-      throws InterruptedException, IOException {
+      FileContentsProvider fileContentsProvider,
+      DistBuildConfig distBuildConfig) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
@@ -98,9 +117,7 @@ public abstract class DistBuildFactory {
                 //TODO(alisdair,shivanker): Change this to state.getRootCell().getBuckConfig().getKeySeed()
                 .setCacheKeySeed(params.getBuckConfig().getKeySeed())
                 .setConsole(params.getConsole())
-                .setProvider(
-                    new MultiSourceContentsProvider(
-                        service, fileMaterializationStatsTracker, globalCacheDir))
+                .setProvider(fileContentsProvider)
                 .setExecutors(params.getExecutors())
                 .setDistBuildMode(mode)
                 .setRemoteCoordinatorPort(coordinatorPort)

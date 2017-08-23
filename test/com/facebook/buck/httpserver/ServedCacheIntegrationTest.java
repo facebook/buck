@@ -125,7 +125,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testFetchFromServedDircache() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -192,7 +192,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -227,7 +227,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -257,7 +257,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -283,7 +283,7 @@ public class ServedCacheIntegrationTest {
       outputStream.writeInt(1024);
     }
 
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -297,7 +297,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void whenNoCacheIsServedLookupsAreErrors() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
@@ -311,7 +311,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void canSetArtifactCacheWithoutRestartingServer() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
@@ -338,7 +338,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreAndFetchNotBorrowable() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -375,7 +375,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreAndFetchBorrowable() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -412,7 +412,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreDisabled() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -446,7 +446,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void fullStackIntegrationTest() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem, "/static/");
+    webServer = new WebServer(/* port */ 0, projectFilesystem);
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -507,6 +507,7 @@ public class ServedCacheIntegrationTest {
             buckEventBus,
             projectFilesystem,
             Optional.empty(),
+            DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             Optional.empty())
         .newInstance();

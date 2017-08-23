@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -78,7 +78,7 @@ import java.util.function.Predicate;
  * (effectively) random unique IDs, they are not amenable to the InputBasedRuleKey optimization when
  * used to compile another file.
  */
-public class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
+class CxxPrecompiledHeader extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements SupportsDependencyFileRuleKey, SupportsInputBasedRuleKey {
 
   // Fields that are added to rule key as is.

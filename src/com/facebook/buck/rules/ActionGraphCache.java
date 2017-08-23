@@ -25,10 +25,8 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.WatchmanOverflowEvent;
 import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.common.annotations.VisibleForTesting;
@@ -170,11 +168,7 @@ public class ActionGraphCache {
 
           @Override
           public void visit(TargetNode<?, ?> node) {
-            try {
-              resolver.requireRule(node.getBuildTarget());
-            } catch (NoSuchBuildTargetException e) {
-              throw new HumanReadableException(e);
-            }
+            resolver.requireRule(node.getBuildTarget());
           }
         };
     bottomUpTraversal.traverse();

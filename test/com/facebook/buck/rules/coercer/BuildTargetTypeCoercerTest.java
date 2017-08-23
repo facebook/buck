@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -26,9 +27,13 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuildTargetTypeCoercerTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path basePath = Paths.get("java/com/facebook/buck/example");
@@ -40,6 +45,14 @@ public class BuildTargetTypeCoercerTest {
             .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
+  }
+
+  @Test
+  public void failedCoerce() throws CoerceFailedException {
+    thrown.expect(CoerceFailedException.class);
+    thrown.expectMessage(containsString("Unable to find the target //foo::bar."));
+    new BuildTargetTypeCoercer()
+        .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo::bar");
   }
 
   @Test

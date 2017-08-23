@@ -45,37 +45,43 @@ public class MultiSourceContentsProviderTest {
 
   @Test
   public void inlineContentProviderTakesPrecedence() throws InterruptedException, IOException {
+    mockProvider.close();
+    EasyMock.expectLastCall().once();
     EasyMock.replay(mockProvider);
-    MultiSourceContentsProvider provider =
+    try (MultiSourceContentsProvider provider =
         new MultiSourceContentsProvider(
-            mockProvider, new FileMaterializationStatsTracker(), Optional.empty());
-    BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
-    entry.setHashCode("1234");
-    entry.setContents(FILE_CONTENTS);
-    Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
-    Assert.assertFalse(Files.isRegularFile(targetAbsPath));
-    provider.materializeFileContents(entry, targetAbsPath);
-    Assert.assertTrue(Files.isRegularFile(targetAbsPath));
-    Assert.assertThat(Files.readAllBytes(targetAbsPath), Matchers.equalTo(FILE_CONTENTS));
+            mockProvider, new FileMaterializationStatsTracker(), Optional.empty())) {
+      BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
+      entry.setSha1("1234");
+      entry.setContents(FILE_CONTENTS);
+      Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
+      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
+      provider.materializeFileContents(entry, targetAbsPath);
+      Assert.assertTrue(Files.isRegularFile(targetAbsPath));
+      Assert.assertThat(Files.readAllBytes(targetAbsPath), Matchers.equalTo(FILE_CONTENTS));
+    }
     EasyMock.verify(mockProvider);
   }
 
   @Test
   public void serverIsUsedWhenInlineIsMissing() throws InterruptedException, IOException {
     BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
-    entry.setHashCode("1234");
+    entry.setSha1("1234");
     Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
     EasyMock.expect(
             mockProvider.materializeFileContents(EasyMock.eq(entry), EasyMock.eq(targetAbsPath)))
         .andReturn(true)
         .once();
+    mockProvider.close();
+    EasyMock.expectLastCall().once();
     EasyMock.replay(mockProvider);
 
-    MultiSourceContentsProvider provider =
+    try (MultiSourceContentsProvider provider =
         new MultiSourceContentsProvider(
-            mockProvider, new FileMaterializationStatsTracker(), Optional.empty());
-    Assert.assertFalse(Files.isRegularFile(targetAbsPath));
-    provider.materializeFileContents(entry, targetAbsPath);
+            mockProvider, new FileMaterializationStatsTracker(), Optional.empty())) {
+      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
+      provider.materializeFileContents(entry, targetAbsPath);
+    }
     EasyMock.verify(mockProvider);
   }
 }

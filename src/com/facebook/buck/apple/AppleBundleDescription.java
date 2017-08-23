@@ -18,9 +18,9 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.StripStyle;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -28,7 +28,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -139,8 +138,7 @@ public class AppleBundleDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AppleBundleDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AppleBundleDescriptionArg args) {
     AppleDebugFormat flavoredDebugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
@@ -288,8 +286,7 @@ public class AppleBundleDescription
       CellPathResolver cellRoots,
       AppleBundleDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
     if (metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       // Bundles should be opaque to framework dependencies.
       return Optional.empty();

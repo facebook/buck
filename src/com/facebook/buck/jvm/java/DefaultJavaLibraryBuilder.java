@@ -21,7 +21,6 @@ import static com.facebook.buck.jvm.java.JavaLibraryRules.getAbiRulesWherePossib
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -71,11 +70,12 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   protected RemoveClassesPatternsMatcher classesToRemoveFromJar =
       RemoveClassesPatternsMatcher.EMPTY;
-  protected JavacOptionsAmender javacOptionsAmender = JavacOptionsAmender.IDENTITY;
+  protected ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
+      ExtraClasspathFromContextFunction.EMPTY;
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions javacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
-  @Nullable private CompileToJarStepFactory compileStepFactory;
+  @Nullable private ConfiguredCompiler configuredCompiler;
 
   protected DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
@@ -149,8 +149,9 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setJavacOptionsAmender(JavacOptionsAmender amender) {
-    javacOptionsAmender = amender;
+  public DefaultJavaLibraryBuilder setExtraClasspathFromContextFunction(
+      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
+    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
     return this;
   }
 
@@ -234,9 +235,9 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setCompileStepFactory(
-      @Nullable CompileToJarStepFactory compileStepFactory) {
-    this.compileStepFactory = compileStepFactory;
+  public DefaultJavaLibraryBuilder setConfiguredCompiler(
+      @Nullable ConfiguredCompiler configuredCompiler) {
+    this.configuredCompiler = configuredCompiler;
     return this;
   }
 
@@ -245,12 +246,12 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public final DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+  public final DefaultJavaLibrary build() {
     BuilderHelper helper = newHelper();
     return helper.build();
   }
 
-  public final BuildRule buildAbi() throws NoSuchBuildTargetException {
+  public final BuildRule buildAbi() {
     return newHelper().buildAbi();
   }
 
@@ -270,11 +271,11 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
     @Nullable private BuildTarget abiJar;
 
-    protected DefaultJavaLibrary build() throws NoSuchBuildTargetException {
+    protected DefaultJavaLibrary build() {
       return getLibraryRule(false);
     }
 
-    protected BuildRule buildAbi() throws NoSuchBuildTargetException {
+    protected BuildRule buildAbi() {
       if (HasJavaAbi.isClassAbiTarget(initialBuildTarget)) {
         return buildAbiFromClasses();
       } else if (HasJavaAbi.isSourceAbiTarget(initialBuildTarget)) {
@@ -343,15 +344,14 @@ public class DefaultJavaLibraryBuilder {
     }
 
     private boolean isCompilingJava() {
-      return getCompileStepFactory() instanceof JavacToJarStepFactory;
+      return getConfiguredCompiler() instanceof JavacToJarStepFactory;
     }
 
     private boolean sourceAbisEnabled() {
       return javaBuckConfig != null && javaBuckConfig.shouldGenerateAbisFromSource();
     }
 
-    private DefaultJavaLibrary getLibraryRule(boolean addToIndex)
-        throws NoSuchBuildTargetException {
+    private DefaultJavaLibrary getLibraryRule(boolean addToIndex) {
       if (libraryRule == null) {
         BuildRuleParams finalParams = getFinalParams();
         CalculateAbiFromSource sourceAbiRule = null;
@@ -387,8 +387,7 @@ public class DefaultJavaLibraryBuilder {
       return libraryRule;
     }
 
-    private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex)
-        throws NoSuchBuildTargetException {
+    private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex) {
       BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
       if (sourceAbiRule == null) {
         sourceAbiRule =
@@ -405,7 +404,7 @@ public class DefaultJavaLibraryBuilder {
       return sourceAbiRule;
     }
 
-    private BuildRule buildAbiFromClasses() throws NoSuchBuildTargetException {
+    private BuildRule buildAbiFromClasses() {
       BuildTarget abiTarget = HasJavaAbi.getClassAbiJar(libraryTarget);
       BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
 
@@ -420,7 +419,7 @@ public class DefaultJavaLibraryBuilder {
                   != JavaBuckConfig.SourceAbiVerificationMode.OFF);
     }
 
-    protected final BuildRuleParams getFinalParams() throws NoSuchBuildTargetException {
+    protected final BuildRuleParams getFinalParams() {
       if (finalParams == null) {
         finalParams = buildFinalParams();
       }
@@ -440,11 +439,10 @@ public class DefaultJavaLibraryBuilder {
       return ImmutableSortedSet.copyOf(
           Iterables.concat(
               initialParams.getDeclaredDeps().get(),
-              getCompileStepFactory().getDeclaredDeps(ruleFinder)));
+              getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
     }
 
-    protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths()
-        throws NoSuchBuildTargetException {
+    protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
       ImmutableSortedSet<BuildRule> buildRules =
           compileAgainstAbis ? getCompileTimeClasspathAbiDeps() : getCompileTimeClasspathFullDeps();
 
@@ -467,8 +465,7 @@ public class DefaultJavaLibraryBuilder {
       return compileTimeClasspathFullDeps;
     }
 
-    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps()
-        throws NoSuchBuildTargetException {
+    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
       if (compileTimeClasspathAbiDeps == null) {
         compileTimeClasspathAbiDeps = buildCompileTimeClasspathAbiDeps();
       }
@@ -476,8 +473,7 @@ public class DefaultJavaLibraryBuilder {
       return compileTimeClasspathAbiDeps;
     }
 
-    protected final ZipArchiveDependencySupplier getAbiClasspath()
-        throws NoSuchBuildTargetException {
+    protected final ZipArchiveDependencySupplier getAbiClasspath() {
       if (abiClasspath == null) {
         abiClasspath = buildAbiClasspath();
       }
@@ -485,15 +481,15 @@ public class DefaultJavaLibraryBuilder {
       return abiClasspath;
     }
 
-    protected final CompileToJarStepFactory getCompileStepFactory() {
-      if (compileStepFactory == null) {
-        compileStepFactory = buildCompileStepFactory();
+    protected final ConfiguredCompiler getConfiguredCompiler() {
+      if (configuredCompiler == null) {
+        configuredCompiler = buildConfiguredCompiler();
       }
 
-      return compileStepFactory;
+      return configuredCompiler;
     }
 
-    protected BuildRuleParams buildFinalParams() throws NoSuchBuildTargetException {
+    protected BuildRuleParams buildFinalParams() {
       ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps = getCompileTimeClasspathAbiDeps();
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
       ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
@@ -528,7 +524,7 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet<BuildRule> extraDeps =
           extraDepsBuilder
               .addAll(Sets.difference(compileTimeClasspathAbiDeps, declaredDeps))
-              .addAll(getCompileStepFactory().getExtraDeps(ruleFinder))
+              .addAll(getConfiguredCompiler().getExtraDeps(ruleFinder))
               .build();
 
       return initialParams.withDeclaredDeps(declaredDeps).withExtraDeps(extraDeps);
@@ -551,12 +547,11 @@ public class DefaultJavaLibraryBuilder {
       return compileTimeClasspathUnfilteredFullDeps;
     }
 
-    protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathAbiDeps()
-        throws NoSuchBuildTargetException {
+    protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathAbiDeps() {
       return JavaLibraryRules.getAbiRules(buildRuleResolver, getCompileTimeClasspathFullDeps());
     }
 
-    protected ZipArchiveDependencySupplier buildAbiClasspath() throws NoSuchBuildTargetException {
+    protected ZipArchiveDependencySupplier buildAbiClasspath() {
       return new ZipArchiveDependencySupplier(
           ruleFinder,
           getCompileTimeClasspathAbiDeps()
@@ -565,24 +560,23 @@ public class DefaultJavaLibraryBuilder {
               .collect(MoreCollectors.toImmutableSortedSet()));
     }
 
-    protected CompileToJarStepFactory buildCompileStepFactory() {
+    protected ConfiguredCompiler buildConfiguredCompiler() {
       return new JavacToJarStepFactory(
-          getJavac(), Preconditions.checkNotNull(javacOptions), javacOptionsAmender);
+          getJavac(), Preconditions.checkNotNull(javacOptions), extraClasspathFromContextFunction);
     }
 
-    protected final JarBuildStepsFactory getJarBuildStepsFactory()
-        throws NoSuchBuildTargetException {
+    protected final JarBuildStepsFactory getJarBuildStepsFactory() {
       if (jarBuildStepsFactory == null) {
         jarBuildStepsFactory = buildJarBuildStepsFactory();
       }
       return jarBuildStepsFactory;
     }
 
-    protected JarBuildStepsFactory buildJarBuildStepsFactory() throws NoSuchBuildTargetException {
+    protected JarBuildStepsFactory buildJarBuildStepsFactory() {
       return new JarBuildStepsFactory(
           projectFilesystem,
           ruleFinder,
-          getCompileStepFactory(),
+          getConfiguredCompiler(),
           srcs,
           resources,
           resourcesRoot,

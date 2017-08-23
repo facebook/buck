@@ -130,7 +130,7 @@ public abstract class AbstractNodeBuilder<
     return rule;
   }
 
-  public TargetNode<TArg, TDescription> build() {
+  public TargetNode<TArg, TDescription> build(ProjectFilesystem filesystem) {
     try {
       HashCode hash =
           rawHashCode == null
@@ -158,6 +158,10 @@ public abstract class AbstractNodeBuilder<
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public TargetNode<TArg, TDescription> build() {
+    return build(filesystem);
   }
 
   public BuildRuleParams createBuildRuleParams(BuildRuleResolver resolver) {

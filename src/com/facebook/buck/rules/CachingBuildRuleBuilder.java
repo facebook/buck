@@ -51,7 +51,6 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
@@ -111,7 +110,6 @@ class CachingBuildRuleBuilder {
   private final BuildInfoStoreManager buildInfoStoreManager;
   private final CachingBuildEngine.BuildMode buildMode;
   private final BuildRuleDurationTracker buildRuleDurationTracker;
-  private final WeightedListeningExecutorService cacheActivityService;
   private final boolean consoleLogBuildFailuresInline;
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
   private final CachingBuildEngine.DepFiles depFiles;
@@ -144,7 +142,6 @@ class CachingBuildRuleBuilder {
       BuildInfoStoreManager buildInfoStoreManager,
       CachingBuildEngine.BuildMode buildMode,
       final BuildRuleDurationTracker buildRuleDurationTracker,
-      WeightedListeningExecutorService cacheActivityService,
       final boolean consoleLogBuildFailuresInline,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       CachingBuildEngine.DepFiles depFiles,
@@ -170,7 +167,6 @@ class CachingBuildRuleBuilder {
     this.buildInfoStoreManager = buildInfoStoreManager;
     this.buildMode = buildMode;
     this.buildRuleDurationTracker = buildRuleDurationTracker;
-    this.cacheActivityService = cacheActivityService;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
     this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.depFiles = depFiles;
@@ -381,7 +377,7 @@ class CachingBuildRuleBuilder {
             inputs
                 .stream()
                 .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
-                .map(MoreFunctions.toJsonFunction())
+                .map(ObjectMappers.toJsonFunction())
                 .collect(MoreCollectors.toImmutableList());
         buildInfoRecorder.addMetadata(BuildInfo.MetadataKey.DEP_FILE, inputStrings);
 
@@ -634,8 +630,7 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> buildLocally(
-      final CacheResult cacheResult, final ListeningExecutorService service)
-      throws StepFailedException, InterruptedException {
+      final CacheResult cacheResult, final ListeningExecutorService service) {
     if (SupportsPipelining.isSupported(rule)) {
       return pipelinesRunner.runPipelineStartingAt((SupportsPipelining<?>) rule, service);
     } else {
@@ -663,7 +658,10 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
-    Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(eventBus);
+    Optional<RuleKeyAndInputs> manifestKey;
+    try (Scope scope = buildRuleScope()) {
+      manifestKey = calculateManifestKey(eventBus);
+    }
     if (manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
@@ -700,8 +698,11 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
-    // Calculate input-based rule key.
-    Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey();
+    Optional<RuleKey> inputRuleKey;
+    try (Scope scope = buildRuleScope()) {
+      // Calculate input-based rule key.
+      inputRuleKey = calculateInputBasedRuleKey();
+    }
     if (inputRuleKey.isPresent()) {
       return performInputBasedCacheFetch(inputRuleKey.get());
     }
@@ -1006,8 +1007,7 @@ class CachingBuildRuleBuilder {
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           final RuleKey ruleKey,
           final ArtifactCache artifactCache,
-          final ProjectFilesystem filesystem)
-          throws IOException {
+          final ProjectFilesystem filesystem) {
     if (!rule.isCacheable()) {
       return Futures.immediateFuture(CacheResult.ignored());
     }
@@ -1056,9 +1056,7 @@ class CachingBuildRuleBuilder {
   private ListenableFuture<CacheResult> fetch(
       ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
-        cacheActivityService.submit(
-            () -> Futures.getUnchecked(artifactCache.fetchAsync(ruleKey, outputPath)),
-            CachingBuildEngine.CACHE_CHECK_RESOURCE_AMOUNTS),
+        artifactCache.fetchAsync(ruleKey, outputPath),
         (CacheResult cacheResult) -> {
           try (Scope scope = buildRuleScope()) {
             if (cacheResult.getType() != CacheResultType.HIT) {
@@ -1264,7 +1262,7 @@ class CachingBuildRuleBuilder {
         depFile
             .get()
             .stream()
-            .map(MoreFunctions.fromJsonFunction(DependencyFileEntry.class))
+            .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
             .collect(MoreCollectors.toImmutableList());
 
     try (Scope scope =
@@ -1368,7 +1366,7 @@ class CachingBuildRuleBuilder {
 
   // Fetch an artifact from the cache using manifest-based caching.
   private ListenableFuture<Optional<BuildResult>> performManifestBasedCacheFetch(
-      RuleKeyAndInputs manifestKey) throws IOException {
+      RuleKeyAndInputs manifestKey) {
     Preconditions.checkArgument(useManifestCaching());
 
     final LazyPath tempFile =
@@ -1611,7 +1609,7 @@ class CachingBuildRuleBuilder {
               Optional.of(BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
           return;
         }
-        try (Scope scope = buildRuleScopeManager.scope()) {
+        try (Scope scope = buildRuleScope()) {
           executeCommandsNowThatDepsAreBuilt();
         }
 

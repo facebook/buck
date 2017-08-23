@@ -58,7 +58,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
   @Override
   public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
-    RuleKey key = new RuleKey(entry.getHashCode());
+    RuleKey key = new RuleKey(entry.getSha1());
     CacheResult cacheResult =
         Futures.getUnchecked(dirCache.fetchAsync(key, LazyPath.ofInstance(targetAbsPath)));
     return cacheResult.getType() == CacheResultType.HIT;
@@ -66,7 +66,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
 
   public void writeFileAndGetInputStream(BuildJobStateFileHashEntry entry, Path absPath)
       throws IOException {
-    RuleKey key = new RuleKey(entry.getHashCode());
+    RuleKey key = new RuleKey(entry.getSha1());
     ArtifactInfo artifactInfo = ArtifactInfo.builder().setRuleKeys(ImmutableList.of(key)).build();
     BorrowablePath nonBorrowablePath = BorrowablePath.notBorrowablePath(absPath);
     try {
@@ -75,4 +75,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
       throw new IOException("Failed to store artifact to DirCache.", e);
     }
   }
+
+  @Override
+  public void close() {}
 }

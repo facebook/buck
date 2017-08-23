@@ -85,7 +85,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     }
   }
 
-  private boolean isExternalSymlink(Path relPath) throws IOException {
+  private boolean isExternalSymlink(Path relPath) {
     return !projectFilesystem
         .getPathRelativeToProjectRoot(findSafeRealPath(projectFilesystem.resolve(relPath)))
         .isPresent();
@@ -290,7 +290,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       fileHashEntry.setArchiveMemberPath(memberRelPath.get());
     }
     if (hashCode.isPresent()) {
-      fileHashEntry.setHashCode(hashCode.get().toString());
+      fileHashEntry.setSha1(hashCode.get().toString());
     }
     if (!isDirectory && !pathIsAbsolute && isRealPathInsideProject) {
       Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();

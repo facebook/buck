@@ -38,6 +38,7 @@
       .git, \
       .buckd, \
       build, \
+      build-ij, \
       bin, \
       **/*.swp, \
       **/*#, \

@@ -16,14 +16,13 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -92,8 +91,7 @@ public class PythonLibraryDescription
       CellPathResolver cellRoots,
       PythonLibraryDescriptionArg args,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
-      Class<U> metadataClass)
-      throws NoSuchBuildTargetException {
+      Class<U> metadataClass) {
 
     Optional<Map.Entry<Flavor, MetadataType>> optionalType =
         METADATA_TYPE.getFlavorAndValue(buildTarget);

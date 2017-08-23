@@ -63,6 +63,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> wifiSsid;
   private final ListeningExecutorService httpWriteExecutorService;
+  private final ListeningExecutorService httpFetchExecutorService;
   private final Optional<AsyncCloseable> asyncCloseable;
 
   private interface NetworkCacheFactory {
@@ -87,13 +88,14 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
+      ListeningExecutorService httpFetchExecutorService,
       Optional<AsyncCloseable> asyncCloseable) {
-
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
     this.projectFilesystem = projectFilesystem;
     this.wifiSsid = wifiSsid;
     this.httpWriteExecutorService = httpWriteExecutorService;
+    this.httpFetchExecutorService = httpFetchExecutorService;
     this.asyncCloseable = asyncCloseable;
   }
 
@@ -129,6 +131,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             projectFilesystem,
             wifiSsid,
             httpWriteExecutorService,
+            httpFetchExecutorService,
             distributedBuildModeEnabled);
 
     if (asyncCloseable.isPresent()) {
@@ -147,6 +150,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         projectFilesystem,
         wifiSsid,
         httpWriteExecutorService,
+        httpFetchExecutorService,
         asyncCloseable);
   }
 
@@ -170,6 +174,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
+      ListeningExecutorService httpFetchExecutorService,
       boolean distributedBuildModeEnabled) {
     ImmutableSet<ArtifactCacheMode> modes = buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
@@ -190,6 +195,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               projectFilesystem,
               wifiSsid,
               httpWriteExecutorService,
+              httpFetchExecutorService,
               builder,
               distributedBuildModeEnabled,
               HTTP_PROTOCOL,
@@ -206,6 +212,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               projectFilesystem,
               wifiSsid,
               httpWriteExecutorService,
+              httpFetchExecutorService,
               builder,
               distributedBuildModeEnabled,
               THRIFT_PROTOCOL,
@@ -254,6 +261,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
+      ListeningExecutorService httpFetchExecutorService,
       ImmutableList.Builder<ArtifactCache> builder,
       boolean distributedBuildModeEnabled,
       NetworkCacheFactory factory,
@@ -271,6 +279,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               buckEventBus,
               projectFilesystem,
               httpWriteExecutorService,
+              httpFetchExecutorService,
               buckConfig,
               factory,
               distributedBuildModeEnabled,
@@ -326,6 +335,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       final BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
+      ListeningExecutorService httpFetchExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
       boolean distributedBuildModeEnabled,
@@ -337,6 +347,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             buckEventBus,
             projectFilesystem,
             httpWriteExecutorService,
+            httpFetchExecutorService,
             config,
             factory,
             distributedBuildModeEnabled,
@@ -350,6 +361,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       final BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
+      ListeningExecutorService httpFetchExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
       boolean distributedBuildModeEnabled,
@@ -465,6 +477,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(buckEventBus)
             .setHttpWriteExecutorService(httpWriteExecutorService)
+            .setHttpFetchExecutorService(httpFetchExecutorService)
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
@@ -481,6 +494,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               "sqlite",
               projectFilesystem,
               cacheDir,
+              buckEventBus,
               cacheConfig.getMaxSizeBytes(),
               cacheConfig.getMaxInlinedSizeBytes(),
               cacheConfig.getCacheReadMode());

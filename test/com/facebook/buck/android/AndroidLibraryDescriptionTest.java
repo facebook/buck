@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.verify;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -202,7 +203,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void bootClasspathAppenderAddsLibsFromAndroidPlatformTarget() {
+  public void androidClasspathFromContextFunctionAddsLibsFromAndroidPlatformTarget() {
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     List<Path> entries =
         ImmutableList.of(
@@ -213,13 +214,14 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
 
     replay(androidPlatformTarget);
 
-    BootClasspathAppender appender = new BootClasspathAppender();
+    ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
+        AndroidClasspathFromContextFunction.INSTANCE;
 
     JavacOptions options =
         JavacOptions.builder().setSourceLevel("1.7").setTargetLevel("1.7").build();
     JavacOptions updated =
-        appender.amend(
-            options,
+        options.withBootclasspathFromContext(
+            extraClasspathFromContextFunction,
             FakeBuildContext.NOOP_CONTEXT.withAndroidPlatformTargetSupplier(
                 Suppliers.ofInstance(androidPlatformTarget)));
 

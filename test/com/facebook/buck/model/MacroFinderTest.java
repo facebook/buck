@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.macros.FunctionMacroReplacer;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -71,14 +69,14 @@ public class MacroFinderTest {
 
   @Test
   public void replace() throws MacroException {
-    Function<String, String> replacer =
-        Functions.forMap(
-            ImmutableMap.of(
-                "arg1", "something",
-                "arg2", "something else"));
+    ImmutableMap<String, String> replacements =
+        ImmutableMap.of(
+            "arg1", "something",
+            "arg2", "something else");
     String actual =
         FINDER.replace(
-            ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
+            ImmutableMap.of(
+                "macro", new FunctionMacroReplacer(args -> replacements.get(args.get(0)))),
             "hello $(macro arg1) goodbye $(macro arg2)",
             true);
     assertEquals("hello something goodbye something else", actual);
@@ -86,14 +84,14 @@ public class MacroFinderTest {
 
   @Test
   public void replaceEscaped() throws MacroException {
-    Function<String, String> replacer =
-        Functions.forMap(
-            ImmutableMap.of(
-                "arg1", "something",
-                "arg2", "something else"));
+    ImmutableMap<String, String> replacements =
+        ImmutableMap.of(
+            "arg1", "something",
+            "arg2", "something else");
     String actual =
         FINDER.replace(
-            ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
+            ImmutableMap.of(
+                "macro", new FunctionMacroReplacer(args -> replacements.get(args.get(0)))),
             "hello \\$(macro arg1) goodbye $(macro arg2)",
             true);
     assertEquals("hello $(macro arg1) goodbye something else", actual);
@@ -107,15 +105,15 @@ public class MacroFinderTest {
 
   @Test
   public void replaceDollarEdgeCases() throws MacroException {
-    Function<String, String> replacer =
-        Functions.forMap(
-            ImmutableMap.of(
-                "arg1", "something",
-                "arg2", "something else",
-                "$", "dollar"));
+    ImmutableMap<String, String> replacements =
+        ImmutableMap.of(
+            "arg1", "something",
+            "arg2", "something else",
+            "$", "dollar");
     String actual =
         FINDER.replace(
-            ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
+            ImmutableMap.of(
+                "macro", new FunctionMacroReplacer(args -> replacements.get(args.get(0)))),
             "hello $\\$(macro arg1) goodbye $$(macro arg2) $(macro \\$)",
             true);
     assertEquals("hello $$(macro arg1) goodbye $something else dollar", actual);

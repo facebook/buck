@@ -16,19 +16,19 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusLibraries;
 import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.NativeLinkStrategy;
-import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkables;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +36,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.python.CxxPythonExtension;
 import com.facebook.buck.python.PythonBinaryDescription;
 import com.facebook.buck.python.PythonPackagable;
@@ -306,8 +305,7 @@ public class LuaBinaryDescription
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
       LuaConfig.PackageStyle packageStyle,
-      Iterable<BuildRule> deps)
-      throws NoSuchBuildTargetException {
+      Iterable<BuildRule> deps) {
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
     final OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(cxxPlatform, ImmutableSet.of());
@@ -317,11 +315,11 @@ public class LuaBinaryDescription
     final Map<BuildTarget, CxxPythonExtension> pythonExtensions = new LinkedHashMap<>();
 
     // Walk the deps to find all Lua packageables and native linkables.
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
       private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
 
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
+      public Iterable<BuildRule> visit(BuildRule rule) {
         Iterable<BuildRule> deps = empty;
         if (rule instanceof LuaPackageable) {
           LuaPackageable packageable = (LuaPackageable) rule;
@@ -758,8 +756,7 @@ public class LuaBinaryDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      LuaBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      LuaBinaryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);

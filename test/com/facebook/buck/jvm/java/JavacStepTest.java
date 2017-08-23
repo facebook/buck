@@ -66,19 +66,20 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableSortedSet.of(),
-            Paths.get("pathToSrcsList"),
-            ImmutableSortedSet.of(),
             fakeJavac,
             javacOptions,
             BuildTargetFactory.newInstance("//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
+            CompilerParameters.builder()
+                .setOutputDirectory(Paths.get("output"))
+                .setGeneratedCodeDirectory(Paths.get("generated"))
+                .setWorkingDirectory(Paths.get("working"))
+                .setDepFilePath(Paths.get("depFile"))
+                .setPathToSourcesList(Paths.get("pathToSrcsList"))
+                .build(),
             Optional.empty(),
             null);
 
@@ -115,19 +116,22 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableSortedSet.of(),
-            Paths.get("pathToSrcsList"),
-            ImmutableSortedSet.of(),
             fakeJavac,
             javacOptions,
             BuildTargetFactory.newInstance("//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
+            CompilerParameters.builder()
+                .setOutputDirectory(Paths.get("output"))
+                .setGeneratedCodeDirectory(Paths.get("generated"))
+                .setWorkingDirectory(Paths.get("working"))
+                .setDepFilePath(Paths.get("depFile"))
+                .setSourceFilePaths(ImmutableSortedSet.of())
+                .setPathToSourcesList(Paths.get("pathToSrcsList"))
+                .setClasspathEntries(ImmutableSortedSet.of())
+                .build(),
             Optional.empty(),
             null);
 
@@ -169,19 +173,22 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableSortedSet.of(),
-            Paths.get("pathToSrcsList"),
-            ImmutableSortedSet.of(),
             fakeJavac,
             javacOptions,
             BuildTargetFactory.newInstance("//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
+            CompilerParameters.builder()
+                .setOutputDirectory(Paths.get("output"))
+                .setGeneratedCodeDirectory(Paths.get("generated"))
+                .setWorkingDirectory(Paths.get("working"))
+                .setDepFilePath(Paths.get("depFile"))
+                .setSourceFilePaths(ImmutableSortedSet.of())
+                .setPathToSourcesList(Paths.get("pathToSrcsList"))
+                .setClasspathEntries(ImmutableSortedSet.of())
+                .build(),
             Optional.empty(),
             null);
 
@@ -221,19 +228,22 @@ public class JavacStepTest {
 
     JavacStep step =
         new JavacStep(
-            Paths.get("output"),
             NoOpClassUsageFileWriter.instance(),
-            Optional.empty(),
-            Optional.empty(),
-            ImmutableSortedSet.of(),
-            Paths.get("pathToSrcsList"),
-            ImmutableSortedSet.of(),
             fakeJavac,
             javacOptions,
             BuildTargetFactory.newInstance("//foo:bar"),
             sourcePathResolver,
             fakeFilesystem,
             classpathChecker,
+            CompilerParameters.builder()
+                .setOutputDirectory(Paths.get("output"))
+                .setGeneratedCodeDirectory(Paths.get("generated"))
+                .setWorkingDirectory(Paths.get("working"))
+                .setDepFilePath(Paths.get("depFile"))
+                .setSourceFilePaths(ImmutableSortedSet.of())
+                .setPathToSourcesList(Paths.get("pathToSrcsList"))
+                .setClasspathEntries(ImmutableSortedSet.of())
+                .build(),
             Optional.empty(),
             null);
 

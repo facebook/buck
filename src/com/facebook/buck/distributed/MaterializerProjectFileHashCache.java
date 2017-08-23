@@ -63,20 +63,14 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
    * This method creates all symlinks and touches all regular files so that any file existence
    * checks during action graph transformation go through (for instance,
    * PrebuiltCxxLibraryDescription::requireSharedLibrary). Note: THIS IS A HACK. And this needs to
-   * be here until the misbehaving rules are fixed.
+   * be here until the misbehaving rules are fixed. TODO(alisdair): remove this once action graph
+   * doesn't read from file system.
    */
-  public void preloadAllFiles() throws IOException {
+  public void preloadAllFiles(boolean materializeAllFiles) throws IOException {
     for (Path absPath : remoteFileHashesByAbsPath.keySet()) {
       LOG.info("Preloading: [%s]", absPath.toString());
       BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
       if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
-        continue;
-      }
-
-      if (fileHashEntry.isSetMaterializeDuringPreloading()
-          && fileHashEntry.isMaterializeDuringPreloading()) {
-        Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
-        materializeIfNeeded(relPath);
         continue;
       }
 
@@ -99,6 +93,14 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         // Create directory
         // No need to materialize sub-dirs/files here, as there will be separate entries for those.
         projectFilesystem.mkdirs(absPath);
+        continue;
+      }
+
+      if (materializeAllFiles
+          || fileHashEntry.isSetMaterializeDuringPreloading()
+              && fileHashEntry.isMaterializeDuringPreloading()) {
+        Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
+        materializeIfNeeded(relPath);
         continue;
       }
 
@@ -238,7 +240,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
   private void integrityCheck(Path relPath) throws IOException {
     Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
     BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
-    if (fileHashEntry == null || !fileHashEntry.isSetHashCode()) {
+    if (fileHashEntry == null || !fileHashEntry.isSetSha1()) {
       return;
     }
 
@@ -247,12 +249,12 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
             delegate.get(relPath),
             "File materialization failed. Delegate FileHashCache returned null HashCode for [%s].",
             relPath);
-    if (!computedHash.toString().equals(fileHashEntry.getHashCode())) {
+    if (!computedHash.toString().equals(fileHashEntry.getSha1())) {
       throw new HumanReadableException(
           "SHA1 of materialized file (at [%s]) does not match the SHA1 sent by buck client.\n"
               + "Computed SHA1: %s\n"
               + "Expected SHA1: %s",
-          relPath, computedHash.toString(), fileHashEntry.getHashCode());
+          relPath, computedHash.toString(), fileHashEntry.getSha1());
     }
   }
 

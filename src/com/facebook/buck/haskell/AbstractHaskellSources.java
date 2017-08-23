@@ -18,7 +18,6 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -49,8 +48,7 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       String parameter,
-      SourceList sources)
-      throws NoSuchBuildTargetException {
+      SourceList sources) {
     HaskellSources.Builder builder = HaskellSources.builder();
     for (Map.Entry<String, SourcePath> ent :
         sources.toNameMap(target, pathResolver, parameter).entrySet()) {

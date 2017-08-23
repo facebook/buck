@@ -410,10 +410,7 @@ public class Watchman implements AutoCloseable {
       // rest of the timeout period.
       long remainingNanos = timeoutNanos - (clock.nanoTime() - startTimeNanos);
       if (remainingNanos > 0) {
-        console
-            .getStdErr()
-            .getRawStream()
-            .format("Waiting for Watchman command [%s]...\n", Joiner.on(" ").join(args));
+        console.getStdErr().getRawStream().format("Waiting for watchman...\n");
         exitCode = executor.waitForProcess(process, remainingNanos, TimeUnit.NANOSECONDS);
       }
     }

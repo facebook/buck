@@ -27,7 +27,7 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -43,7 +43,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -165,14 +164,15 @@ public class AndroidBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidBinaryDescriptionArg args) {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
             Optional.ofNullable(resolver.getEventBus()),
             PerfEventId.of("AndroidBinaryDescription"),
             "target",
             buildTarget.toString())) {
+      params = params.withoutExtraDeps();
+
       // All of our supported flavors are constructed as side-effects
       // of the main target.
       for (Flavor flavor : FLAVORS) {
@@ -314,29 +314,11 @@ public class AndroidBinaryDescription
               .filter(JavaLibrary.class)
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
-      Optional<RedexOptions> redexOptions = getRedexOptions(buildTarget, resolver, cellRoots, args);
-
-      ImmutableSortedSet<BuildRule> redexExtraDeps =
-          redexOptions
-              .map(
-                  a ->
-                      a.getRedexExtraArgs()
-                          .stream()
-                          .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())))
-              .orElse(ImmutableSortedSet.of());
-
       AndroidBinary androidBinary =
           new AndroidBinary(
               buildTarget,
               projectFilesystem,
-              params
-                  .withExtraDeps(result.getFinalDeps())
-                  .copyAppendingExtraDeps(
-                      ruleFinder.filterBuildRuleInputs(
-                          result.getPackageableCollection().getProguardConfigs()))
-                  .copyAppendingExtraDeps(rulesToExcludeFromDex)
-                  .copyAppendingExtraDeps(redexExtraDeps),
+              params,
               ruleFinder,
               proGuardConfig.getProguardJarOverride(),
               proGuardConfig.getProguardMaxHeapSize(),
@@ -350,7 +332,7 @@ public class AndroidBinaryDescription
               args.getOptimizationPasses(),
               args.getProguardConfig(),
               args.isSkipProguard(),
-              redexOptions,
+              getRedexOptions(buildTarget, resolver, cellRoots, args),
               args.getResourceCompression(),
               args.getCpuFilters(),
               resourceFilter,

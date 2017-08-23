@@ -19,7 +19,7 @@ package com.facebook.buck.haskell;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.CommandTool;
@@ -92,7 +92,7 @@ class HaskellTestUtils {
     ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
     Process process = Runtime.getRuntime().exec(cmd.toArray(new String[cmd.size()]));
     String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
-    Pattern versionPattern = Pattern.compile(".*version ([0-9]+)(?:[.][0-9]+(?:[.][0-9]+)?)?");
+    Pattern versionPattern = Pattern.compile(".*version ([0-9]+).*");
     Matcher matcher = versionPattern.matcher(output.trim());
     assertTrue(
         String.format(

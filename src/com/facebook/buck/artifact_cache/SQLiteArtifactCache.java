@@ -16,11 +16,14 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.sqlite.RetryBusyHandler;
@@ -28,6 +31,7 @@ import com.facebook.buck.sqlite.SQLiteUtils;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import org.sqlite.BusyHandler;
 import org.sqlite.SQLiteConfig;
 
@@ -73,12 +78,13 @@ public class SQLiteArtifactCache implements ArtifactCache {
   // How much of the max size to leave if we decide to delete old files.
   private static final float MAX_BYTES_TRIM_RATIO = 2 / 3f;
   private static final String TMP_EXTENSION = ".tmp";
-  private static final long DEFAULT_MAX_INLINED_BYTES = 0;
+  private static final long DEFAULT_MAX_INLINED_BYTES = 40;
   private static final Duration DEFAULT_EVICTION_TIME = Duration.ofDays(7);
 
   private final String name;
   private final ProjectFilesystem filesystem;
   private final Path cacheDir;
+  private final BuckEventBus eventBus;
   private final Optional<Long> maxCacheSizeBytes;
   private final Optional<Long> maxBytesAfterDeletion;
   private final long maxInlinedBytes;
@@ -94,6 +100,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
       String name,
       ProjectFilesystem filesystem,
       Path cacheDir,
+      BuckEventBus eventBus,
       Optional<Long> maxCacheSizeBytes,
       Optional<Long> maxInlinedSizeBytes,
       CacheReadMode cacheMode)
@@ -101,6 +108,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
+    this.eventBus = eventBus;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.maxBytesAfterDeletion =
         maxCacheSizeBytes.map(size -> (long) (size * MAX_BYTES_TRIM_RATIO));
@@ -130,26 +138,31 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   private CacheResult fetch(RuleKey ruleKey, LazyPath output) {
-    CacheResult artifactFetchResult = maybeFetchArtifact(ruleKey, output);
-    if (artifactFetchResult.getType() == CacheResultType.HIT
-        || artifactFetchResult.getType() == CacheResultType.ERROR) {
-      return artifactFetchResult;
+    CacheResult artifactResult = fetchContent(ruleKey, output);
+    CacheResult metadataResult = fetchMetadata(ruleKey, output);
+
+    if (artifactResult.getType().isSuccess() && metadataResult.getType().isSuccess()) {
+      return CacheResult.hit(
+          name, CACHE_MODE, metadataResult.getMetadata(), artifactResult.getArtifactSizeBytes());
+    } else if (artifactResult.getType() == CacheResultType.HIT
+        || artifactResult.getType() == CacheResultType.ERROR) {
+      return artifactResult;
     } else {
-      return fetchMetadata(ruleKey, output);
+      return metadataResult;
     }
   }
 
-  private CacheResult maybeFetchArtifact(RuleKey contentHash, LazyPath output) {
+  private CacheResult fetchContent(RuleKey contentHash, LazyPath output) {
     CacheResult result =
         CacheResult.error(
             name,
             CACHE_MODE,
             String.format("Artifact fetch(%s, %s) stopped unexpectedly", contentHash, output));
     try {
-      ResultSet rs = db.selectContent(contentHash);
-      if (rs.next()) {
-        byte[] artifact = rs.getBytes(1);
-        String filepath = rs.getString(2);
+      Optional<Content> content = db.selectContent(contentHash);
+      if (content.isPresent()) {
+        byte[] artifact = content.get().artifact;
+        String filepath = content.get().filepath;
 
         if (Objects.nonNull(artifact)) {
           // artifact was inlined into the database as a blob
@@ -163,7 +176,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
           return result = CacheResult.miss();
         }
 
-        long size = rs.getLong(3);
+        long size = content.get().size;
         db.accessContent(contentHash);
 
         return result = CacheResult.hit(name, CACHE_MODE, ImmutableMap.of(), size);
@@ -189,13 +202,12 @@ public class SQLiteArtifactCache implements ArtifactCache {
             CACHE_MODE,
             String.format("Metadata fetch(%s, %s) stopped unexpectedly", ruleKey, output));
     try {
-      ResultSet rs = db.selectMetadata(ruleKey);
-      if (rs.next()) {
-        byte[] metadata = rs.getBytes(1);
+      Optional<byte[]> metadata = db.selectMetadata(ruleKey);
+      if (metadata.isPresent()) {
         db.accessMetadata(ruleKey);
         output.get(); // for MultiArtifactCache, force evaluation of the output path
 
-        return result = CacheResult.hit(name, CACHE_MODE, unmarshalMetadata(metadata), 0);
+        return result = CacheResult.hit(name, CACHE_MODE, unmarshalMetadata(metadata.get()), 0);
       }
 
       return result = CacheResult.miss();
@@ -217,12 +229,18 @@ public class SQLiteArtifactCache implements ArtifactCache {
       return Futures.immediateFuture(null);
     }
 
-    if (info.getMetadata().containsKey(TwoLevelArtifactCacheDecorator.METADATA_KEY)) {
-      return Futures.transformAsync(storeMetadata(info), result -> removeOldMetadata());
-    } else {
-      return Futures.transformAsync(
-          storeContent(info.getRuleKeys(), content), result -> removeOldContent());
+    ListenableFuture<Void> metadataResult = Futures.immediateFuture(null);
+    if (!info.getMetadata().isEmpty()) {
+      metadataResult = storeMetadata(info);
     }
+
+    ListenableFuture<Void> contentResult = Futures.immediateFuture(null);
+    if (!info.getMetadata().containsKey(TwoLevelArtifactCacheDecorator.METADATA_KEY)) {
+      contentResult = storeContent(info.getRuleKeys(), content);
+    }
+
+    return Futures.transform(
+        Futures.allAsList(metadataResult, contentResult), Functions.constant(null));
   }
 
   private ListenableFuture<Void> storeMetadata(ArtifactInfo info) {
@@ -249,6 +267,10 @@ public class SQLiteArtifactCache implements ArtifactCache {
       ImmutableSet<RuleKey> contentHashes, BorrowablePath content) {
     try {
       ImmutableSet<RuleKey> toStore = notPreexisting(contentHashes);
+      if (toStore.size() == 0) {
+        return Futures.immediateFuture(null);
+      }
+
       long size = filesystem.getFileSize(content.getPath());
       if (size <= maxInlinedBytes) {
         // artifact is small enough to inline in the database
@@ -278,10 +300,10 @@ public class SQLiteArtifactCache implements ArtifactCache {
     ImmutableSet.Builder<RuleKey> builder = ImmutableSet.builder();
     for (RuleKey contentHash : contentHashes) {
       // if the content already exists in the cache, skip it
-      ResultSet existingArtifact = db.selectContent(contentHash);
-      if (existingArtifact.next()) {
-        byte[] inlined = existingArtifact.getBytes(1);
-        String artifactPath = existingArtifact.getString(2);
+      Optional<Content> existingArtifact = db.selectContent(contentHash);
+      if (existingArtifact.isPresent()) {
+        byte[] inlined = existingArtifact.get().artifact;
+        String artifactPath = existingArtifact.get().filepath;
 
         if (Objects.nonNull(inlined) || filesystem.exists(filesystem.resolve(artifactPath))) {
           db.accessContent(contentHash);
@@ -352,7 +374,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   /** Removes metadata older than a computed eviction time. */
-  private ListenableFuture<Void> removeOldMetadata() {
+  @VisibleForTesting
+  ListenableFuture<Void> removeOldMetadata() {
     Timestamp evictionTime = Timestamp.from(Instant.now().minus(DEFAULT_EVICTION_TIME));
     try {
       int deleted = db.deleteMetadata(evictionTime);
@@ -365,7 +388,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   /** Deletes files that haven't been accessed recently from the directory cache. */
-  private ListenableFuture<Void> removeOldContent() {
+  @VisibleForTesting
+  ListenableFuture<Void> removeOldContent() {
     if (!maxCacheSizeBytes.isPresent()) {
       return Futures.immediateFuture(null);
     }
@@ -382,30 +406,14 @@ public class SQLiteArtifactCache implements ArtifactCache {
     }
 
     try {
-      ResultSet artifacts = db.selectContentByTime();
-      while (totalSizeBytes > maxBytesAfterDeletion.get() && artifacts.next()) {
-        String filepath = artifacts.getString(1);
-        long sizeBytes = artifacts.getLong(2);
+      Pair<Iterable<String>, Timestamp> contentToEvict =
+          db.getContentToEvict(totalSizeBytes - maxBytesAfterDeletion.get());
 
-        // from database constraint, exactly one of filepath/artifact is null
-        if (Objects.nonNull(filepath)) {
-          LOG.verbose("Deleting path [%s] of total size [%d] bytes.", filepath, sizeBytes);
-          Path filePathInFS = filesystem.resolve(filepath);
-          MoreFiles.deleteRecursivelyIfExists(filePathInFS);
-        } else {
-          LOG.verbose("Deleting inlined artifact of size [%d] bytes.", sizeBytes);
-        }
-
-        totalSizeBytes -= sizeBytes;
+      for (String filepath : contentToEvict.getFirst()) {
+        MoreFiles.deleteRecursivelyIfExists(filesystem.resolve(filepath));
       }
 
-      Timestamp evictionCutoff;
-      if (artifacts.next()) {
-        evictionCutoff = artifacts.getTimestamp(3);
-      } else {
-        evictionCutoff = Timestamp.from(Instant.now());
-      }
-
+      Timestamp evictionCutoff = contentToEvict.getSecond();
       int deleted = db.deleteContent(evictionCutoff);
       LOG.verbose("Deleted %d cached artifacts last accessed before %s", deleted, evictionCutoff);
     } catch (IOException | SQLException e) {
@@ -422,6 +430,12 @@ public class SQLiteArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "sqlite_cache_clean")) {
+      Futures.allAsList(removeOldMetadata(), removeOldContent()).get();
+    } catch (ExecutionException | InterruptedException e) {
+      LOG.error("Failed to clean SQLite cache");
+    }
+
     db.close();
   }
 
@@ -553,8 +567,8 @@ public class SQLiteArtifactCache implements ArtifactCache {
       connection
           .createStatement()
           .executeUpdate(
-              "CREATE TABLE IF NOT EXISTS content"
-                  + "(sha1 BLOB PRIMARY KEY NOT NULL,"
+              "CREATE TABLE IF NOT EXISTS content "
+                  + "(sha1 BLOB PRIMARY KEY NOT NULL, "
                   + "artifact BLOB, filepath TEXT, "
                   + "size INTEGER, "
                   + "created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
@@ -599,14 +613,18 @@ public class SQLiteArtifactCache implements ArtifactCache {
       BusyHandler.setHandler(connection, new RetryBusyHandler());
     }
 
-    private synchronized ResultSet selectMetadata(RuleKey ruleKey) throws SQLException {
+    private synchronized Optional<byte[]> selectMetadata(RuleKey ruleKey) throws SQLException {
       fetchMetadata.setBytes(1, getBytes(ruleKey));
-      return fetchMetadata.executeQuery();
+      ResultSet rs = fetchMetadata.executeQuery();
+      return rs.next() ? Optional.of(rs.getBytes(1)) : Optional.empty();
     }
 
-    private synchronized ResultSet selectContent(RuleKey contentHash) throws SQLException {
+    private synchronized Optional<Content> selectContent(RuleKey contentHash) throws SQLException {
       fetchContent.setBytes(1, getBytes(contentHash));
-      return fetchContent.executeQuery();
+      ResultSet rs = fetchContent.executeQuery();
+      return rs.next()
+          ? Optional.of(new Content(rs.getBytes(1), rs.getString(2), rs.getLong(3)))
+          : Optional.empty();
     }
 
     private synchronized void accessMetadata(RuleKey ruleKey) throws SQLException {
@@ -675,8 +693,35 @@ public class SQLiteArtifactCache implements ArtifactCache {
       return rs.getLong(1);
     }
 
-    private synchronized ResultSet selectContentByTime() throws SQLException {
-      return selectContentByTime.executeQuery();
+    private synchronized Pair<Iterable<String>, Timestamp> getContentToEvict(long minToDelete)
+        throws SQLException {
+      ImmutableList.Builder<String> filepaths = ImmutableList.builder();
+      long deleted = 0;
+
+      ResultSet artifacts = selectContentByTime.executeQuery();
+      while (deleted < minToDelete && artifacts.next()) {
+        String filepath = artifacts.getString(1);
+        long sizeBytes = artifacts.getLong(2);
+
+        // from database constraint, exactly one of filepath/artifact is null
+        if (Objects.nonNull(filepath)) {
+          LOG.verbose("Deleting path [%s] of total size [%d] bytes.", filepath, sizeBytes);
+          filepaths.add(filepath);
+        } else {
+          LOG.verbose("Deleting inlined artifact of size [%d] bytes.", sizeBytes);
+        }
+
+        deleted += sizeBytes;
+      }
+
+      Timestamp evictionCutoff;
+      if (artifacts.next()) {
+        evictionCutoff = artifacts.getTimestamp(3);
+      } else {
+        evictionCutoff = Timestamp.from(Instant.now());
+      }
+
+      return new Pair<>(filepaths.build(), evictionCutoff);
     }
 
     private static byte[] getBytes(RuleKey ruleKey) {
@@ -689,6 +734,18 @@ public class SQLiteArtifactCache implements ArtifactCache {
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
+    }
+  }
+
+  private static class Content {
+    private final byte[] artifact;
+    private final String filepath;
+    private final long size;
+
+    Content(byte[] artifact, String filepath, long size) {
+      this.artifact = artifact;
+      this.filepath = filepath;
+      this.size = size;
     }
   }
 }

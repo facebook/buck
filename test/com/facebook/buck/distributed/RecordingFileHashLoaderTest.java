@@ -99,7 +99,7 @@ public class RecordingFileHashLoaderTest {
     assertFalse(fileHashEntry.isSetIsDirectory() && fileHashEntry.isIsDirectory());
     assertFalse(fileHashEntry.isSetRootSymLink());
     assertThat(fileHashEntry.getPath(), Matchers.equalTo(unixPath(symlinkRelPath.toString())));
-    assertThat(fileHashEntry.getHashCode(), Matchers.equalTo(EXAMPLE_HASHCODE.toString()));
+    assertThat(fileHashEntry.getSha1(), Matchers.equalTo(EXAMPLE_HASHCODE.toString()));
     assertFalse(fileHashEntry.isSetPathIsAbsolute() && fileHashEntry.isPathIsAbsolute());
     assertTrue(fileHashEntry.isSetIsExecutable() && fileHashEntry.isIsExecutable());
     // We may or may not read the file inline here.

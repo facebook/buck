@@ -18,17 +18,16 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -169,8 +168,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      final PrebuiltCxxLibraryGroupDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      final PrebuiltCxxLibraryGroupDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new CustomPrebuiltCxxLibrary(buildTarget, projectFilesystem, params) {
 
@@ -197,8 +195,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
         builder.putAllPreprocessorFlags(
             ImmutableListMultimap.copyOf(
@@ -217,7 +214,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
       @Override
       public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+          CxxPlatform cxxPlatform) {
         return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
       }
 
@@ -238,8 +235,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
 
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();
@@ -322,8 +318,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableMap.of();
         }

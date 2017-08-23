@@ -17,7 +17,6 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
-import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
@@ -26,19 +25,19 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.Linkers;
-import com.facebook.buck.cxx.platform.NativeLinkTarget;
-import com.facebook.buck.cxx.platform.NativeLinkTargetMode;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -173,8 +172,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   }
 
   private ImmutableList<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform, Iterable<? extends CxxPreprocessorDep> deps)
-      throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform, Iterable<? extends CxxPreprocessorDep> deps) {
     ImmutableList.Builder<CxxPreprocessorInput> inputs = ImmutableList.builder();
     inputs.addAll(
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -194,7 +192,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             : getLuaConfig().getLuaCxxLibrary(getRuleResolver()));
   }
 
-  private NativeLinkableInput getNativeLinkableInput() throws NoSuchBuildTargetException {
+  private NativeLinkableInput getNativeLinkableInput() {
     Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.of(
@@ -239,7 +237,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   }
 
   @Override
-  public SourcePath build() throws NoSuchBuildTargetException {
+  public SourcePath build() {
     BuildTarget linkTarget = getTarget();
     CxxLink linkRule =
         getRuleResolver()
@@ -283,8 +281,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public NativeLinkableInput getNativeLinkTargetInput(CxxPlatform cxxPlatform) {
     return getNativeLinkableInput();
   }
 

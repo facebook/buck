@@ -27,7 +27,7 @@ import java.util.Optional;
  * Run a C/C++ test command, remembering it's exit code and streaming it's output to a given output
  * file.
  */
-public class CxxTestStep extends AbstractTestStep {
+class CxxTestStep extends AbstractTestStep {
 
   private static final String NAME = "c++ test";
 

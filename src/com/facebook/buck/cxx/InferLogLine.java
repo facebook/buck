@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
-public class InferLogLine {
+class InferLogLine {
   private static final String SPLIT_TOKEN = "\t";
 
   private BuildTarget buildTarget;

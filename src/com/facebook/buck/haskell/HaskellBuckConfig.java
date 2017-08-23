@@ -17,8 +17,8 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SystemToolProvider;
 import com.facebook.buck.rules.ToolProvider;

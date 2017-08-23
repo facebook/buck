@@ -16,9 +16,9 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.WindowsLinker;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.WindowsLinker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
@@ -258,8 +257,7 @@ public class PythonBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      PythonBinaryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      PythonBinaryDescriptionArg args) {
     if (!(args.getMain().isPresent() ^ args.getMainModule().isPresent())) {
       throw new HumanReadableException(
           "%s: must set exactly one of `main_module` and `main`", buildTarget);

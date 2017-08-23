@@ -172,20 +172,12 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
   @Override
   public void put(Path path, HashCodeAndFileType value) {
-    try {
-      fileSystemMap.get(path).set(value);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    fileSystemMap.get(path).set(value);
   }
 
   @Override
   public void putSize(Path path, long value) {
-    try {
-      fileSystemMap.get(path).setSize(value);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    fileSystemMap.get(path).setSize(value);
   }
 
   @Override

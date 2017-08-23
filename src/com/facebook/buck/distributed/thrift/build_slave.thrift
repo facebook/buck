@@ -76,6 +76,9 @@ struct FileMaterializationStats {
     1: optional i32 totalFilesMaterializedCount;
     2: optional i32 filesMaterializedFromCASCount;
     3: optional i64 totalTimeSpentMaterializingFilesFromCASMillis;
+    4: optional i32 fullBufferCasMultiFetchCount;
+    5: optional i32 periodicCasMultiFetchCount;
+    6: optional i64 timeSpentInMultiFetchNetworkCallsMs;
 }
 
 struct BuildSlavePerStageTimingStats {
@@ -85,6 +88,7 @@ struct BuildSlavePerStageTimingStats {
     4: optional i64 targetGraphDeserializationTimeMillis;
     5: optional i64 actionGraphCreationTimeMillis;
     6: optional i64 totalBuildtimeMillis;
+    7: optional i64 distBuildPreparationTimeMillis;
 }
 
 struct BuildSlaveFinishedStats {

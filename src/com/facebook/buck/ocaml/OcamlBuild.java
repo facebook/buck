@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
-import com.facebook.buck.cxx.platform.Compiler;
+import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

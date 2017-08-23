@@ -3,4 +3,3 @@ cxx_binary(
   deps = ['//test_lib:foo'],
   srcs = [ 'binary.cpp' ],
 )
-

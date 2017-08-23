@@ -16,9 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 
 /** Interface marking a rule as having tests. */
 public interface NativeTestable {
@@ -31,6 +30,5 @@ public interface NativeTestable {
    * propagate private headers to the test testing this object. For convenience, tests can see
    * private headers visible in the rule being tested.
    */
-  CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException;
+  CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform);
 }

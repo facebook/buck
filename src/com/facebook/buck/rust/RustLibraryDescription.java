@@ -19,18 +19,17 @@ package com.facebook.buck.rust;
 import static com.facebook.buck.rust.RustCompileUtils.ruleToCrateName;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -103,8 +102,7 @@ public class RustLibraryDescription
       String crate,
       CrateType crateType,
       Linker.LinkableDepType depType,
-      RustLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      RustLibraryDescriptionArg args) {
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
             buildTarget,
@@ -142,8 +140,7 @@ public class RustLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      RustLibraryDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      RustLibraryDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -245,27 +242,23 @@ public class RustLibraryDescription
           }
         }
 
-        try {
-          rule =
-              requireBuild(
-                  buildTarget,
-                  projectFilesystem,
-                  params,
-                  resolver,
-                  pathResolver,
-                  ruleFinder,
-                  cxxPlatform,
-                  rustBuckConfig,
-                  rustcArgs.build(),
-                  /* linkerArgs */ ImmutableList.of(),
-                  /* linkerInputs */ ImmutableList.of(),
-                  crate,
-                  crateType,
-                  depType,
-                  args);
-        } catch (NoSuchBuildTargetException e) {
-          throw new RuntimeException(e);
-        }
+        rule =
+            requireBuild(
+                buildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                pathResolver,
+                ruleFinder,
+                cxxPlatform,
+                rustBuckConfig,
+                rustcArgs.build(),
+                /* linkerArgs */ ImmutableList.of(),
+                /* linkerInputs */ ImmutableList.of(),
+                crate,
+                crateType,
+                depType,
+                args);
         SourcePath rlib = rule.getSourcePathToOutput();
         return new RustLibraryArg(pathResolver, crate, rlib, direct, params.getBuildDeps());
       }
@@ -276,8 +269,7 @@ public class RustLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public ImmutableMap<String, SourcePath> getRustSharedLibraries(CxxPlatform cxxPlatform) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname = CrateType.DYLIB.filenameFor(crate, cxxPlatform);
         BuildRule sharedLibraryBuildRule =
@@ -317,8 +309,7 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType,
           boolean forceLinkWhole,
-          ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-          throws NoSuchBuildTargetException {
+          ImmutableSet<LanguageExtensions> languageExtensions) {
         CrateType crateType;
 
         switch (depType) {
@@ -366,8 +357,7 @@ public class RustLibraryDescription
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
-          throws NoSuchBuildTargetException {
+      public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(

@@ -16,17 +16,16 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
-import com.facebook.buck.cxx.platform.NativeLinkables;
-import com.facebook.buck.cxx.platform.Preprocessor;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -118,8 +117,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions)
-      throws NoSuchBuildTargetException {
+      ImmutableSet<LanguageExtensions> languageExtensions) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         cxxPlatform,
         getBuildDeps(),
@@ -133,8 +131,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
   }
 
   @Override
-  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform)
-      throws NoSuchBuildTargetException {
+  public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return CxxPreprocessorInput.EMPTY;
   }
 
@@ -144,19 +141,15 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+      CxxPlatform cxxPlatform) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform);
   }
 
   private ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInputs(CxxPlatform cxxPlatform) {
     ImmutableList.Builder<CxxPreprocessorInput> builder = ImmutableList.builder();
-    try {
-      for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
-          getTransitiveCxxPreprocessorInput(cxxPlatform).entrySet()) {
-        builder.add(entry.getValue());
-      }
-    } catch (NoSuchBuildTargetException e) {
-      throw new RuntimeException(e);
+    for (Map.Entry<BuildTarget, CxxPreprocessorInput> entry :
+        getTransitiveCxxPreprocessorInput(cxxPlatform).entrySet()) {
+      builder.add(entry.getValue());
     }
     return builder.build();
   }

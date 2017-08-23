@@ -119,7 +119,8 @@ final class JavaBuildGraphProcessor {
       }
 
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(
+              graph, new DefaultTargetNodeToBuildRuleTransformer(), params.getBuckEventBus());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate cachingBuildEngineDelegate =
@@ -127,7 +128,6 @@ final class JavaBuildGraphProcessor {
       try (CachingBuildEngine buildEngine =
           new CachingBuildEngine(
               cachingBuildEngineDelegate,
-              executorService,
               executorService,
               new DefaultStepRunner(),
               CachingBuildEngine.BuildMode.SHALLOW,

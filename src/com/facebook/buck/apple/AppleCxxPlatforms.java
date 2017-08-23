@@ -22,21 +22,22 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.cxx.DefaultLinkerProvider;
-import com.facebook.buck.cxx.MungingDebugPathSanitizer;
-import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.platform.BsdArchiver;
-import com.facebook.buck.cxx.platform.CompilerProvider;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.CxxToolProvider;
-import com.facebook.buck.cxx.platform.DebugPathSanitizer;
-import com.facebook.buck.cxx.platform.HeaderVerification;
-import com.facebook.buck.cxx.platform.LinkerProvider;
-import com.facebook.buck.cxx.platform.Linkers;
-import com.facebook.buck.cxx.platform.PosixNmSymbolNameTool;
-import com.facebook.buck.cxx.platform.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.ArchiverProvider;
+import com.facebook.buck.cxx.toolchain.BsdArchiver;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
@@ -106,8 +107,7 @@ public class AppleCxxPlatforms {
       Optional<ImmutableMap<String, AppleToolchain>> toolchains,
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
-      SwiftBuckConfig swiftBuckConfig)
-      throws IOException {
+      SwiftBuckConfig swiftBuckConfig) {
     if (!sdkPaths.isPresent() || !toolchains.isPresent()) {
       return ImmutableList.of();
     }
@@ -435,7 +435,7 @@ public class AppleCxxPlatforms {
                 LinkerProvider.Type.DARWIN, new ConstantToolProvider(clangXxPath)),
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             strip,
-            new BsdArchiver(ar),
+            ArchiverProvider.from(new BsdArchiver(ar)),
             ranlib,
             new PosixNmSymbolNameTool(nm),
             cflagsBuilder.build(),

@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.CxxDescriptionEnhancer.normalizeModuleName;
 
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;

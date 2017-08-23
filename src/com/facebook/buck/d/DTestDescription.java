@@ -16,12 +16,13 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import static com.facebook.buck.d.DDescriptionUtils.SOURCE_LINK_TREE;
+
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -80,20 +81,19 @@ public class DTestDescription
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
-      DTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      DTestDescriptionArg args) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
+    if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
+      return DDescriptionUtils.createSourceSymlinkTree(
+          buildTarget, projectFilesystem, pathResolver, args.getSrcs());
+    }
+
     SymlinkTree sourceTree =
-        buildRuleResolver.addToIndex(
-            DDescriptionUtils.createSourceSymlinkTree(
-                DDescriptionUtils.getSymlinkTreeTarget(buildTarget),
-                buildTarget,
-                projectFilesystem,
-                pathResolver,
-                args.getSrcs()));
+        (SymlinkTree)
+            buildRuleResolver.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.

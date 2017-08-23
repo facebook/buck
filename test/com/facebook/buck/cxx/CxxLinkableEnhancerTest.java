@@ -28,11 +28,13 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.Linker;
-import com.facebook.buck.cxx.platform.NativeLinkable;
-import com.facebook.buck.cxx.platform.NativeLinkableInput;
-import com.facebook.buck.cxx.platform.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -110,7 +112,7 @@ public class CxxLinkableEnhancerTest {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ImmutableSet<NativeLinkable.LanguageExtensions> languageExtensions) {
+        ImmutableSet<LanguageExtensions> languageExtensions) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 

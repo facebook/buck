@@ -37,20 +37,79 @@ files and provides various flags to control how they are linked and exported.
 {/call}
 
 {call buck.arg}
-  {param name: 'lib_name' /}
-  {{param default: '{name}' /}}
+  {param name: 'header_dirs' /}
+  {param default: '[]' /}
   {param desc}
-    The name of the library.  If your library file was named <code>libmylib.a</code>, this should
-    be <code>mylib</code>.  This defaults to the <code>name</code> of the rule.
+    A directory that headers can be included from.  These directories are added
+    to the include path using <code>-isystem</code>.
   {/param}
 {/call}
 
 {call buck.arg}
-  {param name: 'lib_dir' /}
-  {param default: 'lib' /}
+  {param name: 'platform_header_dirs' /}
+  {param default: '[]' /}
   {param desc}
-    The directory the library <code>lib_name</code> can be found.  This can use the
-    <code>$(platform)</code> macro to specify platform-dependent versions of the library.
+    Platform specific header directories. These should be specified as a list of pairs where the first
+    element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+    name is matched, and the second element is either a list of header directories.
+    See <code>header_dirs</code> for more information.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'static_lib' /}
+  {param default: '[]' /}
+  {param desc}
+    The path to the library to use when performing static linking.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'platform_static_lib' /}
+  {param default: '[]' /}
+  {param desc}
+    Platform specific static library. These should be specified as a list of pairs where the first
+    element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+    name is matched, and the second element the path to the library.
+    See <code>static_lib</code> for more information.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'static_pic_lib' /}
+  {param default: '[]' /}
+  {param desc}
+    The path to the library to use when performing static PIC linking.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'platform_static_lib' /}
+  {param default: '[]' /}
+  {param desc}
+    Platform specific static PIC library. These should be specified as a list of pairs where the first
+    element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+    name is matched, and the second element the path to the library.
+    See <code>static_pic_lib</code> for more information.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'shared_lib' /}
+  {param default: '[]' /}
+  {param desc}
+    The path to the library to use when performing shared linking.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'platform_shared_lib' /}
+  {param default: '[]' /}
+  {param desc}
+    Platform specific shared library. These should be specified as a list of pairs where the first
+    element is an un-anchored regex (in java.util.regex.Pattern syntax) against which the platform
+    name is matched, and the second element the path to the library.
+    See <code>shared_lib</code> for more information.
   {/param}
 {/call}
 
@@ -73,15 +132,6 @@ files and provides various flags to control how they are linked and exported.
 {call native_common.preferred_linkage /}
 
 {call cxx_common.exported_deps_arg /}
-
-{call buck.arg}
-  {param name: 'include_dirs' /}
-  {param default: 'None' /}
-  {param desc}
-    A directory that headers can be included from. This can use the <code>$(platform)</code>
-    macro to specify platform-dependent versions of the directory.
-  {/param}
-{/call}
 
 {/param} // close args
 
@@ -106,7 +156,11 @@ prebuilt_cxx_library(
 {literal}<pre class="prettyprint lang-py">
 prebuilt_cxx_library(
   name = 'mylib',
-  lib_dir = 'lib/$(platform)',
+  platform_static_lib = [
+    ('android-arm', 'android-arm/libmylib.a'),
+    ('android-x86', 'android-x86/libmylib.a'),
+    ('iphonesimulator-x86_64', 'iphonesimulator-x86_64/libmylib.a'),
+  ],
   exported_headers = [
     'mylib.h',
   ],

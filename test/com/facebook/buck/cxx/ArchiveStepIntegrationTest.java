@@ -21,10 +21,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.platform.Archiver;
-import com.facebook.buck.cxx.platform.CxxPlatform;
-import com.facebook.buck.cxx.platform.ObjectFileCommonModificationDate;
-import com.facebook.buck.cxx.platform.ObjectFileScrubbers;
+import com.facebook.buck.cxx.toolchain.Archiver;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileCommonModificationDate;
+import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -67,12 +69,11 @@ public class ArchiveStepIntegrationTest {
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Archiver archiver = platform.getAr();
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    Archiver archiver = platform.getAr().resolve(ruleResolver);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("input.dat");
     filesystem.writeContentsToPath("blah", input);
@@ -91,7 +92,7 @@ public class ArchiveStepIntegrationTest {
             archiver,
             filesystem.getPath("scratchDir"));
     FileScrubberStep fileScrubberStep =
-        new FileScrubberStep(filesystem, output, platform.getAr().getScrubbers());
+        new FileScrubberStep(filesystem, output, archiver.getScrubbers());
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -121,12 +122,11 @@ public class ArchiveStepIntegrationTest {
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Archiver archiver = platform.getAr();
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    Archiver archiver = platform.getAr().resolve(ruleResolver);
     Path output = filesystem.getPath("output.a");
 
     // Build an archive step.
@@ -164,12 +164,11 @@ public class ArchiveStepIntegrationTest {
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Archiver archiver = platform.getAr();
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    Archiver archiver = platform.getAr().resolve(ruleResolver);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("foo/blah.dat");
     filesystem.mkdirs(input.getParent());
@@ -209,15 +208,15 @@ public class ArchiveStepIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    assumeTrue(platform.getAr().supportsThinArchives());
 
     // Build up the paths to various files the archive step will use.
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
-    Archiver archiver = platform.getAr();
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    Archiver archiver = platform.getAr().resolve(ruleResolver);
+
+    assumeTrue(archiver.supportsThinArchives());
 
     Path output = filesystem.getPath("foo/libthin.a");
     filesystem.mkdirs(output.getParent());

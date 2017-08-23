@@ -22,7 +22,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -77,8 +76,7 @@ public class ApplePackageDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      ApplePackageDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      ApplePackageDescriptionArg args) {
     final BuildRule bundle =
         resolver.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);

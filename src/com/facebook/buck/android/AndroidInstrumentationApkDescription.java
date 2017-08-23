@@ -22,14 +22,13 @@ import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.cxx.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -95,8 +94,8 @@ public class AndroidInstrumentationApkDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      AndroidInstrumentationApkDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      AndroidInstrumentationApkDescriptionArg args) {
+    params = params.withoutExtraDeps();
     BuildRule installableApk = resolver.getRule(args.getApk());
     if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
@@ -179,9 +178,7 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
-        params
-            .withExtraDeps(enhancementResult.getFinalDeps())
-            .copyAppendingExtraDeps(rulesToExcludeFromDex),
+        params,
         ruleFinder,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),

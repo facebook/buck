@@ -82,6 +82,13 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.devtools.build.lib.syntax.BuildFileAST;
+import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.util.BlazeClock;
+import com.google.devtools.build.lib.vfs.FileSystemUtils;
+import com.google.devtools.build.lib.vfs.inmemoryfs.InMemoryFileSystem;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -477,8 +484,7 @@ public class ParserTest {
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
-        "Target //java/com/facebook:baz (type genrule) does not currently support flavors "
-            + "(tried [src])");
+        "The following flavor(s) are not supported on target //java/com/facebook:baz:\n" + "src.");
     parser.buildTargetGraph(
         eventBus, cell, false, executorService, ImmutableSortedSet.of(flavored));
   }
@@ -2180,6 +2186,21 @@ public class ParserTest {
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
+  }
+
+  @Test
+  public void testSkylark() throws Exception {
+    InMemoryFileSystem fileSystem = new InMemoryFileSystem(BlazeClock.instance());
+    com.google.devtools.build.lib.vfs.Path root = fileSystem.getPath("/");
+    com.google.devtools.build.lib.vfs.Path buckFile = root.getChild("BUCK");
+    FileSystemUtils.writeContentAsLatin1(buckFile, "x = 1 + 2");
+    BuildFileAST buildFileAst =
+        BuildFileAST.parseBuildFile(ParserInputSource.create(buckFile), null);
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env = Environment.builder(mutability).build();
+      assertTrue(buildFileAst.exec(env, /* eventHandler */ null));
+      assertEquals(env.lookup("x"), 3);
+    }
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

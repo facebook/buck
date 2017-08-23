@@ -86,6 +86,11 @@ abstract class AbstractBuckPaths {
   }
 
   @Value.Derived
+  public Path getXcodeDir() {
+    return getBuckOut().resolve("xcode");
+  }
+
+  @Value.Derived
   public Path getTrashDir() {
     // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
     return getBuckOut().resolve(".trash");

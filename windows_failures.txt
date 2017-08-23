@@ -27,7 +27,7 @@
 !com.facebook.buck.cxx.HeaderMapStepTest
 !com.facebook.buck.cxx.OmnibusTest
 !com.facebook.buck.cxx.ToolTest
-!com.facebook.buck.cxx.platform.DebugPathSanitizerTest
+!com.facebook.buck.cxx.toolchain.DebugPathSanitizerTest
 !com.facebook.buck.jvm.java.ExternalJavacIntegrationTest#whenBuckdUsesExternalJavacThenClientEnvironmentUsed
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryIntegrationTest

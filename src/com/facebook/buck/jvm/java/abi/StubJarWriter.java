@@ -23,8 +23,7 @@ import java.nio.file.Path;
 
 /** An interface for writing to stub jars. */
 interface StubJarWriter extends AutoCloseable {
-  void writeEntry(Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier)
-      throws IOException;
+  void writeEntry(Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier);
 
   @Override
   void close() throws IOException;

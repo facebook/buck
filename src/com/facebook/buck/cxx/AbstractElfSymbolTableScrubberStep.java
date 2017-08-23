@@ -18,17 +18,17 @@ package com.facebook.buck.cxx;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 
-import com.facebook.buck.cxx.elf.Elf;
-import com.facebook.buck.cxx.elf.ElfHeader;
-import com.facebook.buck.cxx.elf.ElfSection;
-import com.facebook.buck.cxx.elf.ElfSectionLookupResult;
-import com.facebook.buck.cxx.elf.ElfSymbolTable;
+import com.facebook.buck.cxx.toolchain.elf.Elf;
+import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
+import com.facebook.buck.cxx.toolchain.elf.ElfSection;
+import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
+import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.immutables.BuckStylePackageVisibleTuple;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +45,7 @@ import org.immutables.value.Value;
 
 /** A step which scrubs an ELF symbol table of information relevant to dynamic linking. */
 @Value.Immutable
-@BuckStyleTuple
+@BuckStylePackageVisibleTuple
 abstract class AbstractElfSymbolTableScrubberStep implements Step {
 
   @VisibleForTesting static final int STABLE_SECTION = 1;

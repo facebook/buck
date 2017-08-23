@@ -24,8 +24,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -164,7 +164,7 @@ public class KnownBuildRuleTypesTest {
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes =
-        KnownBuildRuleTypes.createInstance(
+        KnownBuildRuleTypesTestUtil.createInstance(
             buckConfig, filesystem, processExecutor, new FakeAndroidDirectoryResolver());
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
@@ -229,7 +229,7 @@ public class KnownBuildRuleTypesTest {
       throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     KnownBuildRuleTypes knownBuildRuleTypes1 =
-        KnownBuildRuleTypes.createInstance(
+        KnownBuildRuleTypesTestUtil.createInstance(
             FakeBuckConfig.builder().build(),
             filesystem,
             createExecutor(),
@@ -244,7 +244,7 @@ public class KnownBuildRuleTypesTest {
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
     KnownBuildRuleTypes knownBuildRuleTypes2 =
-        KnownBuildRuleTypes.createInstance(
+        KnownBuildRuleTypesTestUtil.createInstance(
             buckConfig, filesystem, processExecutor, new FakeAndroidDirectoryResolver());
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
@@ -258,7 +258,7 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     // This would throw if "default" weren't available as a platform.
-    KnownBuildRuleTypes.createInstance(
+    KnownBuildRuleTypesTestUtil.createInstance(
         buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
   }
 
@@ -274,7 +274,7 @@ public class KnownBuildRuleTypesTest {
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
-    KnownBuildRuleTypes.createInstance(
+    KnownBuildRuleTypesTestUtil.createInstance(
         buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
   }
 
@@ -287,7 +287,7 @@ public class KnownBuildRuleTypesTest {
         ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypes.createInstance(
+        KnownBuildRuleTypesTestUtil.createInstance(
             buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
     assertThat(
         knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
@@ -306,7 +306,7 @@ public class KnownBuildRuleTypesTest {
             ImmutableMap.of());
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypes.createInstance(
+        KnownBuildRuleTypesTestUtil.createInstance(
             buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
     OcamlLibraryDescription ocamlLibraryDescription =
         (OcamlLibraryDescription)
@@ -336,7 +336,7 @@ public class KnownBuildRuleTypesTest {
             ImmutableMap.of("default_cxx_platform", flavor.toString()));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypes.createInstance(
+        KnownBuildRuleTypesTestUtil.createInstance(
             buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
     JavaBinaryDescription javaBinaryDescription =
         (JavaBinaryDescription)

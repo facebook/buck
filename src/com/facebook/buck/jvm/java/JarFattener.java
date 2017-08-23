@@ -175,44 +175,42 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             fatJarDir);
 
-    Path pathToSrcsList =
-        BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s__srcs");
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntries(ImmutableSortedSet.of())
+            .setSourceFilePaths(javaSourceFilePaths.build())
+            .setStandardPaths(getBuildTarget(), getProjectFilesystem())
+            .setOutputDirectory(fatJarDir)
+            .build();
+
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                pathToSrcsList.getParent())));
+                compilerParameters.getPathToSourcesList().getParent())));
 
-    CompileToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(javac, javacOptions, JavacOptionsAmender.IDENTITY);
+    JavacToJarStepFactory compileStepFactory =
+        new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
 
     compileStepFactory.createCompileStep(
         context,
-        javaSourceFilePaths.build(),
         getBuildTarget(),
         context.getSourcePathResolver(),
         getProjectFilesystem(),
-        /* classpathEntries */ ImmutableSortedSet.of(),
-        fatJarDir,
-        /* workingDir */ Optional.empty(),
-        Optional.of(
-            BuildTargets.getAnnotationPath(getProjectFilesystem(), getBuildTarget(), "__%s_gen__")),
-        Optional.empty(),
-        pathToSrcsList,
+        compilerParameters,
         steps,
         buildableContext);
 
     steps.add(zipStep);
-    steps.add(
-        new JarDirectoryStep(
-            getProjectFilesystem(),
-            JarParameters.builder()
-                .setJarPath(output)
-                .setEntriesToJar(ImmutableSortedSet.of(zipped))
-                .setMainClass(Optional.of(FatJarMain.class.getName()))
-                .setMergeManifests(true)
-                .build()));
+    JarParameters jarParameters =
+        JarParameters.builder()
+            .setJarPath(output)
+            .setEntriesToJar(ImmutableSortedSet.of(zipped))
+            .setMainClass(Optional.of(FatJarMain.class.getName()))
+            .setMergeManifests(true)
+            .build();
+    steps.add(new JarDirectoryStep(getProjectFilesystem(), jarParameters));
 
     buildableContext.recordArtifact(output);
 

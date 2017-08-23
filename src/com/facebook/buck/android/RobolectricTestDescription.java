@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.platform.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -32,7 +32,6 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -103,8 +102,7 @@ public class RobolectricTestDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      RobolectricTestDescriptionArg args)
-      throws NoSuchBuildTargetException {
+      RobolectricTestDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
@@ -176,13 +174,13 @@ public class RobolectricTestDescription
                     cellRoots,
                     javaBuckConfig)
                 .setArgs(args)
-                .setCompileStepFactory(
+                .setConfiguredCompiler(
                     compilerFactory
                         .getCompiler(
                             args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA))
-                        .compileToJar(args, Preconditions.checkNotNull(javacOptions), resolver))
+                        .configure(args, Preconditions.checkNotNull(javacOptions), resolver))
                 .setJavacOptions(javacOptions)
-                .setJavacOptionsAmender(new BootClasspathAppender())
+                .setExtraClasspathFromContextFunction(AndroidClasspathFromContextFunction.INSTANCE)
                 .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());
 
@@ -232,12 +230,12 @@ public class RobolectricTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRobolectricTestDescriptionArg extends JavaTestDescription.CoreArg {
+  interface AbstractRobolectricTestDescriptionArg
+      extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
+
     Optional<String> getRobolectricRuntimeDependency();
 
     Optional<SourcePath> getRobolectricManifest();
-
-    Optional<AndroidLibraryDescription.JvmLanguage> getLanguage();
 
     @Value.Default
     default boolean isUseOldStyleableFormat() {

@@ -591,6 +591,35 @@ class BuildFileProcessor(object):
         ):
             yield
 
+    @staticmethod
+    def _merge_explicit_globals(src, dst, freeze_globals, whitelist=None, whitelist_mapping=None):
+        # type: (types.ModuleType, Dict[str, Any], bool, List[str], Dict[str, str]) -> None
+        """Copy explicitly requested global definitions from one globals dict to another.
+
+        If whitelist is set, only globals from the whitelist will be pulled in.
+        If whitelist_mapping is set, globals will be exported under the name of the keyword. For
+        example, foo="bar" would mean that a variable with name "bar" in imported file, will be
+        available as "foo" in current file.
+        """
+
+        if whitelist is not None:
+            for symbol in whitelist:
+                if symbol not in src.__dict__:
+                    raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
+                value = src.__dict__[symbol]
+                if freeze_globals:
+                    value = BuildFileProcessor._freeze(value)
+                dst[symbol] = value
+
+        if whitelist_mapping is not None:
+            for exported_name, symbol in whitelist_mapping.iteritems():
+                if symbol not in src.__dict__:
+                    raise KeyError("\"%s\" is not defined in %s" % (symbol, src.__name__))
+                value = src.__dict__[symbol]
+                if freeze_globals:
+                    value = BuildFileProcessor._freeze(value)
+                dst[exported_name] = value
+
     def _merge_globals(self, mod, dst):
         # type: (types.ModuleType, Dict[str, Any]) -> None
         """Copy the global definitions from one globals dict to another.
@@ -601,6 +630,7 @@ class BuildFileProcessor(object):
 
         hidden = set([
             'include_defs',
+            'load',
         ])
 
         keys = getattr(mod, '__all__', mod.__dict__.keys())
@@ -612,10 +642,12 @@ class BuildFileProcessor(object):
             if not key.startswith('_') and key not in hidden and not block_copying_module:
                 value = mod.__dict__[key]
                 if self._freeze_globals:
-                    value = self._freeze(value)
+                    value = BuildFileProcessor._freeze(value)
                 dst[key] = value
 
-    def _freeze(self, value):
+    @staticmethod
+    def _freeze(value):
+        # type: (Any) -> Any
         """
         Returns a read-only version of the passed value instance.
 
@@ -659,6 +691,7 @@ class BuildFileProcessor(object):
             namespace.update(original_namespace)
 
     def _get_include_path(self, name):
+        # type: (str) -> str
         """Resolve the given include def name to a full path."""
         match = re.match(r'^([A-Za-z0-9_]*)//(.*)$', name)
         if match is None:
@@ -678,6 +711,7 @@ class BuildFileProcessor(object):
             return os.path.normpath(os.path.join(self._project_root, relative_path))
 
     def _read_config(self, section, field, default=None):
+        # type: (str, str, Any) -> Any
         """
         Lookup a setting from `.buckconfig`.
 
@@ -713,6 +747,7 @@ class BuildFileProcessor(object):
             allow_safe_import=self._import_whitelist_manager.allow_unsafe_import)
 
     def _record_env_var(self, name, value):
+        # type: (str, Any) -> None
         """
         Record a read of an environment variable.
 
@@ -727,6 +762,7 @@ class BuildFileProcessor(object):
         build_env.used_env_vars[name] = value
 
     def _called_from_project_file(self):
+        # type: () -> bool
         """
         Returns true if the function was called from a project file.
         """
@@ -735,7 +771,7 @@ class BuildFileProcessor(object):
         return is_in_dir(filename, self._project_root)
 
     def _include_defs(self, is_implicit_include, name, namespace=None):
-        # type: (bool, str) -> None
+        # type: (bool, str, Optional[str]) -> None
         """Pull the named include into the current caller's context.
 
         This method is meant to be installed into the globals of any files or
@@ -766,7 +802,35 @@ class BuildFileProcessor(object):
         build_env.includes.add(path)
         build_env.merge(inner_env)
 
+    def _load(self, name, *symbols, **symbol_kwargs):
+        # type: (str, *str, **str) -> None
+        """Pull the symbols from the named include into the current caller's context.
+
+        This method is meant to be installed into the globals of any files or
+        includes that we process.
+        """
+        # Grab the current build context from the top of the stack.
+        build_env = self._current_build_env
+
+        # Resolve the named include to its path and process it to get its
+        # build context and module.
+        path = self._get_include_path(name)
+        inner_env, module = self._process_include(path, False)
+
+        # Look up the caller's stack frame and merge the include's globals
+        # into it's symbol table.
+        frame = get_caller_frame(skip=['_functools', __name__])
+        BuildFileProcessor._merge_explicit_globals(
+            module, frame.f_globals, self._freeze_globals, symbols, symbol_kwargs,
+        )
+
+        # Pull in the include's accounting of its own referenced includes
+        # into the current build context.
+        build_env.includes.add(path)
+        build_env.merge(inner_env)
+
     def _add_build_file_dep(self, name):
+        # type: (str) -> None
         """
         Explicitly specify a dependency on an external file.
 
@@ -912,6 +976,7 @@ class BuildFileProcessor(object):
                 'allow_unsafe_import': self._import_whitelist_manager.allow_unsafe_import,
                 'glob': self._glob,
                 'subdir_glob': self._subdir_glob,
+                'load': self._load,
             }
 
             # Don't include implicit includes if the current file being

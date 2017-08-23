@@ -45,7 +45,7 @@
     %if(androidFacet.compiler_output_path)%inherit-compiler-output="false"%else%inherit-compiler-output="true"%endif%>
 %endif%
     %if(androidFacet.compiler_output_path)%
-    <output url="file://$MODULE_DIR$%androidFacet.compiler_output_path%" />
+    <output url="%androidFacet.compiler_output_path%" />
     %endif%
     <exclude-output />
 %if(androidFacet.enabled)%
