@@ -20,5 +20,5 @@ prebuilt_cxx_library(
   visibility = [ 'PUBLIC', ],
   lib_dir = '$(location :gen_prebuilt_foo)',
   include_dirs = ['$(location :gen_prebuilt_foo_headers)'],
-
+  preferred_linkage = 'shared',
 )

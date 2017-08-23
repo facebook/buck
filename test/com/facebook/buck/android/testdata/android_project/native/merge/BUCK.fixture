@@ -99,6 +99,7 @@ cxx_library(
 prebuilt_cxx_library(
   name = 'prebuilt_for_C',
   lib_dir = 'prebuilt_for_C/$(platform)',
+  supported_platforms_regex = 'android-x86',
   deps = [
   ],
 )
@@ -106,6 +107,7 @@ prebuilt_cxx_library(
 prebuilt_cxx_library(
   name = 'prebuilt_for_F',
   lib_dir = 'prebuilt_for_F/$(platform)',
+  supported_platforms_regex = 'android-x86',
   deps = [
   ],
 )
