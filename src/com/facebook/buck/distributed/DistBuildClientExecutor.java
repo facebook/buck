@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed;
 
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -139,9 +141,9 @@ public class DistBuildClientExecutor {
       String tenantId)
       throws IOException, InterruptedException {
 
-    distBuildClientStats.startCreateBuildTimer();
+    distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
     BuildJob job = distBuildService.createBuild(buildMode, numberOfMinions, repository, tenantId);
-    distBuildClientStats.stopCreateBuildTimer();
+    distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();
     distBuildClientStats.setStampedeId(stampedeId.getId());
@@ -191,9 +193,9 @@ public class DistBuildClientExecutor {
     LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());
 
     // Everything is now setup remotely to run the distributed build. No more local prep.
-    this.distBuildClientStats.stopLocalPreparationTimer();
+    this.distBuildClientStats.stopTimer(LOCAL_PREPARATION);
 
-    distBuildClientStats.startPerformDistributedBuildTimer();
+    distBuildClientStats.startTimer(PERFORM_DISTRIBUTED_BUILD);
     job = distBuildService.startBuild(stampedeId);
     LOG.info("Started job. Build status: " + job.getStatus().toString());
     logDebugInfo(job);
@@ -305,10 +307,10 @@ public class DistBuildClientExecutor {
         throw new HumanReadableException(e, "Failed to fetch build information from server.");
       }
     } finally {
-      distBuildClientStats.stopPerformDistributedBuildTimer();
+      distBuildClientStats.stopTimer(PERFORM_DISTRIBUTED_BUILD);
     }
 
-    distBuildClientStats.startPostDistributedBuildLocalStepsTimer();
+    distBuildClientStats.startTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
 
     postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
     ListenableFuture<?> slaveFinishedStatsFuture =
@@ -564,7 +566,7 @@ public class DistBuildClientExecutor {
       return;
     }
 
-    distBuildClientStats.startMaterializeSlaveLogsTimer();
+    distBuildClientStats.startTimer(MATERIALIZE_SLAVE_LOGS);
 
     try {
       MultiGetBuildSlaveLogDirResponse logDirsResponse =
@@ -574,8 +576,9 @@ public class DistBuildClientExecutor {
       distBuildLogStateTracker.materializeLogDirs(logDirsResponse.getLogDirs());
     } catch (IOException ex) {
       LOG.error(ex, "Error fetching slave log directories from frontend.");
+    } finally {
+      distBuildClientStats.stopTimer(MATERIALIZE_SLAVE_LOGS);
     }
-    distBuildClientStats.stopMaterializeSlaveLogsTimer();
   }
 
   public static final class JobCompletedException extends RuntimeException {

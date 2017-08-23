@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
@@ -464,12 +466,12 @@ public class BuildCommand extends AbstractCommand {
       DistBuildClientStatsTracker distBuildClientStatsTracker =
           new DistBuildClientStatsTracker(distBuildConfig.getBuildLabel());
 
-      distBuildClientStatsTracker.startLocalPreparationTimer();
-      distBuildClientStatsTracker.startLocalGraphConstructionTimer();
+      distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
+      distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
 
       graphs = createGraphs(params, executorService);
 
-      distBuildClientStatsTracker.stopLocalGraphConstructionTimer();
+      distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
       Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
           computeDistBuildState(params, graphs, executorService);
@@ -707,9 +709,9 @@ public class BuildCommand extends AbstractCommand {
           LOG.error(errorMessage);
         }
 
-        distBuildClientStats.startPerformLocalBuildTimer();
+        distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
         int localBuildExitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
-        distBuildClientStats.stopPerformLocalBuildTimer();
+        distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
         distBuildClientStats.setLocalBuildExitCode(localBuildExitCode);
         distBuildClientStats.setPerformedLocalBuild(true);
 
@@ -748,7 +750,7 @@ public class BuildCommand extends AbstractCommand {
         exitCode = localBuildExitCode;
       }
 
-      distBuildClientStats.stopPostDistributedBuildLocalStepsTimer();
+      distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
 
       params
           .getBuckEventBus()
