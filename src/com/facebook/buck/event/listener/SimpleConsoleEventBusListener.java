@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -290,6 +291,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       }
       testStatusMessageBuilder.add(finished.getTestStatusMessage());
     }
+  }
+
+  @Subscribe
+  public void onDistBuildCreatedEvent(DistBuildCreatedEvent distBuildCreatedEvent) {
+    ImmutableList.Builder<String> lines =
+        ImmutableList.<String>builder()
+            .add("STAMPEDE ID: " + distBuildCreatedEvent.getStampedeId());
+    printLines(lines);
   }
 
   private void printLines(ImmutableList.Builder<String> lines) {

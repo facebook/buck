@@ -146,6 +146,8 @@ public class DistBuildClientExecutor {
     distBuildClientStats.stopTimer(CREATE_DISTRIBUTED_BUILD);
 
     final StampedeId stampedeId = job.getStampedeId();
+    eventBus.post(new DistBuildCreatedEvent(stampedeId.getId()));
+
     distBuildClientStats.setStampedeId(stampedeId.getId());
     LOG.info("Created job. Build id = " + stampedeId.getId());
     logDebugInfo(job);

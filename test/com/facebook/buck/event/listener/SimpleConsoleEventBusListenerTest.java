@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -57,6 +58,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SimpleConsoleEventBusListenerTest {
+  private static final String STAMPEDE_ID_ONE = "stampedeIdOne";
+  private static final String STAMPEDE_ID_ONE_MESSAGE = "STAMPEDE ID: stampedeIdOne\n";
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
@@ -338,6 +341,18 @@ public class SimpleConsoleEventBusListenerTest {
             BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
     expectedOutput += "[-] BUILDING...FINISHED 1.2s\n" + FINISHED_DOWNLOAD_STRING + "\n";
+    assertOutput(expectedOutput, console);
+  }
+
+  @Test
+  public void testPrintsStampedeIdForDistributedBuild() {
+    setupSimpleConsole(true);
+    String expectedOutput = "";
+    assertOutput(expectedOutput, console);
+
+    eventBus.post(new DistBuildCreatedEvent(STAMPEDE_ID_ONE));
+
+    expectedOutput += STAMPEDE_ID_ONE_MESSAGE;
     assertOutput(expectedOutput, console);
   }
 
