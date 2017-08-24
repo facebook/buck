@@ -28,4 +28,6 @@ interface ArtificialElement extends Element {
 
   @Override
   List<? extends Element> getEnclosedElements();
+
+  void addEnclosedElement(Element element);
 }

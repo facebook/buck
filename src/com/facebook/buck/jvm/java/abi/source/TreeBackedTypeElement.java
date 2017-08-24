@@ -68,7 +68,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   }
 
   @Override
-  protected void addEnclosedElement(Element element) {
+  public void addEnclosedElement(Element element) {
     if (!(element instanceof TreeBackedElement)) {
       throw new IllegalArgumentException();
     }
