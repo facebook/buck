@@ -79,7 +79,7 @@ public class CxxPlatformUtils {
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL)))
           .setStrip(DEFAULT_TOOL)
-          .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
+          .setAr(new GnuArchiver(DEFAULT_TOOL))
           .setRanlib(DEFAULT_TOOL)
           .setSymbolNameTool(new PosixNmSymbolNameTool(DEFAULT_TOOL))
           .setSharedLibraryExtension("so")

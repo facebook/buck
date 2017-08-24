@@ -22,7 +22,6 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -435,7 +434,7 @@ public class AppleCxxPlatforms {
                 LinkerProvider.Type.DARWIN, new ConstantToolProvider(clangXxPath)),
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             strip,
-            ArchiverProvider.from(new BsdArchiver(ar)),
+            new BsdArchiver(ar),
             ranlib,
             new PosixNmSymbolNameTool(nm),
             cflagsBuilder.build(),

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -107,7 +106,6 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
   public static Archive from(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
       SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
       ArchiveContents contents,
@@ -118,7 +116,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         target,
         projectFilesystem,
         ruleFinder,
-        platform.getAr().resolve(resolver),
+        platform.getAr(),
         platform.getArflags(),
         platform.getRanlib(),
         platform.getRanlibflags(),

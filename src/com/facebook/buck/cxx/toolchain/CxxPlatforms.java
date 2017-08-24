@@ -26,6 +26,7 @@ import com.facebook.buck.rules.LazyDelegatingTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,7 +82,7 @@ public class CxxPlatforms {
       LinkerProvider ld,
       Iterable<String> ldFlags,
       Tool strip,
-      final ArchiverProvider ar,
+      final Archiver ar,
       final Tool ranlib,
       final SymbolNameTool nm,
       ImmutableList<String> asflags,
@@ -100,6 +101,9 @@ public class CxxPlatforms {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
+    final Archiver arDelegate =
+        ar instanceof LazyDelegatingArchiver ? ((LazyDelegatingArchiver) ar).getDelegate() : ar;
+
     builder
         .setFlavor(flavor)
         .setAs(config.getCompilerProvider("as").orElse(as))
@@ -114,7 +118,12 @@ public class CxxPlatforms {
         .setAsmpp(config.getPreprocessorProvider("asmpp"))
         .setLd(config.getLinkerProvider("ld", ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
-        .setAr(config.getArchiverProvider(platform).orElse(ar))
+        .setAr(
+            new LazyDelegatingArchiver(
+                () ->
+                    getTool("ar", config)
+                        .map(getArchiver(arDelegate.getClass(), config)::apply)
+                        .orElse(arDelegate)))
         .setRanlib(new LazyDelegatingTool(() -> getTool("ranlib", config).orElse(ranlib)))
         .setStrip(getTool("strip", config).orElse(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
@@ -187,6 +196,19 @@ public class CxxPlatforms {
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),
         defaultPlatform.getHeaderVerification());
+  }
+
+  private static Function<Tool, Archiver> getArchiver(
+      final Class<? extends Archiver> arClass, final CxxBuckConfig config) {
+    return input -> {
+      try {
+        return config
+            .getArchiver(input)
+            .orElse(arClass.getConstructor(Tool.class).newInstance(input));
+      } catch (ReflectiveOperationException e) {
+        throw new RuntimeException(e);
+      }
+    };
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {
@@ -286,7 +308,6 @@ public class CxxPlatforms {
       deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getAr().getParseTimeDeps());
     cxxPlatform.getSharedLibraryInterfaceParams().ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }

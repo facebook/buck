@@ -99,7 +99,8 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
     return Collections.unmodifiableList(enclosedElements);
   }
 
-  protected void addEnclosedElement(Element element) {
+  @Override
+  public void addEnclosedElement(Element element) {
     enclosedElements.add(element);
   }
 

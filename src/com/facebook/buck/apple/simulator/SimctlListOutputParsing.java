@@ -32,6 +32,8 @@ public class SimctlListOutputParsing {
   private static final String DEVICE_STATE_GROUP = "state";
   private static final String DEVICE_UNAVAILABLE_GROUP = "unavailable";
 
+  private static final String TERM_ESCS = "(?:\\u001B\\[[;\\d]*[mK])*";
+
   private static final Pattern SIMCTL_LIST_DEVICES_PATTERN =
       Pattern.compile(
           " *(?<"
@@ -57,6 +59,7 @@ public class SimctlListOutputParsing {
   public static void parseOutput(
       String output, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) throws IOException {
     for (String line : MoreStrings.lines(output)) {
+      line = line.replaceAll(TERM_ESCS, "");
       parseLine(line, simulatorsBuilder);
     }
   }

@@ -238,7 +238,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           Throwables.propagateIfPossible(t.getCause(), IOException.class);
           throw new RuntimeException(t.getCause());
         default:
-          // An error should already have been reported, so we need not do anything.
+          if (buildSuccessful()) {
+            Throwables.propagateIfPossible(t, IOException.class);
+            throw new RuntimeException(t);
+          }
+
+          // An error was already reported, so we need not do anything.
           return;
       }
     }
