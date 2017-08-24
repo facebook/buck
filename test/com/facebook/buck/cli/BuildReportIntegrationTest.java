@@ -18,14 +18,17 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -75,5 +78,24 @@ public class BuildReportIntegrationTest {
         new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
     assertEquals(
         workspace.getFileContents("expected_failed_build_report.json"), buildReportContents);
+  }
+
+  @Test
+  public void testCompilerErrorIsIncluded() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
+
+    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    workspace
+        .runBuckBuild(
+            "--build-report", buildReport.toAbsolutePath().toString(), "//:failing_c_rule")
+        .assertFailure();
+
+    assertTrue(Files.exists(buildReport));
+    String buildReportContents =
+        new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
+    assertEquals(
+        workspace.getFileContents("expected_failed_c_build_report.json"), buildReportContents);
   }
 }

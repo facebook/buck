@@ -1,0 +1,11 @@
+{
+  "success" : false,
+  "results" : {
+    "//:failing_c_rule" : {
+      "success" : false
+    }
+  },
+  "failures" : {
+    "//:failing_c_rule" : "//:failing_c_rule#compile-failure.c.o4a68836c,default failed with exit code 1:\nc preprocess_and_compile\nstderr: failure.c:2:3: error: use of undeclared identifier 'foo'; did you mean 'for'?\n  foo;\n  ^~~\n  for\nfailure.c:2:6: error: expected '(' after 'for'\n  foo;\n     ^\n2 errors generated.\n"
+  }
+}

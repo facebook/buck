@@ -1928,9 +1928,6 @@ public class CxxBinaryIntegrationTest {
         error,
         Matchers.not(
             Matchers.containsString(filesystem.getBuckPaths().getScratchDir().toString())));
-    assertThat(
-        error,
-        Matchers.not(Matchers.containsString(filesystem.getBuckPaths().getGenDir().toString())));
     assertThat(error, Matchers.containsString("In file included from lib1.h:1"));
     assertThat(error, Matchers.containsString("from bin.h:1"));
     assertThat(error, Matchers.containsString("from bin.cpp:1:"));
