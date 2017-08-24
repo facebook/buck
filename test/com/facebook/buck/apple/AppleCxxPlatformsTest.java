@@ -233,7 +233,7 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         "/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar",
-        cxxPlatform.getAr().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
   @Test
@@ -325,7 +325,7 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         "/Developer/Platforms/WatchOS.platform/Developer/usr/bin/ar",
-        cxxPlatform.getAr().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
   @Test
@@ -419,7 +419,7 @@ public class AppleCxxPlatformsTest {
         cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
     assertEquals(
         "/Developer/Platforms/AppleTVOS.platform/Developer/usr/bin/ar",
-        cxxPlatform.getAr().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform.getAr().getCommandPrefix(resolver).get(0));
   }
 
   @Test

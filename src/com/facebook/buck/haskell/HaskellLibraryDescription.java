@@ -170,7 +170,6 @@ public class HaskellLibraryDescription
     return Archive.from(
         target,
         projectFilesystem,
-        resolver,
         ruleFinder,
         platform.getCxxPlatform(),
         cxxBuckConfig.getArchiveContents(),

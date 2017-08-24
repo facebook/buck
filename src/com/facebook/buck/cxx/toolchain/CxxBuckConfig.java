@@ -25,6 +25,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -132,14 +133,30 @@ public class CxxBuckConfig {
   /*
    * Constructs the appropriate Archiver for the specified platform.
    */
-  public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
-    Optional<ToolProvider> toolProvider = delegate.getToolProvider(cxxSection, "ar");
-    return toolProvider.map(
-        archiver -> {
-          Optional<Platform> archiverPlatform =
-              delegate.getEnum(cxxSection, "archiver_platform", Platform.class);
-          return ArchiverProvider.from(archiver, archiverPlatform.orElse(defaultPlatform));
-        });
+  public Optional<Archiver> getArchiver(Tool ar) {
+    Optional<Platform> archiverPlatform =
+        delegate.getEnum(cxxSection, "archiver_platform", Platform.class);
+    if (!archiverPlatform.isPresent()) {
+      return Optional.empty();
+    }
+    Archiver result;
+    switch (archiverPlatform.get()) {
+      case MACOS:
+      case FREEBSD:
+        result = new BsdArchiver(ar);
+        break;
+      case LINUX:
+        result = new GnuArchiver(ar);
+        break;
+      case WINDOWS:
+        result = new WindowsArchiver(ar);
+        break;
+      case UNKNOWN:
+      default:
+        throw new RuntimeException(
+            "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
+    }
+    return Optional.of(result);
   }
 
   /** @return the maximum size in bytes of test output to report in test results. */

@@ -340,7 +340,6 @@ public class HaskellDescriptionUtils {
             Archive.from(
                 emptyArchiveTarget,
                 projectFilesystem,
-                resolver,
                 ruleFinder,
                 platform.getCxxPlatform(),
                 ArchiveContents.NORMAL,

@@ -86,7 +86,7 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   List<String> getStripFlags();
 
-  ArchiverProvider getAr();
+  Archiver getAr();
 
   List<String> getArflags();
 
