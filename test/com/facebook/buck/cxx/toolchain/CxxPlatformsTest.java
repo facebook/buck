@@ -71,7 +71,7 @@ public class CxxPlatformsTest {
             .setStrip(new HashedFileTool(Paths.get("borland")))
             .setSymbolNameTool(new PosixNmSymbolNameTool(new HashedFileTool(Paths.get("borland"))))
             .setAr(ArchiverProvider.from(new GnuArchiver(new HashedFileTool(Paths.get("borland")))))
-            .setRanlib(new ConstantToolProvider(new HashedFileTool(Paths.get("borland"))))
+            .setRanlib(new HashedFileTool(Paths.get("borland")))
             .setSharedLibraryExtension("so")
             .setSharedLibraryVersionedExtensionFormat(".so.%s")
             .setStaticLibraryExtension("a")

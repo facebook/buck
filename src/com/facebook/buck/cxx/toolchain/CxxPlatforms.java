@@ -22,8 +22,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.HashedFileTool;
+import com.facebook.buck.rules.LazyDelegatingTool;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -82,7 +82,7 @@ public class CxxPlatforms {
       Iterable<String> ldFlags,
       Tool strip,
       final ArchiverProvider ar,
-      final ToolProvider ranlib,
+      final Tool ranlib,
       final SymbolNameTool nm,
       ImmutableList<String> asflags,
       ImmutableList<String> asppflags,
@@ -115,7 +115,7 @@ public class CxxPlatforms {
         .setLd(config.getLinkerProvider("ld", ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
-        .setRanlib(config.getToolProvider("ranlib").orElse(ranlib))
+        .setRanlib(new LazyDelegatingTool(() -> getTool("ranlib", config).orElse(ranlib)))
         .setStrip(getTool("strip", config).orElse(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
@@ -287,7 +287,6 @@ public class CxxPlatforms {
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
     deps.addAll(cxxPlatform.getAr().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getRanlib().getParseTimeDeps());
     cxxPlatform.getSharedLibraryInterfaceParams().ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }

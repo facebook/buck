@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
@@ -91,7 +90,7 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   List<String> getArflags();
 
-  ToolProvider getRanlib();
+  Tool getRanlib();
 
   List<String> getRanlibflags();
 

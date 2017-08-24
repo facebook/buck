@@ -120,7 +120,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         ruleFinder,
         platform.getAr().resolve(resolver),
         platform.getArflags(),
-        platform.getRanlib().resolve(resolver),
+        platform.getRanlib(),
         platform.getRanlibflags(),
         contents,
         output,

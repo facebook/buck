@@ -436,7 +436,7 @@ public class AppleCxxPlatforms {
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
-            new ConstantToolProvider(ranlib),
+            ranlib,
             new PosixNmSymbolNameTool(nm),
             cflagsBuilder.build(),
             ImmutableList.of(),
