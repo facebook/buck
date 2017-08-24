@@ -297,7 +297,7 @@ public class TestCommand extends BuildCommand {
           testRules,
           build.getExecutionContext(),
           getTestRunningOptions(params),
-          testPool.getExecutor(),
+          testPool.getListeningExecutorService(),
           buildEngine,
           new DefaultStepRunner(),
           buildContext,
@@ -400,7 +400,7 @@ public class TestCommand extends BuildCommand {
                       params.getBuckEventBus(),
                       params.getCell(),
                       getEnableParserProfiling(),
-                      pool.getExecutor(),
+                      pool.getListeningExecutorService(),
                       ImmutableList.of(
                           TargetNodePredicateSpec.of(
                                   BuildFileSpec.fromRecursivePath(
@@ -421,7 +421,7 @@ public class TestCommand extends BuildCommand {
                       params.getBuckEventBus(),
                       params.getCell(),
                       getEnableParserProfiling(),
-                      pool.getExecutor(),
+                      pool.getListeningExecutorService(),
                       parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
                       parserConfig.getDefaultFlavorsMode());
 
@@ -449,7 +449,7 @@ public class TestCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         params.getCell(),
                         getEnableParserProfiling(),
-                        pool.getExecutor(),
+                        pool.getListeningExecutorService(),
                         allTargets);
             LOG.debug("Finished building new target graph with tests.");
             targetGraphAndBuildTargets = TargetGraphAndBuildTargets.of(targetGraph, allTargets);
@@ -502,7 +502,7 @@ public class TestCommand extends BuildCommand {
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
-                    pool.getExecutor(),
+                    pool.getWeightedListeningExecutorService(),
                     new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                     cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

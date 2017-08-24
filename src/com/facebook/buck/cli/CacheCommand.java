@@ -107,7 +107,7 @@ public class CacheCommand extends AbstractCommand {
     try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
-      WeightedListeningExecutorService executor = pool.getExecutor();
+      WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
 
       fakeOutParseEvents(params.getBuckEventBus());
 

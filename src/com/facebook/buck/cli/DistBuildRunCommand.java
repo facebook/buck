@@ -162,7 +162,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
               DistBuildFactory.createDistBuildExecutor(
                   state,
                   params,
-                  pool.getExecutor(),
+                  pool.getWeightedListeningExecutorService(),
                   service,
                   Preconditions.checkNotNull(distBuildMode),
                   coordinatorPort,

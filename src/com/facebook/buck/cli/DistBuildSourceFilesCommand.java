@@ -105,7 +105,8 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
         new CommandThreadManager(
             "DistBuildSourceFiles", getConcurrencyLimit(params.getBuckConfig()))) {
       BuildJobState jobState =
-          BuildCommand.getDistBuildState(arguments, params, pool.getExecutor());
+          BuildCommand.getDistBuildState(
+              arguments, params, pool.getWeightedListeningExecutorService());
       outputResultToTempFile(params, jobState);
     }
   }

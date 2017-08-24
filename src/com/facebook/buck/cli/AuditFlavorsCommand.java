@@ -99,7 +99,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
                     params.getBuckEventBus(),
                     params.getCell(),
                     getEnableParserProfiling(),
-                    pool.getExecutor(),
+                    pool.getListeningExecutorService(),
                     target);
         builder.add(targetNode);
       }

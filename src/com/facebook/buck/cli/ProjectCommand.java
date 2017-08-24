@@ -268,7 +268,7 @@ public class ProjectCommand extends BuildCommand {
     try (CommandThreadManager pool =
         new CommandThreadManager("Project", getConcurrencyLimit(params.getBuckConfig()))) {
 
-      ListeningExecutorService executor = pool.getExecutor();
+      ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       int result;

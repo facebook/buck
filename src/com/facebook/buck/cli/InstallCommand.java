@@ -215,7 +215,7 @@ public class InstallCommand extends BuildCommand {
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {
-        installHelperTargets = getInstallHelperTargets(params, pool.getExecutor());
+        installHelperTargets = getInstallHelperTargets(params, pool.getListeningExecutorService());
       } catch (BuildTargetException | BuildFileParseException e) {
         params
             .getBuckEventBus()
@@ -224,7 +224,7 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Build the targets
-      exitCode = super.run(params, pool.getExecutor(), installHelperTargets);
+      exitCode = super.run(params, pool, installHelperTargets);
       if (exitCode != 0) {
         return exitCode;
       }

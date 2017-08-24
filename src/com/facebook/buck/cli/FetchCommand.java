@@ -82,7 +82,7 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckEventBus(),
                     params.getCell(),
                     getEnableParserProfiling(),
-                    pool.getExecutor(),
+                    pool.getListeningExecutorService(),
                     parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
                     parserConfig.getDefaultFlavorsMode());
         if (params.getBuckConfig().getBuildVersions()) {
@@ -114,7 +114,7 @@ public class FetchCommand extends BuildCommand {
           CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   localCachingBuildEngineDelegate,
-                  pool.getExecutor(),
+                  pool.getWeightedListeningExecutorService(),
                   new DefaultStepRunner(),
                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

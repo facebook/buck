@@ -46,13 +46,10 @@ public class CommandThreadManagerTest {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Test", concurrencyLimit, 250, TimeUnit.MILLISECONDS)) {
-      pool.getExecutor()
+      pool.getListeningExecutorService()
           .submit(
-              new Runnable() {
-                @Override
-                public void run() {
-                  while (true) {}
-                }
+              () -> {
+                while (true) {}
               });
     }
   }

@@ -958,7 +958,9 @@ public class CachingBuildEngineTest {
                   ResourceAmounts.of(100, 100, 100, 100),
                   ResourceAmounts.of(0, 0, 0, 0)))) {
         CachingBuildEngine cachingBuildEngine =
-            cachingBuildEngineFactory().setExecutorService(threadManager.getExecutor()).build();
+            cachingBuildEngineFactory()
+                .setExecutorService(threadManager.getWeightedListeningExecutorService())
+                .build();
         BuildResult result =
             cachingBuildEngine
                 .build(buildContext, TestExecutionContext.newInstance(), withFailingDeps)

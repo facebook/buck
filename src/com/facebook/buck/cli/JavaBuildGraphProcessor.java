@@ -43,7 +43,6 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -61,8 +60,8 @@ final class JavaBuildGraphProcessor {
 
   /**
    * Can be thrown by {@link Processor#process(TargetGraph, JavaDepsFinder,
-   * WeightedListeningExecutorService)} to indicate the way in which processing has failed. The exit
-   * code value may be useful if the failure is bubbled up to a Buck command.
+   * ListeningExecutorService)} to indicate the way in which processing has failed. The exit code
+   * value may be useful if the failure is bubbled up to a Buck command.
    */
   static final class ExitCodeException extends Exception {
     public final int exitCode;
@@ -78,9 +77,7 @@ final class JavaBuildGraphProcessor {
    */
   interface Processor {
     void process(
-        TargetGraph graph,
-        JavaDepsFinder javaDepsFinder,
-        WeightedListeningExecutorService executorService);
+        TargetGraph graph, JavaDepsFinder javaDepsFinder, ListeningExecutorService executorService);
   }
 
   /**
@@ -95,7 +92,6 @@ final class JavaBuildGraphProcessor {
     try (CommandThreadManager pool =
         new CommandThreadManager(command.getClass().getName(), concurrencyLimit)) {
       Cell cell = params.getCell();
-      WeightedListeningExecutorService executorService = pool.getExecutor();
 
       TargetGraph graph;
       try {
@@ -106,7 +102,7 @@ final class JavaBuildGraphProcessor {
                     params.getBuckEventBus(),
                     cell,
                     command.getEnableParserProfiling(),
-                    executorService,
+                    pool.getListeningExecutorService(),
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
@@ -128,7 +124,7 @@ final class JavaBuildGraphProcessor {
       try (CachingBuildEngine buildEngine =
           new CachingBuildEngine(
               cachingBuildEngineDelegate,
-              executorService,
+              pool.getWeightedListeningExecutorService(),
               new DefaultStepRunner(),
               CachingBuildEngine.BuildMode.SHALLOW,
               cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
@@ -156,7 +152,7 @@ final class JavaBuildGraphProcessor {
                 .setEnvironment(/* environment */ ImmutableMap.of())
                 .setExecutors(
                     ImmutableMap.<ExecutorPool, ListeningExecutorService>of(
-                        ExecutorPool.CPU, executorService))
+                        ExecutorPool.CPU, pool.getListeningExecutorService()))
                 .setJavaPackageFinder(params.getJavaPackageFinder())
                 .setPlatform(params.getPlatform())
                 .setCellPathResolver(params.getCell().getCellPathResolver())
@@ -187,7 +183,7 @@ final class JavaBuildGraphProcessor {
             JavaDepsFinder.createJavaDepsFinder(
                 params.getBuckConfig(), buildContext, executionContext, buildEngine);
 
-        processor.process(graph, javaDepsFinder, executorService);
+        processor.process(graph, javaDepsFinder, pool.getListeningExecutorService());
       }
     }
   }
