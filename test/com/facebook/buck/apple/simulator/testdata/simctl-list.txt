@@ -13,6 +13,7 @@ Resizable iPad (com.apple.CoreSimulator.SimDeviceType.Resizable-iPad)
 iOS 8.3 (8.3 - 12F69) (com.apple.CoreSimulator.SimRuntime.iOS-8-3)
 == Devices ==
 -- iOS 8.3 --
+[0m[31m    iPhone ANSI Color (7313DF34-884C-49F7-8261-B26377F9FC23) (Shutdown)
     iPhone 4s (F7C1CC9A-945E-4258-BA84-DEEBE683798B) (Shutdown)
     iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)
     iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)

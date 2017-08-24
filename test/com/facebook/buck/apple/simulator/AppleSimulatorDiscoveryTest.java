@@ -100,6 +100,12 @@ public class AppleSimulatorDiscoveryTest {
                     .build())
             .add(
                 AppleSimulator.builder()
+                    .setName("iPhone ANSI Color")
+                    .setUdid("7313DF34-884C-49F7-8261-B26377F9FC23")
+                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
+                    .build())
+            .add(
+                AppleSimulator.builder()
                     .setName("iPad 2")
                     .setUdid("CC1B0BAD-BAE6-4A53-92CF-F79850654057")
                     .setSimulatorState(AppleSimulatorState.SHUTTING_DOWN)
