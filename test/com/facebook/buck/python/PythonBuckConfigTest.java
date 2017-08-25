@@ -178,7 +178,7 @@ public class PythonBuckConfigTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Path projectDir = Files.createTempDirectory("project");
-    Path pexExecuter = Paths.get("pex-exectuter");
+    Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =
         new FakeProjectFilesystem(new FakeClock(0), projectDir, ImmutableSet.of(pexExecuter));
     Files.createFile(projectFilesystem.resolve(pexExecuter));
@@ -196,7 +196,7 @@ public class PythonBuckConfigTest {
             new ExecutableFinder());
     assertThat(
         config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
-        Matchers.contains(pexExecuter.toString()));
+        Matchers.contains(projectDir.resolve(pexExecuter).toString()));
   }
 
   @Test

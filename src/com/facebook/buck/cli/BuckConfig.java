@@ -384,7 +384,7 @@ public class BuckConfig implements ConfigPathGetter {
           new ConstantToolProvider(
               new HashedFileTool(
                   () ->
-                      checkPathExists(
+                      checkPathExistsAndResolve(
                           value.get(),
                           String.format("Overridden %s:%s path not found: ", section, field)))));
     }
