@@ -396,6 +396,7 @@ public class DistBuildSlaveExecutor {
                   .setCellPathResolver(args.getRootCell().getCellPathResolver())
                   .setBuildCellRootPath(args.getRootCell().getRoot())
                   .setProcessExecutor(processExecutor)
+                  .setEnvironment(distBuildConfig.getEnvironment())
                   .build();
           Build build =
               new Build(
