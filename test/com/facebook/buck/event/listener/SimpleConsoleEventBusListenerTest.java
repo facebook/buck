@@ -368,6 +368,7 @@ public class SimpleConsoleEventBusListenerTest {
             fakeClock,
             TestResultSummaryVerbosity.of(false, false),
             hideSucceededRules,
+            /* numberOfSlowRulesToShow */ 0,
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(

@@ -200,7 +200,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long minimumDurationMillisecondsToShowActionGraph,
       long minimumDurationMillisecondsToShowWatchman,
       boolean hideEmptyDownload) {
-    super(console, clock, locale, executionEnvironment, false);
+    super(console, clock, locale, executionEnvironment, false, config.getNumberOfSlowRulesToShow());
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
     this.webServer = webServer;
@@ -443,6 +443,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
     getBuildTraceURLLine(lines);
     getBuildTimeLine(lines);
+    showTopSlowBuildRules(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
       MultiStateRenderer renderer =

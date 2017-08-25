@@ -1525,6 +1525,7 @@ public final class Main {
         clock,
         testResultSummaryVerbosity,
         config.getHideSucceededRulesInLogMode(),
+        config.getNumberOfSlowRulesToShow(),
         locale,
         testLogPath,
         executionEnvironment);

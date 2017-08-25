@@ -25,6 +25,7 @@ public class SuperConsoleConfig {
   private static final String SECTION_NAME = "ui";
   private static final int DEFAULT_THREAD_LINE_LIMIT = 10;
   private static final long DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS = 0;
+  private static final int DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW = 0;
 
   private final BuckConfig delegate;
 
@@ -61,6 +62,11 @@ public class SuperConsoleConfig {
   // When true, it will hide successful built rules when using the simple console.
   public boolean getHideSucceededRulesInLogMode() {
     return delegate.getBooleanValue(SECTION_NAME, "hide_succeeded_rules_in_log_mode", false);
+  }
+
+  public int getNumberOfSlowRulesToShow() {
+    return getPositiveInt(SECTION_NAME, "number_of_slow_rules_to_show")
+        .orElse(DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW);
   }
 
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {

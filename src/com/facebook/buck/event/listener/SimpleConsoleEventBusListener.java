@@ -60,10 +60,11 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       Clock clock,
       TestResultSummaryVerbosity summaryVerbosity,
       boolean hideSucceededRules,
+      int numberOfSlowRulesToShow,
       Locale locale,
       Path testLogPath,
       ExecutionEnvironment executionEnvironment) {
-    super(console, clock, locale, executionEnvironment, true);
+    super(console, clock, locale, executionEnvironment, true, numberOfSlowRulesToShow);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.hideSucceededRules = hideSucceededRules;
@@ -150,6 +151,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     }
 
     lines.add(getNetworkStatsLine(finished));
+
+    showTopSlowBuildRules(lines);
 
     printLines(lines);
   }

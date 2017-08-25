@@ -37,6 +37,7 @@ import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -64,8 +65,11 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -73,6 +77,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -100,7 +105,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final Clock clock;
   protected final Ansi ansi;
   private final Locale locale;
-  protected final boolean showTextInAllCaps;
+  private final boolean showTextInAllCaps;
+  private final int numberOfSlowRulesToShow;
+  private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
 
   protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
@@ -167,12 +174,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Clock clock,
       Locale locale,
       ExecutionEnvironment executionEnvironment,
-      Boolean showTextInAllCaps) {
+      boolean showTextInAllCaps,
+      int numberOfSlowRulesToShow) {
     this.console = console;
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
     this.showTextInAllCaps = showTextInAllCaps;
+    this.numberOfSlowRulesToShow = numberOfSlowRulesToShow;
+    this.timeSpentMillisecondsInRules = new HashMap<>();
 
     this.projectBuildFileParseStarted = null;
     this.projectBuildFileParseFinished = null;
@@ -755,6 +765,19 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    if (numberOfSlowRulesToShow != 0) {
+      synchronized (timeSpentMillisecondsInRules) {
+        UnflavoredBuildTarget unflavoredTarget =
+            finished.getBuildRule().getBuildTarget().getUnflavoredBuildTarget();
+        Long value = timeSpentMillisecondsInRules.get(unflavoredTarget);
+        if (value == null) {
+          value = 0L;
+        }
+        value = value + finished.getDuration().getWallMillisDuration();
+        timeSpentMillisecondsInRules.put(unflavoredTarget, value);
+      }
+    }
+
     if (finished.getStatus() != BuildRuleStatus.CANCELED) {
       if (progressEstimator.isPresent()) {
         progressEstimator.get().didFinishRule();
@@ -880,6 +903,50 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           humanReadableBytesUploaded, complete, failed, uploading, pending);
     } else {
       return humanReadableBytesUploaded;
+    }
+  }
+
+  protected void showTopSlowBuildRules(ImmutableList.Builder<String> lines) {
+    if (numberOfSlowRulesToShow == 0 || buildFinished == null) {
+      return;
+    }
+
+    Comparator<UnflavoredBuildTarget> comparator =
+        new Comparator<UnflavoredBuildTarget>() {
+          @Override
+          public int compare(UnflavoredBuildTarget target1, UnflavoredBuildTarget target2) {
+            Long elapsedTime1 =
+                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
+            Long elapsedTime2 =
+                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
+            long delta = elapsedTime2 - elapsedTime1;
+            if (delta < 0L) {
+              return -1;
+            } else if (delta > 0L) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }
+        };
+
+    lines.add(String.format(""));
+    synchronized (timeSpentMillisecondsInRules) {
+      if (timeSpentMillisecondsInRules.size() == 0) {
+        lines.add(String.format("Top slow rules: Buck didn't spend time in rules."));
+      } else {
+        lines.add(String.format("Top slow rules"));
+        Stream<UnflavoredBuildTarget> keys =
+            timeSpentMillisecondsInRules.keySet().stream().sorted(comparator);
+        keys.limit(numberOfSlowRulesToShow)
+            .forEachOrdered(
+                target -> {
+                  lines.add(
+                      String.format(
+                          "    %s: %s",
+                          target, formatElapsedTime(timeSpentMillisecondsInRules.get(target))));
+                });
+      }
     }
   }
 
