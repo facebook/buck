@@ -32,7 +32,7 @@ public final class Configs {
   private static final Logger LOG = Logger.get(Configs.class);
 
   private static final String DEFAULT_BUCK_CONFIG_FILE_NAME = ".buckconfig";
-  private static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
+  public static final String DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
   private static final String DEFAULT_BUCK_CONFIG_DIRECTORY_NAME = ".buckconfig.d";
 
   private static final Path GLOBAL_BUCK_CONFIG_FILE_PATH = Paths.get("/etc/buckconfig");

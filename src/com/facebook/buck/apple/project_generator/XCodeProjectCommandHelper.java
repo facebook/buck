@@ -24,6 +24,7 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.ProjectTestsMode;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
@@ -526,7 +527,7 @@ public class XCodeProjectCommandHelper {
                   + "  ide_prompt = false\n\n",
               cell.getFilesystem()
                   .getRootPath()
-                  .resolve(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME)
+                  .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
                   .toAbsolutePath());
     } else {
       LOG.debug(

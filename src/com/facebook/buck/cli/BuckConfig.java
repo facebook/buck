@@ -79,8 +79,6 @@ import java.util.regex.Pattern;
 /** Structured representation of data read from a {@code .buckconfig} file. */
 public class BuckConfig implements ConfigPathGetter {
 
-  public static final String BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
-
   private static final String ALIAS_SECTION_HEADER = "alias";
   public static final String RESOURCES_SECTION_HEADER = "resources";
   public static final String RESOURCES_PER_RULE_SECTION_HEADER = "resources_per_rule";
