@@ -61,4 +61,8 @@ abstract class AbstractDistBuildClientStats {
   abstract Optional<Long> missingFilesUploadedCount();
 
   abstract Optional<Long> materializeSlaveLogsDurationMs();
+
+  abstract Optional<Long> publishBuildSlaveFinishedStatsDurationMs();
+
+  abstract Optional<Long> postBuildAnalysisDurationMs();
 }

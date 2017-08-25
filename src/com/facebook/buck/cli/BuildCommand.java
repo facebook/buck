@@ -733,6 +733,7 @@ public class BuildCommand extends AbstractCommand {
           LOG.error("Failed to publish distributed build client cache request event", ex);
         }
 
+        distBuildClientStats.startTimer(POST_BUILD_ANALYSIS);
         DistBuildPostBuildAnalysis postBuildAnalysis =
             new DistBuildPostBuildAnalysis(
                 params.getInvocationInfo().get().getBuildId(),
@@ -750,6 +751,7 @@ public class BuildCommand extends AbstractCommand {
                 ConsoleEvent.warning(
                     "Details of distributed build analysis: %s",
                     relativePathToSummaryFile.toString()));
+        distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
 
         exitCode = localBuildExitCode;
       }

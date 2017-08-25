@@ -33,6 +33,8 @@ public class DistBuildClientStatsTracker {
     PERFORM_DISTRIBUTED_BUILD,
     PERFORM_LOCAL_BUILD,
     POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
+    PUBLISH_BUILD_SLAVE_FINISHED_STATS,
+    POST_BUILD_ANALYSIS,
     CREATE_DISTRIBUTED_BUILD,
     UPLOAD_MISSING_FILES,
     UPLOAD_TARGET_GRAPH,
@@ -51,6 +53,8 @@ public class DistBuildClientStatsTracker {
     UPLOAD_TARGET_GRAPH,
     UPLOAD_BUCK_DOT_FILES,
     SET_BUCK_VERSION,
+    // POST_BUILD_ANALYSIS only happens if remote build was successful
+    // PUBLISH_BUILD_SLAVE_FINISHED_STATS is optional
     // MATERIALIZE_SLAVE_LOGS is optional
     // PERFORM_LOCAL_BUILD only happens if remote build was successful
   };
@@ -98,6 +102,9 @@ public class DistBuildClientStatsTracker {
       Preconditions.checkNotNull(
           durationsMsByType.get(PERFORM_LOCAL_BUILD),
           "No time was recorded for stat: " + PERFORM_LOCAL_BUILD);
+      Preconditions.checkNotNull(
+          durationsMsByType.get(POST_BUILD_ANALYSIS),
+          "No time was recorded for stat: " + POST_BUILD_ANALYSIS);
     }
 
     for (DistBuildClientStat stat : REQUIRED_STATS) {
@@ -140,6 +147,7 @@ public class DistBuildClientStatsTracker {
     if (performedLocalBuild) {
       builder.setLocalBuildExitCode(localBuildExitCode);
       builder.setLocalBuildDurationMs(getDurationOrEmpty(PERFORM_LOCAL_BUILD));
+      builder.setPostBuildAnalysisDurationMs(getDurationOrEmpty(POST_BUILD_ANALYSIS));
     }
 
     builder.setLocalPreparationDurationMs(getDurationOrEmpty(LOCAL_PREPARATION));
@@ -152,8 +160,9 @@ public class DistBuildClientStatsTracker {
     builder.setUploadTargetGraphDurationMs(getDurationOrEmpty(UPLOAD_TARGET_GRAPH));
     builder.setUploadBuckDotFilesDurationMs(getDurationOrEmpty(UPLOAD_BUCK_DOT_FILES));
     builder.setSetBuckVersionDurationMs(getDurationOrEmpty(SET_BUCK_VERSION));
-
     builder.setMaterializeSlaveLogsDurationMs(getDurationOrEmpty(MATERIALIZE_SLAVE_LOGS));
+    builder.setPublishBuildSlaveFinishedStatsDurationMs(
+        getDurationOrEmpty(PUBLISH_BUILD_SLAVE_FINISHED_STATS));
 
     builder.setMissingFilesUploadedCount(missingFilesUploadedCount);
 
