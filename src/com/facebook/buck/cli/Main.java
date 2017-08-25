@@ -108,6 +108,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -170,6 +171,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -853,6 +855,26 @@ public final class Main {
                   counterRegistry,
                   commandEventListeners
                   );
+
+          ImmutableList<Path> localConfigFiles =
+              rootCell
+                  .getAllCells()
+                  .stream()
+                  .map(
+                      cell ->
+                          cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
+                  .filter(path -> Files.isRegularFile(path))
+                  .collect(MoreCollectors.toImmutableList());
+          if (localConfigFiles.size() > 0) {
+            String message =
+                localConfigFiles.size() == 1
+                    ? "Using local configuration:"
+                    : "Using local configurations:";
+            buildEventBus.post(ConsoleEvent.warning(message));
+            for (Path localConfigFile : localConfigFiles) {
+              buildEventBus.post(ConsoleEvent.warning(String.format("- %s", localConfigFile)));
+            }
+          }
 
           if (commandMode == CommandMode.RELEASE && buckConfig.isPublicAnnouncementsEnabled()) {
             PublicAnnouncementManager announcementManager =
