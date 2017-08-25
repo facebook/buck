@@ -99,7 +99,6 @@ public class AppleDescriptions {
       ImmutableSet.of(INCLUDE_FRAMEWORKS_FLAVOR, NO_INCLUDE_FRAMEWORKS_FLAVOR);
 
   private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
-  private static final Path EMPTY_PATH = Paths.get("");
 
   /** Utility class: do not instantiate. */
   private AppleDescriptions() {}
@@ -127,25 +126,17 @@ public class AppleDescriptions {
       CxxLibraryDescription.CommonArg arg) {
     // The private headers will contain exported headers with the private include style and private
     // headers with both styles.
-    ImmutableSortedMap.Builder<String, SourcePath> headersMapBuilder =
-        ImmutableSortedMap.<String, SourcePath>naturalOrder()
-            .putAll(
-                AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                    buildTarget, pathResolver, arg.getHeaders()));
-
-    // headers are already available without path prefix for usage from the same target, so don't
-    // attempt to map same headers without header path prefix for usage from other targets
-    if (!EMPTY_PATH.equals(headerPathPrefix)) {
-      headersMapBuilder
-          .putAll(
-              AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                  buildTarget, pathResolver, arg.getExportedHeaders()))
-          .putAll(
-              AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                  buildTarget, pathResolver, headerPathPrefix, arg.getHeaders()));
-    }
-
-    return headersMapBuilder.build();
+    return ImmutableSortedMap.<String, SourcePath>naturalOrder()
+        .putAll(
+            AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+                buildTarget, pathResolver, arg.getHeaders()))
+        .putAll(
+            AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+                buildTarget, pathResolver, headerPathPrefix, arg.getHeaders()))
+        .putAll(
+            AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+                buildTarget, pathResolver, arg.getExportedHeaders()))
+        .build();
   }
 
   @VisibleForTesting

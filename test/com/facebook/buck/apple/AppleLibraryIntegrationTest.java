@@ -71,46 +71,6 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithHeaderPathPrefix() throws InterruptedException, IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "apple_library_with_header_path_prefix", tmp);
-    workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
-
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
-    result.assertSuccess();
-
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
-  }
-
-  @Test
-  public void testCanUseAHeaderWithoutPrefix() throws InterruptedException, IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "apple_library_with_header_path_prefix", tmp);
-    workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
-
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Libraries/TestLibrary2:TestLibrary2#static,default");
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("build", target.getFullyQualifiedName());
-    result.assertSuccess();
-
-    assertTrue(Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"))));
-  }
-
-  @Test
   public void testAppleLibraryWithDefaultsInConfigBuildsSomething()
       throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
