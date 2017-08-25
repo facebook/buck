@@ -350,7 +350,8 @@ public class AndroidBinaryDescription
               args.getManifestEntries(),
               javaOptions.getJavaRuntimeLauncher(),
               dxConfig.getDxMaxHeapSize(),
-              args.getIsCacheable());
+              args.getIsCacheable(),
+              args.getAndroidAppModularityResult());
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(
@@ -579,6 +580,8 @@ public class AndroidBinaryDescription
     Optional<SourcePath> getSecondaryDexTailClassesFile();
 
     Set<BuildTarget> getApplicationModuleTargets();
+
+    Optional<SourcePath> getAndroidAppModularityResult();
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 
