@@ -46,7 +46,7 @@ public class TestSelectorOptions {
             + "to include (or exclude) a test.  "
             + "By default, all tests are excluded unless a selector includes them.  "
             + "However, if all selectors are exclusive then the default is to include.  "
-            + "Use the format '@/path/to/file' to load selectors, one per line, from a file.  "
+            + "Use the format ':/path/to/file' to load selectors, one per line, from a file.  "
             + "Examples: 'com.example.MyTest' to run all tests in MyTest; "
             + "'com.example.MyTest#testFoo' or 'MyTest#Foo' to just run the testFoo test; "
             + "'!MyTest#Foo' to run everything except the testFoo test; "
