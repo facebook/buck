@@ -2,9 +2,7 @@
 from collections import namedtuple
 import inspect
 import itertools
-import logging
 import os
-import signal
 import sys
 import threading
 import time
