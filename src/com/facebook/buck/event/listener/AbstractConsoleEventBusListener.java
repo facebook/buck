@@ -357,10 +357,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected void logHttpCacheUploads(ImmutableList.Builder<String> lines) {
     if (firstHttpCacheUploadScheduled.get() != null) {
       boolean isFinished = httpShutdownEvent != null;
-      lines.add(
-          String.format(
-              "[%s] HTTP CACHE UPLOAD...%s%s",
-              isFinished ? "-" : "+", isFinished ? "FINISHED " : "", renderHttpUploads()));
+      String line = String.format("[%s] HTTP CACHE UPLOAD", isFinished ? "-" : "+");
+      line += isFinished ? ": FINISHED " : "... ";
+      line += renderHttpUploads();
+      lines.add(line);
     }
   }
 
@@ -394,12 +394,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     long completedRunTimesMs = getTotalCompletedTimeFromEventPairs(eventPairs);
     long currentlyRunningTime = getWorkingTimeFromLastStartUntilNow(eventPairs, currentMillis);
     boolean stillRunning = currentlyRunningTime >= 0;
-    String parseLine = (stillRunning ? "[+] " : "[-] ") + prefix + "...";
+    String parseLine = (stillRunning ? "[+] " : "[-] ") + prefix;
     long elapsedTimeMs = completedRunTimesMs - offsetMs;
     if (stillRunning) {
+      parseLine += "... ";
       elapsedTimeMs += currentlyRunningTime;
     } else {
-      parseLine += convertToAllCapsIfNeeded("Finished ");
+      parseLine += convertToAllCapsIfNeeded(": finished in ");
       if (progress.isPresent()) {
         progress = Optional.of(1.0);
       }
@@ -409,7 +410,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     parseLine += formatElapsedTime(elapsedTimeMs);
     if (progress.isPresent()) {
-      parseLine += " [" + Math.round(progress.get() * 100) + "%]";
+      parseLine += " (" + Math.round(progress.get() * 100) + "%)";
     }
     if (suffix.isPresent()) {
       parseLine += " " + suffix.get();
@@ -657,7 +658,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       columns.add(
           String.format(
               locale,
-              "%d/%d " + convertToAllCapsIfNeeded("Jobs"),
+              "%d/%d " + convertToAllCapsIfNeeded("jobs"),
               numRulesCompleted.get(),
               ruleCount.get()));
       CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
@@ -665,25 +666,23 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       columns.add(
           String.format(
               locale,
-              "%d " + convertToAllCapsIfNeeded("Updated"),
+              "%d " + convertToAllCapsIfNeeded("updated"),
               cacheRateStats.getUpdatedRulesCount()));
       if (ruleCount.orElse(0) > 0) {
         columns.add(
             String.format(
                 locale,
-                "%d [%.1f%%] " + convertToAllCapsIfNeeded("Cache miss"),
-                cacheRateStats.getCacheMissCount(),
+                "%.1f%% " + convertToAllCapsIfNeeded("cache miss"),
                 cacheRateStats.getCacheMissRate()));
         if (cacheRateStats.getCacheErrorCount() > 0) {
           columns.add(
               String.format(
                   locale,
-                  "%d [%.1f%%] " + convertToAllCapsIfNeeded("Cache errors"),
-                  cacheRateStats.getCacheErrorCount(),
+                  "%.1f%% " + convertToAllCapsIfNeeded("cache errors"),
                   cacheRateStats.getCacheErrorRate()));
         }
       }
-      jobSummary = "(" + Joiner.on(", ").join(columns) + ")";
+      jobSummary = Joiner.on(", ").join(columns);
     }
 
     return Strings.isNullOrEmpty(jobSummary) ? Optional.empty() : Optional.of(jobSummary);
@@ -691,7 +690,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected String getNetworkStatsLine(@Nullable BuildEvent.Finished finishedEvent) {
     String parseLine =
-        (finishedEvent != null ? "[-] " : "[+] ") + convertToAllCapsIfNeeded("Downloading") + "...";
+        finishedEvent != null
+            ? "[-] " + convertToAllCapsIfNeeded("Downloaded")
+            : "[+] " + convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
     if (finishedEvent != null) {
       Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();
@@ -699,25 +700,34 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           SizeUnit.getHumanReadableSize(avgDownloadSpeed.getFirst(), avgDownloadSpeed.getSecond());
       columns.add(
           String.format(
-              locale, "%s/S " + "AVG", SizeUnit.toHumanReadableString(readableSpeed, locale)));
+              locale,
+              "%s/" + convertToAllCapsIfNeeded("sec") + " " + convertToAllCapsIfNeeded("avg"),
+              convertToAllCapsIfNeeded(SizeUnit.toHumanReadableString(readableSpeed, locale))));
     } else {
       Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
       Pair<Double, SizeUnit> readableDownloadSpeed =
           SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
       columns.add(
           String.format(
-              locale, "%s/S", SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
+              locale,
+              "%s/" + convertToAllCapsIfNeeded("sec"),
+              SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
     }
     Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
     Pair<Double, SizeUnit> readableBytesDownloaded =
         SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
     columns.add(
         String.format(
-            locale, "TOTAL: %s", SizeUnit.toHumanReadableString(readableBytesDownloaded, locale)));
+            locale,
+            "%d " + convertToAllCapsIfNeeded("artifacts"),
+            networkStatsKeeper.getDownloadedArtifactDownloaded()));
     columns.add(
         String.format(
-            locale, "%d Artifacts", networkStatsKeeper.getDownloadedArtifactDownloaded()));
-    return parseLine + " " + "(" + Joiner.on(", ").join(columns) + ")";
+            locale,
+            "%s",
+            convertToAllCapsIfNeeded(
+                SizeUnit.toHumanReadableString(readableBytesDownloaded, locale))));
+    return parseLine + " " + Joiner.on(", ").join(columns);
   }
 
   @Subscribe
@@ -857,8 +867,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected String renderHttpUploads() {
     long bytesUploaded = httpArtifactTotalBytesUploaded.longValue();
     String humanReadableBytesUploaded =
-        SizeUnit.toHumanReadableString(
-            SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES), locale);
+        convertToAllCapsIfNeeded(
+            SizeUnit.toHumanReadableString(
+                SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES), locale));
     int scheduled = httpArtifactUploadsScheduledCount.get();
     int complete = httpArtifactUploadedCount.get();
     int failed = httpArtifactUploadFailedCount.get();
