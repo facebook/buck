@@ -17,6 +17,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -268,6 +269,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ArtifactCacheMode cacheMode) {
     for (HttpCacheEntry cacheEntry : artifactCacheEntries.getHttpCacheEntries()) {
       if (!cacheEntry.isWifiUsableForDistributedCache(wifiSsid)) {
+        buckEventBus.post(
+            ConsoleEvent.warning(
+                String.format(
+                    "Remote Buck cache is disabled because the WiFi (%s) is not usable.",
+                    wifiSsid)));
         LOG.warn("HTTP cache is disabled because WiFi is not usable.");
         continue;
       }
