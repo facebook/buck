@@ -510,7 +510,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private void getBuildTimeLine(ImmutableList.Builder<String> lines) {
     if (buildStarted != null & buildFinished != null) {
       long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
-      lines.add("    Total time: " + formatElapsedTime(durationMs));
+      lines.add("  Total time: " + formatElapsedTime(durationMs));
     }
   }
 
@@ -617,7 +617,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     if (useCompressedLine) {
       lineBuilder.delete(0, lineBuilder.length());
-      lineBuilder.append(" |=> ");
+      lineBuilder.append(" - ");
       lineBuilder.append(threadsWithShortStatus);
       if (fullLines == 0) {
         lineBuilder.append(String.format(" %s:", renderer.getExecutorCollectionLabel()));

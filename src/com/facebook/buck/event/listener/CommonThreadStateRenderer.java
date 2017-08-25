@@ -92,7 +92,7 @@ public class CommonThreadStateRenderer {
       Optional<String> placeholderStepInformation,
       long elapsedTimeMs,
       StringBuilder lineBuilder) {
-    lineBuilder.append(" |=> ");
+    lineBuilder.append(" - ");
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
       lineBuilder.append("IDLE");
       return ansi.asSubtleText(lineBuilder.toString());

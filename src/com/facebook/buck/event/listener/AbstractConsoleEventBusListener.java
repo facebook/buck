@@ -357,8 +357,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected void logHttpCacheUploads(ImmutableList.Builder<String> lines) {
     if (firstHttpCacheUploadScheduled.get() != null) {
       boolean isFinished = httpShutdownEvent != null;
-      String line = String.format("[%s] HTTP CACHE UPLOAD", isFinished ? "-" : "+");
-      line += isFinished ? ": FINISHED " : "... ";
+      String line = "HTTP CACHE UPLOAD" + (isFinished ? ": FINISHED " : "... ");
       line += renderHttpUploads();
       lines.add(line);
     }
@@ -394,7 +393,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     long completedRunTimesMs = getTotalCompletedTimeFromEventPairs(eventPairs);
     long currentlyRunningTime = getWorkingTimeFromLastStartUntilNow(eventPairs, currentMillis);
     boolean stillRunning = currentlyRunningTime >= 0;
-    String parseLine = (stillRunning ? "[+] " : "[-] ") + prefix;
+    String parseLine = prefix;
     long elapsedTimeMs = completedRunTimesMs - offsetMs;
     if (stillRunning) {
       parseLine += "... ";
@@ -691,8 +690,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected String getNetworkStatsLine(@Nullable BuildEvent.Finished finishedEvent) {
     String parseLine =
         finishedEvent != null
-            ? "[-] " + convertToAllCapsIfNeeded("Downloaded")
-            : "[+] " + convertToAllCapsIfNeeded("Downloading") + "...";
+            ? convertToAllCapsIfNeeded("Downloaded")
+            : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
     if (finishedEvent != null) {
       Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();

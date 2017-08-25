@@ -90,21 +90,21 @@ public class BuildThreadStateRendererTest {
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  4.4s (running step A[2.7s])",
-                    " |=> //:target1...  3.3s (preparing)",
-                    " |=> //:target3...  2.6s (preparing)",
-                    " |=> //:target4...  1.2s (running step B[0.5s])",
-                    " |=> IDLE"))));
+                    " - //:target2...  4.4s (running step A[2.7s])",
+                    " - //:target1...  3.3s (preparing)",
+                    " - //:target3...  2.6s (preparing)",
+                    " - //:target4...  1.2s (running step B[0.5s])",
+                    " - IDLE"))));
     assertThat(
         renderLines(renderer, false),
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  4.4s (running step A[2.7s])",
-                    " |=> //:target3...  2.6s (preparing)",
-                    " |=> //:target1...  3.3s (preparing)",
-                    " |=> IDLE",
-                    " |=> //:target4...  1.2s (running step B[0.5s])"))));
+                    " - //:target2...  4.4s (running step A[2.7s])",
+                    " - //:target3...  2.6s (preparing)",
+                    " - //:target1...  3.3s (preparing)",
+                    " - IDLE",
+                    " - //:target4...  1.2s (running step B[0.5s])"))));
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
@@ -136,9 +136,9 @@ public class BuildThreadStateRendererTest {
             equalTo(
                 ImmutableList.of(
                     // one missing build rule - no output
-                    " |=> //:target3...  2.6s (preparing)", // missing step information
-                    " |=> //:target4...  1.2s (running step B[0.5s])",
-                    " |=> IDLE")))); // missing accumulated time - show as IDLE
+                    " - //:target3...  2.6s (preparing)", // missing step information
+                    " - //:target4...  1.2s (running step B[0.5s])",
+                    " - IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
         renderShortStatus(renderer, true), is(equalTo(ImmutableList.of("[:]", "[:]", "[ ]"))));
   }
