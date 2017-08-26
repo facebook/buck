@@ -74,10 +74,12 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * Common logic for a {@link com.facebook.buck.rules.Description} that creates Apple target rules.
@@ -126,17 +128,30 @@ public class AppleDescriptions {
       CxxLibraryDescription.CommonArg arg) {
     // The private headers will contain exported headers with the private include style and private
     // headers with both styles.
-    return ImmutableSortedMap.<String, SourcePath>naturalOrder()
-        .putAll(
-            AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                buildTarget, pathResolver, arg.getHeaders()))
-        .putAll(
-            AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                buildTarget, pathResolver, headerPathPrefix, arg.getHeaders()))
-        .putAll(
-            AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                buildTarget, pathResolver, arg.getExportedHeaders()))
-        .build();
+    ImmutableSortedMap.Builder<String, SourcePath> headersMapBuilder =
+        ImmutableSortedMap.<String, SourcePath>naturalOrder()
+            .putAll(
+                Stream.of(
+                        AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+                                buildTarget, pathResolver, arg.getHeaders())
+                            .entrySet()
+                            .stream(),
+                        AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
+                                buildTarget, pathResolver, arg.getExportedHeaders())
+                            .entrySet()
+                            .stream(),
+                        AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+                                buildTarget, pathResolver, headerPathPrefix, arg.getHeaders())
+                            .entrySet()
+                            .stream())
+                    .reduce(Stream::concat)
+                    .orElse(Stream.empty())
+                    .distinct() // allow duplicate entries as long as they map to the same path
+                    .collect(
+                        MoreCollectors.toImmutableSortedMap(
+                            Map.Entry::getKey, Map.Entry::getValue)));
+
+    return headersMapBuilder.build();
   }
 
   @VisibleForTesting
@@ -157,7 +172,7 @@ public class AppleDescriptions {
   }
 
   @VisibleForTesting
-  static ImmutableMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
+  static ImmutableSortedMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
       BuildTarget buildTarget, Function<SourcePath, Path> pathResolver, SourceList headers) {
     if (headers.getUnnamedSources().isPresent()) {
       // The user specified a set of header files. Headers can be included from the same target
@@ -167,7 +182,7 @@ public class AppleDescriptions {
     } else {
       // The user specified a map from include paths to header files. There is nothing we need to
       // add on top of the exported headers.
-      return ImmutableMap.of();
+      return ImmutableSortedMap.of();
     }
   }
 
@@ -219,11 +234,19 @@ public class AppleDescriptions {
     ImmutableSortedMap<String, SourcePath> headerMap =
         ImmutableSortedMap.<String, SourcePath>naturalOrder()
             .putAll(
-                convertAppleHeadersToPublicCxxHeaders(
-                    buildTarget, resolver::getRelativePath, headerPathPrefix, arg))
-            .putAll(
-                convertAppleHeadersToPrivateCxxHeaders(
-                    buildTarget, resolver::getRelativePath, headerPathPrefix, arg))
+                Stream.concat(
+                        convertAppleHeadersToPublicCxxHeaders(
+                                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
+                            .entrySet()
+                            .stream(),
+                        convertAppleHeadersToPrivateCxxHeaders(
+                                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
+                            .entrySet()
+                            .stream())
+                    .distinct() // allow duplicate entries as long as they map to the same path
+                    .collect(
+                        MoreCollectors.toImmutableSortedMap(
+                            Map.Entry::getKey, Map.Entry::getValue)))
             .build();
 
     ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
