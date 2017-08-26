@@ -33,8 +33,3 @@ genrule(
   bash = 'cp $SRCS $OUT',
   cmd_exe = 'copy %SRCS% %OUT%'
 )
-
-cxx_binary(
-    name = 'failing_c_rule',
-    srcs = ['failure.c'],
-)

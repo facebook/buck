@@ -170,7 +170,7 @@ class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
-  private ProcessExecutor.Result executeCompilation(ExecutionContext context)
+  private int executeCompilation(ExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
@@ -200,7 +200,7 @@ class CxxPreprocessAndCompileStep implements Step {
         new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
 
     processResult(result, context);
-    return result;
+    return result.getExitCode();
   }
 
   private void processResult(ProcessExecutor.Result result, ExecutionContext context)
@@ -268,8 +268,7 @@ class CxxPreprocessAndCompileStep implements Step {
       throws IOException, InterruptedException {
     LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
-    ProcessExecutor.Result result = executeCompilation(context);
-    int exitCode = result.getExitCode();
+    int exitCode = executeCompilation(context);
 
     // If the compilation completed successfully and we didn't effect debug-info normalization
     // through #line directive modification, perform the in-place update of the compilation per
@@ -285,7 +284,7 @@ class CxxPreprocessAndCompileStep implements Step {
       LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
     }
 
-    return StepExecutionResult.of(result);
+    return StepExecutionResult.of(exitCode);
   }
 
   ImmutableList<String> getCommand() {
