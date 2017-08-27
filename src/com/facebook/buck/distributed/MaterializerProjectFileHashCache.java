@@ -132,7 +132,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
       if (fileHashEntry.isSetRootSymLink()) {
         materializeSymlink(relPath, fileHashEntry);
-        return;
+        continue;
       }
 
       if (fileHashEntry.isIsDirectory()) {
