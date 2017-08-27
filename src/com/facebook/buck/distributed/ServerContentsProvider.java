@@ -21,6 +21,9 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -28,9 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +56,7 @@ public class ServerContentsProvider implements FileContentsProvider {
   private List<String> hashCodesToFetch;
 
   @GuardedBy("multiFetchLock")
-  private CompletableFuture<Map<String, byte[]>> multiFetchFuture;
+  private SettableFuture<Map<String, byte[]>> multiFetchFuture;
 
   private ScheduledFuture<?> scheduledBufferProcessor;
 
@@ -85,7 +86,7 @@ public class ServerContentsProvider implements FileContentsProvider {
 
     synchronized (multiFetchLock) {
       hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
-      multiFetchFuture = new CompletableFuture<>();
+      multiFetchFuture = SettableFuture.create();
     }
 
     scheduledBufferProcessor =
@@ -118,7 +119,7 @@ public class ServerContentsProvider implements FileContentsProvider {
 
   private int processFileBuffer(boolean onlyIfBufferIsFull) {
     List<String> hashCodes;
-    CompletableFuture<Map<String, byte[]>> resultFuture;
+    SettableFuture<Map<String, byte[]>> resultFuture;
 
     synchronized (multiFetchLock) {
       if (onlyIfBufferIsFull && hashCodesToFetch.size() < multiFetchBufferMaxSize) {
@@ -132,11 +133,11 @@ public class ServerContentsProvider implements FileContentsProvider {
       hashCodes = hashCodesToFetch;
       hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
       resultFuture = multiFetchFuture;
-      multiFetchFuture = new CompletableFuture<>();
+      multiFetchFuture = SettableFuture.create();
     }
 
     try {
-      resultFuture.complete(service.multiFetchSourceFiles(hashCodes));
+      resultFuture.set(service.multiFetchSourceFiles(hashCodes));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -145,15 +146,16 @@ public class ServerContentsProvider implements FileContentsProvider {
   }
 
   @VisibleForTesting
-  Future<byte[]> fetchFileContentsAsync(BuildJobStateFileHashEntry entry) {
+  ListenableFuture<byte[]> fetchFileContentsAsync(BuildJobStateFileHashEntry entry) {
     Preconditions.checkState(
         entry.isSetSha1(), String.format("File hash missing for file [%s]", entry.getPath()));
 
-    Future<byte[]> future;
+    ListenableFuture<byte[]> future;
     synchronized (multiFetchLock) {
       hashCodesToFetch.add(entry.getSha1());
       future =
-          multiFetchFuture.thenApply(
+          Futures.transform(
+              multiFetchFuture,
               resultMap -> Preconditions.checkNotNull(resultMap).get(entry.getSha1()));
     }
 
