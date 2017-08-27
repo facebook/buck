@@ -170,7 +170,7 @@ class CxxPreprocessAndCompileStep implements Step {
         .build();
   }
 
-  private int executeCompilation(ExecutionContext context)
+  private ProcessExecutor.Result executeCompilation(ExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
@@ -199,11 +199,35 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutor.Result result =
         new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
 
+    String err = getSanitizedStderr(result, context);
+    result =
+        new ProcessExecutor.Result(
+            result.getExitCode(), result.isTimedOut(), result.getStdout(), Optional.of(err));
     processResult(result, context);
-    return result.getExitCode();
+    return result;
   }
 
   private void processResult(ProcessExecutor.Result result, ExecutionContext context)
+      throws IOException {
+    // If we generated any error output, print that to the console.
+    String err = result.getStderr().orElse("");
+    if (!err.isEmpty()) {
+      context
+          .getBuckEventBus()
+          .post(
+              createConsoleEvent(
+                  context,
+                  compiler.getFlagsForColorDiagnostics().isPresent(),
+                  result.getExitCode() == 0 ? Level.WARNING : Level.SEVERE,
+                  err));
+    }
+  }
+
+  /**
+   * @return The sanitized version of stderr captured during step execution. Sanitized output does
+   *     not include symlink references and other internal buck details.
+   */
+  private String getSanitizedStderr(ProcessExecutor.Result result, ExecutionContext context)
       throws IOException {
     String stdErr = compiler.getStderr(result).orElse("");
     Stream<String> lines = MoreStrings.lines(stdErr).stream();
@@ -232,18 +256,7 @@ class CxxPreprocessAndCompileStep implements Step {
     } else {
       err = lines.map(cxxErrorTransformer::transformLine).collect(Collectors.joining("\n"));
     }
-
-    // If we generated any error output, print that to the console.
-    if (!err.isEmpty()) {
-      context
-          .getBuckEventBus()
-          .post(
-              createConsoleEvent(
-                  context,
-                  compiler.getFlagsForColorDiagnostics().isPresent(),
-                  result.getExitCode() == 0 ? Level.WARNING : Level.SEVERE,
-                  err));
-    }
+    return err;
   }
 
   private static boolean isShowIncludeLine(String line) {
@@ -268,7 +281,8 @@ class CxxPreprocessAndCompileStep implements Step {
       throws IOException, InterruptedException {
     LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
-    int exitCode = executeCompilation(context);
+    ProcessExecutor.Result result = executeCompilation(context);
+    int exitCode = result.getExitCode();
 
     // If the compilation completed successfully and we didn't effect debug-info normalization
     // through #line directive modification, perform the in-place update of the compilation per
@@ -284,7 +298,7 @@ class CxxPreprocessAndCompileStep implements Step {
       LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
     }
 
-    return StepExecutionResult.of(exitCode);
+    return StepExecutionResult.of(result);
   }
 
   ImmutableList<String> getCommand() {
