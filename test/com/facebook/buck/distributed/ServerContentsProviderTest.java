@@ -23,8 +23,8 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.testutil.FakeExecutor;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
@@ -85,7 +85,7 @@ public class ServerContentsProviderTest {
     ImmutableMap.Builder<String, byte[]> result1 = new ImmutableMap.Builder<>();
     result1.put(HASH1, FILE1.getBytes(StandardCharsets.UTF_8));
     result1.put(HASH2, FILE2.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH1, HASH2)))
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH1, HASH2)))
         .andReturn(result1.build())
         .once();
     statsTracker.recordPeriodicCasMultiFetch(EasyMock.anyLong());
@@ -93,7 +93,7 @@ public class ServerContentsProviderTest {
 
     ImmutableMap.Builder<String, byte[]> result2 = new ImmutableMap.Builder<>();
     result2.put(HASH3, FILE3.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH3)))
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH3)))
         .andReturn(result2.build())
         .once();
     statsTracker.recordPeriodicCasMultiFetch(EasyMock.anyLong());
@@ -132,7 +132,7 @@ public class ServerContentsProviderTest {
     ImmutableMap.Builder<String, byte[]> result1 = new ImmutableMap.Builder<>();
     result1.put(HASH1, FILE1.getBytes(StandardCharsets.UTF_8));
     result1.put(HASH2, FILE2.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH1, HASH2)))
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH1, HASH2)))
         .andReturn(result1.build())
         .once();
     statsTracker.recordFullBufferCasMultiFetch(EasyMock.anyLong());
@@ -142,7 +142,7 @@ public class ServerContentsProviderTest {
     ImmutableMap.Builder<String, byte[]> result2 = new ImmutableMap.Builder<>();
     result2.put(HASH3, FILE3.getBytes(StandardCharsets.UTF_8));
     result2.put(HASH4, FILE4.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH3, HASH4)))
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH3, HASH4)))
         .andReturn(result2.build())
         .once();
     statsTracker.recordFullBufferCasMultiFetch(EasyMock.anyLong());

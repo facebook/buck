@@ -27,10 +27,10 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -53,7 +53,7 @@ public class ServerContentsProvider implements FileContentsProvider {
   private final Object multiFetchLock = new Object();
 
   @GuardedBy("multiFetchLock")
-  private List<String> hashCodesToFetch;
+  private Set<String> hashCodesToFetch;
 
   @GuardedBy("multiFetchLock")
   private SettableFuture<Map<String, byte[]>> multiFetchFuture;
@@ -85,7 +85,7 @@ public class ServerContentsProvider implements FileContentsProvider {
     this.statsTracker = statsTracker;
 
     synchronized (multiFetchLock) {
-      hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
+      hashCodesToFetch = new HashSet<>();
       multiFetchFuture = SettableFuture.create();
     }
 
@@ -118,7 +118,7 @@ public class ServerContentsProvider implements FileContentsProvider {
   }
 
   private int processFileBuffer(boolean onlyIfBufferIsFull) {
-    List<String> hashCodes;
+    Set<String> hashCodes;
     SettableFuture<Map<String, byte[]>> resultFuture;
 
     synchronized (multiFetchLock) {
@@ -131,7 +131,7 @@ public class ServerContentsProvider implements FileContentsProvider {
       }
 
       hashCodes = hashCodesToFetch;
-      hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
+      hashCodesToFetch = new HashSet<>();
       resultFuture = multiFetchFuture;
       multiFetchFuture = SettableFuture.create();
     }

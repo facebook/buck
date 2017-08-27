@@ -66,6 +66,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -356,7 +357,8 @@ public class DistBuildServiceTest {
 
     EasyMock.replay(frontendService);
 
-    ImmutableMap<String, byte[]> result = distBuildService.multiFetchSourceFiles(hashCodes);
+    ImmutableMap<String, byte[]> result =
+        distBuildService.multiFetchSourceFiles(ImmutableSet.copyOf(hashCodes));
     Assert.assertEquals(hashCodes.size(), result.keySet().size());
     for (int i = 0; i < hashCodes.size(); ++i) {
       String hashCode = hashCodes.get(i);
