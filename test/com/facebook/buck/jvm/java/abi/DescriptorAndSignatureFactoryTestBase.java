@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.Classes;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
@@ -36,12 +37,23 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.junit.Rule;
+import org.junit.runners.Parameterized;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public class DescriptorAndSignatureFactoryTestBase {
+  private static final String WITH_DEPS = "With Dependencies";
+
+  private static final String WITHOUT_DEPS = "Without Dependencies";
+
+  @Parameterized.Parameter public String testMode;
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Object[] getParameters() {
+    return new Object[] {WITH_DEPS, WITHOUT_DEPS};
+  }
 
   @Rule public TestCompiler correctClassCompiler = new TestCompiler();
   @Rule public TestCompiler testCompiler = new TestCompiler();
@@ -51,6 +63,7 @@ public class DescriptorAndSignatureFactoryTestBase {
   List<String> errors = new ArrayList<>();
 
   protected void test(TestRunnable r) throws Exception {
+    assumeTrue("Without deps NYI", testMode == WITH_DEPS);
     // Always compile with dependencies, so that we have the correct output to compare to
     generateCorrectClassFiles();
 
@@ -68,9 +81,13 @@ public class DescriptorAndSignatureFactoryTestBase {
 
   private void runTest(TestRunnable r) throws Exception {
     testCompiler.addSourceFile(getSourceFile("Foo.java"));
-    testCompiler.addClasspathSourceFile(getSourceFile("Dependency.java"));
-    testCompiler.addClasspathSourceFile(getSourceFile("DependencyException.java"));
-    testCompiler.addClasspathSourceFile(getSourceFile("DependencyInterface.java"));
+    if (testMode == WITH_DEPS) {
+      testCompiler.addClasspathSourceFile(getSourceFile("Dependency.java"));
+      testCompiler.addClasspathSourceFile(getSourceFile("DependencyException.java"));
+      testCompiler.addClasspathSourceFile(getSourceFile("DependencyInterface.java"));
+    } else {
+      testCompiler.useFrontendOnlyJavacTask();
+    }
 
     testCompiler.setProcessors(
         Collections.singletonList(

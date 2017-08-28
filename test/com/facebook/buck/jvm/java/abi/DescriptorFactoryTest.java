@@ -18,13 +18,13 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-@RunWith(CompilerTreeApiTestRunner.class)
+@RunWith(CompilerTreeApiParameterized.class)
 public class DescriptorFactoryTest extends DescriptorAndSignatureFactoryTestBase {
   @Test
   public void testAllTheThings() throws Exception {
