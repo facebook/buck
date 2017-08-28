@@ -92,10 +92,6 @@ class CommandLineArgs:
         return self.command is None and "--version" in self.buck_options
 
 
-class RestartBuck(Exception):
-    pass
-
-
 class BuckToolException(Exception):
     pass
 
