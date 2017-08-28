@@ -119,6 +119,8 @@ class TreeBackedElements implements Elements {
     if (element instanceof TreeBackedElement) {
       TreeBackedElement treeBackedElement = (TreeBackedElement) element;
       return treeBackedElement.getUnderlyingElement();
+    } else if (element instanceof InferredElement) {
+      throw new IllegalArgumentException("Inferred elements have no javac element");
     }
 
     return element;

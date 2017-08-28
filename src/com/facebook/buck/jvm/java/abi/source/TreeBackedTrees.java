@@ -124,6 +124,10 @@ class TreeBackedTrees extends Trees {
     if (e instanceof TreeBackedElement) {
       return javacTrees.getPath(elements.getJavacElement(e));
     }
+    if (e instanceof InferredElement) {
+      // Inferred elements come from dependencies, and you never have trees for those.
+      return null;
+    }
 
     TreePath result = javacTrees.getPath(e);
     if (result != null) {

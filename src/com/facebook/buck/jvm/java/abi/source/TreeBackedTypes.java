@@ -368,7 +368,7 @@ class TreeBackedTypes implements Types {
   }
 
   private boolean isArtificialElement(Element element) {
-    return element instanceof TreeBackedElement;
+    return element instanceof ArtificialElement;
   }
 
   private boolean isArtificialType(@Nullable TypeMirror typeMirror) {
