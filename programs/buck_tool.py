@@ -157,8 +157,6 @@ class BuckTool(object):
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
         self._tmp_dir = platform_path(buck_project.tmp_dir)
-        self._stdout_file = os.path.join(self._tmp_dir, "stdout")
-        self._stderr_file = os.path.join(self._tmp_dir, "stderr")
         self._fake_buck_version = os.environ.get('BUCK_FAKE_VERSION')
         if self._fake_buck_version:
             logging.info("Using fake buck version: {}".format(self._fake_buck_version))
@@ -319,16 +317,14 @@ class BuckTool(object):
 
                 now = int(round(time.time() * 1000))
                 env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
-                if True:
-                    java = which("java")
-                    if java is None:
-                        raise BuckToolException('Could not find java on $PATH')
-                    with Tracing('buck', args={'command': command}):
-                        buck_exit_code = subprocess.call(command,
-                                                         cwd=self._buck_project.root,
-                                                         env=env,
-                                                         executable=java)
-                return buck_exit_code
+                java = which('java')
+                if java is None:
+                    raise BuckToolException('Could not find java on $PATH')
+                with Tracing('buck', args={'command': command}):
+                    return subprocess.call(command,
+                                           cwd=self._buck_project.root,
+                                           env=env,
+                                           executable=java)
 
 
     def _generate_log_entry(self, message, logs_array):
