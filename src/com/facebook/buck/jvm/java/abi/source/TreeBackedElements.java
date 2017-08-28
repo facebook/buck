@@ -45,7 +45,7 @@ class TreeBackedElements implements Elements {
   private final Elements javacElements;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
   private final Map<Name, TypeElement> knownTypes = new HashMap<>();
-  private final Map<Name, PackageElement> knownPackages = new HashMap<>();
+  private final Map<Name, ArtificialPackageElement> knownPackages = new HashMap<>();
 
   public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
@@ -132,7 +132,7 @@ class TreeBackedElements implements Elements {
    */
   @Override
   @Nullable
-  public PackageElement getPackageElement(CharSequence qualifiedNameString) {
+  public ArtificialPackageElement getPackageElement(CharSequence qualifiedNameString) {
     Name qualifiedName = getName(qualifiedNameString);
 
     if (!knownPackages.containsKey(qualifiedName)) {
@@ -141,9 +141,8 @@ class TreeBackedElements implements Elements {
         // If none of the packages for which we have parse trees matches this fully-qualified name,
         // ask javac. javac will check the classpath, which will pick up built-ins (like java.lang)
         // and any packages from dependency targets that are already compiled and on the classpath.
-        // Because our tree-backed elements and javac's elements are sharing a name table, we
-        // should be able to mix implementations without causing too much trouble.
-        knownPackages.put(qualifiedName, javacElement);
+        // Because we may need to add inferred types to the package, we wrap it up in our own.
+        knownPackages.put(qualifiedName, new TreeBackedPackageElement(javacElement));
       }
     }
 
