@@ -52,7 +52,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
   private static final Pattern UNSOLVED_DEPENDENCY_PATTERN =
       Pattern.compile("^(package|import)\\s*([\\w\\.]*);?\\s*$");
   private static final Pattern SOLVED_DEPENDENCY_PATTERN =
-      Pattern.compile("^\\s*[\\w/]*:[\\w]+\\s*$");
+      Pattern.compile("^\\s*[\\w/-]*:[\\w-]+\\s*$");
 
   @Nullable
   @Override

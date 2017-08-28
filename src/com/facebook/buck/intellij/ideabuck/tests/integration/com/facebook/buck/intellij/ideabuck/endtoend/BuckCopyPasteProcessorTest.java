@@ -46,10 +46,14 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
   public void testPasteMultiLineTargets() {
     doTest(
         "     //foo:test   \n\n   :another\n foo:bar\n",
-        "\"//foo:test\",\n':another',\n\"//foo:bar\",");
+        "\"//foo:test\",\n\":another\",\n\"//foo:bar\",");
   }
 
   public void testPasteMultiWithInvalidTarget() {
     doTest("\n  //first:one\nthisoneisinvalid   \n", "\n  //first:one\nthisoneisinvalid   \n");
+  }
+
+  public void testDashInTargetName() {
+    doTest("//third-party/java/json:json", "\"//third-party/java/json:json\",");
   }
 }

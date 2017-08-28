@@ -22,6 +22,7 @@
   <change-notes><![CDATA[
 <h3>3.2</h3>
 <ul>
+  <li>Properly paste targets containing dashes</li>
   <li>Fixed HTML formatting of these change-notes</li>
 </ul>
 
@@ -164,7 +165,7 @@
         language="Buck"
         implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
     <lang.syntaxHighlighterFactory
-        key="Buck"
+        language="Buck"
         implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighterFactory"/>
     <lang.formatter
         language="Buck"
