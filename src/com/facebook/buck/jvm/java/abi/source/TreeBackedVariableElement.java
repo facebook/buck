@@ -62,7 +62,10 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
   @Override
   public TypeMirror asType() {
     if (type == null) {
-      type = getCanonicalizer().getCanonicalType(underlyingElement.asType());
+      type =
+          getCanonicalizer()
+              .getCanonicalType(
+                  underlyingElement.asType(), getTreePath(), tree == null ? null : tree.getType());
     }
     return type;
   }

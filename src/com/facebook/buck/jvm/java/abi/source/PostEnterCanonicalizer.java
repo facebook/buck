@@ -17,11 +17,15 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
+import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.WildcardTree;
 import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,16 +66,43 @@ class PostEnterCanonicalizer {
     return Preconditions.checkNotNull(elements.getCanonicalElement(element));
   }
 
-  public TypeMirror getCanonicalType(@PropagatesNullable TypeMirror typeMirror) {
+  public List<TypeMirror> getCanonicalTypes(
+      List<? extends TypeMirror> types,
+      @Nullable TreePath parent,
+      @Nullable List<? extends Tree> children) {
+    List<TypeMirror> result = new ArrayList<>();
+    for (int i = 0; i < types.size(); i++) {
+      result.add(
+          getCanonicalType(
+              types.get(i),
+              parent,
+              children == null || children.isEmpty() ? null : children.get(i)));
+    }
+    return result;
+  }
+
+  public TypeMirror getCanonicalType(
+      @PropagatesNullable TypeMirror typeMirror, @Nullable TreePath parent, @Nullable Tree child) {
+    return getCanonicalType(
+        typeMirror, (parent != null && child != null) ? new TreePath(parent, child) : null);
+  }
+
+  public TypeMirror getCanonicalType(
+      @PropagatesNullable TypeMirror typeMirror, @Nullable TreePath treePath) {
     if (typeMirror == null) {
       return null;
     }
 
+    Tree tree = treePath == null ? null : treePath.getLeaf();
     switch (typeMirror.getKind()) {
       case ARRAY:
         {
           ArrayType arrayType = (ArrayType) typeMirror;
-          return types.getArrayType(getCanonicalType(arrayType.getComponentType()));
+          return types.getArrayType(
+              getCanonicalType(
+                  arrayType.getComponentType(),
+                  treePath,
+                  tree == null ? null : ((ArrayTypeTree) tree).getType()));
         }
       case TYPEVAR:
         {
@@ -81,27 +112,41 @@ class PostEnterCanonicalizer {
       case WILDCARD:
         {
           WildcardType wildcardType = (WildcardType) typeMirror;
+          Tree boundTree = tree == null ? null : ((WildcardTree) tree).getBound();
           return types.getWildcardType(
-              getCanonicalType(wildcardType.getExtendsBound()),
-              getCanonicalType(wildcardType.getSuperBound()));
+              getCanonicalType(wildcardType.getExtendsBound(), treePath, boundTree),
+              getCanonicalType(wildcardType.getSuperBound(), treePath, boundTree));
         }
       case DECLARED:
         {
           DeclaredType declaredType = (DeclaredType) typeMirror;
 
+          // It is possible to have a DeclaredType with ErrorTypes for arguments, so we must
+          // compute the TreePaths while canonicalizing type arguments
+          List<? extends TypeMirror> underlyingTypeArgs = declaredType.getTypeArguments();
+          TypeMirror[] canonicalTypeArgs;
+          if (underlyingTypeArgs.isEmpty()) {
+            canonicalTypeArgs = new TypeMirror[0];
+          } else {
+            canonicalTypeArgs =
+                getCanonicalTypes(
+                        underlyingTypeArgs,
+                        treePath,
+                        tree == null ? null : ((ParameterizedTypeTree) tree).getTypeArguments())
+                    .stream()
+                    .toArray(TypeMirror[]::new);
+          }
+
+          // On the other hand, it is not possible to have a DeclaredType with an enclosing
+          // ErrorType -- the only way we get a DeclaredType in the first place is if the compiler
+          // can resolve everything it needs to.
           TypeMirror enclosingType = declaredType.getEnclosingType();
           DeclaredType canonicalEnclosingType =
               enclosingType.getKind() != TypeKind.NONE
-                  ? (DeclaredType) getCanonicalType(enclosingType)
+                  ? (DeclaredType) getCanonicalType(enclosingType, null)
                   : null;
           TypeElement canonicalElement =
               (TypeElement) elements.getCanonicalElement(declaredType.asElement());
-          TypeMirror[] canonicalTypeArgs =
-              declaredType
-                  .getTypeArguments()
-                  .stream()
-                  .map(this::getCanonicalType)
-                  .toArray(TypeMirror[]::new);
 
           return types.getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
         }
@@ -139,7 +184,7 @@ class PostEnterCanonicalizer {
         new SimpleAnnotationValueVisitor8<Object, Void>() {
           @Override
           public Object visitType(TypeMirror t, Void aVoid) {
-            return getCanonicalType(t);
+            return getCanonicalType(t, valueTreePath);
           }
 
           @Override

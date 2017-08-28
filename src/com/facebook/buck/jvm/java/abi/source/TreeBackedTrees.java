@@ -160,7 +160,7 @@ class TreeBackedTrees extends Trees {
     Tree leaf = path.getLeaf();
     TypeMirror result = canonicalTypes.get(leaf);
     if (result == null) {
-      result = canonicalizer.getCanonicalType(javacTrees.getTypeMirror(path));
+      result = canonicalizer.getCanonicalType(javacTrees.getTypeMirror(path), path);
       canonicalTypes.put(leaf, result);
     }
 
