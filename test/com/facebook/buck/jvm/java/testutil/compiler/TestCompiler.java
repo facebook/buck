@@ -96,6 +96,10 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       throw new AssertionError("Can't add contents after creating the task");
     }
 
+    getClasspathCompiler().addSourceFileContents(fileName, lines);
+  }
+
+  private TestCompiler getClasspathCompiler() {
     if (classpathCompiler == null) {
       classpathCompiler = new TestCompiler();
       try {
@@ -103,9 +107,18 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       } catch (Throwable throwable) {
         throw new AssertionError(throwable);
       }
+      classpath.add(classpathCompiler.getOutputDir());
     }
-    classpathCompiler.addSourceFileContents(fileName, lines);
-    classpath.add(classpathCompiler.getOutputDir());
+
+    return classpathCompiler;
+  }
+
+  public void addClasspathSourceFile(Path file) throws IOException {
+    if (javacTask != null) {
+      throw new AssertionError("Can't add contents after creating the task");
+    }
+
+    getClasspathCompiler().addSourceFile(file);
   }
 
   public void addClasspath(Collection<Path> paths) {

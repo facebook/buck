@@ -59,12 +59,18 @@ public class DescriptorAndSignatureFactoryTestBase {
 
   private void generateCorrectClassFiles() throws IOException {
     correctClassCompiler.addSourceFile(getSourceFile("Foo.java"));
+    correctClassCompiler.addClasspathSourceFile(getSourceFile("Dependency.java"));
+    correctClassCompiler.addClasspathSourceFile(getSourceFile("DependencyException.java"));
+    correctClassCompiler.addClasspathSourceFile(getSourceFile("DependencyInterface.java"));
     correctClassCompiler.compile();
     correctClasses = correctClassCompiler.getClasses();
   }
 
   private void runTest(TestRunnable r) throws Exception {
     testCompiler.addSourceFile(getSourceFile("Foo.java"));
+    testCompiler.addClasspathSourceFile(getSourceFile("Dependency.java"));
+    testCompiler.addClasspathSourceFile(getSourceFile("DependencyException.java"));
+    testCompiler.addClasspathSourceFile(getSourceFile("DependencyInterface.java"));
 
     testCompiler.setProcessors(
         Collections.singletonList(
