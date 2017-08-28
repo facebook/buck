@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.Tree;
@@ -26,9 +28,16 @@ import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 /**
@@ -45,12 +54,79 @@ class PostEnterCanonicalizer {
     this.types = types;
   }
 
+  public Element getCanonicalElement(@PropagatesNullable Element element) {
+    return elements.getCanonicalElement(element);
+  }
+
   public ExecutableElement getCanonicalElement(ExecutableElement element) {
     return Preconditions.checkNotNull(elements.getCanonicalElement(element));
   }
 
-  /* package */ TypeMirror getCanonicalType(TypeMirror javacType) {
-    return Preconditions.checkNotNull(types.getCanonicalType(javacType));
+  public TypeMirror getCanonicalType(@PropagatesNullable TypeMirror typeMirror) {
+    if (typeMirror == null) {
+      return null;
+    }
+
+    switch (typeMirror.getKind()) {
+      case ARRAY:
+        {
+          ArrayType arrayType = (ArrayType) typeMirror;
+          return types.getArrayType(getCanonicalType(arrayType.getComponentType()));
+        }
+      case TYPEVAR:
+        {
+          TypeVariable typeVar = (TypeVariable) typeMirror;
+          return elements.getCanonicalElement(typeVar.asElement()).asType();
+        }
+      case WILDCARD:
+        {
+          WildcardType wildcardType = (WildcardType) typeMirror;
+          return types.getWildcardType(
+              getCanonicalType(wildcardType.getExtendsBound()),
+              getCanonicalType(wildcardType.getSuperBound()));
+        }
+      case DECLARED:
+        {
+          DeclaredType declaredType = (DeclaredType) typeMirror;
+
+          TypeMirror enclosingType = declaredType.getEnclosingType();
+          DeclaredType canonicalEnclosingType =
+              enclosingType.getKind() != TypeKind.NONE
+                  ? (DeclaredType) getCanonicalType(enclosingType)
+                  : null;
+          TypeElement canonicalElement =
+              (TypeElement) elements.getCanonicalElement(declaredType.asElement());
+          TypeMirror[] canonicalTypeArgs =
+              declaredType
+                  .getTypeArguments()
+                  .stream()
+                  .map(this::getCanonicalType)
+                  .toArray(TypeMirror[]::new);
+
+          return types.getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
+        }
+      case PACKAGE:
+      case ERROR:
+        throw new SourceCodeWillNotCompileException();
+      case BOOLEAN:
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+      case CHAR:
+      case FLOAT:
+      case DOUBLE:
+      case VOID:
+      case NONE:
+      case NULL:
+        return typeMirror;
+      case EXECUTABLE:
+      case OTHER:
+      case UNION:
+      case INTERSECTION:
+      default:
+        throw new UnsupportedOperationException();
+    }
   }
 
   /**

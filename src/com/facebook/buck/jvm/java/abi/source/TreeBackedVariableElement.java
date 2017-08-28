@@ -68,6 +68,7 @@ class TreeBackedVariableElement extends TreeBackedElement implements ArtificialV
   }
 
   @Override
+  @Nullable
   public Object getConstantValue() {
     return underlyingElement.getConstantValue();
   }

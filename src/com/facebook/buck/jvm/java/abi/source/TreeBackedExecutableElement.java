@@ -107,6 +107,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   }
 
   @Override
+  @Nullable
   public TypeMirror getReceiverType() {
     if (receiverType == null) {
       TypeMirror underlyingReceiverType = underlyingElement.getReceiverType();

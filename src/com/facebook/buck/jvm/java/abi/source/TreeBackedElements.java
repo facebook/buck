@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -97,8 +98,7 @@ class TreeBackedElements implements Elements {
    * Given a javac Element, gets the element that should be used by callers to refer to it. For
    * elements that have ASTs, that will be a TreeBackedElement; otherwise the javac Element itself.
    */
-  @Nullable
-  /* package */ Element getCanonicalElement(@Nullable Element element) {
+  /* package */ Element getCanonicalElement(@PropagatesNullable Element element) {
     Element result = treeBackedElements.get(element);
     if (result == null) {
       result = element;

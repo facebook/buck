@@ -47,20 +47,17 @@ import javax.tools.JavaCompiler;
  * An implementation of {@link Trees} that uses our tree-backed elements and types when available.
  */
 class TreeBackedTrees extends Trees {
-  private final TreeBackedElements elements;
-  private final TreeBackedTypes types;
   private final Trees javacTrees;
+  private final PostEnterCanonicalizer canonicalizer;
   private final Map<Tree, TypeMirror> canonicalTypes = new HashMap<>();
 
   public static TreeBackedTrees instance(JavaCompiler.CompilationTask task) {
     return ((FrontendOnlyJavacTask) task).getTrees();
   }
 
-  /* package */ TreeBackedTrees(
-      Trees javacTrees, TreeBackedElements elements, TreeBackedTypes types) {
+  /* package */ TreeBackedTrees(Trees javacTrees, PostEnterCanonicalizer canonicalizer) {
     this.javacTrees = javacTrees;
-    this.elements = elements;
-    this.types = types;
+    this.canonicalizer = canonicalizer;
   }
 
   /* package */ Trees getJavacTrees() {
@@ -122,7 +119,7 @@ class TreeBackedTrees extends Trees {
   @Nullable
   public TreePath getPath(Element e) {
     if (e instanceof TreeBackedElement) {
-      return javacTrees.getPath(elements.getJavacElement(e));
+      return javacTrees.getPath(((TreeBackedElement) e).getUnderlyingElement());
     }
     if (e instanceof InferredElement) {
       // Inferred elements come from dependencies, and you never have trees for those.
@@ -154,7 +151,7 @@ class TreeBackedTrees extends Trees {
   @Override
   @Nullable
   public Element getElement(TreePath path) {
-    return elements.getCanonicalElement(javacTrees.getElement(path));
+    return canonicalizer.getCanonicalElement(javacTrees.getElement(path));
   }
 
   @Override
@@ -163,7 +160,7 @@ class TreeBackedTrees extends Trees {
     Tree leaf = path.getLeaf();
     TypeMirror result = canonicalTypes.get(leaf);
     if (result == null) {
-      result = types.getCanonicalType(javacTrees.getTypeMirror(path));
+      result = canonicalizer.getCanonicalType(javacTrees.getTypeMirror(path));
       canonicalTypes.put(leaf, result);
     }
 
