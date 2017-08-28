@@ -308,13 +308,6 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
   }
 
   @Test
-  public void testIgnoresPrivateTypes() throws IOException {
-    findTypeReferences("class Foo {", "  private class Bar {", "    public String s;", "  }", "}");
-
-    assertThat(typeReferences, Matchers.empty());
-  }
-
-  @Test
   public void testFindsReferencesInConstants() throws IOException {
     findTypeReferences(
         "class Foo {",
