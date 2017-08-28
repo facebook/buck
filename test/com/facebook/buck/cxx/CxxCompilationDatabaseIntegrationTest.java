@@ -156,14 +156,14 @@ public class CxxCompilationDatabaseIntegrationTest {
         path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
+            .add("-x")
+            .add("c++")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .add("-I")
             .add(headerSymlinkTreePath(libraryExportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
-            .add("-x")
-            .add("c++")
             .addAll(
                 prefixMap
                     .entrySet()
@@ -238,6 +238,8 @@ public class CxxCompilationDatabaseIntegrationTest {
         path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
+            .add("-x")
+            .add("c++")
             .add("-fPIC")
             .add("-fPIC")
             .add("-I")
@@ -246,8 +248,6 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add(headerSymlinkTreePath(exportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
-            .add("-x")
-            .add("c++")
             .addAll(
                 prefixMap
                     .entrySet()
@@ -299,12 +299,12 @@ public class CxxCompilationDatabaseIntegrationTest {
         path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
+            .add("-x")
+            .add("c++")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
-            .add("-x")
-            .add("c++")
             .addAll(
                 sandboxSources && Platform.detect() == Platform.MACOS
                     ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")
@@ -357,12 +357,12 @@ public class CxxCompilationDatabaseIntegrationTest {
         path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
+            .add("-x")
+            .add("c++")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
-            .add("-x")
-            .add("c++")
             .addAll(
                 sandboxSources && Platform.detect() == Platform.MACOS
                     ? ImmutableList.of("-fdebug-prefix-map=buck-out/gen/test#default,sandbox/=")

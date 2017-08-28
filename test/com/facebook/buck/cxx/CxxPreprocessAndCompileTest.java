@@ -395,9 +395,9 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> expectedCompileCommand =
         ImmutableList.<String>builder()
             .add("compiler")
+            .add("-x", "c++")
             .add("-ffunction-sections")
             .add("-O3")
-            .add("-x", "c++")
             .add("-c")
             .add(input.toString())
             .add("-o", output.toString())

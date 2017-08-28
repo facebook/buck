@@ -150,13 +150,13 @@ class CxxPreprocessAndCompileStep implements Step {
             ? inputType.getPrecompiledHeaderLanguage().get()
             : inputType.getLanguage();
     return ImmutableList.<String>builder()
-        .addAll(command.getArguments())
         .addAll(
             (allowColorsInDiagnostics
                     ? compiler.getFlagsForColorDiagnostics()
                     : Optional.<ImmutableList<String>>empty())
                 .orElseGet(ImmutableList::of))
         .addAll(compiler.languageArgs(inputLanguage))
+        .addAll(command.getArguments())
         .addAll(
             sanitizer.getCompilationFlags(
                 compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
