@@ -2234,6 +2234,119 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   @Test
+  public void testProjectGenerationAndBuildWithProgress() throws IOException {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
+    SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
+
+    Path storagePath = getStorageForTest();
+    Map<String, Object> storageContents =
+        ImmutableSortedMap.<String, Object>naturalOrder()
+            .put(
+                "project arg1 arg2",
+                ImmutableSortedMap.<String, Number>naturalOrder()
+                    .put(ProgressEstimator.EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES, 10)
+                    .build())
+            .build();
+    String contents = ObjectMappers.WRITER.writeValueAsString(storageContents);
+    Files.createDirectories(storagePath.getParent());
+    Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
+
+    ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
+    listener.setProgressEstimator(e);
+
+    eventBus.post(CommandEvent.started("project", ImmutableList.of("arg1", "arg2"), false, 23L));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.started(), 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(listener, 0L, ImmutableList.of("Generating project... 0.0 sec"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.processed(), 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ProjectGenerationEvent.processed(), 100L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(listener, 100L, ImmutableList.of("Generating project... 0.1 sec (20%)"));
+
+    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
+
+    // no need to validate the output for parsing and action graph, since they're tested elsewhere
+    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(parseStarted, 400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ParseEvent.finished(parseStarted, 10, Optional.empty()),
+            600L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            actionGraphStarted, 600L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ActionGraphEvent.finished(actionGraphStarted),
+            700L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
+    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            buildEventStarted, 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(
+        listener,
+        943L,
+        ImmutableList.of(
+            "Parsing buck files: finished in 0.2 sec",
+            "Creating action graph: finished in 0.1 sec",
+            "Generating project... 0.9 sec (20%)",
+            "Downloading... 0.00 bytes/sec, 0 artifacts, 0.00 bytes",
+            "Building... 0.1 sec"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildEvent.finished(buildEventStarted, 0),
+            1000L,
+            TimeUnit.MILLISECONDS, /* threadId */
+            0L));
+
+    validateConsole(
+        listener,
+        1000L,
+        ImmutableList.of(
+            "Parsing buck files: finished in 0.2 sec",
+            "Creating action graph: finished in 0.1 sec",
+            "Generating project... 1.0 sec (20%)",
+            "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes",
+            "Building: finished in 0.2 sec"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new ProjectGenerationEvent.Finished(), 1200L, TimeUnit.MILLISECONDS, 0L));
+
+    validateConsole(
+        listener,
+        0L,
+        ImmutableList.of(
+            "Parsing buck files: finished in 0.2 sec",
+            "Creating action graph: finished in 0.1 sec",
+            "Generating project: finished in 1.2 sec (100%)",
+            "Downloaded 0.00 bytes/sec avg, 0 artifacts, 0.00 bytes",
+            "Building: finished in 0.2 sec",
+            "  Total time: 1.2 sec"));
+  }
+
+  @Test
   public void testPostingEventBeforeAnyLines() {
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);

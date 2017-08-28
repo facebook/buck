@@ -442,7 +442,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
     getBuildTraceURLLine(lines);
-    getBuildTimeLine(lines);
+    getTotalTimeLine(lines);
     showTopSlowBuildRules(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
@@ -508,10 +508,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
-  private void getBuildTimeLine(ImmutableList.Builder<String> lines) {
-    if (buildStarted != null & buildFinished != null) {
-      long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
-      lines.add("  Total time: " + formatElapsedTime(durationMs));
+  private void getTotalTimeLine(ImmutableList.Builder<String> lines) {
+    if (projectGenerationStarted == null) {
+      // project generation never started
+      // we only output total time if build started and finished
+      if (buildStarted != null && buildFinished != null) {
+        long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
+        lines.add("  Total time: " + formatElapsedTime(durationMs));
+      }
+    } else {
+      // project generation started, it may or may not contain a build
+      // we wait for generation to finish to output time
+      if (projectGenerationFinished != null) {
+        long durationMs =
+            projectGenerationFinished.getTimestamp() - projectGenerationStarted.getTimestamp();
+        lines.add("  Total time: " + formatElapsedTime(durationMs));
+      }
     }
   }
 
