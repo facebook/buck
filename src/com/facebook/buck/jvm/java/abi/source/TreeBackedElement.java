@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
   private final Element underlyingElement;
   @Nullable private final TreeBackedElement enclosingElement;
   private final List<Element> enclosedElements = new ArrayList<>();
-  private final PostEnterCanonicalizer canonicalizer;
+  @Nullable private final PostEnterCanonicalizer canonicalizer;
 
   @Nullable private final TreePath treePath;
 
@@ -46,7 +47,7 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
       Element underlyingElement,
       @Nullable TreeBackedElement enclosingElement,
       @Nullable TreePath treePath,
-      PostEnterCanonicalizer canonicalizer) {
+      @Nullable PostEnterCanonicalizer canonicalizer) {
     this.underlyingElement = underlyingElement;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
@@ -60,7 +61,7 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
   }
 
   protected final PostEnterCanonicalizer getCanonicalizer() {
-    return canonicalizer;
+    return Preconditions.checkNotNull(canonicalizer);
   }
 
   @Nullable

@@ -237,7 +237,7 @@ class TreeBackedEnter {
     }
 
     private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
-      return new TreeBackedPackageElement(underlyingPackage, canonicalizer);
+      return new TreeBackedPackageElement(underlyingPackage);
     }
 
     private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {
