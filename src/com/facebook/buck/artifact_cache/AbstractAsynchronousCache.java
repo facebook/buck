@@ -38,11 +38,13 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private static final Logger LOG = Logger.get(AbstractAsynchronousCache.class);
+  private static final int MAX_CONSECUTIVE_MULTI_FETCH_ERRORS = 3;
   private final String name;
   private final CacheReadMode cacheReadMode;
 
@@ -58,6 +60,11 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private final ArtifactCacheMode mode;
 
   private final BlockingQueue<FetchRequest> pendingFetchRequests = new LinkedBlockingQueue<>();
+
+  // TODO(cjhopman): Remove this error-based disabling of multiFetch, it's only here to make rollout
+  // less disruptive.
+  private volatile boolean enableMultiFetch = true;
+  private final AtomicInteger consecutiveMultiFetchErrorCount = new AtomicInteger();
 
   public AbstractAsynchronousCache(
       String name,
@@ -109,6 +116,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
   private void doMultiFetch(ImmutableList<ClaimedFetchRequest> requests) {
     requests.forEach(r -> r.getEvents().multiFetchStarted());
+    boolean gotNonError = false;
     try {
       MultiFetchResult result =
           multiFetchImpl(
@@ -136,6 +144,12 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
           thisRequest.setResult(thisResult.getCacheResult());
         }
       }
+      gotNonError =
+          result
+              .getResults()
+              .stream()
+              .anyMatch(
+                  fetchResult -> fetchResult.getCacheResult().getType() != CacheResultType.ERROR);
     } catch (IOException e) {
       ImmutableList<RuleKey> keys =
           requests
@@ -154,6 +168,16 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             r.getEvents().multiFetchFailed(e, msg, result);
             r.setResult(result);
           });
+    } finally {
+      if (gotNonError) {
+        consecutiveMultiFetchErrorCount.set(0);
+      } else {
+        if (consecutiveMultiFetchErrorCount.incrementAndGet()
+            == MAX_CONSECUTIVE_MULTI_FETCH_ERRORS) {
+          LOG.error("Too many MultiFetch errors, falling back to Fetch only.");
+          enableMultiFetch = false;
+        }
+      }
     }
   }
 
@@ -176,7 +200,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
   private void processFetch() {
     try {
-      int multiFetchLimit = getMultiFetchBatchSize(pendingFetchRequests.size());
+      int multiFetchLimit =
+          enableMultiFetch ? getMultiFetchBatchSize(pendingFetchRequests.size()) : 0;
       if (multiFetchLimit > 0) {
         ImmutableList.Builder<ClaimedFetchRequest> requestsBuilder = ImmutableList.builder();
         try {
