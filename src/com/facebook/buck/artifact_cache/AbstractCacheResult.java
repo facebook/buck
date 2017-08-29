@@ -56,6 +56,15 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty());
+  public static final CacheResult SKIPPED_RESULT =
+      CacheResult.of(
+          CacheResultType.SKIPPED,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.of(ImmutableMap.of()),
+          Optional.empty(),
+          Optional.empty());
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -143,17 +152,6 @@ abstract class AbstractCacheResult {
         Optional.empty());
   }
 
-  public static CacheResult skipped(String cacheSource, ArtifactCacheMode cacheMode) {
-    return CacheResult.of(
-        CacheResultType.SKIPPED,
-        Optional.of(cacheSource),
-        Optional.of(cacheMode),
-        Optional.empty(),
-        Optional.of(ImmutableMap.of()),
-        Optional.empty(),
-        Optional.empty());
-  }
-
   public static CacheResult error(
       String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
     return CacheResult.of(
@@ -164,6 +162,10 @@ abstract class AbstractCacheResult {
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
+  }
+
+  public static CacheResult skipped() {
+    return SKIPPED_RESULT;
   }
 
   public static CacheResult miss() {

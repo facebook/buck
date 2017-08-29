@@ -16,10 +16,16 @@
 
 package com.facebook.buck.artifact_cache;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import com.facebook.buck.artifact_cache.thrift.ArtifactMetadata;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
+import com.facebook.buck.artifact_cache.thrift.FetchResult;
+import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
@@ -30,20 +36,27 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
+import java.util.Arrays;
 import javax.annotation.Nullable;
+import okhttp3.Request;
 import org.apache.thrift.TBase;
+import org.easymock.Capture;
 import org.easymock.EasyMock;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -126,7 +139,7 @@ public class ThriftArtifactCacheTest {
               cache.fetchAsync(
                   new com.facebook.buck.rules.RuleKey(HashCode.fromInt(42)),
                   LazyPath.ofInstance(artifactPath)));
-      Assert.assertEquals(CacheResultType.ERROR, result.getType());
+      assertEquals(CacheResultType.ERROR, result.getType());
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -157,18 +170,25 @@ public class ThriftArtifactCacheTest {
   private static class InMemoryThriftResponse implements HttpResponse {
     private byte[] response;
 
-    public InMemoryThriftResponse(TBase<?, ?> payload) {
+    public InMemoryThriftResponse(TBase<?, ?> thrift, byte[]... payloads) {
       byte[] serializedThrift = null;
       try {
-        serializedThrift = ThriftUtil.serialize(ThriftArtifactCache.PROTOCOL, payload);
+        serializedThrift = ThriftUtil.serialize(ThriftArtifactCache.PROTOCOL, thrift);
       } catch (ThriftException e) {
         throw new RuntimeException(e);
       }
 
-      ByteBuffer buffer = ByteBuffer.allocate(4 + serializedThrift.length);
+      ByteBuffer buffer =
+          ByteBuffer.allocate(
+              4
+                  + serializedThrift.length
+                  + Arrays.stream(payloads).mapToInt(p -> p.length).reduce(0, (l, r) -> l + r));
       buffer.order(ByteOrder.BIG_ENDIAN);
       buffer.putInt(serializedThrift.length);
       buffer.put(serializedThrift);
+      for (byte[] payload : payloads) {
+        buffer.put(payload);
+      }
       response = buffer.array();
     }
 
@@ -199,5 +219,141 @@ public class ThriftArtifactCacheTest {
 
     @Override
     public void close() throws IOException {}
+  }
+
+  @Test
+  public void testMultiFetch() throws InterruptedException, IOException {
+    HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
+    HttpService fetchClient = EasyMock.createMock(HttpService.class);
+    BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    ProjectFilesystem filesystem = new ProjectFilesystem(tempPaths.getRoot());
+    ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    NetworkCacheArgs networkArgs =
+        NetworkCacheArgs.builder()
+            .setCacheName("default_cache_name")
+            .setRepository("default_repository")
+            .setCacheReadMode(CacheReadMode.READONLY)
+            .setCacheMode(ArtifactCacheMode.thrift_over_http)
+            .setScheduleType("default_schedule_type")
+            .setProjectFilesystem(filesystem)
+            .setFetchClient(fetchClient)
+            .setStoreClient(storeClient)
+            .setBuckEventBus(eventBus)
+            .setHttpWriteExecutorService(service)
+            .setHttpFetchExecutorService(service)
+            .setErrorTextTemplate("my super error msg")
+            .setDistributedBuildModeEnabled(false)
+            .setThriftEndpointPath("/nice_as_well")
+            .build();
+
+    // 0 -> Miss, 1 -> Hit, 2 -> Skip, 3 -> Hit.
+    Path output0 = filesystem.getPath("output0");
+    Path output1 = filesystem.getPath("output1");
+    Path output2 = filesystem.getPath("output2");
+    Path output3 = filesystem.getPath("output3");
+
+    SettableFuture<CacheResult> future = SettableFuture.create();
+    AbstractAsynchronousCache.FetchEvents events =
+        new AbstractAsynchronousCache.FetchEvents() {
+          @Override
+          public void started() {}
+
+          @Override
+          public void finished(com.facebook.buck.artifact_cache.FetchResult result) {}
+
+          @Override
+          public void failed(IOException e, String errorMessage, CacheResult result) {}
+
+          @Override
+          public void multiFetchStarted() {}
+
+          @Override
+          public void multiFetchSkipped() {}
+
+          @Override
+          public void multiFetchFinished(com.facebook.buck.artifact_cache.FetchResult thisResult) {}
+
+          @Override
+          public void multiFetchFailed(IOException e, String msg, CacheResult result) {}
+        };
+
+    com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));
+    com.facebook.buck.rules.RuleKey key1 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(1));
+    com.facebook.buck.rules.RuleKey key2 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(2));
+    com.facebook.buck.rules.RuleKey key3 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(3));
+    ImmutableList<AbstractAsynchronousCache.FetchRequest> requests =
+        ImmutableList.of(
+            new AbstractAsynchronousCache.FetchRequest(
+                key0, LazyPath.ofInstance(output0), events, future),
+            new AbstractAsynchronousCache.FetchRequest(
+                key1, LazyPath.ofInstance(output1), events, future),
+            new AbstractAsynchronousCache.FetchRequest(
+                key2, LazyPath.ofInstance(output2), events, future),
+            new AbstractAsynchronousCache.FetchRequest(
+                key3, LazyPath.ofInstance(output3), events, future));
+
+    String payload1 = "payload1";
+    String payload3 = "bigger payload3";
+    byte[] payloadBytes1 = payload1.getBytes(Charsets.UTF_8);
+    byte[] payloadBytes3 = payload3.getBytes(Charsets.UTF_8);
+
+    ArtifactMetadata metadata1 = new ArtifactMetadata();
+    metadata1.addToRuleKeys(new RuleKey().setHashString(key1.getHashCode().toString()));
+    metadata1.setArtifactPayloadMd5(Hashing.md5().hashBytes(payloadBytes1).toString());
+    metadata1.setMetadata(ImmutableMap.of());
+    ArtifactMetadata metadata3 = new ArtifactMetadata();
+    metadata3.addToRuleKeys(new RuleKey().setHashString(key3.getHashCode().toString()));
+    metadata3.setArtifactPayloadMd5(Hashing.md5().hashBytes(payloadBytes3).toString());
+    metadata3.setMetadata(ImmutableMap.of());
+
+    BuckCacheMultiFetchResponse multiFetchResponse = new BuckCacheMultiFetchResponse();
+    FetchResult result0 = new FetchResult().setResultType(FetchResultType.MISS);
+    FetchResult result1 =
+        new FetchResult().setResultType(FetchResultType.HIT).setMetadata(metadata1);
+    FetchResult result2 = new FetchResult().setResultType(FetchResultType.SKIPPED);
+    FetchResult result3 =
+        new FetchResult().setResultType(FetchResultType.HIT).setMetadata(metadata3);
+
+    multiFetchResponse.addToResults(result0);
+    multiFetchResponse.addToResults(result1);
+    multiFetchResponse.addToResults(result2);
+    multiFetchResponse.addToResults(result3);
+
+    PayloadInfo payloadInfo1 = new PayloadInfo().setSizeBytes(payloadBytes1.length);
+    PayloadInfo payloadInfo3 = new PayloadInfo().setSizeBytes(payloadBytes3.length);
+
+    BuckCacheResponse response =
+        new BuckCacheResponse()
+            .setWasSuccessful(true)
+            .setType(BuckCacheRequestType.MULTI_FETCH)
+            .setMultiFetchResponse(multiFetchResponse)
+            .setPayloads(ImmutableList.of(payloadInfo1, payloadInfo3));
+
+    Capture<Request.Builder> requestCapture = EasyMock.newCapture();
+    EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.capture(requestCapture)))
+        .andReturn(new InMemoryThriftResponse(response, payloadBytes1, payloadBytes3))
+        .once();
+    fetchClient.close();
+    EasyMock.expectLastCall().once();
+    EasyMock.replay(fetchClient);
+
+    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs)) {
+      MultiFetchResult result = cache.multiFetchImpl(requests);
+      assertEquals(4, result.getResults().size());
+      assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());
+      assertEquals(
+          String.format("%s", result.getResults().get(1)),
+          CacheResultType.HIT,
+          result.getResults().get(1).getCacheResult().getType());
+      assertEquals(CacheResultType.SKIPPED, result.getResults().get(2).getCacheResult().getType());
+      assertEquals(CacheResultType.HIT, result.getResults().get(3).getCacheResult().getType());
+
+      assertFalse(filesystem.exists(output0));
+      assertEquals(payload1, filesystem.readFileIfItExists(output1).get());
+      assertFalse(filesystem.exists(output2));
+      assertEquals(payload3, filesystem.readFileIfItExists(output3).get());
+    }
+
+    EasyMock.verify(fetchClient);
   }
 }

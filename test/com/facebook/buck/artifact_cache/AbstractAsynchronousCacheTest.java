@@ -171,9 +171,7 @@ public class AbstractAsynchronousCacheTest {
     }
 
     private FetchResult skip() {
-      return FetchResult.builder()
-          .setCacheResult(CacheResult.skipped(getName(), getMode()))
-          .build();
+      return FetchResult.builder().setCacheResult(CacheResult.skipped()).build();
     }
 
     @Override

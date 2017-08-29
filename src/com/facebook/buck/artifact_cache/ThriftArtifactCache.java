@@ -18,10 +18,13 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.thrift.ArtifactMetadata;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchRequest;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequest;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheRequestType;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheStoreRequest;
+import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.log.Logger;
@@ -29,6 +32,9 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,8 +58,7 @@ import okio.BufferedSink;
  * is Thrift. To learn a bit more about the protocol please look at ThriftArtifactCacheProtocol.
  */
 public class ThriftArtifactCache extends AbstractNetworkCache {
-
-  private static final Logger LOG = Logger.get(ThriftArtifactCache.class);
+  static final Logger LOG = Logger.get(ThriftArtifactCache.class);
 
   public static final MediaType HYBRID_THRIFT_STREAM_CONTENT_TYPE =
       MediaType.parse("application/x-hybrid-thrift-binary");
@@ -220,6 +225,261 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     }
   }
 
+  @Override
+  protected MultiFetchResult multiFetchImpl(Iterable<FetchRequest> requests) throws IOException {
+    ImmutableList<RuleKey> keys =
+        RichStream.from(requests)
+            .map(FetchRequest::getRuleKey)
+            .collect(MoreCollectors.toImmutableList());
+    ImmutableList<LazyPath> outputs =
+        RichStream.from(requests)
+            .map(FetchRequest::getOutput)
+            .collect(MoreCollectors.toImmutableList());
+    Preconditions.checkState(keys.size() == outputs.size());
+    String joinedKeys = Joiner.on(", ").join(keys);
+    LOG.verbose("Will fetch keys <%s>", joinedKeys);
+
+    BuckCacheRequest cacheRequest = createMultiFetchRequest(keys);
+    try (HttpResponse httpResponse =
+        fetchClient.makeRequest(
+            hybridThriftEndpoint,
+            toOkHttpRequest(ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest)))) {
+      return MultiFetchResult.of(
+          processMultiFetchResponse(keys, outputs, cacheRequest, joinedKeys, httpResponse)
+              ::iterator);
+    }
+  }
+
+  com.facebook.buck.artifact_cache.thrift.RuleKey toThriftRuleKey(RuleKey ruleKey) {
+    com.facebook.buck.artifact_cache.thrift.RuleKey thriftRuleKey =
+        new com.facebook.buck.artifact_cache.thrift.RuleKey();
+    thriftRuleKey.setHashString(ruleKey.getHashCode().toString());
+    return thriftRuleKey;
+  }
+
+  private BuckCacheRequest createMultiFetchRequest(ImmutableList<RuleKey> keys) {
+    BuckCacheMultiFetchRequest multiFetchRequest = new BuckCacheMultiFetchRequest();
+    multiFetchRequest.setRepository(getRepository());
+    multiFetchRequest.setScheduleType(scheduleType);
+    multiFetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
+    keys.forEach(k -> multiFetchRequest.addToRuleKeys(toThriftRuleKey(k)));
+
+    BuckCacheRequest cacheRequest = new BuckCacheRequest();
+    cacheRequest.setType(BuckCacheRequestType.MULTI_FETCH);
+    cacheRequest.setMultiFetchRequest(multiFetchRequest);
+    return cacheRequest;
+  }
+
+  private Iterable<FetchResult> processMultiFetchResponse(
+      ImmutableList<RuleKey> keys,
+      ImmutableList<LazyPath> outputs,
+      BuckCacheRequest cacheRequest,
+      String joinedKeys,
+      HttpResponse httpResponse)
+      throws IOException {
+
+    if (httpResponse.statusCode() != 200) {
+      String message =
+          String.format(
+              "Failed to fetch cache artifact with HTTP status code [%d:%s] "
+                  + " to url [%s] for rule keys [%s].",
+              httpResponse.statusCode(),
+              httpResponse.statusMessage(),
+              httpResponse.requestUrl(),
+              joinedKeys);
+      LOG.error(message);
+      CacheResult cacheResult = CacheResult.error(getName(), getMode(), message);
+      return keys.stream().map(k -> FetchResult.builder().setCacheResult(cacheResult).build())
+          ::iterator;
+    }
+
+    try (ThriftArtifactCacheProtocol.Response response =
+        ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
+      return convertMultiFetchResponseToFetchResults(
+                  keys, outputs, cacheRequest, httpResponse, response)
+              .stream()
+              .map(b -> b.build())
+          ::iterator;
+    }
+  }
+
+  private ImmutableList<FetchResult.Builder> convertMultiFetchResponseToFetchResults(
+      ImmutableList<RuleKey> keys,
+      ImmutableList<LazyPath> outputs,
+      BuckCacheRequest cacheRequest,
+      HttpResponse httpResponse,
+      ThriftArtifactCacheProtocol.Response response)
+      throws IOException {
+    long responseSizeBytes = httpResponse.contentLength();
+    ImmutableList<FetchResult.Builder> resultsBuilders =
+        keys.stream().map(k -> FetchResult.builder()).collect(MoreCollectors.toImmutableList());
+
+    BuckCacheResponse cacheResponse = response.getThriftData();
+    resultsBuilders.forEach(b -> b.setResponseSizeBytes(responseSizeBytes));
+
+    if (!cacheResponse.isWasSuccessful()) {
+      String message = cacheResponse.getErrorMessage();
+      LOG.warn("Request was unsuccessful: %s", message);
+      resultsBuilders.forEach(
+          b -> b.setCacheResult(CacheResult.error(getName(), getMode(), message)));
+      return resultsBuilders;
+    }
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(
+          "Debug info for cache multiFetch request: request=[%s] response=[%s]",
+          ThriftUtil.thriftToDebugJson(cacheRequest), ThriftUtil.thriftToDebugJson(cacheResponse));
+    }
+
+    BuckCacheMultiFetchResponse multiFetchResponse = cacheResponse.getMultiFetchResponse();
+    if (multiFetchResponse.getResultsSize() != keys.size()) {
+      String message =
+          String.format(
+              "Response had incorrect results size expected=%d actual=%d",
+              keys.size(), multiFetchResponse.getResultsSize());
+      LOG.warn(message);
+      resultsBuilders.forEach(
+          b -> b.setCacheResult(CacheResult.error(getName(), getMode(), message)));
+      return resultsBuilders;
+    }
+
+    for (int i = 0; i < keys.size(); i++) {
+      RuleKey ruleKey = keys.get(i);
+      com.facebook.buck.artifact_cache.thrift.FetchResult fetchResponse =
+          multiFetchResponse.getResults().get(i);
+      FetchResult.Builder builder = resultsBuilders.get(i);
+      LOG.verbose("Handling result for key %s", ruleKey);
+
+      convertSingleMultiFetchResult(
+          fetchResponse, ruleKey, new PayloadReader(response), outputs.get(i), builder);
+    }
+    return resultsBuilders;
+  }
+
+  private void convertSingleMultiFetchResult(
+      com.facebook.buck.artifact_cache.thrift.FetchResult fetchResponse,
+      RuleKey ruleKey,
+      PayloadReader payloadReader,
+      LazyPath output,
+      FetchResult.Builder builder)
+      throws IOException {
+    FetchResultType resultType = fetchResponse.getResultType();
+    switch (resultType) {
+      case UNKNOWN:
+      case ERROR:
+        builder.setCacheResult(
+            CacheResult.error(
+                getName(), getMode(), String.format("Got bad result of type %s", resultType)));
+        return;
+      case MISS:
+        LOG.verbose("Artifact did not exist.");
+        builder.setCacheResult(CacheResult.miss());
+        return;
+      case CONTAINS:
+        LOG.verbose("Got CONTAINS result.");
+        builder.setCacheResult(CacheResult.skipped());
+        return;
+      case SKIPPED:
+        LOG.verbose("Got SKIPPED result.");
+        builder.setCacheResult(CacheResult.skipped());
+        return;
+      case HIT:
+        // Handled below.
+        break;
+    }
+
+    if (resultType != FetchResultType.HIT) {
+      String message = String.format("Got unexpected result type: %s", resultType);
+      LOG.verbose(message);
+      // We need to throw an exception in this case. We don't know if this result type has a
+      // payload or not and so we could start assigning payloads to incorrect results.
+      // TODO(cjhopman): Do we have to the same for the UNKNOWN case above?
+      throw new IOException(message);
+    }
+
+    LOG.verbose("Got artifact.  Attempting to read payload.");
+    Path tmp = createTempFileForDownload();
+
+    // Always read payload even if information is missing to ensure that we associate payloads
+    // with the correct result.
+    @SuppressWarnings("PMD.PrematureDeclaration")
+    ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readResult =
+        payloadReader.readNextPayload(tmp, ruleKey);
+
+    if (!fetchResponse.isSetMetadata()) {
+      String msg =
+          String.format(
+              "ArtifactMetadata section is missing in the response. response=[%s]",
+              ThriftUtil.thriftToDebugJson(fetchResponse));
+      LOG.verbose(msg);
+      builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
+      return;
+    }
+
+    ArtifactMetadata metadata = fetchResponse.getMetadata();
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          String.format(
+              "Fetched artifact with rule key [%s] contains the following metadata: [%s].",
+              ruleKey, ThriftUtil.thriftToDebugJson(metadata)));
+    }
+
+    if (!metadata.isSetRuleKeys()) {
+      String msg = "Rule key section in the metadata is not set.";
+      LOG.verbose(msg);
+      builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
+      return;
+    }
+
+    ImmutableSet<RuleKey> associatedRuleKeys;
+    try {
+      associatedRuleKeys = toImmutableSet(metadata.getRuleKeys());
+    } catch (IllegalArgumentException e) {
+      String msg =
+          String.format(
+              "Exception parsing the rule keys in the metadata section [%s] with exception [%s].",
+              ThriftUtil.thriftToDebugJson(metadata), e.toString());
+      LOG.verbose(msg);
+      builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
+      return;
+    }
+
+    builder
+        .setBuildTarget(Optional.ofNullable(metadata.getBuildTarget()))
+        .setAssociatedRuleKeys(associatedRuleKeys)
+        .setArtifactSizeBytes(readResult.getBytesRead());
+
+    // Unlike fetch(), multiFetch() requires that the md5 be set. This is to provide extra
+    // protection against assigning a payload to the incorrect request.
+    if (!metadata.isSetArtifactPayloadMd5()) {
+      throw new IOException(
+          String.format(
+              "Metadata for rulekey %s does not contain a payload md5. "
+                  + "Rejecting entire multiFetch result.",
+              ruleKey));
+    }
+
+    builder.setArtifactContentHash(metadata.getArtifactPayloadMd5());
+    if (!readResult.getMd5Hash().equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
+      String msg =
+          String.format(
+              "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+              fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
+      LOG.error(msg);
+      builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
+      return;
+    }
+
+    // This makes sure we don't have 'half downloaded files' in the dir cache.
+    getProjectFilesystem().move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
+    builder.setCacheResult(
+        CacheResult.hit(
+            getName(),
+            getMode(),
+            ImmutableMap.copyOf(fetchResponse.getMetadata().getMetadata()),
+            readResult.getBytesRead()));
+  }
+
   private static ImmutableSet<RuleKey> toImmutableSet(
       List<com.facebook.buck.artifact_cache.thrift.RuleKey> ruleKeys) {
     return ImmutableSet.copyOf(
@@ -299,12 +559,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     return resultBuilder.build();
   }
 
-  @Override
-  protected MultiFetchResult multiFetchImpl(
-      Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
-    throw new RuntimeException("multiFetch not supported.");
-  }
-
   private Path createTempFileForDownload() throws IOException {
     getProjectFilesystem().mkdirs(getProjectFilesystem().getBuckPaths().getScratchDir());
     return getProjectFilesystem()
@@ -367,5 +621,28 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         });
 
     return builder;
+  }
+
+  private class PayloadReader {
+    private ThriftArtifactCacheProtocol.Response response;
+
+    private PayloadReader(ThriftArtifactCacheProtocol.Response response) {
+      this.response = response;
+    }
+
+    ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readNextPayload(Path path, RuleKey ruleKey)
+        throws IOException {
+      try (OutputStream tmpFile = getProjectFilesystem().newFileOutputStream(path)) {
+        ThriftArtifactCacheProtocol.Response.ReadPayloadInfo result;
+        try {
+          result = response.readPayload(tmpFile);
+        } catch (IOException e) {
+          LOG.debug(e, "Encountered an exception while receiving the payload for %s", ruleKey);
+          throw e;
+        }
+        LOG.verbose("Successfully read payload: %d bytes.", result.getBytesRead());
+        return result;
+      }
+    }
   }
 }

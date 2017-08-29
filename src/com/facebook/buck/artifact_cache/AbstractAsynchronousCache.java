@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -378,7 +379,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     private final FetchEvents events;
     private final SettableFuture<CacheResult> future;
 
-    private FetchRequest(
+    @VisibleForTesting
+    protected FetchRequest(
         RuleKey ruleKey, LazyPath output, FetchEvents events, SettableFuture<CacheResult> future) {
       this.ruleKey = ruleKey;
       this.output = output;
