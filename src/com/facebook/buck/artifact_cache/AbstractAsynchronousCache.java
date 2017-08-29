@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -96,10 +97,24 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   protected abstract MultiFetchResult multiFetchImpl(Iterable<FetchRequest> requests)
       throws IOException;
 
-  private void doMultiFetch(ImmutableList<FetchRequest> requests) {
-    requests.forEach(r -> r.events.multiFetchStarted());
+  /**
+   * Used to compute the number of keys to include in every multiFetchRequest. If < 1, fetch will be
+   * used instead of multifetch.
+   */
+  @SuppressWarnings("unused")
+  protected int getMultiFetchBatchSize(int pendingRequestsSize) {
+    return 0;
+  }
+
+  private void doMultiFetch(ImmutableList<ClaimedFetchRequest> requests) {
+    requests.forEach(r -> r.getEvents().multiFetchStarted());
     try {
-      MultiFetchResult result = multiFetchImpl(requests);
+      MultiFetchResult result =
+          multiFetchImpl(
+              requests
+                  .stream()
+                  .map(ClaimedFetchRequest::getRequest)
+                  .collect(MoreCollectors.toImmutableList()));
       Preconditions.checkState(result.getResults().size() == requests.size());
       // MultiFetch must return a non-skipped result for at least one of the requested keys.
       Preconditions.checkState(
@@ -110,19 +125,22 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
                   fetchResult ->
                       fetchResult.getCacheResult().getType() != CacheResultType.SKIPPED));
       for (int i = 0; i < requests.size(); i++) {
-        FetchRequest thisRequest = requests.get(i);
+        ClaimedFetchRequest thisRequest = requests.get(i);
         FetchResult thisResult = result.getResults().get(i);
         if (thisResult.getCacheResult().getType() == CacheResultType.SKIPPED) {
-          thisRequest.events.multiFetchSkipped();
-          addFetchRequest(thisRequest);
+          thisRequest.getEvents().multiFetchSkipped();
+          thisRequest.reschedule();
         } else {
-          thisRequest.events.multiFetchFinished(thisResult);
-          thisRequest.future.set(thisResult.getCacheResult());
+          thisRequest.getEvents().multiFetchFinished(thisResult);
+          thisRequest.setResult(thisResult.getCacheResult());
         }
       }
     } catch (IOException e) {
       ImmutableList<RuleKey> keys =
-          requests.stream().map(FetchRequest::getRuleKey).collect(MoreCollectors.toImmutableList());
+          requests
+              .stream()
+              .map(r -> r.getRequest().getRuleKey())
+              .collect(MoreCollectors.toImmutableList());
       String msg =
           String.format(
               "multifetch(<%s>): %s: %s",
@@ -132,8 +150,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       requests.forEach(
           r -> {
             CacheResult result = CacheResult.error(name, mode, msg);
-            r.events.multiFetchFailed(e, msg, result);
-            r.future.set(result);
+            r.getEvents().multiFetchFailed(e, msg, result);
+            r.setResult(result);
           });
     }
   }
@@ -158,40 +176,83 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private void processFetch() {
     int multiFetchLimit = getMultiFetchBatchSize(pendingFetchRequests.size());
     if (multiFetchLimit > 0) {
-      ImmutableList.Builder<FetchRequest> requestsBuilder = ImmutableList.builder();
-      for (int i = 0; i < multiFetchLimit; i++) {
-        FetchRequest request = getFetchRequest();
-        if (request == null) {
-          break;
+      ImmutableList.Builder<ClaimedFetchRequest> requestsBuilder = ImmutableList.builder();
+      try {
+        for (int i = 0; i < multiFetchLimit; i++) {
+          ClaimedFetchRequest request = getFetchRequest();
+          if (request == null) {
+            break;
+          }
+          requestsBuilder.add(request);
         }
-        requestsBuilder.add(request);
+        ImmutableList<ClaimedFetchRequest> requests = requestsBuilder.build();
+        if (requests.isEmpty()) {
+          return;
+        }
+        doMultiFetch(requests);
+      } finally {
+        requestsBuilder.build().forEach(ClaimedFetchRequest::close);
       }
-      ImmutableList<FetchRequest> requests = requestsBuilder.build();
-      if (requests.isEmpty()) {
-        return;
-      }
-      doMultiFetch(requests);
     } else {
-      FetchRequest request = getFetchRequest();
-      if (request == null) {
-        return;
+      try (ClaimedFetchRequest request = getFetchRequest()) {
+        if (request == null) {
+          return;
+        }
+        doFetch(request.getRequest());
       }
-      doFetch(request);
     }
   }
 
   /**
-   * Used to compute the number of keys to include in every multiFetchRequest. If < 1, fetch will be
-   * used instead of multifetch.
+   * This is just a Scope that will set an exception on the underlying request's future if the
+   * request isn't fulfilled or rescheduled and prevents any modifications to the request after
+   * either of those have happened.
    */
-  @SuppressWarnings("unused")
-  protected int getMultiFetchBatchSize(int pendingRequestsSize) {
-    return 0;
+  private class ClaimedFetchRequest implements Scope {
+    @Nullable FetchRequest request;
+
+    public ClaimedFetchRequest(FetchRequest request) {
+      this.request = request;
+    }
+
+    @Override
+    public void close() {
+      if (request == null) {
+        return;
+      }
+      String msg =
+          String.format("ClaimedFetchRequest for key %s was not satisfied.", request.ruleKey);
+      IllegalStateException throwable = new IllegalStateException(msg);
+      LOG.verbose(throwable, msg);
+      getRequest().future.setException(throwable);
+    }
+
+    private FetchRequest getRequest() {
+      return Preconditions.checkNotNull(request);
+    }
+
+    public FetchEvents getEvents() {
+      return getRequest().events;
+    }
+
+    public void setResult(CacheResult result) {
+      getRequest().future.set(result);
+      request = null;
+    }
+
+    public void reschedule() {
+      addFetchRequest(getRequest());
+      request = null;
+    }
   }
 
   @Nullable
-  private FetchRequest getFetchRequest() {
-    return pendingFetchRequests.poll();
+  private ClaimedFetchRequest getFetchRequest() {
+    FetchRequest request = pendingFetchRequests.poll();
+    if (request == null) {
+      return null;
+    }
+    return new ClaimedFetchRequest(request);
   }
 
   private void addFetchRequest(FetchRequest fetchRequest) {
