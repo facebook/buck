@@ -796,7 +796,8 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(
         listener,
         timeMillis,
-        ImmutableList.of(parsingLine, actionGraphLine, "DISTBUILD... 0.3 sec (STATUS: INIT)"));
+        ImmutableList.of(
+            parsingLine, actionGraphLine, "Distributed build... 0.3 sec (status: init)"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -816,7 +817,9 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine, actionGraphLine, "DISTBUILD... 0.7 sec (STATUS: QUEUED, [step 1])"));
+            parsingLine,
+            actionGraphLine,
+            "Distributed build... 0.7 sec (status: queued, [step 1])"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -835,7 +838,9 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine, actionGraphLine, "DISTBUILD... 0.9 sec (STATUS: BUILDING, [step 2])"));
+            parsingLine,
+            actionGraphLine,
+            "Distributed build... 0.9 sec (status: building, [step 2])"));
 
     RunId runId1 = new RunId();
     runId1.setId("slave1");
@@ -867,7 +872,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "DISTBUILD... 1.1 sec (STATUS: BUILDING, [step 2])",
+            "Distributed build... 1.1 sec (status: building, [step 2])",
             " SERVER 0)=> PROCESSING BUILD GRAPH...",
             " SERVER 1)=> PROCESSING BUILD GRAPH..."));
 
@@ -913,7 +918,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "DISTBUILD... 1.3 sec (33%) (STATUS: BUILDING, 1 [3.3%] CACHE MISS, [step 2])",
+            "Distributed build... 1.3 sec (33%) (status: building, 3.3% cache miss, [step 2])",
             " SERVER 0)=> IDLE... (BUILT 5/10 JOBS, 1 [10.0%] CACHE MISS)",
             " SERVER 1)=> WORKING ON 5 JOBS... (BUILT 5/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS)"));
 
@@ -956,8 +961,8 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "DISTBUILD... 1.5 sec (96%) (STATUS: CUSTOM,"
-                + " 1 [3.3%] CACHE MISS, 1 [3.4%] CACHE ERRORS, 1 UPLOAD ERRORS, [step 2])",
+            "Distributed build... 1.5 sec (96%) (status: custom,"
+                + " 3.3% cache miss, 3.4% cache errors, 1 upload errors, [step 2])",
             " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
             " SERVER 1)=> IDLE... (BUILT 20/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS, "
                 + "1 [5.0%] CACHE ERRORS, 1/3 UPLOADED, 1 UPLOAD ERRORS)"));
@@ -990,8 +995,8 @@ public class SuperConsoleEventBusListenerTest {
 
     timeMillis += 100;
     final String distbuildLine =
-        "DISTBUILD: finished in 1.6 sec (100%) (STATUS: FINISHED_SUCCESSFULLY,"
-            + " 1 [3.3%] CACHE MISS, 1 [3.3%] CACHE ERRORS, 1 UPLOAD ERRORS, [step 3])";
+        "Distributed build: finished in 1.6 sec (100%) (status: finished_successfully,"
+            + " 3.3% cache miss, 3.3% cache errors, 1 upload errors, [step 3])";
     validateConsole(
         listener,
         timeMillis,

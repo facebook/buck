@@ -384,7 +384,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (distBuildStarted != null) {
       long distBuildMs =
           logEventPair(
-              "DISTBUILD",
+              "Distributed build",
               getOptionalDistBuildLineSuffix(),
               currentTimeMillis,
               0,
@@ -533,9 +533,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     synchronized (distBuildStatusLock) {
       if (!distBuildStatus.isPresent()) {
-        columns.add("STATUS: INIT");
+        columns.add("status: init");
       } else {
-        columns.add("STATUS: " + distBuildStatus.get().getStatus());
+        columns.add("status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
         int totalFilesMaterialized = 0;
@@ -557,27 +557,20 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats.build());
 
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
-          columns.add(
-              String.format(
-                  "%d [%.1f%%] CACHE MISS",
-                  aggregatedCacheStats.getCacheMissCount(),
-                  aggregatedCacheStats.getCacheMissRate()));
+          columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
 
           if (aggregatedCacheStats.getCacheErrorCount() != 0) {
             columns.add(
-                String.format(
-                    "%d [%.1f%%] CACHE ERRORS",
-                    aggregatedCacheStats.getCacheErrorCount(),
-                    aggregatedCacheStats.getCacheErrorRate()));
+                String.format("%.1f%% cache errors", aggregatedCacheStats.getCacheErrorRate()));
           }
         }
 
         if (totalUploadErrorsCount > 0) {
-          columns.add(String.format("%d UPLOAD ERRORS", totalUploadErrorsCount));
+          columns.add(String.format("%d upload errors", totalUploadErrorsCount));
         }
 
         if (totalFilesMaterialized > 0) {
-          columns.add(String.format("%d FILES MATERIALIZED", totalFilesMaterialized));
+          columns.add(String.format("%d files materialized", totalFilesMaterialized));
         }
 
         if (distBuildStatus.get().getMessage().isPresent()) {
