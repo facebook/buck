@@ -614,6 +614,56 @@ public class InterCellIntegrationTest {
   }
 
   @Test
+  public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/android/primary", "inter-cell/android/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        primary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+    TestDataHelper.overrideBuckconfig(
+        secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+
+    NdkCxxPlatform platform =
+        AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(
+            new SourcePathRuleFinder(
+                new DefaultBuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    Path tmpDir = tmp.newFolder("merging_tmp");
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
+    SymbolsAndDtNeeded info;
+    Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_deps");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
+    zipInspector.assertFileExists("lib/x86/libI.so");
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, Matchers.hasItem("G"));
+    assertThat(info.symbols.global, Matchers.hasItem("H"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+  }
+
+  @Test
   public void targetsReferencingSameTargetsWithDifferentCellNamesAreConsideredTheSame()
       throws Exception {
     // This test case builds a cxx binary rule with libraries that all depend on the same targets.

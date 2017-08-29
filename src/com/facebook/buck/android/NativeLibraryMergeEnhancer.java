@@ -436,6 +436,16 @@ class NativeLibraryMergeEnhancer {
           getStructuralDeps(
               constituents, NativeLinkable::getNativeLinkableExportedDeps, mergeResults);
 
+      ProjectFilesystem targetProjectFilesystem = projectFilesystem;
+      if (!constituents.isActuallyMerged()) {
+        // There is only one target
+        BuildTarget target = preMergeLibs.iterator().next().getBuildTarget();
+        if (!target.getCellPath().equals(projectFilesystem.getRootPath())) {
+          // Switch the target project filesystem
+          targetProjectFilesystem = ruleResolver.getRule(target).getProjectFilesystem();
+        }
+      }
+
       MergedLibNativeLinkable mergedLinkable =
           new MergedLibNativeLinkable(
               cxxBuckConfig,
@@ -443,7 +453,7 @@ class NativeLibraryMergeEnhancer {
               pathResolver,
               ruleFinder,
               baseBuildTarget,
-              projectFilesystem,
+              targetProjectFilesystem,
               constituents,
               orderedDeps,
               orderedExportedDeps,
