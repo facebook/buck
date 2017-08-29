@@ -30,6 +30,7 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,9 +71,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
   private interface NetworkCacheFactory {
     ArtifactCache newInstance(NetworkCacheArgs args);
   }
-
-  private static final NetworkCacheFactory HTTP_PROTOCOL = HttpArtifactCache::new;
-  private static final NetworkCacheFactory THRIFT_PROTOCOL = ThriftArtifactCache::new;
 
   /**
    * Creates a new instance of the cache factory for use during a build.
@@ -198,14 +196,16 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               httpWriteExecutorService,
               httpFetchExecutorService,
               builder,
-              distributedBuildModeEnabled,
-              HTTP_PROTOCOL,
+              HttpArtifactCache::new,
               mode);
           break;
         case sqlite:
           initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
           break;
         case thrift_over_http:
+          Preconditions.checkArgument(
+              buckConfig.getHybridThriftEndpoint().isPresent(),
+              "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");
           initializeDistributedCaches(
               cacheEntries,
               buckConfig,
@@ -215,8 +215,11 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               httpWriteExecutorService,
               httpFetchExecutorService,
               builder,
-              distributedBuildModeEnabled,
-              THRIFT_PROTOCOL,
+              (args) ->
+                  new ThriftArtifactCache(
+                      args,
+                      buckConfig.getHybridThriftEndpoint().get(),
+                      distributedBuildModeEnabled),
               mode);
           break;
       }
@@ -264,7 +267,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
       ImmutableList.Builder<ArtifactCache> builder,
-      boolean distributedBuildModeEnabled,
       NetworkCacheFactory factory,
       ArtifactCacheMode cacheMode) {
     for (HttpCacheEntry cacheEntry : artifactCacheEntries.getHttpCacheEntries()) {
@@ -288,7 +290,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
               httpFetchExecutorService,
               buckConfig,
               factory,
-              distributedBuildModeEnabled,
               cacheMode));
     }
   }
@@ -344,7 +345,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ListeningExecutorService httpFetchExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
-      boolean distributedBuildModeEnabled,
       ArtifactCacheMode cacheMode) {
     ArtifactCache cache =
         createHttpArtifactCache(
@@ -356,7 +356,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             httpFetchExecutorService,
             config,
             factory,
-            distributedBuildModeEnabled,
             cacheMode);
     return new RetryingCacheDecorator(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
   }
@@ -370,7 +369,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
       ListeningExecutorService httpFetchExecutorService,
       ArtifactCacheBuckConfig config,
       NetworkCacheFactory factory,
-      boolean distributedBuildModeEnabled,
       ArtifactCacheMode cacheMode) {
 
     // Setup the default client to use.
@@ -472,7 +470,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
 
     return factory.newInstance(
         NetworkCacheArgs.builder()
-            .setThriftEndpointPath(config.getHybridThriftEndpoint())
             .setCacheName(cacheMode.name())
             .setCacheMode(cacheMode)
             .setRepository(config.getRepository())
@@ -485,7 +482,6 @@ public class ArtifactCaches implements ArtifactCacheFactory {
             .setHttpWriteExecutorService(httpWriteExecutorService)
             .setHttpFetchExecutorService(httpFetchExecutorService)
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
-            .setDistributedBuildModeEnabled(distributedBuildModeEnabled)
             .build());
   }
 

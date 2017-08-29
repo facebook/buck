@@ -68,13 +68,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   private final String hybridThriftEndpoint;
   private final boolean distributedBuildModeEnabled;
 
-  public ThriftArtifactCache(NetworkCacheArgs args) {
+  public ThriftArtifactCache(
+      NetworkCacheArgs args, String hybridThriftEndpoint, boolean distributedBuildModeEnabled) {
     super(args);
-    Preconditions.checkArgument(
-        args.getThriftEndpointPath().isPresent(),
-        "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");
-    this.hybridThriftEndpoint = args.getThriftEndpointPath().orElse("");
-    this.distributedBuildModeEnabled = args.distributedBuildModeEnabled();
+    this.hybridThriftEndpoint = hybridThriftEndpoint;
+    this.distributedBuildModeEnabled = distributedBuildModeEnabled;
   }
 
   @Override

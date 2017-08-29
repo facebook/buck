@@ -83,7 +83,6 @@ public class AbstractNetworkCacheTest {
                 .setHttpFetchExecutorService(service)
                 .setErrorTextTemplate("super error message")
                 .setMaxStoreSizeBytes(maxArtifactSizeBytes)
-                .setDistributedBuildModeEnabled(false)
                 .build()) {
           @Override
           protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {

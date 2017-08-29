@@ -121,8 +121,6 @@ public class ThriftArtifactCacheTest {
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
-            .setDistributedBuildModeEnabled(false)
-            .setThriftEndpointPath("/nice_as_well")
             .build();
 
     EasyMock.expect(fetchClient.makeRequest(EasyMock.anyString(), EasyMock.anyObject()))
@@ -132,7 +130,7 @@ public class ThriftArtifactCacheTest {
     EasyMock.expectLastCall().once();
     EasyMock.replay(fetchClient);
 
-    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs)) {
+    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs, "/nice_as_well", false)) {
       Path artifactPath = tempPaths.newFile().toAbsolutePath();
       CacheResult result =
           Futures.getUnchecked(
@@ -242,8 +240,6 @@ public class ThriftArtifactCacheTest {
             .setHttpWriteExecutorService(service)
             .setHttpFetchExecutorService(service)
             .setErrorTextTemplate("my super error msg")
-            .setDistributedBuildModeEnabled(false)
-            .setThriftEndpointPath("/nice_as_well")
             .build();
 
     // 0 -> Miss, 1 -> Hit, 2 -> Skip, 3 -> Hit.
@@ -337,7 +333,7 @@ public class ThriftArtifactCacheTest {
     EasyMock.expectLastCall().once();
     EasyMock.replay(fetchClient);
 
-    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs)) {
+    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs, "/nice_as_well", false)) {
       MultiFetchResult result = cache.multiFetchImpl(requests);
       assertEquals(4, result.getResults().size());
       assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());
