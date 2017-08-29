@@ -336,7 +336,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new GenerateRDotJava(
         buildTarget.withAppendedFlavors(GENERATE_RDOT_JAVA_FLAVOR),
         projectFilesystem,
-        buildRuleParams.withoutDeclaredDeps(),
         ruleFinder,
         bannedDuplicateResourceTypes,
         pathToRDotTxtFile,
