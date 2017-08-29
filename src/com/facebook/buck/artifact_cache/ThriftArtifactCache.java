@@ -67,10 +67,18 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
   private final String hybridThriftEndpoint;
   private final boolean distributedBuildModeEnabled;
+  private final int multiFetchLimit;
+  private final int concurrencyLevel;
 
   public ThriftArtifactCache(
-      NetworkCacheArgs args, String hybridThriftEndpoint, boolean distributedBuildModeEnabled) {
+      NetworkCacheArgs args,
+      String hybridThriftEndpoint,
+      boolean distributedBuildModeEnabled,
+      int multiFetchLimit,
+      int concurrencyLevel) {
     super(args);
+    this.multiFetchLimit = multiFetchLimit;
+    this.concurrencyLevel = concurrencyLevel;
     this.hybridThriftEndpoint = hybridThriftEndpoint;
     this.distributedBuildModeEnabled = distributedBuildModeEnabled;
   }
@@ -221,6 +229,13 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             .build();
       }
     }
+  }
+
+  @Override
+  protected int getMultiFetchBatchSize(int pendingRequestsSize) {
+    if (concurrencyLevel > 0)
+      return Math.min(multiFetchLimit, 1 + pendingRequestsSize / concurrencyLevel);
+    return 0;
   }
 
   @Override

@@ -722,8 +722,7 @@ public final class Main {
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
         ListeningExecutorService httpFetchExecutorService =
-            getHttpFetchExecutorService(
-                cacheBuckConfig, buckConfig.getMaximumResourceAmounts().getNetworkIO());
+            getHttpFetchExecutorService(cacheBuckConfig);
         ScheduledExecutorService counterAggregatorExecutor =
             Executors.newSingleThreadScheduledExecutor(
                 new CommandThreadFactory("CounterAggregatorThread"));
@@ -1274,11 +1273,11 @@ public final class Main {
   }
 
   private static ListeningExecutorService getHttpFetchExecutorService(
-      ArtifactCacheBuckConfig buckConfig, int maximumNetworkIOResources) {
+      ArtifactCacheBuckConfig buckConfig) {
     return listeningDecorator(
         MostExecutors.newMultiThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("cache-fetch-%d").build(),
-            Math.min(maximumNetworkIOResources, (int) buckConfig.getThreadPoolSize())));
+            buckConfig.getHttpFetchConcurrency()));
   }
 
   private static ConsoleHandlerState.Writer createWriterForConsole(

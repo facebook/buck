@@ -130,7 +130,8 @@ public class ThriftArtifactCacheTest {
     EasyMock.expectLastCall().once();
     EasyMock.replay(fetchClient);
 
-    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs, "/nice_as_well", false)) {
+    try (ThriftArtifactCache cache =
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 0, 0)) {
       Path artifactPath = tempPaths.newFile().toAbsolutePath();
       CacheResult result =
           Futures.getUnchecked(
@@ -333,7 +334,8 @@ public class ThriftArtifactCacheTest {
     EasyMock.expectLastCall().once();
     EasyMock.replay(fetchClient);
 
-    try (ThriftArtifactCache cache = new ThriftArtifactCache(networkArgs, "/nice_as_well", false)) {
+    try (ThriftArtifactCache cache =
+        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, 0, 0)) {
       MultiFetchResult result = cache.multiFetchImpl(requests);
       assertEquals(4, result.getResults().size());
       assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());

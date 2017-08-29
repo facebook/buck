@@ -175,32 +175,42 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   private void processFetch() {
-    int multiFetchLimit = getMultiFetchBatchSize(pendingFetchRequests.size());
-    if (multiFetchLimit > 0) {
-      ImmutableList.Builder<ClaimedFetchRequest> requestsBuilder = ImmutableList.builder();
-      try {
-        for (int i = 0; i < multiFetchLimit; i++) {
-          ClaimedFetchRequest request = getFetchRequest();
-          if (request == null) {
-            break;
+    try {
+      int multiFetchLimit = getMultiFetchBatchSize(pendingFetchRequests.size());
+      if (multiFetchLimit > 0) {
+        ImmutableList.Builder<ClaimedFetchRequest> requestsBuilder = ImmutableList.builder();
+        try {
+          for (int i = 0; i < multiFetchLimit; i++) {
+            ClaimedFetchRequest request = getFetchRequest();
+            if (request == null) {
+              break;
+            }
+            requestsBuilder.add(request);
           }
-          requestsBuilder.add(request);
+          ImmutableList<ClaimedFetchRequest> requests = requestsBuilder.build();
+          if (requests.isEmpty()) {
+            return;
+          }
+          doMultiFetch(requests);
+        } finally {
+          requestsBuilder.build().forEach(ClaimedFetchRequest::close);
         }
-        ImmutableList<ClaimedFetchRequest> requests = requestsBuilder.build();
-        if (requests.isEmpty()) {
-          return;
+      } else {
+        try (ClaimedFetchRequest request = getFetchRequest()) {
+          if (request == null) {
+            return;
+          }
+          doFetch(request.getRequest());
         }
-        doMultiFetch(requests);
-      } finally {
-        requestsBuilder.build().forEach(ClaimedFetchRequest::close);
       }
-    } else {
-      try (ClaimedFetchRequest request = getFetchRequest()) {
-        if (request == null) {
-          return;
-        }
-        doFetch(request.getRequest());
+    } catch (Exception e) {
+      // If any exception is thrown in trying to process requests, just fulfill everything with an
+      // error.
+      ClaimedFetchRequest request;
+      while ((request = getFetchRequest()) != null) {
+        request.setResult(CacheResult.error(getName(), getMode(), e.getMessage()));
       }
+      LOG.error(e, "Exception thrown while processing fetch requests.");
     }
   }
 

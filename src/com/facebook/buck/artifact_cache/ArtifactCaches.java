@@ -18,9 +18,12 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.EventDispatcher;
+import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -219,7 +222,9 @@ public class ArtifactCaches implements ArtifactCacheFactory {
                   new ThriftArtifactCache(
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
-                      distributedBuildModeEnabled),
+                      distributedBuildModeEnabled,
+                      getMultiFetchLimit(buckConfig, buckEventBus),
+                      buckConfig.getHttpFetchConcurrency()),
               mode);
           break;
       }
@@ -531,6 +536,34 @@ public class ArtifactCaches implements ArtifactCacheFactory {
         .connectTimeout(connectTimeoutSeconds, TimeUnit.SECONDS)
         .readTimeout(readTimeoutSeconds, TimeUnit.SECONDS)
         .writeTimeout(writeTimeoutSeconds, TimeUnit.SECONDS);
+  }
+
+  private static int getMultiFetchLimit(
+      ArtifactCacheBuckConfig buckConfig, EventDispatcher dispatcher) {
+    return getAndRecordMultiFetchEnabled(buckConfig, dispatcher)
+        ? buckConfig.getMultiFetchLimit()
+        : 0;
+  }
+
+  private static boolean getAndRecordMultiFetchEnabled(
+      ArtifactCacheBuckConfig buckConfig, EventDispatcher dispatcher) {
+    ArtifactCacheBuckConfig.MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
+    if (multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.EXPERIMENT) {
+      multiFetchType =
+          RandomizedTrial.getGroup(
+              ArtifactCacheBuckConfig.MULTI_FETCH, ArtifactCacheBuckConfig.MultiFetchType.class);
+      switch (multiFetchType) {
+        case DISABLED:
+        case ENABLED:
+          dispatcher.post(
+              new ExperimentEvent(
+                  ArtifactCacheBuckConfig.MULTI_FETCH, multiFetchType.toString(), "", null, null));
+          break;
+        case EXPERIMENT:
+          throw new RuntimeException("RandomizedTrial picked invalid MultiFetchType.");
+      }
+    }
+    return multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.ENABLED;
   }
 
   private static class ProgressResponseBody extends ResponseBody {
