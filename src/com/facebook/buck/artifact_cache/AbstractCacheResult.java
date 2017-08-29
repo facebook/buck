@@ -143,6 +143,17 @@ abstract class AbstractCacheResult {
         Optional.empty());
   }
 
+  public static CacheResult skipped(String cacheSource, ArtifactCacheMode cacheMode) {
+    return CacheResult.of(
+        CacheResultType.SKIPPED,
+        Optional.of(cacheSource),
+        Optional.of(cacheMode),
+        Optional.empty(),
+        Optional.of(ImmutableMap.of()),
+        Optional.empty(),
+        Optional.empty());
+  }
+
   public static CacheResult error(
       String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
     return CacheResult.of(

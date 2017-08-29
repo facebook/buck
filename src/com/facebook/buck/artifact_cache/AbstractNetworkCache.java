@@ -112,6 +112,12 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
 
         @Override
         public void failed(IOException e, String msg, CacheResult result) {
+          reportFailure(e, msg);
+          eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
+          dispatcher.post(eventBuilder.build());
+        }
+
+        private void reportFailure(IOException e, String msg) {
           if (isNoHealthyServersException(e)) {
             errorReporter.reportFailureToEventBus(
                 "NoHealthyServers",
@@ -126,8 +132,32 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
             String key = String.format("store:%s", e.getClass().getSimpleName());
             errorReporter.reportFailure(e, key, msg);
           }
-          eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
-          dispatcher.post(eventBuilder.build());
+        }
+
+        @Override
+        public void multiFetchStarted() {
+          LOG.debug("multiFetchStarted for %s.", ruleKey);
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void multiFetchSkipped() {
+          LOG.debug("multiFetchSkipped for %s.", ruleKey);
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void multiFetchFinished(FetchResult thisResult) {
+          LOG.debug(
+              "multiFetchFinished for %s with result %s.",
+              ruleKey, thisResult.getCacheResult().getType());
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void multiFetchFailed(IOException e, String msg, CacheResult result) {
+          reportFailure(e, msg);
+          // TODO(cjhopman): implement.
         }
       };
     }

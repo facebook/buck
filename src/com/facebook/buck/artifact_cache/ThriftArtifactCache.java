@@ -299,6 +299,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     return resultBuilder.build();
   }
 
+  @Override
+  protected MultiFetchResult multiFetchImpl(
+      Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
+    throw new RuntimeException("multiFetch not supported.");
+  }
+
   private Path createTempFileForDownload() throws IOException {
     getProjectFilesystem().mkdirs(getProjectFilesystem().getBuckPaths().getScratchDir());
     return getProjectFilesystem()

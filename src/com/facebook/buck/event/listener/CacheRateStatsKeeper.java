@@ -69,6 +69,9 @@ public class CacheRateStatsKeeper {
       case IGNORED:
         cacheIgnores.incrementAndGet();
         break;
+      case SKIPPED:
+        throw new IllegalStateException(
+            "BuildRules shouldn't finish with SKIPPED cache result type.");
       case LOCAL_KEY_UNCHANGED_HIT:
         cacheLocalKeyUnchangedHits.incrementAndGet();
         break;

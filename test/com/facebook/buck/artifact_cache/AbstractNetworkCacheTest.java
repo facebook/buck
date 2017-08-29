@@ -95,6 +95,12 @@ public class AbstractNetworkCacheTest {
             storeCallCount.incrementAndGet();
             return StoreResult.builder().build();
           }
+
+          @Override
+          protected MultiFetchResult multiFetchImpl(
+              Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
+            return null;
+          }
         };
 
     for (int bytes : artifactBytes) {
