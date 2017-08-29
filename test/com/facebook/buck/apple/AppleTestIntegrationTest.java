@@ -284,7 +284,7 @@ public class AppleTestIntegrationTest {
         containsString(
             "Set xctool_path = /path/to/xctool or xctool_zip_target = //path/to:xctool-zip in the "
                 + "[apple] section of .buckconfig to run this test"));
-    workspace.runBuckCommand("test", "//:foo");
+    workspace.runBuckCommand("test", "//:foo", "--config", "apple.xctool_path=does/not/exist");
   }
 
   @Test
