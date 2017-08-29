@@ -321,7 +321,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new Aapt2Link(
         buildTarget.withAppendedFlavors(AAPT2_LINK_FLAVOR),
         projectFilesystem,
-        buildRuleParams.withoutDeclaredDeps(),
         ruleFinder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
