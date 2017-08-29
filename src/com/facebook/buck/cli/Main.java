@@ -892,6 +892,7 @@ public final class Main {
 
           // This needs to be after the registration of the event listener so they can pick it up.
           if (watchmanFreshInstanceAction == WatchmanWatcher.FreshInstanceAction.NONE) {
+            LOG.debug("new Buck daemon");
             buildEventBus.post(DaemonEvent.newDaemonInstance());
           }
 

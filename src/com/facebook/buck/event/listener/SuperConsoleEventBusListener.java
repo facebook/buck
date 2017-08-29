@@ -946,7 +946,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   @SuppressWarnings("unused")
   public void daemonNewInstance(DaemonEvent.NewDaemonInstance event) {
-    printInfoDirectlyOnce("Buck is creating the action graph.");
     parsingStatus = Optional.of("daemonNewInstance");
   }
 
