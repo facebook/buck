@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys;
+package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
@@ -33,7 +33,7 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
 
   private long count = 0;
 
-  CountingRuleKeyHasher(RuleKeyHasher<HASH> delegate) {
+  public CountingRuleKeyHasher(RuleKeyHasher<HASH> delegate) {
     this.delegate = delegate;
   }
 

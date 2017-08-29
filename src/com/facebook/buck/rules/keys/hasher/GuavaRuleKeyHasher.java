@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys;
+package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;
@@ -36,7 +36,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
 
   private final Hasher hasher;
 
-  GuavaRuleKeyHasher(Hasher hasher) {
+  public GuavaRuleKeyHasher(Hasher hasher) {
     this.hasher = hasher;
   }
 

@@ -23,6 +23,8 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;

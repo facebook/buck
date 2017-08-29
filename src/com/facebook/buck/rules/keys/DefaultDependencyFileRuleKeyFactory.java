@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

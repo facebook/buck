@@ -24,6 +24,7 @@ import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Supplier;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys;
+package com.facebook.buck.rules.keys.hasher;
 
 public class RuleKeyHasherTypes {
 

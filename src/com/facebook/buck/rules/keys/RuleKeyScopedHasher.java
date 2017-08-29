@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 
 public interface RuleKeyScopedHasher {

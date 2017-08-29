@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.keys;
+package com.facebook.buck.rules.keys.hasher;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.BuildTarget;

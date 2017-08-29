@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import org.junit.Test;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
