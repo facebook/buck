@@ -21,12 +21,12 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -35,13 +35,14 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public class SplitResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class SplitResources extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path exoResourcesOutputPath;
 
@@ -54,18 +55,16 @@ public class SplitResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final SourcePath pathToAaptResources;
   @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
 
+  private final SourcePathRuleFinder ruleFinder;
+
   public SplitResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        buildRuleParams.copyAppendingExtraDeps(
-            getAllDeps(ruleFinder, pathToAaptResources, pathToOriginalRDotTxt)));
+    super(buildTarget, projectFilesystem);
+    this.ruleFinder = ruleFinder;
     this.pathToAaptResources = pathToAaptResources;
     this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
     this.exoResourcesOutputPath = getOutputDirectory().resolve("exo-resources.apk");
@@ -77,11 +76,10 @@ public class SplitResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/");
   }
 
-  private static Iterable<BuildRule> getAllDeps(
-      SourcePathRuleFinder ruleFinder, SourcePath aaptOutputPath, SourcePath aaptRDotTxtPath) {
-    return RichStream.of(aaptOutputPath, aaptRDotTxtPath)
-        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-        .toOnceIterable();
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return BuildableSupport.deriveDeps(this, ruleFinder)
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   @Override

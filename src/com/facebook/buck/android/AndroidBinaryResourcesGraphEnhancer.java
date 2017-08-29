@@ -139,7 +139,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableList<SourcePath> getExoResources();
   }
 
-  public AndroidBinaryResourcesGraphEnhancementResult enhance(
+  AndroidBinaryResourcesGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         packageableCollection.getResourceDetails();
@@ -281,7 +281,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new SplitResources(
         buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR),
         projectFilesystem,
-        buildRuleParams.withoutDeclaredDeps(),
         ruleFinder,
         aaptOutputPath,
         aaptRDotTxtPath);
