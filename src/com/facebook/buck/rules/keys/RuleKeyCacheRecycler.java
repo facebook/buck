@@ -32,7 +32,6 @@ import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
@@ -153,20 +152,6 @@ public class RuleKeyCacheRecycler<V> {
   }
 
   /**
-   * Run the given {@link Function} with access to the {@link RuleKeyCache}. This is a convenience
-   * method used to abstract away handling of the {@link RuleKeyCacheScope} inside a try-resource
-   * block.
-   */
-  <T> T withRecycledCache(
-      BuckEventBus buckEventBus,
-      SettingsAffectingCache currentSettings,
-      Function<RuleKeyCache<V>, T> func) {
-    try (RuleKeyCacheScope<V> scope = withRecycledCache(buckEventBus, currentSettings)) {
-      return func.apply(scope.getCache());
-    }
-  }
-
-  /**
    * Run the given {@link Consumer} with access to the {@link RuleKeyCache}. This is a convenience
    * method used to abstract away handling of the {@link RuleKeyCacheScope} inside a try-resource
    * block.
@@ -211,11 +196,7 @@ public class RuleKeyCacheRecycler<V> {
       // hit in the action graph cache and re-use the same action graph in the next build.  So, if
       // we detect that a fresh action graph is being used, we eagerly dump the cache to free up
       // memory.
-      if (previous.actionGraph != current.actionGraph) {
-        return false;
-      }
-
-      return true;
+      return previous.actionGraph == current.actionGraph;
     }
   }
 }

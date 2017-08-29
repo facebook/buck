@@ -36,7 +36,7 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
 
   private final Hasher hasher;
 
-  public GuavaRuleKeyHasher(Hasher hasher) {
+  GuavaRuleKeyHasher(Hasher hasher) {
     this.hasher = hasher;
   }
 

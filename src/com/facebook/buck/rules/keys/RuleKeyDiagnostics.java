@@ -35,7 +35,7 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
   private final Function<BuildRule, Result<RULE_KEY, DIAG_KEY>> ruleResultSupplier;
   private final Function<RuleKeyAppendable, Result<RULE_KEY, DIAG_KEY>> appendableResultSupplier;
 
-  public static final <RULE_KEY, DIAG_KEY> RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> nop() {
+  public static <RULE_KEY, DIAG_KEY> RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> nop() {
     return new RuleKeyDiagnostics<RULE_KEY, DIAG_KEY>(rulke -> null, appendable -> null) {
       @Override
       public void processRule(BuildRule rule, Consumer<Result<RULE_KEY, DIAG_KEY>> consumer) {}
@@ -76,7 +76,7 @@ public class RuleKeyDiagnostics<RULE_KEY, DIAG_KEY> {
   public static class Result<RULE_KEY, DIAG_KEY> {
     public final RULE_KEY ruleKey;
     public final DIAG_KEY diagKey;
-    public final Iterable<RuleKeyAppendable> appendables;
+    final Iterable<RuleKeyAppendable> appendables;
 
     public Result(RULE_KEY ruleKey, DIAG_KEY diagKey, Iterable<RuleKeyAppendable> appendables) {
       this.ruleKey = ruleKey;

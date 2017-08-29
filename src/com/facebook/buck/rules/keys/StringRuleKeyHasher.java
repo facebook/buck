@@ -44,7 +44,7 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
 
   @Override
   public StringRuleKeyHasher putNull() {
-    parts.add(String.format("null()"));
+    parts.add("null()");
     return this;
   }
 

@@ -24,7 +24,7 @@ public class SizeLimiter {
   private final long sizeLimit;
   private long currentSize;
 
-  public SizeLimiter(long sizeLimit) {
+  SizeLimiter(long sizeLimit) {
     this.sizeLimit = sizeLimit;
   }
 

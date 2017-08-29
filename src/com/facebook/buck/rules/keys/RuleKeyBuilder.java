@@ -107,7 +107,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     return (DefaultRuleKeyScopedHasher<RULE_KEY>) this.scopedHasher;
   }
 
-  public static RuleKeyHasher<HashCode> createDefaultHasher() {
+  static RuleKeyHasher<HashCode> createDefaultHasher() {
     RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
     if (logger.isVerboseEnabled()) {
       hasher =
@@ -122,15 +122,15 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   }
 
   /** To be called from {@link #setBuildRule(BuildRule)}. */
-  protected final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
-    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.BUILD_RULE)) {
+  final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
+    try (Scope ignored = scopedHasher.wrapperScope(Wrapper.BUILD_RULE)) {
       return setSingleValue(ruleKey);
     }
   }
 
   /** To be called from {@link #setAddsToRuleKey(AddsToRuleKey)}. */
-  protected final RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(RuleKey ruleKey) {
-    try (Scope wraperScope = scopedHasher.wrapperScope(Wrapper.APPENDABLE)) {
+  final RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(RuleKey ruleKey) {
+    try (Scope ignored = scopedHasher.wrapperScope(Wrapper.APPENDABLE)) {
       return setSingleValue(ruleKey);
     }
   }
@@ -142,8 +142,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    * explicitly in {@link #setSourcePath(SourcePath)} instead of calling this method. See also
    * {@link #setSourcePathAsRule}.
    */
-  protected final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath)
-      throws IOException {
+  final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
     if (sourcePath instanceof BuildTargetSourcePath) {
       return setPath(resolver.getFilesystem(sourcePath), resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {
@@ -168,12 +167,12 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    * should be handled as a build rule. This method hashes the given {@link BuildTargetSourcePath}
    * and invokes {@link #setBuildRule(BuildRule)} on the associated rule.
    */
-  protected final RuleKeyBuilder<RULE_KEY> setSourcePathAsRule(BuildTargetSourcePath sourcePath) {
+  final RuleKeyBuilder<RULE_KEY> setSourcePathAsRule(BuildTargetSourcePath sourcePath) {
     try (ContainerScope containerScope = scopedHasher.containerScope(Container.TUPLE)) {
-      try (Scope elementScope = containerScope.elementScope()) {
+      try (Scope ignored = containerScope.elementScope()) {
         hasher.putBuildTargetSourcePath(sourcePath);
       }
-      try (Scope elementScope = containerScope.elementScope()) {
+      try (Scope ignored = containerScope.elementScope()) {
         setBuildRule(ruleFinder.getRule(sourcePath));
       }
     }
@@ -216,7 +215,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     return this;
   }
 
-  protected final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
+  final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
     if (sourcePath instanceof BuildTargetSourcePath) {
       hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
     } else if (sourcePath instanceof PathSourcePath) {

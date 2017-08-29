@@ -31,15 +31,14 @@ public class ScopedRuleKeyObjectSink implements RuleKeyObjectSink {
   private final RuleKeyScopedHasher.ContainerScope scope;
   private final RuleKeyObjectSink delegate;
 
-  public ScopedRuleKeyObjectSink(
-      RuleKeyScopedHasher.ContainerScope scope, RuleKeyObjectSink delegate) {
+  ScopedRuleKeyObjectSink(RuleKeyScopedHasher.ContainerScope scope, RuleKeyObjectSink delegate) {
     this.scope = scope;
     this.delegate = delegate;
   }
 
   @Override
   public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
-    try (Scope elementScope = scope.elementScope()) {
+    try (Scope ignored = scope.elementScope()) {
       delegate.setReflectively(key, val);
       return this;
     }
@@ -48,7 +47,7 @@ public class ScopedRuleKeyObjectSink implements RuleKeyObjectSink {
   @Override
   @SuppressWarnings("deprecation")
   public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) throws IOException {
-    try (Scope elementScope = scope.elementScope()) {
+    try (Scope ignored = scope.elementScope()) {
       delegate.setPath(absolutePath, ideallyRelative);
       return this;
     }

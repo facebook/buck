@@ -31,7 +31,7 @@ public class RuleKeyFieldLoader {
     this.seed = seed;
   }
 
-  public void setFields(RuleKeyObjectSink builder, BuildRule buildRule, RuleKeyType ruleKeyType) {
+  void setFields(RuleKeyObjectSink builder, BuildRule buildRule, RuleKeyType ruleKeyType) {
     // "." is not a valid first character for a field name, nor a valid character for rule attribute
     // name and so the following fields will never collide with other stuff.
     builder.setReflectively(".seed", seed);

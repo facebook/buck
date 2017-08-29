@@ -64,7 +64,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.MapMaker;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
@@ -823,11 +822,6 @@ public class DefaultRuleKeyFactoryTest {
 
     @Override
     public void invalidateInputs(Iterable<RuleKeyInput> inputs) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void invalidateInputsMatchingRelativePath(Path path) {
       throw new UnsupportedOperationException();
     }
 

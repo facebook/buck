@@ -33,7 +33,7 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
 
   private long count = 0;
 
-  public CountingRuleKeyHasher(RuleKeyHasher<HASH> delegate) {
+  CountingRuleKeyHasher(RuleKeyHasher<HASH> delegate) {
     this.delegate = delegate;
   }
 

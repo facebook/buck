@@ -37,8 +37,7 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
   private final RuleKeyHasher<HASH> delegate;
   private final RuleKeyHasher<HASH2> secondHasher;
 
-  protected ForwardingRuleKeyHasher(
-      RuleKeyHasher<HASH> firstHasher, RuleKeyHasher<HASH2> secondHasher) {
+  ForwardingRuleKeyHasher(RuleKeyHasher<HASH> firstHasher, RuleKeyHasher<HASH2> secondHasher) {
     this.secondHasher = secondHasher;
     this.delegate = firstHasher;
   }
