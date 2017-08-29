@@ -856,23 +856,25 @@ public final class Main {
                   commandEventListeners
                   );
 
-          ImmutableList<Path> localConfigFiles =
-              rootCell
-                  .getAllCells()
-                  .stream()
-                  .map(
-                      cell ->
-                          cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
-                  .filter(path -> Files.isRegularFile(path))
-                  .collect(MoreCollectors.toImmutableList());
-          if (localConfigFiles.size() > 0) {
-            String message =
-                localConfigFiles.size() == 1
-                    ? "Using local configuration:"
-                    : "Using local configurations:";
-            buildEventBus.post(ConsoleEvent.warning(message));
-            for (Path localConfigFile : localConfigFiles) {
-              buildEventBus.post(ConsoleEvent.warning(String.format("- %s", localConfigFile)));
+          if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
+            ImmutableList<Path> localConfigFiles =
+                rootCell
+                    .getAllCells()
+                    .stream()
+                    .map(
+                        cell ->
+                            cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
+                    .filter(path -> Files.isRegularFile(path))
+                    .collect(MoreCollectors.toImmutableList());
+            if (localConfigFiles.size() > 0) {
+              String message =
+                  localConfigFiles.size() == 1
+                      ? "Using local configuration:"
+                      : "Using local configurations:";
+              buildEventBus.post(ConsoleEvent.warning(message));
+              for (Path localConfigFile : localConfigFiles) {
+                buildEventBus.post(ConsoleEvent.warning(String.format("- %s", localConfigFile)));
+              }
             }
           }
 

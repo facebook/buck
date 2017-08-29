@@ -502,6 +502,10 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue(LOG_SECTION, "machine_readable_logger_enabled", true);
   }
 
+  public boolean isBuckConfigLocalWarningEnabled() {
+    return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", true);
+  }
+
   public ProjectTestsMode xcodeProjectTestsMode() {
     return getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class)
         .orElse(ProjectTestsMode.WITH_TESTS);
