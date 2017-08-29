@@ -20,12 +20,13 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
@@ -33,9 +34,15 @@ import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
 /**
  * Buildable responsible for compiling non-english string resources to {@code .fbstr} files stored
@@ -48,7 +55,7 @@ import java.nio.file.Path;
  * locales provided. The contents of string_assets.zip is built into the assets of the APK.
  * all_locales_string_assets.zip is used for debugging purposes.
  */
-public class PackageStringAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class PackageStringAssets extends AbstractBuildRule {
   @VisibleForTesting static final String STRING_ASSET_FILE_EXTENSION = ".fbstr";
   public static final String STRING_ASSETS_DIR_FORMAT = "__strings_%s__";
 
@@ -56,17 +63,40 @@ public class PackageStringAssets extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final SourcePath rDotTxtPath;
   private final ImmutableSet<String> locales;
 
-  public PackageStringAssets(
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
+
+  PackageStringAssets(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      ImmutableSet<String> locales,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSortedSet<BuildRule> resourceRules,
+      ImmutableCollection<BuildRule> rulesWithResourceDirectories,
       FilteredResourcesProvider filteredResourcesProvider,
-      SourcePath rDotTxtPath) {
-    super(buildTarget, projectFilesystem, params);
+      ImmutableSet<String> locales,
+      SourcePath pathToRDotTxt) {
+    super(buildTarget, projectFilesystem);
     this.locales = locales;
     this.filteredResourcesProvider = filteredResourcesProvider;
-    this.rDotTxtPath = rDotTxtPath;
+    this.rDotTxtPath = pathToRDotTxt;
+
+    this.buildDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ruleFinder.filterBuildRuleInputs(pathToRDotTxt))
+                    .addAll(resourceRules)
+                    .addAll(rulesWithResourceDirectories)
+                    // Model the dependency on the presence of res directories, which, in the
+                    // case of resource filtering, is cached by the `ResourcesFilter` rule.
+                    .addAll(
+                        Iterables.filter(
+                            ImmutableList.of(filteredResourcesProvider), BuildRule.class))
+                    .build());
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   // TODO(russell): Add an integration test for packaging string assets

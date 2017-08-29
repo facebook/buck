@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -391,20 +390,14 @@ class AndroidBinaryResourcesGraphEnhancer {
       FilteredResourcesProvider filteredResourcesProvider,
       AaptOutputInfo aaptOutputInfo) {
     return new PackageStringAssets(
-        buildTarget.withAppendedFlavors(PACKAGE_STRING_ASSETS_FLAVOR),
+        buildTarget.withAppendedFlavors(
+            AndroidBinaryResourcesGraphEnhancer.PACKAGE_STRING_ASSETS_FLAVOR),
         projectFilesystem,
-        buildRuleParams.withDeclaredDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(ruleFinder.filterBuildRuleInputs(aaptOutputInfo.getPathToRDotTxt()))
-                .addAll(resourceRules)
-                .addAll(rulesWithResourceDirectories)
-                // Model the dependency on the presence of res directories, which, in the
-                // case of resource filtering, is cached by the `ResourcesFilter` rule.
-                .addAll(
-                    Iterables.filter(ImmutableList.of(filteredResourcesProvider), BuildRule.class))
-                .build()),
-        locales,
+        ruleFinder,
+        resourceRules,
+        rulesWithResourceDirectories,
         filteredResourcesProvider,
+        locales,
         aaptOutputInfo.getPathToRDotTxt());
   }
 
