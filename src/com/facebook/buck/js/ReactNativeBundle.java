@@ -78,8 +78,9 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path jsOutputDir;
   private final Path resource;
   private final Path sourceMapOutputPath;
+  private final int maxWorkers; // do not add this field to rule key
 
-  protected ReactNativeBundle(
+  ReactNativeBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams ruleParams,
@@ -92,7 +93,8 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String bundleName,
       ImmutableList<String> packagerFlags,
       Tool jsPackager,
-      ReactNativePlatform platform) {
+      ReactNativePlatform platform,
+      int maxWorkers) {
     super(buildTarget, projectFilesystem, ruleParams);
     this.entryPath = entryPath;
     this.srcs = srcs;
@@ -107,6 +109,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.jsOutputDir = getPathToJSBundleDir(buildTarget, getProjectFilesystem());
     this.resource = getPathToResources(buildTarget, getProjectFilesystem());
     this.sourceMapOutputPath = getPathToSourceMap(buildTarget, getProjectFilesystem());
+    this.maxWorkers = maxWorkers;
   }
 
   @Override
@@ -163,6 +166,12 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), tmpDir)));
 
+    ImmutableList<String> additionalPackagerFlags =
+        ImmutableList.<String>builder()
+            .add("--max-workers", Integer.toString(maxWorkers))
+            .addAll(packagerFlags)
+            .build();
+
     // Run the bundler.
     ReactNativeBundleWorkerStep workerStep =
         new ReactNativeBundleWorkerStep(
@@ -170,7 +179,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             tmpDir,
             jsPackager.getCommandPrefix(context.getSourcePathResolver()),
             jsPackager.getEnvironment(context.getSourcePathResolver()),
-            packagerFlags,
+            additionalPackagerFlags,
             platform,
             isUnbundle,
             isIndexedUnbundle,
@@ -189,7 +198,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             tmpDir,
             jsPackager.getCommandPrefix(context.getSourcePathResolver()),
             jsPackager.getEnvironment(context.getSourcePathResolver()),
-            packagerFlags,
+            additionalPackagerFlags,
             platform,
             getProjectFilesystem()
                 .resolve(context.getSourcePathResolver().getAbsolutePath(entryPath)),
