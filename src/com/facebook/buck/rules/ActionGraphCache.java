@@ -161,7 +161,8 @@ public class ActionGraphCache {
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph) {
-    final BuildRuleResolver resolver = new BuildRuleResolver(targetGraph, transformer, eventBus);
+    final BuildRuleResolver resolver =
+        new DefaultBuildRuleResolver(targetGraph, transformer, eventBus);
 
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {

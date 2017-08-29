@@ -30,6 +30,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -62,7 +63,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder builder =
         new HaskellLibraryBuilder(target).setCompilerFlags(ImmutableList.of(flag));
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new DefaultBuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     HaskellLibrary library = builder.build(resolver);
@@ -78,7 +79,7 @@ public class HaskellLibraryDescriptionTest {
   @Test
   public void targetsAndOutputsAreDifferentBetweenLinkStyles() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new DefaultBuildRuleResolver(
             TargetGraphFactory.newInstance(), new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget baseTarget = BuildTargetFactory.newInstance("//:rule");
 
@@ -124,7 +125,7 @@ public class HaskellLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     HaskellLibraryBuilder builder = new HaskellLibraryBuilder(target).setLinkWhole(true);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new DefaultBuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
@@ -167,7 +168,7 @@ public class HaskellLibraryDescriptionTest {
   @Test
   public void preferredLinkage() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new DefaultBuildRuleResolver(
             TargetGraphFactory.newInstance(), new DefaultTargetNodeToBuildRuleTransformer());
 
     // Test default value.
@@ -217,7 +218,7 @@ public class HaskellLibraryDescriptionTest {
                 SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("Test.hs"))))
             .setLinkWhole(true);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new DefaultBuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     HaskellLibrary library = builder.build(resolver);
@@ -262,7 +263,7 @@ public class HaskellLibraryDescriptionTest {
         TargetGraphFactory.newInstance(
             depABuilder.build(), depBBuilder.build(), ruleBuilder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     HaskellLibrary depA = (HaskellLibrary) resolver.requireRule(depABuilder.getTarget());
     HaskellLibrary depB = (HaskellLibrary) resolver.requireRule(depBBuilder.getTarget());
     HaskellLibrary rule = (HaskellLibrary) resolver.requireRule(ruleBuilder.getTarget());

@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -131,7 +132,7 @@ public class CommandAliasBuilder
     nodes.add(build());
     TargetGraph graph = TargetGraphFactory.newInstance(nodes);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     return new BuildResult(
         (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver);
