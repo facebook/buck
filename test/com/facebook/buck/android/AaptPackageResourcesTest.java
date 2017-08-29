@@ -214,7 +214,9 @@ public class AaptPackageResourcesTest {
         new ResourcesFilter(
             aaptTarget.withFlavors(InternalFlavor.of("filter")),
             filesystem,
-            params.withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2)).withoutExtraDeps(),
+            ImmutableSortedSet.of(resource1, resource2),
+            ImmutableSortedSet.of(resource1, resource2),
+            ruleFinder,
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -228,7 +230,9 @@ public class AaptPackageResourcesTest {
         new ResourcesFilter(
             aaptTarget.withFlavors(InternalFlavor.of("filter")),
             filesystem,
-            params.withDeclaredDeps(ImmutableSortedSet.of(resource1, resource2)).withoutExtraDeps(),
+            ImmutableSortedSet.of(resource1, resource2),
+            ImmutableSortedSet.of(resource1, resource2),
+            ruleFinder,
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
