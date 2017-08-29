@@ -52,6 +52,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
   static final Flavor GENERATE_RDOT_JAVA_FLAVOR = InternalFlavor.of("generate_rdot_java");
   private static final Flavor SPLIT_RESOURCES_FLAVOR = InternalFlavor.of("split_resources");
+  static final Flavor GENERATE_STRING_SOURCE_MAP_FLAVOR =
+      InternalFlavor.of("generate_string_source_map");
 
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesStep.ResourceFilter resourceFilter;
@@ -259,6 +261,10 @@ class AndroidBinaryResourcesGraphEnhancer {
                   getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()),
                   filteredResourcesProvider));
       ruleResolver.addToIndex(generateRDotJava.get());
+
+      if (shouldBuildStringSourceMap) {
+        ruleResolver.addToIndex(createGenerateStringSourceMap());
+      }
     }
 
     return resultBuilder
@@ -340,6 +346,13 @@ class AndroidBinaryResourcesGraphEnhancer {
         shouldBuildStringSourceMap,
         resourceDeps,
         resourcesProvider);
+  }
+
+  private GenerateStringSourceMap createGenerateStringSourceMap() {
+    return new GenerateStringSourceMap(
+        buildTarget.withAppendedFlavors(GENERATE_STRING_SOURCE_MAP_FLAVOR),
+        projectFilesystem,
+        ruleFinder);
   }
 
   private ResourcesFilter createResourcesFilter(
