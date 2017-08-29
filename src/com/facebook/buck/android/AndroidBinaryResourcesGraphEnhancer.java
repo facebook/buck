@@ -414,7 +414,6 @@ class AndroidBinaryResourcesGraphEnhancer {
         new MergeAssets(
             buildTarget.withAppendedFlavors(MERGE_ASSETS_FLAVOR),
             projectFilesystem,
-            buildRuleParams.withoutDeclaredDeps(),
             ruleFinder,
             baseApk,
             ImmutableSortedSet.copyOf(assetsDirectories));
