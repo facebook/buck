@@ -172,12 +172,10 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
-    BuildRuleParams aaptPackageResourcesParams = TestBuildRuleParams.create();
     AaptPackageResources aaptPackageResources =
         new AaptPackageResources(
             aaptPackageResourcesTarget,
             filesystem,
-            aaptPackageResourcesParams,
             ruleFinder,
             ruleResolver,
             /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),

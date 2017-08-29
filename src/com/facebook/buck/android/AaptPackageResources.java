@@ -20,11 +20,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildableContext;
@@ -39,15 +38,18 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 
 /** Packages the resources using {@code aapt}. */
-public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class AaptPackageResources extends AbstractBuildRule {
 
   public static final String RESOURCE_APK_PATH_FORMAT = "%s.unsigned.ap_";
 
@@ -57,6 +59,8 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
 
+  private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
+
   static ImmutableSortedSet<BuildRule> getAllDeps(
       BuildTarget aaptTarget,
       SourcePathRuleFinder ruleFinder,
@@ -64,7 +68,6 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
       ImmutableList<HasAndroidResourceDeps> resourceDeps) {
-
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     Stream<BuildTarget> resourceTargets =
         resourceDeps.stream().map(HasAndroidResourceDeps::getBuildTarget);
@@ -84,7 +87,6 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
   AaptPackageResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
@@ -93,24 +95,27 @@ public class AaptPackageResources extends AbstractBuildRuleWithDeclaredAndExtraD
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        params
-            .withDeclaredDeps(
+    super(buildTarget, projectFilesystem);
+    this.manifest = manifest;
+    this.filteredResourcesProvider = filteredResourcesProvider;
+    this.skipCrunchPngs = skipCrunchPngs;
+    this.includesVectorDrawables = includesVectorDrawables;
+    this.manifestEntries = manifestEntries;
+    this.buildDepsSupplier =
+        Suppliers.memoize(
+            () ->
                 getAllDeps(
                     buildTarget,
                     ruleFinder,
                     ruleResolver,
                     manifest,
                     filteredResourcesProvider,
-                    resourceDeps))
-            .withoutExtraDeps());
-    this.manifest = manifest;
-    this.filteredResourcesProvider = filteredResourcesProvider;
-    this.skipCrunchPngs = skipCrunchPngs;
-    this.includesVectorDrawables = includesVectorDrawables;
-    this.manifestEntries = manifestEntries;
+                    resourceDeps));
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   @Override

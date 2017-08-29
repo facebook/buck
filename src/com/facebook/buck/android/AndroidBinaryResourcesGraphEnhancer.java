@@ -375,7 +375,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new AaptPackageResources(
         buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR),
         projectFilesystem,
-        buildRuleParams.withoutDeclaredDeps(),
         ruleFinder,
         ruleResolver,
         manifest,
