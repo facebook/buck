@@ -240,20 +240,47 @@ class BuckTool(object):
                     time.sleep(1)
         return exit_code
 
-    def _run_with_buckd(self, env):
+    def _run_without_nailgun(self, argv, env):
         '''
-        Run the buck command using buckd.  If the command is "run", get the path, args, etc. from
-        the daemon, and raise an exception that tells __main__ to run that binary
+        Run the command by directly invoking `java` (rather than by sending a command via nailgun)
+        '''
+        command = ["buck"]
+        extra_default_options = [
+            "-Djava.io.tmpdir={0}".format(self._tmp_dir),
+            "-Dfile.encoding=UTF-8",
+            "-XX:SoftRefLRUPolicyMSPerMB=0",
+            "-XX:+UseG1GC",
+        ]
+        command.extend(self._get_java_args(self._get_buck_version_uid(), extra_default_options))
+        command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
+        command.append("com.facebook.buck.cli.Main")
+        command.extend(argv)
+
+        now = int(round(time.time() * 1000))
+        env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
+        java = which('java')
+        if java is None:
+            raise BuckToolException('Could not find java on $PATH')
+        with Tracing('buck', args={'command': command}):
+            return subprocess.call(command,
+                                   cwd=self._buck_project.root,
+                                   env=env,
+                                   executable=java)
+
+    def _execute_command_and_maybe_run_target(self, run_fn, env):
+        '''
+        Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
+        args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
         '''
         with Tracing('buck', args={'command': sys.argv[1:]}):
             argv = sys.argv[1:]
             if len(argv) == 0 or argv[0] != 'run':
-                return self._run_with_nailgun(argv, env)
+                return run_fn(argv, env)
             else:
                 with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
                     # Splice in location of command file to run outside buckd
                     argv = [argv[0]] + ['--command-args-file', argsfile.name] + argv[1:]
-                    exit_code = self._run_with_nailgun(argv, env)
+                    exit_code = run_fn(argv, env)
                     if exit_code != 0:
                         # Build failed, so there's nothing to run.  Exit normally.
                         return exit_code
@@ -296,31 +323,10 @@ class BuckTool(object):
                 env = self._environ_for_buck()
                 env['BUCK_BUILD_ID'] = build_id
 
-                if use_buckd and self._is_buckd_running():
-                    return self._run_with_buckd(env)
+                use_nailgun = use_buckd and self._is_buckd_running()
+                run_fn = self._run_with_nailgun if use_nailgun else self._run_without_nailgun
 
-                command = ["buck"]
-                extra_default_options = [
-                    "-Djava.io.tmpdir={0}".format(self._tmp_dir),
-                    "-Dfile.encoding=UTF-8",
-                    "-XX:SoftRefLRUPolicyMSPerMB=0",
-                    "-XX:+UseG1GC",
-                ]
-                command.extend(self._get_java_args(buck_version_uid, extra_default_options))
-                command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-                command.append("com.facebook.buck.cli.Main")
-                command.extend(sys.argv[1:])
-
-                now = int(round(time.time() * 1000))
-                env['BUCK_PYTHON_SPACE_INIT_TIME'] = str(now - self._init_timestamp)
-                java = which('java')
-                if java is None:
-                    raise BuckToolException('Could not find java on $PATH')
-                with Tracing('buck', args={'command': command}):
-                    return subprocess.call(command,
-                                           cwd=self._buck_project.root,
-                                           env=env,
-                                           executable=java)
+                return self._execute_command_and_maybe_run_target(run_fn, env)
 
 
     def _generate_log_entry(self, message, logs_array):
