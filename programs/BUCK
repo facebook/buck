@@ -25,6 +25,7 @@ python_binary(
     deps = [
         ":buck_version",
     ],
+    visibility = ['PUBLIC'],
 )
 
 # This is bit weird.  This rule isn't idempotent, since it calls out
@@ -106,6 +107,9 @@ python_binary(
         ":bucklib",
         ":subprocutils",
     ],
+    visibility = [
+        "//scripts/packages/debian:debian"
+    ],
 )
 
 python_binary(
@@ -115,6 +119,9 @@ python_binary(
     deps = [
         ":bucklib",
         ":subprocutils",
+    ],
+    visibility = [
+        "//scripts/packages/debian:debian"
     ],
 )
 
