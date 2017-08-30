@@ -30,12 +30,15 @@ import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
+import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -83,12 +86,14 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class ChromeTraceBuildListenerTest {
+  private static final BuildId BUILD_ID = new BuildId("BUILD_ID");
   private static final long CURRENT_TIME_MILLIS = 1409702151000L;
   private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
   private static final FakeClock FAKE_CLOCK =
@@ -100,6 +105,7 @@ public class ChromeTraceBuildListenerTest {
 
   private InvocationInfo invocationInfo;
   private BuildRuleDurationTracker durationTracker;
+  private BuckEventBus eventBus;
 
   @Before
   public void setUp() throws IOException {
@@ -107,7 +113,7 @@ public class ChromeTraceBuildListenerTest {
         InvocationInfo.builder()
             .setTimestampMillis(CURRENT_TIME_MILLIS)
             .setBuckLogDir(tmpDir.getRoot().toPath().resolve("buck-out/log"))
-            .setBuildId(new BuildId("BUILD_ID"))
+            .setBuildId(BUILD_ID)
             .setSubCommand("no_sub_command")
             .setIsDaemon(false)
             .setSuperConsoleEnabled(false)
@@ -115,6 +121,67 @@ public class ChromeTraceBuildListenerTest {
             .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
             .build();
     durationTracker = new BuildRuleDurationTracker();
+    eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
+  }
+
+  @Test
+  public void testEventsUseNanoTime() throws InterruptedException, IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+
+    ChromeTraceBuildListener listener =
+        new ChromeTraceBuildListener(
+            projectFilesystem, invocationInfo, FAKE_CLOCK, chromeTraceConfig(1, false));
+    FakeBuckEvent event = new FakeBuckEvent();
+    eventBus.post(event); // Populates it with a timestamp
+
+    listener.writeChromeTraceEvent(
+        "test", event.getEventName(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), event);
+    listener.outputTrace(BUILD_ID);
+
+    List<ChromeTraceEvent> originalResultList =
+        ObjectMappers.readValue(
+            tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
+            new TypeReference<List<ChromeTraceEvent>>() {});
+
+    assertThat(originalResultList, Matchers.hasSize(3));
+
+    ChromeTraceEvent testEvent = originalResultList.get(2);
+    assertThat(testEvent.getName(), Matchers.equalTo(event.getEventName()));
+    assertThat(
+        testEvent.getMicroTime(),
+        Matchers.equalTo(TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.nanoTime())));
+    assertThat(
+        testEvent.getMicroThreadUserTime(),
+        Matchers.equalTo(
+            TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.threadUserNanoTime(testEvent.getThreadId()))));
+  }
+
+  @Test
+  public void testMetadataEventsUseNanoTime() throws InterruptedException, IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+
+    ChromeTraceBuildListener listener =
+        new ChromeTraceBuildListener(
+            projectFilesystem, invocationInfo, FAKE_CLOCK, chromeTraceConfig(1, false));
+    listener.writeChromeTraceMetadataEvent("test", ImmutableMap.of());
+    listener.outputTrace(BUILD_ID);
+
+    List<ChromeTraceEvent> originalResultList =
+        ObjectMappers.readValue(
+            tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
+            new TypeReference<List<ChromeTraceEvent>>() {});
+
+    assertThat(originalResultList, Matchers.hasSize(3));
+
+    ChromeTraceEvent testEvent = originalResultList.get(2);
+    assertThat(testEvent.getName(), Matchers.equalTo("test"));
+    assertThat(
+        testEvent.getMicroTime(),
+        Matchers.equalTo(TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.nanoTime())));
+    assertThat(
+        testEvent.getMicroThreadUserTime(),
+        Matchers.equalTo(
+            TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.threadUserNanoTime(testEvent.getThreadId()))));
   }
 
   @Test
@@ -585,5 +652,21 @@ public class ChromeTraceBuildListenerTest {
                         "compress_traces",
                         Boolean.toString(compressTraces))))
             .build());
+  }
+
+  private static class FakeBuckEvent extends AbstractBuckEvent {
+    protected FakeBuckEvent() {
+      super(EventKey.of(42));
+    }
+
+    @Override
+    public String getEventName() {
+      return "fake";
+    }
+
+    @Override
+    protected String getValueString() {
+      return "fake";
+    }
   }
 }

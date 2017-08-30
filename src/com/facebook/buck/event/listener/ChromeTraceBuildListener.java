@@ -804,7 +804,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
   }
 
-  private void writeChromeTraceEvent(
+  @VisibleForTesting
+  void writeChromeTraceEvent(
       String category,
       String name,
       ChromeTraceEvent.Phase phase,
@@ -823,9 +824,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     submitTraceEvent(chromeTraceEvent);
   }
 
-  private void writeChromeTraceMetadataEvent(
+  @VisibleForTesting
+  void writeChromeTraceMetadataEvent(
       String name, ImmutableMap<String, ? extends Object> arguments) {
-    long timestampInMicroseconds = TimeUnit.MILLISECONDS.toMicros(clock.currentTimeMillis());
+    long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(clock.nanoTime());
+    long threadTimestampInMicroseconds =
+        TimeUnit.NANOSECONDS.toMicros(clock.threadUserNanoTime(Thread.currentThread().getId()));
     ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
             /* category */ "buck",
@@ -834,7 +838,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             /* processId */ 0,
             /* threadId */ 0,
             /* microTime */ timestampInMicroseconds,
-            /* microThreadUserTime */ timestampInMicroseconds,
+            /* microThreadUserTime */ threadTimestampInMicroseconds,
             arguments);
     submitTraceEvent(chromeTraceEvent);
   }
