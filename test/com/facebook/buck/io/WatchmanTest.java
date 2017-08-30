@@ -88,7 +88,7 @@ public class WatchmanTest {
   @Test
   public void shouldReturnEmptyWatchmanIfVersionCheckFails()
       throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -115,7 +115,7 @@ public class WatchmanTest {
   @Test
   public void shouldReturnNullWatchmanIfExtendedVersionCheckMissing()
       throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -153,7 +153,7 @@ public class WatchmanTest {
 
   @Test
   public void shouldFailIfWatchProjectNotAvailable() throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -202,7 +202,7 @@ public class WatchmanTest {
   @Test
   public void watchmanVersionTakingThirtySecondsReturnsEmpty()
       throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -250,7 +250,7 @@ public class WatchmanTest {
   @Test
   public void watchmanWatchProjectTakingThirtySecondsReturnsEmpty()
       throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -297,7 +297,7 @@ public class WatchmanTest {
 
   @Test
   public void capabilitiesDetectedForVersion38AndLater() throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -355,7 +355,7 @@ public class WatchmanTest {
 
   @Test
   public void capabilitiesDetectedForVersion47AndLater() throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
@@ -415,7 +415,7 @@ public class WatchmanTest {
 
   @Test
   public void emptyClockQueryShouldReturnNullClock() throws InterruptedException, IOException {
-    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =
         new FakeListeningProcessExecutor(
             ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()

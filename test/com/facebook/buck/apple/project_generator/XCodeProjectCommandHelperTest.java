@@ -425,7 +425,7 @@ public class XCodeProjectCommandHelperTest {
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     Cell cell =
         new TestCellBuilder()
-            .setFilesystem(new FakeProjectFilesystem(new SettableFakeClock(0, 0)))
+            .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),

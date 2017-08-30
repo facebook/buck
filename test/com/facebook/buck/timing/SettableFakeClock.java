@@ -16,51 +16,57 @@
 
 package com.facebook.buck.timing;
 
-import com.google.common.collect.ImmutableMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Fake implementation of {@link Clock} which returns the last time to which it was set. */
 public class SettableFakeClock implements Clock {
-  private final AtomicLong currentTimeMillis;
-  private final AtomicLong nanoTime;
-  private final Map<Long, Long> threadIdToUserNanoTime;
+  public static final SettableFakeClock DO_NOT_CARE = new SettableFakeClock(FakeClock.DO_NOT_CARE);
 
-  public SettableFakeClock(
-      long currentTimeMillis, long nanoTime, ImmutableMap<Long, Long> threadIdToUserNanoTime) {
-    this.currentTimeMillis = new AtomicLong(currentTimeMillis);
-    this.nanoTime = new AtomicLong(nanoTime);
-    this.threadIdToUserNanoTime = new HashMap<>(threadIdToUserNanoTime);
+  // We use FakeClock as the implementation because it enforces reasonably realistic behavior.
+  private final AtomicReference<FakeClock> currentClock;
+
+  public SettableFakeClock(FakeClock initial) {
+    currentClock = new AtomicReference<>(initial);
   }
 
+  /**
+   * {@code currentTimeMillis} and {@code nanoTime} should be completely unrelated, because {@link
+   * System#currentTimeMillis()} and {@link System#nanoTime()} are completely unrelated.
+   */
   public SettableFakeClock(long currentTimeMillis, long nanoTime) {
-    this(currentTimeMillis, nanoTime, ImmutableMap.of());
+    currentClock =
+        new AtomicReference<>(
+            FakeClock.builder().currentTimeMillis(currentTimeMillis).nanoTime(nanoTime).build());
   }
 
   public void setCurrentTimeMillis(long millis) {
-    currentTimeMillis.set(millis);
+    currentClock.set(currentClock.get().withCurrentTimeMillis(millis));
   }
 
   public void advanceTimeNanos(long nanos) {
-    this.nanoTime.addAndGet(nanos);
-    this.currentTimeMillis.addAndGet(TimeUnit.NANOSECONDS.toMillis(nanos));
+    FakeClock currentClock = this.currentClock.get();
+    // TODO(jkeljo): The clocks do not necessarily advance in lockstep; change this to be more
+    // realistic.
+    this.currentClock.set(
+        currentClock
+            .withNanoTime(currentClock.nanoTime() + nanos)
+            .withCurrentTimeMillis(
+                currentClock.currentTimeMillis() + TimeUnit.NANOSECONDS.toMillis(nanos)));
   }
 
   @Override
   public long currentTimeMillis() {
-    return currentTimeMillis.get();
+    return currentClock.get().currentTimeMillis();
   }
 
   @Override
   public long nanoTime() {
-    return nanoTime.get();
+    return currentClock.get().nanoTime();
   }
 
   @Override
   public long threadUserNanoTime(long threadId) {
-    return Optional.ofNullable(threadIdToUserNanoTime.get(threadId)).orElse(-1L);
+    return currentClock.get().threadUserNanoTime(threadId);
   }
 }

@@ -140,7 +140,7 @@ public class BuildTracesTest {
 
   @Test
   public void testSortByLastModified() throws IOException {
-    SettableFakeClock clock = new SettableFakeClock(0L, 0L);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem(clock);
     clock.setCurrentTimeMillis(1);
     Path traceDir = projectFilesystem.getBuckPaths().getTraceDir();
@@ -185,7 +185,7 @@ public class BuildTracesTest {
 
   @Test
   public void testFindingTracesInNewPerCommandDirectories() throws IOException {
-    SettableFakeClock clock = new SettableFakeClock(0L, 0L);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeProjectFilesystem fs = new FakeProjectFilesystem(clock);
     fs.touch(getNewTraceFilePath(fs, "build", "1", 1));
     fs.touch(getNewTraceFilePath(fs, "audit", "4", 4));

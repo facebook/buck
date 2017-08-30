@@ -84,7 +84,7 @@ public class DistBuildSlaveEventBusListenerTest {
   private StampedeId stampedeId;
   private DistBuildService distBuildServiceMock;
   private BuckEventBus eventBus;
-  private SettableFakeClock clock = new SettableFakeClock(0, 0);
+  private SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
   private FileMaterializationStatsTracker fileMaterializationStatsTracker;
   private FakeDistBuildSlaveTimingStatsTracker slaveStatsTracker;
 

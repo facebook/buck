@@ -180,7 +180,7 @@ public class ProjectGeneratorTest {
   @Before
   public void setUp() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    clock = new SettableFakeClock(0, 0);
+    clock = SettableFakeClock.DO_NOT_CARE;
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectCell = (new TestCellBuilder()).setFilesystem(fakeProjectFilesystem).build();
     projectFilesystem = projectCell.getFilesystem();
