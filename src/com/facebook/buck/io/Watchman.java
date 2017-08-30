@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -391,8 +390,7 @@ public class Watchman implements AutoCloseable {
       throws InterruptedException, IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    ForwardingProcessListener listener =
-        new ForwardingProcessListener(Channels.newChannel(stdout), Channels.newChannel(stderr));
+    ForwardingProcessListener listener = new ForwardingProcessListener(stdout, stderr);
     ListeningProcessExecutor.LaunchedProcess process =
         executor.launchProcess(
             ProcessExecutorParams.builder()

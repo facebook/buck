@@ -71,7 +71,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -357,8 +356,7 @@ public class TestCommand extends BuildCommand {
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(
-            Channels.newChannel(params.getConsole().getStdOut()),
-            Channels.newChannel(params.getConsole().getStdErr()));
+            params.getConsole().getStdOut(), params.getConsole().getStdErr());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     try {
