@@ -304,7 +304,7 @@ class CachingBuildRuleBuilder {
 
               @Override
               public void onFailure(@Nonnull Throwable thrown) {
-                throw new AssertionError("Dead code");
+                throw new AssertionError("Dead code", thrown);
               }
             },
             serviceByAdjustingDefaultWeightsTo(
