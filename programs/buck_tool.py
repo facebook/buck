@@ -106,7 +106,6 @@ class ExecuteTarget(Exception):
     def execve(self):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
-        os.chdir(self._cwd)
         os.execvpe(self._path, self._argv, self._envp)
 
 

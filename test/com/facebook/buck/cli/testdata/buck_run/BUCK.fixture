@@ -18,3 +18,8 @@ python_binary(
     name = "hello-python",
     main = "hello.py",
 )
+
+python_binary(
+    name = "pwd",
+    main = "pwd.py",
+)

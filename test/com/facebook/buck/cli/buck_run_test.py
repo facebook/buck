@@ -13,9 +13,11 @@
 # under the License.
 
 import os
+import sys
 import unittest
 
 from project_workspace import ProjectWorkspace
+from project_workspace import run_buck_process
 
 
 class TestBuckRun(unittest.TestCase):
@@ -25,6 +27,16 @@ class TestBuckRun(unittest.TestCase):
             self.assertEqual(0, workspace.run_buck('run', '//:hello-java'))
             self.assertEqual(0, workspace.run_buck('run', '//:hello-cxx'))
             self.assertEqual(0, workspace.run_buck('run', '//:hello-python'))
+            subdir = workspace.resolve_path('subdir')
+            os.mkdir(subdir)
+            proc = run_buck_process(['run', '//:pwd'], subdir)
+            stdout, stderr = proc.communicate()
+            sys.stdout.write(stdout)
+            sys.stdout.flush()
+            sys.stderr.write(stderr)
+            sys.stderr.flush()
+            self.assertEqual(0, proc.returncode)
+
 
 if __name__ == '__main__':
     unittest.main()
