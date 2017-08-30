@@ -136,6 +136,71 @@ public class JarBuilderTest {
   }
 
   @Test
+  public void testDisallowAllDuplicates() throws IOException {
+    File tempFile = temporaryFolder.newFile();
+    JarBuilder builder;
+    try (TestJarEntryContainer container1 = new TestJarEntryContainer("Container1");
+        TestJarEntryContainer container2 = new TestJarEntryContainer("Container2")) {
+      builder =
+          new JarBuilder()
+              .addEntryContainer(
+                  container1
+                      .addEntry("Foo.class", "Foo1")
+                      .addEntry("Bar.class", "Bar1")
+                      .addEntry("Buz.txt", "Buz1"))
+              .addEntryContainer(
+                  container2
+                      .addEntry("Foo.class", "Foo2")
+                      .addEntry("Fiz.class", "Fiz2")
+                      .addEntry("Buz.txt", "Buz2"));
+    }
+
+    builder.createJarFile(tempFile.toPath());
+    try (JarFile jarFile = new JarFile(tempFile)) {
+      assertEquals(
+          ImmutableList.of(
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "Bar.class",
+              "Buz.txt",
+              "Buz.txt",
+              "Fiz.class",
+              "Foo.class"),
+          jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
+    }
+
+    try (TestJarEntryContainer container1 = new TestJarEntryContainer("Container1");
+        TestJarEntryContainer container2 = new TestJarEntryContainer("Container2")) {
+      builder =
+          new JarBuilder()
+              .addEntryContainer(
+                  container1
+                      .addEntry("Foo.class", "Foo1")
+                      .addEntry("Bar.class", "Bar1")
+                      .addEntry("Buz.txt", "Buz1"))
+              .addEntryContainer(
+                  container2
+                      .addEntry("Foo.class", "Foo2")
+                      .addEntry("Fiz.class", "Fiz2")
+                      .addEntry("Buz.txt", "Buz2"));
+    }
+
+    builder.setShouldDisallowAllDuplicates(true);
+    builder.createJarFile(tempFile.toPath());
+    try (JarFile jarFile = new JarFile(tempFile)) {
+      assertEquals(
+          ImmutableList.of(
+              "META-INF/",
+              "META-INF/MANIFEST.MF",
+              "Bar.class",
+              "Buz.txt",
+              "Fiz.class",
+              "Foo.class"),
+          jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
+    }
+  }
+
+  @Test
   public void testMakesDirectoriesForEntries() throws IOException {
     File tempFile = temporaryFolder.newFile();
     JarBuilder jarBuilder = new JarBuilder();

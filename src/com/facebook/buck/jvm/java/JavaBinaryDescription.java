@@ -112,6 +112,7 @@ public class JavaBinaryDescription
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
             args.getMergeManifests().orElse(true),
+            args.getDisallowAllDuplicates().orElse(false),
             args.getMetaInfDirectory().orElse(null),
             args.getBlacklist(),
             transitiveClasspathDeps,
@@ -174,6 +175,8 @@ public class JavaBinaryDescription
     Optional<SourcePath> getManifestFile();
 
     Optional<Boolean> getMergeManifests();
+
+    Optional<Boolean> getDisallowAllDuplicates();
 
     Optional<Path> getMetaInfDirectory();
 
