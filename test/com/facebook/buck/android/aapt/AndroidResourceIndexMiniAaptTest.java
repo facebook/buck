@@ -277,7 +277,7 @@ public class AndroidResourceIndexMiniAaptTest {
     aapt.processFileNamesInDirectory(filesystem, Paths.get("sample_res/transition-v19"));
     aapt.processValues(
         filesystem,
-        new DefaultBuckEventBus(new FakeClock(0), new BuildId("")),
+        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("")),
         Paths.get("sample_res/values"));
 
     assertEquals(

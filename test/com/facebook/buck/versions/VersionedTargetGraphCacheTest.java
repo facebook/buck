@@ -44,7 +44,8 @@ import org.junit.Test;
 
 public class VersionedTargetGraphCacheTest {
 
-  private static final BuckEventBus BUS = new DefaultBuckEventBus(new FakeClock(0), new BuildId());
+  private static final BuckEventBus BUS =
+      new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId());
   private static final ForkJoinPool POOL = new ForkJoinPool(1);
 
   private Version version1 = Version.of("v1");

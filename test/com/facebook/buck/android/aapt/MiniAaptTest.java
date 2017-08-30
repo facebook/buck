@@ -639,7 +639,7 @@ public class MiniAaptTest {
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/transition-v19"));
     aapt.processValues(
         filesystem,
-        new DefaultBuckEventBus(new FakeClock(0), new BuildId("")),
+        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("")),
         Paths.get("res/values"));
 
     assertEquals(

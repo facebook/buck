@@ -50,7 +50,7 @@ public class ParsingJavaPackageFinderTest {
 
     fakeProjectFilesystem =
         new FakeProjectFilesystem(
-            new FakeClock(0),
+            FakeClock.DO_NOT_CARE,
             Paths.get(".").toAbsolutePath(),
             ImmutableSet.of(matchPath, mismatchPath, placeholderPath));
     fakeProjectFilesystem.writeContentsToPath(

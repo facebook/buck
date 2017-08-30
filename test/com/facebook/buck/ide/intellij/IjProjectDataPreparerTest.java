@@ -360,7 +360,7 @@ public class IjProjectDataPreparerTest {
             Paths.get("lib/guava.jar"));
 
     FakeProjectFilesystem filesystemForExcludesTest =
-        new FakeProjectFilesystem(new FakeClock(0), Paths.get(".").toAbsolutePath(), paths);
+        new FakeProjectFilesystem(FakeClock.DO_NOT_CARE, Paths.get(".").toAbsolutePath(), paths);
 
     TargetNode<?, ?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))

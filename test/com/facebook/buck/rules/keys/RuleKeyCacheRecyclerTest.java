@@ -39,7 +39,7 @@ public class RuleKeyCacheRecyclerTest {
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final EventBus EVENT_BUS = new EventBus();
   private static final BuckEventBus BUCK_EVENT_BUS =
-      new DefaultBuckEventBus(new FakeClock(0), new BuildId());
+      new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId());
   private static final int RULE_KEY_SEED = 0;
   private static final ActionGraph ACTION_GRAPH = new ActionGraph(ImmutableList.of());
   private static final RuleKeyCacheRecycler.SettingsAffectingCache SETTINGS =

@@ -3702,7 +3702,7 @@ public class StubJarTest {
               testCompiler.getElements(),
               jarBuilder,
               new JavacEventSinkToBuckEventBusBridge(
-                  new DefaultBuckEventBus(new FakeClock(0), new BuildId())));
+                  new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())));
 
       testCompiler.addPostEnterCallback(generator::generate);
       testCompiler.enter();

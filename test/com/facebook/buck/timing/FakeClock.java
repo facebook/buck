@@ -20,6 +20,9 @@ import java.util.concurrent.TimeUnit;
 
 /** Provides a fake implementation of a {@link Clock} which always returns a constant time. */
 public class FakeClock implements Clock {
+  /** FakeClock instance for tests that don't require specific timestamp values. */
+  public static final FakeClock DO_NOT_CARE = new FakeClock(TimeUnit.MILLISECONDS.toNanos(1337));
+
   private final long nanoTime;
 
   public FakeClock(long nanoTime) {

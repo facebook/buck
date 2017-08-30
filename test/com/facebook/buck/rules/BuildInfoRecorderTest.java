@@ -139,7 +139,7 @@ public class BuildInfoRecorderTest {
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
-    BuckEventBus bus = new DefaultBuckEventBus(new FakeClock(0), new BuildId("BUILD"));
+    BuckEventBus bus = new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("BUILD"));
 
     final byte[] contents = "contents".getBytes();
 
