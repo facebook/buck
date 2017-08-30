@@ -16,27 +16,33 @@
 
 package com.facebook.buck.timing;
 
+import com.google.common.base.Preconditions;
 import java.util.concurrent.TimeUnit;
+import org.immutables.value.Value;
 
 /** Provides a fake implementation of a {@link Clock} which always returns a constant time. */
-public class FakeClock implements Clock {
+@Value.Immutable
+@Value.Style(typeImmutable = "*")
+public abstract class AbstractFakeClock implements Clock {
   /** FakeClock instance for tests that don't require specific timestamp values. */
-  public static final FakeClock DO_NOT_CARE = new FakeClock(TimeUnit.MILLISECONDS.toNanos(1337));
-
-  private final long nanoTime;
-
-  public FakeClock(long nanoTime) {
-    this.nanoTime = nanoTime;
-  }
+  public static final FakeClock DO_NOT_CARE =
+      FakeClock.builder()
+          .currentTimeMillis(1337)
+          .nanoTime(TimeUnit.MILLISECONDS.toNanos(4242))
+          .build();
 
   @Override
-  public long currentTimeMillis() {
-    return TimeUnit.NANOSECONDS.toMillis(nanoTime);
-  }
+  public abstract long currentTimeMillis();
 
   @Override
-  public long nanoTime() {
-    return nanoTime;
+  public abstract long nanoTime();
+
+  @Value.Check
+  protected void checkNanoTimeIsNotDerivedFromCurrentTimeMillis() {
+    // Being a little overly conservative here given the method name, but really nano time should
+    // never be anywhere near currentTimeMillis so it's OK.
+    Preconditions.checkState(
+        Math.abs(TimeUnit.NANOSECONDS.toMillis(nanoTime()) - currentTimeMillis()) > 1);
   }
 
   @Override

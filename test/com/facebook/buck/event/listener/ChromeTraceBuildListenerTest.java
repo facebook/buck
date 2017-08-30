@@ -89,7 +89,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class ChromeTraceBuildListenerTest {
-  private static final long TIMESTAMP_NANOS = 1409702151000000000L;
+  private static final long CURRENT_TIME_MILLIS = 1409702151000L;
+  private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
+  private static final FakeClock FAKE_CLOCK =
+      FakeClock.builder().currentTimeMillis(CURRENT_TIME_MILLIS).nanoTime(NANO_TIME).build();
   private static final String EXPECTED_DIR =
       "buck-out/log/2014-09-02_23h55m51s_no_sub_command_BUILD_ID/";
 
@@ -102,7 +105,7 @@ public class ChromeTraceBuildListenerTest {
   public void setUp() throws IOException {
     invocationInfo =
         InvocationInfo.builder()
-            .setTimestampMillis(TimeUnit.NANOSECONDS.toMillis(TIMESTAMP_NANOS))
+            .setTimestampMillis(CURRENT_TIME_MILLIS)
             .setBuckLogDir(tmpDir.getRoot().toPath().resolve("buck-out/log"))
             .setBuildId(new BuildId("BUILD_ID"))
             .setSubCommand("no_sub_command")
@@ -136,7 +139,7 @@ public class ChromeTraceBuildListenerTest {
         new ChromeTraceBuildListener(
             projectFilesystem,
             invocationInfo,
-            new FakeClock(TIMESTAMP_NANOS),
+            FAKE_CLOCK,
             Locale.US,
             TimeZone.getTimeZone("America/Los_Angeles"),
             chromeTraceConfig(3, false));
@@ -170,7 +173,7 @@ public class ChromeTraceBuildListenerTest {
         new ChromeTraceBuildListener(
             projectFilesystem,
             invocationInfo,
-            new FakeClock(TIMESTAMP_NANOS),
+            FAKE_CLOCK,
             Locale.US,
             TimeZone.getTimeZone("America/Los_Angeles"),
             chromeTraceConfig(42, false));
@@ -508,7 +511,7 @@ public class ChromeTraceBuildListenerTest {
           new ChromeTraceBuildListener(
               projectFilesystem,
               invocationInfo,
-              new FakeClock(TIMESTAMP_NANOS),
+              FAKE_CLOCK,
               Locale.US,
               TimeZone.getTimeZone("America/Los_Angeles"),
               chromeTraceConfig(3, false));
@@ -532,7 +535,7 @@ public class ChromeTraceBuildListenerTest {
         new ChromeTraceBuildListener(
             projectFilesystem,
             invocationInfo,
-            new FakeClock(TIMESTAMP_NANOS),
+            FAKE_CLOCK,
             Locale.US,
             TimeZone.getTimeZone("America/Los_Angeles"),
             chromeTraceConfig(1, false));
@@ -550,7 +553,7 @@ public class ChromeTraceBuildListenerTest {
         new ChromeTraceBuildListener(
             projectFilesystem,
             invocationInfo,
-            new FakeClock(TIMESTAMP_NANOS),
+            FAKE_CLOCK,
             Locale.US,
             TimeZone.getTimeZone("America/Los_Angeles"),
             chromeTraceConfig(1, true));
