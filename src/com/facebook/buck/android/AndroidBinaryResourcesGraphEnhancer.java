@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.SourcePath;
@@ -58,7 +57,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
   private final BuildTarget buildTarget;
-  private final BuildRuleParams buildRuleParams;
   private final ProjectFilesystem projectFilesystem;
   private final BuildRuleResolver ruleResolver;
   private final AndroidBinary.AaptMode aaptMode;
@@ -77,7 +75,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       BuildRuleResolver ruleResolver,
       BuildTarget originalBuildTarget,
       boolean exopackageForResources,
@@ -94,7 +91,6 @@ class AndroidBinaryResourcesGraphEnhancer {
       ManifestEntries manifestEntries,
       Optional<Arg> postFilterResourcesCmd,
       boolean noAutoVersionResources) {
-    Preconditions.checkArgument(buildRuleParams.getExtraDeps().get().isEmpty());
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleResolver = ruleResolver;
@@ -103,7 +99,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceFilter = resourceFilter;
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
-    this.buildRuleParams = buildRuleParams;
     this.aaptMode = aaptMode;
     this.manifest = manifest;
     this.resourceUnionPackage = resourceUnionPackage;
@@ -301,7 +296,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             new Aapt2Compile(
                 buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index)),
                 projectFilesystem,
-                buildRuleParams.withoutDeclaredDeps().withExtraDeps(compileDeps),
+                compileDeps,
                 resDir);
         ruleResolver.addToIndex(compileRule);
         compileListBuilder.add(compileRule);

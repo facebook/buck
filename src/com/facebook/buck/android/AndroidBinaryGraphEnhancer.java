@@ -203,7 +203,6 @@ public class AndroidBinaryGraphEnhancer {
         new AndroidBinaryResourcesGraphEnhancer(
             originalBuildTarget,
             projectFilesystem,
-            buildRuleParams,
             ruleResolver,
             originalBuildTarget,
             ExopackageMode.enabledForResources(exopackageModes),

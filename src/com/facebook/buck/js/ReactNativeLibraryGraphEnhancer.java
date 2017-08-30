@@ -141,7 +141,7 @@ public class ReactNativeLibraryGraphEnhancer {
               buildTargetForResource.withAppendedFlavors(
                   AndroidResourceDescription.AAPT2_COMPILE_FLAVOR),
               projectFilesystem,
-              paramsForResource,
+              ImmutableSortedSet.of(bundle),
               resources);
       resolver.addToIndex(aapt2Compile);
     }

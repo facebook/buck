@@ -168,7 +168,7 @@ public class AndroidPrebuiltAarDescription
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          params.copyAppendingExtraDeps(unzipAarRule),
+          ImmutableSortedSet.of(unzipAarRule),
           unzipAar.getResDirectory());
     }
 
