@@ -33,6 +33,7 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -173,7 +174,8 @@ public class MaterializerProjectFileHashCacheTest {
         .andReturn(setCorrectHashCode ? HashCode.fromString("aeae") : EXAMPLE_HASHCODE)
         .atLeastOnce();
 
-    InlineContentsProvider inlineProvider = new InlineContentsProvider();
+    InlineContentsProvider inlineProvider =
+        new InlineContentsProvider(MoreExecutors.newDirectExecutorService());
     replay(mockFileHashCache);
 
     MaterializerProjectFileHashCache fileMaterializer =
@@ -271,7 +273,8 @@ public class MaterializerProjectFileHashCacheTest {
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
     fileHashes.addToEntries(realFileHashEntry);
 
-    InlineContentsProvider inlineProvider = new InlineContentsProvider();
+    InlineContentsProvider inlineProvider =
+        new InlineContentsProvider(MoreExecutors.newDirectExecutorService());
 
     ProjectFileHashCache mockFileHashCache = EasyMock.createNiceMock(ProjectFileHashCache.class);
     expect(mockFileHashCache.getFilesystem()).andReturn(projectFilesystem).atLeastOnce();

@@ -36,6 +36,7 @@ import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -72,16 +73,19 @@ public abstract class DistBuildFactory {
       DistBuildConfig distBuildConfig,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService sourceFileMultiFetchScheduler,
+      ListeningExecutorService executorService,
       Optional<Path> globalCacheDir)
       throws IOException, InterruptedException {
     return new MultiSourceContentsProvider(
         new ServerContentsProvider(
             service,
             sourceFileMultiFetchScheduler,
+            executorService,
             fileMaterializationStatsTracker,
             distBuildConfig.getSourceFileMultiFetchBufferPeriodMs(),
             distBuildConfig.getSourceFileMultiFetchMaxBufferSize()),
         fileMaterializationStatsTracker,
+        executorService,
         globalCacheDir);
   }
 

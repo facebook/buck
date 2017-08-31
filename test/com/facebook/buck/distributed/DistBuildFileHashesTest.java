@@ -290,7 +290,9 @@ public class DistBuildFileHashesTest {
     EasyMock.replay(mockCache);
     MaterializerProjectFileHashCache materializer =
         new MaterializerProjectFileHashCache(
-            mockCache, fileHashes.get(0), new InlineContentsProvider());
+            mockCache,
+            fileHashes.get(0),
+            new InlineContentsProvider(MoreExecutors.newDirectExecutorService()));
 
     try {
       materializer.get(f.javaSrcPath);

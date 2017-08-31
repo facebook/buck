@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,4 +30,7 @@ public interface FileContentsProvider extends Closeable {
    */
   boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException;
+
+  ListenableFuture<Boolean> materializeFileContentsAsync(
+      BuildJobStateFileHashEntry entry, Path targetAbsPath);
 }

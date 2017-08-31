@@ -17,6 +17,8 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,12 +28,15 @@ import java.nio.file.Path;
 
 public class InlineContentsProvider implements FileContentsProvider {
 
-  public InlineContentsProvider() {}
+  final ListeningExecutorService executor;
+
+  public InlineContentsProvider(ListeningExecutorService executor) {
+    this.executor = executor;
+  }
 
   @Override
   public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
-
     if (entry.isSetContents()) {
       try (OutputStream outputStream = newOutputStream(targetAbsPath)) {
         outputStream.write(entry.getContents());
@@ -41,6 +46,12 @@ public class InlineContentsProvider implements FileContentsProvider {
     }
 
     return false;
+  }
+
+  @Override
+  public ListenableFuture<Boolean> materializeFileContentsAsync(
+      BuildJobStateFileHashEntry entry, Path targetAbsPath) {
+    return executor.submit(() -> materializeFileContents(entry, targetAbsPath));
   }
 
   public static OutputStream newOutputStream(Path absPath) throws IOException {
