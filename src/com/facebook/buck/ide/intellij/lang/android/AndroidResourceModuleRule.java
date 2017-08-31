@@ -97,6 +97,12 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
         && target
             .getConstructorArg()
             .labelsContainsAnyOf(Collections.singleton(PREFERRED_RES_FOLDER_LABEL))) {
+      if (context.getPreferredResFolderPath().isPresent()) {
+        throw new AssertionError(
+            "Multiple resource rules declared as preferred"
+                + " for module "
+                + target.getBuildTarget().getBaseName());
+      }
       context.setPreferredResFolderPath(Optional.of(resources.get()));
     }
   }

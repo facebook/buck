@@ -16,6 +16,7 @@
 package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.io.MorePaths;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -66,7 +67,7 @@ public class IjProjectPaths {
     if (moduleRelativePath.isEmpty()) {
       return "";
     } else {
-      return "/" + MorePaths.pathWithUnixSeparators(moduleRelativePath);
+      return File.separator + MorePaths.pathWithUnixSeparators(moduleRelativePath);
     }
   }
 
