@@ -16,14 +16,13 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -124,21 +123,19 @@ final class OwnersReport {
     }
   }
 
-  static Builder builder(Cell rootCell, Parser parser, BuckEventBus eventBus, Console console) {
-    return new Builder(rootCell, parser, eventBus, console);
+  static Builder builder(Cell rootCell, Parser parser, BuckEventBus eventBus) {
+    return new Builder(rootCell, parser, eventBus);
   }
 
   static final class Builder {
     private final Cell rootCell;
     private final Parser parser;
     private final BuckEventBus eventBus;
-    private final Console console;
 
-    private Builder(Cell rootCell, Parser parser, BuckEventBus eventBus, Console console) {
+    private Builder(Cell rootCell, Parser parser, BuckEventBus eventBus) {
       this.rootCell = rootCell;
       this.parser = parser;
       this.eventBus = eventBus;
-      this.console = console;
     }
 
     private OwnersReport getReportForBasePath(
@@ -156,18 +153,7 @@ final class OwnersReport {
                   return parser.getAllTargetNodes(
                       eventBus, cell, /* enable profiling */ false, executor, basePath1);
                 } catch (BuildFileParseException e) {
-                  Path targetBasePath = MorePaths.relativize(cell.getRoot(), basePath);
-                  String targetBaseName =
-                      cell.getCanonicalName().orElse("")
-                          + "//"
-                          + MorePaths.pathWithUnixSeparators(targetBasePath);
-
-                  console
-                      .getStdErr()
-                      .format(
-                          "Could not parse build targets for %s: %s%n",
-                          targetBaseName, e.getHumanReadableErrorMessage());
-                  throw new RuntimeException(e);
+                  throw new HumanReadableException(e);
                 }
               });
       return targetNodes
