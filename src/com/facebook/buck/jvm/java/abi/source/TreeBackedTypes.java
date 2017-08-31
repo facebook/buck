@@ -256,6 +256,10 @@ class TreeBackedTypes implements Types {
     return javacTypes.getNoType(kind);
   }
 
+  /* package */ StandalonePackageType getPackageType(ArtificialPackageElement element) {
+    return new StandalonePackageType(element);
+  }
+
   @Override
   public ArrayType getArrayType(TypeMirror componentType) {
     if (isArtificialType(componentType)) {

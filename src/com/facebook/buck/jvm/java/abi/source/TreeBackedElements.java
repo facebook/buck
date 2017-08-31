@@ -44,7 +44,7 @@ import javax.lang.model.util.Elements;
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
-  private final Map<Name, TypeElement> knownTypes = new HashMap<>();
+  private final Map<Name, ArtificialTypeElement> knownTypes = new HashMap<>();
   private final Map<Name, ArtificialPackageElement> knownPackages = new HashMap<>();
 
   public TreeBackedElements(Elements javacElements) {
@@ -69,8 +69,8 @@ class TreeBackedElements implements Elements {
 
     result = constructor.apply(underlyingElement);
     treeBackedElements.put(underlyingElement, result);
-    if (result instanceof TypeElement) {
-      TypeElement typeElement = (TypeElement) result;
+    if (result instanceof TreeBackedTypeElement) {
+      TreeBackedTypeElement typeElement = (TreeBackedTypeElement) result;
       knownTypes.put(typeElement.getQualifiedName(), typeElement);
     } else if (result instanceof TreeBackedPackageElement) {
       TreeBackedPackageElement packageElement = (TreeBackedPackageElement) result;
@@ -126,6 +126,16 @@ class TreeBackedElements implements Elements {
     return element;
   }
 
+  public ArtificialPackageElement getOrCreatePackageElement(CharSequence qualifiedNameString) {
+    Name qualifiedName = getName(qualifiedNameString);
+    ArtificialPackageElement result = getPackageElement(qualifiedName);
+    if (result == null) {
+      result = new InferredPackageElement(getSimpleName(qualifiedNameString), qualifiedName);
+      knownPackages.put(qualifiedName, result);
+    }
+    return result;
+  }
+
   /**
    * Gets the package element with the given name. If a package with the given name is referenced in
    * the code or exists in the classpath, returns the corresponding element. Otherwise returns null.
@@ -149,6 +159,18 @@ class TreeBackedElements implements Elements {
     return knownPackages.get(qualifiedName);
   }
 
+  public ArtificialTypeElement getOrCreateTypeElement(
+      ArtificialElement enclosingElement, CharSequence fullyQualifiedCharSequence) {
+    Name fullyQualifiedName = getName(fullyQualifiedCharSequence);
+    ArtificialTypeElement result = (ArtificialTypeElement) getTypeElement(fullyQualifiedName);
+    if (result == null) {
+      result =
+          new InferredTypeElement(
+              getSimpleName(fullyQualifiedCharSequence), fullyQualifiedName, enclosingElement);
+    }
+    return result;
+  }
+
   /**
    * Gets the type element with the given name. If a class with the given name is referenced in the
    * code or exists in the classpath, returns the corresponding element. Otherwise returns null.
@@ -165,7 +187,7 @@ class TreeBackedElements implements Elements {
       // should be able to mix implementations without causing too much trouble.
       TypeElement javacElement = javacElements.getTypeElement(fullyQualifiedName);
       if (javacElement != null) {
-        knownTypes.put(fullyQualifiedName, javacElement);
+        return javacElement;
       }
     }
 
@@ -205,6 +227,21 @@ class TreeBackedElements implements Elements {
 
   @Override
   public Name getBinaryName(TypeElement type) {
+    if (type instanceof InferredTypeElement) {
+      StringBuilder nameBuilder = new StringBuilder();
+      Element enclosingElement = type.getEnclosingElement();
+      if (enclosingElement instanceof InferredTypeElement) {
+        nameBuilder.append(getBinaryName((TypeElement) enclosingElement));
+        nameBuilder.append("$");
+      } else {
+        // package
+        nameBuilder.append(enclosingElement.toString());
+        nameBuilder.append(".");
+      }
+      nameBuilder.append(type.getSimpleName());
+
+      return getName(nameBuilder);
+    }
     return javacElements.getBinaryName(getJavacElement(type));
   }
 
@@ -253,5 +290,11 @@ class TreeBackedElements implements Elements {
   @Override
   public boolean isFunctionalInterface(TypeElement type) {
     throw new UnsupportedOperationException();
+  }
+
+  private Name getSimpleName(CharSequence qualifiedNameSeq) {
+    String qualifiedName = qualifiedNameSeq.toString();
+
+    return getName(qualifiedName.substring(qualifiedName.lastIndexOf(".") + 1));
   }
 }

@@ -61,7 +61,7 @@ class TreeBackedEnter {
     this.elements = elements;
     this.types = types;
     this.javacTrees = javacTrees;
-    canonicalizer = new PostEnterCanonicalizer(elements, types);
+    canonicalizer = new PostEnterCanonicalizer(elements, types, javacTrees);
   }
 
   public void enter(CompilationUnitTree compilationUnit) {

@@ -16,24 +16,31 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import com.sun.source.tree.ArrayTypeTree;
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.ImportTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.WildcardTree;
 import com.sun.source.util.TreePath;
+import com.sun.source.util.Trees;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -52,10 +59,14 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 class PostEnterCanonicalizer {
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
+  private final Trees javacTrees;
+  private final Map<CompilationUnitTree, Map<Name, TreePath>> imports = new HashMap<>();
 
-  public PostEnterCanonicalizer(TreeBackedElements elements, TreeBackedTypes types) {
+  public PostEnterCanonicalizer(
+      TreeBackedElements elements, TreeBackedTypes types, Trees javacTrees) {
     this.elements = elements;
     this.types = types;
+    this.javacTrees = javacTrees;
   }
 
   public Element getCanonicalElement(@PropagatesNullable Element element) {
@@ -152,7 +163,13 @@ class PostEnterCanonicalizer {
         }
       case PACKAGE:
       case ERROR:
-        throw new SourceCodeWillNotCompileException();
+        {
+          if (treePath == null) {
+            throw new IllegalArgumentException("Cannot resolve error types without a Tree.");
+          }
+
+          return getInferredType(treePath);
+        }
       case BOOLEAN:
       case BYTE:
       case SHORT:
@@ -172,6 +189,131 @@ class PostEnterCanonicalizer {
       default:
         throw new UnsupportedOperationException();
     }
+  }
+
+  private TypeMirror getUnderlyingType(TreePath treePath) {
+    return Preconditions.checkNotNull(javacTrees.getTypeMirror(treePath));
+  }
+
+  private TypeMirror getInferredType(TreePath treePath) {
+    Tree tree = treePath.getLeaf();
+    switch (tree.getKind()) {
+      case PARAMETERIZED_TYPE:
+        {
+          ParameterizedTypeTree parameterizedTypeTree = (ParameterizedTypeTree) tree;
+          TypeMirror[] typeArguments =
+              parameterizedTypeTree
+                  .getTypeArguments()
+                  .stream()
+                  .map(
+                      arg -> {
+                        TreePath argPath = new TreePath(treePath, arg);
+                        return getCanonicalType(getUnderlyingType(argPath), argPath);
+                      })
+                  .toArray(TypeMirror[]::new);
+
+          TreePath baseTypeTreePath = new TreePath(treePath, parameterizedTypeTree.getType());
+          DeclaredType baseType =
+              (DeclaredType)
+                  getCanonicalType(getUnderlyingType(baseTypeTreePath), baseTypeTreePath);
+
+          TypeMirror enclosingType = baseType.getEnclosingType();
+          if (enclosingType.getKind() == TypeKind.NONE) {
+            enclosingType = null;
+          }
+
+          return types.getDeclaredType(
+              (DeclaredType) enclosingType, (TypeElement) baseType.asElement(), typeArguments);
+        }
+      case UNBOUNDED_WILDCARD:
+        return types.getWildcardType(null, null);
+      case SUPER_WILDCARD:
+        {
+          WildcardTree wildcardTree = (WildcardTree) tree;
+          TreePath boundTreePath = new TreePath(treePath, wildcardTree.getBound());
+          return types.getWildcardType(
+              null, getCanonicalType(getUnderlyingType(boundTreePath), boundTreePath));
+        }
+      case EXTENDS_WILDCARD:
+        {
+          WildcardTree wildcardTree = (WildcardTree) tree;
+          TreePath boundTreePath = new TreePath(treePath, wildcardTree.getBound());
+          return types.getWildcardType(
+              getCanonicalType(getUnderlyingType(boundTreePath), boundTreePath), null);
+        }
+      case MEMBER_SELECT:
+        {
+          MemberSelectTree memberSelectTree = (MemberSelectTree) tree;
+          Name identifier = memberSelectTree.getIdentifier();
+          TreePath baseTypeTreePath = new TreePath(treePath, memberSelectTree.getExpression());
+          StandaloneTypeMirror baseType =
+              (StandaloneTypeMirror)
+                  getCanonicalType(getUnderlyingType(baseTypeTreePath), baseTypeTreePath);
+
+          if (baseType.getKind() == TypeKind.PACKAGE) {
+            CharSequence fullyQualifiedName = TreeBackedTrees.treeToName(memberSelectTree);
+            if (isProbablyPackageName(identifier)) {
+              return types.getPackageType(elements.getOrCreatePackageElement(fullyQualifiedName));
+            } else {
+              StandalonePackageType packageType = (StandalonePackageType) baseType;
+              ArtificialPackageElement packageElement = packageType.asElement();
+              return types.getDeclaredType(
+                  elements.getOrCreateTypeElement(packageElement, fullyQualifiedName));
+            }
+          } else {
+            StandaloneDeclaredType baseDeclaredType = (StandaloneDeclaredType) baseType;
+            DeclaredType enclosingType;
+            if (baseDeclaredType.getEnclosingType().getKind() == TypeKind.NONE) {
+              enclosingType = null;
+            } else {
+              enclosingType = baseDeclaredType;
+            }
+
+            if (baseDeclaredType instanceof InferredDeclaredType
+                || baseDeclaredType.getTypeArguments().isEmpty()) {
+              return types.getDeclaredType(
+                  enclosingType,
+                  elements.getOrCreateTypeElement(
+                      (ArtificialElement) baseDeclaredType.asElement(), identifier));
+            } else {
+              return types.getDeclaredType(
+                  baseDeclaredType,
+                  elements.getOrCreateTypeElement(
+                      (ArtificialElement) baseDeclaredType.asElement(), identifier));
+            }
+          }
+        }
+      case IDENTIFIER:
+        {
+          // If it's imported, then it must be a class; look it up
+          TreePath importedIdentifierPath = getImportedIdentifier(treePath);
+          if (importedIdentifierPath != null) {
+            return getCanonicalType(
+                getUnderlyingType(importedIdentifierPath), importedIdentifierPath);
+          }
+
+          // Infer the type by heuristic
+          IdentifierTree identifierTree = (IdentifierTree) tree;
+          Name identifier = identifierTree.getName();
+          if (isProbablyPackageName(identifier)) {
+            return types.getPackageType(elements.getOrCreatePackageElement(identifier));
+          }
+          return types.getDeclaredType(
+              elements.getOrCreateTypeElement(
+                  (ArtificialElement)
+                      elements.getCanonicalElement(
+                          Preconditions.checkNotNull(
+                              javacTrees.getElement(new TreePath(treePath.getCompilationUnit())))),
+                  identifier));
+        }
+        // $CASES-OMITTED$
+      default:
+        throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
+    }
+  }
+
+  private boolean isProbablyPackageName(CharSequence identifier) {
+    return Character.isLowerCase(identifier.charAt(0));
   }
 
   /**
@@ -229,5 +371,37 @@ class PostEnterCanonicalizer {
           }
         },
         null);
+  }
+
+  @Nullable
+  private TreePath getImportedIdentifier(TreePath identifierTreePath) {
+    IdentifierTree identifierTree = (IdentifierTree) identifierTreePath.getLeaf();
+
+    Map<Name, TreePath> imports =
+        this.imports.computeIfAbsent(
+            identifierTreePath.getCompilationUnit(),
+            compilationUnitTree -> {
+              Map<Name, TreePath> result = new HashMap<>();
+              TreePath rootPath = new TreePath(compilationUnitTree);
+              for (ImportTree importTree : compilationUnitTree.getImports()) {
+                if (importTree.isStatic()) {
+                  continue;
+                }
+
+                MemberSelectTree importedIdentifierTree =
+                    (MemberSelectTree) importTree.getQualifiedIdentifier();
+                if (importedIdentifierTree.getIdentifier().contentEquals("*")) {
+                  continue;
+                }
+
+                TreePath importTreePath = new TreePath(rootPath, compilationUnitTree);
+                TreePath importedIdentifierTreePath =
+                    new TreePath(importTreePath, importedIdentifierTree);
+                result.put(importedIdentifierTree.getIdentifier(), importedIdentifierTreePath);
+              }
+              return result;
+            });
+
+    return imports.get(identifierTree.getName());
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -107,8 +108,17 @@ class SignatureFactory {
             return false;
           }
 
-          DeclaredType declaredType = (DeclaredType) type;
-          return declaredType.asElement().getKind().isClass();
+          try {
+            DeclaredType declaredType = (DeclaredType) type;
+            return declaredType.asElement().getKind().isClass();
+          } catch (CannotInferException e) {
+            // We can't know whether an inferred element is a class or an interface. We need to know
+            // this so that we can properly generate generic bounds signatures, which distinguish
+            // between a class and the (potentially multiple) interfaces. Fortunately, the compiler
+            // treats the bounds equally regardless, so we can safely pretend everything is an
+            // interface.
+            return false;
+          }
         }
 
         @Override
@@ -228,7 +238,16 @@ class SignatureFactory {
           int numTypes = enclosingTypes.size();
           for (int i = 0; i < numTypes; i++) {
             DeclaredType type = enclosingTypes.get(i);
-            List<? extends TypeMirror> typeArguments = type.getTypeArguments();
+            List<? extends TypeMirror> typeArguments;
+            try {
+              typeArguments = type.getTypeArguments();
+            } catch (CannotInferException e) {
+              // InferredDeclaredTypes can only be obtained by calling asType on an
+              // InferredTypeElement. Types that are used in signature generation are not obtained
+              // in this manner, so they should always be StandaloneDeclaredTypes and this exception
+              // should never happen.
+              throw new AssertionError("Unexpected inferred type.", e);
+            }
             if (calledVisitClassType) {
               visitor.visitInnerClassType(type.asElement().getSimpleName().toString());
             } else if (!typeArguments.isEmpty() || i == numTypes - 1) {
@@ -386,7 +405,15 @@ class SignatureFactory {
 
           @Override
           public Boolean visitDeclared(DeclaredType t, Void aVoid) {
-            return !t.getTypeArguments().isEmpty() || usesGenerics(t.getEnclosingType());
+            try {
+              return !t.getTypeArguments().isEmpty() || usesGenerics(t.getEnclosingType());
+            } catch (CannotInferException e) {
+              // InferredDeclaredTypes can only be obtained by calling asType on an
+              // InferredTypeElement. Types that are used in signature generation are not obtained
+              // in this manner, so they should always be StandaloneDeclaredTypes and this exception
+              // should never happen.
+              throw new AssertionError("Unexpected inferred type", e);
+            }
           }
         },
         null);

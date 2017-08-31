@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.jvm.java.testutil.compiler.Classes;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
@@ -62,8 +61,11 @@ public class DescriptorAndSignatureFactoryTestBase {
   protected Elements elements;
   List<String> errors = new ArrayList<>();
 
+  protected boolean isTestingWithDependencies() {
+    return testMode == WITH_DEPS;
+  }
+
   protected void test(TestRunnable r) throws Exception {
-    assumeTrue("Without deps NYI", testMode == WITH_DEPS);
     // Always compile with dependencies, so that we have the correct output to compare to
     generateCorrectClassFiles();
 
