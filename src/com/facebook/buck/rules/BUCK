@@ -230,6 +230,7 @@ java_immutables_library(
         "BuildRuleDurationTracker.java",
         "BuildRuleParams.java",
         "BuildRuleResolver.java",
+        "BuildRuleResolverMetadataCache.java",
         "BuildRuleStatus.java",
         "BuildRuleSuccessType.java",
         "BuildRules.java",

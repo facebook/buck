@@ -18,16 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -44,7 +39,7 @@ public class DefaultBuildRuleResolver implements BuildRuleResolver {
   @Nullable private final BuckEventBus eventBus;
 
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
-  private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
+  private final BuildRuleResolverMetadataCache metadataCache;
 
   @VisibleForTesting
   public DefaultBuildRuleResolver(
@@ -65,39 +60,7 @@ public class DefaultBuildRuleResolver implements BuildRuleResolver {
 
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
-        CacheBuilder.newBuilder()
-            .initialCapacity(initialCapacity)
-            .build(
-                new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
-                  @Override
-                  public Optional<?> load(Pair<BuildTarget, Class<?>> key) {
-                    TargetNode<?, ?> node =
-                        DefaultBuildRuleResolver.this.targetGraph.get(key.getFirst());
-                    return load(node, key.getSecond());
-                  }
-
-                  @SuppressWarnings("unchecked")
-                  private <T, U> Optional<U> load(TargetNode<T, ?> node, Class<U> metadataClass) {
-                    T arg = node.getConstructorArg();
-                    if (metadataClass.isAssignableFrom(arg.getClass())) {
-                      return Optional.of(metadataClass.cast(arg));
-                    }
-
-                    Description<?> description = node.getDescription();
-                    if (!(description instanceof MetadataProvidingDescription)) {
-                      return Optional.empty();
-                    }
-                    MetadataProvidingDescription<T> metadataProvidingDescription =
-                        (MetadataProvidingDescription<T>) description;
-                    return metadataProvidingDescription.createMetadata(
-                        node.getBuildTarget(),
-                        DefaultBuildRuleResolver.this,
-                        node.getCellNames(),
-                        arg,
-                        node.getSelectedVersions(),
-                        metadataClass);
-                  }
-                });
+        new BuildRuleResolverMetadataCache(this, this.targetGraph, initialCapacity);
   }
 
   @Override
@@ -158,14 +121,8 @@ public class DefaultBuildRuleResolver implements BuildRuleResolver {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass) {
-    try {
-      return (Optional<T>)
-          metadataCache.get(new Pair<BuildTarget, Class<?>>(target, metadataClass));
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e);
-    }
+    return metadataCache.requireMetadata(target, metadataClass);
   }
 
   @Override
