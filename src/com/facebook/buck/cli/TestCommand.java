@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -53,6 +54,8 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.external.ExternalTestRunEvent;
+import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
@@ -82,6 +85,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
@@ -327,7 +331,17 @@ public class TestCommand extends BuildCommand {
         return 1;
       }
       ExternalTestRunnerRule rule = (ExternalTestRunnerRule) testRule;
-      specs.add(rule.getExternalTestRunnerSpec(build.getExecutionContext(), options, buildContext));
+      try {
+        params
+            .getBuckEventBus()
+            .post(ExternalTestSpecCalculationEvent.started(rule.getBuildTarget()));
+        specs.add(
+            rule.getExternalTestRunnerSpec(build.getExecutionContext(), options, buildContext));
+      } finally {
+        params
+            .getBuckEventBus()
+            .post(ExternalTestSpecCalculationEvent.finished(rule.getBuildTarget()));
+      }
     }
 
     // Serialize the specs to a file to pass into the test runner.
@@ -357,11 +371,27 @@ public class TestCommand extends BuildCommand {
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(
             params.getConsole().getStdOut(), params.getConsole().getStdErr());
+    final ImmutableSet<String> testTargets =
+        StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
+            .map(BuildRule::getBuildTarget)
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableSet());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
+    int exitCode = -1;
     try {
-      return processExecutor.waitForProcess(process);
+      params
+          .getBuckEventBus()
+          .post(
+              ExternalTestRunEvent.started(
+                  options.isRunAllTests(),
+                  options.getTestSelectorList(),
+                  options.shouldExplainTestSelectorList(),
+                  testTargets));
+      exitCode = processExecutor.waitForProcess(process);
+      return exitCode;
     } finally {
+      params.getBuckEventBus().post(ExternalTestRunEvent.finished(testTargets, exitCode));
       processExecutor.destroyProcess(process, /* force */ false);
       processExecutor.waitForProcess(process);
     }

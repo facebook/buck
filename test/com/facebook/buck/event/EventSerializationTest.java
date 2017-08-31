@@ -34,6 +34,8 @@ import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.FakeTestResults;
+import com.facebook.buck.test.external.ExternalTestRunEvent;
+import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.timing.Clock;
@@ -235,6 +237,62 @@ public class EventSerializationTest {
             + "\"flavor\":\"\"},"
             + "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":"
             + "{\"value\":-624576559}}",
+        message);
+  }
+
+  @Test
+  public void testExternalTestRunEventStarted() throws Exception {
+    ExternalTestRunEvent.Started event =
+        ExternalTestRunEvent.started(
+            /* isRunAllTests */ true,
+            TestSelectorList.empty(), /* shouldExplainTestSelectorList */
+            false,
+            ImmutableSet.of());
+    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    String message = ObjectMappers.WRITER.writeValueAsString(event);
+    assertJsonEquals(
+        "{%s,\"runAllTests\":true,"
+            + "\"eventKey\":{\"value\":-181996491},"
+            + "\"targetNames\":[],\"type\":\"ExternalTestRunStarted\"}",
+        message);
+  }
+
+  @Test
+  public void testExternalTestRunEventFinished() throws Exception {
+    ExternalTestRunEvent.Finished event =
+        ExternalTestRunEvent.finished(ImmutableSet.of(), /* exitCode */ 0);
+    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    String message = ObjectMappers.WRITER.writeValueAsString(event);
+    assertJsonEquals(
+        "{%s,"
+            + "\"eventKey\":{\"value\":-181996491},"
+            + "\"type\":\"ExternalTestRunFinished\",\"exitCode\":0}",
+        message);
+  }
+
+  @Test
+  public void testExternalTestSpecCalculationEventStarted() throws Exception {
+    ExternalTestSpecCalculationEvent.Started event =
+        ExternalTestSpecCalculationEvent.started(BuildTargetFactory.newInstance("//example:app"));
+    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    String message = ObjectMappers.WRITER.writeValueAsString(event);
+    assertJsonEquals(
+        "{%s,"
+            + "\"eventKey\":{\"value\":-1925481175},"
+            + "\"type\":\"ExternalTestSpecCalculationStarted\"}",
+        message);
+  }
+
+  @Test
+  public void testExternalTestSpecCalculationEventFinished() throws Exception {
+    ExternalTestSpecCalculationEvent.Finished event =
+        ExternalTestSpecCalculationEvent.finished(BuildTargetFactory.newInstance("//example:app"));
+    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    String message = ObjectMappers.WRITER.writeValueAsString(event);
+    assertJsonEquals(
+        "{%s,"
+            + "\"eventKey\":{\"value\":-1925481175},"
+            + "\"type\":\"ExternalTestSpecCalculationFinished\"}",
         message);
   }
 

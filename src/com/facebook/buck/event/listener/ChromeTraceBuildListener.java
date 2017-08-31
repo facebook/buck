@@ -46,6 +46,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.external.ExternalTestRunEvent;
+import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
@@ -760,6 +762,39 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     if (finished instanceof BuildRuleEvent.Suspended) {
       writeRuleSuspended((BuildRuleEvent.Suspended) finished);
     }
+  }
+
+  @Subscribe
+  public void externalTestSpecCalculationStarted(ExternalTestSpecCalculationEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        started.getCategory(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("target", started.getBuildTarget().getFullyQualifiedName()),
+        started);
+  }
+
+  @Subscribe
+  public void externalTestSpecCalculationFinished(
+      ExternalTestSpecCalculationEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        finished.getCategory(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("target", finished.getBuildTarget().getFullyQualifiedName()),
+        finished);
+  }
+
+  @Subscribe
+  public void externalTestRunStarted(ExternalTestRunEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck", started.getCategory(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+  }
+
+  @Subscribe
+  public void externalTestRunFinished(ExternalTestRunEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck", finished.getCategory(), ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
   }
 
   @Subscribe

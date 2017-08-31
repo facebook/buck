@@ -54,6 +54,9 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.external.ExternalTestRunEvent;
+import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.IncrementingFakeClock;
@@ -285,6 +288,15 @@ public class ChromeTraceBuildListenerTest {
               ImmutableMap.of("int", 42)));
     }
 
+    eventBus.post(
+        ExternalTestRunEvent.started(true, TestSelectorList.EMPTY, false, ImmutableSet.of()));
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example:app");
+    eventBus.post(ExternalTestSpecCalculationEvent.started(buildTarget));
+    eventBus.post(ExternalTestSpecCalculationEvent.finished(buildTarget));
+
+    eventBus.post(ExternalTestRunEvent.finished(ImmutableSet.of(), 0));
+
     eventBus.post(BuildEvent.finished(buildEventStarted, 0));
     eventBus.post(CommandEvent.finished(commandEventStarted, /* exitCode */ 0));
     listener.outputTrace(new BuildId("BUILD_ID"));
@@ -447,6 +459,19 @@ public class ChromeTraceBuildListenerTest {
                 ImmutableMap.of("boolean", true),
                 ImmutableMap.of("string", "ok"),
                 ImmutableMap.of("int", 42))));
+
+    assertNextResult(resultListCopy, "external_test_run", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(
+        resultListCopy,
+        "external_test_spec_calc",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("target", "//example:app"));
+    assertNextResult(
+        resultListCopy,
+        "external_test_spec_calc",
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("target", "//example:app"));
+    assertNextResult(resultListCopy, "external_test_run", ChromeTraceEvent.Phase.END, emptyArgs);
 
     assertNextResult(resultListCopy, "build", ChromeTraceEvent.Phase.END, emptyArgs);
 
