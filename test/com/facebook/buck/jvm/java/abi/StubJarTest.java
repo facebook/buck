@@ -187,6 +187,47 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsOverloadedMethods() throws IOException {
+    tester
+        .setSourceFile(
+            "Dependency.java", "package com.example.buck;", "public class Dependency {", "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "Dependency2.java", "package com.example.buck;", "public class Dependency2 {", "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public void overloaded(Dependency d) { }",
+            "  public void overloaded(String s) { }",
+            "  public void overloaded(Dependency2 d) { }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public overloaded(Lcom/example/buck/Dependency;)V",
+            "",
+            "  // access flags 0x1",
+            "  public overloaded(Ljava/lang/String;)V",
+            "",
+            "  // access flags 0x1",
+            "  public overloaded(Lcom/example/buck/Dependency2;)V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void preservesThrowsClauses() throws IOException {
     tester
         .setSourceFile(
