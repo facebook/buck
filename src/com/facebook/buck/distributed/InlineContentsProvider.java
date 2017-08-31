@@ -34,8 +34,7 @@ public class InlineContentsProvider implements FileContentsProvider {
     this.executor = executor;
   }
 
-  @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
+  private boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
     if (entry.isSetContents()) {
       try (OutputStream outputStream = newOutputStream(targetAbsPath)) {

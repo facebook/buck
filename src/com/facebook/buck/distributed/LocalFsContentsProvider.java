@@ -57,11 +57,6 @@ public class LocalFsContentsProvider implements FileContentsProvider {
   }
 
   @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath) {
-    return Futures.getUnchecked(materializeFileContentsAsync(entry, targetAbsPath));
-  }
-
-  @Override
   public ListenableFuture<Boolean> materializeFileContentsAsync(
       BuildJobStateFileHashEntry entry, Path targetAbsPath) {
     RuleKey key = new RuleKey(entry.getSha1());

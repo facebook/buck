@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
-import java.io.IOException;
 import java.nio.file.Path;
 
 public interface FileContentsProvider extends Closeable {
@@ -28,9 +27,6 @@ public interface FileContentsProvider extends Closeable {
    * @param targetAbsPath where the file should be written to.
    * @return true if the operation succeed, false otherwise.
    */
-  boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
-      throws IOException;
-
   ListenableFuture<Boolean> materializeFileContentsAsync(
       BuildJobStateFileHashEntry entry, Path targetAbsPath);
 }

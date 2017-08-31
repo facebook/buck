@@ -31,11 +31,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.annotation.concurrent.GuardedBy;
 
 public class ServerContentsProvider implements FileContentsProvider {
@@ -44,7 +42,6 @@ public class ServerContentsProvider implements FileContentsProvider {
 
   private static final long MULTI_FETCH_BUFFER_PERIOD_MS = 100;
   private static final int MULTI_FETCH_BUFFER_MAX_SIZE = 8;
-  private static final long SERVER_FETCH_MAX_TIMEOUT_SECONDS = 15;
 
   private final DistBuildService service;
   private final int multiFetchBufferMaxSize;
@@ -189,27 +186,6 @@ public class ServerContentsProvider implements FileContentsProvider {
       return true;
     } catch (IOException e) {
       LOG.error(e, "Unexpected error in writing file contents: [%s]", e.getMessage());
-    }
-    return false;
-  }
-
-  /** Blocking call */
-  @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath) {
-    try {
-      ListenableFuture<byte[]> fileFuture = scheduleFileToBeFetched(entry);
-      if (!fileFuture.isDone()) {
-        // If a multi-fetch request is due, let's make it ourselves (using the current thread).
-        makeMultiFetchRequestIfBufferIsFull();
-      }
-
-      // Wait for file to be fetched.
-      byte[] fileContents = fileFuture.get(SERVER_FETCH_MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-      return writeFileContentsToPath(fileContents, targetAbsPath);
-    } catch (InterruptedException | ExecutionException e) {
-      LOG.error(e, "Unexpected error in fetching source file [%s]", entry.getPath());
-    } catch (TimeoutException e) {
-      throw new RuntimeException("Timed out while waiting to fetch the file from the server.", e);
     }
     return false;
   }

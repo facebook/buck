@@ -26,19 +26,14 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.easymock.EasyMock;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +42,6 @@ import org.junit.rules.TemporaryFolder;
 public class MultiSourceContentsProviderTest {
 
   private static final long FUTURE_GET_TIMEOUT_SECONDS = 5;
-  private static final byte[] FILE_CONTENTS = "cool contents".getBytes(Charsets.UTF_8);
 
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
@@ -65,54 +59,7 @@ public class MultiSourceContentsProviderTest {
   }
 
   @Test
-  public void inlineContentProviderTakesPrecedence() throws InterruptedException, IOException {
-    mockServerContentsProvider.close();
-    expectLastCall().once();
-    replay(mockServerContentsProvider);
-    try (MultiSourceContentsProvider provider =
-        new MultiSourceContentsProvider(
-            mockServerContentsProvider,
-            new FileMaterializationStatsTracker(),
-            MoreExecutors.newDirectExecutorService(),
-            Optional.empty())) {
-      BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
-      entry.setSha1("1234");
-      entry.setContents(FILE_CONTENTS);
-      Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
-      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
-      provider.materializeFileContents(entry, targetAbsPath);
-      Assert.assertTrue(Files.isRegularFile(targetAbsPath));
-      Assert.assertThat(Files.readAllBytes(targetAbsPath), Matchers.equalTo(FILE_CONTENTS));
-    }
-    verify(mockServerContentsProvider);
-  }
-
-  @Test
-  public void serverIsUsedWhenInlineIsMissing() throws InterruptedException, IOException {
-    BuildJobStateFileHashEntry entry = new BuildJobStateFileHashEntry();
-    entry.setSha1("1234");
-    Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
-    expect(mockServerContentsProvider.materializeFileContents(eq(entry), eq(targetAbsPath)))
-        .andReturn(true)
-        .once();
-    mockServerContentsProvider.close();
-    expectLastCall().once();
-    replay(mockServerContentsProvider);
-
-    try (MultiSourceContentsProvider provider =
-        new MultiSourceContentsProvider(
-            mockServerContentsProvider,
-            new FileMaterializationStatsTracker(),
-            MoreExecutors.newDirectExecutorService(),
-            Optional.empty())) {
-      Assert.assertFalse(Files.isRegularFile(targetAbsPath));
-      provider.materializeFileContents(entry, targetAbsPath);
-    }
-    verify(mockServerContentsProvider);
-  }
-
-  @Test
-  public void testOrderOfContentProvidersAndStatsTrackingInAsyncCalls()
+  public void testOrderOfContentProvidersAndStatsTracking()
       throws IOException, ExecutionException, InterruptedException, TimeoutException {
     Path targetAbsPath = tempDir.getRoot().toPath().resolve("my_file.txt");
     BuildJobStateFileHashEntry entry1 = new BuildJobStateFileHashEntry().setSha1("1234");

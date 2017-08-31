@@ -89,34 +89,6 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
   }
 
   @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
-      throws IOException {
-
-    if (inlineProvider.materializeFileContents(entry, targetAbsPath)) {
-      postInlineMaterializationHelper(targetAbsPath);
-      return true;
-    }
-
-    if (localFsProvider.isPresent()
-        && localFsProvider.get().materializeFileContents(entry, targetAbsPath)) {
-      postLocalFsMaterializationHelper(targetAbsPath);
-      return true;
-    }
-
-    Stopwatch remoteMaterializationStopwatch = Stopwatch.createStarted();
-    boolean wasRemotelyMaterialized =
-        serverContentsProvider.materializeFileContents(entry, targetAbsPath);
-    remoteMaterializationStopwatch.stop();
-    if (wasRemotelyMaterialized) {
-      postRemoteMaterializationHelper(
-          targetAbsPath, entry, remoteMaterializationStopwatch.elapsed(TimeUnit.MILLISECONDS));
-      return true;
-    }
-
-    return false;
-  }
-
-  @Override
   public ListenableFuture<Boolean> materializeFileContentsAsync(
       BuildJobStateFileHashEntry entry, Path targetAbsPath) {
     return Futures.transformAsync(
