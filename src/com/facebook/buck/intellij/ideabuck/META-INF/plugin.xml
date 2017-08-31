@@ -22,8 +22,7 @@
   <change-notes><![CDATA[
 <h3>3.2</h3>
 <ul>
-  <li>Properly paste targets containing dashes</li>
-  <li>Fixed HTML formatting of these change-notes</li>
+  <li>Fix paste bugs; add unit tests so paste doesn't break again.</li>
 </ul>
 
 <h3>3.1</h3>
