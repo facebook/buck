@@ -67,7 +67,7 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
       return new GroovycToJarStepFactory(
           Preconditions.checkNotNull(groovyBuckConfig).getGroovyCompiler().get(),
           Optional.of(extraGroovycArguments),
-          Preconditions.checkNotNull(javacOptions));
+          Preconditions.checkNotNull(getJavacOptions()));
     }
   }
 }

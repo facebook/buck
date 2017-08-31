@@ -225,7 +225,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             Optional.empty(), // ManifestFile for androidLibrary is something else
             postprocessClassesCommands,
             getAbiClasspath(),
-            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),
+            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(getJavacOptions())),
             getFinalCompileTimeClasspathSourcePaths(),
             classesToRemoveFromJar);
       }
@@ -253,7 +253,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                               Iterables.concat(
                                   queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
                   getJavac(),
-                  javacOptions,
+                  getJavacOptions(),
                   DependencyMode.FIRST_ORDER,
                   /* forceFinalResourceIds */ false,
                   args.getResourceUnionPackage(),
@@ -293,7 +293,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Override
       protected ConfiguredCompiler buildConfiguredCompiler() {
         return getAndroidCompiler()
-            .configure(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
+            .configure(args, Preconditions.checkNotNull(getJavacOptions()), buildRuleResolver);
       }
 
       protected ConfiguredCompilerFactory getAndroidCompiler() {
