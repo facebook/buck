@@ -145,15 +145,17 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
     while (!remainingPaths.isEmpty()) {
       relPath = remainingPaths.pop();
       if (materializedPaths.contains(relPath)) {
+        LOG.verbose("Path already materialized: [%s].", relPath.toString());
         continue;
       }
-
-      LOG.info("Materializing path: [%s]", relPath.toString());
 
       Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
       BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByAbsPath.get(absPath);
 
       if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
+        LOG.info(
+            "Insufficient information or no need for materializing path: [%s].",
+            relPath.toString());
         recordMaterializedPath(relPath);
         continue;
       }
@@ -192,9 +194,11 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
     synchronized (fileHashEntry) {
       // Check if we've previously tried to materialize this file.
       if (fileMaterializationFuturesByFileHashEntry.containsKey(fileHashEntry)) {
+        LOG.verbose("File already materialized: [%s].", relPath.toString());
         return fileMaterializationFuturesByFileHashEntry.get(fileHashEntry);
       }
 
+      LOG.info("Materializing file: [%s]", relPath.toString());
       Path absPath = projectFilesystem.resolve(relPath);
       projectFilesystem.createParentDirs(absPath);
       projectFilesystem.touch(absPath);
@@ -226,6 +230,9 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
     synchronized (fileHashEntry) {
       // Check if someone materialized the dir while we were waiting for synchronization.
       if (materializedPaths.contains(relPath)) {
+        LOG.verbose(
+            "Directory already materialized (may still be waiting for some files asynchronously): [%s].",
+            relPath.toString());
         return;
       }
 
@@ -242,6 +249,9 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
 
       if (remainingPaths.peek().equals(relPath)) {
         // This means all children were already materialized.
+        LOG.info(
+            "Materialized directory (may still be waiting for some files asynchronously): [%s].",
+            relPath.toString());
         remainingPaths.pop();
         recordMaterializedPath(relPath);
       }
@@ -251,8 +261,14 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
   private synchronized void materializeSymlink(
       Path relPath, BuildJobStateFileHashEntry fileHashEntry) throws IOException {
     synchronized (fileHashEntry) {
+      Path targetAbsPath =
+          projectFilesystem.resolve(fileHashEntry.getRootSymLinkTarget().getPath());
+
       // Check if someone materialized the symlink while we were waiting for synchronization.
       if (materializedPaths.contains(relPath)) {
+        LOG.verbose(
+            "Symlink already materialized: [%s] -> [%s].",
+            relPath.toString(), targetAbsPath.toString());
         return;
       }
 
@@ -261,14 +277,15 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
           projectFilesystem.getPathRelativeToProjectRoot(rootSymlinkAbsPath).get();
 
       if (materializedPaths.contains(rootSymlinkRelPath)) {
+        LOG.verbose(
+            "Symlink already materialized: [%s] -> [%s].",
+            relPath.toString(), targetAbsPath.toString());
         recordMaterializedPath(relPath);
         return;
       }
 
-      Path targetAbsPath =
-          projectFilesystem.resolve(fileHashEntry.getRootSymLinkTarget().getPath());
       LOG.info(
-          "Materializing sym link [%s] with target [%s]",
+          "Materializing symlink [%s] -> [%s].",
           rootSymlinkAbsPath.toString(), targetAbsPath.toString());
 
       try {

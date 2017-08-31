@@ -166,10 +166,13 @@ public class ServerContentsProvider implements FileContentsProvider {
 
   private ListenableFuture<byte[]> scheduleFileToBeFetched(BuildJobStateFileHashEntry entry) {
     Preconditions.checkState(
-        entry.isSetSha1(), String.format("File hash missing for file [%s]", entry.getPath()));
+        entry.isSetSha1(), String.format("File hash missing for file [%s].", entry.getPath()));
 
     ListenableFuture<byte[]> future;
     synchronized (multiFetchLock) {
+      LOG.verbose(
+          "Scheduling file to be fetched from the CAS: [%s] (SHA1: %s).",
+          entry.getPath(), entry.getSha1());
       hashCodesToFetch.add(entry.getSha1());
       future =
           Futures.transform(
