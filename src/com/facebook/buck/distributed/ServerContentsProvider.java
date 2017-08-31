@@ -40,8 +40,8 @@ public class ServerContentsProvider implements FileContentsProvider {
 
   private static final Logger LOG = Logger.get(ServerContentsProvider.class);
 
-  private static final long MULTI_FETCH_BUFFER_PERIOD_MS = 100;
-  private static final int MULTI_FETCH_BUFFER_MAX_SIZE = 8;
+  private static final long MULTI_FETCH_BUFFER_PERIOD_MS = 25;
+  private static final int MULTI_FETCH_BUFFER_MAX_SIZE = 40;
 
   private final DistBuildService service;
   private final int multiFetchBufferMaxSize;
