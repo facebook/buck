@@ -30,8 +30,10 @@ import com.facebook.buck.rules.HasContacts;
 import com.facebook.buck.rules.HasTestTimeout;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationTestDescription
@@ -39,11 +41,14 @@ public class AndroidInstrumentationTestDescription
 
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final ConcurrentHashMap<ProjectFilesystem, ConcurrentHashMap<String, PackagedResource>>
+      resourceSupplierCache;
 
   public AndroidInstrumentationTestDescription(
       JavaOptions javaOptions, Optional<Long> defaultTestRuleTimeoutMs) {
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+    this.resourceSupplierCache = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -76,7 +81,28 @@ public class AndroidInstrumentationTestDescription
         args.getLabels(),
         args.getContacts(),
         javaOptions.getJavaRuntimeLauncher(),
-        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs));
+        args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        getRelativePackagedResource(projectFilesystem, "ddmlib.jar"),
+        getRelativePackagedResource(projectFilesystem, "kxml2.jar"),
+        getRelativePackagedResource(projectFilesystem, "guava.jar"),
+        getRelativePackagedResource(projectFilesystem, "android-tools-common.jar"));
+  }
+
+  /**
+   * @return The packaged resource with name {@code resourceName} from the same jar as current class
+   *     with path relative to this class location.
+   *     <p>Since resources like ddmlib.jar are needed for all {@link AndroidInstrumentationTest}
+   *     instances it makes sense to memoize them.
+   */
+  private PackagedResource getRelativePackagedResource(
+      ProjectFilesystem projectFilesystem, String resourceName) {
+    return resourceSupplierCache
+        .computeIfAbsent(projectFilesystem, fs -> new ConcurrentHashMap<>())
+        .computeIfAbsent(
+            resourceName,
+            resource ->
+                new PackagedResource(
+                    projectFilesystem, AndroidInstrumentationTestDescription.class, resource));
   }
 
   @BuckStyleImmutable
