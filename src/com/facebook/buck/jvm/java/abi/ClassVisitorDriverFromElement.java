@@ -109,7 +109,7 @@ class ClassVisitorDriverFromElement {
           "java/lang/Object",
           new String[0]);
 
-      visitAnnotations(e.getAnnotationMirrors(), classVisitor::visitAnnotation);
+      visitAnnotations(e, classVisitor::visitAnnotation);
 
       innerClassesTable.reportInnerClassReferences(e, classVisitor);
 
@@ -145,7 +145,7 @@ class ClassVisitorDriverFromElement {
               .toArray(size -> new String[size]));
       classVisitorStarted = true;
 
-      visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
+      visitAnnotations(e, visitor::visitAnnotation);
 
       super.visitType(e, visitor);
 
@@ -179,7 +179,7 @@ class ClassVisitorDriverFromElement {
 
       visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
       visitDefaultValue(e, methodVisitor);
-      visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
+      visitAnnotations(e, methodVisitor::visitAnnotation);
       methodVisitor.visitEnd();
 
       return null;
@@ -233,15 +233,16 @@ class ClassVisitorDriverFromElement {
               descriptorFactory.getDescriptor(e),
               signatureFactory.getSignature(e),
               e.getConstantValue());
-      visitAnnotations(e.getAnnotationMirrors(), fieldVisitor::visitAnnotation);
+      visitAnnotations(e, fieldVisitor::visitAnnotation);
       fieldVisitor.visitEnd();
 
       return null;
     }
 
-    private void visitAnnotations(
-        List<? extends AnnotationMirror> annotations, VisitorWithAnnotations visitor) {
-      annotations.forEach(annotation -> visitAnnotation(annotation, visitor));
+    private void visitAnnotations(Element enclosingElement, VisitorWithAnnotations visitor) {
+      enclosingElement
+          .getAnnotationMirrors()
+          .forEach(annotation -> visitAnnotation(annotation, visitor));
     }
 
     private void visitAnnotation(AnnotationMirror annotation, VisitorWithAnnotations visitor) {
