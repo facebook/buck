@@ -1150,14 +1150,16 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithTypeValues() throws IOException {
-    notYetImplementedForMissingClasspath();
-
     createAnnotationFullJar()
-        .addFullJarToClasspath()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java", "package com.example.buck;", "public class Dependency { }")
+        .createStubJar()
+        .addStubJarToClasspath()
         .setSourceFile(
             "A.java",
             "package com.example.buck;",
-            "@Foo(typeValue=String.class)",
+            "@Foo(typeValue=Dependency.class)",
             "public @interface A {}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -1166,7 +1168,7 @@ public class StubJarTest {
             "public abstract @interface com/example/buck/A implements java/lang/annotation/Annotation  {",
             "",
             "",
-            "  @Lcom/example/buck/Foo;(typeValue=java.lang.String.class)",
+            "  @Lcom/example/buck/Foo;(typeValue=com.example.buck.Dependency.class)",
             "}")
         .createAndCheckStubJar();
   }
@@ -1244,6 +1246,10 @@ public class StubJarTest {
   public void preservesAnnotationDefaultValues() throws IOException {
     tester
         .setSourceFile(
+            "Dependency.java", "package com.example.buck;", "public class Dependency { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
             "Foo.java",
             "package com.example.buck;",
             "import java.lang.annotation.*;",
@@ -1253,7 +1259,7 @@ public class StubJarTest {
             "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
             "  Retention[] annotationArrayValue() default {@Retention(RetentionPolicy.SOURCE), @Retention(RetentionPolicy.CLASS), @Retention(RetentionPolicy.RUNTIME)};",
             "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
-            "  Class typeValue() default Foo.class;",
+            "  Class typeValue() default Dependency.class;",
             "}")
         .addExpectedStub(
             "com/example/buck/Foo",
@@ -1284,7 +1290,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x401",
             "  public abstract typeValue()Ljava/lang/Class;",
-            "    default=com.example.buck.Foo.class",
+            "    default=com.example.buck.Dependency.class",
             "}")
         .createAndCheckStubJar();
   }
@@ -4006,6 +4012,7 @@ public class StubJarTest {
     private List<String> actualStubManifest;
     private String sourceFileName = "";
     private String sourceFileContents = "";
+    private ImmutableSortedSet<Path> universalClasspath = EMPTY_CLASSPATH;
     private ImmutableSortedSet<Path> classpath = EMPTY_CLASSPATH;
     private Path stubJarPath;
     private Path fullJarPath;
@@ -4124,7 +4131,12 @@ public class StubJarTest {
       if (testingMode != MODE_JAR_BASED) {
         stubJarPath =
             StubJarTest.this.createStubJar(
-                testingMode == MODE_SOURCE_BASED ? classpath : Collections.emptySortedSet(),
+                testingMode == MODE_SOURCE_BASED
+                    ? ImmutableSortedSet.<Path>naturalOrder()
+                        .addAll(universalClasspath)
+                        .addAll(classpath)
+                        .build()
+                    : universalClasspath,
                 manifest,
                 sourceFileName,
                 sourceFileContents,
@@ -4141,7 +4153,10 @@ public class StubJarTest {
       File outputDir = temp.newFolder();
       fullJarPath =
           compileToJar(
-              classpath,
+              ImmutableSortedSet.<Path>naturalOrder()
+                  .addAll(classpath)
+                  .addAll(universalClasspath)
+                  .build(),
               Collections.emptyList(),
               manifest,
               sourceFileName,
@@ -4164,11 +4179,19 @@ public class StubJarTest {
       return this;
     }
 
+    public Tester addFullJarToClasspathAlways() throws IOException {
+      universalClasspath =
+          ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(fullJarPath).build();
+      resetActuals();
+      return this;
+    }
+
     public void testCanCompile() throws IOException {
       File outputDir = temp.newFolder();
       try (TestCompiler compiler = new TestCompiler()) {
         compiler.init();
         compiler.addSourceFileContents(sourceFileName, sourceFileContents);
+        compiler.addClasspath(universalClasspath);
         compiler.addClasspath(classpath);
         compiler.setProcessors(Collections.emptyList());
         compiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());

@@ -365,6 +365,22 @@ class PostEnterCanonicalizer {
           }
 
           @Override
+          public Object visitString(String s, Void aVoid) {
+            if (getUnderlyingType(valueTreePath).getKind() == TypeKind.ERROR) {
+              Tree leaf = valueTreePath.getLeaf();
+              if (leaf instanceof MemberSelectTree
+                  && ((MemberSelectTree) leaf).getIdentifier().contentEquals("class")) {
+                TreePath classNamePath =
+                    new TreePath(valueTreePath, ((MemberSelectTree) leaf).getExpression());
+
+                return getCanonicalType(getUnderlyingType(classNamePath), classNamePath);
+              }
+            }
+
+            return super.visitString(s, aVoid);
+          }
+
+          @Override
           protected Object defaultAction(Object o, Void aVoid) {
             // Everything else (primitives, Strings, enums) doesn't need canonicalization
             return o;
