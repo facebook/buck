@@ -107,6 +107,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setModuleType(context.getModuleType())
         .setMetaInfDirectory(context.getMetaInfDirectory())
         .setCompilerOutputPath(context.getCompilerOutputPath())
+        .setPreferredResFolderPath(context.getPreferredResFolderPath())
         .build();
   }
 }

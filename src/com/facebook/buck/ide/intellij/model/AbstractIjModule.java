@@ -79,6 +79,8 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   public abstract Optional<Path> getCompilerOutputPath();
 
+  public abstract Optional<Path> getPreferredResFolderPath();
+
   /** @return path where the XML describing the module to IntelliJ will be written to. */
   @Value.Derived
   public Path getModuleImlFilePath() {

@@ -73,7 +73,8 @@ public class IjProjectTemplateDataPreparer {
   private static final String APK_PATH_TEMPLATE_PARAMETER = "apk_path";
   private static final String ASSETS_FOLDER_TEMPLATE_PARAMETER = "asset_folder";
   private static final String PROGUARD_CONFIG_TEMPLATE_PARAMETER = "proguard_config";
-  private static final String RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER = "res";
+  private static final String RESOURCE_RELATIVE_PATH_TEMPLATE_PARAMETER = "res_folder";
+  private static final String RESOURCES_RELATIVE_PATH_TEMPLATE_PARAMETER = "res_folders";
 
   private static final String EMPTY_STRING = "";
 
@@ -507,6 +508,17 @@ public class IjProjectTemplateDataPreparer {
       for (Path resourcePath : resourcePaths) {
         relativeResourcePaths.add(
             IjProjectPaths.toModuleDirRelativeString(resourcePath, moduleBase));
+      }
+
+      if (!resourcePaths.isEmpty()) {
+        Path resFolderPath =
+            (resourcePaths.size() == 1 || !module.getPreferredResFolderPath().isPresent())
+                ? resourcePaths.iterator().next()
+                : module.getPreferredResFolderPath().get();
+
+        androidProperties.put(
+            RESOURCE_RELATIVE_PATH_TEMPLATE_PARAMETER,
+            IjProjectPaths.toRelativeString(resFolderPath, moduleBase));
       }
 
       androidProperties.put(

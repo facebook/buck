@@ -55,6 +55,21 @@ public class IjProjectPaths {
     }
   }
 
+  /**
+   * @param path path to folder.
+   * @param moduleLocationBasePath path to the location of the .iml file.
+   * @return a path, relative to the module .iml file location describing a folder without the
+   *     IntelliJ format.
+   */
+  static String toRelativeString(Path path, Path moduleLocationBasePath) {
+    String moduleRelativePath = moduleLocationBasePath.relativize(path).toString();
+    if (moduleRelativePath.isEmpty()) {
+      return "";
+    } else {
+      return "/" + MorePaths.pathWithUnixSeparators(moduleRelativePath);
+    }
+  }
+
   String toProjectDirRelativeString(Path repoRelativePath) {
     return MorePaths.pathWithUnixSeparators(
         projectRootPath.toAbsolutePath().relativize(repoRelativePath.toAbsolutePath()));

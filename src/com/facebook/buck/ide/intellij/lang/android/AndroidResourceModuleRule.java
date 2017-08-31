@@ -30,10 +30,13 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResourceDescriptionArg> {
+
+  public static final String PREFERRED_RES_FOLDER_LABEL = "preferred_res_folder";
 
   public AndroidResourceModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -89,6 +92,13 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
     }
 
     context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);
+
+    if (resources.isPresent()
+        && target
+            .getConstructorArg()
+            .labelsContainsAnyOf(Collections.singleton(PREFERRED_RES_FOLDER_LABEL))) {
+      context.setPreferredResFolderPath(Optional.of(resources.get()));
+    }
   }
 
   @Override

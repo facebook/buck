@@ -15,7 +15,10 @@
 %if(androidFacet.android_manifest)%
         <option name="MANIFEST_FILE_RELATIVE_PATH" value="%androidFacet.android_manifest%" />
 %endif%
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="%androidFacet.res%" />
+%if(androidFacet.res_folder)%
+        <option name="RES_FOLDER_RELATIVE_PATH" value="%androidFacet.res_folder%" />
+%endif%
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="%androidFacet.res_folders%" />
 %if(androidFacet.asset_folder)%
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="%androidFacet.asset_folder%" />
 %endif%
