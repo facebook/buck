@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Elements;
@@ -37,8 +38,11 @@ interface LibraryReader extends AutoCloseable {
   }
 
   static LibraryReader of(
-      SourceVersion targetVersion, Elements elements, Iterable<Element> topLevelElements) {
-    return new ElementsReader(targetVersion, elements, topLevelElements);
+      SourceVersion targetVersion,
+      Elements elements,
+      Messager messager,
+      Iterable<Element> topLevelElements) {
+    return new ElementsReader(targetVersion, elements, messager, topLevelElements);
   }
 
   List<Path> getRelativePaths() throws IOException;

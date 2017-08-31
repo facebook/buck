@@ -519,6 +519,7 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
     typeReferences = new ArrayList<>();
     importedTypes = new ArrayList<>();
 
+    testCompiler.setAllowCompilationErrors(errorsOK);
     compile(
         ImmutableMap.of("Foo.java", Joiner.on('\n').join(sourceLines)),
         // ErrorType's get nulled out when the task returns, so we have to get a call back during

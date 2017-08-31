@@ -118,6 +118,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         ImmutableMap.of(
             "com/facebook/bar/Bar.java",
             Joiner.on('\n').join("package com.facebook.bar;", "public class Bar { }")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         Joiner.on('\n')
             .join("import com.facebook.bar.*;", "public abstract class Foo extends Bar { }"));
@@ -180,6 +181,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             Joiner.on('\n')
                 .join(
                     "package com.facebook.foo;", "public interface Baz { interface Inner { } }")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         ImmutableMap.of(
             "Foo.java",
@@ -273,6 +275,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             "com/facebook/foo/Bar.java",
             Joiner.on('\n')
                 .join("package com.facebook.foo;", "class Bar { static class Inner { } }")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         ImmutableMap.of(
             "Foo.java",
@@ -316,6 +319,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                     "  public static final int CONSTANT = 3 + 5;",
                     "  public static final int CONST2 = 3;",
                     "}")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         ImmutableMap.of(
             "Foo.java",

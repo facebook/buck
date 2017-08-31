@@ -787,6 +787,28 @@ public class StubJarTest {
   }
 
   @Test
+  public void providesNiceErrorWhenAnnotationMissing() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    createAnnotationFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  @Foo",
+            "  public void cheese(String key) {}",
+            "}")
+        .addExpectedCompileError(
+            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_abi = True to its build rule.\n"
+                + "  @Foo\n"
+                + "  ^")
+        .createStubJar();
+  }
+
+  @Test
   public void preservesAnnotationsOnMethods() throws IOException {
     notYetImplementedForMissingClasspath();
 
@@ -3905,65 +3927,6 @@ public class StubJarTest {
         .createAndCheckStubJar();
   }
 
-  private Path createStubJar(
-      SortedSet<Path> classpath,
-      DeterministicManifest manifest,
-      String fileName,
-      String source,
-      Path outputDir)
-      throws IOException {
-    Path stubJar = outputDir.resolve("stub.jar");
-    JarBuilder jarBuilder = new JarBuilder();
-
-    try (TestCompiler testCompiler = new TestCompiler()) {
-      testCompiler.init();
-      if (manifest != null) {
-        testCompiler.setManifest(manifest);
-      }
-      testCompiler.useFrontendOnlyJavacTask();
-      testCompiler.addSourceFileContents(fileName, source);
-      testCompiler.addClasspath(classpath);
-      testCompiler.setProcessors(
-          Collections.singletonList(
-              new AbstractProcessor() {
-                @Override
-                public Set<String> getSupportedAnnotationTypes() {
-                  return Collections.singleton("*");
-                }
-
-                @Override
-                public SourceVersion getSupportedSourceVersion() {
-                  return SourceVersion.RELEASE_8;
-                }
-
-                @Override
-                public Set<String> getSupportedOptions() {
-                  return Collections.emptySet();
-                }
-
-                @Override
-                public boolean process(
-                    Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-                  return false;
-                }
-              }));
-      StubGenerator generator =
-          new StubGenerator(
-              SourceVersion.RELEASE_8,
-              testCompiler.getElements(),
-              jarBuilder,
-              new JavacEventSinkToBuckEventBusBridge(
-                  new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())));
-
-      testCompiler.addPostEnterCallback(generator::generate);
-      testCompiler.setAllowCompilationErrors(true);
-      testCompiler.enter();
-      testCompiler.getClasses().writeToJar(jarBuilder);
-      jarBuilder.createJarFile(stubJar);
-    }
-    return stubJar;
-  }
-
   private Path createStubJar(Path fullJar) throws IOException {
     Path stubJar = fullJar.getParent().resolve("stub.jar");
     new StubJar(fullJar).setSourceAbiCompatible(true).writeTo(filesystem, stubJar);
@@ -4156,18 +4119,78 @@ public class StubJarTest {
     public Tester createStubJar() throws IOException {
       File outputDir = temp.newFolder();
       if (testingMode != MODE_JAR_BASED) {
-        stubJarPath =
-            StubJarTest.this.createStubJar(
-                testingMode == MODE_SOURCE_BASED
-                    ? ImmutableSortedSet.<Path>naturalOrder()
-                        .addAll(universalClasspath)
-                        .addAll(classpath)
-                        .build()
-                    : universalClasspath,
-                manifest,
-                sourceFileName,
-                sourceFileContents,
-                outputDir.toPath());
+        SortedSet<Path> classpath1 =
+            testingMode == MODE_SOURCE_BASED
+                ? ImmutableSortedSet.<Path>naturalOrder()
+                    .addAll(universalClasspath)
+                    .addAll(classpath)
+                    .build()
+                : universalClasspath;
+        Path stubJar = outputDir.toPath().resolve("stub.jar");
+        JarBuilder jarBuilder = new JarBuilder();
+
+        try (TestCompiler testCompiler = new TestCompiler()) {
+          testCompiler.init();
+          if (manifest != null) {
+            testCompiler.setManifest(manifest);
+          }
+          testCompiler.useFrontendOnlyJavacTask();
+          testCompiler.addSourceFileContents(sourceFileName, sourceFileContents);
+          testCompiler.addClasspath(classpath1);
+          testCompiler.setProcessors(
+              Collections.singletonList(
+                  new AbstractProcessor() {
+                    @Override
+                    public Set<String> getSupportedAnnotationTypes() {
+                      return Collections.singleton("*");
+                    }
+
+                    @Override
+                    public SourceVersion getSupportedSourceVersion() {
+                      return SourceVersion.RELEASE_8;
+                    }
+
+                    @Override
+                    public Set<String> getSupportedOptions() {
+                      return Collections.emptySet();
+                    }
+
+                    @Override
+                    public boolean process(
+                        Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                      return false;
+                    }
+                  }));
+          StubGenerator generator =
+              new StubGenerator(
+                  SourceVersion.RELEASE_8,
+                  testCompiler.getElements(),
+                  testCompiler.getMessager(),
+                  jarBuilder,
+                  new JavacEventSinkToBuckEventBusBridge(
+                      new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())));
+
+          testCompiler.addPostEnterCallback(generator::generate);
+          testCompiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());
+          testCompiler.enter();
+
+          if (expectedCompileErrors.isEmpty()) {
+            testCompiler.getClasses().writeToJar(jarBuilder);
+            jarBuilder.createJarFile(stubJar);
+          } else {
+            List<String> actualCompileErrors =
+                testCompiler
+                    .getDiagnosticMessages()
+                    .stream()
+                    .map(
+                        diagnostic ->
+                            diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
+                    .collect(Collectors.toList());
+
+            assertEquals(expectedCompileErrors, actualCompileErrors);
+          }
+        }
+        stubJarPath = stubJar;
       } else {
         compileFullJar();
         stubJarPath = StubJarTest.this.createStubJar(fullJarPath);

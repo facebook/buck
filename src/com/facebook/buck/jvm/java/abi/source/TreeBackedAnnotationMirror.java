@@ -55,6 +55,10 @@ class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
     this.canonicalizer = canonicalizer;
   }
 
+  public TreePath getTreePath() {
+    return treePath;
+  }
+
   @Override
   public DeclaredType getAnnotationType() {
     if (type == null) {

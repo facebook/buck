@@ -140,11 +140,19 @@ class TreeBackedTrees extends Trees {
 
   @Override
   public TreePath getPath(Element e, AnnotationMirror a) {
+    if (a instanceof TreeBackedAnnotationMirror) {
+      return ((TreeBackedAnnotationMirror) a).getTreePath();
+    }
+
     throw new UnsupportedOperationException();
   }
 
   @Override
   public TreePath getPath(Element e, AnnotationMirror a, AnnotationValue v) {
+    if (e instanceof TreeBackedElement) {
+      return javacTrees.getPath(e, a, v);
+    }
+
     throw new UnsupportedOperationException();
   }
 
