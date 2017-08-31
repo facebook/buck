@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -63,9 +64,16 @@ public final class AccessFlags {
    * special ASM pseudo-access flag for @Deprecated types.
    */
   public int getAccessFlags(TypeElement typeElement) {
-    int result = getCommonAccessFlags(typeElement);
+    ElementKind kind;
+    try {
+      kind = typeElement.getKind();
+    } catch (CannotInferException e) {
+      // We should never call this method with an inferred type.
+      throw new AssertionError("Unexpected call to getAccessFlags with an inferred type.", e);
+    }
 
-    switch (typeElement.getKind()) {
+    int result = getCommonAccessFlags(typeElement);
+    switch (kind) {
       case ANNOTATION_TYPE:
         // No ACC_SUPER here per JVMS 4.1
         result = result | Opcodes.ACC_ANNOTATION;
@@ -129,13 +137,18 @@ public final class AccessFlags {
    * are common to all kinds of elements.
    */
   private int getCommonAccessFlags(Element element) {
-    int result = modifiersToAccessFlags(element.getModifiers());
+    try {
+      int result = modifiersToAccessFlags(element.getModifiers());
 
-    if (elements.isDeprecated(element)) {
-      result = result | Opcodes.ACC_DEPRECATED;
+      if (elements.isDeprecated(element)) {
+        result = result | Opcodes.ACC_DEPRECATED;
+      }
+
+      return result;
+    } catch (CannotInferException e) {
+      // We should never call this method with an inferred type.
+      throw new AssertionError("Unexpected call to getAccessFlags with an inferred type.", e);
     }
-
-    return result;
   }
 
   /**
