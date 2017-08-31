@@ -41,7 +41,7 @@ import javax.lang.model.type.TypeMirror;
  * compilation, to expose references that may be problematic when generating ABIs without
  * dependencies.
  */
-class InterfaceTypeAndConstantReferenceFinder {
+class InterfaceScanner {
   public interface Listener {
     void onTypeImported(TypeElement type);
 
@@ -54,7 +54,7 @@ class InterfaceTypeAndConstantReferenceFinder {
   private final Listener listener;
   private final Trees trees;
 
-  public InterfaceTypeAndConstantReferenceFinder(Trees trees, Listener listener) {
+  public InterfaceScanner(Trees trees, Listener listener) {
     this.trees = trees;
     this.listener = listener;
   }

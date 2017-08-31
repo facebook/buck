@@ -16,6 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source.api;
 
-public interface BootClasspathOracle {
-  boolean isOnBootClasspath(String binaryName);
+public interface InterfaceValidatorCallback {
+  boolean classIsOnBootClasspath(String binaryName);
 }

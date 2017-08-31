@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
@@ -36,7 +36,7 @@ import javax.tools.Diagnostic;
 public class ValidatingTaskListener implements TaskListener {
   private final BuckJavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
-  private final BootClasspathOracle bootClasspathOracle;
+  private final InterfaceValidatorCallback interfaceValidatorCallback;
   private final Diagnostic.Kind messageKind;
 
   @Nullable private InterfaceValidator validator;
@@ -45,17 +45,17 @@ public class ValidatingTaskListener implements TaskListener {
 
   public ValidatingTaskListener(
       BuckJavacTaskProxy task,
-      BootClasspathOracle bootClasspathOracle,
+      InterfaceValidatorCallback interfaceValidatorCallback,
       Diagnostic.Kind messageKind) {
     this.javacTask = ((BuckJavacTaskProxyImpl) task).getInner();
-    this.bootClasspathOracle = bootClasspathOracle;
+    this.interfaceValidatorCallback = interfaceValidatorCallback;
     this.messageKind = messageKind;
   }
 
   private InterfaceValidator getValidator() {
     // We can't do this on construction, because the Task might not be fully initialized yet
     if (validator == null) {
-      validator = new InterfaceValidator(messageKind, javacTask, bootClasspathOracle);
+      validator = new InterfaceValidator(messageKind, javacTask, interfaceValidatorCallback);
     }
 
     return Preconditions.checkNotNull(validator);

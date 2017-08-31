@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
@@ -28,9 +28,9 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
   public TaskListener newTaskListener(BuckJavacTask task) {
     return new ValidatingTaskListener(
         new BuckJavacTaskProxyImpl(task),
-        new BootClasspathOracle() {
+        new InterfaceValidatorCallback() {
           @Override
-          public boolean isOnBootClasspath(String binaryName) {
+          public boolean classIsOnBootClasspath(String binaryName) {
             return binaryName.startsWith("java.");
           }
         },

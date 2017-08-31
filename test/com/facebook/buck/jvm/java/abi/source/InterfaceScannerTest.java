@@ -37,7 +37,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
-public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApiTest {
+public class InterfaceScannerTest extends CompilerTreeApiTest {
   private List<String> typeReferences;
   private List<String> constantReferences;
   private List<TypeElement> importedTypes;
@@ -530,8 +530,7 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
             return new PostEnterCallback() {
               @Override
               protected void enterComplete(List<CompilationUnitTree> compilationUnits) {
-                InterfaceTypeAndConstantReferenceFinder finder =
-                    new InterfaceTypeAndConstantReferenceFinder(trees, new FinderListener());
+                InterfaceScanner finder = new InterfaceScanner(trees, new FinderListener());
                 finder.findReferences(compilationUnits);
               }
             };
@@ -571,7 +570,7 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
     return String.format("%d, %d: %s", line, column, referent);
   }
 
-  private class FinderListener implements InterfaceTypeAndConstantReferenceFinder.Listener {
+  private class FinderListener implements InterfaceScanner.Listener {
     @Override
     public void onTypeImported(TypeElement type) {
       importedTypes.add(type);

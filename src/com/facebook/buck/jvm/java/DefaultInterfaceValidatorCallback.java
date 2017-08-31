@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.jvm.java.abi.source.api.BootClasspathOracle;
+import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -28,16 +28,16 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
-class FileManagerBootClasspathOracle implements BootClasspathOracle {
+class DefaultInterfaceValidatorCallback implements InterfaceValidatorCallback {
   private final JavaFileManager fileManager;
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
-  public FileManagerBootClasspathOracle(JavaFileManager fileManager) {
+  public DefaultInterfaceValidatorCallback(JavaFileManager fileManager) {
     this.fileManager = fileManager;
   }
 
   @Override
-  public boolean isOnBootClasspath(String binaryName) {
+  public boolean classIsOnBootClasspath(String binaryName) {
     String packageName = getPackageName(binaryName);
     Set<String> packageContents = getPackageContents(packageName);
     return packageContents.contains(binaryName);

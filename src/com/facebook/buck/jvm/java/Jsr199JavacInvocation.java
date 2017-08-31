@@ -359,7 +359,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
-                new FileManagerBootClasspathOracle(fileManager),
+                new DefaultInterfaceValidatorCallback(fileManager),
                 compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
                     ? Diagnostic.Kind.ERROR
                     : Diagnostic.Kind.WARNING);
