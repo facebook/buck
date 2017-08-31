@@ -72,6 +72,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -80,6 +83,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class DistBuildFileHashesTest {
+  private static final long FUTURES_GET_TIMEOUT_SECONDS = 2;
+
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Rule public TemporaryFolder archiveTempDir = new TemporaryFolder();
@@ -236,7 +241,9 @@ public class DistBuildFileHashesTest {
   }
 
   @Test
-  public void materializerWritesContents() throws Exception {
+  public void materializerWritesContents()
+      throws InterruptedException, NoSuchBuildTargetException, IOException, TimeoutException,
+          ExecutionException {
     SingleFileFixture f = new SingleFileFixture(tempDir);
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
@@ -260,11 +267,13 @@ public class DistBuildFileHashesTest {
             // a windows filesystem. So replace '\' by '/'.
             .putFileContents(f.javaSrcPath.toString().replace('\\', '/'), f.writtenContents)
             .build();
-    MaterializerProjectFileHashCache materializer =
-        new MaterializerProjectFileHashCache(
-            mockCache, fileHashes.get(0), fakeFileContentsProvider);
+    MaterializerDummyFileHashCache materializer =
+        new MaterializerDummyFileHashCache(mockCache, fileHashes.get(0), fakeFileContentsProvider);
 
     materializer.get(f.javaSrcPath);
+    materializer
+        .getMaterializationFuturesAsList()
+        .get(FUTURES_GET_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     assertThat(
         materializeProjectFilesystem.readFileIfItExists(f.javaSrcPath),
         Matchers.equalTo(Optional.of(f.writtenContents)));
@@ -272,7 +281,8 @@ public class DistBuildFileHashesTest {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
-  public void materializerThrowsOnCorruption() throws Exception {
+  public void materializerThrowsOnCorruption()
+      throws InterruptedException, NoSuchBuildTargetException, IOException, TimeoutException {
     SingleFileFixture f = new SingleFileFixture(tempDir);
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
@@ -288,16 +298,19 @@ public class DistBuildFileHashesTest {
         .andReturn(HashCode.fromInt(42))
         .atLeastOnce();
     EasyMock.replay(mockCache);
-    MaterializerProjectFileHashCache materializer =
-        new MaterializerProjectFileHashCache(
+    MaterializerDummyFileHashCache materializer =
+        new MaterializerDummyFileHashCache(
             mockCache,
             fileHashes.get(0),
             new InlineContentsProvider(MoreExecutors.newDirectExecutorService()));
 
     try {
       materializer.get(f.javaSrcPath);
+      materializer
+          .getMaterializationFuturesAsList()
+          .get(FUTURES_GET_TIMEOUT_SECONDS, TimeUnit.SECONDS);
       Assert.fail("Materialization should have thrown because of mismatching hash.");
-    } catch (RuntimeException e) {
+    } catch (RuntimeException | ExecutionException e) {
       // expected.
     }
   }

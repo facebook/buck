@@ -216,8 +216,8 @@ public class DistBuildState {
       return decoratedCache;
     }
 
-    MaterializerProjectFileHashCache materializer =
-        new MaterializerProjectFileHashCache(decoratedCache, remoteFileHashes, provider);
+    MaterializerDummyFileHashCache materializer =
+        new MaterializerDummyFileHashCache(decoratedCache, remoteFileHashes, provider);
 
     // Create all symlinks and touch all other files.
     DistBuildConfig remoteConfig = new DistBuildConfig(getRootCell().getBuckConfig());

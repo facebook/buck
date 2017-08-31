@@ -28,26 +28,39 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-class MaterializerProjectFileHashCache implements ProjectFileHashCache {
+/**
+ * Note that this class may or may not return the real HashCode of a file/dir. The primary purpose
+ * of this class is to trigger async materialization of files in a distributed build.
+ */
+class MaterializerDummyFileHashCache implements ProjectFileHashCache {
 
-  private static final Logger LOG = Logger.get(MaterializerProjectFileHashCache.class);
+  private static final Logger LOG = Logger.get(MaterializerDummyFileHashCache.class);
+  private static final long DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS = 300;
 
   private final ImmutableMap<Path, BuildJobStateFileHashEntry> remoteFileHashesByAbsPath;
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
   private final ProjectFilesystem projectFilesystem;
   private final ProjectFileHashCache delegate;
+  private final Map<BuildJobStateFileHashEntry, ListenableFuture<?>>
+      fileMaterializationFuturesByFileHashEntry;
 
-  public MaterializerProjectFileHashCache(
+  public MaterializerDummyFileHashCache(
       ProjectFileHashCache delegate,
       BuildJobStateFileHashes remoteFileHashes,
       FileContentsProvider provider) {
@@ -57,6 +70,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     this.materializedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.provider = provider;
     this.projectFilesystem = delegate.getFilesystem();
+    this.fileMaterializationFuturesByFileHashEntry = new ConcurrentHashMap<>();
   }
 
   /**
@@ -100,7 +114,7 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
           || fileHashEntry.isSetMaterializeDuringPreloading()
               && fileHashEntry.isMaterializeDuringPreloading()) {
         Path relPath = projectFilesystem.getPathRelativeToProjectRoot(absPath).get();
-        materializeIfNeeded(relPath);
+        materializeFileAsync(relPath, fileHashEntry);
         continue;
       }
 
@@ -108,9 +122,23 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
       projectFilesystem.createParentDirs(absPath);
       projectFilesystem.touch(absPath);
     }
+
+    try {
+      getMaterializationFuturesAsList()
+          .get(DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    } catch (ExecutionException e) {
+      LOG.error(e, "Preload file materialization failed with exception: [%s].", e.getMessage());
+    } catch (InterruptedException e) {
+      LOG.error(e, "Preload file materialization was interrupted.");
+    } catch (TimeoutException e) {
+      LOG.error(
+          e,
+          "Preload materialization timed out after [%d] seconds.",
+          DEFAULT_PRELOAD_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
+    }
   }
 
-  private void materializeIfNeeded(Path relPath) throws IOException {
+  private void materializeIfNeededAsync(Path relPath) throws IOException {
     Stack<Path> remainingPaths = new Stack<>();
     remainingPaths.add(relPath);
 
@@ -140,32 +168,55 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
         continue;
       }
 
-      materializeFile(relPath, fileHashEntry);
+      materializeFileAsync(relPath, fileHashEntry);
     }
   }
 
-  private void materializeFile(Path relPath, BuildJobStateFileHashEntry fileHashEntry)
-      throws IOException {
-    Path absPath = projectFilesystem.resolve(relPath).toAbsolutePath();
-    projectFilesystem.createParentDirs(projectFilesystem.resolve(relPath));
+  private void postFileMaterializationHelper(
+      boolean success, Path relPath, BuildJobStateFileHashEntry fileHashEntry) throws IOException {
+    Path absPath = projectFilesystem.resolve(relPath);
+    Preconditions.checkState(
+        success,
+        "Failed to materialize source file [%s] for FileHashEntry=[%s].",
+        absPath,
+        fileHashEntry);
 
-    // We should materialize files using multiple threads, but we need to maintain synchronization
-    // on at least a per-file basis. Trying to materialize a file again might make the file seem
-    // unavailable for a small window when we're writing it again.
+    absPath.toFile().setExecutable(fileHashEntry.isExecutable);
+    recordMaterializedPath(relPath);
+  }
+
+  private ListenableFuture<?> materializeFileAsync(
+      Path relPath, BuildJobStateFileHashEntry fileHashEntry) throws IOException {
+    // We need to maintain synchronization a per-file basis. Trying to materialize a file again
+    // makes the file unavailable for a small window when we're writing it again.
     synchronized (fileHashEntry) {
-      // Check if someone materialized the file while we were waiting for synchronization.
-      if (materializedPaths.contains(relPath)) {
-        return;
+      // Check if we've previously tried to materialize this file.
+      if (fileMaterializationFuturesByFileHashEntry.containsKey(fileHashEntry)) {
+        return fileMaterializationFuturesByFileHashEntry.get(fileHashEntry);
       }
 
-      Preconditions.checkState(
-          provider.materializeFileContents(fileHashEntry, absPath),
-          "Failed to materialize source file [%s] for FileHashEntry=[%s].",
-          absPath,
-          fileHashEntry);
+      Path absPath = projectFilesystem.resolve(relPath);
+      projectFilesystem.createParentDirs(absPath);
+      projectFilesystem.touch(absPath);
 
-      absPath.toFile().setExecutable(fileHashEntry.isExecutable);
-      recordMaterializedPath(relPath);
+      ListenableFuture<?> materializationFuture =
+          Futures.transform(
+              provider.materializeFileContentsAsync(fileHashEntry, absPath),
+              (success) -> {
+                try {
+                  postFileMaterializationHelper(success, relPath, fileHashEntry);
+                  return success;
+                } catch (IOException e) {
+                  throw new RuntimeException(
+                      String.format(
+                          "Failed to materialize source file [%s] for FileHashEntry=[%s].",
+                          absPath, fileHashEntry),
+                      e);
+                }
+              });
+
+      fileMaterializationFuturesByFileHashEntry.put(fileHashEntry, materializationFuture);
+      return materializationFuture;
     }
   }
 
@@ -263,10 +314,19 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
     materializedPaths.add(relPath);
   }
 
+  public ListenableFuture<?> getMaterializationFuturesAsList() {
+    return Futures.allAsList(fileMaterializationFuturesByFileHashEntry.values());
+  }
+
   @Override
   public HashCode get(Path relPath) throws IOException {
-    materializeIfNeeded(relPath);
-    return delegate.get(relPath);
+    materializeIfNeededAsync(relPath);
+    if (getMaterializationFuturesAsList().isDone()) {
+      return delegate.get(relPath);
+    } else {
+      // Return a fake. This class is not meant for actually computing HashCodes.
+      return HashCode.fromInt(0);
+    }
   }
 
   @Override
@@ -281,8 +341,13 @@ class MaterializerProjectFileHashCache implements ProjectFileHashCache {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
-    materializeIfNeeded(archiveMemberRelPath.getArchivePath());
-    return delegate.get(archiveMemberRelPath);
+    materializeIfNeededAsync(archiveMemberRelPath.getArchivePath());
+    if (getMaterializationFuturesAsList().isDone()) {
+      return delegate.get(archiveMemberRelPath);
+    } else {
+      // Return a fake. This class is not meant for actually computing HashCodes.
+      return HashCode.fromInt(0);
+    }
   }
 
   @Override

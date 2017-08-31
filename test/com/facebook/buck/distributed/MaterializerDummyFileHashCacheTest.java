@@ -40,6 +40,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -47,41 +50,62 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class MaterializerProjectFileHashCacheTest {
-  @Rule public TemporaryFolder projectDir = new TemporaryFolder();
-
-  @Rule public TemporaryFolder externalDir = new TemporaryFolder();
+public class MaterializerDummyFileHashCacheTest {
+  private static final long FUTURE_COMPLETION_TIMEOUT_SECONDS = 5;
 
   private static final HashCode EXAMPLE_HASHCODE = HashCode.fromString("1234");
   private static final HashCode EXAMPLE_HASHCODE_TWO = HashCode.fromString("3456");
   private static final String FILE_CONTENTS = "filecontents";
   private static final String FILE_CONTENTS_TWO = "filecontentstwo";
 
+  @Rule public TemporaryFolder projectDir = new TemporaryFolder();
+  @Rule public TemporaryFolder externalDir = new TemporaryFolder();
+
   interface MaterializeFunction {
-    void execute(MaterializerProjectFileHashCache materializer, Path path) throws IOException;
+    void execute(MaterializerDummyFileHashCache materializer, Path path) throws IOException;
   }
+
+  private static MaterializeFunction waitingWrapper(MaterializeFunction materializeFunction) {
+    return (materializer, path) -> {
+      materializeFunction.execute(materializer, path);
+      try {
+        materializer
+            .getMaterializationFuturesAsList()
+            .get(FUTURE_COMPLETION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        Assert.fail(String.format("Unexpected failure: [%s].", e.getMessage()));
+      }
+    };
+  };
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private static final MaterializeFunction THROWING_GET =
       (materializer, path) -> {
         try {
           materializer.get(path);
+          materializer
+              .getMaterializationFuturesAsList()
+              .get(FUTURE_COMPLETION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
           Assert.fail("Materialization should have thrown because of mismatching hash.");
-        } catch (RuntimeException e) {
+        } catch (InterruptedException | TimeoutException e) {
+          Assert.fail(String.format("Unexpected failure: [%s].", e.getMessage()));
+        } catch (RuntimeException | ExecutionException e) {
           // expected.
         }
       };
 
-  private static final MaterializeFunction GET = (materializer, path) -> materializer.get(path);
+  private static final MaterializeFunction GET =
+      waitingWrapper((materializer, path) -> materializer.get(path));
   private static final MaterializeFunction PRELOAD =
-      (materializer, path) -> materializer.preloadAllFiles(false);
+      waitingWrapper((materializer, path) -> materializer.preloadAllFiles(false));
   private static final MaterializeFunction PRELOAD_THEN_GET =
-      (materializer, path) -> {
-        materializer.preloadAllFiles(false);
-        materializer.get(path);
-      };
+      waitingWrapper(
+          (materializer, path) -> {
+            materializer.preloadAllFiles(false);
+            materializer.get(path);
+          });
   private static final MaterializeFunction PRELOAD_WITH_MATERIALIZE_ALL =
-      (materializer, path) -> materializer.preloadAllFiles(true);
+      waitingWrapper((materializer, path) -> materializer.preloadAllFiles(true));
 
   private void testMaterializeDirectoryHelper(
       boolean materializeDuringPreloading,
@@ -178,8 +202,8 @@ public class MaterializerProjectFileHashCacheTest {
         new InlineContentsProvider(MoreExecutors.newDirectExecutorService());
     replay(mockFileHashCache);
 
-    MaterializerProjectFileHashCache fileMaterializer =
-        new MaterializerProjectFileHashCache(mockFileHashCache, fileHashes, inlineProvider);
+    MaterializerDummyFileHashCache fileMaterializer =
+        new MaterializerDummyFileHashCache(mockFileHashCache, fileHashes, inlineProvider);
 
     assertFalse(pathDirA.toFile().exists());
     assertFalse(pathDirAb.toFile().exists());
@@ -282,8 +306,8 @@ public class MaterializerProjectFileHashCacheTest {
         .andReturn(setCorrectHash ? EXAMPLE_HASHCODE : EXAMPLE_HASHCODE_TWO)
         .atLeastOnce();
     replay(mockFileHashCache);
-    MaterializerProjectFileHashCache fileMaterializer =
-        new MaterializerProjectFileHashCache(mockFileHashCache, fileHashes, inlineProvider);
+    MaterializerDummyFileHashCache fileMaterializer =
+        new MaterializerDummyFileHashCache(mockFileHashCache, fileHashes, inlineProvider);
     materializeFunction.execute(fileMaterializer, relativeRealFile);
 
     return realFileAbsPath;
@@ -383,8 +407,8 @@ public class MaterializerProjectFileHashCacheTest {
         .atLeastOnce();
     replay(mockFileHashCache);
 
-    MaterializerProjectFileHashCache fileMaterializer =
-        new MaterializerProjectFileHashCache(mockFileHashCache, fileHashes, mockFileProvider);
+    MaterializerDummyFileHashCache fileMaterializer =
+        new MaterializerDummyFileHashCache(mockFileHashCache, fileHashes, mockFileProvider);
 
     assertFalse(symlink.toFile().exists());
 
