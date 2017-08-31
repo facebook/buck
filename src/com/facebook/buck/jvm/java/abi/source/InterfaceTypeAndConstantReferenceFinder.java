@@ -94,7 +94,7 @@ class InterfaceTypeAndConstantReferenceFinder {
       public Void visitClass(ClassTree node, Void aVoid) {
         Element element = getEnclosingElement();
         // Skip private since they're not part of the interface
-        if (isPrivate(element)) {
+        if (!element.getKind().isClass() && isPrivate(element)) {
           return null;
         }
 

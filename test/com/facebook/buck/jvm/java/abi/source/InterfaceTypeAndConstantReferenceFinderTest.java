@@ -61,10 +61,12 @@ public class InterfaceTypeAndConstantReferenceFinderTest extends CompilerTreeApi
   }
 
   @Test
-  public void testIgnoresPrivateNestedTypes() throws IOException {
+  public void testFindsTypeReferencesInPrivateNestedTypes() throws IOException {
     findTypeReferences("class Foo {", "  private class Bar {", "    String s;", "  }", "}");
 
-    assertThat(typeReferences, Matchers.empty());
+    assertThat(
+        typeReferences,
+        Matchers.containsInAnyOrder(createSymbolicReference("java.lang.String", 3, 5)));
   }
 
   @Test
