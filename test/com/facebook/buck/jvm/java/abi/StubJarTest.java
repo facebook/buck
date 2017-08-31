@@ -49,12 +49,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -3919,7 +3923,30 @@ public class StubJarTest {
       testCompiler.useFrontendOnlyJavacTask();
       testCompiler.addSourceFileContents(fileName, source);
       testCompiler.addClasspath(classpath);
-      testCompiler.setProcessors(Collections.emptyList());
+      testCompiler.setProcessors(
+          Collections.singletonList(
+              new AbstractProcessor() {
+                @Override
+                public Set<String> getSupportedAnnotationTypes() {
+                  return Collections.singleton("*");
+                }
+
+                @Override
+                public SourceVersion getSupportedSourceVersion() {
+                  return SourceVersion.RELEASE_8;
+                }
+
+                @Override
+                public Set<String> getSupportedOptions() {
+                  return Collections.emptySet();
+                }
+
+                @Override
+                public boolean process(
+                    Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                  return false;
+                }
+              }));
       StubGenerator generator =
           new StubGenerator(
               SourceVersion.RELEASE_8,
