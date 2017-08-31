@@ -88,37 +88,14 @@ class SignatureFactory {
         public Void visitTypeParameter(TypeParameterElement element, SignatureVisitor visitor) {
           visitor.visitFormalTypeParameter(element.getSimpleName().toString());
           for (TypeMirror boundType : element.getBounds()) {
-            if (isClassType(boundType)) {
-              boundType.accept(typeVisitorAdapter, visitor.visitClassBound());
-            } else {
-              boundType.accept(typeVisitorAdapter, visitor.visitInterfaceBound());
-            }
+            // We can't know whether an inferred type is a class or interface, but it turns out
+            // the compiler does not distinguish between them when reading signatures, so we can
+            // write inferred types as interface bounds. We go ahead and write all bounds as
+            // interface bounds to make the SourceAbiCompatibleSignatureVisitor possible.
+            boundType.accept(typeVisitorAdapter, visitor.visitInterfaceBound());
           }
 
           return null;
-        }
-
-        private boolean isClassType(TypeMirror type) {
-          if (type.getKind() == TypeKind.TYPEVAR) {
-            // For the purposes of signatures, typevar bounds are considered class bounds
-            return true;
-          }
-
-          if (type.getKind() != TypeKind.DECLARED) {
-            return false;
-          }
-
-          try {
-            DeclaredType declaredType = (DeclaredType) type;
-            return declaredType.asElement().getKind().isClass();
-          } catch (CannotInferException e) {
-            // We can't know whether an inferred element is a class or an interface. We need to know
-            // this so that we can properly generate generic bounds signatures, which distinguish
-            // between a class and the (potentially multiple) interfaces. Fortunately, the compiler
-            // treats the bounds equally regardless, so we can safely pretend everything is an
-            // interface.
-            return false;
-          }
         }
 
         @Override

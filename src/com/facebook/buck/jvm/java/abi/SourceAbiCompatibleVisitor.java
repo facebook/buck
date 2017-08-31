@@ -16,11 +16,15 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureWriter;
 
 /**
  * This class fixes up a few details of class ABIs so that they match the way source ABIs generate
@@ -44,7 +48,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
       String[] interfaces) {
     this.name = name;
     access = stripAbstractFromEnums(access);
-    super.visit(version, access, name, signature, superName, interfaces);
+    super.visit(version, access, name, fixupSignature(signature), superName, interfaces);
   }
 
   @Override
@@ -54,7 +58,13 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
     if ((access & Opcodes.ACC_BRIDGE) != 0) {
       return null;
     }
-    return super.visitMethod(access, name, desc, signature, exceptions);
+    return super.visitMethod(access, name, desc, fixupSignature(signature), exceptions);
+  }
+
+  @Override
+  public FieldVisitor visitField(
+      int access, String name, String desc, String signature, Object value) {
+    return super.visitField(access, name, desc, fixupSignature(signature), value);
   }
 
   @Override
@@ -69,6 +79,19 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
     }
     access = stripAbstractFromEnums(access);
     super.visitInnerClass(name, outerName, innerName, access);
+  }
+
+  private static String fixupSignature(@PropagatesNullable String signature) {
+    if (signature == null) {
+      return signature;
+    }
+
+    SignatureReader reader = new SignatureReader(signature);
+    SignatureWriter writer = new SignatureWriter();
+
+    reader.accept(new SourceAbiCompatibleSignatureVisitor(writer));
+
+    return writer.toString();
   }
 
   private static int stripAbstractFromEnums(int access) {
