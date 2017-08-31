@@ -28,6 +28,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -48,6 +49,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -670,10 +672,20 @@ public class WorkspaceAndProjectGenerator {
           if (!(node.getConstructorArg() instanceof HasTests)) {
             continue;
           }
-          for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
-            if (!focusModules.isFocusedOn(explicitTestTarget)) {
-              continue;
-            }
+          ImmutableList<BuildTarget> focusedTests =
+              ((HasTests) node.getConstructorArg())
+                  .getTests()
+                  .stream()
+                  .filter(t -> focusModules.isFocusedOn(t))
+                  .collect(MoreCollectors.toImmutableList());
+          // Show a warning if the target is not focused but the tests are.
+          if (focusedTests.size() > 0 && !focusModules.isFocusedOn(node.getBuildTarget())) {
+            buckEventBus.post(
+                ConsoleEvent.warning(
+                    "Skipping tests of %s since it's not focused", node.getBuildTarget()));
+            continue;
+          }
+          for (BuildTarget explicitTestTarget : focusedTests) {
             Optional<TargetNode<?, ?>> explicitTestNode =
                 targetGraph.getOptional(explicitTestTarget);
             if (explicitTestNode.isPresent()) {

@@ -352,4 +352,23 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testBuckProjectFocusWithTests() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_focus_with_tests", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.ide=xcode",
+            "--with-tests",
+            "--focus",
+            "//Tests:",
+            "//Apps:TestApp");
+    result.assertSuccess();
+  }
 }
