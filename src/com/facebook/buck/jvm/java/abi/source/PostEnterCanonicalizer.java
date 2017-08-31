@@ -50,6 +50,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
+import javax.tools.Diagnostic;
 
 /**
  * After the enter phase is complete, this class can obtain the "canonical" version of any {@link
@@ -374,6 +375,12 @@ class PostEnterCanonicalizer {
                     new TreePath(valueTreePath, ((MemberSelectTree) leaf).getExpression());
 
                 return getCanonicalType(getUnderlyingType(classNamePath), classNamePath);
+              } else {
+                javacTrees.printMessage(
+                    Diagnostic.Kind.ERROR,
+                    "Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.",
+                    leaf,
+                    valueTreePath.getCompilationUnit());
               }
             }
 

@@ -1200,6 +1200,61 @@ public class StubJarTest {
   }
 
   @Test
+  public void providesNiceErrorWhenConstantMissing() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    createAnnotationFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java",
+            "package com.example.buck;",
+            "public class Dependency { public static final String STRING = \"string\";}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "@Foo(stringValue=Dependency.STRING)",
+            "public @interface A {}")
+        .addExpectedCompileError(
+            "A.java:2: error: Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.\n"
+                + "@Foo(stringValue=Dependency.STRING)\n"
+                + "                           ^")
+        .createStubJar();
+  }
+
+  @Test
+  public void preservesAnnotationsWithConstantValues() throws IOException {
+    notYetImplementedForMissingClasspath();
+
+    createAnnotationFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java",
+            "package com.example.buck;",
+            "public class Dependency { public static final String STRING = \"string\";}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "@Foo(stringValue=Dependency.STRING)",
+            "public @interface A {}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x2601",
+            "public abstract @interface com/example/buck/A implements java/lang/annotation/Annotation  {",
+            "",
+            "",
+            "  @Lcom/example/buck/Foo;(stringValue=\"string\")",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void preservesAnnotationsWithEnumArrayValues() throws IOException {
     tester
         .setSourceFile(
@@ -3969,6 +4024,7 @@ public class StubJarTest {
             "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
             "public @interface Foo {",
             "  int primitiveValue() default 0;",
+            "  String stringValue() default \"default\";",
             "  String[] stringArrayValue() default {\"Hello\"};",
             "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
             "  Retention[] annotationArrayValue() default {};",
