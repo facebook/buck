@@ -874,6 +874,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
+    if (console.getVerbosity().isSilent()
+        && !event.getLevel().equals(Level.SEVERE)) {
+      return;
+    }
     logEvents.add(event);
   }
 
@@ -883,6 +887,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   private void printInfoDirectlyOnce(String line) {
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     if (!actionGraphCacheMessage.contains(line)) {
       logEvents.add(ConsoleEvent.info(line));
       actionGraphCacheMessage.add(line);

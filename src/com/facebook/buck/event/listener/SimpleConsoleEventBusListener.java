@@ -181,7 +181,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   @Subscribe
   public void logEvent(ConsoleEvent event) {
     if (console.getVerbosity().isSilent()
-        && !event.getLevel().equals(Level.WARNING)
         && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
