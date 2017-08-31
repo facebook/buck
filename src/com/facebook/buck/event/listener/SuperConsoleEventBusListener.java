@@ -270,7 +270,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting
   synchronized void render() {
     LOG.verbose("Rendering");
-    String lastRenderClear = clearLastRender();
+    int previousNumLinesPrinted = lastNumLinesPrinted;
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
     ImmutableList<String> logLines = createLogRenderLines();
     lastNumLinesPrinted = lines.size();
@@ -287,15 +287,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         stderrDirty = console.getStdErr().isDirty();
         if (stdoutDirty || stderrDirty) {
           stopRenderScheduler();
-        } else if (!lastRenderClear.isEmpty() || !lines.isEmpty() || !logLines.isEmpty()) {
-          Iterable<String> renderedLines =
-              Iterables.concat(
-                  MoreIterables.zipAndConcat(logLines, Iterables.cycle("\n")),
-                  ansi.asNoWrap(MoreIterables.zipAndConcat(lines, Iterables.cycle("\n"))));
-          StringBuilder fullFrame = new StringBuilder(lastRenderClear);
-          for (String part : renderedLines) {
-            fullFrame.append(part);
-          }
+        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
+          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
           console.getStdErr().getRawStream().print(fullFrame);
         }
       }
@@ -304,6 +297,43 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       LOG.debug(
           "Stopping console output (stdout dirty %s, stderr dirty %s).", stdoutDirty, stderrDirty);
     }
+  }
+
+  private String renderFullFrame(
+      ImmutableList<String> logLines, ImmutableList<String> lines, int previousNumLinesPrinted) {
+    int currentNumLines = lines.size();
+
+    Iterable<String> renderedLines =
+        Iterables.concat(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle(ansi.clearLine()), logLines, Iterables.cycle("\n")),
+            ansi.asNoWrap(
+                MoreIterables.zipAndConcat(
+                    Iterables.cycle(ansi.clearLine()), lines, Iterables.cycle("\n"))));
+
+    // Number of lines remaining to clear because of old output once we displayed
+    // the new output.
+    int remainingLinesToClear =
+        previousNumLinesPrinted > currentNumLines ? previousNumLinesPrinted - currentNumLines : 0;
+
+    StringBuilder fullFrame = new StringBuilder();
+    // We move the cursor back to the top.
+    for (int i = 0; i < previousNumLinesPrinted; i++) {
+      fullFrame.append(ansi.cursorPreviousLine(1));
+    }
+    // We display the new output.
+    for (String part : renderedLines) {
+      fullFrame.append(part);
+    }
+    // We clear the remaining lines of the old output.
+    for (int i = 0; i < remainingLinesToClear; i++) {
+      fullFrame.append(ansi.clearLine() + "\n");
+    }
+    // We move the cursor at the end of the new output.
+    for (int i = 0; i < remainingLinesToClear; i++) {
+      fullFrame.append(ansi.cursorPreviousLine(1));
+    }
+    return fullFrame.toString();
   }
 
   /**
@@ -658,19 +688,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       return Optional.empty();
     }
-  }
-
-  /**
-   * @return A string of ansi characters that will clear the last set of lines printed by {@link
-   *     SuperConsoleEventBusListener#createRenderLinesAtTime(long)}.
-   */
-  private String clearLastRender() {
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < lastNumLinesPrinted; ++i) {
-      result.append(ansi.cursorPreviousLine(1));
-      result.append(ansi.clearLine());
-    }
-    return result.toString();
   }
 
   @Override
