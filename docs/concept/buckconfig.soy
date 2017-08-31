@@ -3159,6 +3159,17 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'test' /}
+  {param name: 'parallel_external_test_spec_computation_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+    Whether external test spec computation is allowed to happen in parallel. Enabling this option
+    can significantly speed up test execution when many test targets are requested. By default it
+    is disabled.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'thrift' /}
   {param description}

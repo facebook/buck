@@ -82,6 +82,7 @@ public class BuckConfig implements ConfigPathGetter {
   private static final String ALIAS_SECTION_HEADER = "alias";
   public static final String RESOURCES_SECTION_HEADER = "resources";
   public static final String RESOURCES_PER_RULE_SECTION_HEADER = "resources_per_rule";
+  private static final String TEST_SECTION_HEADER = "test";
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
 
@@ -473,6 +474,11 @@ public class BuckConfig implements ConfigPathGetter {
 
   public long getDefaultTestTimeoutMillis() {
     return Long.parseLong(getValue("test", "timeout").orElse("0"));
+  }
+
+  public boolean isParallelExternalTestSpecComputationEnabled() {
+    return getBooleanValue(
+        TEST_SECTION_HEADER, "parallel_external_test_spec_computation_enabled", false);
   }
 
   private static final String LOG_SECTION = "log";
