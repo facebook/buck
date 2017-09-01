@@ -797,7 +797,7 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine, actionGraphLine, "Distributed build... 0.3 sec (status: init)"));
+            parsingLine, actionGraphLine, "Distributed build... 0.3 sec status: init"));
 
     timeMillis += 250;
     eventBus.postWithoutConfiguring(
@@ -817,9 +817,7 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed build... 0.7 sec (status: queued, [step 1])"));
+            parsingLine, actionGraphLine, "Distributed build... 0.7 sec status: queued, step 1"));
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -838,9 +836,7 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         timeMillis,
         ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed build... 0.9 sec (status: building, [step 2])"));
+            parsingLine, actionGraphLine, "Distributed build... 0.9 sec status: building, step 2"));
 
     RunId runId1 = new RunId();
     runId1.setId("slave1");
@@ -872,9 +868,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed build... 1.1 sec (status: building, [step 2])",
-            " SERVER 0)=> PROCESSING BUILD GRAPH...",
-            " SERVER 1)=> PROCESSING BUILD GRAPH..."));
+            "Distributed build... 1.1 sec status: building, step 2",
+            " Server 0: Creating action graph...",
+            " Server 1: Creating action graph..."));
 
     timeMillis += 100;
     slave1.setTotalRulesCount(10);
@@ -918,9 +914,9 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed build... 1.3 sec (33%) (status: building, 3.3% cache miss, [step 2])",
-            " SERVER 0)=> IDLE... (BUILT 5/10 JOBS, 1 [10.0%] CACHE MISS)",
-            " SERVER 1)=> WORKING ON 5 JOBS... (BUILT 5/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS)"));
+            "Distributed build... 1.3 sec (33%) status: building, 1 [3.3%] cache miss, step 2",
+            " Server 0: Idle... built 5/10 jobs, 1 [10.0%] cache miss",
+            " Server 1: Working on 5 jobs... built 5/20 jobs, 1 jobs failed, 0 [0.0%] cache miss"));
 
     timeMillis += 100;
     slave1.setRulesStartedCount(1);
@@ -946,7 +942,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 DistBuildStatus.builder()
-                    .setStatus("CUSTOM")
+                    .setStatus("custom")
                     .setMessage("step 2")
                     .setSlaveStatuses(ImmutableList.of(slave1, slave2))
                     .build()),
@@ -961,11 +957,11 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            "Distributed build... 1.5 sec (96%) (status: custom,"
-                + " 3.3% cache miss, 3.4% cache errors, 1 upload errors, [step 2])",
-            " SERVER 0)=> WORKING ON 1 JOBS... (BUILT 9/10 JOBS, 1 [10.0%] CACHE MISS)",
-            " SERVER 1)=> IDLE... (BUILT 20/20 JOBS, 1 JOBS FAILED, 0 [0.0%] CACHE MISS, "
-                + "1 [5.0%] CACHE ERRORS, 1/3 UPLOADED, 1 UPLOAD ERRORS)"));
+            "Distributed build... 1.5 sec (96%) status: custom,"
+                + " 1 [3.3%] cache miss, 1 [3.4%] cache errors, 1 upload errors, step 2",
+            " Server 0: Working on 1 jobs... built 9/10 jobs, 1 [10.0%] cache miss",
+            " Server 1: Idle... built 20/20 jobs, 1 jobs failed, 0 [0.0%] cache miss, "
+                + "1 [5.0%] cache errors, 1/3 uploaded, 1 upload errors"));
 
     timeMillis += 100;
     slave1.setRulesStartedCount(0);
@@ -995,8 +991,8 @@ public class SuperConsoleEventBusListenerTest {
 
     timeMillis += 100;
     final String distbuildLine =
-        "Distributed build: finished in 1.6 sec (100%) (status: finished_successfully,"
-            + " 3.3% cache miss, 3.3% cache errors, 1 upload errors, [step 3])";
+        "Distributed build: finished in 1.6 sec (100%) status: finished_successfully,"
+            + " 1 [3.3%] cache miss, 1 [3.3%] cache errors, 1 upload errors, step 3";
     validateConsole(
         listener,
         timeMillis,

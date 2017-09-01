@@ -587,11 +587,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats.build());
 
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
-          columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
+          columns.add(
+              String.format(
+                  "%d [%.1f%%] cache miss",
+                  aggregatedCacheStats.getCacheMissCount(),
+                  aggregatedCacheStats.getCacheMissRate()));
 
           if (aggregatedCacheStats.getCacheErrorCount() != 0) {
             columns.add(
-                String.format("%.1f%% cache errors", aggregatedCacheStats.getCacheErrorRate()));
+                String.format(
+                    "%d [%.1f%%] cache errors",
+                    aggregatedCacheStats.getCacheErrorCount(),
+                    aggregatedCacheStats.getCacheErrorRate()));
           }
         }
 
@@ -604,12 +611,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         }
 
         if (distBuildStatus.get().getMessage().isPresent()) {
-          columns.add("[" + distBuildStatus.get().getMessage().get() + "]");
+          columns.add(distBuildStatus.get().getMessage().get());
         }
       }
     }
 
-    parseLine = "(" + Joiner.on(", ").join(columns) + ")";
+    parseLine = Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
@@ -891,8 +898,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
-    if (console.getVerbosity().isSilent()
-        && !event.getLevel().equals(Level.SEVERE)) {
+    if (console.getVerbosity().isSilent() && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
     logEvents.add(event);
