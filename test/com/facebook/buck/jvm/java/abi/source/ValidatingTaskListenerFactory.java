@@ -24,11 +24,22 @@ import com.sun.source.util.TaskListener;
 import javax.tools.Diagnostic;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
+  private final boolean requiredForSourceAbi;
+
+  ValidatingTaskListenerFactory(boolean requiredForSourceAbi) {
+    this.requiredForSourceAbi = requiredForSourceAbi;
+  }
+
   @Override
   public TaskListener newTaskListener(BuckJavacTask task) {
     return new ValidatingTaskListener(
         new BuckJavacTaskProxyImpl(task),
         new InterfaceValidatorCallback() {
+          @Override
+          public boolean ruleIsRequiredForSourceAbi() {
+            return requiredForSourceAbi;
+          }
+
           @Override
           public boolean classIsOnBootClasspath(String binaryName) {
             return binaryName.startsWith("java.");

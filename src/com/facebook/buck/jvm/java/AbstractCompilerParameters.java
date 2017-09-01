@@ -66,6 +66,11 @@ abstract class AbstractCompilerParameters {
     return false;
   }
 
+  @Value.Default
+  public boolean ruleIsRequiredForSourceAbi() {
+    return false;
+  }
+
   public static Path getClassesDir(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargets.getScratchPath(filesystem, target, "lib__%s__classes");
   }

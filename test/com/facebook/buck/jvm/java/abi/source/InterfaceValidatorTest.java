@@ -344,15 +344,20 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(String source)
       throws IOException {
-    return compileWithValidation(ImmutableMap.of("Foo.java", source));
+    return compileWithValidation(ImmutableMap.of("Foo.java", source), true);
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(
       Map<String, String> sources) throws IOException {
+    return compileWithValidation(sources, true);
+  }
+
+  protected Iterable<? extends CompilationUnitTree> compileWithValidation(
+      Map<String, String> sources, boolean requiredForSourceAbi) throws IOException {
     return compile(
         sources,
         // A side effect of our hacky test class loader appears to be that this only works if
         // it's NOT a lambda. LoL.
-        new ValidatingTaskListenerFactory());
+        new ValidatingTaskListenerFactory(requiredForSourceAbi));
   }
 }

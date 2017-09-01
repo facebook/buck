@@ -30,10 +30,18 @@ import javax.tools.StandardLocation;
 
 class DefaultInterfaceValidatorCallback implements InterfaceValidatorCallback {
   private final JavaFileManager fileManager;
+  private final boolean ruleIsRequiredForSourceAbi;
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
-  public DefaultInterfaceValidatorCallback(JavaFileManager fileManager) {
+  public DefaultInterfaceValidatorCallback(
+      JavaFileManager fileManager, boolean ruleIsRequiredForSourceAbi) {
     this.fileManager = fileManager;
+    this.ruleIsRequiredForSourceAbi = ruleIsRequiredForSourceAbi;
+  }
+
+  @Override
+  public boolean ruleIsRequiredForSourceAbi() {
+    return ruleIsRequiredForSourceAbi;
   }
 
   @Override

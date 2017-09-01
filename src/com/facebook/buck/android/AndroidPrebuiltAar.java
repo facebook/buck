@@ -76,7 +76,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             /* trackClassUsage */ false,
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 prebuiltJar.getSourcePathToOutput()),
-            RemoveClassesPatternsMatcher.EMPTY),
+            RemoveClassesPatternsMatcher.EMPTY,
+            requiredForSourceAbi),
         Optional.of(proguardConfig),
         /* declaredDeps */ androidLibraryParams.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()

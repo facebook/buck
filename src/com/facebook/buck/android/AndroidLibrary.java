@@ -233,7 +233,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             getAbiClasspath(),
             getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(getJavacOptions())),
             getFinalCompileTimeClasspathSourcePaths(),
-            classesToRemoveFromJar);
+            classesToRemoveFromJar,
+            getRequiredForSourceAbi());
       }
 
       protected DummyRDotJava buildDummyRDotJava() {

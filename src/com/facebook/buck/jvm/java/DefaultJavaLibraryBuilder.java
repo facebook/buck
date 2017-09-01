@@ -591,7 +591,8 @@ public class DefaultJavaLibraryBuilder {
           getAbiClasspath(),
           trackClassUsage,
           getFinalCompileTimeClasspathSourcePaths(),
-          classesToRemoveFromJar);
+          classesToRemoveFromJar,
+          getRequiredForSourceAbi());
     }
 
     protected final JavacOptions getJavacOptions() {
