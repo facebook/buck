@@ -103,7 +103,10 @@ public class BuildCommandTest {
             + "\n"
             + "\u001B[31mFAIL\u001B[0m //fake:rule2\n"
             + "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n"
-            + "\u001B[31mFAIL\u001B[0m //fake:rule4\n";
+            + "\u001B[31mFAIL\u001B[0m //fake:rule4\n"
+            + "\n"
+            + " ** Summary of failures encountered during the build **\n"
+            + "Rule //fake:rule2 FAILED because some.\n";
     String observedReport =
         new BuildReport(buildExecutionResult, resolver)
             .generateForConsole(
