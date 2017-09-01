@@ -43,6 +43,8 @@ import javax.lang.model.type.TypeMirror;
  */
 class InterfaceScanner {
   public interface Listener {
+    void onAnnotationTypeFound(TypeElement type, TreePath path);
+
     void onTypeImported(TypeElement type);
 
     void onTypeReferenceFound(TypeElement type, TreePath path, Element enclosingElement);
@@ -93,6 +95,11 @@ class InterfaceScanner {
       @Override
       public Void visitClass(ClassTree node, Void aVoid) {
         Element element = getEnclosingElement();
+
+        if (element.getKind() == ElementKind.ANNOTATION_TYPE) {
+          listener.onAnnotationTypeFound((TypeElement) element, getCurrentPath());
+        }
+
         // Skip private since they're not part of the interface
         if (!element.getKind().isClass() && isPrivate(element)) {
           return null;

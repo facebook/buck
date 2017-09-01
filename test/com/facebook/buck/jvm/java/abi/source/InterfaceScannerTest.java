@@ -29,7 +29,9 @@ import com.sun.source.util.TreePath;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import org.hamcrest.Matchers;
@@ -41,6 +43,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   private List<String> typeReferences;
   private List<String> constantReferences;
   private List<TypeElement> importedTypes;
+  private List<TypeElement> annotationTypesFound = new ArrayList<>();
 
   @Test
   public void testFindsVariableTypeReference() throws IOException {
@@ -506,6 +509,19 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     assertThat(typeReferences, Matchers.empty());
   }
 
+  @Test
+  public void testFindsAnnotationTypeDefinitions() throws IOException {
+    findTypeReferences("@interface Foo {", "  @interface Inner { }", "}", "@interface Bar { }");
+
+    assertThat(
+        annotationTypesFound
+            .stream()
+            .map(TypeElement::getQualifiedName)
+            .map(Name::toString)
+            .collect(Collectors.toList()),
+        Matchers.contains("Foo", "Foo.Inner", "Bar"));
+  }
+
   private void findTypeReferences(String... sourceLines) throws IOException {
     findTypeReferences(sourceLines, false);
   }
@@ -571,6 +587,11 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   private class FinderListener implements InterfaceScanner.Listener {
+    @Override
+    public void onAnnotationTypeFound(TypeElement type, TreePath path) {
+      annotationTypesFound.add(type);
+    }
+
     @Override
     public void onTypeImported(TypeElement type) {
       importedTypes.add(type);

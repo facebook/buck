@@ -78,6 +78,11 @@ class InterfaceValidator {
                 private final Set<Element> importedTypes = new HashSet<>();
 
                 @Override
+                public void onAnnotationTypeFound(TypeElement type, TreePath path) {
+                  // TODO(jkeljo): do something with this
+                }
+
+                @Override
                 public void onTypeImported(TypeElement type) {
                   importedTypes.add(type);
                 }
