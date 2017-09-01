@@ -93,7 +93,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             clock.currentTimeMillis(),
             0L,
             buckFilesParsingEvents.values(),
-            getEstimatedProgressOfProcessingBuckFiles(),
+            getEstimatedProgressOfParsingBuckFiles(),
             Optional.empty(),
             lines));
     printLines(lines);

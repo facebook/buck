@@ -255,9 +255,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
+  protected Optional<Double> getEstimatedProgressOfParsingBuckFiles() {
     if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
+      return progressEstimator.get().getEstimatedProgressOfParsingBuckFiles();
     } else {
       return Optional.empty();
     }
