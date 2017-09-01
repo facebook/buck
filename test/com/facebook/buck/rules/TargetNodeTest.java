@@ -77,7 +77,7 @@ public class TargetNodeTest {
             "deps",
             depsStrings,
             "sourcePaths",
-            ImmutableList.of("//example/path:four", "MyClass.java"),
+            ImmutableList.of("//example/path:two", "//example/path:four", "MyClass.java"),
             "appleSource",
             "//example/path:five",
             "source",
@@ -94,6 +94,7 @@ public class TargetNodeTest {
     assertThat(
         targetNode.getExtraDeps(),
         containsInAnyOrder(
+            BuildTargetFactory.newInstance("//example/path:two"),
             BuildTargetFactory.newInstance("//example/path:four"),
             BuildTargetFactory.newInstance("//example/path:five")));
 
