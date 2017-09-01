@@ -253,25 +253,29 @@ public class ThriftArtifactCacheTest {
     AbstractAsynchronousCache.FetchEvents events =
         new AbstractAsynchronousCache.FetchEvents() {
           @Override
-          public void started() {}
+          public FetchRequestEvents started() {
+            return new FetchRequestEvents() {
+              @Override
+              public void finished(com.facebook.buck.artifact_cache.FetchResult result) {}
+
+              @Override
+              public void failed(IOException e, String errorMessage, CacheResult result) {}
+            };
+          }
 
           @Override
-          public void finished(com.facebook.buck.artifact_cache.FetchResult result) {}
+          public MultiFetchRequestEvents multiFetchStarted() {
+            return new MultiFetchRequestEvents() {
+              @Override
+              public void skipped() {}
 
-          @Override
-          public void failed(IOException e, String errorMessage, CacheResult result) {}
+              @Override
+              public void finished(com.facebook.buck.artifact_cache.FetchResult thisResult) {}
 
-          @Override
-          public void multiFetchStarted() {}
-
-          @Override
-          public void multiFetchSkipped() {}
-
-          @Override
-          public void multiFetchFinished(com.facebook.buck.artifact_cache.FetchResult thisResult) {}
-
-          @Override
-          public void multiFetchFailed(IOException e, String msg, CacheResult result) {}
+              @Override
+              public void failed(IOException e, String msg, CacheResult result) {}
+            };
+          }
         };
 
     com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));

@@ -115,7 +115,11 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   private void doMultiFetch(ImmutableList<ClaimedFetchRequest> requests) {
-    requests.forEach(r -> r.getEvents().multiFetchStarted());
+    ImmutableList<FetchEvents.MultiFetchRequestEvents> requestEvents =
+        requests
+            .stream()
+            .map(r -> r.getEvents().multiFetchStarted())
+            .collect(MoreCollectors.toImmutableList());
     boolean gotNonError = false;
     try {
       MultiFetchResult result =
@@ -137,10 +141,10 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
         ClaimedFetchRequest thisRequest = requests.get(i);
         FetchResult thisResult = result.getResults().get(i);
         if (thisResult.getCacheResult().getType() == CacheResultType.SKIPPED) {
-          thisRequest.getEvents().multiFetchSkipped();
+          requestEvents.get(i).skipped();
           thisRequest.reschedule();
         } else {
-          thisRequest.getEvents().multiFetchFinished(thisResult);
+          requestEvents.get(i).finished(thisResult);
           thisRequest.setResult(thisResult.getCacheResult());
         }
       }
@@ -162,12 +166,11 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
               Joiner.on(", ").join(keys), e.getClass().getName(), e.getMessage());
       // Some of these might already be fulfilled. That's fine, this set() call will just be
       // ignored.
-      requests.forEach(
-          r -> {
-            CacheResult result = CacheResult.error(name, mode, msg);
-            r.getEvents().multiFetchFailed(e, msg, result);
-            r.setResult(result);
-          });
+      for (int i = 0; i < requests.size(); i++) {
+        CacheResult result = CacheResult.error(name, mode, msg);
+        requestEvents.get(i).failed(e, msg, result);
+        requests.get(i).setResult(result);
+      }
     } finally {
       if (gotNonError) {
         consecutiveMultiFetchErrorCount.set(0);
@@ -183,17 +186,17 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
   private void doFetch(FetchRequest request) {
     CacheResult result;
+    FetchEvents.FetchRequestEvents requestEvents = request.events.started();
     try {
-      request.events.started();
       FetchResult fetchResult = fetchImpl(request.getRuleKey(), request.getOutput());
-      request.events.finished(fetchResult);
       result = fetchResult.getCacheResult();
+      requestEvents.finished(fetchResult);
     } catch (IOException e) {
       String msg =
           String.format(
               "fetch(%s): %s: %s", request.getRuleKey(), e.getClass().getName(), e.getMessage());
       result = CacheResult.error(name, mode, msg);
-      request.events.failed(e, msg, result);
+      requestEvents.failed(e, msg, result);
     }
     request.future.set(result);
   }
@@ -329,17 +332,17 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     StoreEvents events = eventListener.storeScheduled(info, artifactSizeBytes);
     return storeExecutorService.submit(
         () -> {
+          StoreEvents.StoreRequestEvents requestEvents = events.started();
           try {
-            events.started();
             StoreResult result = storeImpl(info, tmp);
-            events.finished(result);
+            requestEvents.finished(result);
             return null;
           } catch (IOException e) {
             String msg =
                 String.format(
                     "store(%s): %s: %s",
                     info.getRuleKeys(), e.getClass().getName(), e.getMessage());
-            events.failed(e, msg);
+            requestEvents.failed(e, msg);
             throw new RuntimeException(e);
           }
         });
@@ -385,27 +388,33 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   public interface FetchEvents {
-    void started();
+    FetchRequestEvents started();
 
-    void finished(FetchResult result);
+    interface FetchRequestEvents {
+      void finished(FetchResult result);
 
-    void failed(IOException e, String errorMessage, CacheResult result);
+      void failed(IOException e, String errorMessage, CacheResult result);
+    }
 
-    void multiFetchStarted();
+    MultiFetchRequestEvents multiFetchStarted();
 
-    void multiFetchSkipped();
+    interface MultiFetchRequestEvents {
+      void skipped();
 
-    void multiFetchFinished(FetchResult thisResult);
+      void finished(FetchResult thisResult);
 
-    void multiFetchFailed(IOException e, String msg, CacheResult result);
+      void failed(IOException e, String msg, CacheResult result);
+    }
   }
 
   public interface StoreEvents {
-    void started();
+    StoreRequestEvents started();
 
-    void finished(StoreResult result);
+    interface StoreRequestEvents {
+      void finished(StoreResult result);
 
-    void failed(IOException e, String errorMessage);
+      void failed(IOException e, String errorMessage);
+    }
   }
 
   protected static class FetchRequest {

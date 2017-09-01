@@ -96,41 +96,43 @@ public class AbstractAsynchronousCacheTest {
     @Override
     public AbstractAsynchronousCache.StoreEvents storeScheduled(
         ArtifactInfo info, long artifactSizeBytes) {
-      return new AbstractAsynchronousCache.StoreEvents() {
-        @Override
-        public void started() {}
+      return () ->
+          new AbstractAsynchronousCache.StoreEvents.StoreRequestEvents() {
+            @Override
+            public void finished(StoreResult result) {}
 
-        @Override
-        public void finished(StoreResult result) {}
-
-        @Override
-        public void failed(IOException e, String errorMessage) {}
-      };
+            @Override
+            public void failed(IOException e, String errorMessage) {}
+          };
     }
 
     @Override
     public AbstractAsynchronousCache.FetchEvents fetchScheduled(RuleKey ruleKey) {
       return new AbstractAsynchronousCache.FetchEvents() {
         @Override
-        public void started() {}
+        public FetchRequestEvents started() {
+          return new FetchRequestEvents() {
+            @Override
+            public void finished(FetchResult result) {}
+
+            @Override
+            public void failed(IOException e, String errorMessage, CacheResult result) {}
+          };
+        }
 
         @Override
-        public void finished(FetchResult result) {}
+        public MultiFetchRequestEvents multiFetchStarted() {
+          return new MultiFetchRequestEvents() {
+            @Override
+            public void skipped() {}
 
-        @Override
-        public void failed(IOException e, String errorMessage, CacheResult result) {}
+            @Override
+            public void finished(FetchResult thisResult) {}
 
-        @Override
-        public void multiFetchStarted() {}
-
-        @Override
-        public void multiFetchSkipped() {}
-
-        @Override
-        public void multiFetchFinished(FetchResult thisResult) {}
-
-        @Override
-        public void multiFetchFailed(IOException e, String msg, CacheResult result) {}
+            @Override
+            public void failed(IOException e, String msg, CacheResult result) {}
+          };
+        }
       };
     }
   }

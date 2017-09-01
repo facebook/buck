@@ -85,36 +85,64 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     @Override
     public FetchEvents fetchScheduled(RuleKey ruleKey) {
       // TODO(cjhopman): Send a scheduled event this when fetch is actually async.
-
-      HttpArtifactCacheEvent.Started startedEvent =
-          HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
-      HttpArtifactCacheEvent.Finished.Builder eventBuilder =
-          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-      eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
       return new FetchEvents() {
         @Override
-        public void started() {
+        public FetchRequestEvents started() {
+          HttpArtifactCacheEvent.Started startedEvent =
+              HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
+          HttpArtifactCacheEvent.Finished.Builder eventBuilder =
+              HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+          eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
           dispatcher.post(startedEvent);
+          return new FetchRequestEvents() {
+            @Override
+            public void finished(FetchResult fetchResult) {
+              eventBuilder.setTarget(fetchResult.getBuildTarget());
+              eventBuilder
+                  .getFetchBuilder()
+                  .setAssociatedRuleKeys(
+                      fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
+                  .setArtifactContentHash(fetchResult.getArtifactContentHash())
+                  .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
+                  .setFetchResult(fetchResult.getCacheResult())
+                  .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
+              dispatcher.post(eventBuilder.build());
+            }
+
+            @Override
+            public void failed(IOException e, String msg, CacheResult result) {
+              reportFailure(e, msg);
+              eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
+              dispatcher.post(eventBuilder.build());
+            }
+          };
         }
 
         @Override
-        public void finished(FetchResult fetchResult) {
-          eventBuilder.setTarget(fetchResult.getBuildTarget());
-          eventBuilder
-              .getFetchBuilder()
-              .setAssociatedRuleKeys(fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
-              .setArtifactContentHash(fetchResult.getArtifactContentHash())
-              .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
-              .setFetchResult(fetchResult.getCacheResult())
-              .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
-          dispatcher.post(eventBuilder.build());
-        }
+        public MultiFetchRequestEvents multiFetchStarted() {
+          LOG.debug("multiFetchStarted for %s.", ruleKey);
+          // TODO(cjhopman): implement.
+          return new MultiFetchRequestEvents() {
+            @Override
+            public void skipped() {
+              LOG.debug("multiFetchSkipped for %s.", ruleKey);
+              // TODO(cjhopman): implement.
+            }
 
-        @Override
-        public void failed(IOException e, String msg, CacheResult result) {
-          reportFailure(e, msg);
-          eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
-          dispatcher.post(eventBuilder.build());
+            @Override
+            public void finished(FetchResult thisResult) {
+              LOG.debug(
+                  "multiFetchFinished for %s with result %s.",
+                  ruleKey, thisResult.getCacheResult().getType());
+              // TODO(cjhopman): implement.
+            }
+
+            @Override
+            public void failed(IOException e, String msg, CacheResult result) {
+              reportFailure(e, msg);
+              // TODO(cjhopman): implement.
+            }
+          };
         }
 
         private void reportFailure(IOException e, String msg) {
@@ -133,32 +161,6 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
             errorReporter.reportFailure(e, key, msg);
           }
         }
-
-        @Override
-        public void multiFetchStarted() {
-          LOG.debug("multiFetchStarted for %s.", ruleKey);
-          // TODO(cjhopman): implement.
-        }
-
-        @Override
-        public void multiFetchSkipped() {
-          LOG.debug("multiFetchSkipped for %s.", ruleKey);
-          // TODO(cjhopman): implement.
-        }
-
-        @Override
-        public void multiFetchFinished(FetchResult thisResult) {
-          LOG.debug(
-              "multiFetchFinished for %s with result %s.",
-              ruleKey, thisResult.getCacheResult().getType());
-          // TODO(cjhopman): implement.
-        }
-
-        @Override
-        public void multiFetchFailed(IOException e, String msg, CacheResult result) {
-          reportFailure(e, msg);
-          // TODO(cjhopman): implement.
-        }
       };
     }
 
@@ -175,34 +177,35 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       return new StoreEvents() {
         @Override
-        public void started() {
+        public StoreRequestEvents started() {
           dispatcher.post(startedEvent);
           finishedEventBuilder.getStoreBuilder().setRuleKeys(info.getRuleKeys());
           finishedEventBuilder
               .getStoreBuilder()
               .setArtifactSizeBytes(artifactSizeBytes)
               .setRuleKeys(info.getRuleKeys());
-        }
+          return new StoreRequestEvents() {
+            @Override
+            public void finished(StoreResult result) {
+              finishedEventBuilder
+                  .getStoreBuilder()
+                  .setArtifactContentHash(result.getArtifactContentHash())
+                  .setRequestSizeBytes(result.getRequestSizeBytes())
+                  .setWasStoreSuccessful(result.getWasStoreSuccessful());
+              dispatcher.post(finishedEventBuilder.build());
+            }
 
-        @Override
-        public void finished(StoreResult result) {
-          finishedEventBuilder
-              .getStoreBuilder()
-              .setArtifactContentHash(result.getArtifactContentHash())
-              .setRequestSizeBytes(result.getRequestSizeBytes())
-              .setWasStoreSuccessful(result.getWasStoreSuccessful());
-          dispatcher.post(finishedEventBuilder.build());
-        }
-
-        @Override
-        public void failed(IOException e, String errorMessage) {
-          String key = String.format("store:%s", e.getClass().getSimpleName());
-          errorReporter.reportFailure(e, key, errorMessage);
-          finishedEventBuilder
-              .getStoreBuilder()
-              .setWasStoreSuccessful(false)
-              .setErrorMessage(errorMessage);
-          dispatcher.post(finishedEventBuilder.build());
+            @Override
+            public void failed(IOException e, String errorMessage) {
+              String key = String.format("store:%s", e.getClass().getSimpleName());
+              errorReporter.reportFailure(e, key, errorMessage);
+              finishedEventBuilder
+                  .getStoreBuilder()
+                  .setWasStoreSuccessful(false)
+                  .setErrorMessage(errorMessage);
+              dispatcher.post(finishedEventBuilder.build());
+            }
+          };
         }
       };
     }
