@@ -18,7 +18,7 @@ import uuid
 from pynailgun import NailgunConnection, NailgunException
 from timing import monotonic_time_nanos
 from tracing import Tracing
-from subprocutils import check_output, which
+from subprocutils import check_output, which, CalledProcessError
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
 GC_MAX_PAUSE_TARGET = 15000
@@ -207,6 +207,16 @@ class BuckTool(object):
         env['CLASSPATH'] = str(self._get_bootstrap_classpath())
         env['BUCK_CLASSPATH'] = str(self._get_java_classpath())
         env['BUCK_TTY'] = str(int(sys.stdin.isatty()))
+        if os.name == 'posix':
+            # It will fallback on default on Windows platform.
+            try:
+                # Get the number of columns in the terminal.
+                with open(os.devnull, 'w') as devnull:
+                    columns = check_output(["tput", "cols"], stderr=devnull).strip()
+                    env['COLUMNS'] = columns
+            except CalledProcessError:
+                # If the call to tput fails, we use the default.
+                pass
         return env
 
     def _run_with_nailgun(self, argv, env):

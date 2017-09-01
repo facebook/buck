@@ -159,6 +159,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Set<String> actionGraphCacheMessage = new HashSet<>();
 
+  /** Maximum width of the terminal. */
+  private final int outputMaxColumns;
+
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
       Console console,
@@ -242,6 +245,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // Using LinkedHashMap because we want a predictable iteration order.
     this.distBuildSlaveTracker = new LinkedHashMap<>();
+
+    int outputMaxColumns = 80;
+    Optional<String> columnsStr = executionEnvironment.getenv("COLUMNS");
+    if (columnsStr.isPresent()) {
+      try {
+        outputMaxColumns = Integer.parseInt(columnsStr.get());
+      } catch (NumberFormatException e) {
+        LOG.debug(
+            "the environment variable COLUMNS did not contain a valid value: %s", columnsStr.get());
+      }
+    }
+    this.outputMaxColumns = outputMaxColumns;
   }
 
   /** Schedules a runnable that updates the console output at a fixed interval. */
@@ -481,6 +496,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              outputMaxColumns,
               buildRuleMinimumDurationMillis,
               threadsToRunningStep,
               buildRuleThreadTracker);
@@ -505,6 +521,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              outputMaxColumns,
               threadsToRunningTestSummaryEvent,
               threadsToRunningTestStatusMessageEvent,
               threadsToRunningStep,

@@ -213,7 +213,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.3 sec",
-            " - //banana:stand...  0.1 sec (preparing)"));
+            " - //banana:stand... 0.1 sec (preparing)"));
 
     validateConsole(
         listener,
@@ -223,7 +223,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.3 sec",
-            " - //banana:stand...  0.1 sec (preparing)"));
+            " - //banana:stand... 0.1 sec (preparing)"));
 
     ArtifactCompressionEvent.Started compressStarted =
         ArtifactCompressionEvent.started(
@@ -239,7 +239,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.3 sec",
-            " - //banana:stand...  0.1 sec (running artifact_compress[0.0 sec])"));
+            " - //banana:stand... 0.1 sec (running artifact_compress[0.0 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -256,7 +256,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.3 sec",
-            " - //banana:stand...  0.1 sec (preparing)"));
+            " - //banana:stand... 0.1 sec (preparing)"));
 
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
         new DirArtifactCacheEvent.DirArtifactCacheEventFactory();
@@ -275,7 +275,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.3 sec",
-            " - //banana:stand...  0.1 sec (running dir_artifact_fetch[0.0 sec])"));
+            " - //banana:stand... 0.1 sec (running dir_artifact_fetch[0.0 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -293,7 +293,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.4 sec",
-            " - //banana:stand...  0.2 sec (preparing)"));
+            " - //banana:stand... 0.2 sec (preparing)"));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -311,7 +311,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.5 sec",
-            " - //banana:stand...  0.3 sec (running doing_something[0.1 sec])"));
+            " - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -355,7 +355,7 @@ public class SuperConsoleEventBusListenerTest {
             DOWNLOAD_STRING,
             "Building... 0.7 sec",
             " - IDLE",
-            " - //chicken:dance...  0.0 sec (preparing)"));
+            " - //chicken:dance... 0.0 sec (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -612,7 +612,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.4 sec" + " (0%) 0/10 jobs, 0 updated, " + "0.0% cache miss",
-            " - //banana:stand...  0.2 sec (preparing)"));
+            " - //banana:stand... 0.2 sec (preparing)"));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -630,7 +630,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.5 sec" + " (0%) 0/10 jobs, 0 updated, " + "0.0% cache miss",
-            " - //banana:stand...  0.3 sec (running doing_something[0.1 sec])"));
+            " - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -678,7 +678,7 @@ public class SuperConsoleEventBusListenerTest {
             DOWNLOAD_STRING,
             "Building... 0.7 sec (10%) 1/10 jobs, 1 updated, 10.0% cache miss",
             " - IDLE",
-            " - //chicken:dance...  0.0 sec (preparing)"));
+            " - //chicken:dance... 0.0 sec (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1147,7 +1147,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.4 sec",
-            " - //:test...  0.2 sec (preparing)"));
+            " - //:test... 0.2 sec (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1218,7 +1218,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
-            " - //:test...  0.1 sec"));
+            " - //:test... 0.1 sec"));
 
     UUID stepUuid = new UUID(0, 1);
     StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid);
@@ -1236,7 +1236,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
-            " - //:test...  0.3 sec (running step_name[0.1 sec])"));
+            " - //:test... 0.3 sec (running step_name[0.1 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1255,7 +1255,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
-            " - //:test...  0.5 sec"));
+            " - //:test... 0.5 sec"));
 
     UUID testUUID = new UUID(2, 3);
 
@@ -1276,7 +1276,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
-            " - //:test...  0.7 sec (running Foo[0.1 sec])"));
+            " - //:test... 0.7 sec (running Foo[0.1 sec])"));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
@@ -1305,7 +1305,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (1 PASS/0 FAIL)",
-            " - //:test...  0.9 sec"));
+            " - //:test... 0.9 sec"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1420,7 +1420,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.4 sec",
-            " - //:test...  0.2 sec (preparing)"));
+            " - //:test... 0.2 sec (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1491,7 +1491,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
-            " - //:test...  0.1 sec"));
+            " - //:test... 0.1 sec"));
 
     UUID stepUuid = new UUID(0, 1);
     StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid);
@@ -1509,7 +1509,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
-            " - //:test...  0.3 sec (running step_name[0.1 sec])"));
+            " - //:test... 0.3 sec (running step_name[0.1 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1528,7 +1528,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
-            " - //:test...  0.5 sec"));
+            " - //:test... 0.5 sec"));
 
     UUID testUUID = new UUID(2, 3);
 
@@ -1549,7 +1549,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
-            " - //:test...  0.7 sec (running Foo[0.1 sec])"));
+            " - //:test... 0.7 sec (running Foo[0.1 sec])"));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
@@ -1579,7 +1579,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (0 PASS/1 SKIP/0 FAIL)",
-            " - //:test...  0.9 sec"));
+            " - //:test... 0.9 sec"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1712,7 +1712,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.4 sec",
-            " - //:test...  0.2 sec (preparing)"));
+            " - //:test... 0.2 sec (preparing)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1783,7 +1783,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
-            " - //:test...  0.1 sec"));
+            " - //:test... 0.1 sec"));
 
     UUID stepUuid = new UUID(0, 1);
     StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid);
@@ -1801,7 +1801,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
-            " - //:test...  0.3 sec (running step_name[0.1 sec])"));
+            " - //:test... 0.3 sec (running step_name[0.1 sec])"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1820,7 +1820,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
-            " - //:test...  0.5 sec"));
+            " - //:test... 0.5 sec"));
 
     UUID testUUID = new UUID(2, 3);
 
@@ -1841,7 +1841,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
-            " - //:test...  0.7 sec (running Foo[0.1 sec])"));
+            " - //:test... 0.7 sec (running Foo[0.1 sec])"));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
@@ -1870,7 +1870,7 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (0 PASS/1 FAIL)",
-            " - //:test...  0.9 sec"),
+            " - //:test... 0.9 sec"),
         ImmutableList.of("FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"));
 
     eventBus.postWithoutConfiguring(
@@ -2005,7 +2005,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.3 sec",
-            " - //banana:stand...  0.1 sec (preparing)"));
+            " - //banana:stand... 0.1 sec (preparing)"));
 
     // Post events that run another step.
     StepEvent.Started step2EventStarted =
@@ -2023,7 +2023,7 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             DOWNLOAD_STRING,
             "Building... 0.5 sec",
-            " - //banana:stand...  0.3 sec (running doing_something[0.1 sec])"));
+            " - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
     // Finish the step and rule.
     eventBus.postWithoutConfiguring(
