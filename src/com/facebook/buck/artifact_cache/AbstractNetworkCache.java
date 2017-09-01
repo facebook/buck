@@ -124,13 +124,12 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     public MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> ruleKeys) {
       Joiner ruleKeysStr = Joiner.on(", ");
       LOG.debug("multiFetchStarted for <%s>.", ruleKeysStr.join(ruleKeys));
-      // TODO(cjhopman): implement.
+      HttpArtifactCacheEvent.MultiFetchStarted startedEvent =
+          HttpArtifactCacheEvent.newMultiFetchStartedEvent(ruleKeys);
+      HttpArtifactCacheEvent.Finished.Builder eventBuilder =
+          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+      dispatcher.post(startedEvent);
       return new MultiFetchRequestEvents() {
-        @Override
-        public void close() {
-          LOG.debug("multiFetch request finished for <%s>.", ruleKeysStr);
-        }
-
         @Override
         public void skipped(int keyIndex) {
           LOG.debug("multiFetchSkipped for %s.", ruleKeys.get(keyIndex));
@@ -148,7 +147,12 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         @Override
         public void failed(int keyIndex, IOException e, String msg, CacheResult result) {
           reportFetchFailure(ruleKeys.get(keyIndex), e, msg);
-          // TODO(cjhopman): implement.
+          // TODO(cjhopman): implement this.
+        }
+
+        @Override
+        public void close() {
+          dispatcher.post(eventBuilder.build());
         }
       };
     }
