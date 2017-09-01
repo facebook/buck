@@ -374,7 +374,8 @@ public class DefaultJavaLibraryBuilder {
                 fullJarProvidedDeps,
                 getAbiJar(),
                 mavenCoords,
-                tests);
+                tests,
+                getRequiredForSourceAbi());
 
         if (sourceAbiRule != null) {
           libraryRule.setSourceAbi(sourceAbiRule);
@@ -386,6 +387,10 @@ public class DefaultJavaLibraryBuilder {
       }
 
       return libraryRule;
+    }
+
+    protected final boolean getRequiredForSourceAbi() {
+      return args != null && args.getRequiredForSourceAbi();
     }
 
     private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex) {

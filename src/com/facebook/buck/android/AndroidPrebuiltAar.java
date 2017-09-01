@@ -55,7 +55,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       UnzipAar unzipAar,
       ConfiguredCompiler configuredCompiler,
       Iterable<PrebuiltJar> exportedDeps,
-      ZipArchiveDependencySupplier abiClasspath) {
+      ZipArchiveDependencySupplier abiClasspath,
+      boolean requiredForSourceAbi) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -88,7 +89,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         Optional.of(
             new ExplicitBuildTargetSourcePath(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* tests */ ImmutableSortedSet.of());
+        /* tests */ ImmutableSortedSet.of(),
+        /* requiredForSourceAbi */ requiredForSourceAbi);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

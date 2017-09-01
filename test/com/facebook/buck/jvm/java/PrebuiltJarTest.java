@@ -65,7 +65,8 @@ public class PrebuiltJarTest {
             /* gwtJar */ Optional.empty(),
             Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
             /* mavenCoords */ Optional.empty(),
-            /* provided */ false);
+            /* provided */ false,
+            /* requiredForSourceAbi */ false);
   }
 
   @Test

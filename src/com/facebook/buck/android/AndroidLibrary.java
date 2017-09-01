@@ -97,7 +97,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Nullable BuildTarget abiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      boolean requiredForSourceAbi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -110,7 +111,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarProvidedDeps,
         abiJar,
         mavenCoords,
-        tests);
+        tests,
+        requiredForSourceAbi);
     this.manifestFile = manifestFile;
   }
 
@@ -197,20 +199,24 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       @Override
       protected DefaultJavaLibrary build() {
-        return new AndroidLibrary(
-            libraryTarget,
-            projectFilesystem,
-            getFinalParams(),
-            sourcePathResolver,
-            getJarBuildStepsFactory(),
-            proguardConfig,
-            getFinalFullJarDeclaredDeps(),
-            fullJarExportedDeps,
-            fullJarProvidedDeps,
-            getAbiJar(),
-            mavenCoords,
-            androidManifest,
-            tests);
+        AndroidLibrary result =
+            new AndroidLibrary(
+                libraryTarget,
+                projectFilesystem,
+                getFinalParams(),
+                sourcePathResolver,
+                getJarBuildStepsFactory(),
+                proguardConfig,
+                getFinalFullJarDeclaredDeps(),
+                fullJarExportedDeps,
+                fullJarProvidedDeps,
+                getAbiJar(),
+                mavenCoords,
+                androidManifest,
+                tests,
+                getRequiredForSourceAbi());
+
+        return result;
       }
 
       @Override

@@ -24,6 +24,7 @@ import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.MaybeRequiredForSourceAbiArg;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -161,7 +162,8 @@ public class AndroidPrebuiltAarDescription
           /* gwtJar */ Optional.empty(),
           /* javadocUrl */ Optional.empty(),
           /* mavenCoords */ Optional.empty(),
-          /* provided */ false);
+          /* provided */ false,
+          /* requiredForSourceAbi */ args.getRequiredForSourceAbi());
     }
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
@@ -208,16 +210,27 @@ public class AndroidPrebuiltAarDescription
             javacOptions,
             AndroidClasspathFromContextFunction.INSTANCE),
         /* exportedDeps */ javaDeps,
-        JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()));
+        JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),
+        args.getRequiredForSourceAbi());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidPrebuiltAarDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractAndroidPrebuiltAarDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceAbiArg {
     SourcePath getAar();
 
     Optional<SourcePath> getSourceJar();
 
     Optional<String> getJavadocUrl();
+
+    @Override
+    @Value.Default
+    default boolean getRequiredForSourceAbi() {
+      // Prebuilt jars are quick to build, and often contain third-party code, which in turn is
+      // often a source of annotations and constants. To ease migration to ABI generation from
+      // source without deps, we have them present during ABI gen by default.
+      return true;
+    }
   }
 }
