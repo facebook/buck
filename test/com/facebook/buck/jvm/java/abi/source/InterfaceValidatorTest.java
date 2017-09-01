@@ -43,6 +43,21 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testAnnotationInNonRequiredRuleFails() throws IOException {
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"), false);
+
+    assertErrors(
+        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+            + "@interface Foo { @interface Inner { } };\n"
+            + " ^",
+        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+            + "@interface Foo { @interface Inner { } };\n"
+            + "                  ^");
+  }
+
+  @Test
   public void testFullyQualifiedNameFromBootClasspathSucceeds() throws IOException {
     compileWithValidation("abstract class Foo implements java.util.List { }");
 
