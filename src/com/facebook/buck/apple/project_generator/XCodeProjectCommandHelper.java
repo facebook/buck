@@ -165,6 +165,8 @@ public class XCodeProjectCommandHelper {
     ImmutableSet<BuildTarget> passedInTargetsSet;
     TargetGraph projectGraph;
 
+    LOG.debug("Xcode project generation: Getting the target graph");
+
     try {
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       passedInTargetsSet =
@@ -184,7 +186,11 @@ public class XCodeProjectCommandHelper {
       return 1;
     }
 
+    LOG.debug("Xcode project generation: Killing existing Xcode if needed");
+
     checkForAndKillXcodeIfRunning(getIdePrompt(buckConfig));
+
+    LOG.debug("Xcode project generation: Computing graph roots");
 
     ImmutableSet<BuildTarget> graphRoots;
     if (passedInTargetsSet.isEmpty()) {
@@ -195,6 +201,8 @@ public class XCodeProjectCommandHelper {
     } else {
       graphRoots = passedInTargetsSet;
     }
+
+    LOG.debug("Xcode project generation: Getting more part of the target graph");
 
     TargetGraphAndTargets targetGraphAndTargets;
     try {
@@ -222,6 +230,8 @@ public class XCodeProjectCommandHelper {
 
       return 0;
     }
+
+    LOG.debug("Xcode project generation: Run the project generator");
 
     return runXcodeProjectGenerator(executor, targetGraphAndTargets, passedInTargetsSet);
   }
@@ -273,6 +283,8 @@ public class XCodeProjectCommandHelper {
             appleConfig.shouldUseHeaderMapsInXcodeProject(),
             appleConfig.shouldMergeHeaderMapsInXcodeProject(),
             appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
+
+    LOG.debug("Xcode project generation: Generates workspaces for targets");
 
     ImmutableSet<BuildTarget> requiredBuildTargets =
         generateWorkspacesForTargets(
