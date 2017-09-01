@@ -259,7 +259,8 @@ public class AppleLibraryDescription
         args.getTests(),
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
-        appleConfig.cacheBundlesAndPackages());
+        appleConfig.cacheBundlesAndPackages(),
+        appleConfig.shouldCheckForAssetCatalogDuplicateImages());
   }
 
   /**

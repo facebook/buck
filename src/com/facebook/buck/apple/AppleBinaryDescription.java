@@ -334,7 +334,8 @@ public class AppleBinaryDescription
         args.getTests(),
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
-        appleConfig.cacheBundlesAndPackages());
+        appleConfig.cacheBundlesAndPackages(),
+        appleConfig.shouldCheckForAssetCatalogDuplicateImages());
   }
 
   private BuildRule createBinary(
