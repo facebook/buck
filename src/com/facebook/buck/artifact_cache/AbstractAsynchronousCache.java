@@ -115,61 +115,63 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   private void doMultiFetch(ImmutableList<ClaimedFetchRequest> requests) {
-    ImmutableList<FetchEvents.MultiFetchRequestEvents> requestEvents =
-        requests
-            .stream()
-            .map(r -> r.getEvents().multiFetchStarted())
-            .collect(MoreCollectors.toImmutableList());
     boolean gotNonError = false;
-    try {
-      MultiFetchResult result =
-          multiFetchImpl(
-              requests
-                  .stream()
-                  .map(ClaimedFetchRequest::getRequest)
-                  .collect(MoreCollectors.toImmutableList()));
-      Preconditions.checkState(result.getResults().size() == requests.size());
-      // MultiFetch must return a non-skipped result for at least one of the requested keys.
-      Preconditions.checkState(
-          result
-              .getResults()
-              .stream()
-              .anyMatch(
-                  fetchResult ->
-                      fetchResult.getCacheResult().getType() != CacheResultType.SKIPPED));
-      for (int i = 0; i < requests.size(); i++) {
-        ClaimedFetchRequest thisRequest = requests.get(i);
-        FetchResult thisResult = result.getResults().get(i);
-        if (thisResult.getCacheResult().getType() == CacheResultType.SKIPPED) {
-          requestEvents.get(i).skipped();
-          thisRequest.reschedule();
-        } else {
-          requestEvents.get(i).finished(thisResult);
-          thisRequest.setResult(thisResult.getCacheResult());
+    try (CacheEventListener.MultiFetchRequestEvents requestEvents =
+        eventListener.multiFetchStarted(
+            requests
+                .stream()
+                .map(r -> r.getRequest().getRuleKey())
+                .collect(MoreCollectors.toImmutableList()))) {
+      try {
+        MultiFetchResult result =
+            multiFetchImpl(
+                requests
+                    .stream()
+                    .map(ClaimedFetchRequest::getRequest)
+                    .collect(MoreCollectors.toImmutableList()));
+        Preconditions.checkState(result.getResults().size() == requests.size());
+        // MultiFetch must return a non-skipped result for at least one of the requested keys.
+        Preconditions.checkState(
+            result
+                .getResults()
+                .stream()
+                .anyMatch(
+                    fetchResult ->
+                        fetchResult.getCacheResult().getType() != CacheResultType.SKIPPED));
+        for (int i = 0; i < requests.size(); i++) {
+          ClaimedFetchRequest thisRequest = requests.get(i);
+          FetchResult thisResult = result.getResults().get(i);
+          if (thisResult.getCacheResult().getType() == CacheResultType.SKIPPED) {
+            requestEvents.skipped(i);
+            thisRequest.reschedule();
+          } else {
+            requestEvents.finished(i, thisResult);
+            thisRequest.setResult(thisResult.getCacheResult());
+          }
         }
-      }
-      gotNonError =
-          result
-              .getResults()
-              .stream()
-              .anyMatch(
-                  fetchResult -> fetchResult.getCacheResult().getType() != CacheResultType.ERROR);
-    } catch (IOException e) {
-      ImmutableList<RuleKey> keys =
-          requests
-              .stream()
-              .map(r -> r.getRequest().getRuleKey())
-              .collect(MoreCollectors.toImmutableList());
-      String msg =
-          String.format(
-              "multifetch(<%s>): %s: %s",
-              Joiner.on(", ").join(keys), e.getClass().getName(), e.getMessage());
-      // Some of these might already be fulfilled. That's fine, this set() call will just be
-      // ignored.
-      for (int i = 0; i < requests.size(); i++) {
-        CacheResult result = CacheResult.error(name, mode, msg);
-        requestEvents.get(i).failed(e, msg, result);
-        requests.get(i).setResult(result);
+        gotNonError =
+            result
+                .getResults()
+                .stream()
+                .anyMatch(
+                    fetchResult -> fetchResult.getCacheResult().getType() != CacheResultType.ERROR);
+      } catch (IOException e) {
+        ImmutableList<RuleKey> keys =
+            requests
+                .stream()
+                .map(r -> r.getRequest().getRuleKey())
+                .collect(MoreCollectors.toImmutableList());
+        String msg =
+            String.format(
+                "multifetch(<%s>): %s: %s",
+                Joiner.on(", ").join(keys), e.getClass().getName(), e.getMessage());
+        // Some of these might already be fulfilled. That's fine, this set() call will just be
+        // ignored.
+        for (int i = 0; i < requests.size(); i++) {
+          CacheResult result = CacheResult.error(name, mode, msg);
+          requestEvents.failed(i, e, msg, result);
+          requests.get(i).setResult(result);
+        }
       }
     } finally {
       if (gotNonError) {
@@ -186,7 +188,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
   private void doFetch(FetchRequest request) {
     CacheResult result;
-    FetchEvents.FetchRequestEvents requestEvents = request.events.started();
+    CacheEventListener.FetchRequestEvents requestEvents =
+        eventListener.fetchStarted(request.getRuleKey());
     try {
       FetchResult fetchResult = fetchImpl(request.getRuleKey(), request.getOutput());
       result = fetchResult.getCacheResult();
@@ -270,10 +273,6 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       return Preconditions.checkNotNull(request);
     }
 
-    public FetchEvents getEvents() {
-      return getRequest().events;
-    }
-
     public void setResult(CacheResult result) {
       getRequest().future.set(result);
       request = null;
@@ -301,9 +300,9 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
 
   @Override
   public final ListenableFuture<CacheResult> fetchAsync(RuleKey ruleKey, LazyPath output) {
-    FetchEvents events = eventListener.fetchScheduled(ruleKey);
+    eventListener.fetchScheduled(ruleKey);
     SettableFuture<CacheResult> future = SettableFuture.create();
-    addFetchRequest(new FetchRequest(ruleKey, output, events, future));
+    addFetchRequest(new FetchRequest(ruleKey, output, future));
     return future;
   }
 
@@ -384,11 +383,9 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   public interface CacheEventListener {
     StoreEvents storeScheduled(ArtifactInfo info, long artifactSizeBytes);
 
-    FetchEvents fetchScheduled(RuleKey ruleKey);
-  }
+    void fetchScheduled(RuleKey ruleKey);
 
-  public interface FetchEvents {
-    FetchRequestEvents started();
+    FetchRequestEvents fetchStarted(RuleKey ruleKey);
 
     interface FetchRequestEvents {
       void finished(FetchResult result);
@@ -396,14 +393,14 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       void failed(IOException e, String errorMessage, CacheResult result);
     }
 
-    MultiFetchRequestEvents multiFetchStarted();
+    MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> keys);
 
-    interface MultiFetchRequestEvents {
-      void skipped();
+    interface MultiFetchRequestEvents extends Scope {
+      void skipped(int keyIndex);
 
-      void finished(FetchResult thisResult);
+      void finished(int keyIndex, FetchResult thisResult);
 
-      void failed(IOException e, String msg, CacheResult result);
+      void failed(int keyIndex, IOException e, String msg, CacheResult result);
     }
   }
 
@@ -420,15 +417,12 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   protected static class FetchRequest {
     private final RuleKey ruleKey;
     private final LazyPath output;
-    private final FetchEvents events;
     private final SettableFuture<CacheResult> future;
 
     @VisibleForTesting
-    protected FetchRequest(
-        RuleKey ruleKey, LazyPath output, FetchEvents events, SettableFuture<CacheResult> future) {
+    protected FetchRequest(RuleKey ruleKey, LazyPath output, SettableFuture<CacheResult> future) {
       this.ruleKey = ruleKey;
       this.output = output;
-      this.events = events;
       this.future = future;
     }
 

@@ -22,6 +22,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.NoHealthyServersException;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -83,85 +85,89 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     }
 
     @Override
-    public FetchEvents fetchScheduled(RuleKey ruleKey) {
-      // TODO(cjhopman): Send a scheduled event this when fetch is actually async.
-      return new FetchEvents() {
-        @Override
-        public FetchRequestEvents started() {
-          HttpArtifactCacheEvent.Started startedEvent =
-              HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
-          HttpArtifactCacheEvent.Finished.Builder eventBuilder =
-              HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-          eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
-          dispatcher.post(startedEvent);
-          return new FetchRequestEvents() {
-            @Override
-            public void finished(FetchResult fetchResult) {
-              eventBuilder.setTarget(fetchResult.getBuildTarget());
-              eventBuilder
-                  .getFetchBuilder()
-                  .setAssociatedRuleKeys(
-                      fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
-                  .setArtifactContentHash(fetchResult.getArtifactContentHash())
-                  .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
-                  .setFetchResult(fetchResult.getCacheResult())
-                  .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
-              dispatcher.post(eventBuilder.build());
-            }
+    public void fetchScheduled(RuleKey ruleKey) {
+      // TODO(cjhopman): Send an event for this.
+    }
 
-            @Override
-            public void failed(IOException e, String msg, CacheResult result) {
-              reportFailure(e, msg);
-              eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
-              dispatcher.post(eventBuilder.build());
-            }
-          };
+    @Override
+    public FetchRequestEvents fetchStarted(RuleKey ruleKey) {
+      HttpArtifactCacheEvent.Started startedEvent =
+          HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
+      HttpArtifactCacheEvent.Finished.Builder eventBuilder =
+          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+      eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
+      dispatcher.post(startedEvent);
+      return new FetchRequestEvents() {
+        @Override
+        public void finished(FetchResult fetchResult) {
+          eventBuilder.setTarget(fetchResult.getBuildTarget());
+          eventBuilder
+              .getFetchBuilder()
+              .setAssociatedRuleKeys(fetchResult.getAssociatedRuleKeys().orElse(ImmutableSet.of()))
+              .setArtifactContentHash(fetchResult.getArtifactContentHash())
+              .setArtifactSizeBytes(fetchResult.getArtifactSizeBytes())
+              .setFetchResult(fetchResult.getCacheResult())
+              .setResponseSizeBytes(fetchResult.getResponseSizeBytes());
+          dispatcher.post(eventBuilder.build());
         }
 
         @Override
-        public MultiFetchRequestEvents multiFetchStarted() {
-          LOG.debug("multiFetchStarted for %s.", ruleKey);
-          // TODO(cjhopman): implement.
-          return new MultiFetchRequestEvents() {
-            @Override
-            public void skipped() {
-              LOG.debug("multiFetchSkipped for %s.", ruleKey);
-              // TODO(cjhopman): implement.
-            }
-
-            @Override
-            public void finished(FetchResult thisResult) {
-              LOG.debug(
-                  "multiFetchFinished for %s with result %s.",
-                  ruleKey, thisResult.getCacheResult().getType());
-              // TODO(cjhopman): implement.
-            }
-
-            @Override
-            public void failed(IOException e, String msg, CacheResult result) {
-              reportFailure(e, msg);
-              // TODO(cjhopman): implement.
-            }
-          };
-        }
-
-        private void reportFailure(IOException e, String msg) {
-          if (isNoHealthyServersException(e)) {
-            errorReporter.reportFailureToEventBus(
-                "NoHealthyServers",
-                String.format(
-                    "\n"
-                        + "Failed to fetch %s over %s:\n"
-                        + "Buck encountered a critical network failure.\n"
-                        + "Please check your network connection and retry."
-                        + "\n",
-                    ruleKey, name));
-          } else {
-            String key = String.format("store:%s", e.getClass().getSimpleName());
-            errorReporter.reportFailure(e, key, msg);
-          }
+        public void failed(IOException e, String msg, CacheResult result) {
+          reportFetchFailure(ruleKey, e, msg);
+          eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
+          dispatcher.post(eventBuilder.build());
         }
       };
+    }
+
+    @Override
+    public MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> ruleKeys) {
+      Joiner ruleKeysStr = Joiner.on(", ");
+      LOG.debug("multiFetchStarted for <%s>.", ruleKeysStr.join(ruleKeys));
+      // TODO(cjhopman): implement.
+      return new MultiFetchRequestEvents() {
+        @Override
+        public void close() {
+          LOG.debug("multiFetch request finished for <%s>.", ruleKeysStr);
+        }
+
+        @Override
+        public void skipped(int keyIndex) {
+          LOG.debug("multiFetchSkipped for %s.", ruleKeys.get(keyIndex));
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void finished(int keyIndex, FetchResult thisResult) {
+          LOG.debug(
+              "multiFetchFinished for %s with result %s.",
+              ruleKeys.get(keyIndex), thisResult.getCacheResult().getType());
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void failed(int keyIndex, IOException e, String msg, CacheResult result) {
+          reportFetchFailure(ruleKeys.get(keyIndex), e, msg);
+          // TODO(cjhopman): implement.
+        }
+      };
+    }
+
+    private void reportFetchFailure(RuleKey ruleKey, IOException e, String msg) {
+      if (isNoHealthyServersException(e)) {
+        errorReporter.reportFailureToEventBus(
+            "NoHealthyServers",
+            String.format(
+                "\n"
+                    + "Failed to fetch %s over %s:\n"
+                    + "Buck encountered a critical network failure.\n"
+                    + "Please check your network connection and retry."
+                    + "\n",
+                ruleKey, name));
+      } else {
+        String key = String.format("store:%s", e.getClass().getSimpleName());
+        errorReporter.reportFailure(e, key, msg);
+      }
     }
 
     @Override

@@ -107,32 +107,33 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
-    public AbstractAsynchronousCache.FetchEvents fetchScheduled(RuleKey ruleKey) {
-      return new AbstractAsynchronousCache.FetchEvents() {
-        @Override
-        public FetchRequestEvents started() {
-          return new FetchRequestEvents() {
-            @Override
-            public void finished(FetchResult result) {}
+    public void fetchScheduled(RuleKey ruleKey) {}
 
-            @Override
-            public void failed(IOException e, String errorMessage, CacheResult result) {}
-          };
-        }
+    @Override
+    public FetchRequestEvents fetchStarted(RuleKey ruleKey) {
+      return new FetchRequestEvents() {
+        @Override
+        public void finished(FetchResult result) {}
 
         @Override
-        public MultiFetchRequestEvents multiFetchStarted() {
-          return new MultiFetchRequestEvents() {
-            @Override
-            public void skipped() {}
+        public void failed(IOException e, String errorMessage, CacheResult result) {}
+      };
+    }
 
-            @Override
-            public void finished(FetchResult thisResult) {}
+    @Override
+    public MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> keys) {
+      return new MultiFetchRequestEvents() {
+        @Override
+        public void skipped(int keyIndex) {}
 
-            @Override
-            public void failed(IOException e, String msg, CacheResult result) {}
-          };
-        }
+        @Override
+        public void finished(int keyIndex, FetchResult thisResult) {}
+
+        @Override
+        public void failed(int keyIndex, IOException e, String msg, CacheResult result) {}
+
+        @Override
+        public void close() {}
       };
     }
   }

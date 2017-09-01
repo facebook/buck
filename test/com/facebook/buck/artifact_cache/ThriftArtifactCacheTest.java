@@ -250,33 +250,6 @@ public class ThriftArtifactCacheTest {
     Path output3 = filesystem.getPath("output3");
 
     SettableFuture<CacheResult> future = SettableFuture.create();
-    AbstractAsynchronousCache.FetchEvents events =
-        new AbstractAsynchronousCache.FetchEvents() {
-          @Override
-          public FetchRequestEvents started() {
-            return new FetchRequestEvents() {
-              @Override
-              public void finished(com.facebook.buck.artifact_cache.FetchResult result) {}
-
-              @Override
-              public void failed(IOException e, String errorMessage, CacheResult result) {}
-            };
-          }
-
-          @Override
-          public MultiFetchRequestEvents multiFetchStarted() {
-            return new MultiFetchRequestEvents() {
-              @Override
-              public void skipped() {}
-
-              @Override
-              public void finished(com.facebook.buck.artifact_cache.FetchResult thisResult) {}
-
-              @Override
-              public void failed(IOException e, String msg, CacheResult result) {}
-            };
-          }
-        };
 
     com.facebook.buck.rules.RuleKey key0 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(0));
     com.facebook.buck.rules.RuleKey key1 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(1));
@@ -284,14 +257,10 @@ public class ThriftArtifactCacheTest {
     com.facebook.buck.rules.RuleKey key3 = new com.facebook.buck.rules.RuleKey(HashCode.fromInt(3));
     ImmutableList<AbstractAsynchronousCache.FetchRequest> requests =
         ImmutableList.of(
-            new AbstractAsynchronousCache.FetchRequest(
-                key0, LazyPath.ofInstance(output0), events, future),
-            new AbstractAsynchronousCache.FetchRequest(
-                key1, LazyPath.ofInstance(output1), events, future),
-            new AbstractAsynchronousCache.FetchRequest(
-                key2, LazyPath.ofInstance(output2), events, future),
-            new AbstractAsynchronousCache.FetchRequest(
-                key3, LazyPath.ofInstance(output3), events, future));
+            new AbstractAsynchronousCache.FetchRequest(key0, LazyPath.ofInstance(output0), future),
+            new AbstractAsynchronousCache.FetchRequest(key1, LazyPath.ofInstance(output1), future),
+            new AbstractAsynchronousCache.FetchRequest(key2, LazyPath.ofInstance(output2), future),
+            new AbstractAsynchronousCache.FetchRequest(key3, LazyPath.ofInstance(output3), future));
 
     String payload1 = "payload1";
     String payload3 = "bigger payload3";
