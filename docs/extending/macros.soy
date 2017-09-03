@@ -81,7 +81,7 @@ include_defs("//MACROS")
 java_library_using_guava(...)
 </pre>{/literal} or <a href="/function/load.html"><code>load()</code></a>:
 {literal}<pre class="prettyprint lang-py">
-load("//MACROS", "java_library_using_guava")
+load("//:MACROS", "java_library_using_guava")
 
 # This will call the `java_library_using_guava` macro defined in //MACROS.
 java_library_using_guava(...)

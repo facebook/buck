@@ -32,13 +32,13 @@ macros for creating more complex build rules.
 {param args}
 
 {call buck.arg}
-  {param name: 'path' /}
+  {param name: 'label' /}
   {param desc}
-  A path (label) to a file containing {call buck.macros/} and constants. It
-  looks similar to a build target because it starts with <code>//</code>{sp}
-  (indicating the root of the project), but is not a
-  proper build target because it identifies a file relative to the root of
-  the project rather than a build rule.
+  The label identifying file containing {call buck.macros/} and constants. It's
+  exactly the same as build target syntax but all macro files are assumed to be
+  implicitly exported using <pre>buck.export_file</pre> with its original name, so
+  a macro file <pre>defs</pre> from <pre>package</pre>pre> directory is accessible
+  using <pre>//package:defs</pre>pre> syntax.
   {/param}
 {/call}
 
@@ -71,7 +71,7 @@ Then another build file could include the array using
 copy-and-paste definitions across build files:
 
 {literal}<pre class="prettyprint lang-py">
-load('//core/DEFS', 'JARS_TO_EXCLUDE_FROM_DX')
+load('//core:DEFS', 'JARS_TO_EXCLUDE_FROM_DX')
 
 android_binary(
   name = 'example',
@@ -83,7 +83,7 @@ android_binary(
 Alternatively, to make an imported symbol available under a different name,
 keywords can be used instead:
 {literal}<pre class="prettyprint lang-py">
-load('//core/DEFS', no_dx='JARS_TO_EXCLUDE_FROM_DX')
+load('//core:DEFS', no_dx='JARS_TO_EXCLUDE_FROM_DX')
 
 android_binary(
   name = 'example',

@@ -22,10 +22,10 @@ python_library(
 python_binary(
     name = "gen_buck_info",
     main = "gen_buck_info.py",
+    visibility = ["PUBLIC"],
     deps = [
         ":buck_version",
     ],
-    visibility = ['PUBLIC'],
 )
 
 # This is bit weird.  This rule isn't idempotent, since it calls out
@@ -97,18 +97,18 @@ python_library(
     ],
 )
 
-load("//programs/macro_defs", "interpreter_override_args")
+load("//programs:macro_defs", "interpreter_override_args")
 
 python_binary(
     name = "buck",
     build_args = interpreter_override_args(),
     main = "buck.py",
+    visibility = [
+        "//scripts/packages/debian:debian",
+    ],
     deps = [
         ":bucklib",
         ":subprocutils",
-    ],
-    visibility = [
-        "//scripts/packages/debian:debian"
     ],
 )
 
@@ -116,12 +116,12 @@ python_binary(
     name = "buckd",
     build_args = interpreter_override_args(),
     main = "buckd.py",
+    visibility = [
+        "//scripts/packages/debian:debian",
+    ],
     deps = [
         ":bucklib",
         ":subprocutils",
-    ],
-    visibility = [
-        "//scripts/packages/debian:debian"
     ],
 )
 
