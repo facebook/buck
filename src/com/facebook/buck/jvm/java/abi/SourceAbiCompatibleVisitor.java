@@ -35,7 +35,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Nullable private String name;
 
   public SourceAbiCompatibleVisitor(ClassVisitor cv) {
-    super(Opcodes.ASM5, cv);
+    super(Opcodes.ASM6, cv);
   }
 
   @Override

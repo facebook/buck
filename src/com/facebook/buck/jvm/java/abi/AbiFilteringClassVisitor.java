@@ -39,7 +39,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   }
 
   public AbiFilteringClassVisitor(ClassVisitor cv, @Nullable Set<String> referencedClassNames) {
-    super(Opcodes.ASM5, cv);
+    super(Opcodes.ASM6, cv);
     this.referencedClassNames = referencedClassNames;
   }
 

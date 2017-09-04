@@ -21,7 +21,7 @@ import org.objectweb.asm.signature.SignatureVisitor;
 
 class SourceAbiCompatibleSignatureVisitor extends SignatureVisitorWrapper {
   public SourceAbiCompatibleSignatureVisitor(SignatureVisitor sv) {
-    super(Opcodes.ASM5, sv);
+    super(Opcodes.ASM6, sv);
   }
 
   @Override
