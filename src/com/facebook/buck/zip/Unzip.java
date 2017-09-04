@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -71,8 +72,11 @@ public class Unzip {
       }
     }
 
+    Path filePath = filesystem.resolve(target);
+    File file = filePath.toFile();
+
     // restore mtime for the file
-    filesystem.resolve(target).toFile().setLastModified(entry.getTime());
+    file.setLastModified(entry.getTime());
 
     // TODO(simons): Implement what the comment below says we should do.
     //
@@ -147,8 +151,9 @@ public class Unzip {
 
     Set<PosixFilePermission> permissions =
         MorePosixFilePermissions.fromMode(entry.getExternalAttributes() >> 16);
-    if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-      MoreFiles.makeExecutable(filesystem.resolve(target));
+    if (permissions.contains(PosixFilePermission.OWNER_EXECUTE)
+        && file.getCanonicalFile().exists()) {
+      MoreFiles.makeExecutable(filePath);
     }
   }
 

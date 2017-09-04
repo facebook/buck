@@ -28,11 +28,14 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -136,7 +139,39 @@ public class UnzipTest {
       zip.closeArchiveEntry();
     }
 
-    // Now run `Unzip.extractZipFile` on our test zip and verify that the file is executable.
+    Path extractFolder = tmpFolder.newFolder();
+    Unzip.extractZipFile(
+        zipFile.toAbsolutePath(), extractFolder.toAbsolutePath(), Unzip.ExistingFileMode.OVERWRITE);
+    Path link = extractFolder.toAbsolutePath().resolve("link.txt");
+    assertTrue(Files.isSymbolicLink(link));
+    assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
+  }
+
+  @Test
+  public void testExtractBrokenSymlinkWithOwnerExecutePermissions()
+      throws InterruptedException, IOException {
+    assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
+
+    // Create a simple zip archive using apache's commons-compress to store executable info.
+    try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
+      ZipArchiveEntry entry = new ZipArchiveEntry("link.txt");
+      entry.setUnixMode((int) MoreFiles.S_IFLNK);
+      String target = "target.txt";
+      entry.setSize(target.getBytes(Charsets.UTF_8).length);
+      entry.setMethod(ZipEntry.STORED);
+
+      // Mark the file as being executable.
+      Set<PosixFilePermission> filePermissions = ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE);
+
+      long externalAttributes =
+          entry.getExternalAttributes() + (MorePosixFilePermissions.toMode(filePermissions) << 16);
+      entry.setExternalAttributes(externalAttributes);
+
+      zip.putArchiveEntry(entry);
+      zip.write(target.getBytes(Charsets.UTF_8));
+      zip.closeArchiveEntry();
+    }
+
     Path extractFolder = tmpFolder.newFolder();
     Unzip.extractZipFile(
         zipFile.toAbsolutePath(), extractFolder.toAbsolutePath(), Unzip.ExistingFileMode.OVERWRITE);
