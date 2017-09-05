@@ -133,6 +133,10 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
     return new TargetGraph(subgraph, ImmutableMap.copyOf(index));
   }
 
+  public int getSize() {
+    return getNodes().size();
+  }
+
   @SuppressWarnings("serial")
   public static class NoSuchNodeException extends RuntimeException
       implements ExceptionWithHumanReadableMessage {

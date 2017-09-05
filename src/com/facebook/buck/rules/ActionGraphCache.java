@@ -73,6 +73,7 @@ public class ActionGraphCache {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndResolver out;
+    ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
       if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
@@ -106,10 +107,11 @@ public class ActionGraphCache {
           lastActionGraph = freshActionGraph;
         }
       }
+      finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
+      return out;
     } finally {
-      eventBus.post(ActionGraphEvent.finished(started));
+      eventBus.post(finished);
     }
-    return out;
   }
 
   /**
@@ -145,7 +147,7 @@ public class ActionGraphCache {
 
     ActionGraphAndResolver actionGraph = createActionGraph(eventBus, transformer, targetGraph);
 
-    eventBus.post(ActionGraphEvent.finished(started));
+    eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
     return actionGraph;
   }
 

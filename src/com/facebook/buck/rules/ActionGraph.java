@@ -34,4 +34,8 @@ public class ActionGraph {
   public String toString() {
     return Iterables.toString(nodes);
   }
+
+  public int getSize() {
+    return Iterables.size(nodes);
+  }
 }
