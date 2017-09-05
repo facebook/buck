@@ -96,4 +96,5 @@ struct BuildSlaveFinishedStats {
     2: optional i32 exitCode;
     3: optional FileMaterializationStats fileMaterializationStats;
     4: optional BuildSlavePerStageTimingStats buildSlavePerStageTimingStats;
+    5: optional string hostname;
 }

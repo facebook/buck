@@ -35,6 +35,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
@@ -71,6 +72,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private final Clock clock;
   private final ScheduledFuture<?> scheduledServerUpdates;
   private final ScheduledExecutorService networkScheduler;
+  private final String hostname;
 
   private final Object consoleEventsLock = new Object();
 
@@ -129,6 +131,14 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     scheduledServerUpdates =
         networkScheduler.scheduleAtFixedRate(
             this::sendServerUpdates, 0, serverUpdatePeriodMillis, TimeUnit.MILLISECONDS);
+
+    String hostname;
+    try {
+      hostname = HostnameFetching.getHostname();
+    } catch (IOException e) {
+      hostname = "unknown";
+    }
+    this.hostname = hostname;
   }
 
   public void setDistBuildService(DistBuildService service) {
@@ -190,6 +200,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private BuildSlaveFinishedStats createBuildSlaveFinishedStats() {
     BuildSlaveFinishedStats finishedStats =
         new BuildSlaveFinishedStats()
+            .setHostname(hostname)
             .setBuildSlaveStatus(createBuildSlaveStatus())
             .setFileMaterializationStats(
                 fileMaterializationStatsTracker.getFileMaterializationStats())

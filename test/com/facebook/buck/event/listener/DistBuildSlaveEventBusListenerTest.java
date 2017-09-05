@@ -57,6 +57,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -487,6 +488,7 @@ public class DistBuildSlaveEventBusListenerTest {
             .setDistBuildPreparationTimeMillis(0);
 
     BuildSlaveFinishedStats expectedFinishedStats = new BuildSlaveFinishedStats();
+    expectedFinishedStats.setHostname(HostnameFetching.getHostname());
     expectedFinishedStats.setBuildSlaveStatus(status);
     expectedFinishedStats.setFileMaterializationStats(fileMaterializationStats);
     expectedFinishedStats.setBuildSlavePerStageTimingStats(timingStats);
