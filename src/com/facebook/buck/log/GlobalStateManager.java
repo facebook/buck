@@ -299,7 +299,7 @@ public class GlobalStateManager {
     }
   }
 
-  public interface LoggerIsMappedToThreadScope extends AutoCloseable {
+  public interface LoggerIsMappedToThreadScope extends Closeable {
     Closeable setWriter(ConsoleHandlerState.Writer writer);
 
     @Override

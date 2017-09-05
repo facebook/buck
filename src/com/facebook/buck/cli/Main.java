@@ -147,6 +147,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
+import com.google.common.io.Closer;
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -565,7 +566,7 @@ public final class Main {
       }
     }
 
-    try {
+    try (Closer closeables = Closer.create()) {
       if (commandSemaphoreAcquired) {
         commandSemaphoreNgClient = context;
       }
@@ -718,6 +719,25 @@ public final class Main {
         TestConfig testConfig = new TestConfig(buckConfig);
         ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
+        // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
+        // when connecting. For now, we'll use the default from the server environment.
+        Locale locale = Locale.getDefault();
+
+        InvocationInfo invocationInfo =
+            InvocationInfo.of(
+                buildId,
+                isSuperConsoleEnabled(console),
+                daemon.isPresent(),
+                command.getSubCommandNameForLogging(),
+                args,
+                unexpandedCommandLineArgs,
+                filesystem.getBuckPaths().getLogDir());
+
+        GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
+            GlobalStateManager.singleton()
+                .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
+        closeables.register(loggerThreadMappingScope);
+
         ExecutorService diskIoExecutorService = MostExecutors.newSingleThreadExecutor("Disk I/O");
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
@@ -726,10 +746,6 @@ public final class Main {
         ScheduledExecutorService counterAggregatorExecutor =
             Executors.newSingleThreadScheduledExecutor(
                 new CommandThreadFactory("CounterAggregatorThread"));
-
-        // Eventually, we'll want to get allow websocket and/or nailgun clients to specify locale
-        // when connecting. For now, we'll use the default from the server environment.
-        Locale locale = Locale.getDefault();
 
         // Create a cached thread pool for cpu intensive tasks
         Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
@@ -754,19 +770,7 @@ public final class Main {
         // The order of resources in the try-with-resources block is important: the BuckEventBus
         // must be the last resource, so that it is closed first and can deliver its queued events
         // to the other resources before they are closed.
-        InvocationInfo invocationInfo =
-            InvocationInfo.of(
-                buildId,
-                isSuperConsoleEnabled(console),
-                daemon.isPresent(),
-                command.getSubCommandNameForLogging(),
-                args,
-                unexpandedCommandLineArgs,
-                filesystem.getBuckPaths().getLogDir());
-        try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
-                GlobalStateManager.singleton()
-                    .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
-            BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
+        try (BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
                     clock,
