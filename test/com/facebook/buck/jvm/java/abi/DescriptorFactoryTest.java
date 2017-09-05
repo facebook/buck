@@ -18,33 +18,27 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-@RunWith(CompilerTreeApiTestRunner.class)
+@RunWith(CompilerTreeApiParameterized.class)
 public class DescriptorFactoryTest extends DescriptorAndSignatureFactoryTestBase {
-
-  private DescriptorFactory descriptorFactory;
-
-  @Override
-  public void setUp() throws IOException {
-    super.setUp();
-    descriptorFactory = new DescriptorFactory(elements);
-  }
-
   @Test
-  public void testAllTheThings() throws IOException {
-    List<String> errors =
-        getTestErrors(
-            field -> field.desc,
-            method -> method.desc,
-            (t) -> null,
-            descriptorFactory::getDescriptor);
+  public void testAllTheThings() throws Exception {
+    test(
+        () -> {
+          DescriptorFactory descriptorFactory = new DescriptorFactory(elements);
+          List<String> errors =
+              getTestErrors(
+                  field -> field.desc,
+                  method -> method.desc,
+                  (t) -> null,
+                  descriptorFactory::getDescriptor);
 
-    assertTrue("Descriptor mismatch!\n\n" + Joiner.on('\n').join(errors), errors.isEmpty());
+          assertTrue("Descriptor mismatch!\n\n" + Joiner.on('\n').join(errors), errors.isEmpty());
+        });
   }
 }

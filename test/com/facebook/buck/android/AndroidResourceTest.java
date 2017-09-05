@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
@@ -80,7 +81,8 @@ public class AndroidResourceTest {
                   .build();
 
           TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
-          return new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+          return new DefaultBuildRuleResolver(
+              targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
         };
 
     FakeFileHashCache hashCache =
@@ -122,7 +124,7 @@ public class AndroidResourceTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new BuildRuleResolver(
+            new DefaultBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
@@ -157,7 +159,7 @@ public class AndroidResourceTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new BuildRuleResolver(
+            new DefaultBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
@@ -199,7 +201,7 @@ public class AndroidResourceTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, resourceNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     AndroidResource dep = (AndroidResource) resolver.requireRule(depNode.getBuildTarget());
     AndroidResource resource =

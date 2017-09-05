@@ -45,8 +45,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -583,7 +583,7 @@ public class InterCellIntegrationTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new BuildRuleResolver(
+                new DefaultBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
@@ -600,6 +600,56 @@ public class InterCellIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, Matchers.hasItem("G"));
+    assertThat(info.symbols.global, Matchers.hasItem("H"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+  }
+
+  @Test
+  public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/android/primary", "inter-cell/android/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        primary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+    TestDataHelper.overrideBuckconfig(
+        secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+
+    NdkCxxPlatform platform =
+        AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(
+            new SourcePathRuleFinder(
+                new DefaultBuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    Path tmpDir = tmp.newFolder("merging_tmp");
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
+    SymbolsAndDtNeeded info;
+    Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_deps");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
+    zipInspector.assertFileExists("lib/x86/libI.so");
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
     assertThat(info.symbols.global, Matchers.hasItem("A"));

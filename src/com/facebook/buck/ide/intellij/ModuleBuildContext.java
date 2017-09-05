@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -270,6 +271,6 @@ public class ModuleBuildContext {
         DependencyType.putWithMerge(result, buildTarget, dependencyType);
       }
     }
-    return ImmutableMap.copyOf(result);
+    return ImmutableSortedMap.copyOf(result);
   }
 }

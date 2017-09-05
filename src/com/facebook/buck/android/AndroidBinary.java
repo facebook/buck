@@ -166,6 +166,7 @@ public class AndroidBinary extends AbstractBuildRule
   private final boolean skipProguard;
   private final Tool javaRuntimeLauncher;
   private final boolean isCacheable;
+  private final Optional<SourcePath> appModularityResult;
 
   private final BuildRuleParams buildRuleParams;
 
@@ -206,10 +207,10 @@ public class AndroidBinary extends AbstractBuildRule
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
       Optional<String> dxMaxHeapSize,
-      boolean isCacheable) {
+      boolean isCacheable,
+      Optional<SourcePath> appModularityResult) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
-
     this.ruleFinder = ruleFinder;
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
@@ -227,6 +228,7 @@ public class AndroidBinary extends AbstractBuildRule
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
+    this.appModularityResult = appModularityResult;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -288,7 +290,8 @@ public class AndroidBinary extends AbstractBuildRule
             enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile(),
             dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
-            resourceCompressionMode.isCompressResources());
+            resourceCompressionMode.isCompressResources(),
+            this.appModularityResult);
     params =
         params.withExtraDeps(
             () ->

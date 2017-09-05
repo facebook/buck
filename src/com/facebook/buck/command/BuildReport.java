@@ -83,7 +83,7 @@ public class BuildReport {
     }
 
     if (!buildExecutionResult.getFailures().isEmpty()
-        && console.getVerbosity().shouldPrintCommand()) {
+        && console.getVerbosity().shouldPrintStandardInformation()) {
       report.append("\n ** Summary of failures encountered during the build **\n");
       for (BuildResult failureResult : buildExecutionResult.getFailures()) {
         Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());

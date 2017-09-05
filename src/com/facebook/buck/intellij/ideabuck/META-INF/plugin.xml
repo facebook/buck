@@ -22,7 +22,7 @@
   <change-notes><![CDATA[
 <h3>3.2</h3>
 <ul>
-  <li>Fixed HTML formatting of these change-notes</li>
+  <li>Fix paste bugs; add unit tests so paste doesn't break again.</li>
 </ul>
 
 <h3>3.1</h3>
@@ -164,7 +164,7 @@
         language="Buck"
         implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
     <lang.syntaxHighlighterFactory
-        key="Buck"
+        language="Buck"
         implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighterFactory"/>
     <lang.formatter
         language="Buck"

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
@@ -95,7 +96,7 @@ public class BuildReportIntegrationTest {
     assertTrue(Files.exists(buildReport));
     String buildReportContents =
         new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
-    assertEquals(
-        workspace.getFileContents("expected_failed_c_build_report.json"), buildReportContents);
+    assertThat(buildReportContents, Matchers.containsString("stderr: failure.c"));
+    assertThat(buildReportContents, Matchers.containsString("failure.c:2:3"));
   }
 }

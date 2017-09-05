@@ -44,6 +44,7 @@ import java.util.Optional;
  */
 class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
+  private static final boolean REQUIRED_FOR_SOURCE_ABI = false;
   private final AndroidBuildConfig androidBuildConfig;
 
   AndroidBuildConfigJavaLibrary(
@@ -74,14 +75,16 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             /* trackClassUsage */ javacOptions.trackClassUsage(),
             /* compileTimeClasspathDeps */ ImmutableSortedSet.of(
                 androidBuildConfig.getSourcePathToOutput()),
-            /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY),
+            /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,
+            /* ruleRequiredForSourceAbi */ REQUIRED_FOR_SOURCE_ABI),
         /* proguardConfig */ Optional.empty(),
         /* declaredDeps */ params.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         HasJavaAbi.getClassAbiJar(buildTarget),
         /* mavenCoords */ Optional.empty(),
-        /* tests */ ImmutableSortedSet.of());
+        /* tests */ ImmutableSortedSet.of(),
+        /* requiredForSourceAbi */ REQUIRED_FOR_SOURCE_ABI);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getBuildDeps().contains(androidBuildConfig),

@@ -86,6 +86,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
         ExportDependencies,
         InitializableFromDisk<JavaLibrary.Data>,
         AndroidPackageable,
+        MaybeRequiredForSourceAbi,
         SupportsInputBasedRuleKey,
         SupportsDependencyFileRuleKey,
         SupportsPipelining<JavacPipelineState>,
@@ -98,6 +99,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final JarContentsSupplier outputJarContentsSupplier;
   @Nullable private final BuildTarget abiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
+  @AddToRuleKey private final boolean requiredForSourceAbi;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
@@ -150,7 +152,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
       Optional<String> mavenCoords,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      boolean requiredForSourceAbi) {
     super(buildTarget, projectFilesystem, params);
     this.jarBuildStepsFactory = jarBuildStepsFactory;
 
@@ -175,6 +178,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.fullJarProvidedDeps = fullJarProvidedDeps;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
+    this.requiredForSourceAbi = requiredForSourceAbi;
 
     this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.abiJar = abiJar;
@@ -196,6 +200,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+  }
+
+  @Override
+  public boolean getRequiredForSourceAbi() {
+    return requiredForSourceAbi;
   }
 
   public void setSourceAbi(CalculateAbiFromSource sourceAbi) {

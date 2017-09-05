@@ -59,10 +59,11 @@ public class UnskippedRulesTrackerTest {
   @Before
   public void setUp() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);
-    eventBus = new DefaultBuckEventBus(new FakeClock(1), new BuildId());
+    eventBus = new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId());
     eventBus.register(
         new Object() {
           @Subscribe

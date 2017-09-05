@@ -67,9 +67,10 @@ public class TransitiveDepsClosureResolver {
                       (CommonDescriptionArg) targetGraph.get(target).getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
+            .sorted()
             .flatMap(
                 target ->
-                    Stream.concat(Stream.of(target), getTransitiveDepsClosure(target).stream()))
+                    Stream.concat(getTransitiveDepsClosure(target).stream(), Stream.of(target)))
             .collect(MoreCollectors.toImmutableSet());
 
     index.put(buildTarget, transitiveDepsClosure);

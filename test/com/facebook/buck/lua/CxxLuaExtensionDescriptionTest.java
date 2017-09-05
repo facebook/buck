@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import java.nio.file.Paths;
@@ -35,7 +36,7 @@ public class CxxLuaExtensionDescriptionTest {
         new CxxLuaExtensionBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setBaseModule("hello.world");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new DefaultBuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     CxxLuaExtension extension = builder.build(resolver);

@@ -116,7 +116,8 @@ public class AndroidBinaryDescription
       ImmutableSet.of(
           PACKAGE_STRING_ASSETS_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR,
-          AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR);
+          AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
+          AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_SOURCE_MAP_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
@@ -350,7 +351,8 @@ public class AndroidBinaryDescription
               args.getManifestEntries(),
               javaOptions.getJavaRuntimeLauncher(),
               dxConfig.getDxMaxHeapSize(),
-              args.getIsCacheable());
+              args.getIsCacheable(),
+              args.getAndroidAppModularityResult());
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(
@@ -579,6 +581,8 @@ public class AndroidBinaryDescription
     Optional<SourcePath> getSecondaryDexTailClassesFile();
 
     Set<BuildTarget> getApplicationModuleTargets();
+
+    Optional<SourcePath> getAndroidAppModularityResult();
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 

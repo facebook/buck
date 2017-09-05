@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -66,7 +67,7 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());
@@ -104,7 +105,7 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(exportedNode, exportingNode, robolectricTestNode);
 
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricTestNode.getBuildTarget());

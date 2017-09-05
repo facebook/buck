@@ -710,6 +710,27 @@ class BuildFileProcessor(object):
         else:
             return os.path.normpath(os.path.join(self._project_root, relative_path))
 
+    def _get_load_path(self, label):
+        # type: (str) -> str
+        """Resolve the given load function label to a full path."""
+        match = re.match(r'^([A-Za-z0-9_]*)//(.*):(.*)$', label)
+        if match is None:
+            raise ValueError(
+                'load label {} should be in the form of '
+                '//path:file or cellname//path:file'.format(label))
+        cell_name = match.group(1)
+        relative_path = match.group(2)
+        file_name = match.group(3)
+        if len(cell_name) > 0:
+            cell_root = self._cell_roots.get(cell_name)
+            if cell_root is None:
+                raise KeyError(
+                    'load label {} references an unknown cell named {}'
+                    'known cells: {!r}'.format(label, cell_name, self._cell_roots))
+            return os.path.normpath(os.path.join(cell_root, relative_path, file_name))
+        else:
+            return os.path.normpath(os.path.join(self._project_root, relative_path, file_name))
+
     def _read_config(self, section, field, default=None):
         # type: (str, str, Any) -> Any
         """
@@ -814,7 +835,7 @@ class BuildFileProcessor(object):
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
-        path = self._get_include_path(name)
+        path = self._get_load_path(name)
         inner_env, module = self._process_include(path, False)
 
         # Look up the caller's stack frame and merge the include's globals

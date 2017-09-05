@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.file.Paths;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -268,7 +267,7 @@ public class ProjectCommand extends BuildCommand {
     try (CommandThreadManager pool =
         new CommandThreadManager("Project", getConcurrencyLimit(params.getBuckConfig()))) {
 
-      ListeningExecutorService executor = pool.getExecutor();
+      ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       int result;
@@ -418,8 +417,8 @@ public class ProjectCommand extends BuildCommand {
         new ForwardingProcessListener(
             // Using rawStream to avoid shutting down SuperConsole. This is safe to do
             // because this process finishes before we start parsing process.
-            Channels.newChannel(params.getConsole().getStdOut().getRawStream()),
-            Channels.newChannel(params.getConsole().getStdErr().getRawStream()));
+            params.getConsole().getStdOut().getRawStream(),
+            params.getConsole().getStdErr().getRawStream());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     try {

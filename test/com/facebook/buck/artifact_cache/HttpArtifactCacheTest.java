@@ -134,8 +134,7 @@ public class HttpArtifactCacheTest {
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
             .setHttpFetchExecutorService(DIRECT_EXECUTOR_SERVICE)
-            .setErrorTextTemplate(ERROR_TEXT_TEMPLATE)
-            .setDistributedBuildModeEnabled(false);
+            .setErrorTextTemplate(ERROR_TEXT_TEMPLATE);
   }
 
   @Test

@@ -16,20 +16,41 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
+import com.sun.source.tree.ArrayTypeTree;
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.ImportTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.WildcardTree;
 import com.sun.source.util.TreePath;
+import com.sun.source.util.Trees;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
+import javax.tools.Diagnostic;
 
 /**
  * After the enter phase is complete, this class can obtain the "canonical" version of any {@link
@@ -39,18 +60,261 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 class PostEnterCanonicalizer {
   private final TreeBackedElements elements;
   private final TreeBackedTypes types;
+  private final Trees javacTrees;
+  private final Map<CompilationUnitTree, Map<Name, TreePath>> imports = new HashMap<>();
 
-  public PostEnterCanonicalizer(TreeBackedElements elements, TreeBackedTypes types) {
+  public PostEnterCanonicalizer(
+      TreeBackedElements elements, TreeBackedTypes types, Trees javacTrees) {
     this.elements = elements;
     this.types = types;
+    this.javacTrees = javacTrees;
+  }
+
+  public Element getCanonicalElement(@PropagatesNullable Element element) {
+    return elements.getCanonicalElement(element);
   }
 
   public ExecutableElement getCanonicalElement(ExecutableElement element) {
     return Preconditions.checkNotNull(elements.getCanonicalElement(element));
   }
 
-  /* package */ TypeMirror getCanonicalType(TypeMirror javacType) {
-    return Preconditions.checkNotNull(types.getCanonicalType(javacType));
+  public List<TypeMirror> getCanonicalTypes(
+      List<? extends TypeMirror> types,
+      @Nullable TreePath parent,
+      @Nullable List<? extends Tree> children) {
+    List<TypeMirror> result = new ArrayList<>();
+    for (int i = 0; i < types.size(); i++) {
+      result.add(
+          getCanonicalType(
+              types.get(i),
+              parent,
+              children == null || children.isEmpty() ? null : children.get(i)));
+    }
+    return result;
+  }
+
+  public TypeMirror getCanonicalType(
+      @PropagatesNullable TypeMirror typeMirror, @Nullable TreePath parent, @Nullable Tree child) {
+    return getCanonicalType(
+        typeMirror, (parent != null && child != null) ? new TreePath(parent, child) : null);
+  }
+
+  public TypeMirror getCanonicalType(
+      @PropagatesNullable TypeMirror typeMirror, @Nullable TreePath treePath) {
+    if (typeMirror == null) {
+      return null;
+    }
+
+    Tree tree = treePath == null ? null : treePath.getLeaf();
+    switch (typeMirror.getKind()) {
+      case ARRAY:
+        {
+          ArrayType arrayType = (ArrayType) typeMirror;
+          return types.getArrayType(
+              getCanonicalType(
+                  arrayType.getComponentType(),
+                  treePath,
+                  tree == null ? null : ((ArrayTypeTree) tree).getType()));
+        }
+      case TYPEVAR:
+        {
+          TypeVariable typeVar = (TypeVariable) typeMirror;
+          return elements.getCanonicalElement(typeVar.asElement()).asType();
+        }
+      case WILDCARD:
+        {
+          WildcardType wildcardType = (WildcardType) typeMirror;
+          Tree boundTree = tree == null ? null : ((WildcardTree) tree).getBound();
+          return types.getWildcardType(
+              getCanonicalType(wildcardType.getExtendsBound(), treePath, boundTree),
+              getCanonicalType(wildcardType.getSuperBound(), treePath, boundTree));
+        }
+      case DECLARED:
+        {
+          DeclaredType declaredType = (DeclaredType) typeMirror;
+
+          // It is possible to have a DeclaredType with ErrorTypes for arguments, so we must
+          // compute the TreePaths while canonicalizing type arguments
+          List<? extends TypeMirror> underlyingTypeArgs = declaredType.getTypeArguments();
+          TypeMirror[] canonicalTypeArgs;
+          if (underlyingTypeArgs.isEmpty()) {
+            canonicalTypeArgs = new TypeMirror[0];
+          } else {
+            canonicalTypeArgs =
+                getCanonicalTypes(
+                        underlyingTypeArgs,
+                        treePath,
+                        tree == null ? null : ((ParameterizedTypeTree) tree).getTypeArguments())
+                    .stream()
+                    .toArray(TypeMirror[]::new);
+          }
+
+          // On the other hand, it is not possible to have a DeclaredType with an enclosing
+          // ErrorType -- the only way we get a DeclaredType in the first place is if the compiler
+          // can resolve everything it needs to.
+          TypeMirror enclosingType = declaredType.getEnclosingType();
+          DeclaredType canonicalEnclosingType =
+              enclosingType.getKind() != TypeKind.NONE
+                  ? (DeclaredType) getCanonicalType(enclosingType, null)
+                  : null;
+          TypeElement canonicalElement =
+              (TypeElement) elements.getCanonicalElement(declaredType.asElement());
+
+          return types.getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
+        }
+      case PACKAGE:
+      case ERROR:
+        {
+          if (treePath == null) {
+            throw new IllegalArgumentException("Cannot resolve error types without a Tree.");
+          }
+
+          return getInferredType(treePath);
+        }
+      case BOOLEAN:
+      case BYTE:
+      case SHORT:
+      case INT:
+      case LONG:
+      case CHAR:
+      case FLOAT:
+      case DOUBLE:
+      case VOID:
+      case NONE:
+      case NULL:
+        return typeMirror;
+      case EXECUTABLE:
+      case OTHER:
+      case UNION:
+      case INTERSECTION:
+      default:
+        throw new UnsupportedOperationException();
+    }
+  }
+
+  private TypeMirror getUnderlyingType(TreePath treePath) {
+    return Preconditions.checkNotNull(javacTrees.getTypeMirror(treePath));
+  }
+
+  private TypeMirror getInferredType(TreePath treePath) {
+    Tree tree = treePath.getLeaf();
+    switch (tree.getKind()) {
+      case PARAMETERIZED_TYPE:
+        {
+          ParameterizedTypeTree parameterizedTypeTree = (ParameterizedTypeTree) tree;
+          TypeMirror[] typeArguments =
+              parameterizedTypeTree
+                  .getTypeArguments()
+                  .stream()
+                  .map(
+                      arg -> {
+                        TreePath argPath = new TreePath(treePath, arg);
+                        return getCanonicalType(getUnderlyingType(argPath), argPath);
+                      })
+                  .toArray(TypeMirror[]::new);
+
+          TreePath baseTypeTreePath = new TreePath(treePath, parameterizedTypeTree.getType());
+          DeclaredType baseType =
+              (DeclaredType)
+                  getCanonicalType(getUnderlyingType(baseTypeTreePath), baseTypeTreePath);
+
+          TypeMirror enclosingType = baseType.getEnclosingType();
+          if (enclosingType.getKind() == TypeKind.NONE) {
+            enclosingType = null;
+          }
+
+          return types.getDeclaredType(
+              (DeclaredType) enclosingType, (TypeElement) baseType.asElement(), typeArguments);
+        }
+      case UNBOUNDED_WILDCARD:
+        return types.getWildcardType(null, null);
+      case SUPER_WILDCARD:
+        {
+          WildcardTree wildcardTree = (WildcardTree) tree;
+          TreePath boundTreePath = new TreePath(treePath, wildcardTree.getBound());
+          return types.getWildcardType(
+              null, getCanonicalType(getUnderlyingType(boundTreePath), boundTreePath));
+        }
+      case EXTENDS_WILDCARD:
+        {
+          WildcardTree wildcardTree = (WildcardTree) tree;
+          TreePath boundTreePath = new TreePath(treePath, wildcardTree.getBound());
+          return types.getWildcardType(
+              getCanonicalType(getUnderlyingType(boundTreePath), boundTreePath), null);
+        }
+      case MEMBER_SELECT:
+        {
+          MemberSelectTree memberSelectTree = (MemberSelectTree) tree;
+          Name identifier = memberSelectTree.getIdentifier();
+          TreePath baseTypeTreePath = new TreePath(treePath, memberSelectTree.getExpression());
+          StandaloneTypeMirror baseType =
+              (StandaloneTypeMirror)
+                  getCanonicalType(getUnderlyingType(baseTypeTreePath), baseTypeTreePath);
+
+          if (baseType.getKind() == TypeKind.PACKAGE) {
+            CharSequence fullyQualifiedName = TreeBackedTrees.treeToName(memberSelectTree);
+            if (isProbablyPackageName(identifier)) {
+              return types.getPackageType(elements.getOrCreatePackageElement(fullyQualifiedName));
+            } else {
+              StandalonePackageType packageType = (StandalonePackageType) baseType;
+              ArtificialPackageElement packageElement = packageType.asElement();
+              return types.getDeclaredType(
+                  elements.getOrCreateTypeElement(packageElement, fullyQualifiedName));
+            }
+          } else {
+            StandaloneDeclaredType baseDeclaredType = (StandaloneDeclaredType) baseType;
+            DeclaredType enclosingType;
+            if (baseDeclaredType.getEnclosingType().getKind() == TypeKind.NONE) {
+              enclosingType = null;
+            } else {
+              enclosingType = baseDeclaredType;
+            }
+
+            if (baseDeclaredType instanceof InferredDeclaredType
+                || baseDeclaredType.getTypeArguments().isEmpty()) {
+              return types.getDeclaredType(
+                  enclosingType,
+                  elements.getOrCreateTypeElement(
+                      (ArtificialElement) baseDeclaredType.asElement(), identifier));
+            } else {
+              return types.getDeclaredType(
+                  baseDeclaredType,
+                  elements.getOrCreateTypeElement(
+                      (ArtificialElement) baseDeclaredType.asElement(), identifier));
+            }
+          }
+        }
+      case IDENTIFIER:
+        {
+          // If it's imported, then it must be a class; look it up
+          TreePath importedIdentifierPath = getImportedIdentifier(treePath);
+          if (importedIdentifierPath != null) {
+            return getCanonicalType(
+                getUnderlyingType(importedIdentifierPath), importedIdentifierPath);
+          }
+
+          // Infer the type by heuristic
+          IdentifierTree identifierTree = (IdentifierTree) tree;
+          Name identifier = identifierTree.getName();
+          if (isProbablyPackageName(identifier)) {
+            return types.getPackageType(elements.getOrCreatePackageElement(identifier));
+          }
+          return types.getDeclaredType(
+              elements.getOrCreateTypeElement(
+                  (ArtificialElement)
+                      elements.getCanonicalElement(
+                          Preconditions.checkNotNull(
+                              javacTrees.getElement(new TreePath(treePath.getCompilationUnit())))),
+                  identifier));
+        }
+        // $CASES-OMITTED$
+      default:
+        throw new AssertionError(String.format("Unexpected tree kind %s", tree.getKind()));
+    }
+  }
+
+  private boolean isProbablyPackageName(CharSequence identifier) {
+    return Character.isLowerCase(identifier.charAt(0));
   }
 
   /**
@@ -63,7 +327,7 @@ class PostEnterCanonicalizer {
         new SimpleAnnotationValueVisitor8<Object, Void>() {
           @Override
           public Object visitType(TypeMirror t, Void aVoid) {
-            return getCanonicalType(t);
+            return getCanonicalType(t, valueTreePath);
           }
 
           @Override
@@ -102,11 +366,65 @@ class PostEnterCanonicalizer {
           }
 
           @Override
+          public Object visitString(String s, Void aVoid) {
+            if (getUnderlyingType(valueTreePath).getKind() == TypeKind.ERROR) {
+              Tree leaf = valueTreePath.getLeaf();
+              if (leaf instanceof MemberSelectTree
+                  && ((MemberSelectTree) leaf).getIdentifier().contentEquals("class")) {
+                TreePath classNamePath =
+                    new TreePath(valueTreePath, ((MemberSelectTree) leaf).getExpression());
+
+                return getCanonicalType(getUnderlyingType(classNamePath), classNamePath);
+              } else {
+                javacTrees.printMessage(
+                    Diagnostic.Kind.ERROR,
+                    "Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.",
+                    leaf,
+                    valueTreePath.getCompilationUnit());
+              }
+            }
+
+            return super.visitString(s, aVoid);
+          }
+
+          @Override
           protected Object defaultAction(Object o, Void aVoid) {
             // Everything else (primitives, Strings, enums) doesn't need canonicalization
             return o;
           }
         },
         null);
+  }
+
+  @Nullable
+  private TreePath getImportedIdentifier(TreePath identifierTreePath) {
+    IdentifierTree identifierTree = (IdentifierTree) identifierTreePath.getLeaf();
+
+    Map<Name, TreePath> imports =
+        this.imports.computeIfAbsent(
+            identifierTreePath.getCompilationUnit(),
+            compilationUnitTree -> {
+              Map<Name, TreePath> result = new HashMap<>();
+              TreePath rootPath = new TreePath(compilationUnitTree);
+              for (ImportTree importTree : compilationUnitTree.getImports()) {
+                if (importTree.isStatic()) {
+                  continue;
+                }
+
+                MemberSelectTree importedIdentifierTree =
+                    (MemberSelectTree) importTree.getQualifiedIdentifier();
+                if (importedIdentifierTree.getIdentifier().contentEquals("*")) {
+                  continue;
+                }
+
+                TreePath importTreePath = new TreePath(rootPath, compilationUnitTree);
+                TreePath importedIdentifierTreePath =
+                    new TreePath(importTreePath, importedIdentifierTree);
+                result.put(importedIdentifierTree.getIdentifier(), importedIdentifierTreePath);
+              }
+              return result;
+            });
+
+    return imports.get(identifierTree.getName());
   }
 }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -32,7 +33,8 @@ public class ShBinaryDescriptionTest {
   @Test
   public void mainIsIncludedInCommand() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     FakeSourcePath main = new FakeSourcePath("main.sh");
     ShBinary shBinary =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -44,7 +46,8 @@ public class ShBinaryDescriptionTest {
   @Test
   public void resourcesAreIncludedInCommand() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     FakeSourcePath main = new FakeSourcePath("main.sh");
     FakeSourcePath resource = new FakeSourcePath("resource.dat");
     ShBinary shBinary =

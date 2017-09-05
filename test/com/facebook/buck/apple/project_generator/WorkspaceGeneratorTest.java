@@ -52,7 +52,7 @@ public class WorkspaceGeneratorTest {
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    clock = new SettableFakeClock(0, 0);
+    clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
     generator = new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
   }

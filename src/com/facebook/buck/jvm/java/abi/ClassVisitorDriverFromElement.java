@@ -16,10 +16,12 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -34,6 +36,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementScanner8;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleAnnotationValueVisitor8;
+import javax.tools.Diagnostic;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -42,6 +45,7 @@ import org.objectweb.asm.Opcodes;
 
 class ClassVisitorDriverFromElement {
   private final DescriptorFactory descriptorFactory;
+  private final Messager messager;
   private final SignatureFactory signatureFactory;
   private final SourceVersion targetVersion;
   private final Elements elements;
@@ -51,11 +55,13 @@ class ClassVisitorDriverFromElement {
   /**
    * @param targetVersion the class file version to target, expressed as the corresponding Java
    *     source version
+   * @param messager
    */
-  ClassVisitorDriverFromElement(SourceVersion targetVersion, Elements elements) {
+  ClassVisitorDriverFromElement(SourceVersion targetVersion, Elements elements, Messager messager) {
     this.targetVersion = targetVersion;
     this.elements = elements;
     descriptorFactory = new DescriptorFactory(elements);
+    this.messager = messager;
     signatureFactory = new SignatureFactory(descriptorFactory);
     accessFlagsUtils = new AccessFlags(elements);
     innerClassesTable = new InnerClassesTable(descriptorFactory, accessFlagsUtils);
@@ -109,7 +115,7 @@ class ClassVisitorDriverFromElement {
           "java/lang/Object",
           new String[0]);
 
-      visitAnnotations(e.getAnnotationMirrors(), classVisitor::visitAnnotation);
+      visitAnnotations(e, classVisitor::visitAnnotation);
 
       innerClassesTable.reportInnerClassReferences(e, classVisitor);
 
@@ -145,7 +151,7 @@ class ClassVisitorDriverFromElement {
               .toArray(size -> new String[size]));
       classVisitorStarted = true;
 
-      visitAnnotations(e.getAnnotationMirrors(), visitor::visitAnnotation);
+      visitAnnotations(e, visitor::visitAnnotation);
 
       super.visitType(e, visitor);
 
@@ -179,7 +185,7 @@ class ClassVisitorDriverFromElement {
 
       visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
       visitDefaultValue(e, methodVisitor);
-      visitAnnotations(e.getAnnotationMirrors(), methodVisitor::visitAnnotation);
+      visitAnnotations(e, methodVisitor::visitAnnotation);
       methodVisitor.visitEnd();
 
       return null;
@@ -233,27 +239,37 @@ class ClassVisitorDriverFromElement {
               descriptorFactory.getDescriptor(e),
               signatureFactory.getSignature(e),
               e.getConstantValue());
-      visitAnnotations(e.getAnnotationMirrors(), fieldVisitor::visitAnnotation);
+      visitAnnotations(e, fieldVisitor::visitAnnotation);
       fieldVisitor.visitEnd();
 
       return null;
     }
 
-    private void visitAnnotations(
-        List<? extends AnnotationMirror> annotations, VisitorWithAnnotations visitor) {
-      annotations.forEach(annotation -> visitAnnotation(annotation, visitor));
+    private void visitAnnotations(Element enclosingElement, VisitorWithAnnotations visitor) {
+      enclosingElement
+          .getAnnotationMirrors()
+          .forEach(annotation -> visitAnnotation(enclosingElement, annotation, visitor));
     }
 
-    private void visitAnnotation(AnnotationMirror annotation, VisitorWithAnnotations visitor) {
-      if (MoreElements.isSourceRetention(annotation)) {
-        return;
+    private void visitAnnotation(
+        Element enclosingElement, AnnotationMirror annotation, VisitorWithAnnotations visitor) {
+      try {
+        if (MoreElements.isSourceRetention(annotation)) {
+          return;
+        }
+        AnnotationVisitor annotationVisitor =
+            visitor.visitAnnotation(
+                descriptorFactory.getDescriptor(annotation.getAnnotationType()),
+                MoreElements.isRuntimeRetention(annotation));
+        visitAnnotationValues(annotation, annotationVisitor);
+        annotationVisitor.visitEnd();
+      } catch (CannotInferException e) {
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "Could not load the class file for this annotation. Consider adding required_for_source_abi = True to its build rule.",
+            enclosingElement,
+            annotation);
       }
-      AnnotationVisitor annotationVisitor =
-          visitor.visitAnnotation(
-              descriptorFactory.getDescriptor(annotation.getAnnotationType()),
-              MoreElements.isRuntimeRetention(annotation));
-      visitAnnotationValues(annotation, annotationVisitor);
-      annotationVisitor.visitEnd();
     }
 
     private void visitAnnotationValues(

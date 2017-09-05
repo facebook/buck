@@ -43,6 +43,21 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
   }
 
   @Test
+  public void testAnnotationInNonRequiredRuleFails() throws IOException {
+    testCompiler.setAllowCompilationErrors(true);
+    compileWithValidation(
+        ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"), false);
+
+    assertErrors(
+        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+            + "@interface Foo { @interface Inner { } };\n"
+            + " ^",
+        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+            + "@interface Foo { @interface Inner { } };\n"
+            + "                  ^");
+  }
+
+  @Test
   public void testFullyQualifiedNameFromBootClasspathSucceeds() throws IOException {
     compileWithValidation("abstract class Foo implements java.util.List { }");
 
@@ -118,6 +133,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         ImmutableMap.of(
             "com/facebook/bar/Bar.java",
             Joiner.on('\n').join("package com.facebook.bar;", "public class Bar { }")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         Joiner.on('\n')
             .join("import com.facebook.bar.*;", "public abstract class Foo extends Bar { }"));
@@ -180,6 +196,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             Joiner.on('\n')
                 .join(
                     "package com.facebook.foo;", "public interface Baz { interface Inner { } }")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         ImmutableMap.of(
             "Foo.java",
@@ -273,6 +290,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
             "com/facebook/foo/Bar.java",
             Joiner.on('\n')
                 .join("package com.facebook.foo;", "class Bar { static class Inner { } }")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         ImmutableMap.of(
             "Foo.java",
@@ -316,6 +334,7 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
                     "  public static final int CONSTANT = 3 + 5;",
                     "  public static final int CONST2 = 3;",
                     "}")));
+    testCompiler.setAllowCompilationErrors(true);
     compileWithValidation(
         ImmutableMap.of(
             "Foo.java",
@@ -340,15 +359,20 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(String source)
       throws IOException {
-    return compileWithValidation(ImmutableMap.of("Foo.java", source));
+    return compileWithValidation(ImmutableMap.of("Foo.java", source), true);
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(
       Map<String, String> sources) throws IOException {
+    return compileWithValidation(sources, true);
+  }
+
+  protected Iterable<? extends CompilationUnitTree> compileWithValidation(
+      Map<String, String> sources, boolean requiredForSourceAbi) throws IOException {
     return compile(
         sources,
         // A side effect of our hacky test class loader appears to be that this only works if
         // it's NOT a lambda. LoL.
-        new ValidatingTaskListenerFactory());
+        new ValidatingTaskListenerFactory(requiredForSourceAbi));
   }
 }

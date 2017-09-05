@@ -29,6 +29,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -174,13 +175,14 @@ public class PythonBuckConfigTest {
   @Test
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Path projectDir = Files.createTempDirectory("project");
-    Path pexExecuter = Paths.get("pex-exectuter");
+    Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(new FakeClock(0), projectDir, ImmutableSet.of(pexExecuter));
+        new FakeProjectFilesystem(FakeClock.DO_NOT_CARE, projectDir, ImmutableSet.of(pexExecuter));
     Files.createFile(projectFilesystem.resolve(pexExecuter));
     assertTrue(
         "Should be able to set file executable",
@@ -196,7 +198,7 @@ public class PythonBuckConfigTest {
             new ExecutableFinder());
     assertThat(
         config.getPexExecutor(resolver).get().getCommandPrefix(pathResolver),
-        Matchers.contains(pexExecuter.toString()));
+        Matchers.contains(projectDir.resolve(pexExecuter).toString()));
   }
 
   @Test
@@ -228,7 +230,8 @@ public class PythonBuckConfigTest {
                 .build(),
             new AlwaysFoundExecutableFinder());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     assertThat(
         config
             .getPexTool(resolver)

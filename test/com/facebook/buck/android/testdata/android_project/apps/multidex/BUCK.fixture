@@ -261,3 +261,47 @@ android_app_modularity(
   ],
   no_dx = [],
 )
+
+android_binary(
+  name = 'app-with-consistency-check',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  application_module_configs = {
+    'small_with_no_resource_deps' : ['//java/com/sample/small:small_with_no_resource_deps'],
+  },
+  android_app_modularity_result = ':modularity-metadata',
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+    '//java/com/sample/small:small_with_no_resource_deps',
+    '//res/com/sample/base:base',
+    ':modularity-metadata',
+  ],
+  no_dx = [],
+)
+
+android_binary(
+  name = 'app-with-consistency-failure',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  application_module_configs = {
+  },
+  android_app_modularity_result = ':modularity-metadata',
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+    '//java/com/sample/small:small_with_no_resource_deps',
+    '//res/com/sample/base:base',
+    ':modularity-metadata',
+  ],
+  no_dx = [],
+)
+    

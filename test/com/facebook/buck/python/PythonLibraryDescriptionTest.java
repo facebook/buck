@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -71,7 +72,8 @@ public class PythonLibraryDescriptionTest {
     TargetGraph normalTargetGraph = TargetGraphFactory.newInstance(normalBuilder.build());
     PythonLibrary normal =
         normalBuilder.build(
-            new BuildRuleResolver(normalTargetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
+            new DefaultBuildRuleResolver(
+                normalTargetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
             filesystem,
             normalTargetGraph);
     assertEquals(
@@ -91,7 +93,7 @@ public class PythonLibraryDescriptionTest {
         TargetGraphFactory.newInstance(withBaseModuleBuilder.build());
     PythonLibrary withBaseModule =
         withBaseModuleBuilder.build(
-            new BuildRuleResolver(
+            new DefaultBuildRuleResolver(
                 withBaseModuleTargetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
             filesystem,
             withBaseModuleTargetGraph);
@@ -123,7 +125,8 @@ public class PythonLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     PythonLibrary library =
         builder.build(
-            new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
+            new DefaultBuildRuleResolver(
+                targetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
             filesystem,
             targetGraph);
     assertThat(
@@ -155,7 +158,8 @@ public class PythonLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     PythonLibrary library =
         builder.build(
-            new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
+            new DefaultBuildRuleResolver(
+                targetGraph, new DefaultTargetNodeToBuildRuleTransformer()),
             filesystem,
             targetGraph);
     assertThat(
@@ -205,7 +209,7 @@ public class PythonLibraryDescriptionTest {
                 new DefaultTypeCoercerFactory())
             .getTargetGraph();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PythonLibrary library = (PythonLibrary) resolver.requireRule(builder.getTarget());
     assertThat(
         library
@@ -254,7 +258,7 @@ public class PythonLibraryDescriptionTest {
                 new DefaultTypeCoercerFactory())
             .getTargetGraph();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PythonLibrary library = (PythonLibrary) resolver.requireRule(builder.getTarget());
     assertThat(
         library
@@ -278,7 +282,7 @@ public class PythonLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     CxxGenrule src = (CxxGenrule) resolver.requireRule(srcBuilder.getTarget());
     PythonLibrary library = (PythonLibrary) resolver.requireRule(libraryBuilder.getTarget());
     PythonPackageComponents components =
@@ -312,7 +316,7 @@ public class PythonLibraryDescriptionTest {
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), ruleBuilder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     PythonLibrary rule = (PythonLibrary) resolver.requireRule(ruleBuilder.getTarget());
     assertThat(
         RichStream.from(

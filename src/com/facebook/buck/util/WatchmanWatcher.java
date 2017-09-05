@@ -266,6 +266,7 @@ public class WatchmanWatcher {
               "Could not get response from Watchman for query %s within %d ms",
               query, timeoutMillis);
           postWatchEvent(
+              buckEventBus,
               WatchmanOverflowEvent.of(
                   cellPath,
                   "Timed out after "
@@ -282,6 +283,7 @@ public class WatchmanWatcher {
           WatchmanWatcherException e = new WatchmanWatcherException(error);
           LOG.debug(e, "Error in Watchman output. Posting an overflow event to flush the caches");
           postWatchEvent(
+              buckEventBus,
               WatchmanOverflowEvent.of(cellPath, "Watchman error occurred: " + e.getMessage()));
           throw e;
         }
@@ -311,6 +313,7 @@ public class WatchmanWatcher {
               break;
             case POST_OVERFLOW_EVENT:
               postWatchEvent(
+                  buckEventBus,
                   WatchmanOverflowEvent.of(cellPath, "Watchman has been initialized recently."));
               break;
           }
@@ -324,7 +327,8 @@ public class WatchmanWatcher {
             LOG.warn(
                 "Posting overflow event: too many files changed: %d > %d",
                 files.size(), OVERFLOW_THRESHOLD);
-            postWatchEvent(WatchmanOverflowEvent.of(cellPath, "Too many files changed."));
+            postWatchEvent(
+                buckEventBus, WatchmanOverflowEvent.of(cellPath, "Too many files changed."));
             filesHaveChanged.set(true);
             return;
           }
@@ -339,6 +343,7 @@ public class WatchmanWatcher {
             if (fileName == null) {
               LOG.warn("Filename missing from watchman file response %s", file);
               postWatchEvent(
+                  buckEventBus,
                   WatchmanOverflowEvent.of(cellPath, "Filename missing from watchman response."));
               filesHaveChanged.set(true);
               return;
@@ -352,7 +357,7 @@ public class WatchmanWatcher {
             if (fileExists != null && !fileExists) {
               kind = WatchmanPathEvent.Kind.DELETE;
             }
-            postWatchEvent(WatchmanPathEvent.of(cellPath, kind, Paths.get(fileName)));
+            postWatchEvent(buckEventBus, WatchmanPathEvent.of(cellPath, kind, Paths.get(fileName)));
           }
 
           if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
@@ -370,7 +375,7 @@ public class WatchmanWatcher {
       String message = "The communication with watchman daemon has been interrupted.";
       LOG.warn(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(WatchmanOverflowEvent.of(cellPath, message));
+      postWatchEvent(buckEventBus, WatchmanOverflowEvent.of(cellPath, message));
       Threads.interruptCurrentThread();
       throw e;
     } catch (IOException e) {
@@ -378,13 +383,32 @@ public class WatchmanWatcher {
           "There was an error while communicating with the watchman daemon: " + e.getMessage();
       LOG.error(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(WatchmanOverflowEvent.of(cellPath, message));
+      postWatchEvent(buckEventBus, WatchmanOverflowEvent.of(cellPath, message));
       throw e;
     }
   }
 
-  private void postWatchEvent(WatchmanEvent event) {
+  private void postWatchEvent(BuckEventBus eventBus, WatchmanEvent event) {
     LOG.warn("Posting WatchEvent: %s", event);
     fileChangeEventBus.post(event);
+
+    // Post analogous Status events for logging/status.
+    if (event instanceof WatchmanOverflowEvent) {
+      eventBus.post(WatchmanStatusEvent.overflow(((WatchmanOverflowEvent) event).getReason()));
+    } else if (event instanceof WatchmanPathEvent) {
+      WatchmanPathEvent pathEvent = (WatchmanPathEvent) event;
+      switch (pathEvent.getKind()) {
+        case CREATE:
+          eventBus.post(WatchmanStatusEvent.fileCreation(pathEvent.toString()));
+          return;
+        case DELETE:
+          eventBus.post(WatchmanStatusEvent.fileDeletion(pathEvent.toString()));
+          return;
+        case MODIFY:
+          // No analog for this event.
+          return;
+      }
+      throw new IllegalStateException("Unhandled case: " + pathEvent.getKind());
+    }
   }
 }

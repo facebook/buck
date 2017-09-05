@@ -363,7 +363,7 @@ public class BuildCommand extends AbstractCommand {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
-      return run(params, pool.getExecutor(), ImmutableSet.of());
+      return run(params, pool, ImmutableSet.of());
     }
   }
 
@@ -387,7 +387,7 @@ public class BuildCommand extends AbstractCommand {
 
   protected int run(
       CommandRunnerParams params,
-      WeightedListeningExecutorService executorService,
+      CommandThreadManager commandThreadManager,
       ImmutableSet<String> additionalTargets)
       throws IOException, InterruptedException {
     if (!additionalTargets.isEmpty()) {
@@ -396,7 +396,7 @@ public class BuildCommand extends AbstractCommand {
     BuildEvent.Started started = postBuildStartedEvent(params);
     int exitCode = 0;
     try {
-      exitCode = executeBuildAndProcessResult(params, executorService);
+      exitCode = executeBuildAndProcessResult(params, commandThreadManager);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = 1;
@@ -419,7 +419,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private ActionAndTargetGraphs createGraphs(
-      CommandRunnerParams params, WeightedListeningExecutorService executorService)
+      CommandRunnerParams params, ListeningExecutorService executorService)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService);
@@ -457,7 +457,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private int executeBuildAndProcessResult(
-      CommandRunnerParams params, WeightedListeningExecutorService executorService)
+      CommandRunnerParams params, CommandThreadManager commandThreadManager)
       throws IOException, InterruptedException, ActionGraphCreationException {
     int exitCode;
     ActionAndTargetGraphs graphs = null;
@@ -469,12 +469,12 @@ public class BuildCommand extends AbstractCommand {
       distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
 
-      graphs = createGraphs(params, executorService);
+      graphs = createGraphs(params, commandThreadManager.getListeningExecutorService());
 
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
       Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
-          computeDistBuildState(params, graphs, executorService);
+          computeDistBuildState(params, graphs, commandThreadManager.getListeningExecutorService());
       BuildJobState jobState = stateAndCells.getFirst();
       DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
 
@@ -484,7 +484,7 @@ public class BuildCommand extends AbstractCommand {
                 params,
                 distBuildConfig,
                 graphs,
-                executorService,
+                commandThreadManager.getWeightedListeningExecutorService(),
                 params.getCell().getFilesystem(),
                 params.getFileHashCache(),
                 jobState,
@@ -505,8 +505,12 @@ public class BuildCommand extends AbstractCommand {
         }
       }
     } else {
-      graphs = createGraphs(params, executorService);
-      exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
+      graphs = createGraphs(params, commandThreadManager.getListeningExecutorService());
+      exitCode =
+          executeLocalBuild(
+              params,
+              graphs.actionGraph,
+              commandThreadManager.getWeightedListeningExecutorService());
     }
     if (exitCode == 0) {
       exitCode = processSuccessfulBuild(params, graphs);
@@ -553,7 +557,7 @@ public class BuildCommand extends AbstractCommand {
   private Pair<BuildJobState, DistBuildCellIndexer> computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final WeightedListeningExecutorService executorService)
+      final ListeningExecutorService executorService)
       throws IOException, InterruptedException {
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
@@ -729,6 +733,7 @@ public class BuildCommand extends AbstractCommand {
           LOG.error("Failed to publish distributed build client cache request event", ex);
         }
 
+        distBuildClientStats.startTimer(POST_BUILD_ANALYSIS);
         DistBuildPostBuildAnalysis postBuildAnalysis =
             new DistBuildPostBuildAnalysis(
                 params.getInvocationInfo().get().getBuildId(),
@@ -746,6 +751,7 @@ public class BuildCommand extends AbstractCommand {
                 ConsoleEvent.warning(
                     "Details of distributed build analysis: %s",
                     relativePathToSummaryFile.toString()));
+        distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
 
         exitCode = localBuildExitCode;
       }

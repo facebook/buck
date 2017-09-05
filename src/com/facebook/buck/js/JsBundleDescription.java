@@ -216,17 +216,19 @@ public class JsBundleDescription
       BuildRuleResolver resolver,
       JsBundle jsBundle,
       String rDotJavaPackage) {
+    if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
+      return new Aapt2Compile(
+          buildTarget,
+          projectFilesystem,
+          ImmutableSortedSet.of(jsBundle),
+          jsBundle.getSourcePathToResources());
+    }
 
     BuildRuleParams params =
         new BuildRuleParams(
             () -> ImmutableSortedSet.of(),
             () -> ImmutableSortedSet.of(jsBundle),
             ImmutableSortedSet.of());
-
-    if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
-      return new Aapt2Compile(
-          buildTarget, projectFilesystem, params, jsBundle.getSourcePathToResources());
-    }
 
     return new AndroidResource(
         buildTarget,

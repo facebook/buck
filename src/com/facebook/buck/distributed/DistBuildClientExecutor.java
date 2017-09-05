@@ -315,8 +315,18 @@ public class DistBuildClientExecutor {
     distBuildClientStats.startTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
 
     postDistBuildStatusEvent(eventBus, finalJob, buildSlaveStatusList, "FETCHING LOG DIRS");
+
+    distBuildClientStats.startTimer(PUBLISH_BUILD_SLAVE_FINISHED_STATS);
     ListenableFuture<?> slaveFinishedStatsFuture =
         publishBuildSlaveFinishedStatsEvent(finalJob, eventBus, networkExecutorService);
+    slaveFinishedStatsFuture =
+        Futures.transform(
+            slaveFinishedStatsFuture,
+            f -> {
+              distBuildClientStats.stopTimer(PUBLISH_BUILD_SLAVE_FINISHED_STATS);
+              return f;
+            });
+
     materializeSlaveLogDirs(finalJob);
     try {
       slaveFinishedStatsFuture.get();

@@ -37,6 +37,7 @@ import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -64,8 +65,11 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -73,6 +77,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -100,7 +105,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected final Clock clock;
   protected final Ansi ansi;
   private final Locale locale;
-  protected final boolean showTextInAllCaps;
+  private final boolean showTextInAllCaps;
+  private final int numberOfSlowRulesToShow;
+  private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
 
   protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
 
@@ -167,12 +174,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Clock clock,
       Locale locale,
       ExecutionEnvironment executionEnvironment,
-      Boolean showTextInAllCaps) {
+      boolean showTextInAllCaps,
+      int numberOfSlowRulesToShow) {
     this.console = console;
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
     this.showTextInAllCaps = showTextInAllCaps;
+    this.numberOfSlowRulesToShow = numberOfSlowRulesToShow;
+    this.timeSpentMillisecondsInRules = new HashMap<>();
 
     this.projectBuildFileParseStarted = null;
     this.projectBuildFileParseFinished = null;
@@ -245,9 +255,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
+  protected Optional<Double> getEstimatedProgressOfParsingBuckFiles() {
     if (progressEstimator.isPresent()) {
-      return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
+      return progressEstimator.get().getEstimatedProgressOfParsingBuckFiles();
     } else {
       return Optional.empty();
     }
@@ -357,10 +367,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected void logHttpCacheUploads(ImmutableList.Builder<String> lines) {
     if (firstHttpCacheUploadScheduled.get() != null) {
       boolean isFinished = httpShutdownEvent != null;
-      lines.add(
-          String.format(
-              "[%s] HTTP CACHE UPLOAD...%s%s",
-              isFinished ? "-" : "+", isFinished ? "FINISHED " : "", renderHttpUploads()));
+      String line = "HTTP CACHE UPLOAD" + (isFinished ? ": FINISHED " : "... ");
+      line += renderHttpUploads();
+      lines.add(line);
     }
   }
 
@@ -394,12 +403,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     long completedRunTimesMs = getTotalCompletedTimeFromEventPairs(eventPairs);
     long currentlyRunningTime = getWorkingTimeFromLastStartUntilNow(eventPairs, currentMillis);
     boolean stillRunning = currentlyRunningTime >= 0;
-    String parseLine = (stillRunning ? "[+] " : "[-] ") + prefix + "...";
+    String parseLine = prefix;
     long elapsedTimeMs = completedRunTimesMs - offsetMs;
     if (stillRunning) {
+      parseLine += "... ";
       elapsedTimeMs += currentlyRunningTime;
     } else {
-      parseLine += convertToAllCapsIfNeeded("Finished ");
+      parseLine += convertToAllCapsIfNeeded(": finished in ");
       if (progress.isPresent()) {
         progress = Optional.of(1.0);
       }
@@ -409,7 +419,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     parseLine += formatElapsedTime(elapsedTimeMs);
     if (progress.isPresent()) {
-      parseLine += " [" + Math.round(progress.get() * 100) + "%]";
+      parseLine += " (" + Math.round(progress.get() * 100) + "%)";
     }
     if (suffix.isPresent()) {
       parseLine += " " + suffix.get();
@@ -657,7 +667,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       columns.add(
           String.format(
               locale,
-              "%d/%d " + convertToAllCapsIfNeeded("Jobs"),
+              "%d/%d " + convertToAllCapsIfNeeded("jobs"),
               numRulesCompleted.get(),
               ruleCount.get()));
       CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
@@ -665,25 +675,23 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       columns.add(
           String.format(
               locale,
-              "%d " + convertToAllCapsIfNeeded("Updated"),
+              "%d " + convertToAllCapsIfNeeded("updated"),
               cacheRateStats.getUpdatedRulesCount()));
       if (ruleCount.orElse(0) > 0) {
         columns.add(
             String.format(
                 locale,
-                "%d [%.1f%%] " + convertToAllCapsIfNeeded("Cache miss"),
-                cacheRateStats.getCacheMissCount(),
+                "%.1f%% " + convertToAllCapsIfNeeded("cache miss"),
                 cacheRateStats.getCacheMissRate()));
         if (cacheRateStats.getCacheErrorCount() > 0) {
           columns.add(
               String.format(
                   locale,
-                  "%d [%.1f%%] " + convertToAllCapsIfNeeded("Cache errors"),
-                  cacheRateStats.getCacheErrorCount(),
+                  "%.1f%% " + convertToAllCapsIfNeeded("cache errors"),
                   cacheRateStats.getCacheErrorRate()));
         }
       }
-      jobSummary = "(" + Joiner.on(", ").join(columns) + ")";
+      jobSummary = Joiner.on(", ").join(columns);
     }
 
     return Strings.isNullOrEmpty(jobSummary) ? Optional.empty() : Optional.of(jobSummary);
@@ -691,7 +699,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected String getNetworkStatsLine(@Nullable BuildEvent.Finished finishedEvent) {
     String parseLine =
-        (finishedEvent != null ? "[-] " : "[+] ") + convertToAllCapsIfNeeded("Downloading") + "...";
+        finishedEvent != null
+            ? convertToAllCapsIfNeeded("Downloaded")
+            : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
     if (finishedEvent != null) {
       Pair<Double, SizeUnit> avgDownloadSpeed = networkStatsKeeper.getAverageDownloadSpeed();
@@ -699,25 +709,34 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           SizeUnit.getHumanReadableSize(avgDownloadSpeed.getFirst(), avgDownloadSpeed.getSecond());
       columns.add(
           String.format(
-              locale, "%s/S " + "AVG", SizeUnit.toHumanReadableString(readableSpeed, locale)));
+              locale,
+              "%s/" + convertToAllCapsIfNeeded("sec") + " " + convertToAllCapsIfNeeded("avg"),
+              convertToAllCapsIfNeeded(SizeUnit.toHumanReadableString(readableSpeed, locale))));
     } else {
       Pair<Double, SizeUnit> downloadSpeed = networkStatsKeeper.getDownloadSpeed();
       Pair<Double, SizeUnit> readableDownloadSpeed =
           SizeUnit.getHumanReadableSize(downloadSpeed.getFirst(), downloadSpeed.getSecond());
       columns.add(
           String.format(
-              locale, "%s/S", SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
+              locale,
+              "%s/" + convertToAllCapsIfNeeded("sec"),
+              SizeUnit.toHumanReadableString(readableDownloadSpeed, locale)));
     }
     Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
     Pair<Double, SizeUnit> readableBytesDownloaded =
         SizeUnit.getHumanReadableSize(bytesDownloaded.getFirst(), bytesDownloaded.getSecond());
     columns.add(
         String.format(
-            locale, "TOTAL: %s", SizeUnit.toHumanReadableString(readableBytesDownloaded, locale)));
+            locale,
+            "%d " + convertToAllCapsIfNeeded("artifacts"),
+            networkStatsKeeper.getDownloadedArtifactDownloaded()));
     columns.add(
         String.format(
-            locale, "%d Artifacts", networkStatsKeeper.getDownloadedArtifactDownloaded()));
-    return parseLine + " " + "(" + Joiner.on(", ").join(columns) + ")";
+            locale,
+            "%s",
+            convertToAllCapsIfNeeded(
+                SizeUnit.toHumanReadableString(readableBytesDownloaded, locale))));
+    return parseLine + " " + Joiner.on(", ").join(columns);
   }
 
   @Subscribe
@@ -746,6 +765,19 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
+    if (numberOfSlowRulesToShow != 0) {
+      synchronized (timeSpentMillisecondsInRules) {
+        UnflavoredBuildTarget unflavoredTarget =
+            finished.getBuildRule().getBuildTarget().getUnflavoredBuildTarget();
+        Long value = timeSpentMillisecondsInRules.get(unflavoredTarget);
+        if (value == null) {
+          value = 0L;
+        }
+        value = value + finished.getDuration().getWallMillisDuration();
+        timeSpentMillisecondsInRules.put(unflavoredTarget, value);
+      }
+    }
+
     if (finished.getStatus() != BuildRuleStatus.CANCELED) {
       if (progressEstimator.isPresent()) {
         progressEstimator.get().didFinishRule();
@@ -857,8 +889,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected String renderHttpUploads() {
     long bytesUploaded = httpArtifactTotalBytesUploaded.longValue();
     String humanReadableBytesUploaded =
-        SizeUnit.toHumanReadableString(
-            SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES), locale);
+        convertToAllCapsIfNeeded(
+            SizeUnit.toHumanReadableString(
+                SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES), locale));
     int scheduled = httpArtifactUploadsScheduledCount.get();
     int complete = httpArtifactUploadedCount.get();
     int failed = httpArtifactUploadFailedCount.get();
@@ -870,6 +903,50 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           humanReadableBytesUploaded, complete, failed, uploading, pending);
     } else {
       return humanReadableBytesUploaded;
+    }
+  }
+
+  protected void showTopSlowBuildRules(ImmutableList.Builder<String> lines) {
+    if (numberOfSlowRulesToShow == 0 || buildFinished == null) {
+      return;
+    }
+
+    Comparator<UnflavoredBuildTarget> comparator =
+        new Comparator<UnflavoredBuildTarget>() {
+          @Override
+          public int compare(UnflavoredBuildTarget target1, UnflavoredBuildTarget target2) {
+            Long elapsedTime1 =
+                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target1));
+            Long elapsedTime2 =
+                Preconditions.checkNotNull(timeSpentMillisecondsInRules.get(target2));
+            long delta = elapsedTime2 - elapsedTime1;
+            if (delta < 0L) {
+              return -1;
+            } else if (delta > 0L) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }
+        };
+
+    lines.add(String.format(""));
+    synchronized (timeSpentMillisecondsInRules) {
+      if (timeSpentMillisecondsInRules.size() == 0) {
+        lines.add(String.format("Top slow rules: Buck didn't spend time in rules."));
+      } else {
+        lines.add(String.format("Top slow rules"));
+        Stream<UnflavoredBuildTarget> keys =
+            timeSpentMillisecondsInRules.keySet().stream().sorted(comparator);
+        keys.limit(numberOfSlowRulesToShow)
+            .forEachOrdered(
+                target -> {
+                  lines.add(
+                      String.format(
+                          "    %s: %s",
+                          target, formatElapsedTime(timeSpentMillisecondsInRules.get(target))));
+                });
+      }
     }
   }
 

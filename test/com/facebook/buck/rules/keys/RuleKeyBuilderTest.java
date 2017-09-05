@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -266,7 +267,7 @@ public class RuleKeyBuilderTest {
   }
 
   // This ugliness is necessary as we don't have mocks in Buck unit tests.
-  private static class FakeBuildRuleResolver extends BuildRuleResolver {
+  private static class FakeBuildRuleResolver extends DefaultBuildRuleResolver {
     private final Map<BuildTarget, BuildRule> ruleMap;
 
     public FakeBuildRuleResolver(Map<BuildTarget, BuildRule> ruleMap) {

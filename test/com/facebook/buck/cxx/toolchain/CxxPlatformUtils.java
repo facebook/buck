@@ -28,6 +28,7 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
@@ -79,8 +80,8 @@ public class CxxPlatformUtils {
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL)))
           .setStrip(DEFAULT_TOOL)
-          .setAr(new GnuArchiver(DEFAULT_TOOL))
-          .setRanlib(DEFAULT_TOOL)
+          .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
+          .setRanlib(new ConstantToolProvider(DEFAULT_TOOL))
           .setSymbolNameTool(new PosixNmSymbolNameTool(DEFAULT_TOOL))
           .setSharedLibraryExtension("so")
           .setSharedLibraryVersionedExtensionFormat("so.%s")
@@ -117,7 +118,8 @@ public class CxxPlatformUtils {
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root)
       throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
         ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP

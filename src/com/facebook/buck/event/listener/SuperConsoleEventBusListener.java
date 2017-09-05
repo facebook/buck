@@ -159,6 +159,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Set<String> actionGraphCacheMessage = new HashSet<>();
 
+  /** Maximum width of the terminal. */
+  private final int outputMaxColumns;
+
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
       Console console,
@@ -200,7 +203,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long minimumDurationMillisecondsToShowActionGraph,
       long minimumDurationMillisecondsToShowWatchman,
       boolean hideEmptyDownload) {
-    super(console, clock, locale, executionEnvironment, false);
+    super(console, clock, locale, executionEnvironment, false, config.getNumberOfSlowRulesToShow());
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
     this.webServer = webServer;
@@ -242,6 +245,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // Using LinkedHashMap because we want a predictable iteration order.
     this.distBuildSlaveTracker = new LinkedHashMap<>();
+
+    int outputMaxColumns = 80;
+    Optional<String> columnsStr = executionEnvironment.getenv("COLUMNS");
+    if (columnsStr.isPresent()) {
+      try {
+        outputMaxColumns = Integer.parseInt(columnsStr.get());
+      } catch (NumberFormatException e) {
+        LOG.debug(
+            "the environment variable COLUMNS did not contain a valid value: %s", columnsStr.get());
+      }
+    }
+    this.outputMaxColumns = outputMaxColumns;
   }
 
   /** Schedules a runnable that updates the console output at a fixed interval. */
@@ -270,7 +285,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting
   synchronized void render() {
     LOG.verbose("Rendering");
-    String lastRenderClear = clearLastRender();
+    int previousNumLinesPrinted = lastNumLinesPrinted;
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
     ImmutableList<String> logLines = createLogRenderLines();
     lastNumLinesPrinted = lines.size();
@@ -287,15 +302,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         stderrDirty = console.getStdErr().isDirty();
         if (stdoutDirty || stderrDirty) {
           stopRenderScheduler();
-        } else if (!lastRenderClear.isEmpty() || !lines.isEmpty() || !logLines.isEmpty()) {
-          Iterable<String> renderedLines =
-              Iterables.concat(
-                  MoreIterables.zipAndConcat(logLines, Iterables.cycle("\n")),
-                  ansi.asNoWrap(MoreIterables.zipAndConcat(lines, Iterables.cycle("\n"))));
-          StringBuilder fullFrame = new StringBuilder(lastRenderClear);
-          for (String part : renderedLines) {
-            fullFrame.append(part);
-          }
+        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
+          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
           console.getStdErr().getRawStream().print(fullFrame);
         }
       }
@@ -304,6 +312,43 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       LOG.debug(
           "Stopping console output (stdout dirty %s, stderr dirty %s).", stdoutDirty, stderrDirty);
     }
+  }
+
+  private String renderFullFrame(
+      ImmutableList<String> logLines, ImmutableList<String> lines, int previousNumLinesPrinted) {
+    int currentNumLines = lines.size();
+
+    Iterable<String> renderedLines =
+        Iterables.concat(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle(ansi.clearLine()), logLines, Iterables.cycle("\n")),
+            ansi.asNoWrap(
+                MoreIterables.zipAndConcat(
+                    Iterables.cycle(ansi.clearLine()), lines, Iterables.cycle("\n"))));
+
+    // Number of lines remaining to clear because of old output once we displayed
+    // the new output.
+    int remainingLinesToClear =
+        previousNumLinesPrinted > currentNumLines ? previousNumLinesPrinted - currentNumLines : 0;
+
+    StringBuilder fullFrame = new StringBuilder();
+    // We move the cursor back to the top.
+    for (int i = 0; i < previousNumLinesPrinted; i++) {
+      fullFrame.append(ansi.cursorPreviousLine(1));
+    }
+    // We display the new output.
+    for (String part : renderedLines) {
+      fullFrame.append(part);
+    }
+    // We clear the remaining lines of the old output.
+    for (int i = 0; i < remainingLinesToClear; i++) {
+      fullFrame.append(ansi.clearLine() + "\n");
+    }
+    // We move the cursor at the end of the new output.
+    for (int i = 0; i < remainingLinesToClear; i++) {
+      fullFrame.append(ansi.cursorPreviousLine(1));
+    }
+    return fullFrame.toString();
   }
 
   /**
@@ -332,7 +377,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         currentTimeMillis,
         /* offsetMs */ 0L,
         buckFilesParsingEvents.values(),
-        getEstimatedProgressOfProcessingBuckFiles(),
+        getEstimatedProgressOfParsingBuckFiles(),
         Optional.of(this.minimumDurationMillisecondsToShowParse),
         lines);
 
@@ -343,7 +388,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             currentTimeMillis,
             /* offsetMs */ 0L,
             actionGraphEvents.values(),
-            getEstimatedProgressOfProcessingBuckFiles(),
+            getEstimatedProgressOfParsingBuckFiles(),
             Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
 
@@ -384,7 +429,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (distBuildStarted != null) {
       long distBuildMs =
           logEventPair(
-              "DISTBUILD",
+              "Distributed build",
               getOptionalDistBuildLineSuffix(),
               currentTimeMillis,
               0,
@@ -420,13 +465,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long buildStartedTime = buildStarted.getTimestamp();
     long buildFinishedTime =
         buildFinished != null ? buildFinished.getTimestamp() : currentTimeMillis;
-    Collection<EventPair> parsingEvents =
+    Collection<EventPair> filteredBuckFilesParsingEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesParsingEvents.values());
-    Collection<EventPair> processingEvents =
+    Collection<EventPair> filteredActionGraphEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
     long offsetMs =
-        getTotalCompletedTimeFromEventPairs(parsingEvents)
-            + getTotalCompletedTimeFromEventPairs(processingEvents);
+        getTotalCompletedTimeFromEventPairs(filteredBuckFilesParsingEvents)
+            + getTotalCompletedTimeFromEventPairs(filteredActionGraphEvents);
 
     long totalBuildMs =
         logEventPair(
@@ -442,7 +487,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
     getBuildTraceURLLine(lines);
-    getBuildTimeLine(lines);
+    getTotalTimeLine(lines);
+    showTopSlowBuildRules(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
       MultiStateRenderer renderer =
@@ -450,6 +496,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              outputMaxColumns,
               buildRuleMinimumDurationMillis,
               threadsToRunningStep,
               buildRuleThreadTracker);
@@ -474,6 +521,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              outputMaxColumns,
               threadsToRunningTestSummaryEvent,
               threadsToRunningTestStatusMessageEvent,
               threadsToRunningStep,
@@ -507,10 +555,22 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
-  private void getBuildTimeLine(ImmutableList.Builder<String> lines) {
-    if (buildStarted != null & buildFinished != null) {
-      long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
-      lines.add("    Total time: " + formatElapsedTime(durationMs));
+  private void getTotalTimeLine(ImmutableList.Builder<String> lines) {
+    if (projectGenerationStarted == null) {
+      // project generation never started
+      // we only output total time if build started and finished
+      if (buildStarted != null && buildFinished != null) {
+        long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
+        lines.add("  Total time: " + formatElapsedTime(durationMs));
+      }
+    } else {
+      // project generation started, it may or may not contain a build
+      // we wait for generation to finish to output time
+      if (projectGenerationFinished != null) {
+        long durationMs =
+            projectGenerationFinished.getTimestamp() - projectGenerationStarted.getTimestamp();
+        lines.add("  Total time: " + formatElapsedTime(durationMs));
+      }
     }
   }
 
@@ -520,9 +580,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     synchronized (distBuildStatusLock) {
       if (!distBuildStatus.isPresent()) {
-        columns.add("STATUS: INIT");
+        columns.add("status: init");
       } else {
-        columns.add("STATUS: " + distBuildStatus.get().getStatus());
+        columns.add("status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
         int totalFilesMaterialized = 0;
@@ -546,34 +606,34 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
           columns.add(
               String.format(
-                  "%d [%.1f%%] CACHE MISS",
+                  "%d [%.1f%%] cache miss",
                   aggregatedCacheStats.getCacheMissCount(),
                   aggregatedCacheStats.getCacheMissRate()));
 
           if (aggregatedCacheStats.getCacheErrorCount() != 0) {
             columns.add(
                 String.format(
-                    "%d [%.1f%%] CACHE ERRORS",
+                    "%d [%.1f%%] cache errors",
                     aggregatedCacheStats.getCacheErrorCount(),
                     aggregatedCacheStats.getCacheErrorRate()));
           }
         }
 
         if (totalUploadErrorsCount > 0) {
-          columns.add(String.format("%d UPLOAD ERRORS", totalUploadErrorsCount));
+          columns.add(String.format("%d upload errors", totalUploadErrorsCount));
         }
 
         if (totalFilesMaterialized > 0) {
-          columns.add(String.format("%d FILES MATERIALIZED", totalFilesMaterialized));
+          columns.add(String.format("%d files materialized", totalFilesMaterialized));
         }
 
         if (distBuildStatus.get().getMessage().isPresent()) {
-          columns.add("[" + distBuildStatus.get().getMessage().get() + "]");
+          columns.add(distBuildStatus.get().getMessage().get());
         }
       }
     }
 
-    parseLine = "(" + Joiner.on(", ").join(columns) + ")";
+    parseLine = Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
@@ -617,7 +677,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     if (useCompressedLine) {
       lineBuilder.delete(0, lineBuilder.length());
-      lineBuilder.append(" |=> ");
+      lineBuilder.append(" - ");
       lineBuilder.append(threadsWithShortStatus);
       if (fullLines == 0) {
         lineBuilder.append(String.format(" %s:", renderer.getExecutorCollectionLabel()));
@@ -652,19 +712,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       return Optional.empty();
     }
-  }
-
-  /**
-   * @return A string of ansi characters that will clear the last set of lines printed by {@link
-   *     SuperConsoleEventBusListener#createRenderLinesAtTime(long)}.
-   */
-  private String clearLastRender() {
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < lastNumLinesPrinted; ++i) {
-      result.append(ansi.cursorPreviousLine(1));
-      result.append(ansi.clearLine());
-    }
-    return result.toString();
   }
 
   @Override
@@ -868,6 +915,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
+    if (console.getVerbosity().isSilent() && !event.getLevel().equals(Level.SEVERE)) {
+      return;
+    }
     logEvents.add(event);
   }
 
@@ -877,6 +927,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   private void printInfoDirectlyOnce(String line) {
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     if (!actionGraphCacheMessage.contains(line)) {
       logEvents.add(ConsoleEvent.info(line));
       actionGraphCacheMessage.add(line);
@@ -933,7 +986,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   @SuppressWarnings("unused")
   public void daemonNewInstance(DaemonEvent.NewDaemonInstance event) {
-    printInfoDirectlyOnce("Buck is creating the action graph.");
     parsingStatus = Optional.of("daemonNewInstance");
   }
 

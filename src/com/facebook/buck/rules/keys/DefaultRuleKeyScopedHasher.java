@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.keys.hasher.CountingRuleKeyHasher;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 
 /**
@@ -28,7 +30,7 @@ import com.facebook.buck.util.Scope;
 public class DefaultRuleKeyScopedHasher<HASH> implements RuleKeyScopedHasher {
   private final CountingRuleKeyHasher<HASH> hasher;
 
-  public DefaultRuleKeyScopedHasher(CountingRuleKeyHasher<HASH> hasher) {
+  DefaultRuleKeyScopedHasher(CountingRuleKeyHasher<HASH> hasher) {
     this.hasher = hasher;
   }
 

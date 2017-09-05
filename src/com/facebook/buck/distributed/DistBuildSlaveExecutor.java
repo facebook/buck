@@ -36,9 +36,11 @@ import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
+import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -83,7 +85,7 @@ public class DistBuildSlaveExecutor {
 
   @Nullable private ActionGraphAndResolver actionGraphAndResolver;
 
-  @Nullable private DistBuildCachingEngineDelegate cachingBuildEngineDelegate;
+  @Nullable private CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
   public DistBuildSlaveExecutor(DistBuildExecutorArgs args) {
     this.args = args;
@@ -209,7 +211,7 @@ public class DistBuildSlaveExecutor {
     return actionGraphAndResolver;
   }
 
-  public DistBuildCachingEngineDelegate createBuildEngineDelegate(
+  public CachingBuildEngineDelegate createBuildEngineDelegate(
       DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
@@ -219,14 +221,22 @@ public class DistBuildSlaveExecutor {
     StackedFileHashCaches caches = createStackedFileHashesAndPreload();
     tracker.stopTimer(SlaveEvents.SOURCE_FILE_PRELOAD_TIME);
     createActionGraphAndResolver(tracker);
-    SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(Preconditions.checkNotNull(actionGraphAndResolver).getResolver());
-    cachingBuildEngineDelegate =
-        new DistBuildCachingEngineDelegate(
-            DefaultSourcePathResolver.from(ruleFinder),
-            ruleFinder,
-            caches.remoteStateCache,
-            caches.materializingCache);
+
+    DistBuildConfig remoteConfig = new DistBuildConfig(args.getRemoteRootCellConfig());
+    if (remoteConfig.materializeSourceFilesOnDemand()) {
+      SourcePathRuleFinder ruleFinder =
+          new SourcePathRuleFinder(
+              Preconditions.checkNotNull(actionGraphAndResolver).getResolver());
+      cachingBuildEngineDelegate =
+          new DistBuildCachingEngineDelegate(
+              DefaultSourcePathResolver.from(ruleFinder),
+              ruleFinder,
+              caches.remoteStateCache,
+              caches.materializingCache);
+    } else {
+      cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(caches.remoteStateCache);
+    }
+
     return cachingBuildEngineDelegate;
   }
 
@@ -396,6 +406,7 @@ public class DistBuildSlaveExecutor {
                   .setCellPathResolver(args.getRootCell().getCellPathResolver())
                   .setBuildCellRootPath(args.getRootCell().getRoot())
                   .setProcessExecutor(processExecutor)
+                  .setEnvironment(distBuildConfig.getEnvironment())
                   .build();
           Build build =
               new Build(

@@ -51,6 +51,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
@@ -66,6 +67,7 @@ import com.facebook.buck.zip.Unzip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -135,6 +137,19 @@ class CachingBuildRuleBuilder {
   private final BuildId buildId;
 
   private final BuildRuleScopeManager buildRuleScopeManager;
+
+  // These fields contain data that may be computed during a build.
+
+  /**
+   * This is used to weakly cache the manifest RuleKeyAndInputs. It is not set until after the
+   * rule's deps are built.
+   *
+   * <p>This is necessary because RuleKeyAndInputs may be very large, and due to the async nature of
+   * CachingBuildRuleBuilder, there may be many BuildRules that are in-between two stages that both
+   * need the manifest's RuleKeyAndInputs. If we just stored the RuleKeyAndInputs directly, we could
+   * use too much memory.
+   */
+  @Nullable private Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
 
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
@@ -289,7 +304,7 @@ class CachingBuildRuleBuilder {
 
               @Override
               public void onFailure(@Nonnull Throwable thrown) {
-                throw new AssertionError("Dead code");
+                throw new AssertionError("Dead code", thrown);
               }
             },
             serviceByAdjustingDefaultWeightsTo(
@@ -391,6 +406,7 @@ class CachingBuildRuleBuilder {
 
           // Push an updated manifest to the cache.
           if (useManifestCaching()) {
+            // TODO(cjhopman): This should be able to use manifestKeySupplier.
             Optional<RuleKeyAndInputs> manifestKey = calculateManifestKey(eventBus);
             if (manifestKey.isPresent()) {
               buildInfoRecorder.addBuildMetadata(
@@ -658,18 +674,25 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
-    Optional<RuleKeyAndInputs> manifestKey;
-    try (Scope scope = buildRuleScope()) {
-      manifestKey = calculateManifestKey(eventBus);
+    manifestBasedKeySupplier =
+        MoreSuppliers.weakMemoize(
+            () -> {
+              try (Scope scope = buildRuleScope()) {
+                return calculateManifestKey(eventBus);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+    Optional<RuleKey> manifestKey =
+        manifestBasedKeySupplier.get().map(RuleKeyAndInputs::getRuleKey);
+    if (!manifestKey.isPresent()) {
+      return Futures.immediateFuture(Optional.empty());
     }
-    if (manifestKey.isPresent()) {
-      buildInfoRecorder.addBuildMetadata(
-          BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().getRuleKey().toString());
-      try (Scope scope = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
-        return performManifestBasedCacheFetch(manifestKey.get());
-      }
+    buildInfoRecorder.addBuildMetadata(
+        BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().toString());
+    try (Scope scope = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
+      return performManifestBasedCacheFetch(manifestKey.get());
     }
-    return Futures.immediateFuture(Optional.empty());
   }
 
   private Optional<BuildResult> checkMatchingDepfile() throws IOException {
@@ -1366,7 +1389,7 @@ class CachingBuildRuleBuilder {
 
   // Fetch an artifact from the cache using manifest-based caching.
   private ListenableFuture<Optional<BuildResult>> performManifestBasedCacheFetch(
-      RuleKeyAndInputs manifestKey) {
+      RuleKey manifestCacheKey) {
     Preconditions.checkArgument(useManifestCaching());
 
     final LazyPath tempFile =
@@ -1378,11 +1401,13 @@ class CachingBuildRuleBuilder {
         };
 
     return Futures.transformAsync(
-        fetch(artifactCache, manifestKey.getRuleKey(), tempFile),
+        fetch(artifactCache, manifestCacheKey, tempFile),
         manifestResult -> {
           if (!manifestResult.getType().isSuccess()) {
             return Futures.immediateFuture(Optional.empty());
           }
+          RuleKeyAndInputs manifestKey =
+              Preconditions.checkNotNull(manifestBasedKeySupplier).get().get();
 
           Path manifestPath = getManifestPath(rule);
 

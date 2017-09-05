@@ -218,10 +218,10 @@ public class HaskellGhciDescription
           public ImmutableSet<BuildRule> visit(BuildRule rule) {
             ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
             if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
+              HaskellCompileDep haskellRule = (HaskellCompileDep) rule;
               HaskellCompileInput ci =
-                  ((HaskellCompileDep) rule)
-                      .getCompileInput(
-                          platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
+                  haskellRule.getCompileInput(
+                      platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
@@ -229,11 +229,11 @@ public class HaskellGhciDescription
 
               if (rule instanceof HaskellLibrary) {
                 haskellPackages.addAll(ci.getPackages());
-                traverse.addAll(rule.getBuildDeps());
               } else if (rule instanceof PrebuiltHaskellLibrary) {
                 prebuiltHaskellPackages.addAll(ci.getPackages());
-                traverse.addAll(rule.getBuildDeps());
               }
+
+              traverse.addAll(haskellRule.getCompileDeps(platform));
             }
 
             return traverse.build();

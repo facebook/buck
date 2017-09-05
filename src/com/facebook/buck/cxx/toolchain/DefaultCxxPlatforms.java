@@ -167,8 +167,9 @@ public class DefaultCxxPlatforms {
             linkerType, new ConstantToolProvider(new HashedFileTool(defaultLinker))),
         ImmutableList.of(),
         new HashedFileTool(getExecutablePath("strip", DEFAULT_STRIP, env)),
-        archiver,
-        new HashedFileTool(getExecutablePath(ranlibCommand, DEFAULT_RANLIB, env)),
+        ArchiverProvider.from(archiver),
+        new ConstantToolProvider(
+            new HashedFileTool(getExecutablePath(ranlibCommand, DEFAULT_RANLIB, env))),
         new PosixNmSymbolNameTool(new HashedFileTool(getExecutablePath("nm", DEFAULT_NM, env))),
         ImmutableList.of(),
         ImmutableList.of(),

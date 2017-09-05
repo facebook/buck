@@ -272,6 +272,7 @@
         <include name="${bootstrapper.src.dir}/**/*.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
+        <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
       </javac-params>
@@ -321,6 +322,7 @@
       <javac-params>
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
+        <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
       </javac-params>

@@ -36,6 +36,8 @@ public class DistBuildClientStatsTrackerTest {
   private static final int MATERIALIZE_SLAVE_LOGS_DURATION = 8;
   private static final int LOCAL_PREPARATION_DURATION = 9;
   private static final int LOCAL_GRAPH_CONSTRUCTION_DURATION = 10;
+  private static final int POST_BUILD_ANALYSIS_DURATION_MS = 11;
+  private static final int PUBLISH_BUILD_SLAVE_FINISHED_STATS_DURATION_MS = 12;
   private static final int MISSING_FILES_UPLOADED_COUNT = 2001;
   private static final String BUCK_CLIENT_ERROR_MESSAGE = "Some error message";
   private static final String BUILD_LABEL = "unit_test";
@@ -112,6 +114,7 @@ public class DistBuildClientStatsTrackerTest {
     initializeCommonStats(tracker);
     tracker.setPerformedLocalBuild(true);
     tracker.setDurationMs(PERFORM_LOCAL_BUILD, PERFORM_LOCAL_BUILD_DURATION);
+    tracker.setDurationMs(POST_BUILD_ANALYSIS, POST_BUILD_ANALYSIS_DURATION_MS);
     tracker.setLocalBuildExitCode(LOCAL_BUILD_EXIT_CODE);
     DistBuildClientStats stats = tracker.generateStats();
     assertCommonStats(stats);
@@ -120,6 +123,8 @@ public class DistBuildClientStatsTrackerTest {
     Assert.assertTrue(stats.localBuildExitCode().isPresent());
     Assert.assertEquals(LOCAL_BUILD_EXIT_CODE, (long) stats.localBuildExitCode().get());
     Assert.assertEquals(PERFORM_LOCAL_BUILD_DURATION, (long) stats.localBuildDurationMs().get());
+    Assert.assertEquals(
+        POST_BUILD_ANALYSIS_DURATION_MS, (long) stats.postBuildAnalysisDurationMs().get());
   }
 
   private void initializeCommonStats(DistBuildClientStatsTracker tracker) {
@@ -137,6 +142,8 @@ public class DistBuildClientStatsTrackerTest {
     tracker.setDurationMs(UPLOAD_BUCK_DOT_FILES, UPLOAD_BUCK_DOT_FILES_DURATION);
     tracker.setDurationMs(SET_BUCK_VERSION, SET_BUCK_VERSION_DURATION);
     tracker.setDurationMs(MATERIALIZE_SLAVE_LOGS, MATERIALIZE_SLAVE_LOGS_DURATION);
+    tracker.setDurationMs(
+        PUBLISH_BUILD_SLAVE_FINISHED_STATS, PUBLISH_BUILD_SLAVE_FINISHED_STATS_DURATION_MS);
 
     tracker.setMissingFilesUploadedCount(MISSING_FILES_UPLOADED_COUNT);
   }
@@ -167,6 +174,9 @@ public class DistBuildClientStatsTrackerTest {
     Assert.assertEquals(
         POST_DISTRIBUTED_BUILD_LOCAL_STEPS_DURATION,
         (long) stats.postDistBuildLocalStepsDurationMs().get());
+    Assert.assertEquals(
+        PUBLISH_BUILD_SLAVE_FINISHED_STATS_DURATION_MS,
+        (long) stats.publishBuildSlaveFinishedStatsDurationMs().get());
     Assert.assertFalse(stats.buckClientError());
   }
 }

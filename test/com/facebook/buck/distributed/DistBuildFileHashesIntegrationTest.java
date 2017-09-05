@@ -203,7 +203,7 @@ public class DistBuildFileHashesIntegrationTest {
 
   private DistBuildFileHashes createDistBuildFileHashes(TargetGraph targetGraph, Cell rootCell)
       throws InterruptedException, IOException {
-    ActionGraphCache cache = new ActionGraphCache(new BroadcastEventListener());
+    ActionGraphCache cache = new ActionGraphCache();
     ActionGraphAndResolver actionGraphAndResolver =
         cache.getActionGraph(
             BuckEventBusForTests.newInstance(), true, false, targetGraph, KEY_SEED);

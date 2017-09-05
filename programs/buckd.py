@@ -6,7 +6,7 @@ import sys
 import zipfile
 
 from buck_logging import setup_logging
-from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
+from buck_tool import BuckToolException, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from subprocutils import propagate_failure
 
@@ -36,8 +36,6 @@ if __name__ == "__main__":
     try:
         setup_logging()
         propagate_failure(main(sys.argv))
-    except RestartBuck:
-        os.execvp(os.path.join(os.path.dirname(THIS_DIR), 'bin', 'buckd'), sys.argv)
     except (BuckToolException, NoBuckConfigFoundException) as e:
         logging.info(str(e))
         sys.exit(1)

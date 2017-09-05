@@ -105,7 +105,7 @@ class CodeSignStep implements Step {
             processExecutorParams,
             options,
             /* stdin */ Optional.empty(),
-            /* timeOutMs */ Optional.of((long) 120000),
+            /* timeOutMs */ Optional.of((long) 300000),
             /* timeOutHandler */ Optional.empty());
 
     if (result.isTimedOut()) {

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -76,7 +77,8 @@ public class PomIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private final BuildRuleResolver ruleResolver =
-      new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      new DefaultBuildRuleResolver(
+          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   private final SourcePathResolver pathResolver =
       DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 

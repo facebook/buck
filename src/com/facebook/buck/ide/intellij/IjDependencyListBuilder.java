@@ -19,7 +19,6 @@ package com.facebook.buck.ide.intellij;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -143,7 +142,7 @@ public class IjDependencyListBuilder {
   private ImmutableSet.Builder<DependencyEntry> builder;
 
   public IjDependencyListBuilder() {
-    builder = ImmutableSortedSet.naturalOrder();
+    builder = ImmutableSet.builder();
   }
 
   public void addModule(String name, Scope scope, boolean exported) {

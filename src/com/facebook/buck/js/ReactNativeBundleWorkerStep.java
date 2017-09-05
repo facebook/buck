@@ -28,7 +28,7 @@ import java.util.Optional;
 
 public class ReactNativeBundleWorkerStep extends WorkerShellStep {
 
-  public ReactNativeBundleWorkerStep(
+  ReactNativeBundleWorkerStep(
       ProjectFilesystem filesystem,
       Path tmpDir,
       ImmutableList<String> jsPackagerCommand,

@@ -83,7 +83,6 @@ public class AbstractNetworkCacheTest {
                 .setHttpFetchExecutorService(service)
                 .setErrorTextTemplate("super error message")
                 .setMaxStoreSizeBytes(maxArtifactSizeBytes)
-                .setDistributedBuildModeEnabled(false)
                 .build()) {
           @Override
           protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
@@ -94,6 +93,12 @@ public class AbstractNetworkCacheTest {
           protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
             storeCallCount.incrementAndGet();
             return StoreResult.builder().build();
+          }
+
+          @Override
+          protected MultiFetchResult multiFetchImpl(
+              Iterable<AbstractAsynchronousCache.FetchRequest> requests) throws IOException {
+            return null;
           }
         };
 

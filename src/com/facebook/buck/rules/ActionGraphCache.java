@@ -20,8 +20,6 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -54,12 +52,6 @@ public class ActionGraphCache {
 
   @Nullable private HashCode lastTargetGraphHash;
 
-  private BroadcastEventListener broadcastEventListener;
-
-  public ActionGraphCache(BroadcastEventListener broadcastEventListener) {
-    this.broadcastEventListener = broadcastEventListener;
-  }
-
   /**
    * It returns an {@link ActionGraphAndResolver}. If the {@code targetGraph} exists in the cache it
    * returns a cached version of the {@link ActionGraphAndResolver}, else returns a new one and
@@ -81,6 +73,7 @@ public class ActionGraphCache {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndResolver out;
+    ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
       if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
@@ -114,10 +107,11 @@ public class ActionGraphCache {
           lastActionGraph = freshActionGraph;
         }
       }
+      finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
+      return out;
     } finally {
-      eventBus.post(ActionGraphEvent.finished(started));
+      eventBus.post(finished);
     }
-    return out;
   }
 
   /**
@@ -153,7 +147,7 @@ public class ActionGraphCache {
 
     ActionGraphAndResolver actionGraph = createActionGraph(eventBus, transformer, targetGraph);
 
-    eventBus.post(ActionGraphEvent.finished(started));
+    eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
     return actionGraph;
   }
 
@@ -161,7 +155,8 @@ public class ActionGraphCache {
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph) {
-    final BuildRuleResolver resolver = new BuildRuleResolver(targetGraph, transformer, eventBus);
+    final BuildRuleResolver resolver =
+        new DefaultBuildRuleResolver(targetGraph, transformer, eventBus);
 
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
@@ -274,19 +269,6 @@ public class ActionGraphCache {
       LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
     }
     invalidateCache();
-    switch (event.getKind()) {
-      case CREATE:
-        broadcastEventListener.broadcast(
-            WatchmanStatusEvent.fileCreation(event.getPath().toString()));
-        return;
-      case DELETE:
-        broadcastEventListener.broadcast(
-            WatchmanStatusEvent.fileDeletion(event.getPath().toString()));
-        return;
-      case MODIFY:
-        throw new IllegalStateException("Should have handled MODIFY event earlier.");
-    }
-    throw new IllegalStateException("Unhandled case: " + event.getKind());
   }
 
   @Subscribe
@@ -295,7 +277,6 @@ public class ActionGraphCache {
       LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
     }
     invalidateCache();
-    broadcastEventListener.broadcast(WatchmanStatusEvent.overflow(event.getReason()));
   }
 
   private void invalidateCache() {

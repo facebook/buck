@@ -24,6 +24,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +47,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   private final SourcePathRuleFinder ruleFinder;
   private final long inputSizeLimit;
 
-  public DefaultDependencyFileRuleKeyFactory(
+  private DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
@@ -143,8 +144,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       // `@AddToRuleKey Optional<ImmutableList<SourcePath>> myPaths` would have to be accompanied by
       // its structure information: `myPaths;Optional;List`. This adds additional overhead of
       // bookkeeping that information and counters any benefits caching would provide here.
-      try (Scope appendableScope =
-          getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
+      try (Scope ignored = getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
         try (RuleKeyScopedHasher.ContainerScope tupleScope =
             getScopedHasher().containerScope(RuleKeyHasher.Container.TUPLE)) {
           AlterRuleKeys.amendKey(new ScopedRuleKeyObjectSink(tupleScope, this), appendable);

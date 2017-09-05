@@ -95,7 +95,11 @@ public class HaskellLibraryIntegrationTest {
     workspace.runBuckBuild("//:first_order_a_pass#default," + getLinkFlavor()).assertSuccess();
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckBuild("//:first_order_a_fail#default," + getLinkFlavor()).assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("It is a member of the hidden package"));
+    assertThat(
+        result.getStderr(),
+        Matchers.anyOf(
+            Matchers.containsString("It is a member of the hidden package"), // < GHC 8.1
+            Matchers.containsString("Could not find module"))); // > GHC 8.1
   }
 
   @Test

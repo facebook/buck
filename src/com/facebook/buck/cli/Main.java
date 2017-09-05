@@ -108,6 +108,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PkillProcessManager;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -170,6 +171,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -720,8 +722,7 @@ public final class Main {
         ListeningExecutorService httpWriteExecutorService =
             getHttpWriteExecutorService(cacheBuckConfig);
         ListeningExecutorService httpFetchExecutorService =
-            getHttpFetchExecutorService(
-                cacheBuckConfig, buckConfig.getMaximumResourceAmounts().getNetworkIO());
+            getHttpFetchExecutorService(cacheBuckConfig);
         ScheduledExecutorService counterAggregatorExecutor =
             Executors.newSingleThreadScheduledExecutor(
                 new CommandThreadFactory("CounterAggregatorThread"));
@@ -854,6 +855,28 @@ public final class Main {
                   commandEventListeners
                   );
 
+          if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
+            ImmutableList<Path> localConfigFiles =
+                rootCell
+                    .getAllCells()
+                    .stream()
+                    .map(
+                        cell ->
+                            cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
+                    .filter(path -> Files.isRegularFile(path))
+                    .collect(MoreCollectors.toImmutableList());
+            if (localConfigFiles.size() > 0) {
+              String message =
+                  localConfigFiles.size() == 1
+                      ? "Using local configuration:"
+                      : "Using local configurations:";
+              buildEventBus.post(ConsoleEvent.warning(message));
+              for (Path localConfigFile : localConfigFiles) {
+                buildEventBus.post(ConsoleEvent.warning(String.format("- %s", localConfigFile)));
+              }
+            }
+          }
+
           if (commandMode == CommandMode.RELEASE && buckConfig.isPublicAnnouncementsEnabled()) {
             PublicAnnouncementManager announcementManager =
                 new PublicAnnouncementManager(
@@ -868,6 +891,7 @@ public final class Main {
 
           // This needs to be after the registration of the event listener so they can pick it up.
           if (watchmanFreshInstanceAction == WatchmanWatcher.FreshInstanceAction.NONE) {
+            LOG.debug("new Buck daemon");
             buildEventBus.post(DaemonEvent.newDaemonInstance());
           }
 
@@ -955,7 +979,7 @@ public final class Main {
           }
 
           if (actionGraphCache == null) {
-            actionGraphCache = new ActionGraphCache(broadcastEventListener);
+            actionGraphCache = new ActionGraphCache();
           }
 
           if (typeCoercerFactory == null || parser == null) {
@@ -1249,11 +1273,11 @@ public final class Main {
   }
 
   private static ListeningExecutorService getHttpFetchExecutorService(
-      ArtifactCacheBuckConfig buckConfig, int maximumNetworkIOResources) {
+      ArtifactCacheBuckConfig buckConfig) {
     return listeningDecorator(
         MostExecutors.newMultiThreadExecutor(
             new ThreadFactoryBuilder().setNameFormat("cache-fetch-%d").build(),
-            Math.min(maximumNetworkIOResources, (int) buckConfig.getThreadPoolSize())));
+            buckConfig.getHttpFetchConcurrency()));
   }
 
   private static ConsoleHandlerState.Writer createWriterForConsole(
@@ -1503,6 +1527,7 @@ public final class Main {
         clock,
         testResultSummaryVerbosity,
         config.getHideSucceededRulesInLogMode(),
+        config.getNumberOfSlowRulesToShow(),
         locale,
         testLogPath,
         executionEnvironment);

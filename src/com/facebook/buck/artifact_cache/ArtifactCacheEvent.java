@@ -33,6 +33,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   public enum Operation {
     FETCH,
+    MULTI_FETCH,
     STORE,
   }
 

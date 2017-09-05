@@ -126,7 +126,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -156,7 +156,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
@@ -196,7 +196,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -226,7 +226,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -265,7 +265,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
-            BuckEventBusForTests.newInstance(new FakeClock(0)),
+            BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
             "This is an error",
             "parser",
             ImmutableMap.<String, Object>builder()
@@ -305,7 +305,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
-            BuckEventBusForTests.newInstance(new FakeClock(0)),
+            BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
             "This is an error",
             "parser",
             ImmutableMap.<String, Object>builder()
@@ -336,7 +336,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
+    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
       @Subscribe
@@ -408,7 +408,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
-            BuckEventBusForTests.newInstance(new FakeClock(0)),
+            BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE),
             "This is an error",
             "parser",
             ImmutableMap.<String, Object>builder()

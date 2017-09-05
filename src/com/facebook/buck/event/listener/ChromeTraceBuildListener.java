@@ -46,6 +46,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.step.StepEvent;
+import com.facebook.buck.test.external.ExternalTestRunEvent;
+import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
@@ -763,13 +765,47 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Subscribe
+  public void externalTestSpecCalculationStarted(ExternalTestSpecCalculationEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck",
+        started.getCategory(),
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of("target", started.getBuildTarget().getFullyQualifiedName()),
+        started);
+  }
+
+  @Subscribe
+  public void externalTestSpecCalculationFinished(
+      ExternalTestSpecCalculationEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck",
+        finished.getCategory(),
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.of("target", finished.getBuildTarget().getFullyQualifiedName()),
+        finished);
+  }
+
+  @Subscribe
+  public void externalTestRunStarted(ExternalTestRunEvent.Started started) {
+    writeChromeTraceEvent(
+        "buck", started.getCategory(), ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of(), started);
+  }
+
+  @Subscribe
+  public void externalTestRunFinished(ExternalTestRunEvent.Finished finished) {
+    writeChromeTraceEvent(
+        "buck", finished.getCategory(), ChromeTraceEvent.Phase.END, ImmutableMap.of(), finished);
+  }
+
+  @Subscribe
   public void onWatchmanOverflow(WatchmanOverflowEvent event) {
     writeChromeTraceMetadataEvent(
         "watchman_overflow",
         ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
   }
 
-  private void writeChromeTraceEvent(
+  @VisibleForTesting
+  void writeChromeTraceEvent(
       String category,
       String name,
       ChromeTraceEvent.Phase phase,
@@ -788,9 +824,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     submitTraceEvent(chromeTraceEvent);
   }
 
-  private void writeChromeTraceMetadataEvent(
+  @VisibleForTesting
+  void writeChromeTraceMetadataEvent(
       String name, ImmutableMap<String, ? extends Object> arguments) {
-    long timestampInMicroseconds = TimeUnit.MILLISECONDS.toMicros(clock.currentTimeMillis());
+    long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(clock.nanoTime());
+    long threadTimestampInMicroseconds =
+        TimeUnit.NANOSECONDS.toMicros(clock.threadUserNanoTime(Thread.currentThread().getId()));
     ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
             /* category */ "buck",
@@ -799,7 +838,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             /* processId */ 0,
             /* threadId */ 0,
             /* microTime */ timestampInMicroseconds,
-            /* microThreadUserTime */ timestampInMicroseconds,
+            /* microThreadUserTime */ threadTimestampInMicroseconds,
             arguments);
     submitTraceEvent(chromeTraceEvent);
   }

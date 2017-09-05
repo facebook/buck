@@ -24,7 +24,6 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -95,7 +94,8 @@ public class TargetNodeFactory {
             .values()) {
       if (info.isDep()
           && info.isInput()
-          && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
+          && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
+          && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
             extraDepsBuilder, pathsBuilder, info, constructorArg);
       }
@@ -123,7 +123,7 @@ public class TargetNodeFactory {
         filesystem,
         pathsBuilder.build(),
         declaredDeps,
-        ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
+        extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
         cellRoots,
         visibilityPatterns,

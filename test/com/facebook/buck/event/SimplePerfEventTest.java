@@ -214,7 +214,7 @@ public class SimplePerfEventTest {
     PerfEventId parentId = PerfEventId.of("Parent");
 
     SimplePerfEventListener listener = new SimplePerfEventListener();
-    SettableFakeClock clock = new SettableFakeClock(0L, 0L);
+    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(clock);
     eventBus.register(listener);
 

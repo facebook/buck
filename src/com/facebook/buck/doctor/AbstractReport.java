@@ -16,7 +16,7 @@
 
 package com.facebook.buck.doctor;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.Configs;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.SourceControlInfo;
@@ -194,7 +194,7 @@ public abstract class AbstractReport {
     Path rootPath = filesystem.getRootPath();
     ImmutableSet<Path> knownUserLocalConfigs =
         ImmutableSet.of(
-            Paths.get(BuckConfig.BUCK_CONFIG_OVERRIDE_FILE_NAME),
+            Paths.get(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME),
             LogConfigPaths.LOCAL_PATH,
             Paths.get(".watchman.local"),
             Paths.get(".buckjavaargs.local"),

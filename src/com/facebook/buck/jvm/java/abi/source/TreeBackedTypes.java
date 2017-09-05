@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.SourceCodeWillNotCompileException;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.util.Arrays;
 import java.util.List;
@@ -43,11 +42,9 @@ import javax.lang.model.util.Types;
  */
 class TreeBackedTypes implements Types {
   private final Types javacTypes;
-  private final TreeBackedElements elements;
 
-  TreeBackedTypes(Types javacTypes, TreeBackedElements elements) {
+  TreeBackedTypes(Types javacTypes) {
     this.javacTypes = javacTypes;
-    this.elements = elements;
   }
 
   @Override
@@ -259,6 +256,10 @@ class TreeBackedTypes implements Types {
     return javacTypes.getNoType(kind);
   }
 
+  /* package */ StandalonePackageType getPackageType(ArtificialPackageElement element) {
+    return new StandalonePackageType(element);
+  }
+
   @Override
   public ArrayType getArrayType(TypeMirror componentType) {
     if (isArtificialType(componentType)) {
@@ -299,76 +300,8 @@ class TreeBackedTypes implements Types {
     return javacTypes.getDeclaredType(containing, typeElem, typeArgs);
   }
 
-  @Nullable
-  public TypeMirror getCanonicalType(@Nullable TypeMirror typeMirror) {
-    if (typeMirror == null) {
-      return null;
-    }
-
-    switch (typeMirror.getKind()) {
-      case ARRAY:
-        {
-          ArrayType arrayType = (ArrayType) typeMirror;
-          return getArrayType(getCanonicalType(arrayType.getComponentType()));
-        }
-      case TYPEVAR:
-        {
-          TypeVariable typeVar = (TypeVariable) typeMirror;
-          return elements.getCanonicalElement(typeVar.asElement()).asType();
-        }
-      case WILDCARD:
-        {
-          WildcardType wildcardType = (WildcardType) typeMirror;
-          return getWildcardType(
-              getCanonicalType(wildcardType.getExtendsBound()),
-              getCanonicalType(wildcardType.getSuperBound()));
-        }
-      case DECLARED:
-        {
-          DeclaredType declaredType = (DeclaredType) typeMirror;
-
-          TypeMirror enclosingType = declaredType.getEnclosingType();
-          DeclaredType canonicalEnclosingType =
-              enclosingType.getKind() != TypeKind.NONE
-                  ? (DeclaredType) getCanonicalType(enclosingType)
-                  : null;
-          TypeElement canonicalElement =
-              (TypeElement) elements.getCanonicalElement(declaredType.asElement());
-          TypeMirror[] canonicalTypeArgs =
-              declaredType
-                  .getTypeArguments()
-                  .stream()
-                  .map(this::getCanonicalType)
-                  .toArray(TypeMirror[]::new);
-
-          return getDeclaredType(canonicalEnclosingType, canonicalElement, canonicalTypeArgs);
-        }
-      case PACKAGE:
-      case ERROR:
-        throw new SourceCodeWillNotCompileException();
-      case BOOLEAN:
-      case BYTE:
-      case SHORT:
-      case INT:
-      case LONG:
-      case CHAR:
-      case FLOAT:
-      case DOUBLE:
-      case VOID:
-      case NONE:
-      case NULL:
-        return typeMirror;
-      case EXECUTABLE:
-      case OTHER:
-      case UNION:
-      case INTERSECTION:
-      default:
-        throw new UnsupportedOperationException();
-    }
-  }
-
   private boolean isArtificialElement(Element element) {
-    return element instanceof TreeBackedElement;
+    return element instanceof ArtificialElement;
   }
 
   private boolean isArtificialType(@Nullable TypeMirror typeMirror) {

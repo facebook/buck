@@ -144,12 +144,11 @@ public class AndroidResourceDescription
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
           buildTarget);
-      params =
-          params
-              .withDeclaredDeps(
-                  ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())))
-              .withoutExtraDeps();
-      return new Aapt2Compile(buildTarget, projectFilesystem, params, resDir.get());
+      return new Aapt2Compile(
+          buildTarget,
+          projectFilesystem,
+          ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
+          resDir.get());
     }
 
     params =

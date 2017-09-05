@@ -24,6 +24,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -181,7 +182,7 @@ public class JsTestScenario {
     public JsTestScenario build() {
       final TargetGraph graph = TargetGraphFactory.newInstance(nodes);
       final BuildRuleResolver resolver =
-          new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+          new DefaultBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
       for (TargetNode<?, ?> node : nodes) {
         resolver.requireRule(node.getBuildTarget());
       }

@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -72,7 +73,7 @@ public class AndroidInstrumentationApkDescriptionTest {
         TargetGraphFactory.newInstance(
             transitiveDep, dep, keystore, androidBinary, androidInstrumentationApk);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule transitiveDepRule = ruleResolver.requireRule(transitiveDep.getBuildTarget());
     AndroidInstrumentationApk androidInstrumentationApkRule =
         (AndroidInstrumentationApk) ruleResolver.requireRule(target);

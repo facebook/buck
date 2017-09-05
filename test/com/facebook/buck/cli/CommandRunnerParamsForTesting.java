@@ -129,7 +129,7 @@ public class CommandRunnerParamsForTesting {
             new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()))
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setInvocationInfo(Optional.empty())
-        .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
+        .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesFactory(
             new KnownBuildRuleTypesFactory(
                 processExecutor, androidDirectoryResolver, sdkEnvironment))

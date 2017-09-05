@@ -141,6 +141,15 @@ public class AndroidReactNativeLibraryIntegrationTest {
   }
 
   @Test
+  public void testNumberOfThreadsDoesNotAffectRuleKey() throws IOException {
+    workspace.runBuckBuild("-c", "build.threads=1", "//js:app").assertSuccess();
+
+    workspace.runBuckBuild("-c", "build.threads=10", "//js:app").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetHadMatchingRuleKey("//js:app");
+  }
+
+  @Test
   public void testEditingUsedJSFileTriggersRebuild() throws IOException {
     workspace.runBuckBuild("//apps/sample:app").assertSuccess();
 

@@ -17,26 +17,11 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathRuleFinder;
 import java.util.Optional;
 
-public class InputRuleResolver {
-  private SourcePathRuleFinder ruleFinder;
+/** Created by cjhopman on 8/21/17. */
+public interface InputRuleResolver {
+  Optional<BuildRule> resolve(InputPath path);
 
-  public InputRuleResolver(SourcePathRuleFinder ruleFinder) {
-    this.ruleFinder = ruleFinder;
-  }
-
-  public Optional<BuildRule> resolve(InputPath path) {
-    return ruleFinder.getRule(path.getSourcePath());
-  }
-
-  public Optional<BuildRule> resolve(InputData data) {
-    Optional<SourcePath> sp = data.getSourcePath();
-    if (!sp.isPresent()) {
-      return Optional.empty();
-    }
-    return ruleFinder.getRule(sp.get());
-  }
+  Optional<BuildRule> resolve(InputData data);
 }

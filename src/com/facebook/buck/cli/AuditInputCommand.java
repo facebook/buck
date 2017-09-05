@@ -107,7 +107,7 @@ public class AuditInputCommand extends AbstractCommand {
                   params.getBuckEventBus(),
                   params.getCell(),
                   getEnableParserProfiling(),
-                  pool.getExecutor(),
+                  pool.getListeningExecutorService(),
                   targets);
     } catch (BuildFileParseException | BuildTargetException e) {
       params

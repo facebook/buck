@@ -209,7 +209,7 @@ public class AutoSparseIntegrationTest {
     // Only include the parent directory, not the file
     delegate.exists(repoPath.resolve("not_hidden_subdir/file_in_subdir_not_hidden"));
 
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance(new FakeClock(0));
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance(FakeClock.DO_NOT_CARE);
     AutoSparseIntegrationTest.CapturingAutoSparseStateEventListener listener =
         new AutoSparseIntegrationTest.CapturingAutoSparseStateEventListener();
     eventBus.register(listener);

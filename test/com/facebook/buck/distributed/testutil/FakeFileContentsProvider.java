@@ -21,6 +21,8 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -63,8 +65,7 @@ public class FakeFileContentsProvider implements FileContentsProvider {
   @Override
   public void close() throws IOException {}
 
-  @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
+  private boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
       throws IOException {
     filesystem.writeContentsToPath(
         Preconditions.checkNotNull(
@@ -74,5 +75,15 @@ public class FakeFileContentsProvider implements FileContentsProvider {
             String.join(", ", fileContents.keySet())),
         filesystem.getPathRelativeToProjectRoot(targetAbsPath).get());
     return true;
+  }
+
+  @Override
+  public ListenableFuture<Boolean> materializeFileContentsAsync(
+      BuildJobStateFileHashEntry entry, Path targetAbsPath) {
+    try {
+      return Futures.immediateFuture(materializeFileContents(entry, targetAbsPath));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

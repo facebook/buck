@@ -612,3 +612,13 @@ java_test(
         "//third-party/java/thrift:libthrift",
     ],
 )
+
+python_test(
+    name = "buck_run",
+    srcs = [
+        "buck_run_test.py",
+    ],
+    deps = [
+        "//test/com/facebook/buck/testutil/integration:integration-py",
+    ],
+)

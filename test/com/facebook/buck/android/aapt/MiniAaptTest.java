@@ -28,7 +28,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -70,7 +70,7 @@ public class MiniAaptTest {
   private final SourcePathResolver resolver =
       DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
-              new BuildRuleResolver(
+              new DefaultBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -639,7 +639,7 @@ public class MiniAaptTest {
     aapt.processFileNamesInDirectory(filesystem, Paths.get("res/transition-v19"));
     aapt.processValues(
         filesystem,
-        new DefaultBuckEventBus(new FakeClock(0), new BuildId("")),
+        new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId("")),
         Paths.get("res/values"));
 
     assertEquals(

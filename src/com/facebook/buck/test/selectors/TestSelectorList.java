@@ -140,7 +140,7 @@ public class TestSelectorList {
     }
 
     private Builder addRawSelector(String rawSelector) {
-      if (rawSelector.charAt(0) == '@') {
+      if (rawSelector.charAt(0) == ':') {
         try {
           String pathString = rawSelector.substring(1);
           if (pathString.isEmpty()) {

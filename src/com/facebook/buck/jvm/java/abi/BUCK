@@ -28,6 +28,7 @@ java_library(
         "//src/com/facebook/buck/zip:stream",
         "//third-party/java/asm:asm",
         "//third-party/java/guava:guava",
+        "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jsr:jsr305",
     ],
 )

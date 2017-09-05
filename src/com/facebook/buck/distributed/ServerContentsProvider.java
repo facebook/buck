@@ -18,56 +18,57 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.log.Logger;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import javax.annotation.concurrent.GuardedBy;
 
 public class ServerContentsProvider implements FileContentsProvider {
 
   private static final Logger LOG = Logger.get(ServerContentsProvider.class);
 
-  private static final long MULTI_FETCH_BUFFER_PERIOD_MS = 100;
-  private static final int MULTI_FETCH_BUFFER_MAX_SIZE = 8;
-  private static final long SERVER_FETCH_MAX_TIMEOUT_SECONDS = 15;
+  private static final long MULTI_FETCH_BUFFER_PERIOD_MS = 25;
+  private static final int MULTI_FETCH_BUFFER_MAX_SIZE = 40;
 
   private final DistBuildService service;
   private final int multiFetchBufferMaxSize;
   private final FileMaterializationStatsTracker statsTracker;
+  private final ListeningExecutorService networkThreadPool;
 
   private final Object multiFetchLock = new Object();
 
   @GuardedBy("multiFetchLock")
-  private List<String> hashCodesToFetch;
+  private Set<String> hashCodesToFetch;
 
   @GuardedBy("multiFetchLock")
-  private CompletableFuture<Map<String, byte[]>> multiFetchFuture;
+  private SettableFuture<Map<String, byte[]>> multiFetchFuture;
 
   private ScheduledFuture<?> scheduledBufferProcessor;
 
   public ServerContentsProvider(
       DistBuildService service,
       ScheduledExecutorService networkScheduler,
+      ListeningExecutorService networkThreadPool,
       FileMaterializationStatsTracker statsTracker,
       Optional<Long> multiFetchBufferPeriodMs,
       Optional<Integer> multiFetchBufferMaxSize) {
     this(
         service,
         networkScheduler,
+        networkThreadPool,
         statsTracker,
         multiFetchBufferPeriodMs.orElse(MULTI_FETCH_BUFFER_PERIOD_MS),
         multiFetchBufferMaxSize.orElse(MULTI_FETCH_BUFFER_MAX_SIZE));
@@ -76,28 +77,23 @@ public class ServerContentsProvider implements FileContentsProvider {
   public ServerContentsProvider(
       DistBuildService service,
       ScheduledExecutorService networkScheduler,
+      ListeningExecutorService networkThreadPool,
       FileMaterializationStatsTracker statsTracker,
       long multiFetchBufferPeriodMs,
       int multiFetchBufferMaxSize) {
     this.service = service;
     this.multiFetchBufferMaxSize = multiFetchBufferMaxSize;
     this.statsTracker = statsTracker;
+    this.networkThreadPool = networkThreadPool;
 
     synchronized (multiFetchLock) {
-      hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
-      multiFetchFuture = new CompletableFuture<>();
+      hashCodesToFetch = new HashSet<>();
+      multiFetchFuture = SettableFuture.create();
     }
 
     scheduledBufferProcessor =
         networkScheduler.scheduleAtFixedRate(
-            () -> {
-              Stopwatch stopwatch = Stopwatch.createStarted();
-              int numFilesFetched = this.processFileBuffer(false);
-              long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
-              if (numFilesFetched > 0) {
-                this.statsTracker.recordPeriodicCasMultiFetch(elapsedMs);
-              }
-            },
+            this::makePeriodicMultiFetchRequest,
             0,
             multiFetchBufferPeriodMs,
             TimeUnit.MILLISECONDS);
@@ -116,9 +112,30 @@ public class ServerContentsProvider implements FileContentsProvider {
     }
   }
 
+  /** Blocking call */
+  private void makePeriodicMultiFetchRequest() {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    int numFilesFetched = this.processFileBuffer(false);
+    long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
+    if (numFilesFetched > 0) {
+      this.statsTracker.recordPeriodicCasMultiFetch(elapsedMs);
+    }
+  }
+
+  /** Blocking call */
+  private void makeMultiFetchRequestIfBufferIsFull() {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    int numFilesFetched = this.processFileBuffer(true);
+    long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
+    if (numFilesFetched > 0) {
+      statsTracker.recordFullBufferCasMultiFetch(elapsedMs);
+    }
+  }
+
+  /** Blocking call */
   private int processFileBuffer(boolean onlyIfBufferIsFull) {
-    List<String> hashCodes;
-    CompletableFuture<Map<String, byte[]>> resultFuture;
+    Set<String> hashCodes;
+    SettableFuture<Map<String, byte[]>> resultFuture;
 
     synchronized (multiFetchLock) {
       if (onlyIfBufferIsFull && hashCodesToFetch.size() < multiFetchBufferMaxSize) {
@@ -130,13 +147,16 @@ public class ServerContentsProvider implements FileContentsProvider {
       }
 
       hashCodes = hashCodesToFetch;
-      hashCodesToFetch = new ArrayList<>(multiFetchBufferMaxSize);
+      hashCodesToFetch = new HashSet<>();
       resultFuture = multiFetchFuture;
-      multiFetchFuture = new CompletableFuture<>();
+      multiFetchFuture = SettableFuture.create();
     }
 
     try {
-      resultFuture.complete(service.multiFetchSourceFiles(hashCodes));
+      LOG.info(
+          "Fetching [%d] source files from the CAS (%s).",
+          hashCodes.size(), onlyIfBufferIsFull ? "buffer was full" : "scheduled");
+      resultFuture.set(service.multiFetchSourceFiles(hashCodes));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -144,44 +164,45 @@ public class ServerContentsProvider implements FileContentsProvider {
     return hashCodes.size();
   }
 
-  @VisibleForTesting
-  Future<byte[]> fetchFileContentsAsync(BuildJobStateFileHashEntry entry) {
+  private ListenableFuture<byte[]> scheduleFileToBeFetched(BuildJobStateFileHashEntry entry) {
     Preconditions.checkState(
-        entry.isSetSha1(), String.format("File hash missing for file [%s]", entry.getPath()));
+        entry.isSetSha1(), String.format("File hash missing for file [%s].", entry.getPath()));
 
-    Future<byte[]> future;
+    ListenableFuture<byte[]> future;
     synchronized (multiFetchLock) {
+      LOG.verbose(
+          "Scheduling file to be fetched from the CAS: [%s] (SHA1: %s).",
+          entry.getPath(), entry.getSha1());
       hashCodesToFetch.add(entry.getSha1());
       future =
-          multiFetchFuture.thenApply(
+          Futures.transform(
+              multiFetchFuture,
               resultMap -> Preconditions.checkNotNull(resultMap).get(entry.getSha1()));
     }
 
-    // If the buffer has maxed out, fetch right away.
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    int numFilesFetched = this.processFileBuffer(true);
-    long elapsedMs = stopwatch.stop().elapsed(TimeUnit.MILLISECONDS);
-    if (numFilesFetched > 0) {
-      statsTracker.recordFullBufferCasMultiFetch(elapsedMs);
-    }
     return future;
   }
 
-  @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
-      throws IOException {
-    try {
-      byte[] fileContents =
-          fetchFileContentsAsync(entry).get(SERVER_FETCH_MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-      try (OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
-        outputStream.write(fileContents);
-      }
-
-    } catch (InterruptedException | ExecutionException e) {
-      LOG.error(e, "Unexpected error in fetching source file [%s]", entry.getPath());
-    } catch (TimeoutException e) {
-      throw new RuntimeException("Timed out while waiting to fetch the file from the server.", e);
+  private boolean writeFileContentsToPath(byte[] fileContents, Path targetAbsPath) {
+    try (OutputStream outputStream = InlineContentsProvider.newOutputStream(targetAbsPath)) {
+      outputStream.write(fileContents);
+      return true;
+    } catch (IOException e) {
+      LOG.error(e, "Unexpected error in writing file contents: [%s]", e.getMessage());
     }
-    return true;
+    return false;
+  }
+
+  @Override
+  public ListenableFuture<Boolean> materializeFileContentsAsync(
+      BuildJobStateFileHashEntry entry, Path targetAbsPath) {
+
+    ListenableFuture<byte[]> fileFuture = scheduleFileToBeFetched(entry);
+    // If the buffer is full, make a multi-fetch request using the thread pool.
+    // Don't block the calling thread.
+    networkThreadPool.submit(this::makeMultiFetchRequestIfBufferIsFull);
+
+    return Futures.transform(
+        fileFuture, (byte[] fileContents) -> writeFileContentsToPath(fileContents, targetAbsPath));
   }
 }

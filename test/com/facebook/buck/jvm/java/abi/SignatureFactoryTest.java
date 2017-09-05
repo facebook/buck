@@ -18,32 +18,45 @@ package com.facebook.buck.jvm.java.abi;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTestRunner;
+import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.objectweb.asm.signature.SignatureReader;
+import org.objectweb.asm.signature.SignatureWriter;
 
-@RunWith(CompilerTreeApiTestRunner.class)
+@RunWith(CompilerTreeApiParameterized.class)
 public class SignatureFactoryTest extends DescriptorAndSignatureFactoryTestBase {
-  private SignatureFactory signatureFactory;
+  @Test
+  public void testAllTheThings() throws Exception {
+    test(
+        () -> {
+          SignatureFactory signatureFactory = new SignatureFactory(new DescriptorFactory(elements));
+          List<String> errors =
+              getTestErrors(
+                  field -> treatDependencyBoundsAsInterfaces(field.signature),
+                  method -> treatDependencyBoundsAsInterfaces(method.signature),
+                  type -> treatDependencyBoundsAsInterfaces(type.signature),
+                  signatureFactory::getSignature);
 
-  @Override
-  public void setUp() throws IOException {
-    super.setUp();
-    signatureFactory = new SignatureFactory(new DescriptorFactory(elements));
+          assertTrue("Signature mismatch!\n\n" + Joiner.on('\n').join(errors), errors.isEmpty());
+        });
   }
 
-  @Test
-  public void testAllTheThings() throws IOException {
-    List<String> errors =
-        getTestErrors(
-            field -> field.signature,
-            method -> method.signature,
-            type -> type.signature,
-            signatureFactory::getSignature);
-
-    assertTrue("Signature mismatch!\n\n" + Joiner.on('\n').join(errors), errors.isEmpty());
+  /**
+   * We can't tell whether an inferred class is a class, interface, annotation, or enum. This is
+   * problematic for expressing generic type bounds, because the bytecode is different depending on
+   * whether it is a class or an interface. As it happens, it's safe (from the compiler's
+   * perspective) to treat everything as an interface. This method is used to rework the "expected"
+   * signature so that we can use the same test data for testing with and without deps.
+   */
+  private String treatDependencyBoundsAsInterfaces(String signature) {
+    if (signature == null) {
+      return null;
+    }
+    SignatureWriter writer = new SignatureWriter();
+    new SignatureReader(signature).accept(new SourceAbiCompatibleSignatureVisitor(writer));
+    return writer.toString();
   }
 }

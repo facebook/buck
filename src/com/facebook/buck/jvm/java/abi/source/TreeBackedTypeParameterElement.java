@@ -22,7 +22,6 @@ import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.TypeParameterElement;
@@ -36,6 +35,7 @@ import javax.lang.model.type.TypeMirror;
 class TreeBackedTypeParameterElement extends TreeBackedElement
     implements ArtificialTypeParameterElement {
   private final TypeParameterElement underlyingElement;
+  private final TypeParameterTree tree;
   private final StandaloneTypeVariable typeVar;
   @Nullable private List<TypeMirror> bounds;
 
@@ -47,6 +47,7 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
       PostEnterCanonicalizer canonicalizer) {
     super(underlyingElement, enclosingElement, treePath, canonicalizer);
     this.underlyingElement = underlyingElement;
+    this.tree = (TypeParameterTree) treePath.getLeaf();
     typeVar = new StandaloneTypeVariable(types, this);
 
     // In javac's implementation, enclosingElement does not have type parameters in the return
@@ -74,11 +75,11 @@ class TreeBackedTypeParameterElement extends TreeBackedElement
     if (bounds == null) {
       bounds =
           Collections.unmodifiableList(
-              underlyingElement
-                  .getBounds()
-                  .stream()
-                  .map(getCanonicalizer()::getCanonicalType)
-                  .collect(Collectors.toList()));
+              getCanonicalizer()
+                  .getCanonicalTypes(
+                      underlyingElement.getBounds(),
+                      getTreePath(),
+                      tree == null ? null : tree.getBounds()));
     }
 
     return bounds;

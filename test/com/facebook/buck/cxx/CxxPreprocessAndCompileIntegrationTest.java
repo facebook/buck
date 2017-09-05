@@ -688,4 +688,15 @@ public class CxxPreprocessAndCompileIntegrationTest {
             "cxx.untracked_headers_whitelist=" + "/usr/.*")
         .assertSuccess();
   }
+
+  @Test
+  public void languageFlagCanBeOverridden() throws IOException {
+    assumeTrue(
+        "Windows does not use gcc style language parameters.",
+        Platform.detect() != Platform.WINDOWS);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "override_lang", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:c-as-c").assertFailure();
+    workspace.runBuckBuild("//:c-as-cxx").assertSuccess();
+  }
 }

@@ -107,7 +107,7 @@ public class CacheCommand extends AbstractCommand {
     try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
-      WeightedListeningExecutorService executor = pool.getExecutor();
+      WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
 
       fakeOutParseEvents(params.getBuckEventBus());
 
@@ -185,6 +185,7 @@ public class CacheCommand extends AbstractCommand {
         return String.format("%s %s", typeString, cacheResult.getCacheError());
       case HIT:
         return String.format("%s %s", typeString, cacheResult.getCacheSource());
+      case SKIPPED:
       case MISS:
       case IGNORED:
       case LOCAL_KEY_UNCHANGED_HIT:

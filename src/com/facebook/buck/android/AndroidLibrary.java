@@ -97,7 +97,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Nullable BuildTarget abiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
-      ImmutableSortedSet<BuildTarget> tests) {
+      ImmutableSortedSet<BuildTarget> tests,
+      boolean requiredForSourceAbi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -110,7 +111,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarProvidedDeps,
         abiJar,
         mavenCoords,
-        tests);
+        tests,
+        requiredForSourceAbi);
     this.manifestFile = manifestFile;
   }
 
@@ -197,20 +199,24 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       @Override
       protected DefaultJavaLibrary build() {
-        return new AndroidLibrary(
-            libraryTarget,
-            projectFilesystem,
-            getFinalParams(),
-            sourcePathResolver,
-            getJarBuildStepsFactory(),
-            proguardConfig,
-            getFinalFullJarDeclaredDeps(),
-            fullJarExportedDeps,
-            fullJarProvidedDeps,
-            getAbiJar(),
-            mavenCoords,
-            androidManifest,
-            tests);
+        AndroidLibrary result =
+            new AndroidLibrary(
+                libraryTarget,
+                projectFilesystem,
+                getFinalParams(),
+                sourcePathResolver,
+                getJarBuildStepsFactory(),
+                proguardConfig,
+                getFinalFullJarDeclaredDeps(),
+                fullJarExportedDeps,
+                fullJarProvidedDeps,
+                getAbiJar(),
+                mavenCoords,
+                androidManifest,
+                tests,
+                getRequiredForSourceAbi());
+
+        return result;
       }
 
       @Override
@@ -225,9 +231,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             Optional.empty(), // ManifestFile for androidLibrary is something else
             postprocessClassesCommands,
             getAbiClasspath(),
-            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(javacOptions)),
+            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(getJavacOptions())),
             getFinalCompileTimeClasspathSourcePaths(),
-            classesToRemoveFromJar);
+            classesToRemoveFromJar,
+            getRequiredForSourceAbi());
       }
 
       protected DummyRDotJava buildDummyRDotJava() {
@@ -253,7 +260,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                               Iterables.concat(
                                   queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
                   getJavac(),
-                  javacOptions,
+                  getJavacOptions(),
                   DependencyMode.FIRST_ORDER,
                   /* forceFinalResourceIds */ false,
                   args.getResourceUnionPackage(),
@@ -293,7 +300,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Override
       protected ConfiguredCompiler buildConfiguredCompiler() {
         return getAndroidCompiler()
-            .configure(args, Preconditions.checkNotNull(javacOptions), buildRuleResolver);
+            .configure(args, Preconditions.checkNotNull(getJavacOptions()), buildRuleResolver);
       }
 
       protected ConfiguredCompilerFactory getAndroidCompiler() {

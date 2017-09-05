@@ -73,13 +73,13 @@ public class AuditTestsCommand extends AbstractCommand {
             new PerBuildState(
                 params.getParser(),
                 params.getBuckEventBus(),
-                pool.getExecutor(),
+                pool.getListeningExecutorService(),
                 params.getCell(),
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
-              params, parserState, pool.getExecutor(), getEnableParserProfiling());
+              params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());
       return QueryCommand.runMultipleQuery(
           params,
           env,

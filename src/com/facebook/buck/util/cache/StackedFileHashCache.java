@@ -226,4 +226,8 @@ public class StackedFileHashCache implements FileHashCache {
 
     return new StackedFileHashCache(decoratedCaches.build());
   }
+
+  public ImmutableList<? extends ProjectFileHashCache> getCaches() {
+    return caches;
+  }
 }

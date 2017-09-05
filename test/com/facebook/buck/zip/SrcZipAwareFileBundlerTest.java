@@ -20,7 +20,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -72,7 +72,7 @@ public class SrcZipAwareFileBundlerTest {
         FakeBuildContext.withSourcePathResolver(
             DefaultSourcePathResolver.from(
                 new SourcePathRuleFinder(
-                    new BuildRuleResolver(
+                    new DefaultBuildRuleResolver(
                         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())))),
         immutableStepList,
         dest,

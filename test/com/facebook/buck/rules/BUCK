@@ -1,6 +1,9 @@
 java_test(
     name = "rules",
-    srcs = glob(["*Test.java"]),
+    srcs = glob([
+        "*Test.java",
+        "modern/**/*.java",
+    ]),
     has_immutable_types = True,
     resources = glob(["testdata/**"]),
     deps = [
@@ -97,6 +100,7 @@ java_test(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",

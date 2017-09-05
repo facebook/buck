@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.randomizedtrial.WithProbability;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -123,6 +124,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String SCHEDULE_TYPE = "schedule_type";
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
+  static final String MULTI_FETCH = "multi_fetch";
+  private static final String MULTI_FETCH_LIMIT = "multi_fetch_limit";
+  private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
 
   public enum LoadBalancingType {
     SINGLE_SERVER,
@@ -141,9 +145,44 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     this.slbConfig = new SlbBuckConfig(buckConfig, CACHE_SECTION_NAME);
   }
 
+  public enum MultiFetchType implements WithProbability {
+    ENABLED(0.5),
+    DISABLED(0.5),
+    EXPERIMENT(0.0);
+    public static final MultiFetchType DEFAULT = DISABLED;
+
+    private final double probability;
+
+    MultiFetchType(double probability) {
+      this.probability = probability;
+    }
+
+    @Override
+    public double getProbability() {
+      return probability;
+    }
+  }
+
+  public MultiFetchType getMultiFetchType() {
+    return buckConfig
+        .getEnum(CACHE_SECTION_NAME, MULTI_FETCH, MultiFetchType.class)
+        .orElse(MultiFetchType.DEFAULT);
+  }
+
   @Override
   public BuckConfig getDelegate() {
     return buckConfig;
+  }
+
+  public int getHttpFetchConcurrency() {
+    return (int)
+        Math.min(buckConfig.getMaximumResourceAmounts().getNetworkIO(), getThreadPoolSize());
+  }
+
+  public int getMultiFetchLimit() {
+    return buckConfig
+        .getInteger(CACHE_SECTION_NAME, MULTI_FETCH_LIMIT)
+        .orElse(DEFAULT_MULTI_FETCH_LIMIT);
   }
 
   public String getRepository() {

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -53,9 +52,6 @@ public interface RuleKeyCache<V> {
 
   /** Invalidate the given inputs and all their transitive dependents. */
   void invalidateInputs(Iterable<RuleKeyInput> inputs);
-
-  /** Invalidate all inputs from any {@link ProjectFilesystem} matching the given relative path. */
-  void invalidateInputsMatchingRelativePath(Path path);
 
   /**
    * Invalidate all inputs *not* from the given {@link ProjectFilesystem}s and their transitive

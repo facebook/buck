@@ -150,13 +150,13 @@ class CxxPreprocessAndCompileStep implements Step {
             ? inputType.getPrecompiledHeaderLanguage().get()
             : inputType.getLanguage();
     return ImmutableList.<String>builder()
-        .addAll(command.getArguments())
         .addAll(
             (allowColorsInDiagnostics
                     ? compiler.getFlagsForColorDiagnostics()
                     : Optional.<ImmutableList<String>>empty())
                 .orElseGet(ImmutableList::of))
         .addAll(compiler.languageArgs(inputLanguage))
+        .addAll(command.getArguments())
         .addAll(
             sanitizer.getCompilationFlags(
                 compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
@@ -199,11 +199,35 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutor.Result result =
         new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
 
+    String err = getSanitizedStderr(result, context);
+    result =
+        new ProcessExecutor.Result(
+            result.getExitCode(), result.isTimedOut(), result.getStdout(), Optional.of(err));
     processResult(result, context);
     return result;
   }
 
   private void processResult(ProcessExecutor.Result result, ExecutionContext context)
+      throws IOException {
+    // If we generated any error output, print that to the console.
+    String err = result.getStderr().orElse("");
+    if (!err.isEmpty()) {
+      context
+          .getBuckEventBus()
+          .post(
+              createConsoleEvent(
+                  context,
+                  compiler.getFlagsForColorDiagnostics().isPresent(),
+                  result.getExitCode() == 0 ? Level.WARNING : Level.SEVERE,
+                  err));
+    }
+  }
+
+  /**
+   * @return The sanitized version of stderr captured during step execution. Sanitized output does
+   *     not include symlink references and other internal buck details.
+   */
+  private String getSanitizedStderr(ProcessExecutor.Result result, ExecutionContext context)
       throws IOException {
     String stdErr = compiler.getStderr(result).orElse("");
     Stream<String> lines = MoreStrings.lines(stdErr).stream();
@@ -232,18 +256,7 @@ class CxxPreprocessAndCompileStep implements Step {
     } else {
       err = lines.map(cxxErrorTransformer::transformLine).collect(Collectors.joining("\n"));
     }
-
-    // If we generated any error output, print that to the console.
-    if (!err.isEmpty()) {
-      context
-          .getBuckEventBus()
-          .post(
-              createConsoleEvent(
-                  context,
-                  compiler.getFlagsForColorDiagnostics().isPresent(),
-                  result.getExitCode() == 0 ? Level.WARNING : Level.SEVERE,
-                  err));
-    }
+    return err;
   }
 
   private static boolean isShowIncludeLine(String line) {

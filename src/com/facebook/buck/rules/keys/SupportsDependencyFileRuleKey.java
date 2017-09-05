@@ -41,8 +41,6 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * unconditionally in the rule key. Inputs that *are* in this list should be included in the rule
    * key if and only if they are actually being used for the rule. I.e. if they are present in the
    * dep-file listed by {@link #getInputsAfterBuildingLocally(BuildContext, CellPathResolver)}.
-   *
-   * @param pathResolver
    */
   Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver);
 
@@ -59,8 +57,6 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * present in the dep-file produced in the previous build, and yet if we run a local build now the
    * compiler may decide to use it. For that reason rule key needs to reflect existence of all such
    * files and change when a such a file gets added or removed.
-   *
-   * @param pathResolver
    */
   Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver);
 

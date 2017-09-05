@@ -24,49 +24,53 @@ public abstract class Foo {
   int[] primitiveArrayField;
 
   // Types
-  String topLevelClassField;
-  Map.Entry nestedClassField;
-  Object[] objectArrayField;
-  List<String> genericField;
-  List<?> wildcardField;
-  List<? super String> superWildcardField;
-  List<? extends Runnable> extendsWildcardField;
-  List<Set<String>> nestedGenericField;
-  List<String>[] genericArrayField;
-  Object[][] multiDimObjectArrayField;
+  Dependency topLevelClassField;
+  Dependency.Inner nestedClassField;
+  Dependency[] objectArrayField;
+  Dependency<String> genericField;
+  List<Dependency> genericField2;
+  Dependency<?> wildcardField;
+  Dependency<? super String> superWildcardField;
+  List<? super Dependency> superWildcardField2;
+  Dependency<? extends Runnable> extendsWildcardField;
+  List<? extends Dependency> extendsWildcardField2;
+  List<Dependency<String>> nestedGenericField;
+  List<Set<Dependency>> nestedGenericField2;
+  Dependency<String>[] genericArrayField;
+  Dependency[][] multiDimObjectArrayField;
 
   // Methods
-  abstract String parameterlessMethod();
+  abstract Dependency parameterlessMethod();
   abstract int methodWithParameters(int p1, int p2);
-  abstract void methodWithGenericParams(List<String> a, int b);
+  abstract void methodWithGenericParams(Dependency<String> a, int b);
+  abstract void methodWithGenericParams2(List<Dependency> a, int b);
   abstract <X, Y, Z> Z methodWithTypeVarParameters(X x, List<Y> y, Set<? extends Z> z);
-  abstract String parameterlessThrowingMethod() throws Exception;
+  abstract String parameterlessThrowingMethod() throws DependencyException;
   abstract <T extends Exception> void typevarThrowingMethod() throws T, Exception;
   abstract <T extends Exception> void nonGenericThrowingGenericMethod() throws Exception;
-  abstract List<String> genericReturningMethod();
+  abstract Dependency<String> genericReturningMethod();
+  abstract List<Dependency> genericReturningMethod2();
 
   // Type vars
-  abstract <T extends Runnable & CharSequence> void typeVarWithMultipleBounds(T t);
-  abstract <T extends CharSequence & Runnable> void typeVarWithMultipleBoundsInDifferentOrder(T t);
+  abstract <T extends Dependency & DependencyInterface> void typeVarWithClassAndInterfaceBounds(T t);
+  abstract <T extends Runnable & DependencyInterface> void typeVarWithMultipleBounds(T t);
+  abstract <T extends DependencyInterface & Runnable> void typeVarWithDifferentOrderBounds(T t);
 
   // Classes
   class NonGenericClass {}
   class SimpleGenericClass<T> {}
   interface SimpleGenericInterface<T> {}
-  abstract class ClassWithTypeVariableParameterizedSuper<T> extends ArrayList<T> {}
-  abstract class ClassWithParameterizedSuper extends ArrayList<Integer> {}
-  abstract class ClassWithParameterizedInterfaces implements List<Integer>, Comparable<String> {}
-  class ClassWithInterfaceBoundedTypeParameter<T extends Runnable & Collection> {}
-  class ClassWithClassBoundedTypeParameter<T extends ArrayList> {}
-  class ClassWithTypeVarBoundedTypeParameter<T extends U, U extends ArrayList> {}
+  abstract class ClassWithTypeVariableParameterizedSuper<T> extends Dependency<T> {}
+  abstract class ClassWithParameterizedSuper extends Dependency<Integer> {}
+  abstract class ClassWithParameterizedInterfaces
+      implements DependencyInterface<Integer>, Comparable<Dependency> {}
+  class ClassWithInterfaceBoundedTypeParameter<T extends DependencyInterface & Collection> {}
+  class ClassWithClassBoundedTypeParameter<T extends Dependency> {}
+  class ClassWithTypeVarBoundedTypeParameter<T extends U, U extends Dependency> {}
 
   // Weird stuff
-  class GenericClass<T> {
-    class GenericInnerClassInsideGeneric<U> {}
-    class NonGenericInnerClassInsideGeneric {}
-  }
-  GenericClass<Integer>.GenericInnerClassInsideGeneric<String> genericInnerClassInsideGenericField;
-  GenericClass<Integer>.NonGenericInnerClassInsideGeneric nonGenericInnerClassInsideGenericField;
-
-
+  Dependency<Integer>.NonGenericInner.GenericInnerer<String>
+      genericInnerClassInsideNonGenericInsideGenericField;
+  Dependency<Integer>.GenericInner<String> genericInnerClassInsideGenericField;
+  Dependency<Integer>.NonGenericInner nonGenericInnerClassInsideGenericField;
 }

@@ -34,7 +34,7 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -62,7 +62,7 @@ public class JavaBuckConfigTest {
   private static final SourcePathResolver PATH_RESOLVER =
       DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
-              new BuildRuleResolver(
+              new DefaultBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();

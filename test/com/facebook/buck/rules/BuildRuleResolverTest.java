@@ -44,7 +44,8 @@ public class BuildRuleResolverTest {
   @Test
   public void testBuildAndAddToIndexRejectsDuplicateBuildTarget() throws Exception {
     BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder.createBuilder(target).build(buildRuleResolver);
@@ -65,7 +66,7 @@ public class BuildRuleResolverTest {
     TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule rule = resolver.requireRule(target);
     assertThat(rule, is(notNullValue()));
@@ -79,7 +80,7 @@ public class BuildRuleResolverTest {
     TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule existing = builder.build(resolver);
 
     assertThat(resolver.getRuleOptional(target).isPresent(), is(true));
@@ -93,7 +94,8 @@ public class BuildRuleResolverTest {
   @Test
   public void getRuleWithTypeMissingRule() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("could not be resolved"));
     resolver.getRuleWithType(BuildTargetFactory.newInstance("//:non-existent"), BuildRule.class);
@@ -106,7 +108,7 @@ public class BuildRuleResolverTest {
     TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     builder.build(resolver);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("not of expected type"));
@@ -116,7 +118,8 @@ public class BuildRuleResolverTest {
   @Test
   public void computeIfAbsentComputesOnlyIfAbsent() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AtomicInteger supplierInvoked = new AtomicInteger(0);
     BuildRule buildRule =

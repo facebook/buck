@@ -258,6 +258,8 @@ public class CompilationDatabaseIntegrationTest {
 
     List<String> commandArgs = new ArrayList<>();
     commandArgs.add(clang);
+    commandArgs.add("-x");
+    commandArgs.add(language);
     if (isLibrary) {
       commandArgs.add("-fPIC");
       commandArgs.add("-fPIC");
@@ -287,8 +289,6 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");
     commandArgs.add("." + Strings.repeat("/", 399));
-    commandArgs.add("-x");
-    commandArgs.add(language);
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");

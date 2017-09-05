@@ -20,6 +20,7 @@ import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -46,7 +47,7 @@ public class RustLibraryDescriptionTest {
         TargetGraphFactory.newInstance(
             srcBuilder.build(), libraryBuilder.build(), binaryBuilder.build());
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.requireRule(binaryBuilder.getTarget());
   }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Supplier;
@@ -39,7 +40,7 @@ import javax.annotation.Nullable;
 
 public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private static final Logger LOG = Logger.get(AbstractRuleKeyBuilder.class);
-  protected final RuleKeyScopedHasher scopedHasher;
+  final RuleKeyScopedHasher scopedHasher;
 
   protected AbstractRuleKeyBuilder(RuleKeyScopedHasher scopedHasher) {
     this.scopedHasher = scopedHasher;
@@ -47,7 +48,7 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
 
   @Override
   public final AbstractRuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
-    try (Scope keyScope = scopedHasher.keyScope(key)) {
+    try (Scope ignored = scopedHasher.keyScope(key)) {
       return setReflectively(val);
     }
   }
@@ -63,7 +64,7 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
     }
 
     if (val instanceof Supplier) {
-      try (Scope containerScope = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.SUPPLIER)) {
+      try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.SUPPLIER)) {
         Object newVal = ((Supplier<?>) val).get();
         return setReflectively(newVal);
       }
@@ -71,7 +72,7 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
 
     if (val instanceof Optional) {
       Object o = ((Optional<?>) val).orElse(null);
-      try (Scope wraperScope = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.OPTIONAL)) {
+      try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.OPTIONAL)) {
         return setReflectively(o);
       }
     }
@@ -79,11 +80,11 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
     if (val instanceof Either) {
       Either<?, ?> either = (Either<?, ?>) val;
       if (either.isLeft()) {
-        try (Scope wraperScope = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.EITHER_LEFT)) {
+        try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.EITHER_LEFT)) {
           return setReflectively(either.getLeft());
         }
       } else {
-        try (Scope wraperScope = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.EITHER_RIGHT)) {
+        try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.EITHER_RIGHT)) {
           return setReflectively(either.getRight());
         }
       }
@@ -95,7 +96,7 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
       try (RuleKeyScopedHasher.ContainerScope containerScope =
           scopedHasher.containerScope(RuleKeyHasher.Container.LIST)) {
         for (Object element : (Iterable<?>) val) {
-          try (Scope elementScope = containerScope.elementScope()) {
+          try (Scope ignored = containerScope.elementScope()) {
             setReflectively(element);
           }
         }
@@ -108,7 +109,7 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
       try (RuleKeyScopedHasher.ContainerScope containerScope =
           scopedHasher.containerScope(RuleKeyHasher.Container.LIST)) {
         while (iterator.hasNext()) {
-          try (Scope elementScope = containerScope.elementScope()) {
+          try (Scope ignored = containerScope.elementScope()) {
             setReflectively(iterator.next());
           }
         }
@@ -126,10 +127,10 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
       try (RuleKeyScopedHasher.ContainerScope containerScope =
           scopedHasher.containerScope(RuleKeyHasher.Container.MAP)) {
         for (Map.Entry<?, ?> entry : ((Map<?, ?>) val).entrySet()) {
-          try (Scope elementScope = containerScope.elementScope()) {
+          try (Scope ignored = containerScope.elementScope()) {
             setReflectively(entry.getKey());
           }
-          try (Scope elementScope = containerScope.elementScope()) {
+          try (Scope ignored = containerScope.elementScope()) {
             setReflectively(entry.getValue());
           }
         }
@@ -159,12 +160,12 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
       SourceWithFlags source = (SourceWithFlags) val;
       try (RuleKeyScopedHasher.ContainerScope containerScope =
           scopedHasher.containerScope(RuleKeyHasher.Container.TUPLE)) {
-        try (Scope elementScope = containerScope.elementScope()) {
+        try (Scope ignored = containerScope.elementScope()) {
           setSourcePath(source.getSourcePath());
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
-        try (Scope elementScope = containerScope.elementScope()) {
+        try (Scope ignored = containerScope.elementScope()) {
           setReflectively(source.getFlags());
         }
       }

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,8 +44,8 @@ import javax.lang.model.util.Elements;
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
   private final Map<Element, TreeBackedElement> treeBackedElements = new HashMap<>();
-  private final Map<Name, TypeElement> knownTypes = new HashMap<>();
-  private final Map<Name, PackageElement> knownPackages = new HashMap<>();
+  private final Map<Name, ArtificialTypeElement> knownTypes = new HashMap<>();
+  private final Map<Name, ArtificialPackageElement> knownPackages = new HashMap<>();
 
   public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
@@ -68,8 +69,8 @@ class TreeBackedElements implements Elements {
 
     result = constructor.apply(underlyingElement);
     treeBackedElements.put(underlyingElement, result);
-    if (result instanceof TypeElement) {
-      TypeElement typeElement = (TypeElement) result;
+    if (result instanceof TreeBackedTypeElement) {
+      TreeBackedTypeElement typeElement = (TreeBackedTypeElement) result;
       knownTypes.put(typeElement.getQualifiedName(), typeElement);
     } else if (result instanceof TreeBackedPackageElement) {
       TreeBackedPackageElement packageElement = (TreeBackedPackageElement) result;
@@ -97,8 +98,7 @@ class TreeBackedElements implements Elements {
    * Given a javac Element, gets the element that should be used by callers to refer to it. For
    * elements that have ASTs, that will be a TreeBackedElement; otherwise the javac Element itself.
    */
-  @Nullable
-  /* package */ Element getCanonicalElement(@Nullable Element element) {
+  /* package */ Element getCanonicalElement(@PropagatesNullable Element element) {
     Element result = treeBackedElements.get(element);
     if (result == null) {
       result = element;
@@ -119,9 +119,21 @@ class TreeBackedElements implements Elements {
     if (element instanceof TreeBackedElement) {
       TreeBackedElement treeBackedElement = (TreeBackedElement) element;
       return treeBackedElement.getUnderlyingElement();
+    } else if (element instanceof InferredElement) {
+      throw new IllegalArgumentException("Inferred elements have no javac element");
     }
 
     return element;
+  }
+
+  public ArtificialPackageElement getOrCreatePackageElement(CharSequence qualifiedNameString) {
+    Name qualifiedName = getName(qualifiedNameString);
+    ArtificialPackageElement result = getPackageElement(qualifiedName);
+    if (result == null) {
+      result = new InferredPackageElement(getSimpleName(qualifiedNameString), qualifiedName);
+      knownPackages.put(qualifiedName, result);
+    }
+    return result;
   }
 
   /**
@@ -130,7 +142,7 @@ class TreeBackedElements implements Elements {
    */
   @Override
   @Nullable
-  public PackageElement getPackageElement(CharSequence qualifiedNameString) {
+  public ArtificialPackageElement getPackageElement(CharSequence qualifiedNameString) {
     Name qualifiedName = getName(qualifiedNameString);
 
     if (!knownPackages.containsKey(qualifiedName)) {
@@ -139,13 +151,24 @@ class TreeBackedElements implements Elements {
         // If none of the packages for which we have parse trees matches this fully-qualified name,
         // ask javac. javac will check the classpath, which will pick up built-ins (like java.lang)
         // and any packages from dependency targets that are already compiled and on the classpath.
-        // Because our tree-backed elements and javac's elements are sharing a name table, we
-        // should be able to mix implementations without causing too much trouble.
-        knownPackages.put(qualifiedName, javacElement);
+        // Because we may need to add inferred types to the package, we wrap it up in our own.
+        knownPackages.put(qualifiedName, new TreeBackedPackageElement(javacElement));
       }
     }
 
     return knownPackages.get(qualifiedName);
+  }
+
+  public ArtificialTypeElement getOrCreateTypeElement(
+      ArtificialElement enclosingElement, CharSequence fullyQualifiedCharSequence) {
+    Name fullyQualifiedName = getName(fullyQualifiedCharSequence);
+    ArtificialTypeElement result = (ArtificialTypeElement) getTypeElement(fullyQualifiedName);
+    if (result == null) {
+      result =
+          new InferredTypeElement(
+              getSimpleName(fullyQualifiedCharSequence), fullyQualifiedName, enclosingElement);
+    }
+    return result;
   }
 
   /**
@@ -164,7 +187,7 @@ class TreeBackedElements implements Elements {
       // should be able to mix implementations without causing too much trouble.
       TypeElement javacElement = javacElements.getTypeElement(fullyQualifiedName);
       if (javacElement != null) {
-        knownTypes.put(fullyQualifiedName, javacElement);
+        return javacElement;
       }
     }
 
@@ -204,6 +227,21 @@ class TreeBackedElements implements Elements {
 
   @Override
   public Name getBinaryName(TypeElement type) {
+    if (type instanceof InferredTypeElement) {
+      StringBuilder nameBuilder = new StringBuilder();
+      Element enclosingElement = type.getEnclosingElement();
+      if (enclosingElement instanceof InferredTypeElement) {
+        nameBuilder.append(getBinaryName((TypeElement) enclosingElement));
+        nameBuilder.append("$");
+      } else {
+        // package
+        nameBuilder.append(enclosingElement.toString());
+        nameBuilder.append(".");
+      }
+      nameBuilder.append(type.getSimpleName());
+
+      return getName(nameBuilder);
+    }
     return javacElements.getBinaryName(getJavacElement(type));
   }
 
@@ -252,5 +290,11 @@ class TreeBackedElements implements Elements {
   @Override
   public boolean isFunctionalInterface(TypeElement type) {
     throw new UnsupportedOperationException();
+  }
+
+  private Name getSimpleName(CharSequence qualifiedNameSeq) {
+    String qualifiedName = qualifiedNameSeq.toString();
+
+    return getName(qualifiedName.substring(qualifiedName.lastIndexOf(".") + 1));
   }
 }

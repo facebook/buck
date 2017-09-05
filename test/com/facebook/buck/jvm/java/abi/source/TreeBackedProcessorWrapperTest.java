@@ -144,6 +144,7 @@ public class TreeBackedProcessorWrapperTest {
 
   @Test
   public void testElementMessager() throws IOException {
+    testCompiler.setAllowCompilationErrors(true);
     runTestProcessor(
         (annotations, roundEnv) -> {
           messager.printMessage(

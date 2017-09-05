@@ -65,7 +65,7 @@ public class SimpleConsoleEventBusListenerTest {
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
   private static final String FINISHED_DOWNLOAD_STRING =
-      "[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)";
+      "DOWNLOADED 0.00 BYTES/SEC AVG, 0 ARTIFACTS, 0.00 BYTES";
 
   private BuildRuleDurationTracker durationTracker;
 
@@ -114,7 +114,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
+    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.4s\n";
     assertOutput(expectedOutput, console);
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -152,8 +152,8 @@ public class SimpleConsoleEventBusListenerTest {
 
     expectedOutput +=
         "BUILT  0.4s //banana:stand\n"
-            + "[-] BUILDING...FINISHED 1.2s\n"
-            + "WAITING FOR HTTP CACHE UPLOADS 0.00 B (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n"
+            + "BUILDING: FINISHED IN 1.2s\n"
+            + "WAITING FOR HTTP CACHE UPLOADS 0.00 BYTES (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)\n"
             + FINISHED_DOWNLOAD_STRING
             + "\n";
     assertOutput(expectedOutput, console);
@@ -179,7 +179,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "[-] INSTALLING...FINISHED 1.5s\n";
+    expectedOutput += "INSTALLING: FINISHED IN 1.5s\n";
     assertOutput(expectedOutput, console);
 
     long artifactSizeOne = SizeUnit.MEGABYTES.toBytes(1.5);
@@ -198,7 +198,7 @@ public class SimpleConsoleEventBusListenerTest {
             HttpArtifactCacheEvent.newShutdownEvent(), 6000L, TimeUnit.MILLISECONDS, threadId));
 
     expectedOutput +=
-        "[-] HTTP CACHE UPLOAD...FINISHED 1.50 MB (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
+        "HTTP CACHE UPLOAD: FINISHED 1.50 MBYTES (1 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)\n";
     assertOutput(expectedOutput, console);
   }
 
@@ -228,7 +228,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    expectedOutput += "[-] BUILDING...FINISHED 1.0s (0/10 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)\n";
+    expectedOutput += "BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0 UPDATED, 0.0% CACHE MISS\n";
     assertOutput(expectedOutput + FINISHED_DOWNLOAD_STRING + "\n", console);
   }
 
@@ -254,7 +254,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.2s\n";
+    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.2s\n";
     assertOutput(expectedOutput, console);
 
     ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
@@ -278,8 +278,8 @@ public class SimpleConsoleEventBusListenerTest {
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
-    expectedOutput += "[-] CREATING ACTION GRAPH...FINISHED 0.2s\n";
-    expectedOutput += "[-] BUILDING...FINISHED 0.1s\n";
+    expectedOutput += "CREATING ACTION GRAPH: FINISHED IN 0.2s\n";
+    expectedOutput += "BUILDING: FINISHED IN 0.1s\n";
     expectedOutput += FINISHED_DOWNLOAD_STRING + "\n";
     assertOutput(expectedOutput, console);
   }
@@ -313,7 +313,7 @@ public class SimpleConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "[-] PARSING BUCK FILES...FINISHED 0.4s\n";
+    expectedOutput += "PARSING BUCK FILES: FINISHED IN 0.4s\n";
     assertOutput(expectedOutput, console);
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -340,7 +340,7 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(
             BuildEvent.finished(buildEventStarted, 0), 1234L, TimeUnit.MILLISECONDS, threadId));
 
-    expectedOutput += "[-] BUILDING...FINISHED 1.2s\n" + FINISHED_DOWNLOAD_STRING + "\n";
+    expectedOutput += "BUILDING: FINISHED IN 1.2s\n" + FINISHED_DOWNLOAD_STRING + "\n";
     assertOutput(expectedOutput, console);
   }
 
@@ -368,6 +368,7 @@ public class SimpleConsoleEventBusListenerTest {
             fakeClock,
             TestResultSummaryVerbosity.of(false, false),
             hideSucceededRules,
+            /* numberOfSlowRulesToShow */ 0,
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(

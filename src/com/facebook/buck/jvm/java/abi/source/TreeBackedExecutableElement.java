@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -92,7 +94,12 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   @Override
   public TypeMirror getReturnType() {
     if (returnType == null) {
-      returnType = getCanonicalizer().getCanonicalType(underlyingElement.getReturnType());
+      returnType =
+          getCanonicalizer()
+              .getCanonicalType(
+                  underlyingElement.getReturnType(),
+                  getTreePath(),
+                  tree == null ? null : tree.getReturnType());
     }
     return returnType;
   }
@@ -107,13 +114,23 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
   }
 
   @Override
+  @Nullable
   public TypeMirror getReceiverType() {
     if (receiverType == null) {
-      TypeMirror underlyingReceiverType = underlyingElement.getReceiverType();
-      this.receiverType =
-          underlyingReceiverType == null
-              ? null
-              : getCanonicalizer().getCanonicalType(underlyingReceiverType);
+      TreePath methodTreePath = getTreePath();
+      TreePath receiverParameterPath = null;
+      Tree receiverTypeTree = null;
+      if (methodTreePath != null && tree != null) {
+        VariableTree receiverParameterTree = tree.getReceiverParameter();
+        if (receiverParameterTree != null) {
+          receiverParameterPath = new TreePath(methodTreePath, receiverParameterTree);
+          receiverTypeTree = receiverParameterTree.getType();
+        }
+      }
+      receiverType =
+          getCanonicalizer()
+              .getCanonicalType(
+                  underlyingElement.getReceiverType(), receiverParameterPath, receiverTypeTree);
     }
     return receiverType;
   }
@@ -133,11 +150,11 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
     if (thrownTypes == null) {
       thrownTypes =
           Collections.unmodifiableList(
-              underlyingElement
-                  .getThrownTypes()
-                  .stream()
-                  .map(getCanonicalizer()::getCanonicalType)
-                  .collect(Collectors.toList()));
+              getCanonicalizer()
+                  .getCanonicalTypes(
+                      underlyingElement.getThrownTypes(),
+                      getTreePath(),
+                      tree == null ? null : tree.getThrows()));
     }
 
     return thrownTypes;

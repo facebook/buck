@@ -151,18 +151,22 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           Optional<StampedeId> stampedeId = getStampedeIdOptional();
           DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
 
+          // Note that we cannot use the same pool of build threads for file materialization
+          // because usually all build threads are waiting for files to be materialized, and
+          // there is no thread left for the FileContentsProvider(s) to use.
           FileContentsProvider multiSourceFileContentsProvider =
               DistBuildFactory.createMultiSourceContentsProvider(
                   service,
                   new DistBuildConfig(state.getRootCell().getBuckConfig()),
                   fileMaterializationStatsTracker,
                   params.getScheduledExecutor(),
+                  params.getExecutors().get(ExecutorPool.CPU),
                   getGlobalCacheDirOptional());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
                   params,
-                  pool.getExecutor(),
+                  pool.getWeightedListeningExecutorService(),
                   service,
                   Preconditions.checkNotNull(distBuildMode),
                   coordinatorPort,

@@ -59,4 +59,10 @@ public final class InputPath implements Comparable<InputPath> {
   public int compareTo(InputPath o) {
     return sourcePath.compareTo(o.sourcePath);
   }
+
+  public static class Internals {
+    public static SourcePath getSourcePathFrom(InputPath inputPath) {
+      return inputPath.getSourcePath();
+    }
+  }
 }

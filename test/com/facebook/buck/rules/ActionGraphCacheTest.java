@@ -25,7 +25,6 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -60,7 +59,6 @@ public class ActionGraphCacheTest {
   private TargetNode<?, ?> nodeB;
   private TargetGraph targetGraph;
   private BuckEventBus eventBus;
-  private BroadcastEventListener broadcastEventListener;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
   private final int keySeed = 0;
 
@@ -81,8 +79,6 @@ public class ActionGraphCacheTest {
 
     eventBus =
         BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
-    broadcastEventListener = new BroadcastEventListener();
-    broadcastEventListener.addEventBus(eventBus);
 
     eventBus.register(
         new Object() {
@@ -95,7 +91,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnCache() throws InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
 
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(
@@ -122,7 +118,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void missOnCache() {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(
             eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
@@ -163,7 +159,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void missWithTargetGraphHashMatch() {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
     cache.getActionGraph(
         eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -201,7 +197,7 @@ public class ActionGraphCacheTest {
 
   @Test
   public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
     Path file = tmpFilePath.newFile("foo.txt");
 
     // Fill the cache. An overflow event should invalidate the cache.

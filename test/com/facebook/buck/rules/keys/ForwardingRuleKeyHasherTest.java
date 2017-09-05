@@ -29,6 +29,8 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourceRoot;
+import com.facebook.buck.rules.keys.hasher.ForwardingRuleKeyHasher;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import java.nio.file.Paths;

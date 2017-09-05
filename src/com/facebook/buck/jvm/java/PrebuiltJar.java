@@ -63,6 +63,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         HasClasspathEntries,
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
+        MaybeRequiredForSourceAbi,
         SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
@@ -77,6 +78,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Optional<String> javadocUrl;
   @AddToRuleKey private final Optional<String> mavenCoords;
   @AddToRuleKey private final boolean provided;
+  @AddToRuleKey private final boolean requiredForSourceAbi;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -92,7 +94,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
-      final boolean provided) {
+      final boolean provided,
+      final boolean requiredForSourceAbi) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
@@ -100,6 +103,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javadocUrl = javadocUrl;
     this.mavenCoords = mavenCoords;
     this.provided = provided;
+    this.requiredForSourceAbi = requiredForSourceAbi;
 
     transitiveClasspathsSupplier =
         Suppliers.memoize(
@@ -131,6 +135,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.binaryJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
 
     buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+  }
+
+  @Override
+  public boolean getRequiredForSourceAbi() {
+    return requiredForSourceAbi;
   }
 
   public Optional<SourcePath> getSourceJar() {

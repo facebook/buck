@@ -18,6 +18,9 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.rules.keys.hasher.CountingRuleKeyHasher;
+import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
