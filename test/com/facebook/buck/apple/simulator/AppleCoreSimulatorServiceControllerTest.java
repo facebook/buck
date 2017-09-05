@@ -25,13 +25,13 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeUserIdFetcher;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
+import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.Test;
 
 /** Unit tests for {@link AppleCoreSimulatorServiceController}. */
 public class AppleCoreSimulatorServiceControllerTest {

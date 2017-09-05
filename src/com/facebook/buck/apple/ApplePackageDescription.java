@@ -45,9 +45,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
+import org.immutables.value.Value;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 
 public class ApplePackageDescription
     implements Description<ApplePackageDescriptionArg>,

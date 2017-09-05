@@ -32,12 +32,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
 
 /**
  * Class to handle: 1. Identifying the best {@code .mobileprovision} file to use based on the bundle

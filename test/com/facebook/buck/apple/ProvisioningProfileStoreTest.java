@@ -28,10 +28,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Optional;
-import org.junit.Test;
 
 public class ProvisioningProfileStoreTest {
   private static ProvisioningProfileMetadata makeTestMetadata(

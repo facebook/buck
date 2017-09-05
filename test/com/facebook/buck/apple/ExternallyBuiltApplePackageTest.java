@@ -53,9 +53,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
+import java.nio.file.Paths;
 
 public class ExternallyBuiltApplePackageTest {
 

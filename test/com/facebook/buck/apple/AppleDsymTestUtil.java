@@ -19,11 +19,11 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.google.common.collect.ImmutableList;
+import org.codehaus.plexus.util.StringUtils;
+import org.hamcrest.Matchers;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.codehaus.plexus.util.StringUtils;
-import org.hamcrest.Matchers;
 
 public class AppleDsymTestUtil {
   private static final String MAIN = "main";

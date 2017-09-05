@@ -29,9 +29,9 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import org.junit.Test;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.Test;
 
 public class AppleResourcesTest {
 

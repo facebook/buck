@@ -48,8 +48,8 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 public class AppleBundleDescription
     implements Description<AppleBundleDescriptionArg>,

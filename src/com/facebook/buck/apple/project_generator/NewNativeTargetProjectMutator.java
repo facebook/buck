@@ -76,6 +76,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
+import org.stringtemplate.v4.ST;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,7 +87,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.stringtemplate.v4.ST;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a

@@ -29,9 +29,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.junit.Test;
 
 public class RuleUtilsTest {
 

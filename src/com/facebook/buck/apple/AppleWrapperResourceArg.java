@@ -18,8 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
 import org.immutables.value.Value;
+import java.nio.file.Path;
 
 /** A description for a resource defined by a single path. */
 @BuckStyleImmutable

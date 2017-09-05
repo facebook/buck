@@ -23,6 +23,7 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.xml.sax.SAXException;
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -36,7 +37,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
 
 /** Utility class to discover the location of toolchains contained inside an Xcode installation. */
 public class AppleToolchainDiscovery {

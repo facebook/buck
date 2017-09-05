@@ -23,10 +23,10 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 /** Adds Apple-specific tools to {@link CxxPlatform}. */
 @Value.Immutable

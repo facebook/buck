@@ -66,11 +66,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import org.immutables.value.Value;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import org.immutables.value.Value;
 
 public class AppleLibraryDescription
     implements Description<AppleLibraryDescriptionArg>,

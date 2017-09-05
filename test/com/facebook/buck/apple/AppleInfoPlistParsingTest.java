@@ -23,13 +23,13 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 /** Unit tests for {@link AppleInfoPlistParsing}. */
 public class AppleInfoPlistParsingTest {

@@ -30,9 +30,9 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
+import java.util.Optional;
 
 public class PBXBuildPhasesTest {
   private XcodeprojSerializer serializer;

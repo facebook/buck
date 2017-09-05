@@ -28,8 +28,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 /**
  * Description for an apple_asset_catalog rule, which identifies an asset catalog for an iOS or Mac

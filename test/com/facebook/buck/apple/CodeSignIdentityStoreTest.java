@@ -31,8 +31,8 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import org.junit.Test;
+import java.nio.file.Path;
 
 public class CodeSignIdentityStoreTest {
   @Test

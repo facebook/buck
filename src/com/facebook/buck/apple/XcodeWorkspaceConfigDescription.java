@@ -32,10 +32,10 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class XcodeWorkspaceConfigDescription
     implements Description<XcodeWorkspaceConfigDescriptionArg> {

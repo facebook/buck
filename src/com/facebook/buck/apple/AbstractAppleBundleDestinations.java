@@ -19,9 +19,9 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable

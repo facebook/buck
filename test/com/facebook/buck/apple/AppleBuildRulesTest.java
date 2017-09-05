@@ -47,11 +47,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.util.Collection;
-import java.util.Optional;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import java.util.Collection;
+import java.util.Optional;
 
 @RunWith(Parameterized.class)
 public class AppleBuildRulesTest {

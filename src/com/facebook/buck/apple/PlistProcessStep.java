@@ -27,6 +27,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
+import org.xml.sax.SAXException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,6 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
 
 class PlistProcessStep implements Step {
 

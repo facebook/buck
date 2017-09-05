@@ -33,11 +33,11 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ProvisioningProfileMetadataTest {
   @Rule public ExpectedException thrown = ExpectedException.none();

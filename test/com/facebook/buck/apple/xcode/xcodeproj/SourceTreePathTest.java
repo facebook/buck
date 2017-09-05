@@ -18,9 +18,9 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import static org.junit.Assert.assertNotEquals;
 
+import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.junit.Test;
 
 /** Tests for {@link SourceTreePath}. */
 public class SourceTreePathTest {

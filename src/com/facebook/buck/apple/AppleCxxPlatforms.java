@@ -59,6 +59,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +73,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
 
 /**
  * Utility class to create Objective-C/C/C++/Objective-C++ platforms to support building iOS and Mac

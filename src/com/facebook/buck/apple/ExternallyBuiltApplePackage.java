@@ -29,9 +29,9 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
 public class ExternallyBuiltApplePackage extends Genrule {

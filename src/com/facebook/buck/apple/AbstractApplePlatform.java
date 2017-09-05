@@ -20,8 +20,8 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
