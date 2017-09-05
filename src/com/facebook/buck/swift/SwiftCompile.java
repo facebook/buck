@@ -119,7 +119,10 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.version = version;
-    this.compilerFlags = compilerFlags;
+    this.compilerFlags = new ImmutableList.Builder<Arg>()
+        .addAll(StringArg.from(swiftBuckConfig.getFlags().orElse(ImmutableSet.of())))
+        .addAll(compilerFlags)
+        .build();
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
@@ -174,10 +177,6 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 .map(input -> resolver.getAbsolutePath(input).toString())
                 .collect(MoreCollectors.toImmutableSet())));
 
-    Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
-    if (configFlags.isPresent()) {
-      compilerCommand.addAll(configFlags.get());
-    }
     boolean hasMainEntry =
         srcs.stream()
             .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
