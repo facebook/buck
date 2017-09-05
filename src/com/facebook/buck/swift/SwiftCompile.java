@@ -82,6 +82,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final boolean enableObjcInterop;
   private final Optional<SourcePath> bridgingHeader;
+  @SuppressWarnings("unused")
   private final SwiftBuckConfig swiftBuckConfig;
   @AddToRuleKey private final Preprocessor cPreprocessor;
 
