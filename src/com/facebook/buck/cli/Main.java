@@ -979,7 +979,7 @@ public final class Main {
           }
 
           if (actionGraphCache == null) {
-            actionGraphCache = new ActionGraphCache(broadcastEventListener);
+            actionGraphCache = new ActionGraphCache();
           }
 
           if (typeCoercerFactory == null || parser == null) {

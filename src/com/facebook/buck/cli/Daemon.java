@@ -99,7 +99,7 @@ final class Daemon implements Closeable {
     this.hashCaches = hashCachesBuilder.build();
 
     this.broadcastEventListener = new BroadcastEventListener();
-    this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
+    this.actionGraphCache = new ActionGraphCache();
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();

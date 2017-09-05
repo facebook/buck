@@ -20,8 +20,6 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
@@ -53,12 +51,6 @@ public class ActionGraphCache {
   @Nullable private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
 
   @Nullable private HashCode lastTargetGraphHash;
-
-  private BroadcastEventListener broadcastEventListener;
-
-  public ActionGraphCache(BroadcastEventListener broadcastEventListener) {
-    this.broadcastEventListener = broadcastEventListener;
-  }
 
   /**
    * It returns an {@link ActionGraphAndResolver}. If the {@code targetGraph} exists in the cache it
@@ -275,19 +267,6 @@ public class ActionGraphCache {
       LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
     }
     invalidateCache();
-    switch (event.getKind()) {
-      case CREATE:
-        broadcastEventListener.broadcast(
-            WatchmanStatusEvent.fileCreation(event.getPath().toString()));
-        return;
-      case DELETE:
-        broadcastEventListener.broadcast(
-            WatchmanStatusEvent.fileDeletion(event.getPath().toString()));
-        return;
-      case MODIFY:
-        throw new IllegalStateException("Should have handled MODIFY event earlier.");
-    }
-    throw new IllegalStateException("Unhandled case: " + event.getKind());
   }
 
   @Subscribe
@@ -296,7 +275,6 @@ public class ActionGraphCache {
       LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
     }
     invalidateCache();
-    broadcastEventListener.broadcast(WatchmanStatusEvent.overflow(event.getReason()));
   }
 
   private void invalidateCache() {
