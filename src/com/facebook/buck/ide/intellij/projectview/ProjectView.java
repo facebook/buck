@@ -44,6 +44,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -118,6 +119,7 @@ public class ProjectView {
   private final boolean dryRun;
   private final boolean withTests;
   private final Config config;
+  private final Verbosity verbosity;
 
   private final TargetGraph targetGraph;
   private final ImmutableSet<BuildTarget> buildTargets;
@@ -140,6 +142,8 @@ public class ProjectView {
     this.viewPath = Preconditions.checkNotNull(projectViewParameters.getViewPath());
     this.dryRun = projectViewParameters.isDryRun();
     this.withTests = projectViewParameters.isWithTests();
+    this.config = projectViewParameters.getConfig();
+    this.verbosity = projectViewParameters.getVerbosity();
 
     this.targetGraph = targetGraph;
     this.buildTargets = buildTargets;
@@ -148,8 +152,6 @@ public class ProjectView {
     BuildRuleResolver buildRuleResolver = actionGraph.getResolver();
     SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
     this.sourcePathResolver = DefaultSourcePathResolver.from(sourcePathRuleFinder);
-
-    this.config = projectViewParameters.getConfig();
 
     INPUT_RESOURCE_FOLDERS =
         getIntellijSectionValue(INPUT_RESOURCE_FOLDERS_KEY, INPUT_RESOURCE_FOLDERS_DEFAULT);
@@ -182,6 +184,8 @@ public class ProjectView {
     writeRootDotIml(sourceFiles, roots, buildDotIdeaFolder(inputs));
 
     buildAllDirectoriesAndSymlinks();
+
+    stderr("\nSuccess.\n");
 
     return 0;
   }
@@ -312,7 +316,7 @@ public class ProjectView {
       return;
     }
 
-    if (input.contains(".")) {
+    if (input.contains(".") && verbosity.compareTo(Verbosity.STANDARD_INFORMATION) > 0) {
       stderr("Can't handle %s\n", input);
     }
   }

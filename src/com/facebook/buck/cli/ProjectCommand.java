@@ -31,6 +31,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -492,6 +493,11 @@ public class ProjectCommand extends BuildCommand {
     @Override
     public boolean isProcessAnnotations() {
       return processAnnotations;
+    }
+
+    @Override
+    public Verbosity getVerbosity() {
+      return getConsole().getVerbosity();
     }
   }
 

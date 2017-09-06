@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli.parameter_extractors;
 
+import com.facebook.buck.util.Verbosity;
+
 /** Command line switches for project generation */
 public interface ProjectGeneratorParameters extends CommandRunnerParameters {
   boolean isDryRun();
@@ -29,4 +31,6 @@ public interface ProjectGeneratorParameters extends CommandRunnerParameters {
   boolean isWithoutDependenciesTests();
 
   boolean isProcessAnnotations();
+
+  Verbosity getVerbosity();
 }
