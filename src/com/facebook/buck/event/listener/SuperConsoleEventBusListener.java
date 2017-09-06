@@ -321,10 +321,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     Iterable<String> renderedLines =
         Iterables.concat(
             MoreIterables.zipAndConcat(
-                Iterables.cycle(ansi.clearLine()), logLines, Iterables.cycle("\n")),
+                Iterables.cycle(ansi.clearLine()), logLines, Iterables.cycle(ansi.clearToTheEndOfLine() + "\n")),
             ansi.asNoWrap(
                 MoreIterables.zipAndConcat(
-                    Iterables.cycle(ansi.clearLine()), lines, Iterables.cycle("\n"))));
+                    Iterables.cycle(ansi.clearLine()), lines, Iterables.cycle(ansi.clearToTheEndOfLine() + "\n"))));
 
     // Number of lines remaining to clear because of old output once we displayed
     // the new output.
