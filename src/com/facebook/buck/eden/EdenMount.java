@@ -19,13 +19,14 @@ package com.facebook.buck.eden;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
-import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.Optional;
  * pair. The Buck project root must be contained by the Eden mount point.
  */
 public class EdenMount {
-  private final ThreadLocal<EdenService.Client> client;
+  private final EdenClientPool pool;
 
   /** Value of the mountPoint argument to use when communicating with Eden via the Thrift API. */
   private final String mountPoint;
@@ -55,16 +56,30 @@ public class EdenMount {
    * point, Buck project root) pair. It must be the case that {@code
    * projectRoot.startsWith(mountPoint)}.
    */
-  EdenMount(ThreadLocal<EdenService.Client> client, Path mountPoint, Path projectRoot) {
+  EdenMount(EdenClientPool pool, Path mountPoint, Path projectRoot) {
     Preconditions.checkArgument(
         projectRoot.startsWith(mountPoint),
         "Eden mount point %s must contain the Buck project at %s.",
         mountPoint,
         projectRoot);
-    this.client = client;
+    this.pool = pool;
     this.mountPoint = mountPoint.toString();
     this.projectRoot = projectRoot;
     this.prefix = mountPoint.relativize(projectRoot);
+  }
+
+  /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
+  public static Optional<EdenMount> createEdenMountForProjectRoot(
+      Path projectRoot, EdenClientPool pool) {
+    Path rootSymlink = projectRoot.resolve(".eden/root");
+    Path rootOfEdenMount;
+    try {
+      rootOfEdenMount = Files.readSymbolicLink(rootSymlink);
+    } catch (IOException e) {
+      return Optional.empty();
+    }
+
+    return Optional.of(new EdenMount(pool, rootOfEdenMount, projectRoot));
   }
 
   /** @return The root to the Buck project that this {@link EdenMount} represents. */
@@ -78,9 +93,9 @@ public class EdenMount {
   }
 
   /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
-  public Sha1HashCode getSha1(Path entry) throws EdenError, TException {
+  public Sha1HashCode getSha1(Path entry) throws EdenError, IOException, TException {
     List<SHA1Result> results =
-        client.get().getSHA1(mountPoint, ImmutableList.of(normalizePathArg(entry)));
+        pool.getClient().getSHA1(mountPoint, ImmutableList.of(normalizePathArg(entry)));
     SHA1Result result = Iterables.getOnlyElement(results);
     if (result.getSetField() == SHA1Result.SHA1) {
       return Sha1HashCode.fromBytes(result.getSha1());
@@ -92,8 +107,8 @@ public class EdenMount {
   public ImmutableList<Path> getBindMounts() {
     List<String> bindMounts;
     try {
-      bindMounts = client.get().getBindMounts(mountPoint);
-    } catch (TException e) {
+      bindMounts = pool.getClient().getBindMounts(mountPoint);
+    } catch (EdenError | IOException | TException e) {
       throw new RuntimeException(e);
     }
 

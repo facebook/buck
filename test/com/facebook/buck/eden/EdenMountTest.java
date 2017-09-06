@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
-import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +42,7 @@ import org.junit.Test;
 public class EdenMountTest {
   @Test
   public void getSha1DelegatesToThriftClient() throws EdenError, IOException, TException {
-    EdenService.Client thriftClient = createMock(EdenService.Client.class);
+    final EdenClient thriftClient = createMock(EdenClient.class);
 
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     Path entry = fs.getPath("LICENSE");
@@ -54,38 +53,38 @@ public class EdenMountTest {
         .andReturn(ImmutableList.of(sha1Result));
     replay(thriftClient);
 
-    EdenClient client = new EdenClient(thriftClient);
+    EdenClientPool pool = new EdenClientPool(thriftClient);
     Path pathToBuck = fs.getPath("/home/mbolin/src/buck");
     Files.createDirectories(pathToBuck.resolve(".eden"));
     Files.createSymbolicLink(pathToBuck.resolve(".eden").resolve("root"), pathToBuck);
 
-    Optional<EdenMount> mount = client.getMountFor(pathToBuck);
+    Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(pathToBuck, pool);
     assertTrue("Should find mount for path.", mount.isPresent());
     assertEquals(Sha1HashCode.fromHashCode(hash), mount.get().getSha1(entry));
     verify(thriftClient);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void getMountPointReturnsValuePassedToConstructor() {
-    ThreadLocal<EdenService.Client> thriftClient = createMock(ThreadLocal.class);
+    EdenClient thriftClient = createMock(EdenClient.class);
+    EdenClientPool pool = new EdenClientPool(thriftClient);
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 
-    EdenMount mount = new EdenMount(thriftClient, mountPoint, mountPoint);
+    EdenMount mount = new EdenMount(pool, mountPoint, mountPoint);
     assertEquals(mountPoint, mount.getProjectRoot());
 
     verify(thriftClient);
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void toStringHasExpectedFormatting() {
-    ThreadLocal<EdenService.Client> thriftClient = createMock(ThreadLocal.class);
+    EdenClient thriftClient = createMock(EdenClient.class);
+    EdenClientPool pool = new EdenClientPool(thriftClient);
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 
-    EdenMount mount = new EdenMount(thriftClient, mountPoint, mountPoint);
+    EdenMount mount = new EdenMount(pool, mountPoint, mountPoint);
     assertEquals(String.format("EdenMount{mountPoint=%s, prefix=}", mountPoint), mount.toString());
 
     verify(thriftClient);

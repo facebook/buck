@@ -17,7 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.config.Config;
-import com.facebook.buck.eden.EdenClient;
+import com.facebook.buck.eden.EdenClientPool;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
@@ -46,10 +46,10 @@ public final class ProjectFilesystemDelegateFactory {
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegate newInstance(
       Path root, Path buckOut, String hgCmd, Config config) throws InterruptedException {
-    Optional<EdenClient> client = EdenClient.tryToCreateEdenClient(root);
+    Optional<EdenClientPool> pool = EdenClientPool.tryToCreateEdenClientPool(root);
 
-    if (client.isPresent()) {
-      Optional<EdenMount> mount = client.get().getMountFor(root);
+    if (pool.isPresent()) {
+      Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(root, pool.get());
       if (mount.isPresent()) {
         LOG.debug("Created eden mount for %s: %s", root, mount.get());
         return new EdenProjectFilesystemDelegate(mount.get(), config);
