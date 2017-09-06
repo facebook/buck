@@ -58,12 +58,12 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class SwiftLibraryIntegrationTest {
   @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
@@ -229,6 +229,29 @@ public class SwiftLibraryIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
+  }
+
+  @Test
+  public void testGlobalFlagsInRuleKey() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmpDir);
+    workspace.setUp();
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:hello#iphonesimulator-x86_64,swift-compile");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:hello#iphonesimulator-x86_64,swift-compile");
+
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:hello#iphonesimulator-x86_64,swift-compile");
+
+    workspace.addBuckConfigLocalOption("swift", "compiler_flags", "-D DEBUG");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:hello#iphonesimulator-x86_64,swift-compile");
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {
