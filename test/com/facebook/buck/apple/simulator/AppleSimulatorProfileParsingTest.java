@@ -20,10 +20,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import org.junit.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
-import org.junit.Test;
 
 /** Unit tests for {@link SimctlListOutputParsing}. */
 public class AppleSimulatorProfileParsingTest {

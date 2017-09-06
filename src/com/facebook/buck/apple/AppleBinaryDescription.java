@@ -64,12 +64,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import org.immutables.value.Value;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 
 public class AppleBinaryDescription
     implements Description<AppleBinaryDescriptionArg>,

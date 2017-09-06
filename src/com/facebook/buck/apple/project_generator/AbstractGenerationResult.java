@@ -20,8 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import org.immutables.value.Value;
+import java.nio.file.Path;
 
 @Value.Immutable
 @BuckStyleTuple

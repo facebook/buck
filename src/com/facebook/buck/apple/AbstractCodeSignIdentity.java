@@ -20,10 +20,10 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
+import org.immutables.value.Value;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 /** Represents a identity used in code signing. */
 @Value.Immutable

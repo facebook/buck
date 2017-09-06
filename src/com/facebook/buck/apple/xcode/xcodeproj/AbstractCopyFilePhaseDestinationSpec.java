@@ -17,8 +17,8 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable

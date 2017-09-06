@@ -17,10 +17,10 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /** Paths to Apple SDK directories under an installation of Xcode. */
 @Value.Immutable

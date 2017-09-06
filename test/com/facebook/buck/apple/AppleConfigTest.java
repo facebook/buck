@@ -33,15 +33,15 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.hamcrest.junit.ExpectedException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.hamcrest.junit.ExpectedException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
 public class AppleConfigTest {
 

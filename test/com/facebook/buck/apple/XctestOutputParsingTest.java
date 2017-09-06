@@ -33,6 +33,8 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import org.hamcrest.Matcher;
+import org.junit.Test;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -41,8 +43,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.hamcrest.Matcher;
-import org.junit.Test;
 
 public class XctestOutputParsingTest {
 

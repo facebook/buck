@@ -17,9 +17,9 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 import java.util.List;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /** Metadata about an Apple SDK. */
 @Value.Immutable

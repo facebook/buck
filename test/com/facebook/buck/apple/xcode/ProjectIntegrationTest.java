@@ -26,12 +26,12 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import java.io.IOException;
-import java.nio.file.Files;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class ProjectIntegrationTest {
 

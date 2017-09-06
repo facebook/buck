@@ -37,6 +37,9 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.ImmutableList;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -44,9 +47,6 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 
 public class BuiltinApplePackageIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();

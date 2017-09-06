@@ -44,9 +44,9 @@ import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import org.immutables.value.Value;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 public class PrebuiltAppleFrameworkDescription
     implements Description<PrebuiltAppleFrameworkDescriptionArg>,

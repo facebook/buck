@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import org.junit.Test;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
-import org.junit.Test;
 
 public class XctoolOutputParsingTest {
 

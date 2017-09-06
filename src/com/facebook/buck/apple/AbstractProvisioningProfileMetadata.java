@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import org.immutables.value.Value;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
@@ -44,7 +45,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 /** Metadata contained in a provisioning profile (.mobileprovision). */
 @Value.Immutable

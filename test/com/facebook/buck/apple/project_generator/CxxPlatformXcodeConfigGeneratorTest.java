@@ -23,9 +23,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.InternalFlavor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.LinkedHashMap;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import java.util.LinkedHashMap;
 
 public class CxxPlatformXcodeConfigGeneratorTest {
 

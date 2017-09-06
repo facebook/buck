@@ -21,6 +21,7 @@ import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.util.HumanReadableException;
+import org.xml.sax.SAXException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +29,6 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Optional;
 import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
 
 /** Utility class to parse Info.plist from an Apple bundle. */
 public class AppleInfoPlistParsing {

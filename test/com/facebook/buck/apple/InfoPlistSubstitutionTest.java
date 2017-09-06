@@ -23,10 +23,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.util.Optional;
 
 /** Unit tests for {@link InfoPlistSubstitution}. */
 public class InfoPlistSubstitutionTest {

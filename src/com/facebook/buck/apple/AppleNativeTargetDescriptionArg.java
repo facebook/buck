@@ -20,8 +20,8 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.swift.SwiftCommonArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 /** Arguments common to Apple targets. */
 public interface AppleNativeTargetDescriptionArg

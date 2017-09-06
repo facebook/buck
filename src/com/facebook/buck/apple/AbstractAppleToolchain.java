@@ -17,9 +17,9 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Metadata about an Apple toolchain. */
 @Value.Immutable

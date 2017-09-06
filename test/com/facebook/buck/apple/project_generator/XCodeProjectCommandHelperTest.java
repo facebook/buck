@@ -42,14 +42,14 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.junit.Before;
+import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
 
 public class XCodeProjectCommandHelperTest {
 

@@ -25,9 +25,9 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
+import java.nio.file.Paths;
 
 public class PathRelativizerTest {
   private PathRelativizer pathRelativizer;

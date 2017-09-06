@@ -38,12 +38,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
+import org.junit.Before;
+import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
 
 public class XctoolRunTestsStepTest {
 
