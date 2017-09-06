@@ -559,7 +559,7 @@ public class IjProjectTemplateDataPreparer {
       IjResourceFolderType ijResourceFolderType = IjResourceFolderType.JAVA_RESOURCE;
       if (folder instanceof ResourceFolder) {
         ResourceFolder resourceFolder = (ResourceFolder) folder;
-        relativeOutputPath = resourceFolder.getRelativeOutputPath().orElse(null);
+        relativeOutputPath = resourceFolder.getRelativeOutputPath();
         ijResourceFolderType = resourceFolder.getResourceFolderType();
       }
 

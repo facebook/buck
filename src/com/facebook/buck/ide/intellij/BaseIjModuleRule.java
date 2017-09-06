@@ -35,6 +35,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -69,7 +70,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
    * @return index of path to set of inputs in that path
    */
   protected static ImmutableMultimap<Path, Path> getSourceFoldersToInputsIndex(
-      ImmutableSet<Path> paths) {
+      ImmutableCollection<Path> paths) {
     Path defaultParent = Paths.get("");
     return paths
         .stream()
@@ -217,7 +218,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   // resources will not be added as regular source folders.
   protected void addResourceFolders(
       IjResourceFolderType ijResourceFolderType,
-      ImmutableSet<Path> resourcePaths,
+      ImmutableCollection<Path> resourcePaths,
       Path resourcesRoot,
       ModuleBuildContext context) {
     addResourceFolders(

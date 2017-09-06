@@ -18,27 +18,26 @@ package com.facebook.buck.ide.intellij.model.folders;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 public abstract class ResourceFolder extends InclusiveFolder {
-  @Nullable protected final Path resourcesRoot;
+  protected final Path resourcesRoot;
 
   ResourceFolder(Path path, @Nullable Path resourcesRoot, ImmutableSortedSet<Path> inputs) {
     super(path, false, inputs);
-    this.resourcesRoot = resourcesRoot;
-  }
-
-  public Optional<Path> getRelativeOutputPath() {
-    if (resourcesRoot == null || !getPath().startsWith(resourcesRoot)) {
-      return Optional.empty();
+    if (resourcesRoot == null) {
+      this.resourcesRoot = Paths.get("");
     } else {
-      return Optional.of(resourcesRoot.relativize(getPath()));
+      this.resourcesRoot = resourcesRoot;
     }
   }
 
-  @Nullable
+  public Path getRelativeOutputPath() {
+    return resourcesRoot.relativize(getPath());
+  }
+
   public Path getResourcesRoot() {
     return resourcesRoot;
   }

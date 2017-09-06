@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -361,7 +362,9 @@ public class IjSourceRootSimplifier {
           ijResourceFolderType.getResourcesRootFromFolder(childrenToMerge.get(0));
 
       // If merging would recurse above resources_root, don't merge.
-      if (resourcesRoot != null && !currentPath.startsWith(resourcesRoot)) {
+      if (resourcesRoot != null
+          && !resourcesRoot.equals(Paths.get(""))
+          && !currentPath.startsWith(resourcesRoot)) {
         return Optional.empty();
       }
 
