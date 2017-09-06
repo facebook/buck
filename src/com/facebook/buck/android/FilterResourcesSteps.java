@@ -56,7 +56,7 @@ import javax.annotation.Nullable;
  * This {@link com.facebook.buck.step.Step} copies {@code res} directories to a different location,
  * while filtering out certain resources.
  */
-public class FilterResourcesStep implements Step {
+public class FilterResourcesSteps {
 
   private static final Pattern DRAWABLE_PATH_PATTERN =
       Pattern.compile(".*drawable.*/.*(png|jpg|jpeg|gif|webp|xml)", Pattern.CASE_INSENSITIVE);
@@ -64,7 +64,7 @@ public class FilterResourcesStep implements Step {
   private static final Pattern DRAWABLE_EXCLUDE_PATTERN =
       Pattern.compile(".*-nodpi.*", Pattern.CASE_INSENSITIVE);
 
-  private static final Logger LOG = Logger.get(FilterResourcesStep.class);
+  private static final Logger LOG = Logger.get(FilterResourcesSteps.class);
 
   @VisibleForTesting
   static final Pattern NON_ENGLISH_STRINGS_FILE_PATH =
@@ -77,6 +77,8 @@ public class FilterResourcesStep implements Step {
   private final ImmutableSet<Path> whitelistedStringDirs;
   private final ImmutableSet<String> locales;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
+  private final CopyStep copyStep = new CopyStep();
+  private final ScaleStep scaleStep = new ScaleStep();
   @Nullable private final Set<ResourceFilters.Density> targetDensities;
   @Nullable private final DrawableFinder drawableFinder;
   @Nullable private final ImageScaler imageScaler;
@@ -101,7 +103,7 @@ public class FilterResourcesStep implements Step {
    *     to allowing Android to do it at runtime). Only applicable if filterByDensity. is true.
    */
   @VisibleForTesting
-  FilterResourcesStep(
+  FilterResourcesSteps(
       ProjectFilesystem filesystem,
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
       boolean filterByDensity,
@@ -129,24 +131,61 @@ public class FilterResourcesStep implements Step {
     this.imageScaler = imageScaler;
   }
 
-  @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
-    boolean canDownscale = imageScaler != null && imageScaler.isAvailable(context);
-    LOG.info(
-        "FilterResourcesStep: canDownscale: %s. imageScalar non-null: %s.",
-        canDownscale, imageScaler != null);
-
-    // Create filtered copies of all resource directories. These will be passed to aapt instead.
-    filteredDirectoryCopier.copyDirs(
-        filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
-
-    // If an ImageScaler was specified, but only if it is available, try to apply it.
-    if (canDownscale && filterByDensity) {
-      scaleUnmatchedDrawables(context);
+  private class CopyStep implements Step {
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      LOG.info(
+          "FilterResourcesSteps: canDownscale: %s. imageScalar non-null: %s.",
+          canDownscale(context), imageScaler != null);
+      // Create filtered copies of all resource directories. These will be passed to aapt instead.
+      filteredDirectoryCopier.copyDirs(
+          filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
+      return StepExecutionResult.of(0);
     }
 
-    return StepExecutionResult.of(0);
+    @Override
+    public String getShortName() {
+      return "resource_filtering-copy";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "Copy resources, filtering by density";
+    }
+  }
+
+  private class ScaleStep implements Step {
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+      if (canDownscale(context) && filterByDensity) {
+        scaleUnmatchedDrawables(context);
+      }
+      return StepExecutionResult.of(0);
+    }
+
+    @Override
+    public String getShortName() {
+      return "resource_filtering-scale";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "Scale resources to the appropriate density";
+    }
+  }
+
+  public Step getCopyStep() {
+    return copyStep;
+  }
+
+  public Step getScaleStep() {
+    return scaleStep;
+  }
+
+  private boolean canDownscale(ExecutionContext context) {
+    return imageScaler != null && imageScaler.isAvailable(context);
   }
 
   @VisibleForTesting
@@ -163,9 +202,7 @@ public class FilterResourcesStep implements Step {
       Set<Path> drawables = drawableFinder.findDrawables(rootResourceDirs, filesystem);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
-              drawables,
-              targetDensities,
-              /* canDownscale */ imageScaler != null && imageScaler.isAvailable(context)));
+              drawables, targetDensities, /* canDownscale */ canDownscale(context)));
     }
 
     final boolean localeFilterEnabled = !locales.isEmpty();
@@ -202,16 +239,6 @@ public class FilterResourcesStep implements Step {
     }
 
     return false;
-  }
-
-  @Override
-  public String getShortName() {
-    return "resource_filtering";
-  }
-
-  @Override
-  public String getDescription(ExecutionContext context) {
-    return "Filtering drawable and string resources.";
   }
 
   /**
@@ -464,12 +491,12 @@ public class FilterResourcesStep implements Step {
       return this;
     }
 
-    public FilterResourcesStep build() {
+    public FilterResourcesSteps build() {
       Preconditions.checkNotNull(filesystem);
       Preconditions.checkNotNull(resourceFilter);
-      LOG.info("FilterResourcesStep.Builder: resource filter: %s", resourceFilter);
+      LOG.info("FilterResourcesSteps.Builder: resource filter: %s", resourceFilter);
       Preconditions.checkNotNull(inResDirToOutResDirMap);
-      return new FilterResourcesStep(
+      return new FilterResourcesSteps(
           filesystem,
           inResDirToOutResDirMap,
           /* filterByDensity */ resourceFilter.isEnabled(),

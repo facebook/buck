@@ -217,7 +217,7 @@ public class AaptPackageResourcesTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
-            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             Optional.empty());
 
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
@@ -233,7 +233,7 @@ public class AaptPackageResourcesTest {
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
-            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             Optional.empty());
 
     previousRuleKey = assertKeyChanged(previousRuleKey, args);

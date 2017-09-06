@@ -132,7 +132,7 @@ public class AndroidInstrumentationApkDescription
             cellRoots,
             AndroidBinary.AaptMode.AAPT1,
             ResourceCompressionMode.DISABLED,
-            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),

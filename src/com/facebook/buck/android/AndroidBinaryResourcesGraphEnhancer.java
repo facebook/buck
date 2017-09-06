@@ -53,7 +53,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       InternalFlavor.of("generate_string_source_map");
 
   private final SourcePathRuleFinder ruleFinder;
-  private final FilterResourcesStep.ResourceFilter resourceFilter;
+  private final FilterResourcesSteps.ResourceFilter resourceFilter;
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
   private final BuildTarget buildTarget;
@@ -80,7 +80,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean exopackageForResources,
       SourcePath manifest,
       AndroidBinary.AaptMode aaptMode,
-      FilterResourcesStep.ResourceFilter resourceFilter,
+      FilterResourcesSteps.ResourceFilter resourceFilter,
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,
       Optional<String> resourceUnionPackage,
