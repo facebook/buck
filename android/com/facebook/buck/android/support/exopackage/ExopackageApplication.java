@@ -56,7 +56,7 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
     this.exopackageFlags = exopackageFlags;
   }
 
-  private boolean isExopackageEnabledForSecodaryDex() {
+  private boolean isExopackageEnabledForSecondaryDex() {
     return (exopackageFlags & SECONDARY_DEX_MASK) != 0;
   }
 
@@ -69,7 +69,7 @@ public abstract class ExopackageApplication<T extends ApplicationLike> extends A
   }
 
   private T createDelegate() {
-    if (isExopackageEnabledForSecodaryDex()) {
+    if (isExopackageEnabledForSecondaryDex()) {
       ExopackageDexLoader.loadExopackageJars(this);
     }
 
