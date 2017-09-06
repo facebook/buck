@@ -81,6 +81,13 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-testsof"))));
+
+    ProjectWorkspace.ProcessResult dotResult =
+        workspace.runBuckCommand("query", "--dot", "testsof(//example:one)");
+    dotResult.assertSuccess();
+    assertThat(
+        dotResult.getStdout(),
+        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-testsof.dot"))));
   }
 
   @Test

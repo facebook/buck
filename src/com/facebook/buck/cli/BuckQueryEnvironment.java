@@ -424,7 +424,12 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
-    return getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(getNode(target)));
+    ImmutableSet<QueryTarget> testTargets =
+        getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(getNode(target)));
+    for (QueryTarget test : testTargets) {
+      graph.addNode(getNode(test));
+    }
+    return testTargets;
   }
 
   @Override
