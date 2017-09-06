@@ -26,7 +26,9 @@ import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.ResourceFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -47,6 +49,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implements IjModuleRule<T> {
 
@@ -198,8 +201,17 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         TestFolder.FACTORY, DependencyType.TEST, targetNode, wantsPackagePrefix, context);
   }
 
+  protected ImmutableSet<Path> getResourcePaths(Collection<SourcePath> resources) {
+    return resources
+        .stream()
+        .filter(PathSourcePath.class::isInstance)
+        .map(PathSourcePath.class::cast)
+        .map(PathSourcePath::getRelativePath)
+        .collect(MoreCollectors.toImmutableSet());
+  }
+
   protected ImmutableSet<Path> getResourcePaths(
-      Path resourcesRoot, Collection<SourcePath> resources) {
+      Collection<SourcePath> resources, Path resourcesRoot) {
     return resources
         .stream()
         .filter(PathSourcePath.class::isInstance)
@@ -207,6 +219,21 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .map(PathSourcePath::getRelativePath)
         .filter(path -> path.startsWith(resourcesRoot))
         .collect(MoreCollectors.toImmutableSet());
+  }
+
+  protected ImmutableMultimap<Path, Path> getResourcesRootsToResources(
+      ImmutableSet<Path> resourcePaths) {
+    final JavaPackageFinder packageFinder =
+        projectConfig.getJavaBuckConfig().createDefaultJavaPackageFinder();
+    return resourcePaths
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableMultimap(
+                path ->
+                    MorePaths.stripCommonSuffix(
+                            path.getParent(), packageFinder.findJavaPackageFolder(path))
+                        .getFirst(),
+                Function.identity()));
   }
 
   // This function should only be called if resources_root is present. If there is no
