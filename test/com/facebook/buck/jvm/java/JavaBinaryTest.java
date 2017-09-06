@@ -93,6 +93,7 @@ public class JavaBinaryTest {
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,
+                false,
                 null,
                 /* blacklist */ ImmutableSet.of(),
                 ImmutableSet.of(),

@@ -36,6 +36,11 @@ abstract class AbstractJarParameters {
     return false;
   }
 
+  @Value.Default
+  public boolean getDisallowAllDuplicates() {
+    return false;
+  }
+
   public abstract Path getJarPath();
 
   @Value.Default
