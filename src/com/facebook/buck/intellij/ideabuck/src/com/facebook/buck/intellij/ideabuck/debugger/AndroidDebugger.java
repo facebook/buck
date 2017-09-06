@@ -46,7 +46,7 @@ public class AndroidDebugger {
         || !isAdbInitialized(AndroidDebugBridge.getBridge())) {
       AndroidDebugBridge.initIfNeeded(/* clientSupport */ true);
       AndroidDebugBridge.createBridge(
-          BuckSettingsProvider.getInstance().getState().adbExecutable, false);
+          BuckSettingsProvider.getInstance().resolveAdbExecutable(), false);
     }
 
     long start = System.currentTimeMillis();

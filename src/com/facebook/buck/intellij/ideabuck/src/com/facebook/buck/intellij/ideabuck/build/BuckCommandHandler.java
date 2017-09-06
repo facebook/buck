@@ -81,7 +81,7 @@ public abstract class BuckCommandHandler {
       Project project, File directory, BuckCommand command, boolean doStartNotify) {
     this.doStartNotify = doStartNotify;
 
-    String buckExecutable = BuckSettingsProvider.getInstance().getState().buckExecutable;
+    String buckExecutable = BuckSettingsProvider.getInstance().resolveBuckExecutable();
 
     this.project = project;
     this.command = command;

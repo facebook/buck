@@ -23,6 +23,8 @@
 <h3>3.2</h3>
 <ul>
   <li>Fix paste bugs; add unit tests so paste doesn't break again.</li>
+  <li>Move <tt>adb</tt>/<tt>buck</tt> configuration checks to point of use, so you no longer get
+   Fatal Errors on opening IJ if you don't have <tt>adb</tt> installed.</li>
 </ul>
 
 <h3>3.1</h3>

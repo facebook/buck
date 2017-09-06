@@ -61,7 +61,8 @@ public class ExecutableFinder {
     if (!exe.isPresent()) {
       throw new RuntimeException(
           String.format(
-              "Unable to locate %s on PATH, or it's not marked as being executable",
+              "Unable to locate %s based on environment variables, "
+                  + "or it's not marked as being executable",
               suggestedExecutable));
     }
     return exe.get();

@@ -155,7 +155,7 @@ public class BuckBuildManager {
     }
     Project project = handler.project();
 
-    String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
+    String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
     if (exec == null) {
       BuckToolWindowFactory.outputConsoleMessage(
           project,

@@ -30,12 +30,7 @@ public final class BuckWSServerPortUtils {
 
   public static int getPort(String runInPath)
       throws NumberFormatException, IOException, ExecutionException {
-    BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
-    if (state == null) {
-      throw new RuntimeException("Cannot load ideabuck settings.");
-    }
-
-    String exec = state.buckExecutable;
+    String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
 
     if (Strings.isNullOrEmpty(exec)) {
       throw new RuntimeException("Buck executable is not defined in settings.");

@@ -29,6 +29,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Optional;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -63,23 +64,21 @@ public class BuckSettingsUI extends JPanel {
     FileChooserDescriptor buckFileChooserDescriptor =
         new FileChooserDescriptor(true, false, false, false, false, false);
     buckPathField.addBrowseFolderListener(
-        "",
-        "Buck Executable Path",
+        "Buck Executable",
+        "If unspecified, dynamically find one on your PATH",
         null,
         buckFileChooserDescriptor,
-        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
-        false);
+        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
 
     adbPathField = new TextFieldWithBrowseButton();
     FileChooserDescriptor adbFileChooserDescriptor =
         new FileChooserDescriptor(true, false, false, false, false, false);
     adbPathField.addBrowseFolderListener(
-        "",
-        "Adb Executable Path",
+        "Adb Executable",
+        "If unspecified, dynamically find one on your PATH or relative to ANDROID_SDK",
         null,
         adbFileChooserDescriptor,
-        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
-        false);
+        TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
     customizedInstallSettingField = new JBTextField();
     customizedInstallSettingField.getEmptyText().setText(CUSTOMIZED_INSTALL_FLAGS_HINT);
     customizedInstallSettingField.setEnabled(false);
@@ -167,9 +166,26 @@ public class BuckSettingsUI extends JPanel {
     installSettings.add(customizedInstallSetting, BorderLayout.NORTH);
   }
 
+  // When displaying an empty Optional in a text field, use "".
+  private String optionalToText(Optional<String> optional) {
+    return optional.orElse("");
+  }
+
+  // Empty or all-whitespace text fields should be parsed as Optional.empty()
+  private Optional<String> textToOptional(String text) {
+    if (text == null || text.trim().isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(text);
+  }
+
   public boolean isModified() {
-    return !Comparing.equal(buckPathField.getText(), optionsProvider.getState().buckExecutable)
-        || !Comparing.equal(adbPathField.getText(), optionsProvider.getState().adbExecutable)
+    return !Comparing.equal(
+            buckPathField.getText().trim(),
+            optionalToText(optionsProvider.getBuckExecutableOverride()))
+        || !Comparing.equal(
+            adbPathField.getText().trim(),
+            optionalToText(optionsProvider.getAdbExecutableOverride()))
         || optionsProvider.getState().runAfterInstall != runAfterInstall.isSelected()
         || optionsProvider.getState().showDebug != showDebug.isSelected()
         || optionsProvider.getState().enableAutoDeps != enableAutoDeps.isSelected()
@@ -185,8 +201,8 @@ public class BuckSettingsUI extends JPanel {
   }
 
   public void apply() {
-    optionsProvider.getState().buckExecutable = buckPathField.getText();
-    optionsProvider.getState().adbExecutable = adbPathField.getText();
+    optionsProvider.setBuckExecutableOverride(textToOptional(buckPathField.getText()));
+    optionsProvider.setAdbExecutableOverride(textToOptional(adbPathField.getText()));
     optionsProvider.getState().showDebug = showDebug.isSelected();
     optionsProvider.getState().enableAutoDeps = enableAutoDeps.isSelected();
     optionsProvider.getState().runAfterInstall = runAfterInstall.isSelected();
@@ -198,8 +214,8 @@ public class BuckSettingsUI extends JPanel {
   }
 
   public void reset() {
-    buckPathField.setText(optionsProvider.getState().buckExecutable);
-    adbPathField.setText(optionsProvider.getState().adbExecutable);
+    buckPathField.setText(optionsProvider.getBuckExecutableOverride().orElse(""));
+    adbPathField.setText(optionsProvider.getAdbExecutableOverride().orElse(""));
     showDebug.setSelected(optionsProvider.getState().showDebug);
     enableAutoDeps.setSelected(optionsProvider.getState().enableAutoDeps);
     runAfterInstall.setSelected(optionsProvider.getState().runAfterInstall);
