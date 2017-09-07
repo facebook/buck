@@ -72,9 +72,6 @@ BUCK_CORE_RESOURCES = {
     "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
     "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
     "external_executor_jar": "//src/com/facebook/buck/step/external:executor",
-
-    # TODO(#5448619): We currently don't have a great way of packaging up
-    # entire directories into a PEX file.
 }
 
 python_library(
