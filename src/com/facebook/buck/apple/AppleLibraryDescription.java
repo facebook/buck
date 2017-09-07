@@ -469,7 +469,8 @@ public class AppleLibraryDescription
               bundleLoader,
               blacklist,
               extraCxxDeps,
-              transitiveCxxDeps);
+              transitiveCxxDeps,
+              Optional.empty());
       return resolver.addToIndex(rule);
     }
   }
