@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -33,7 +34,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Type;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.inmemoryfs.InMemoryFileSystem;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
@@ -42,7 +42,7 @@ import org.junit.Test;
 
 public class SkylarkProjectBuildFileParserTest {
 
-  private InMemoryFileSystem inMemoryFileSystem;
+  private SkylarkFilesystem skylarkFilesystem;
   private SkylarkProjectBuildFileParser parser;
   private Cell cell;
   private ProjectFilesystem projectFilesystem;
@@ -51,8 +51,8 @@ public class SkylarkProjectBuildFileParserTest {
   public void setUp() throws Exception {
     // Jimfs does not currently support Windows syntax for an absolute path on the current drive
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    inMemoryFileSystem = new InMemoryFileSystem();
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     parser =
         SkylarkProjectBuildFileParser.using(
@@ -66,13 +66,13 @@ public class SkylarkProjectBuildFileParserTest {
                 .setPythonInterpreter("skylark")
                 .build(),
             BuckEventBusForTests.newInstance(),
-            inMemoryFileSystem);
+            skylarkFilesystem);
   }
 
   @Test
   public void canParsePrebuiltJarRule() throws Exception {
     Path buildFile =
-        inMemoryFileSystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
+        skylarkFilesystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
     FileSystemUtils.createDirectoryAndParents(buildFile.getParentDirectory());
     FileSystemUtils.writeContentAsLatin1(
         buildFile,
@@ -104,7 +104,7 @@ public class SkylarkProjectBuildFileParserTest {
   @Test
   public void includeDefsIsANop() throws Exception {
     Path buildFile =
-        inMemoryFileSystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
+        skylarkFilesystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
     FileSystemUtils.createDirectoryAndParents(buildFile.getParentDirectory());
     FileSystemUtils.writeContentAsLatin1(buildFile, "include_defs('//foo/bar')");
 
