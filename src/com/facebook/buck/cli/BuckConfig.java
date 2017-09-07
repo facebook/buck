@@ -509,7 +509,7 @@ public class BuckConfig implements ConfigPathGetter {
   }
 
   public boolean isBuckConfigLocalWarningEnabled() {
-    return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", true);
+    return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
   }
 
   public ProjectTestsMode xcodeProjectTestsMode() {
