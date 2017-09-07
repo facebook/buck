@@ -276,7 +276,7 @@ public class AppleTestDescription
             debugFormat,
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages(),
-            appleConfig.shouldCheckForAssetCatalogDuplicateImages());
+            appleConfig.assetCatalogValidation());
     resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);

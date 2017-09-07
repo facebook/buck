@@ -173,7 +173,7 @@ public class AppleBundleDescription
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
-        appleConfig.shouldCheckForAssetCatalogDuplicateImages());
+        appleConfig.assetCatalogValidation());
   }
 
   /**

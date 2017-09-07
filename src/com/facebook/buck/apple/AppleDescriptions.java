@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static com.facebook.buck.apple.AppleAssetCatalog.validateAssetCatalogs;
 import static com.facebook.buck.swift.SwiftDescriptions.SWIFT_EXTENSION;
 
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
@@ -71,13 +72,9 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -315,7 +312,7 @@ public class AppleDescriptions {
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Tool actool,
-      boolean checkForAssetCatalogDuplicateImages) {
+      AppleAssetCatalog.ValidationType assetCatalogValidation) {
     TargetNode<?, ?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
@@ -377,7 +374,7 @@ public class AppleDescriptions {
         buildTarget,
         projectFilesystem,
         sourcePathResolver,
-        checkForAssetCatalogDuplicateImages);
+        assetCatalogValidation);
 
     BuildTarget assetCatalogBuildTarget = buildTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
 
@@ -571,7 +568,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
       boolean cacheable,
-      boolean checkForAssetCatalogDuplicateImages) {
+      AppleAssetCatalog.ValidationType assetCatalogValidation) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
@@ -644,7 +641,7 @@ public class AppleDescriptions {
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool(),
-            checkForAssetCatalogDuplicateImages);
+            assetCatalogValidation);
     addToIndex(resolver, assetCatalog);
 
     Optional<CoreDataModel> coreDataModel =
@@ -941,78 +938,5 @@ public class AppleDescriptions {
     }
 
     return false;
-  }
-
-  private static void validateAssetCatalogs(
-      ImmutableSortedSet<SourcePath> assetCatalogDirs,
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
-      boolean checkForAssetCatalogDuplicateImages)
-      throws HumanReadableException {
-    HashMap<String, Path> catalogPathsForImageNames = new HashMap<>();
-    ArrayList<String> errors = new ArrayList<>();
-
-    for (SourcePath assetCatalogDir : assetCatalogDirs) {
-      Path catalogPath = sourcePathResolver.getRelativePath(assetCatalogDir);
-      if (!catalogPath.getFileName().toString().endsWith(".xcassets")) {
-        errors.add(
-            String.format(
-                "Target %s had asset catalog dir %s - asset catalog dirs must end with .xcassets",
-                buildTarget, catalogPath));
-        continue;
-      }
-
-      if (checkForAssetCatalogDuplicateImages) {
-        checkCatalogForDuplicateImages(
-            catalogPath, catalogPathsForImageNames, errors, projectFilesystem);
-      }
-    }
-
-    if (!errors.isEmpty()) {
-      throw new HumanReadableException(
-          String.format("Asset catalogs invalid\n%s", String.join("\n", errors)));
-    }
-  }
-
-  /**
-   * All asset catalogs (.xcassets directories) get merged into a single directory per apple bundle.
-   * This method collects errors for duplicate filenames across all the asset catalogs. Imagesets
-   * containing images with identical names can overwrite one another, this is especially
-   * problematic if two images share a name but are different.
-   */
-  private static void checkCatalogForDuplicateImages(
-      Path catalogPath,
-      Map<String, Path> catalogPathsForImageNames,
-      List<String> errors,
-      ProjectFilesystem projectFilesystem)
-      throws HumanReadableException {
-    try {
-      for (Path asset : projectFilesystem.getDirectoryContents(catalogPath)) {
-        if (asset.toString().endsWith(".imageset")) {
-          for (Path imageSetFile : projectFilesystem.getDirectoryContents(asset)) {
-            String fileName = imageSetFile.getFileName().toString().toLowerCase();
-            if (fileName.equals("contents.json")) {
-              continue;
-            } else if (catalogPathsForImageNames.containsKey(fileName)) {
-              Path existingCatalogPath = catalogPathsForImageNames.get(fileName);
-              if (catalogPath.equals(existingCatalogPath)) {
-                continue;
-              } else {
-                errors.add(
-                    String.format(
-                        "%s is included by two asset catalogs: '%s' and '%s'",
-                        imageSetFile.getFileName(), catalogPath, existingCatalogPath));
-              }
-            } else {
-              catalogPathsForImageNames.put(fileName, catalogPath);
-            }
-          }
-        }
-      }
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          "Failed to process asset catalog at %s: %s", catalogPath, e.getMessage());
-    }
   }
 }

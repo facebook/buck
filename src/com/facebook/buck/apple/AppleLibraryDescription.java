@@ -260,7 +260,7 @@ public class AppleLibraryDescription
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
-        appleConfig.shouldCheckForAssetCatalogDuplicateImages());
+        appleConfig.assetCatalogValidation());
   }
 
   /**

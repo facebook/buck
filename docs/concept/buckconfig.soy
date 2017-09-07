@@ -455,13 +455,12 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'apple' /}
-  {param name: 'check_asset_catalog_duplicate_images' /}
-  {param example_value: 'false' /}
+  {param name: 'asset_catalog_validation' /}
+  {param example_value: 'XCODE' /}
   {param description}
-    All asset catalogs (.xcassets directories) get merged into a single directory per apple bundle.
-    This option prevents duplicate filenames across all the asset catalogs. Imagesets
-    containing images with identical names can overwrite one another, this is especially
-    problematic if two images share a name but are different.
+    Buck can check errors in .xcassets' contents that can later cause silent failures, like having
+    multiple images with the same name or missing <code>Contents.json</code> files. To add extra
+    validation above what Xcode does, set this option to <code>STRICT</code>.
   {/param}
 {/call}
 

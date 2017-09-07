@@ -263,8 +263,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_header_symlink_tree_only", false);
   }
 
-  public boolean shouldCheckForAssetCatalogDuplicateImages() {
-    return delegate.getBooleanValue(APPLE_SECTION, "check_asset_catalog_duplicate_images", false);
+  public AppleAssetCatalog.ValidationType assetCatalogValidation() {
+    return delegate
+        .getEnum(APPLE_SECTION, "asset_catalog_validation", AppleAssetCatalog.ValidationType.class)
+        .orElse(AppleAssetCatalog.ValidationType.XCODE);
   }
 
   public String getTestLogDirectoryEnvironmentVariable() {
