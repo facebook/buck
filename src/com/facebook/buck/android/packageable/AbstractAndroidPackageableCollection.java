@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.packageable;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;

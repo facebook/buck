@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.packageable;
 
 /**
  * Something (usually a {@link com.facebook.buck.rules.BuildRule}) that can be included in an

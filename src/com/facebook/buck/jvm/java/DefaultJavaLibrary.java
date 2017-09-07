@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.android.AndroidPackageableCollector;
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

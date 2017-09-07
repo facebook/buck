@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
+import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;

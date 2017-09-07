@@ -78,7 +78,7 @@ public class AndroidResourceDescription
       InternalFlavor.of("android-resource-index");
 
   @VisibleForTesting
-  static final Flavor ASSETS_SYMLINK_TREE_FLAVOR = InternalFlavor.of("assets-symlink-tree");
+  public static final Flavor ASSETS_SYMLINK_TREE_FLAVOR = InternalFlavor.of("assets-symlink-tree");
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 

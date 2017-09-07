@@ -14,11 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.packageable;
 
-import com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection.ResourceDetails;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
@@ -66,7 +66,7 @@ public class AndroidPackageableCollector {
   private final APKModuleGraph apkModuleGraph;
 
   @VisibleForTesting
-  AndroidPackageableCollector(BuildTarget collectionRoot) {
+  public AndroidPackageableCollector(BuildTarget collectionRoot) {
     this(
         collectionRoot,
         ImmutableSet.of(),
