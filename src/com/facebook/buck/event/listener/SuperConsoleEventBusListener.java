@@ -961,7 +961,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  @SuppressWarnings("unused")
   public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
     LOG.debug("Watchman notified about file addition: " + event.getFilename());
     printFileAddedOrRemoved();
@@ -969,7 +968,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  @SuppressWarnings("unused")
   public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
     LOG.debug("Watchman notified about file deletion: " + event.getFilename());
     printFileAddedOrRemoved();
