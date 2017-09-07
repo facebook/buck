@@ -32,7 +32,6 @@ import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,18 +50,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
-
-  private static final BuiltinFunction INCLUDE_DEFS =
-      new BuiltinFunction(
-          "include_defs", FunctionSignature.POSITIONALS, BuiltinFunction.USE_AST_ENV) {
-        @SuppressWarnings({"unused"})
-        public Object invoke(SkylarkList<String> includes, FuncallExpression ast, Environment env) {
-          // TODO(ttsugrii): consider implementing. Unfortunately include_defs function is fundamentally
-          // lossy because it does not require all imported globals to be explicit, which makes
-          // automatic conversion hard/impossible
-          return Runtime.NONE;
-        }
-      };
 
   private final FileSystem fileSystem;
   private final ProjectBuildFileParserOptions options;
@@ -114,7 +101,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile The build file to parse.
    * @return The build rules defined in {@code buildFile}.
    */
-  public ImmutableList<Map<String, Object>> parseBuildRules(Path buildFile)
+  private ImmutableList<Map<String, Object>> parseBuildRules(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
     // configured for terminals that support it.
@@ -125,7 +112,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList.Builder<Map<String, Object>> builder = ImmutableList.builder();
     try (Mutability mutability = Mutability.create("BUCK")) {
       Environment env = Environment.builder(mutability).build();
-      env.setup("include_defs", INCLUDE_DEFS);
       setupBuckRules(buildFile, builder, env);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {

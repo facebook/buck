@@ -100,15 +100,4 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(ImmutableList.of("PUBLIC")));
     assertThat(rule.get("buck.base_path"), equalTo("test"));
   }
-
-  @Test
-  public void includeDefsIsANop() throws Exception {
-    Path buildFile =
-        skylarkFilesystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
-    FileSystemUtils.createDirectoryAndParents(buildFile.getParentDirectory());
-    FileSystemUtils.writeContentAsLatin1(buildFile, "include_defs('//foo/bar')");
-
-    parser.getAllRulesAndMetaRules(
-        projectFilesystem.getPath(buildFile.toString()), new AtomicLong());
-  }
 }
