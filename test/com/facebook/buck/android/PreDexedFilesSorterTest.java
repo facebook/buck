@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;

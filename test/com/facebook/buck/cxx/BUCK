@@ -18,7 +18,6 @@ java_test(
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -182,7 +181,6 @@ java_test(
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -367,7 +365,6 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",

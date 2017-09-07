@@ -49,7 +49,6 @@ java_library(
     ],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -218,7 +217,6 @@ java_test(
     srcs = glob(STEP_TEST_SRCS),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
@@ -226,6 +224,7 @@ java_test(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/annotations:annotations",
         "//src/com/facebook/buck/apple:platform",
@@ -390,7 +389,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -400,6 +398,7 @@ java_test(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/annotations:annotations",
         "//src/com/facebook/buck/apple:platform",
@@ -580,7 +579,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -751,7 +749,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -924,7 +921,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -1091,7 +1087,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -1277,7 +1272,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",
@@ -1460,7 +1454,6 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:helpers",

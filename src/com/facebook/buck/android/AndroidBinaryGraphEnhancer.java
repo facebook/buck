@@ -23,6 +23,8 @@ import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;

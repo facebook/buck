@@ -18,7 +18,7 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":apkmodule",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/graph:graph",
@@ -176,7 +176,6 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":apkmodule",
         ":config",
         ":cxxruntime",
         ":helpers",
@@ -185,6 +184,7 @@ java_immutables_library(
         ":steps",
         ":utils",
         "//src/com/facebook/buck/android/aapt:aapt",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/redex:redex",
         "//src/com/facebook/buck/android/resources:resources",
@@ -304,32 +304,6 @@ java_library(
     ],
 )
 
-APKMODULE_SRCS = [
-    "AbstractAPKModule.java",
-    "APKModuleGraph.java",
-]
-
-java_immutables_library(
-    name = "apkmodule",
-    srcs = APKMODULE_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/rules:build_rule",
-    ],
-    tests = [
-        "//test/com/facebook/buck/android:integration1",
-        "//test/com/facebook/buck/android:integration2",
-        "//test/com/facebook/buck/android:unit",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/java/classes:classes",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/util:util",
-    ],
-)
-
 HELPERS_SRCS = [
     "AdbHelper.java",
     "AndroidPlatformTargetSupplier.java",
@@ -418,7 +392,7 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
         excludes = PACKAGEABLE_SRCS + CXXRUNTIME_SRCS + BUCK_CONFIG_SRCS + RULES_SRCS +
-                   SPLIT_DEX_SRCS + UTILS_SRCS + APKMODULE_SRCS + HELPERS_SRCS,
+                   SPLIT_DEX_SRCS + UTILS_SRCS + HELPERS_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/android:integration1",
@@ -427,12 +401,12 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":apkmodule",
         ":config",
         ":cxxruntime",
         ":packageable",
         ":split_dex",
         ":utils",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",

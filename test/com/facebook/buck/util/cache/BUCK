@@ -2,7 +2,6 @@ standard_java_test(
     name = "cache",
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",

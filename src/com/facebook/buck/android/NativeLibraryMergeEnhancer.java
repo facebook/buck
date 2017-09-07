@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;

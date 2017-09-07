@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.apkmodule;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
@@ -57,7 +57,7 @@ import java.util.Set;
  */
 public class APKModuleGraph {
 
-  static final String ROOT_APKMODULE_NAME = "dex";
+  public static final String ROOT_APKMODULE_NAME = "dex";
 
   private final TargetGraph targetGraph;
   private final BuildTarget target;

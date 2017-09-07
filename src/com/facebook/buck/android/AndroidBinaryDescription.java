@@ -25,6 +25,7 @@ import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;

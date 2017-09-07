@@ -16,7 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
-import com.facebook.buck.android.APKModule;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.google.common.collect.ImmutableMultimap;
 import java.io.IOException;
 import java.nio.file.Path;

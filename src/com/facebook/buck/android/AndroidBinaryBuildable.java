@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;

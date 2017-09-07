@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;

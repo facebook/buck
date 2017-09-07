@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;

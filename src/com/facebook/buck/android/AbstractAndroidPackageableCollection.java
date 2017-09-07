@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;

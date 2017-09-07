@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
