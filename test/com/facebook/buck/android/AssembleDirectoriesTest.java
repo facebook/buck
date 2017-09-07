@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -75,17 +73,16 @@ public class AssembleDirectoriesTest {
 
     BuildTarget target =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:output_folder");
-    BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
     BuildRuleResolver ruleResolver =
         new DefaultBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     AssembleDirectories assembleDirectories =
-        new AssembleDirectories(target, filesystem, buildRuleParams, directories);
+        new AssembleDirectories(target, filesystem, ruleFinder, directories);
     ruleResolver.addToIndex(assembleDirectories);
 
     ImmutableList<Step> steps =

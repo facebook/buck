@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -32,7 +31,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -106,17 +104,16 @@ public class MergeAndroidResourcesSourcesTest {
   @SuppressWarnings("unchecked")
   public void testRuleStepCreation() throws IOException, InterruptedException {
     BuildTarget target = BuildTargetFactory.newInstance("//:output_folder");
-    BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             new FakeSourcePath(filesystem, "res_in_1"), new FakeSourcePath(filesystem, "res_in_2"));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new DefaultBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
-        new MergeAndroidResourceSources(target, filesystem, buildRuleParams, directories);
+        new MergeAndroidResourceSources(target, filesystem, ruleFinder, directories);
 
     ImmutableList<Step> steps =
         mergeAndroidResourceSourcesStep.getBuildSteps(
