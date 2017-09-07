@@ -124,4 +124,11 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
     }
     throw new AssertionError(syntax + " is not mapped to any parser");
   }
+
+  /** @return The hybrid parser that supports Python DSL and Skylark syntax. */
+  public static HybridProjectBuildFileParser using(
+      PythonDslProjectBuildFileParser pythonDslParser,
+      SkylarkProjectBuildFileParser skylarkParser) {
+    return new HybridProjectBuildFileParser(pythonDslParser, skylarkParser);
+  }
 }

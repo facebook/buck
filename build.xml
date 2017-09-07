@@ -135,6 +135,7 @@
     <include name="stringtemplate/ST-4.0.8.jar" />
     <include name="thrift/libthrift-0.10.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
+    <include name="bazel/skylark-lang_deploy.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />

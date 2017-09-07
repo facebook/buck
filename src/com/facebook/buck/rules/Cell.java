@@ -21,9 +21,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.SkylarkFilesystem;
+import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
+import com.facebook.buck.json.SkylarkProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
@@ -283,7 +286,7 @@ public class Cell {
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
-    return new PythonDslProjectBuildFileParser(
+    ProjectBuildFileParserOptions buildFileParserOptions =
         ProjectBuildFileParserOptions.builder()
             .setEnableProfiling(enableProfiling)
             .setProjectRoot(getFilesystem().getRootPath())
@@ -305,11 +308,21 @@ public class Cell {
             .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .build(),
-        typeCoercerFactory,
-        config.getEnvironment(),
-        eventBus,
-        new DefaultProcessExecutor(console));
+            .build();
+    PythonDslProjectBuildFileParser pythonDslProjectBuildFileParser =
+        new PythonDslProjectBuildFileParser(
+            buildFileParserOptions,
+            typeCoercerFactory,
+            config.getEnvironment(),
+            eventBus,
+            new DefaultProcessExecutor(console));
+    if (parserConfig.isPolyglotParsingEnabled()) {
+      return HybridProjectBuildFileParser.using(
+          pythonDslProjectBuildFileParser,
+          SkylarkProjectBuildFileParser.using(
+              buildFileParserOptions, eventBus, SkylarkFilesystem.using(filesystem)));
+    }
+    return pythonDslProjectBuildFileParser;
   }
 
   @Override

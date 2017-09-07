@@ -144,7 +144,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Path buildFile, ImmutableList.Builder<Map<String, Object>> builder, Environment env) {
     for (Description<?> description : options.getDescriptions()) {
       String ruleClass = Description.getBuildRuleType(description).getName();
-      String basePath = options.getProjectRoot().relativize(buildFile).getParent().toString();
+      String basePath =
+          Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
+              .map(Path::toString)
+              .orElse("");
       env.setup(ruleClass, newRuleDefinition(ruleClass, basePath, builder));
     }
   }
