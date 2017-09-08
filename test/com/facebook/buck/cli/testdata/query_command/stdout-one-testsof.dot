@@ -1,3 +1,0 @@
-digraph result_graph {
-  "//example:one-tests" [style=filled,color="#978AB9"];
-}
