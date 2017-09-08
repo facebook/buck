@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
@@ -236,7 +235,6 @@ final class Daemon implements Closeable {
   }
 
   void watchFileSystem(
-      CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
@@ -248,7 +246,6 @@ final class Daemon implements Closeable {
     // disconnections.
     synchronized (parser) {
       parser.recordParseStartTime(eventBus);
-      fileEventBus.post(commandEvent);
       // Track the file hash cache invalidation run time.
       FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
       eventBus.post(started);

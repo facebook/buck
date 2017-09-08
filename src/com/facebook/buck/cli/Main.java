@@ -957,7 +957,6 @@ public final class Main {
                   getParserFromDaemon(
                       daemon.get(),
                       context.get(),
-                      startedEvent,
                       buildEventBus,
                       watchmanWatcher,
                       watchmanFreshInstanceAction);
@@ -1323,7 +1322,6 @@ public final class Main {
   private Pair<TypeCoercerFactory, Parser> getParserFromDaemon(
       Daemon daemonForParser,
       NGContext context,
-      CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
@@ -1341,8 +1339,7 @@ public final class Main {
           daemonForParser.interruptOnClientExit(context.err);
         });
 
-    daemonForParser.watchFileSystem(
-        commandEvent, eventBus, watchmanWatcher, watchmanFreshInstanceAction);
+    daemonForParser.watchFileSystem(eventBus, watchmanWatcher, watchmanFreshInstanceAction);
     return new Pair<>(daemonForParser.getTypeCoercerFactory(), daemonForParser.getParser());
   }
 
