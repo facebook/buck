@@ -19,8 +19,13 @@ package com.facebook.buck.json;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
@@ -51,24 +56,31 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
 
+  private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
+      ImmutableSet.of("visibility", "within_view");
+
   private final FileSystem fileSystem;
+  private final TypeCoercerFactory typeCoercerFactory;
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
 
   private SkylarkProjectBuildFileParser(
       final ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
-      FileSystem fileSystem) {
+      FileSystem fileSystem,
+      TypeCoercerFactory typeCoercerFactory) {
     this.options = options;
     this.buckEventBus = buckEventBus;
     this.fileSystem = fileSystem;
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   public static SkylarkProjectBuildFileParser using(
       final ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
-      FileSystem fileSystem) {
-    return new SkylarkProjectBuildFileParser(options, buckEventBus, fileSystem);
+      FileSystem fileSystem,
+      TypeCoercerFactory typeCoercerFactory) {
+    return new SkylarkProjectBuildFileParser(options, buckEventBus, fileSystem, typeCoercerFactory);
   }
 
   @Override
@@ -129,12 +141,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private void setupBuckRules(
       Path buildFile, ImmutableList.Builder<Map<String, Object>> builder, Environment env) {
     for (Description<?> description : options.getDescriptions()) {
-      String ruleClass = Description.getBuildRuleType(description).getName();
       String basePath =
           Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
               .map(Path::toString)
               .orElse("");
-      env.setup(ruleClass, newRuleDefinition(ruleClass, basePath, builder));
+      String name = Description.getBuildRuleType(description).getName();
+      env.setup(name, newRuleDefinition(description, basePath, builder));
     }
   }
 
@@ -150,23 +162,73 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return Skylark function to handle the Buck rule.
    */
   private BuiltinFunction newRuleDefinition(
-      String ruleClass, String basePath, ImmutableList.Builder<Map<String, Object>> ruleRegistry) {
+      Description<?> ruleClass,
+      String basePath,
+      ImmutableList.Builder<Map<String, Object>> ruleRegistry) {
+    String name = Description.getBuildRuleType(ruleClass).getName();
     return new BuiltinFunction(
-        ruleClass, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
+        name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
 
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(
           Map<String, Object> kwargs, FuncallExpression ast, Environment env)
           throws EvalException, InterruptedException {
-        ruleRegistry.add(
+        ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
-                .putAll(kwargs)
                 .put("buck.base_path", basePath)
-                .put("buck.type", ruleClass)
-                .build());
+                .put("buck.type", name);
+        ImmutableMap<String, ParamInfo> allParamInfo =
+            CoercedTypeCache.INSTANCE.getAllParamInfo(
+                typeCoercerFactory, ruleClass.getConstructorArgType());
+        populateAttributes(kwargs, builder, allParamInfo);
+        throwOnMissingRequiredAttribute(kwargs, allParamInfo);
+        ruleRegistry.add(builder.build());
         return Runtime.NONE;
       }
     };
+  }
+
+  /**
+   * Validates attributes passed to the rule and in case any required attribute is not provided,
+   * throws an {@link IllegalArgumentException}.
+   *
+   * @param kwargs The keyword arguments passed to the rule.
+   * @param allParamInfo The mapping from build rule attributes to their information.
+   */
+  private void throwOnMissingRequiredAttribute(
+      Map<String, Object> kwargs, ImmutableMap<String, ParamInfo> allParamInfo) {
+    for (Map.Entry<String, ParamInfo> paramInfoEntry : allParamInfo.entrySet()) {
+      String pythonName = paramInfoEntry.getValue().getPythonName();
+      if (!paramInfoEntry.getValue().isOptional() && !kwargs.containsKey(pythonName)) {
+        throw new IllegalArgumentException(pythonName + " is expected but not provided");
+      }
+    }
+  }
+
+  /**
+   * Populates provided {@code builder} with values from {@code kwargs} assuming {@code ruleClass}
+   * as the target {@link Description} class.
+   *
+   * @param kwargs The keyword arguments and their values passed to rule function in build file.
+   * @param builder The map builder used for storing extracted attributes and their values.
+   * @param allParamInfo The parameter information for every build rule attribute.
+   */
+  private void populateAttributes(
+      Map<String, Object> kwargs,
+      ImmutableMap.Builder<String, Object> builder,
+      ImmutableMap<String, ParamInfo> allParamInfo) {
+    for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
+      String paramName =
+          CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, kwargEntry.getKey());
+      if (!allParamInfo.containsKey(paramName)
+          && !(IMPLICIT_ATTRIBUTES.contains(kwargEntry.getKey()))) {
+        throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
+      }
+      if (Runtime.NONE.equals(kwargEntry.getValue())) {
+        continue;
+      }
+      builder.put(paramName, kwargEntry.getValue());
+    }
   }
 
   @Override

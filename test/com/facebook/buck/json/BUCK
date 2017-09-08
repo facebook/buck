@@ -44,6 +44,7 @@ standard_java_test(
         "//src/com/facebook/buck/rules:relative_cell_name",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:types",
+        "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",

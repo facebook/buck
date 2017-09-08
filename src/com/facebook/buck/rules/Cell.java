@@ -320,7 +320,10 @@ public class Cell {
       return HybridProjectBuildFileParser.using(
           pythonDslProjectBuildFileParser,
           SkylarkProjectBuildFileParser.using(
-              buildFileParserOptions, eventBus, SkylarkFilesystem.using(filesystem)));
+              buildFileParserOptions,
+              eventBus,
+              SkylarkFilesystem.using(filesystem),
+              typeCoercerFactory));
     }
     return pythonDslProjectBuildFileParser;
   }
