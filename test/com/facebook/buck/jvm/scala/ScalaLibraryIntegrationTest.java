@@ -102,4 +102,20 @@ public class ScalaLibraryIntegrationTest {
 
     assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
   }
+
+  @Test(timeout = (2 * 60 * 1000))
+  public void shouldCompileMixedJavaAndScalaSources() throws Exception {
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                "scala.compiler=//:scala-compiler",
+                "//:bin_mixed",
+                "--",
+                "world!")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.containsString("Hello WORLD!"));
+  }
 }
