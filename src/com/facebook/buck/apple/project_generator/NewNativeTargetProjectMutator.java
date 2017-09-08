@@ -746,9 +746,6 @@ class NewNativeTargetProjectMutator {
       throw new RuntimeException("There was an error loading 'js-bundle.st' template", e);
     }
 
-    JsBundleDescriptionArg args = (JsBundleDescriptionArg) targetNode.getConstructorArg();
-
-    template.add("bundle_name", args.getBundleName());
     BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
     BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
 
@@ -759,6 +756,8 @@ class NewNativeTargetProjectMutator {
     SourcePath resOutput = bundle.getSourcePathToResources();
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    template.add("bundle_name", bundle.getBundleName());
     template.add("built_bundle_path", sourcePathResolver.getAbsolutePath(jsOutput));
     template.add("built_resources_path", sourcePathResolver.getAbsolutePath(resOutput));
 
