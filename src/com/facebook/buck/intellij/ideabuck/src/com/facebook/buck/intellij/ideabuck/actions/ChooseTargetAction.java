@@ -68,11 +68,6 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
               return;
             }
 
-            BuckSettingsProvider buckSettingsProvider = BuckSettingsProvider.getInstance();
-            if (buckSettingsProvider == null || buckSettingsProvider.getState() == null) {
-              return;
-            }
-
             ChooseTargetItem item = (ChooseTargetItem) element;
             // if the target selected isn't an alias, then it has to have : or end with /...
             if (item.getName().contains("//")
@@ -81,12 +76,8 @@ public class ChooseTargetAction extends GotoActionBase implements DumbAware {
               return;
             }
 
-            if (buckSettingsProvider.getState().lastAlias != null) {
-              buckSettingsProvider
-                  .getState()
-                  .lastAlias
-                  .put(project.getBasePath(), item.getBuildTarget());
-            }
+            BuckSettingsProvider buckSettingsProvider = BuckSettingsProvider.getInstance();
+            buckSettingsProvider.setLastAliasForProject(project, item.getBuildTarget());
             BuckToolWindowFactory.updateBuckToolWindowTitle(project);
           }
         };

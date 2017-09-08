@@ -186,44 +186,39 @@ public class BuckSettingsUI extends JPanel {
         || !Comparing.equal(
             adbPathField.getText().trim(),
             optionalToText(optionsProvider.getAdbExecutableOverride()))
-        || optionsProvider.getState().runAfterInstall != runAfterInstall.isSelected()
-        || optionsProvider.getState().showDebug != showDebug.isSelected()
-        || optionsProvider.getState().enableAutoDeps != enableAutoDeps.isSelected()
-        || optionsProvider.getState().multiInstallMode != multiInstallMode.isSelected()
-        || optionsProvider.getState().uninstallBeforeInstalling
-            != uninstallBeforeInstall.isSelected()
-        || optionsProvider.getState().customizedInstallSetting
-            != customizedInstallSetting.isSelected()
+        || optionsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
+        || optionsProvider.isShowDebugWindow() != showDebug.isSelected()
+        || optionsProvider.isAutoDepsEnabled() != enableAutoDeps.isSelected()
+        || optionsProvider.isMultiInstallMode() != multiInstallMode.isSelected()
+        || optionsProvider.isUninstallBeforeInstalling() != uninstallBeforeInstall.isSelected()
+        || optionsProvider.isUseCustomizedInstallSetting() != customizedInstallSetting.isSelected()
         || !optionsProvider
-            .getState()
-            .customizedInstallSettingCommand
+            .getCustomizedInstallSettingCommand()
             .equals(customizedInstallSettingField.getText());
   }
 
   public void apply() {
     optionsProvider.setBuckExecutableOverride(textToOptional(buckPathField.getText()));
     optionsProvider.setAdbExecutableOverride(textToOptional(adbPathField.getText()));
-    optionsProvider.getState().showDebug = showDebug.isSelected();
-    optionsProvider.getState().enableAutoDeps = enableAutoDeps.isSelected();
-    optionsProvider.getState().runAfterInstall = runAfterInstall.isSelected();
-    optionsProvider.getState().multiInstallMode = multiInstallMode.isSelected();
-    optionsProvider.getState().uninstallBeforeInstalling = uninstallBeforeInstall.isSelected();
-    optionsProvider.getState().customizedInstallSetting = customizedInstallSetting.isSelected();
-    optionsProvider.getState().customizedInstallSettingCommand =
-        customizedInstallSettingField.getText();
+    optionsProvider.setShowDebugWindow(showDebug.isSelected());
+    optionsProvider.setAutoDepsEnabled(enableAutoDeps.isSelected());
+    optionsProvider.setRunAfterInstall(runAfterInstall.isSelected());
+    optionsProvider.setMultiInstallMode(multiInstallMode.isSelected());
+    optionsProvider.setUninstallBeforeInstalling(uninstallBeforeInstall.isSelected());
+    optionsProvider.setUseCustomizedInstallSetting(customizedInstallSetting.isSelected());
+    optionsProvider.setCustomizedInstallSettingCommand(customizedInstallSettingField.getText());
   }
 
   public void reset() {
     buckPathField.setText(optionsProvider.getBuckExecutableOverride().orElse(""));
     adbPathField.setText(optionsProvider.getAdbExecutableOverride().orElse(""));
-    showDebug.setSelected(optionsProvider.getState().showDebug);
-    enableAutoDeps.setSelected(optionsProvider.getState().enableAutoDeps);
-    runAfterInstall.setSelected(optionsProvider.getState().runAfterInstall);
-    multiInstallMode.setSelected(optionsProvider.getState().multiInstallMode);
-    uninstallBeforeInstall.setSelected(optionsProvider.getState().uninstallBeforeInstalling);
-    customizedInstallSetting.setSelected(optionsProvider.getState().customizedInstallSetting);
-    customizedInstallSettingField.setText(
-        optionsProvider.getState().customizedInstallSettingCommand);
+    showDebug.setSelected(optionsProvider.isShowDebugWindow());
+    enableAutoDeps.setSelected(optionsProvider.isAutoDepsEnabled());
+    runAfterInstall.setSelected(optionsProvider.isRunAfterInstall());
+    multiInstallMode.setSelected(optionsProvider.isMultiInstallMode());
+    uninstallBeforeInstall.setSelected(optionsProvider.isUninstallBeforeInstalling());
+    customizedInstallSetting.setSelected(optionsProvider.isUseCustomizedInstallSetting());
+    customizedInstallSettingField.setText(optionsProvider.getCustomizedInstallSettingCommand());
   }
 
   private void initCustomizedInstallCommandListener() {

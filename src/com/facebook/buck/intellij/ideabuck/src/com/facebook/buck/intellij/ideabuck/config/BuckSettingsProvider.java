@@ -25,10 +25,12 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import org.jetbrains.annotations.Nullable;
 
 /** Load and save buck setting states across IDE restarts. */
 @State(
@@ -161,11 +163,75 @@ public class BuckSettingsProvider
     return executable;
   }
 
+  public boolean isShowDebugWindow() {
+    return state.showDebug;
+  }
+
+  public void setShowDebugWindow(boolean showDebug) {
+    state.showDebug = showDebug;
+  }
+
+  public boolean isAutoDepsEnabled() {
+    return state.enableAutoDeps;
+  }
+
+  public void setAutoDepsEnabled(boolean enableAutoDeps) {
+    state.enableAutoDeps = enableAutoDeps;
+  }
+
+  public boolean isRunAfterInstall() {
+    return state.runAfterInstall;
+  }
+
+  public void setRunAfterInstall(boolean runAfterInstall) {
+    state.runAfterInstall = runAfterInstall;
+  }
+
+  public boolean isMultiInstallMode() {
+    return state.multiInstallMode;
+  }
+
+  public void setMultiInstallMode(boolean multiInstallMode) {
+    state.multiInstallMode = multiInstallMode;
+  }
+
+  public boolean isUninstallBeforeInstalling() {
+    return state.uninstallBeforeInstalling;
+  }
+
+  public void setUninstallBeforeInstalling(boolean uninstallBeforeInstalling) {
+    state.uninstallBeforeInstalling = uninstallBeforeInstalling;
+  }
+
+  public boolean isUseCustomizedInstallSetting() {
+    return state.customizedInstallSetting;
+  }
+
+  public void setUseCustomizedInstallSetting(boolean customizedInstallSetting) {
+    state.customizedInstallSetting = customizedInstallSetting;
+  }
+
+  public String getCustomizedInstallSettingCommand() {
+    return state.customizedInstallSettingCommand;
+  }
+
+  public void setCustomizedInstallSettingCommand(String customizedInstallSettingCommand) {
+    state.customizedInstallSettingCommand = customizedInstallSettingCommand;
+  }
+
+  public @Nullable String getLastAliasForProject(Project project) {
+    return state.lastAlias.get(project.getBasePath());
+  }
+
+  public void setLastAliasForProject(Project project, String buildTarget) {
+    state.lastAlias.put(project.getBasePath(), buildTarget);
+  }
+
   /** All settings are stored in this inner class. */
   public static class State {
 
     /** Remember the last used buck alias for each historical project. */
-    public Map<String, String> lastAlias = new HashMap<String, String>();
+    public Map<String, String> lastAlias = new HashMap<>();
 
     /** Buck executable to prefer to whatever can be found by the BuckExecutableDetector. */
     public String buckExecutable = null;
@@ -180,16 +246,16 @@ public class BuckSettingsProvider
     public boolean enableAutoDeps = false;
 
     /** "-r" parameter for "buck install" */
-    public Boolean runAfterInstall = true;
+    public boolean runAfterInstall = true;
 
     /** "-x" parameter for "buck install" */
-    public Boolean multiInstallMode = false;
+    public boolean multiInstallMode = false;
 
     /** "-u" parameter for "buck install" */
-    public Boolean uninstallBeforeInstalling = false;
+    public boolean uninstallBeforeInstalling = false;
 
-    /** If use user's customized install string. */
-    public Boolean customizedInstallSetting = false;
+    /** If true, use user's customized install string. */
+    public boolean customizedInstallSetting = false;
 
     /** User's customized install command string, e.g. "-a -b -c". */
     public String customizedInstallSettingCommand = "";

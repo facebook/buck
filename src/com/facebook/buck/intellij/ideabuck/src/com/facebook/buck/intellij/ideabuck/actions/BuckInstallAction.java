@@ -56,27 +56,24 @@ public class BuckInstallAction extends BuckBaseAction {
       return;
     }
 
-    BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
-    if (state == null) {
-      return;
-    }
+    BuckSettingsProvider settingsProvider = BuckSettingsProvider.getInstance();
     BuckBuildCommandHandler handler =
         new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.INSTALL);
-    if (state.customizedInstallSetting) {
+    if (settingsProvider.isUseCustomizedInstallSetting()) {
       // Split the whole command line into different parameters.
-      String commands = state.customizedInstallSettingCommand;
+      String commands = settingsProvider.getCustomizedInstallSettingCommand();
       Matcher matcher = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(commands);
       while (matcher.find()) {
         handler.command().addParameter(matcher.group(1));
       }
     } else {
-      if (state.runAfterInstall) {
+      if (settingsProvider.isRunAfterInstall()) {
         handler.command().addParameter("-r");
       }
-      if (state.multiInstallMode) {
+      if (settingsProvider.isMultiInstallMode()) {
         handler.command().addParameter("-x");
       }
-      if (state.uninstallBeforeInstalling) {
+      if (settingsProvider.isUninstallBeforeInstalling()) {
         handler.command().addParameter("-u");
       }
     }
