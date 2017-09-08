@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
  * Provides a mechanism for mapping between a {@link BuildTarget} and the {@link BuildRule} it
  * represents. Once parsing is complete, instances of this class can be considered immutable.
  */
-public class DefaultBuildRuleResolver implements BuildRuleResolver {
+public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
@@ -42,12 +42,12 @@ public class DefaultBuildRuleResolver implements BuildRuleResolver {
   private final BuildRuleResolverMetadataCache metadataCache;
 
   @VisibleForTesting
-  public DefaultBuildRuleResolver(
+  public SingleThreadedBuildRuleResolver(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
     this(targetGraph, buildRuleGenerator, null);
   }
 
-  public DefaultBuildRuleResolver(
+  public SingleThreadedBuildRuleResolver(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       @Nullable BuckEventBus eventBus) {

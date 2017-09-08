@@ -23,12 +23,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -63,7 +63,8 @@ public class ApkGenruleDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(installableApkNode, transitiveDepNode, depNode, genruleNode);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule transitiveDep = resolver.requireRule(transitiveDepNode.getBuildTarget());
     BuildRule dep = resolver.requireRule(depNode.getBuildTarget());

@@ -23,12 +23,12 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -97,7 +97,8 @@ public class AaptPackageResourcesTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode, resourceNode2);
     ruleResolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     resource1 = (AndroidResource) ruleResolver.requireRule(resourceNode.getBuildTarget());
     resource2 = (AndroidResource) ruleResolver.requireRule(resourceNode2.getBuildTarget());
 

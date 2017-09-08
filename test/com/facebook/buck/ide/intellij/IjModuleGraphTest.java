@@ -47,10 +47,10 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -633,7 +633,7 @@ public class IjModuleGraphTest {
     final SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {

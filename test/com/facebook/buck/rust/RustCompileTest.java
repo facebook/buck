@@ -26,11 +26,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -246,7 +246,7 @@ public class RustCompileTest {
 
       SourcePathRuleFinder ruleFinder =
           new SourcePathRuleFinder(
-              new DefaultBuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
 
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);

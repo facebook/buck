@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.KeystoreProperties;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -65,7 +65,7 @@ public class ReDexStepTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
     ReDexStep redex =

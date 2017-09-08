@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -50,7 +50,7 @@ public class AppleDescriptionsTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
@@ -75,7 +75,7 @@ public class AppleDescriptionsTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
@@ -105,7 +105,7 @@ public class AppleDescriptionsTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     assertEquals(
         headerMap,
@@ -127,7 +127,7 @@ public class AppleDescriptionsTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     assertEquals(
         ImmutableMap.of(),
@@ -142,7 +142,7 @@ public class AppleDescriptionsTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
@@ -166,7 +166,7 @@ public class AppleDescriptionsTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(

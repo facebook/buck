@@ -28,10 +28,10 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -70,7 +70,7 @@ public class MiniAaptTest {
   private final SourcePathResolver resolver =
       DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
-              new DefaultBuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Rule public ExpectedException thrown = ExpectedException.none();

@@ -45,7 +45,6 @@ import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -53,6 +52,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SdkEnvironment;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -369,7 +369,7 @@ public class DistBuildStateTest {
   private DistBuildFileHashes emptyActionGraph() throws IOException, InterruptedException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

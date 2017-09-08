@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -39,6 +38,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -75,7 +75,7 @@ public class ArchiveTest {
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -184,7 +184,7 @@ public class ArchiveTest {
   @Test
   public void flagsArePropagated() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -223,7 +223,7 @@ public class ArchiveTest {
   @Test
   public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

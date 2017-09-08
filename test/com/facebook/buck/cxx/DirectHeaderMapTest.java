@@ -28,13 +28,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -107,7 +107,7 @@ public class DirectHeaderMapTest {
 
     // Setup the symlink tree buildable.
     ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     ruleFinder = new SourcePathRuleFinder(ruleResolver);
@@ -158,7 +158,7 @@ public class DirectHeaderMapTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -183,7 +183,7 @@ public class DirectHeaderMapTest {
   public void testRuleKeyDoesNotChangeIfLinkTargetsChange()
       throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(buildRule);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);

@@ -24,8 +24,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.args.StringArg;
@@ -66,7 +66,7 @@ public class CxxBoostTestTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");

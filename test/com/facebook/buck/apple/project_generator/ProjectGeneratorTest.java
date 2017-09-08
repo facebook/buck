@@ -93,12 +93,12 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -4380,7 +4380,8 @@ public class ProjectGeneratorTest {
         ImmutableSet.of(frameworkBinaryNode, frameworkNode, resourceNode, binaryNode, bundleNode);
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
             nodes,
@@ -4828,7 +4829,8 @@ public class ProjectGeneratorTest {
   private Function<TargetNode<?, ?>, BuildRuleResolver> getBuildRuleResolverNodeFunction(
       final TargetGraph targetGraph) {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
           @Override

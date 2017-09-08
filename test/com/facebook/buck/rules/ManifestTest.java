@@ -42,7 +42,7 @@ public class ManifestTest {
   private static final SourcePathResolver RESOLVER =
       DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
-              new DefaultBuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Test

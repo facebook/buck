@@ -27,9 +27,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
@@ -72,7 +72,8 @@ public class AndroidBinaryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(transitiveDepNode, depNode, keystoreNode, androidBinaryNode);
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
     AndroidBinary androidBinary = (AndroidBinary) ruleResolver.requireRule(target);
@@ -82,7 +83,7 @@ public class AndroidBinaryDescriptionTest {
   @Test
   public void turkishCaseRulesDoNotCrashConstructor() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:keystore");
     Keystore keystore =

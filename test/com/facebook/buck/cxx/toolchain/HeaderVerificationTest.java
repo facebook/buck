@@ -20,10 +20,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -45,7 +45,7 @@ public class HeaderVerificationTest {
   private RuleKey getRuleKey(HeaderVerification headerVerification) {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =

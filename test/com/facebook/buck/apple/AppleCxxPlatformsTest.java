@@ -50,11 +50,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -189,7 +189,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
@@ -287,7 +287,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
@@ -381,7 +381,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -753,7 +753,7 @@ public class AppleCxxPlatformsTest {
   private ImmutableMap<Flavor, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws IOException {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -814,7 +814,7 @@ public class AppleCxxPlatformsTest {
   private ImmutableMap<Flavor, RuleKey> constructLinkRuleKeys(
       ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);

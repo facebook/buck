@@ -22,11 +22,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +37,7 @@ public class KeystoreTest {
 
   private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
         .setStore(new FakeSourcePath("keystores/debug.keystore"))

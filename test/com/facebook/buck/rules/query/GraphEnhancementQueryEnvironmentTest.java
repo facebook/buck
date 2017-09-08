@@ -31,9 +31,9 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -136,7 +136,8 @@ public class GraphEnhancementQueryEnvironmentTest {
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(bottomNode, libNode, sublibNode);
     BuildRuleResolver realResolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     FakeJavaLibrary bottomRule =
         realResolver.addToIndex(new FakeJavaLibrary(bottomNode.getBuildTarget()));

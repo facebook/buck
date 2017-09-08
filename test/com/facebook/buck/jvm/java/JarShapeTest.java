@@ -23,9 +23,9 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -51,7 +51,8 @@ public class JarShapeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
     BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
@@ -78,7 +79,8 @@ public class JarShapeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
     BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
@@ -112,7 +114,8 @@ public class JarShapeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, mavenDepNode, libNode);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
     BuildRule mavenDep = resolver.requireRule(mavenDepNode.getBuildTarget());
@@ -151,7 +154,8 @@ public class JarShapeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(deepMavenDepNode, mavenDepNode, libNode);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule deepMavenDep = resolver.requireRule(deepMavenDepNode.getBuildTarget());
     BuildRule mavenDep = resolver.requireRule(mavenDepNode.getBuildTarget());

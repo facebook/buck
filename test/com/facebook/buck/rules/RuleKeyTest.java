@@ -63,7 +63,7 @@ public class RuleKeyTest {
   public void shouldNotAllowPathsInRuleKeysWhenSetReflectively() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKeyBuilder<HashCode> builder = createBuilder(resolver, ruleFinder);
@@ -81,10 +81,10 @@ public class RuleKeyTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
     BuildRuleResolver ruleResolver1 =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRuleResolver ruleResolver2 =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(ruleResolver1);
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -129,7 +129,7 @@ public class RuleKeyTest {
   public void ensureSimpleValuesCorrectRuleKeyChangesMade() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey reflective =
@@ -156,7 +156,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
@@ -182,7 +182,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
@@ -207,7 +207,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
@@ -237,7 +237,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
@@ -260,7 +260,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey reflective =
@@ -282,7 +282,7 @@ public class RuleKeyTest {
   public void differentSeedsMakeDifferentKeys() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -307,7 +307,7 @@ public class RuleKeyTest {
   public void testRuleKeyEqualsAndHashCodeMethods() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey keyPair1 =
@@ -330,7 +330,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Changing the name of a named source path should change the hash...
@@ -366,11 +366,11 @@ public class RuleKeyTest {
     // Changing the relative path should change the rule key
     SourcePathRuleFinder ruleFinder1 =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathRuleFinder ruleFinder2 =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     assertNotEquals(
         buildResult(
@@ -384,7 +384,7 @@ public class RuleKeyTest {
   @Test
   public void setInputBuildTargetSourcePath() {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -457,7 +457,7 @@ public class RuleKeyTest {
   @Test
   public void setInputArchiveMemberSourcePath() {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -511,7 +511,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
@@ -528,7 +528,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
@@ -541,7 +541,7 @@ public class RuleKeyTest {
   public void canAddRuleKeyAppendable() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
@@ -557,7 +557,7 @@ public class RuleKeyTest {
         ImmutableList.of(new TestRuleKeyAppendable("foo"), new TestRuleKeyAppendable("bar"));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
@@ -573,7 +573,7 @@ public class RuleKeyTest {
             "bar", new TestRuleKeyAppendable("bar"));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
@@ -588,7 +588,7 @@ public class RuleKeyTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache =
@@ -617,7 +617,7 @@ public class RuleKeyTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache =
@@ -670,7 +670,7 @@ public class RuleKeyTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
@@ -692,7 +692,7 @@ public class RuleKeyTest {
   public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());

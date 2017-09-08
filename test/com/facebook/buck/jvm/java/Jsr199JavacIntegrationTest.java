@@ -24,10 +24,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -161,7 +161,7 @@ public class Jsr199JavacIntegrationTest {
   public void shouldWriteResolvedBuildTargetSourcePathsToClassesFile()
       throws IOException, InterruptedException {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = new FakeBuildRule("//:fake");
     resolver.addToIndex(rule);
@@ -247,7 +247,7 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void shouldUseSpecifiedJavacJar() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = new FakeBuildRule("//:fake");
     resolver.addToIndex(rule);

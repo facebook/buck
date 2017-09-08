@@ -20,10 +20,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -43,7 +43,7 @@ public class AppleAssetCatalogTest {
   private SourcePathResolver resolver =
       DefaultSourcePathResolver.from(
           new SourcePathRuleFinder(
-              new DefaultBuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();

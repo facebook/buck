@@ -46,8 +46,8 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
@@ -2383,7 +2383,7 @@ public class CxxBinaryIntegrationTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     assumeTrue(cxxPlatform.getAr().resolve(ruleResolver).supportsThinArchives());
     ProjectWorkspace workspace =

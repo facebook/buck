@@ -35,7 +35,7 @@ public class PathSourcePathTest {
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path resolved = resolver.getRelativePath(path);
 

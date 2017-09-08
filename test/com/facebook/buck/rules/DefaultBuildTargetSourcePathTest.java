@@ -32,7 +32,7 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -52,7 +52,7 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

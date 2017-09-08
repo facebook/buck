@@ -29,10 +29,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -116,7 +116,7 @@ final class JavaBuildGraphProcessor {
       }
 
       BuildRuleResolver buildRuleResolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               graph, new DefaultTargetNodeToBuildRuleTransformer(), params.getBuckEventBus());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);

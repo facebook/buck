@@ -33,7 +33,7 @@ public class ForwardingBuildTargetSourcePathTest {
   @Before
   public void setUp() {
     resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
   }

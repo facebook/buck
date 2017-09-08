@@ -36,13 +36,13 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -132,7 +132,7 @@ public class MultiarchFileTest {
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
@@ -164,7 +164,7 @@ public class MultiarchFileTest {
   @Test
   public void descriptionWithMultipleDifferentSdksShouldFail() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     try {
@@ -185,7 +185,7 @@ public class MultiarchFileTest {
   @Test
   public void ruleWithSpecialBuildActionShouldFail() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors =

@@ -28,9 +28,9 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Architecture;
@@ -118,7 +118,7 @@ public class CxxPlatformUtils {
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root)
       throws InterruptedException, IOException {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()

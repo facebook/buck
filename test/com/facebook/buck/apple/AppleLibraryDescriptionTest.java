@@ -27,10 +27,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -55,7 +55,7 @@ public class AppleLibraryDescriptionTest {
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR, DefaultCxxPlatforms.FLAVOR);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =

@@ -22,8 +22,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,7 +43,7 @@ public class BuildTargetsQueueTest {
   @Test
   public void testResolverWithoutAnyTargets() {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of());
     ImmutableList<String> zeroDepTargets = queue.dequeueZeroDependencyNodes(ImmutableList.of());
@@ -89,7 +89,7 @@ public class BuildTargetsQueueTest {
 
   private static BuildRuleResolver createSimpleResolver() throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ImmutableSortedSet<BuildRule> buildRules =
         ImmutableSortedSet.of(
@@ -110,7 +110,7 @@ public class BuildTargetsQueueTest {
   public static BuildRuleResolver createDiamondDependencyResolver()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget root = BuildTargetFactory.newInstance(TARGET_NAME);

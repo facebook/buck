@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -46,6 +45,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -79,7 +79,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -167,7 +167,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   @Test
   public void testGetBuildStepsWhenThereAreNoClassesToDex() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     DefaultJavaLibrary javaLibrary = JavaLibraryBuilder.createBuilder("//foo:bar").build(resolver);
     javaLibrary
@@ -206,7 +206,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   @Test
   public void testObserverMethods() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     DefaultJavaLibrary accumulateClassNames =
         JavaLibraryBuilder.createBuilder("//foo:bar").build(resolver);
@@ -240,7 +240,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   @Test
   public void getOutputDoesNotAccessWrappedJavaLibrary() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     JavaLibrary javaLibrary =

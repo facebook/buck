@@ -59,7 +59,7 @@ public class UnskippedRulesTrackerTest {
   @Before
   public void setUp() {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     RuleDepsCache depsCache = new RuleDepsCache(resolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, resolver);

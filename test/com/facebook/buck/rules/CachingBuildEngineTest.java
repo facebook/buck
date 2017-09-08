@@ -168,7 +168,7 @@ public class CachingBuildEngineTest {
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final SourcePathRuleFinder DEFAULT_RULE_FINDER =
       new SourcePathRuleFinder(
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
@@ -241,7 +241,7 @@ public class CachingBuildEngineTest {
               .build();
       buildContext.getEventBus().register(listener);
       resolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       ruleFinder = new SourcePathRuleFinder(resolver);
       pathResolver = DefaultSourcePathResolver.from(ruleFinder);

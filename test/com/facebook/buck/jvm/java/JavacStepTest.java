@@ -24,9 +24,9 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -55,7 +55,7 @@ public class JavacStepTest {
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -106,7 +106,7 @@ public class JavacStepTest {
   public void failedCompileSendsStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -160,7 +160,7 @@ public class JavacStepTest {
   public void existingBootclasspathDirSucceeds() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -216,7 +216,7 @@ public class JavacStepTest {
   public void missingBootclasspathDirFailsWithError() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

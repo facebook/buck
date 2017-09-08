@@ -35,7 +35,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -44,6 +43,7 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -130,7 +130,7 @@ public class CxxPreprocessAndCompileTest {
   public void inputChangesCauseRuleKeyChangesForCompilation() throws Exception {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -297,7 +297,7 @@ public class CxxPreprocessAndCompileTest {
       throws Exception {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -362,7 +362,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -421,7 +421,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
@@ -486,7 +486,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -532,7 +532,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

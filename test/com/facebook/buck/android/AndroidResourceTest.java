@@ -26,13 +26,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -81,7 +81,7 @@ public class AndroidResourceTest {
                   .build();
 
           TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
-          return new DefaultBuildRuleResolver(
+          return new SingleThreadedBuildRuleResolver(
               targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
         };
 
@@ -124,7 +124,7 @@ public class AndroidResourceTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
@@ -159,7 +159,7 @@ public class AndroidResourceTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
@@ -201,7 +201,8 @@ public class AndroidResourceTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, resourceNode);
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     AndroidResource dep = (AndroidResource) resolver.requireRule(depNode.getBuildTarget());
     AndroidResource resource =

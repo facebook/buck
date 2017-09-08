@@ -130,7 +130,7 @@ public class KnownBuildRuleTypesTest {
 
     JavaLibraryDescriptionArg arg = JavaLibraryDescriptionArg.builder().setName("foo").build();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return (DefaultJavaLibrary)
         description.createBuildRule(
@@ -171,7 +171,7 @@ public class KnownBuildRuleTypesTest {
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache =

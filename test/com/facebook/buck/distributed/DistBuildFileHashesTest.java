@@ -38,11 +38,11 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -112,7 +112,7 @@ public class DistBuildFileHashesTest {
       secondJavaFs = secondProjectFilesystem.getRootPath().getFileSystem();
 
       buildRuleResolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

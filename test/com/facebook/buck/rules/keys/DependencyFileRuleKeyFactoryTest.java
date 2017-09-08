@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -33,6 +32,7 @@ import com.facebook.buck.rules.FakeDepFileBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -945,7 +945,7 @@ public class DependencyFileRuleKeyFactoryTest {
   }
 
   private BuildRuleResolver newRuleResolver() {
-    return new DefaultBuildRuleResolver(
+    return new SingleThreadedBuildRuleResolver(
         TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   }
 }

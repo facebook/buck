@@ -45,9 +45,9 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -752,7 +752,7 @@ public class XCodeProjectCommandHelper {
     public LazyActionGraph(TargetGraph targetGraph, BuckEventBus buckEventBus) {
       this.targetGraph = targetGraph;
       this.resolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
     }
 

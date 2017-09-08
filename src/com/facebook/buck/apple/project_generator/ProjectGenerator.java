@@ -105,12 +105,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -322,7 +322,7 @@ public class ProjectGenerator {
     this.defaultPathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new DefaultBuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY,
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     buckEventBus)));
@@ -896,7 +896,7 @@ public class ProjectGenerator {
         };
 
     BuildRuleResolver emptyBuildRuleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     for (StringWithMacros flag : flags) {

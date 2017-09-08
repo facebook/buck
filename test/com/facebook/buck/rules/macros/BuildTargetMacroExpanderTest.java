@@ -28,9 +28,9 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -46,7 +46,7 @@ public class BuildTargetMacroExpanderTest {
   private static Optional<BuildTarget> match(String blob) throws MacroException {
     final List<BuildTarget> found = new ArrayList<>();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     FakeBuildRule rule = new FakeBuildRule("//something:manifest");
     resolver.addToIndex(rule);

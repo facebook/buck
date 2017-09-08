@@ -41,11 +41,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -108,7 +108,7 @@ public class CxxPrecompiledHeaderRuleTest {
       new DefaultTargetNodeToBuildRuleTransformer();
 
   public final BuildRuleResolver ruleResolver =
-      new DefaultBuildRuleResolver(TargetGraph.EMPTY, transformer);
+      new SingleThreadedBuildRuleResolver(TargetGraph.EMPTY, transformer);
   public final SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
   public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 

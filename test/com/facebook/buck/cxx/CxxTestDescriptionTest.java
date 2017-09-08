@@ -30,11 +30,11 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -149,7 +149,7 @@ public class CxxTestDescriptionTest {
   public void environmentIsPropagated() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -186,7 +186,7 @@ public class CxxTestDescriptionTest {
   public void testArgsArePropagated() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -224,7 +224,7 @@ public class CxxTestDescriptionTest {
     for (CxxTestType framework : CxxTestType.values()) {
       ProjectFilesystem filesystem = new FakeProjectFilesystem();
       BuildRuleResolver resolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       addFramework(resolver, filesystem);
       CxxTestBuilder builder =
@@ -247,7 +247,7 @@ public class CxxTestDescriptionTest {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(cxxLibraryTarget).setDeps(ImmutableSortedSet.of(cxxBinaryTarget));
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), cxxBinaryBuilder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     addFramework(resolver, filesystem);
@@ -266,7 +266,7 @@ public class CxxTestDescriptionTest {
   public void locationMacro() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -298,7 +298,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -333,7 +333,7 @@ public class CxxTestDescriptionTest {
   public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -372,7 +372,7 @@ public class CxxTestDescriptionTest {
   public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -415,7 +415,7 @@ public class CxxTestDescriptionTest {
     for (CxxTestType framework : CxxTestType.values()) {
       // Create a test rule without resources attached.
       BuildRuleResolver resolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       addFramework(resolver, filesystem);
       CxxTestBuilder builder = createTestBuilder().setFramework(framework);
@@ -425,7 +425,7 @@ public class CxxTestDescriptionTest {
 
       // Create a rule with a resource attached.
       resolver =
-          new DefaultBuildRuleResolver(
+          new SingleThreadedBuildRuleResolver(
               TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       addFramework(resolver, filesystem);
       builder =

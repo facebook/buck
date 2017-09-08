@@ -30,9 +30,9 @@ import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -68,7 +68,7 @@ public class ApplePackageDescriptionTest {
     BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");
 
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
@@ -121,7 +121,7 @@ public class ApplePackageDescriptionTest {
     BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");
 
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();

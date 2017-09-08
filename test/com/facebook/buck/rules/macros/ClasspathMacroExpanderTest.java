@@ -29,10 +29,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -73,7 +73,7 @@ public class ClasspathMacroExpanderTest {
   @Test
   public void shouldIncludeARuleIfNothingIsGiven() throws Exception {
     final BuildRuleResolver buildRuleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
@@ -105,7 +105,8 @@ public class ClasspathMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -127,7 +128,7 @@ public class ClasspathMacroExpanderTest {
   @Test(expected = MacroException.class)
   public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
@@ -153,7 +154,8 @@ public class ClasspathMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule dep = ruleResolver.requireRule(depNode.getBuildTarget());
     BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
@@ -185,7 +187,8 @@ public class ClasspathMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
     BuildRule dep = ruleResolver.requireRule(depNode.getBuildTarget());

@@ -22,8 +22,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
@@ -34,7 +34,7 @@ public class JavaBinaryDescriptionTest {
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     FakeJavaLibrary transitiveLibrary =

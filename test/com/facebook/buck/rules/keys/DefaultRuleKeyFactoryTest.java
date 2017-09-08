@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -38,6 +37,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -84,7 +84,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -112,7 +112,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -143,7 +143,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -182,7 +182,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -225,7 +225,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -269,7 +269,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget depTarget = BuildTargetFactory.newInstance("//cheese:more-peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -325,7 +325,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -357,7 +357,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -389,7 +389,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -424,7 +424,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget topLevelTarget = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(topLevelTarget);
@@ -466,7 +466,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -547,7 +547,7 @@ public class DefaultRuleKeyFactoryTest {
   public void testFactoryReportsInputsAndDependenciesToCacheForBuildRule() throws IOException {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
@@ -603,7 +603,7 @@ public class DefaultRuleKeyFactoryTest {
       throws IOException {
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     NoopRuleKeyCache<RuleKey> noopRuleKeyCache = new NoopRuleKeyCache<>();
@@ -667,7 +667,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);
@@ -690,7 +690,7 @@ public class DefaultRuleKeyFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new DefaultBuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule rule = new EmptyRule(target);

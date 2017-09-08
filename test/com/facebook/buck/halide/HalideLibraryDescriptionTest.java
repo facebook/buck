@@ -35,13 +35,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -81,7 +81,8 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(compilerBuilder.build(), libBuilder.build());
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     HalideLibrary lib = (HalideLibrary) libBuilder.build(resolver, filesystem, targetGraph);
 
     // Check that the library rule has the correct preprocessor input.
@@ -124,7 +125,8 @@ public class HalideLibraryDescriptionTest {
     HalideLibraryBuilder halideLibraryBuilder = new HalideLibraryBuilder(target);
     TargetGraph targetGraph1 = TargetGraphFactory.newInstance(halideLibraryBuilder.build());
     BuildRuleResolver resolver1 =
-        new DefaultBuildRuleResolver(targetGraph1, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph1, new DefaultTargetNodeToBuildRuleTransformer());
     HalideLibrary halideLibrary =
         (HalideLibrary) halideLibraryBuilder.build(resolver1, filesystem, targetGraph1);
     assertThat(
@@ -138,7 +140,8 @@ public class HalideLibraryDescriptionTest {
     halideLibraryBuilder.setSupportedPlatformsRegex(Pattern.compile("nothing"));
     TargetGraph targetGraph2 = TargetGraphFactory.newInstance(halideLibraryBuilder.build());
     BuildRuleResolver resolver2 =
-        new DefaultBuildRuleResolver(targetGraph2, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph2, new DefaultTargetNodeToBuildRuleTransformer());
     halideLibrary = (HalideLibrary) halideLibraryBuilder.build(resolver2, filesystem, targetGraph2);
     assertThat(
         halideLibrary
@@ -169,7 +172,8 @@ public class HalideLibraryDescriptionTest {
     // First, make sure the compile step doesn't include the extra flags.
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     HalideCompile compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
@@ -186,7 +190,8 @@ public class HalideLibraryDescriptionTest {
     compileBuilder.setCompilerInvocationFlags(extraCompilerFlags);
     targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
     buildSteps =
@@ -214,7 +219,8 @@ public class HalideLibraryDescriptionTest {
     // for the function output name.
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     HalideCompile compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
@@ -232,7 +238,8 @@ public class HalideLibraryDescriptionTest {
     compileBuilder.setFunctionNameOverride(overrideName);
     targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     compile = (HalideCompile) compileBuilder.build(resolver, filesystem, targetGraph);
 
     buildSteps =

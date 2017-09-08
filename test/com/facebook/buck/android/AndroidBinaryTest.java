@@ -32,12 +32,12 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -73,7 +73,7 @@ public class AndroidBinaryTest {
   @Test
   public void testAndroidBinaryNoDx() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
@@ -247,7 +247,7 @@ public class AndroidBinaryTest {
   @Test
   public void testGetUnsignedApkPath() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
@@ -280,7 +280,7 @@ public class AndroidBinaryTest {
   @Test
   public void testGetProguardOutputFromInputClasspath() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign");
@@ -321,7 +321,7 @@ public class AndroidBinaryTest {
   @Test
   public void testDexingCommand() throws Exception {
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(
@@ -372,7 +372,7 @@ public class AndroidBinaryTest {
     SourcePath reorderTool = new FakeSourcePath("/tools#reorder_tool");
     SourcePath reorderData = new FakeSourcePath("/tools#reorder_data");
     BuildRuleResolver ruleResolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(
@@ -422,7 +422,7 @@ public class AndroidBinaryTest {
   @Test
   public void testAddPostFilterCommandSteps() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -460,7 +460,7 @@ public class AndroidBinaryTest {
   @Test
   public void noDxParametersAreHintsAndNotHardDependencies() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule keystoreRule = addKeystoreRule(resolver);
 
@@ -475,7 +475,7 @@ public class AndroidBinaryTest {
   @Test
   public void transitivePrebuiltJarsAreFirstOrderDeps() throws Exception {
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule keystoreRule = addKeystoreRule(resolver);
 

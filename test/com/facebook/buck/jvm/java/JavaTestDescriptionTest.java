@@ -22,8 +22,8 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -64,7 +64,8 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(exportedNode, exportingNode, javaTestNode);
 
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     JavaTest javaTest = (JavaTest) resolver.requireRule(javaTestNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());
@@ -100,7 +101,8 @@ public class JavaTestDescriptionTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(exportedNode, exportingNode, javaTestNode);
 
     BuildRuleResolver resolver =
-        new DefaultBuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     JavaTest javaTest = (JavaTest) resolver.requireRule(javaTestNode.getBuildTarget());
     BuildRule exportedRule = resolver.requireRule(exportedNode.getBuildTarget());

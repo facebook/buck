@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.rules.DefaultBuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -61,7 +61,7 @@ public class ScalaLibraryIntegrationTest {
     try {
       new ScalaBuckConfig(FakeBuckConfig.builder().build())
           .getScalac(
-              new DefaultBuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     } catch (HumanReadableException e) {
       assumeNoException("Could not find local scalac", e);
