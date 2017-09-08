@@ -115,7 +115,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .build();
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {
-    if (platform.getName().contains("osx")) {
+    if (platform.getType() == ApplePlatformType.MAC) {
       return AppleBundleDestinations.OSX_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_DESTINATIONS;
@@ -123,7 +123,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
   }
 
   public static AppleBundleDestinations platformFrameworkDestinations(ApplePlatform platform) {
-    if (platform.getName().contains("osx")) {
+    if (platform.getType() == ApplePlatformType.MAC) {
       return AppleBundleDestinations.OSX_FRAMEWORK_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_FRAMEWORK_DESTINATIONS;

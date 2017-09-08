@@ -117,6 +117,10 @@ abstract class AbstractApplePlatform
     return false;
   }
 
+  public ApplePlatformType getType() {
+    return ApplePlatformType.of(getName());
+  }
+
   public static boolean needsCodeSign(String name) {
     return name.startsWith(IPHONEOS.getName())
         || name.startsWith(IPHONESIMULATOR.getName())

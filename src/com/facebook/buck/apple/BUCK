@@ -1,6 +1,7 @@
 PLATFORM_SRCS = [
     "AbstractAppleCxxPlatform.java",
     "AbstractApplePlatform.java",
+    "ApplePlatformType.java",
     "AbstractAppleSdk.java",
     "AbstractAppleSdkPaths.java",
     "AbstractAppleToolchain.java",

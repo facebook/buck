@@ -761,9 +761,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableMap<String, NSObject> getInfoPlistOverrideKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
 
-    if (platform.getName().contains("osx")) {
+    if (platform.getType() == ApplePlatformType.MAC) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(false));
-    } else if (!platform.getName().contains("watch") && !isLegacyWatchApp()) {
+    } else if (!platform.getType().isWatch() && !isLegacyWatchApp()) {
       keys.put("LSRequiresIPhoneOS", new NSNumber(true));
     }
 
@@ -772,23 +772,36 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys() {
     ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
-    final String platformName = platform.getName();
 
-    if (platformName.contains("osx")) {
-      keys.put("NSHighResolutionCapable", new NSNumber(true));
-      keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
-      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("MacOSX")));
-    } else if (platformName.contains("iphoneos")) {
-      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
-    } else if (platformName.contains("iphonesimulator")) {
-      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
-    } else if (platformName.contains("watchos") && !isLegacyWatchApp()) {
-      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchOS")));
-    } else if (platformName.contains("watchsimulator") && !isLegacyWatchApp()) {
-      keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchSimulator")));
+    switch (platform.getType()) {
+      case MAC:
+        keys.put("NSHighResolutionCapable", new NSNumber(true));
+        keys.put("NSSupportsAutomaticGraphicsSwitching", new NSNumber(true));
+        keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("MacOSX")));
+        break;
+      case IOS_DEVICE:
+        keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneOS")));
+        break;
+      case IOS_SIMULATOR:
+        keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
+        break;
+      case WATCH_DEVICE:
+        if (!isLegacyWatchApp()) {
+          keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchOS")));
+        }
+        break;
+      case WATCH_SIMULATOR:
+        if (!isLegacyWatchApp()) {
+          keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchSimulator")));
+        }
+        break;
+      case TV_DEVICE:
+      case TV_SIMULATOR:
+      case UNKNOWN:
+        break;
     }
 
-    keys.put("DTPlatformName", new NSString(platformName));
+    keys.put("DTPlatformName", new NSString(platform.getName()));
     keys.put("DTPlatformVersion", new NSString(sdkVersion));
     keys.put("DTSDKName", new NSString(sdkName + sdkVersion));
     keys.put("MinimumOSVersion", new NSString(minOSVersion));
