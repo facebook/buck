@@ -580,7 +580,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
-          bundleRoot.resolve(Paths.get("Frameworks")),
+          bundleRoot.resolve(destinations.getFrameworksPath()),
           dryRunCodeSigning
               ? Optional.<Supplier<CodeSignIdentity>>empty()
               : Optional.of(codeSignIdentitySupplier),
@@ -617,7 +617,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     } else {
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
-          bundleRoot.resolve(Paths.get("Frameworks")),
+          bundleRoot.resolve(destinations.getFrameworksPath()),
           Optional.<Supplier<CodeSignIdentity>>empty(),
           stepsBuilder,
           false /* is for packaging? */);
