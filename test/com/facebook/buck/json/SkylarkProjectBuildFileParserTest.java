@@ -17,9 +17,7 @@
 package com.facebook.buck.json;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -29,12 +27,9 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Type;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
-import com.google.devtools.build.lib.vfs.Path;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
@@ -45,20 +40,15 @@ import org.junit.rules.ExpectedException;
 
 public class SkylarkProjectBuildFileParserTest {
 
-  private SkylarkFilesystem skylarkFilesystem;
   private SkylarkProjectBuildFileParser parser;
-  private Cell cell;
   private ProjectFilesystem projectFilesystem;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws Exception {
-    // Jimfs does not currently support Windows syntax for an absolute path on the current drive
-    assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
-    cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     parser =
         SkylarkProjectBuildFileParser.using(
             ProjectBuildFileParserOptions.builder()
@@ -71,28 +61,26 @@ public class SkylarkProjectBuildFileParserTest {
                 .setPythonInterpreter("skylark")
                 .build(),
             BuckEventBusForTests.newInstance(),
-            skylarkFilesystem,
+            SkylarkFilesystem.using(projectFilesystem),
             new DefaultTypeCoercerFactory());
   }
 
   @Test
   public void canParsePrebuiltJarRule() throws Exception {
-    Path buildFile =
-        skylarkFilesystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
-    FileSystemUtils.createDirectoryAndParents(buildFile.getParentDirectory());
-    FileSystemUtils.writeContentAsLatin1(
-        buildFile,
+    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    projectFilesystem.mkdirs(buildFile.getParent());
+    projectFilesystem.writeContentsToPath(
         "prebuilt_jar("
             + "name='guava',"
             + "binary_jar='guava.jar',"
             + "licenses=['LICENSE'],"
             + "source_jar='guava-sources.jar',"
             + "visibility=['PUBLIC'],"
-            + ")");
+            + ")",
+        buildFile);
 
     ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(
-            projectFilesystem.getPath(buildFile.toString()), new AtomicLong());
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
     assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
     Map<String, Object> rule = allRulesAndMetaRules.get(0);
     assertThat(rule.get("name"), equalTo("guava"));
@@ -104,47 +92,43 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(
         Type.STRING_LIST.convert(rule.get("visibility"), "PUBLIC"),
         equalTo(ImmutableList.of("PUBLIC")));
-    assertThat(rule.get("buck.base_path"), equalTo("test"));
+    assertThat(rule.get("buck.base_path"), equalTo("src/test"));
   }
 
   @Test
   public void detectsInvalidAttribute() throws Exception {
-    Path buildFile =
-        skylarkFilesystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
-    FileSystemUtils.createDirectoryAndParents(buildFile.getParentDirectory());
-    FileSystemUtils.writeContentAsLatin1(
-        buildFile,
+    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    projectFilesystem.mkdirs(buildFile.getParent());
+    projectFilesystem.writeContentsToPath(
         "prebuilt_jar("
             + "name='guava',"
             + "binary_jarz='guava.jar',"
             + "licenses=['LICENSE'],"
             + "source_jar='guava-sources.jar',"
             + "visibility=['PUBLIC'],"
-            + ")");
+            + ")",
+        buildFile);
 
     thrown.expect(BuildFileParseException.class);
 
-    parser.getAllRulesAndMetaRules(
-        projectFilesystem.getPath(buildFile.toString()), new AtomicLong());
+    parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
   }
 
   @Test
   public void detectsMissingRequiredAttribute() throws Exception {
-    Path buildFile =
-        skylarkFilesystem.getPath(cell.getRoot().resolve("test").resolve("BUCK").toString());
-    FileSystemUtils.createDirectoryAndParents(buildFile.getParentDirectory());
-    FileSystemUtils.writeContentAsLatin1(
-        buildFile,
+    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    projectFilesystem.mkdirs(buildFile.getParent());
+    projectFilesystem.writeContentsToPath(
         "prebuilt_jar("
             + "name='guava',"
             + "licenses=['LICENSE'],"
             + "source_jar='guava-sources.jar',"
             + "visibility=['PUBLIC'],"
-            + ")");
+            + ")",
+        buildFile);
 
     thrown.expect(BuildFileParseException.class);
 
-    parser.getAllRulesAndMetaRules(
-        projectFilesystem.getPath(buildFile.toString()), new AtomicLong());
+    parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
   }
 }

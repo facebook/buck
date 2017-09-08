@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
@@ -143,7 +144,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     for (Description<?> description : options.getDescriptions()) {
       String basePath =
           Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
-              .map(Path::toString)
+              .map(MorePaths::pathWithUnixSeparators)
               .orElse("");
       String name = Description.getBuildRuleType(description).getName();
       env.setup(name, newRuleDefinition(description, basePath, builder));
