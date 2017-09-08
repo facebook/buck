@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -269,7 +270,16 @@ public class JavacStep implements Step {
         new OptionsConsumer() {
           @Override
           public void addOptionValue(String option, String value) {
-            builder.add("-" + option).add(value);
+            if (option.equals("bootclasspath")) {
+              builder
+                  .add("-bootclasspath")
+                  .add(
+                      Arrays.stream(value.split(File.pathSeparator))
+                          .map(path -> filesystem.resolve(path).toString())
+                          .collect(Collectors.joining(File.pathSeparator)));
+            } else {
+              builder.add("-" + option).add(value);
+            }
           }
 
           @Override

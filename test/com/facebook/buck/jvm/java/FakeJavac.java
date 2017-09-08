@@ -103,7 +103,7 @@ public class FakeJavac implements Javac {
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList) {
-    throw new UnsupportedOperationException();
+    return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
   }
 
   @Override
