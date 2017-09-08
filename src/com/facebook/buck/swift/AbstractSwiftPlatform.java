@@ -32,7 +32,15 @@ interface AbstractSwiftPlatform {
 
   Optional<Tool> getSwiftStdlibTool();
 
+  /**
+   * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,
+   *     the directory will contain libs like libswiftCore.dylib and others.
+   */
   Set<Path> getSwiftRuntimePaths();
 
+  /**
+   * @return A set of directories which contain the Swift runtime as static libraries. On macOS, the
+   *     directory will contain libs like libswiftCore.a and others.
+   */
   Set<Path> getSwiftStaticRuntimePaths();
 }
