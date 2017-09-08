@@ -213,7 +213,7 @@ class BuckTool(object):
                 # Get the number of columns in the terminal.
                 with open(os.devnull, 'w') as devnull:
                     columns = check_output(["tput", "cols"], stderr=devnull).strip()
-                    env['COLUMNS'] = columns
+                    env['BUCK_TERM_COLUMNS'] = columns
             except CalledProcessError:
                 # If the call to tput fails, we use the default.
                 pass

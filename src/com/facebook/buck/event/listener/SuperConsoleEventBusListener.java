@@ -247,13 +247,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.distBuildSlaveTracker = new LinkedHashMap<>();
 
     int outputMaxColumns = 80;
-    Optional<String> columnsStr = executionEnvironment.getenv("COLUMNS");
+    Optional<String> columnsStr = executionEnvironment.getenv("BUCK_TERM_COLUMNS");
     if (columnsStr.isPresent()) {
       try {
         outputMaxColumns = Integer.parseInt(columnsStr.get());
       } catch (NumberFormatException e) {
         LOG.debug(
-            "the environment variable COLUMNS did not contain a valid value: %s", columnsStr.get());
+            "the environment variable BUCK_TERM_COLUMNS did not contain a valid value: %s",
+            columnsStr.get());
       }
     }
     this.outputMaxColumns = outputMaxColumns;
