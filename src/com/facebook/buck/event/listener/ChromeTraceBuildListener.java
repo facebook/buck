@@ -474,7 +474,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         "action_graph_cache",
         ChromeTraceEvent.Phase.IMMEDIATE,
-        ImmutableMap.of("hit", "true"),
+        ImmutableMap.of("hit", true),
         hit);
   }
 
@@ -484,7 +484,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         "action_graph_cache",
         ChromeTraceEvent.Phase.IMMEDIATE,
-        ImmutableMap.of("hit", "false", "cacheWasEmpty", String.valueOf(miss.cacheWasEmpty)),
+        ImmutableMap.of("hit", false, "cacheWasEmpty", miss.cacheWasEmpty),
         miss);
   }
 
