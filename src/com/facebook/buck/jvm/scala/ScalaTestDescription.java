@@ -19,10 +19,13 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
@@ -58,16 +61,22 @@ public class ScalaTestDescription
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
   private final ScalaBuckConfig config;
+  private final JavaBuckConfig javaBuckConfig;
+  private final JavacOptions templateJavacOptions;
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
   private final CxxPlatform cxxPlatform;
 
   public ScalaTestDescription(
       ScalaBuckConfig config,
+      JavaBuckConfig javaBuckConfig,
+      JavacOptions templateOptions,
       JavaOptions javaOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
       CxxPlatform cxxPlatform) {
     this.config = config;
+    this.javaBuckConfig = javaBuckConfig;
+    this.templateJavacOptions = templateOptions;
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
@@ -102,6 +111,10 @@ public class ScalaTestDescription
     BuildTarget javaLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
+
     ScalaLibraryBuilder scalaLibraryBuilder =
         new ScalaLibraryBuilder(
                 targetGraph,
@@ -110,7 +123,9 @@ public class ScalaTestDescription
                 params,
                 resolver,
                 cellRoots,
-                config)
+                config,
+                javaBuckConfig)
+            .setJavacOptions(javacOptions)
             .setArgs(args);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {

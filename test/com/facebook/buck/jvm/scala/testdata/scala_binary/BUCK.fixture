@@ -17,6 +17,19 @@ java_binary(
     ],
 )
 
+scala_library(
+    name='mixed',
+    srcs=['MainMixed.scala', 'Class2.java'],
+)
+
+java_binary(
+    name='bin_mixed',
+    main_class='buck.MainMixed',
+    deps=[
+        ':mixed',
+    ],
+)
+
 ###### Compiler
 
 prebuilt_jar(

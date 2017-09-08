@@ -615,10 +615,15 @@ public class KnownBuildRuleTypes {
     builder.register(new RustLibraryDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new RustTestDescription(rustBuckConfig, cxxPlatforms, defaultCxxPlatform));
     builder.register(new PrebuiltRustLibraryDescription());
-    builder.register(new ScalaLibraryDescription(scalaConfig));
+    builder.register(new ScalaLibraryDescription(scalaConfig, javaConfig, defaultJavacOptions));
     builder.register(
         new ScalaTestDescription(
-            scalaConfig, defaultJavaOptionsForTests, defaultTestRuleTimeoutMs, defaultCxxPlatform));
+            scalaConfig,
+            javaConfig,
+            defaultJavacOptions,
+            defaultJavaOptionsForTests,
+            defaultTestRuleTimeoutMs,
+            defaultCxxPlatform));
     builder.register(new SceneKitAssetsDescription());
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
