@@ -91,7 +91,10 @@ public class FetchCommand extends BuildCommand {
         actionGraphAndResolver =
             Preconditions.checkNotNull(
                 ActionGraphCache.getFreshActionGraph(
-                    params.getBuckEventBus(), ruleGenerator, result.getTargetGraph()));
+                    params.getBuckEventBus(),
+                    ruleGenerator,
+                    result.getTargetGraph(),
+                    params.getBuckConfig().isActionGraphParallelizationEnabled()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildTargetException | BuildFileParseException | VersionException e) {
         params

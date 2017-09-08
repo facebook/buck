@@ -179,7 +179,10 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     BuildRuleResolver resolver =
         Preconditions.checkNotNull(
-                ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph))
+                ActionGraphCache.getFreshActionGraph(
+                    params.getBuckEventBus(),
+                    targetGraph,
+                    params.getBuckConfig().isActionGraphParallelizationEnabled()))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -217,7 +220,10 @@ public class AuditClasspathCommand extends AbstractCommand {
 
     BuildRuleResolver resolver =
         Preconditions.checkNotNull(
-                ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph))
+                ActionGraphCache.getFreshActionGraph(
+                    params.getBuckEventBus(),
+                    targetGraph,
+                    params.getBuckConfig().isActionGraphParallelizationEnabled()))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

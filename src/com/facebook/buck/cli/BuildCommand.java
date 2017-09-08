@@ -869,15 +869,12 @@ public class BuildCommand extends AbstractCommand {
     buildTargets = targetGraphAndBuildTargets.getBuildTargets();
     buildTargetsHaveBeenCalculated = true;
     ActionGraphAndResolver actionGraphAndResolver =
-        Preconditions.checkNotNull(
-            params
-                .getActionGraphCache()
-                .getActionGraph(
-                    params.getBuckEventBus(),
-                    params.getBuckConfig().isActionGraphCheckingEnabled(),
-                    params.getBuckConfig().isSkipActionGraphCache(),
-                    targetGraphAndBuildTargets.getTargetGraph(),
-                    params.getBuckConfig().getKeySeed()));
+        params
+            .getActionGraphCache()
+            .getActionGraph(
+                params.getBuckEventBus(),
+                targetGraphAndBuildTargets.getTargetGraph(),
+                params.getBuckConfig());
 
     // If the user specified an explicit build target, use that.
     if (justBuildTarget != null) {

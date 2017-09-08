@@ -67,7 +67,6 @@ import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -504,15 +503,12 @@ public class TestCommand extends BuildCommand {
       }
 
       ActionGraphAndResolver actionGraphAndResolver =
-          Preconditions.checkNotNull(
-              params
-                  .getActionGraphCache()
-                  .getActionGraph(
-                      params.getBuckEventBus(),
-                      params.getBuckConfig().isActionGraphCheckingEnabled(),
-                      params.getBuckConfig().isSkipActionGraphCache(),
-                      targetGraphAndBuildTargets.getTargetGraph(),
-                      params.getBuckConfig().getKeySeed()));
+          params
+              .getActionGraphCache()
+              .getActionGraph(
+                  params.getBuckEventBus(),
+                  targetGraphAndBuildTargets.getTargetGraph(),
+                  params.getBuckConfig());
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules =
           Iterables.filter(actionGraphAndResolver.getActionGraph().getNodes(), TestRule.class);

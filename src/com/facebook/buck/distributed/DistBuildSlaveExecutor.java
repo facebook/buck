@@ -199,14 +199,14 @@ public class DistBuildSlaveExecutor {
 
     tracker.startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     actionGraphAndResolver =
-        Preconditions.checkNotNull(
-            args.getActionGraphCache()
-                .getActionGraph(
-                    args.getBuckEventBus(),
-                    /* checkActionGraphs */ false,
-                    /* skipActionGraphCache */ false,
-                    Preconditions.checkNotNull(targetGraph),
-                    args.getCacheKeySeed()));
+        args.getActionGraphCache()
+            .getActionGraph(
+                args.getBuckEventBus(),
+                /* checkActionGraphs */ false,
+                /* skipActionGraphCache */ false,
+                Preconditions.checkNotNull(targetGraph),
+                args.getCacheKeySeed(),
+                false);
     tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }

@@ -821,10 +821,8 @@ public class TargetsCommand extends AbstractCommand {
               .getActionGraphCache()
               .getActionGraph(
                   params.getBuckEventBus(),
-                  params.getBuckConfig().isActionGraphCheckingEnabled(),
-                  params.getBuckConfig().isSkipActionGraphCache(),
                   targetGraphAndTargetNodes.getFirst(),
-                  params.getBuckConfig().getKeySeed());
+                  params.getBuckConfig());
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {

@@ -2205,7 +2205,8 @@ public class ParserTest {
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
-    return Preconditions.checkNotNull(ActionGraphCache.getFreshActionGraph(eventBus, targetGraph))
+    return Preconditions.checkNotNull(
+            ActionGraphCache.getFreshActionGraph(eventBus, targetGraph, false))
         .getResolver();
   }
 

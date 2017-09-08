@@ -197,12 +197,7 @@ public class IjProjectCommandHelper {
   }
 
   private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
-    return actionGraphCache.getActionGraph(
-        buckEventBus,
-        buckConfig.isActionGraphCheckingEnabled(),
-        buckConfig.isSkipActionGraphCache(),
-        targetGraph,
-        buckConfig.getKeySeed());
+    return actionGraphCache.getActionGraph(buckEventBus, targetGraph, buckConfig);
   }
 
   private TargetGraph getProjectGraphForIde(

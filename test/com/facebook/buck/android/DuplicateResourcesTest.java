@@ -249,7 +249,8 @@ public class DuplicateResourcesTest {
             BuckEventBusForTests.newInstance(
                 new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
             new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraph);
+            targetGraph,
+            false);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

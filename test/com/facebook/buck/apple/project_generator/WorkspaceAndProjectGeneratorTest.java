@@ -930,7 +930,9 @@ public class WorkspaceAndProjectGeneratorTest {
       final TargetGraph targetGraph) {
     return input ->
         ActionGraphCache.getFreshActionGraph(
-                BuckEventBusForTests.newInstance(), targetGraph.getSubgraph(ImmutableSet.of(input)))
+                BuckEventBusForTests.newInstance(),
+                targetGraph.getSubgraph(ImmutableSet.of(input)),
+                false)
             .getResolver();
   }
 }
