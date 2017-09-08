@@ -46,7 +46,8 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
       case JAVA:
         return new JavaConfiguredCompilerFactory(javaConfig, extraClasspathFromContextFunction);
       case SCALA:
-        return new ScalaConfiguredCompilerFactory(scalaConfig, extraClasspathFromContextFunction);
+        return new ScalaConfiguredCompilerFactory(
+            scalaConfig, javaConfig, extraClasspathFromContextFunction);
       case KOTLIN:
         return new KotlinConfiguredCompilerFactory(
             kotlinBuckConfig, javaConfig, extraClasspathFromContextFunction);

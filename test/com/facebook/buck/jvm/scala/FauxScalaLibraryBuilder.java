@@ -35,7 +35,7 @@ public class FauxScalaLibraryBuilder
 
   private FauxScalaLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
-    super(new ScalaLibraryDescription(null), target, projectFilesystem, hashCode);
+    super(new ScalaLibraryDescription(null, null, null), target, projectFilesystem, hashCode);
     this.projectFilesystem = projectFilesystem;
   }
 
