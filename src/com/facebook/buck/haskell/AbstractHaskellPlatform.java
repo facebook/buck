@@ -42,6 +42,9 @@ abstract class AbstractHaskellPlatform implements FlavorConvertible {
   /** @return the {@link ToolProvider} for the haskell compiler. */
   abstract ToolProvider getCompiler();
 
+  /** @return The Haddock binary. */
+  abstract ToolProvider getHaddock();
+
   /** @return the {@link HaskellVersion} for the haskell compiler. */
   abstract HaskellVersion getHaskellVersion();
 

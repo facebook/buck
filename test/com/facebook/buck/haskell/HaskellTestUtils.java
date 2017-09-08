@@ -42,6 +42,7 @@ class HaskellTestUtils {
           .setCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setHaddock(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setHaskellVersion(HaskellVersion.of(8))
           .setShouldCacheLinks(true)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
