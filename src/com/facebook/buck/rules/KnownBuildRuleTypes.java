@@ -365,7 +365,10 @@ public class KnownBuildRuleTypes {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
     LuaBuckConfig luaBuckConfig = new LuaBuckConfig(config, executableFinder);
-    LuaPlatform luaPlatform = luaBuckConfig.getPlatform();
+    FlavorDomain<LuaPlatform> luaPlatforms =
+        FlavorDomain.from(
+            LuaPlatform.FLAVOR_DOMAIN_NAME, luaBuckConfig.getPlatforms(cxxPlatforms.getValues()));
+    LuaPlatform defaultLuaPlatform = luaPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
@@ -519,7 +522,7 @@ public class KnownBuildRuleTypes {
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
     builder.register(new CxxGenruleDescription(cxxPlatforms));
-    builder.register(new CxxLuaExtensionDescription(luaPlatform, cxxBuckConfig, cxxPlatforms));
+    builder.register(new CxxLuaExtensionDescription(luaPlatforms, cxxBuckConfig));
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.register(
@@ -575,8 +578,7 @@ public class KnownBuildRuleTypes {
             defaultJavacOptions,
             defaultTestRuleTimeoutMs));
     builder.register(
-        new LuaBinaryDescription(
-            luaPlatform, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms));
+        new LuaBinaryDescription(defaultLuaPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);

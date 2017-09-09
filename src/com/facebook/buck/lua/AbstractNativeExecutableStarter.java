@@ -88,8 +88,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   abstract CxxBuckConfig getCxxBuckConfig();
 
-  abstract CxxPlatform getCxxPlatform();
-
   abstract BuildTarget getTarget();
 
   abstract Path getOutput();
@@ -161,7 +159,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                               : "NULL",
                           "EXT_SUFFIX",
                           Escaper.escapeAsPythonString(
-                              getCxxPlatform().getSharedLibraryExtension())),
+                              getLuaPlatform().getCxxPlatform().getSharedLibraryExtension())),
                       /* executable */ false);
                 });
 
@@ -202,7 +200,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 getPathResolver(),
                 getRuleFinder(),
                 getCxxBuckConfig(),
-                getCxxPlatform(),
+                getLuaPlatform().getCxxPlatform(),
                 ImmutableList.<CxxPreprocessorInput>builder()
                     .add(
                         CxxPreprocessorInput.builder()
@@ -212,7 +210,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                                     ? ImmutableList.of()
                                     : StringArg.from("-DBUILTIN_NATIVE_STARTER"))
                             .build())
-                    .addAll(getTransitiveCxxPreprocessorInput(getCxxPlatform(), nativeStarterDeps))
+                    .addAll(
+                        getTransitiveCxxPreprocessorInput(
+                            getLuaPlatform().getCxxPlatform(), nativeStarterDeps))
                     .build(),
                 ImmutableMultimap.of(),
                 Optional.empty(),
@@ -229,7 +229,11 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                         "-rpath",
                         String.format(
                             "%s/%s",
-                            getCxxPlatform().getLd().resolve(getRuleResolver()).origin(),
+                            getLuaPlatform()
+                                .getCxxPlatform()
+                                .getLd()
+                                .resolve(getRuleResolver())
+                                .origin(),
                             getRelativeNativeLibsDir().get().toString())))
                 : ImmutableList.of())
         .addAllArgs(SourcePathArg.from(objects.values()))
@@ -244,7 +248,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             .addToIndex(
                 CxxLinkableEnhancer.createCxxLinkableBuildRule(
                     getCxxBuckConfig(),
-                    getCxxPlatform(),
+                    getLuaPlatform().getCxxPlatform(),
                     getProjectFilesystem(),
                     getRuleResolver(),
                     getPathResolver(),

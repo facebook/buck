@@ -16,7 +16,9 @@
 
 package com.facebook.buck.lua;
 
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 
@@ -30,5 +32,9 @@ public class LuaTestUtils {
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setShouldCacheBinaries(true)
           .setNativeLinkStrategy(NativeLinkStrategy.SEPARATE)
+          .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .build();
+
+  public static final FlavorDomain<LuaPlatform> DEFAULT_PLATFORMS =
+      FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, DEFAULT_PLATFORM);
 }

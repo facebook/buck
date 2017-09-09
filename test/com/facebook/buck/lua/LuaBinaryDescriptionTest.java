@@ -270,9 +270,8 @@ public class LuaBinaryDescriptionTest {
         new LuaBinaryBuilder(
                 new LuaBinaryDescription(
                     LuaTestUtils.DEFAULT_PLATFORM,
+                    LuaTestUtils.DEFAULT_PLATFORMS,
                     cxxBuckConfig,
-                    CxxPlatformUtils.DEFAULT_PLATFORM,
-                    CxxPlatformUtils.DEFAULT_PLATFORMS,
                     pythonPlatforms),
                 BuildTargetFactory.newInstance("//:binary"))
             .setMainModule("main")
@@ -471,13 +470,14 @@ public class LuaBinaryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     extensionBuilder.setBaseModule("hello");
 
+    LuaPlatform platform =
+        LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED);
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
             BuildTargetFactory.newInstance("//:bin"),
-            LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED),
+            platform,
+            FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, platform),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            CxxPlatformUtils.DEFAULT_PLATFORMS,
             pythonPlatforms);
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(extensionBuilder.getTarget()));

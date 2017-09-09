@@ -17,8 +17,11 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ToolProvider;
@@ -30,12 +33,19 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractLuaPlatform {
+abstract class AbstractLuaPlatform implements FlavorConvertible {
+
+  public static final String FLAVOR_DOMAIN_NAME = "Lua Platform";
 
   private static final AbstractCxxLibrary SYSTEM_CXX_LIBRARY =
       new SystemLuaCxxLibrary(
           BuildTarget.of(
               UnflavoredBuildTarget.of(Paths.get(""), Optional.empty(), "//system", "lua")));
+
+  @Override
+  public Flavor getFlavor() {
+    return getCxxPlatform().getFlavor();
+  }
 
   public abstract ToolProvider getLua();
 
@@ -58,6 +68,8 @@ abstract class AbstractLuaPlatform {
 
   /** @return the native link strategy to use for binaries. */
   public abstract NativeLinkStrategy getNativeLinkStrategy();
+
+  public abstract CxxPlatform getCxxPlatform();
 
   public AbstractCxxLibrary getLuaCxxLibrary(BuildRuleResolver resolver) {
     return getLuaCxxLibraryTarget()

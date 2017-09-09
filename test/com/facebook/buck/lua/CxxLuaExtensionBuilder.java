@@ -18,8 +18,8 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -44,9 +44,8 @@ public class CxxLuaExtensionBuilder
   public CxxLuaExtensionBuilder(BuildTarget target, LuaPlatform luaPlatform) {
     this(
         new CxxLuaExtensionDescription(
-            luaPlatform,
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            CxxPlatformUtils.DEFAULT_PLATFORMS),
+            FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform),
+            new CxxBuckConfig(FakeBuckConfig.builder().build())),
         target);
   }
 

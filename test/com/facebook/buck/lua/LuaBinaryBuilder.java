@@ -18,8 +18,6 @@ package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonPlatform;
@@ -39,14 +37,12 @@ public class LuaBinaryBuilder
 
   public LuaBinaryBuilder(
       BuildTarget target,
-      LuaPlatform luaPlatform,
+      LuaPlatform defaultPlatform,
+      FlavorDomain<LuaPlatform> luaPlatforms,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     this(
-        new LuaBinaryDescription(
-            luaPlatform, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms),
+        new LuaBinaryDescription(defaultPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms),
         target);
   }
 
@@ -54,9 +50,8 @@ public class LuaBinaryBuilder
     this(
         target,
         luaPlatform,
+        FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform),
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        CxxPlatformUtils.DEFAULT_PLATFORMS,
         PythonTestUtils.PYTHON_PLATFORMS);
   }
 

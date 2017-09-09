@@ -79,17 +79,13 @@ public class CxxLuaExtensionDescription
             CxxLuaExtensionDescription.AbstractCxxLuaExtensionDescriptionArg>,
         VersionPropagator<CxxLuaExtensionDescriptionArg> {
 
-  private final LuaPlatform luaPlatform;
+  private final FlavorDomain<LuaPlatform> luaPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxLuaExtensionDescription(
-      LuaPlatform luaPlatform,
-      CxxBuckConfig cxxBuckConfig,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.luaPlatform = luaPlatform;
+      FlavorDomain<LuaPlatform> luaPlatforms, CxxBuckConfig cxxBuckConfig) {
+    this.luaPlatforms = luaPlatforms;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatforms = cxxPlatforms;
   }
 
   private String getExtensionName(BuildTarget target, CxxPlatform cxxPlatform) {
@@ -114,8 +110,10 @@ public class CxxLuaExtensionDescription
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform,
+      LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
+
+    CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -217,8 +215,9 @@ public class CxxLuaExtensionDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
       CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform,
+      LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
+    CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
       return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
           ruleResolver, args, cxxPlatform, buildTarget, projectFilesystem);
@@ -257,7 +256,7 @@ public class CxxLuaExtensionDescription
                     pathResolver,
                     ruleFinder,
                     cellRoots,
-                    cxxPlatform,
+                    luaPlatform,
                     args))
             .build(),
         Optional.empty());
@@ -280,7 +279,7 @@ public class CxxLuaExtensionDescription
 
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, LuaPlatform>> platform = luaPlatforms.getFlavorAndValue(buildTarget);
 
     // If a C/C++ platform is specified, then build an extension with it.
     if (platform.isPresent()) {
@@ -331,7 +330,7 @@ public class CxxLuaExtensionDescription
                     pathResolver,
                     ruleFinder,
                     cellRoots,
-                    cxxPlatform,
+                    luaPlatforms.getValue(cxxPlatform.getFlavor()),
                     args))
             .addAllFrameworks(args.getFrameworks())
             .build();
@@ -351,11 +350,15 @@ public class CxxLuaExtensionDescription
       AbstractCxxLuaExtensionDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    // Add deps from lua C/C++ library.
-    Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
 
-    // Get any parse time deps from the C/C++ platforms.
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
+    for (LuaPlatform luaPlatform : luaPlatforms.getValues()) {
+
+      // Add deps from lua C/C++ library.
+      Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
+
+      // Get any parse time deps from the C/C++ platforms.
+      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
+    }
   }
 
   @BuckStyleImmutable

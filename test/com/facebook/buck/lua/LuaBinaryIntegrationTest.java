@@ -28,6 +28,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
@@ -151,7 +152,12 @@ public class LuaBinaryIntegrationTest {
                     "[cxx]",
                     "  sandbox_sources =" + sandboxSources)),
         ".buckconfig");
-    LuaPlatform platform = getLuaBuckConfig().getPlatform();
+    LuaPlatform platform =
+        getLuaBuckConfig()
+            .getPlatforms(
+                ImmutableList.of(
+                    CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(DefaultCxxPlatforms.FLAVOR)))
+            .get(0);
     assertThat(platform.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
     assertThat(platform.getNativeLinkStrategy(), Matchers.equalTo(nativeLinkStrategy));
   }

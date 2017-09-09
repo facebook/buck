@@ -17,15 +17,19 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.ErrorToolProvider;
 import com.facebook.buck.rules.SystemToolProvider;
+import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 
 public class LuaBuckConfig {
 
-  private static final String SECTION = "lua";
+  private static final String SECTION_PREFIX = "lua";
 
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
@@ -35,11 +39,11 @@ public class LuaBuckConfig {
     this.finder = finder;
   }
 
-  public LuaPlatform getPlatform() {
+  private LuaPlatform getPlatform(String section, CxxPlatform cxxPlatform) {
     return LuaPlatform.builder()
         .setLua(
             delegate
-                .getToolProvider(SECTION, "lua")
+                .getToolProvider(section, "lua")
                 .orElseGet(
                     () ->
                         SystemToolProvider.builder()
@@ -47,25 +51,44 @@ public class LuaBuckConfig {
                             .setName(Paths.get("lua"))
                             .setEnvironment(delegate.getEnvironment())
                             .build()))
-        .setLuaCxxLibraryTarget(delegate.getBuildTarget(SECTION, "cxx_library"))
+        .setLuaCxxLibraryTarget(delegate.getBuildTarget(section, "cxx_library"))
         .setStarterType(
-            delegate.getEnum(SECTION, "starter_type", LuaBinaryDescription.StarterType.class))
-        .setExtension(delegate.getValue(SECTION, "extension").orElse(".lex"))
-        .setNativeStarterLibrary(delegate.getBuildTarget(SECTION, "native_starter_library"))
+            delegate.getEnum(section, "starter_type", LuaBinaryDescription.StarterType.class))
+        .setExtension(delegate.getValue(section, "extension").orElse(".lex"))
+        .setNativeStarterLibrary(delegate.getBuildTarget(section, "native_starter_library"))
         .setPackageStyle(
             delegate
-                .getEnum(SECTION, "package_style", LuaPlatform.PackageStyle.class)
+                .getEnum(section, "package_style", LuaPlatform.PackageStyle.class)
                 .orElse(LuaPlatform.PackageStyle.INPLACE))
         .setPackager(
             delegate
-                .getToolProvider(SECTION, "packager")
+                .getToolProvider(section, "packager")
                 .orElseGet(
-                    () -> ErrorToolProvider.from("no packager set in '%s.packager'", SECTION)))
-        .setShouldCacheBinaries(delegate.getBooleanValue(SECTION, "cache_binaries", true))
+                    () -> ErrorToolProvider.from("no packager set in '%s.packager'", section)))
+        .setShouldCacheBinaries(delegate.getBooleanValue(section, "cache_binaries", true))
         .setNativeLinkStrategy(
             delegate
-                .getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
+                .getEnum(section, "native_link_strategy", NativeLinkStrategy.class)
                 .orElse(NativeLinkStrategy.SEPARATE))
+        .setCxxPlatform(cxxPlatform)
         .build();
+  }
+
+  /**
+   * @return for each passed in {@link CxxPlatform}, build and wrap it in a {@link LuaPlatform}
+   *     defined in the `lua#<cxx-platform-flavor>` config section.
+   */
+  public ImmutableList<LuaPlatform> getPlatforms(Iterable<CxxPlatform> cxxPlatforms) {
+    return RichStream.from(cxxPlatforms)
+        .map(
+            cxxPlatform ->
+                // We special case the "default" C/C++ platform to just use the "lua" section,
+                // otherwise we load the `LuaPlatform` from the `lua#<cxx-platform-flavor>` section.
+                cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
+                    ? getPlatform(SECTION_PREFIX, cxxPlatform)
+                    : getPlatform(
+                        String.format("%s#%s", SECTION_PREFIX, cxxPlatform.getFlavor()),
+                        cxxPlatform))
+        .toImmutableList();
   }
 }
