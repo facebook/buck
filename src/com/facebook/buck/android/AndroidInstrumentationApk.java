@@ -66,7 +66,6 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getProguardJvmArgs(),
         proguardAgentPath,
         apkUnderTest.getKeystore(),
-        PackageType.INSTRUMENTED,
         // Do not split the test apk even if the tested apk is split
         DexSplitMode.NO_SPLIT,
         apkUnderTest.getBuildTargetsToExcludeFromDex(),

@@ -247,7 +247,7 @@ public class AndroidBinaryGraphEnhancer {
       copyNativeLibraries.get().values().forEach(ruleResolver::addToIndex);
     }
 
-    if (nativeLibraryProguardConfigGenerator.isPresent() && packageType.isBuildWithObfuscation()) {
+    if (nativeLibraryProguardConfigGenerator.isPresent()) {
       NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
           createNativeLibraryProguardGenerator(
               copyNativeLibraries
