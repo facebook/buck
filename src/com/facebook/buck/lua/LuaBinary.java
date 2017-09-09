@@ -44,7 +44,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final String mainModule;
   private final LuaPackageComponents components;
   private final Tool lua;
-  private final LuaConfig.PackageStyle packageStyle;
+  private final LuaPlatform.PackageStyle packageStyle;
 
   public LuaBinary(
       BuildTarget buildTarget,
@@ -55,7 +55,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       String mainModule,
       LuaPackageComponents components,
       Tool lua,
-      LuaConfig.PackageStyle packageStyle) {
+      LuaPlatform.PackageStyle packageStyle) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     Preconditions.checkArgument(!output.isAbsolute());
     this.output = output;
@@ -73,7 +73,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public boolean outputFileCanBeCopied() {
-    return packageStyle != LuaConfig.PackageStyle.INPLACE;
+    return packageStyle != LuaPlatform.PackageStyle.INPLACE;
   }
 
   @Override

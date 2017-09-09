@@ -79,13 +79,15 @@ public class CxxLuaExtensionDescription
             CxxLuaExtensionDescription.AbstractCxxLuaExtensionDescriptionArg>,
         VersionPropagator<CxxLuaExtensionDescriptionArg> {
 
-  private final LuaConfig luaConfig;
+  private final LuaPlatform luaPlatform;
   private final CxxBuckConfig cxxBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public CxxLuaExtensionDescription(
-      LuaConfig luaConfig, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.luaConfig = luaConfig;
+      LuaPlatform luaPlatform,
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this.luaPlatform = luaPlatform;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
   }
@@ -142,7 +144,7 @@ public class CxxLuaExtensionDescription
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         ImmutableList.<CxxPreprocessorInput>builder()
-            .add(luaConfig.getLuaCxxLibrary(ruleResolver).getCxxPreprocessorInput(cxxPlatform))
+            .add(luaPlatform.getLuaCxxLibrary(ruleResolver).getCxxPreprocessorInput(cxxPlatform))
             .addAll(
                 CxxDescriptionEnhancer.collectCxxPreprocessorInput(
                     buildTarget,
@@ -240,7 +242,7 @@ public class CxxLuaExtensionDescription
         /* thinLto */ false,
         RichStream.from(args.getCxxDeps().get(ruleResolver, cxxPlatform))
             .filter(NativeLinkable.class)
-            .concat(Stream.of(luaConfig.getLuaCxxLibrary(ruleResolver)))
+            .concat(Stream.of(luaPlatform.getLuaCxxLibrary(ruleResolver)))
             .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
@@ -350,7 +352,7 @@ public class CxxLuaExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add deps from lua C/C++ library.
-    Optionals.addIfPresent(luaConfig.getLuaCxxLibraryTarget(), extraDepsBuilder);
+    Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
 
     // Get any parse time deps from the C/C++ platforms.
     extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));

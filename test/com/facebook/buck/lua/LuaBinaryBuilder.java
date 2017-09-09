@@ -39,21 +39,21 @@ public class LuaBinaryBuilder
 
   public LuaBinaryBuilder(
       BuildTarget target,
-      LuaConfig config,
+      LuaPlatform luaPlatform,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     this(
         new LuaBinaryDescription(
-            config, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms),
+            luaPlatform, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms),
         target);
   }
 
-  public LuaBinaryBuilder(BuildTarget target, LuaConfig config) {
+  public LuaBinaryBuilder(BuildTarget target, LuaPlatform luaPlatform) {
     this(
         target,
-        config,
+        luaPlatform,
         new CxxBuckConfig(FakeBuckConfig.builder().build()),
         CxxPlatformUtils.DEFAULT_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS,
@@ -61,7 +61,7 @@ public class LuaBinaryBuilder
   }
 
   public LuaBinaryBuilder(BuildTarget target) {
-    this(target, FakeLuaConfig.DEFAULT);
+    this(target, LuaTestUtils.DEFAULT_PLATFORM);
   }
 
   public LuaBinaryBuilder setMainModule(String mainModule) {
@@ -74,7 +74,7 @@ public class LuaBinaryBuilder
     return this;
   }
 
-  public LuaBinaryBuilder setPackageStyle(LuaConfig.PackageStyle packageStyle) {
+  public LuaBinaryBuilder setPackageStyle(LuaPlatform.PackageStyle packageStyle) {
     getArgForPopulating().setPackageStyle(Optional.of(packageStyle));
     return this;
   }

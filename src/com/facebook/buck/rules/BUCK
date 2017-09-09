@@ -241,6 +241,7 @@ java_immutables_library(
         "DefaultSourcePathResolver.java",
         "DependencyAggregation.java",
         "Description.java",
+        "ErrorToolProvider.java",
         "ExportDependencies.java",
         "HasDeclaredAndExtraDeps.java",
         "HasPostBuildSteps.java",

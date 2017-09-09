@@ -17,25 +17,15 @@
 package com.facebook.buck.lua;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.AbstractCxxLibrary;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.ErrorToolProvider;
 import com.facebook.buck.rules.SystemToolProvider;
-import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.util.HumanReadableException;
 import java.nio.file.Paths;
-import java.util.Optional;
 
-public class LuaBuckConfig implements LuaConfig {
+public class LuaBuckConfig {
 
   private static final String SECTION = "lua";
-  private static final AbstractCxxLibrary SYSTEM_CXX_LIBRARY =
-      new SystemLuaCxxLibrary(
-          BuildTarget.of(
-              UnflavoredBuildTarget.of(Paths.get(""), Optional.empty(), "//system", "lua")));
 
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
@@ -45,79 +35,37 @@ public class LuaBuckConfig implements LuaConfig {
     this.finder = finder;
   }
 
-  @Override
-  public ToolProvider getLua() {
-    return delegate
-        .getToolProvider(SECTION, "lua")
-        .orElseGet(
-            () ->
-                SystemToolProvider.builder()
-                    .setExecutableFinder(finder)
-                    .setName(Paths.get("lua"))
-                    .setEnvironment(delegate.getEnvironment())
-                    .build());
-  }
-
-  @Override
-  public Optional<BuildTarget> getLuaCxxLibraryTarget() {
-    return delegate.getBuildTarget(SECTION, "cxx_library");
-  }
-
-  @Override
-  public AbstractCxxLibrary getLuaCxxLibrary(BuildRuleResolver resolver) {
-    Optional<BuildTarget> luaCxxLibrary = getLuaCxxLibraryTarget();
-    if (luaCxxLibrary.isPresent()) {
-      Optional<AbstractCxxLibrary> rule =
-          resolver.getRuleOptionalWithType(luaCxxLibrary.get(), AbstractCxxLibrary.class);
-      if (!rule.isPresent()) {
-        throw new HumanReadableException(
-            ".buckconfig: cannot find C/C++ library rule %s", luaCxxLibrary.get());
-      }
-      return rule.get();
-    }
-    return SYSTEM_CXX_LIBRARY;
-  }
-
-  @Override
-  public Optional<LuaBinaryDescription.StarterType> getStarterType() {
-    return delegate.getEnum(SECTION, "starter_type", LuaBinaryDescription.StarterType.class);
-  }
-
-  @Override
-  public String getExtension() {
-    return delegate.getValue(SECTION, "extension").orElse(".lex");
-  }
-
-  @Override
-  public Optional<BuildTarget> getNativeStarterLibrary() {
-    return delegate.getBuildTarget(SECTION, "native_starter_library");
-  }
-
-  @Override
-  public PackageStyle getPackageStyle() {
-    return delegate
-        .getEnum(SECTION, "package_style", PackageStyle.class)
-        .orElse(PackageStyle.INPLACE);
-  }
-
-  @Override
-  public ToolProvider getPackager() {
-    Optional<ToolProvider> packager = delegate.getToolProvider(SECTION, "packager");
-    if (!packager.isPresent()) {
-      throw new HumanReadableException("no packager set in '%s.packager'", SECTION);
-    }
-    return packager.get();
-  }
-
-  @Override
-  public boolean shouldCacheBinaries() {
-    return delegate.getBooleanValue(SECTION, "cache_binaries", true);
-  }
-
-  @Override
-  public NativeLinkStrategy getNativeLinkStrategy() {
-    return delegate
-        .getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
-        .orElse(NativeLinkStrategy.SEPARATE);
+  public LuaPlatform getPlatform() {
+    return LuaPlatform.builder()
+        .setLua(
+            delegate
+                .getToolProvider(SECTION, "lua")
+                .orElseGet(
+                    () ->
+                        SystemToolProvider.builder()
+                            .setExecutableFinder(finder)
+                            .setName(Paths.get("lua"))
+                            .setEnvironment(delegate.getEnvironment())
+                            .build()))
+        .setLuaCxxLibraryTarget(delegate.getBuildTarget(SECTION, "cxx_library"))
+        .setStarterType(
+            delegate.getEnum(SECTION, "starter_type", LuaBinaryDescription.StarterType.class))
+        .setExtension(delegate.getValue(SECTION, "extension").orElse(".lex"))
+        .setNativeStarterLibrary(delegate.getBuildTarget(SECTION, "native_starter_library"))
+        .setPackageStyle(
+            delegate
+                .getEnum(SECTION, "package_style", LuaPlatform.PackageStyle.class)
+                .orElse(LuaPlatform.PackageStyle.INPLACE))
+        .setPackager(
+            delegate
+                .getToolProvider(SECTION, "packager")
+                .orElseGet(
+                    () -> ErrorToolProvider.from("no packager set in '%s.packager'", SECTION)))
+        .setShouldCacheBinaries(delegate.getBooleanValue(SECTION, "cache_binaries", true))
+        .setNativeLinkStrategy(
+            delegate
+                .getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
+                .orElse(NativeLinkStrategy.SEPARATE))
+        .build();
   }
 }

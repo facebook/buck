@@ -41,17 +41,17 @@ public class CxxLuaExtensionBuilder
     super(description, target);
   }
 
-  public CxxLuaExtensionBuilder(BuildTarget target, LuaConfig config) {
+  public CxxLuaExtensionBuilder(BuildTarget target, LuaPlatform luaPlatform) {
     this(
         new CxxLuaExtensionDescription(
-            config,
+            luaPlatform,
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             CxxPlatformUtils.DEFAULT_PLATFORMS),
         target);
   }
 
   public CxxLuaExtensionBuilder(BuildTarget target) {
-    this(target, FakeLuaConfig.DEFAULT);
+    this(target, LuaTestUtils.DEFAULT_PLATFORM);
   }
 
   public CxxLuaExtensionBuilder setBaseModule(String baseModule) {

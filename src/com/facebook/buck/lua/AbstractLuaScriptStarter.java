@@ -58,7 +58,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
 
   abstract SourcePathRuleFinder getRuleFinder();
 
-  abstract LuaConfig getLuaConfig();
+  abstract LuaPlatform getLuaPlatform();
 
   abstract CxxPlatform getCxxPlatform();
 
@@ -96,7 +96,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 
-    final Tool lua = getLuaConfig().getLua().resolve(getRuleResolver());
+    final Tool lua = getLuaPlatform().getLua().resolve(getRuleResolver());
     WriteStringTemplateRule writeStringTemplateRule =
         getRuleResolver()
             .addToIndex(

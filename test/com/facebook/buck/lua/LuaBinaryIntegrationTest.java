@@ -151,9 +151,9 @@ public class LuaBinaryIntegrationTest {
                     "[cxx]",
                     "  sandbox_sources =" + sandboxSources)),
         ".buckconfig");
-    LuaBuckConfig config = getLuaBuckConfig();
-    assertThat(config.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
-    assertThat(config.getNativeLinkStrategy(), Matchers.equalTo(nativeLinkStrategy));
+    LuaPlatform platform = getLuaBuckConfig().getPlatform();
+    assertThat(platform.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
+    assertThat(platform.getNativeLinkStrategy(), Matchers.equalTo(nativeLinkStrategy));
   }
 
   @Test

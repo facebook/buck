@@ -111,7 +111,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
-                FakeLuaConfig.DEFAULT.withExtension(".override"))
+                LuaTestUtils.DEFAULT_PLATFORM.withExtension(".override"))
             .setMainModule("main")
             .build(resolver);
     assertThat(
@@ -128,7 +128,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
-                FakeLuaConfig.DEFAULT
+                LuaTestUtils.DEFAULT_PLATFORM
                     .withLua(new ConstantToolProvider(override))
                     .withExtension(".override"))
             .setMainModule("main")
@@ -145,7 +145,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
-                FakeLuaConfig.DEFAULT.withPackageStyle(LuaConfig.PackageStyle.INPLACE))
+                LuaTestUtils.DEFAULT_PLATFORM.withPackageStyle(LuaPlatform.PackageStyle.INPLACE))
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
     BuildRuleResolver resolver =
@@ -269,7 +269,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(
                 new LuaBinaryDescription(
-                    FakeLuaConfig.DEFAULT,
+                    LuaTestUtils.DEFAULT_PLATFORM,
                     cxxBuckConfig,
                     CxxPlatformUtils.DEFAULT_PLATFORM,
                     CxxPlatformUtils.DEFAULT_PLATFORMS,
@@ -311,7 +311,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
-            .setPackageStyle(LuaConfig.PackageStyle.INPLACE)
+            .setPackageStyle(LuaPlatform.PackageStyle.INPLACE)
             .setDeps(ImmutableSortedSet.of(pythonLibraryBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), luaBinaryBuilder.build());
@@ -346,7 +346,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
             BuildTargetFactory.newInstance("//:bin"),
-            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
+            LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
@@ -385,7 +385,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
             BuildTargetFactory.newInstance("//:bin"),
-            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.SEPARATE));
+            LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.SEPARATE));
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
 
@@ -430,7 +430,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
             BuildTargetFactory.newInstance("//:bin"),
-            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
+            LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
     binaryBuilder.setMainModule("main");
     binaryBuilder.setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()));
     binaryBuilder.setNativeStarterLibrary(nativeStarterCxxBuilder.getTarget());
@@ -474,7 +474,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
             BuildTargetFactory.newInstance("//:bin"),
-            FakeLuaConfig.DEFAULT.withNativeLinkStrategy(NativeLinkStrategy.MERGED),
+            LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED),
             CxxPlatformUtils.DEFAULT_CONFIG,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_PLATFORMS,

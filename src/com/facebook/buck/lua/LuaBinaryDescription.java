@@ -96,19 +96,19 @@ public class LuaBinaryDescription
 
   private static final Flavor BINARY_FLAVOR = InternalFlavor.of("binary");
 
-  private final LuaConfig luaConfig;
+  private final LuaPlatform luaPlatform;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
 
   public LuaBinaryDescription(
-      LuaConfig luaConfig,
+      LuaPlatform luaPlatform,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
-    this.luaConfig = luaConfig;
+    this.luaPlatform = luaPlatform;
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
@@ -148,14 +148,14 @@ public class LuaBinaryDescription
   }
 
   private Path getOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, target, "%s" + luaConfig.getExtension());
+    return BuildTargets.getGenPath(filesystem, target, "%s" + luaPlatform.getExtension());
   }
 
   private Iterable<BuildTarget> getNativeStarterDepTargets() {
-    Optional<BuildTarget> nativeStarterLibrary = luaConfig.getNativeStarterLibrary();
+    Optional<BuildTarget> nativeStarterLibrary = luaPlatform.getNativeStarterLibrary();
     return nativeStarterLibrary.isPresent()
         ? ImmutableSet.of(nativeStarterLibrary.get())
-        : Optionals.toStream(luaConfig.getLuaCxxLibraryTarget())
+        : Optionals.toStream(luaPlatform.getLuaCxxLibraryTarget())
             .collect(MoreCollectors.toImmutableSet());
   }
 
@@ -188,7 +188,7 @@ public class LuaBinaryDescription
             ruleResolver,
             pathResolver,
             ruleFinder,
-            luaConfig,
+            luaPlatform,
             cxxPlatform,
             target,
             output,
@@ -203,7 +203,7 @@ public class LuaBinaryDescription
             ruleResolver,
             pathResolver,
             ruleFinder,
-            luaConfig,
+            luaPlatform,
             cxxBuckConfig,
             cxxPlatform,
             target,
@@ -215,11 +215,11 @@ public class LuaBinaryDescription
             relativeNativeLibsDir);
     }
     throw new IllegalStateException(
-        String.format("%s: unexpected starter type %s", baseTarget, luaConfig.getStarterType()));
+        String.format("%s: unexpected starter type %s", baseTarget, luaPlatform.getStarterType()));
   }
 
   private StarterType getStarterType(boolean mayHaveNativeCode) {
-    return luaConfig
+    return luaPlatform
         .getStarterType()
         .orElse(mayHaveNativeCode ? StarterType.NATIVE : StarterType.PURE);
   }
@@ -235,7 +235,7 @@ public class LuaBinaryDescription
       final CxxPlatform cxxPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
-      LuaConfig.PackageStyle packageStyle,
+      LuaPlatform.PackageStyle packageStyle,
       boolean mayHaveNativeCode) {
 
     Path output = getOutputPath(baseTarget, projectFilesystem);
@@ -247,7 +247,7 @@ public class LuaBinaryDescription
     Optional<Path> relativeNativeLibsDir = Optional.empty();
 
     // For in-place binaries, set the relative paths to the symlink trees holding the components.
-    if (packageStyle == LuaConfig.PackageStyle.INPLACE) {
+    if (packageStyle == LuaPlatform.PackageStyle.INPLACE) {
       relativeModulesDir =
           Optional.of(
               output
@@ -279,10 +279,10 @@ public class LuaBinaryDescription
         ruleFinder,
         cxxPlatform,
         baseTarget.withAppendedFlavors(
-            packageStyle == LuaConfig.PackageStyle.STANDALONE
+            packageStyle == LuaPlatform.PackageStyle.STANDALONE
                 ? InternalFlavor.of("starter")
                 : BINARY_FLAVOR),
-        packageStyle == LuaConfig.PackageStyle.STANDALONE
+        packageStyle == LuaPlatform.PackageStyle.STANDALONE
             ? output.resolveSibling(output.getFileName() + "-starter")
             : output,
         starterType,
@@ -304,7 +304,7 @@ public class LuaBinaryDescription
       final PythonPlatform pythonPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
-      LuaConfig.PackageStyle packageStyle,
+      LuaPlatform.PackageStyle packageStyle,
       Iterable<BuildRule> deps) {
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
@@ -387,7 +387,7 @@ public class LuaBinaryDescription
             !nativeLinkableRoots.isEmpty() || !omnibusRoots.isEmpty());
     SourcePath starterPath = null;
 
-    if (luaConfig.getNativeLinkStrategy() == NativeLinkStrategy.MERGED) {
+    if (luaPlatform.getNativeLinkStrategy() == NativeLinkStrategy.MERGED) {
 
       // If we're using a native starter, include it in omnibus linking.
       if (starter instanceof NativeExecutableStarter) {
@@ -672,8 +672,8 @@ public class LuaBinaryDescription
       final LuaPackageComponents components) {
     Path output = getOutputPath(buildTarget, projectFilesystem);
 
-    Tool lua = luaConfig.getLua().resolve(resolver);
-    Tool packager = luaConfig.getPackager().resolve(resolver);
+    Tool lua = luaPlatform.getLua().resolve(resolver);
+    Tool packager = luaPlatform.getPackager().resolve(resolver);
 
     LuaStandaloneBinary binary =
         resolver.addToIndex(
@@ -696,7 +696,7 @@ public class LuaBinaryDescription
                 components,
                 mainModule,
                 lua,
-                luaConfig.shouldCacheBinaries()));
+                luaPlatform.shouldCacheBinaries()));
 
     return new CommandTool.Builder()
         .addArg(SourcePathArg.of(binary.getSourcePathToOutput()))
@@ -713,7 +713,7 @@ public class LuaBinaryDescription
       String mainModule,
       SourcePath starter,
       final LuaPackageComponents components,
-      LuaConfig.PackageStyle packageStyle) {
+      LuaPlatform.PackageStyle packageStyle) {
     switch (packageStyle) {
       case STANDALONE:
         return getStandaloneBinary(
@@ -780,13 +780,13 @@ public class LuaBinaryDescription
             pythonPlatform,
             args.getNativeStarterLibrary()
                 .map(Optional::of)
-                .orElse(luaConfig.getNativeStarterLibrary()),
+                .orElse(luaPlatform.getNativeStarterLibrary()),
             args.getMainModule(),
-            args.getPackageStyle().orElse(luaConfig.getPackageStyle()),
+            args.getPackageStyle().orElse(luaPlatform.getPackageStyle()),
             resolver.getAllRules(
                 LuaUtil.getDeps(cxxPlatform, args.getDeps(), args.getPlatformDeps())));
-    LuaConfig.PackageStyle packageStyle =
-        args.getPackageStyle().orElse(luaConfig.getPackageStyle());
+    LuaPlatform.PackageStyle packageStyle =
+        args.getPackageStyle().orElse(luaPlatform.getPackageStyle());
     Tool binary =
         getBinary(
             buildTarget,
@@ -807,7 +807,7 @@ public class LuaBinaryDescription
         binary,
         args.getMainModule(),
         components.getComponents(),
-        luaConfig.getLua().resolve(resolver),
+        luaPlatform.getLua().resolve(resolver),
         packageStyle);
   }
 
@@ -818,8 +818,8 @@ public class LuaBinaryDescription
       AbstractLuaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    if (luaConfig.getPackageStyle() == LuaConfig.PackageStyle.STANDALONE) {
-      extraDepsBuilder.addAll(luaConfig.getPackager().getParseTimeDeps());
+    if (luaPlatform.getPackageStyle() == LuaPlatform.PackageStyle.STANDALONE) {
+      extraDepsBuilder.addAll(luaPlatform.getPackager().getParseTimeDeps());
     }
     extraDepsBuilder.addAll(getNativeStarterDepTargets());
   }
@@ -845,7 +845,7 @@ public class LuaBinaryDescription
 
     Optional<Flavor> getCxxPlatform();
 
-    Optional<LuaConfig.PackageStyle> getPackageStyle();
+    Optional<LuaPlatform.PackageStyle> getPackageStyle();
 
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {

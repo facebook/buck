@@ -127,8 +127,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.lua.CxxLuaExtensionDescription;
 import com.facebook.buck.lua.LuaBinaryDescription;
 import com.facebook.buck.lua.LuaBuckConfig;
-import com.facebook.buck.lua.LuaConfig;
 import com.facebook.buck.lua.LuaLibraryDescription;
+import com.facebook.buck.lua.LuaPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
@@ -364,7 +364,8 @@ public class KnownBuildRuleTypes {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
-    LuaConfig luaConfig = new LuaBuckConfig(config, executableFinder);
+    LuaBuckConfig luaBuckConfig = new LuaBuckConfig(config, executableFinder);
+    LuaPlatform luaPlatform = luaBuckConfig.getPlatform();
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
@@ -518,7 +519,7 @@ public class KnownBuildRuleTypes {
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
     builder.register(new CxxGenruleDescription(cxxPlatforms));
-    builder.register(new CxxLuaExtensionDescription(luaConfig, cxxBuckConfig, cxxPlatforms));
+    builder.register(new CxxLuaExtensionDescription(luaPlatform, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new CxxPythonExtensionDescription(pythonPlatforms, cxxBuckConfig, cxxPlatforms));
     builder.register(
@@ -575,7 +576,7 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs));
     builder.register(
         new LuaBinaryDescription(
-            luaConfig, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms));
+            luaPlatform, cxxBuckConfig, defaultCxxPlatform, cxxPlatforms, pythonPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);

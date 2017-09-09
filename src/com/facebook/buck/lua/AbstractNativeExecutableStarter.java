@@ -84,7 +84,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   abstract SourcePathRuleFinder getRuleFinder();
 
-  abstract LuaConfig getLuaConfig();
+  abstract LuaPlatform getLuaPlatform();
 
   abstract CxxBuckConfig getCxxBuckConfig();
 
@@ -189,7 +189,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
         getNativeStarterLibrary().isPresent()
             ? getRuleResolver()
                 .getRuleWithType(getNativeStarterLibrary().get(), AbstractCxxLibrary.class)
-            : getLuaConfig().getLuaCxxLibrary(getRuleResolver()));
+            : getLuaPlatform().getLuaCxxLibrary(getRuleResolver()));
   }
 
   private NativeLinkableInput getNativeLinkableInput() {
