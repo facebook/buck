@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FILE;
+import static java.util.stream.Collectors.joining;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -50,7 +51,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   private final Set<String> sourceDirectories;
   private final Set<Path> jarFiles;
   private final Path outputDirectory;
-  private CoverageReportFormat format;
+  private final Set<CoverageReportFormat> formats;
   private final String title;
   private final Path propertyFile;
   private final Optional<String> coverageIncludes;
@@ -62,7 +63,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       Set<String> sourceDirectories,
       Set<Path> jarFiles,
       Path outputDirectory,
-      CoverageReportFormat format,
+      Set<CoverageReportFormat> formats,
       String title,
       Optional<String> coverageIncludes,
       Optional<String> coverageExcludes) {
@@ -72,7 +73,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);
     this.jarFiles = ImmutableSet.copyOf(jarFiles);
     this.outputDirectory = outputDirectory;
-    this.format = format;
+    this.formats = formats;
     this.title = title;
     this.propertyFile = outputDirectory.resolve("parameters.properties");
     this.coverageIncludes = coverageIncludes;
@@ -130,7 +131,9 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
     properties.setProperty("jacoco.output.dir", filesystem.resolve(outputDirectory).toString());
     properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);
-    properties.setProperty("jacoco.format", format.toString().toLowerCase());
+    properties.setProperty(
+        "jacoco.format",
+        formats.stream().map(format -> format.name().toLowerCase()).collect(joining(",")));
     properties.setProperty("jacoco.title", title);
 
     properties.setProperty("classes.jars", formatPathSet(jarFiles));

@@ -28,6 +28,10 @@
  */
 package com.facebook.buck.jvm.java.coverage;
 
+import static java.util.stream.Collectors.joining;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,7 +39,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import org.codehaus.plexus.util.FileUtils;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
@@ -45,6 +53,7 @@ import org.jacoco.report.DirectorySourceFileLocator;
 import org.jacoco.report.FileMultiReportOutput;
 import org.jacoco.report.IReportVisitor;
 import org.jacoco.report.ISourceFileLocator;
+import org.jacoco.report.MultiReportVisitor;
 import org.jacoco.report.MultiSourceFileLocator;
 import org.jacoco.report.csv.CSVFormatter;
 import org.jacoco.report.html.HTMLFormatter;
@@ -59,6 +68,7 @@ import org.jacoco.report.xml.XMLFormatter;
  */
 public class ReportGenerator {
 
+  private static final Set<String> KNOWN_REPORT_FORMATS = Sets.newHashSet("csv", "html", "xml");
   private static final int TAB_WIDTH = 4;
 
   private final String title;
@@ -68,7 +78,7 @@ public class ReportGenerator {
   private final String classesPath;
   private final String sourcesPath;
   private final File reportDirectory;
-  private final String reportFormat;
+  private final Set<String> reportFormats;
   private final String coverageIncludes;
   private final String coverageExcludes;
 
@@ -82,7 +92,9 @@ public class ReportGenerator {
     this.classesPath = properties.getProperty("classes.dir");
     this.sourcesPath = properties.getProperty("src.dir");
     this.reportDirectory = new File(jacocoOutputDir, "code-coverage");
-    this.reportFormat = properties.getProperty("jacoco.format", "html");
+    this.reportFormats =
+        new HashSet<>(
+            Splitter.on(",").splitToList(properties.getProperty("jacoco.format", "html")));
     this.coverageIncludes = properties.getProperty("jacoco.includes", "**");
     this.coverageExcludes = properties.getProperty("jacoco.excludes", "");
   }
@@ -110,36 +122,37 @@ public class ReportGenerator {
   }
 
   private void createReport(final IBundleCoverage bundleCoverage) throws IOException {
-
-    // Create a concrete report visitor based on some supplied
-    // configuration. In this case we use the defaults
-    IReportVisitor visitor;
-    switch (reportFormat) {
-      case "csv":
-        reportDirectory.mkdirs();
-        CSVFormatter csvFormatter = new CSVFormatter();
-        visitor =
-            csvFormatter.createVisitor(
-                new FileOutputStream(new File(reportDirectory, "coverage.csv")));
-        break;
-
-      case "html":
-        HTMLFormatter htmlFormatter = new HTMLFormatter();
-        visitor = htmlFormatter.createVisitor(new FileMultiReportOutput(reportDirectory));
-        break;
-
-      case "xml":
-        reportDirectory.mkdirs();
-        XMLFormatter xmlFormatter = new XMLFormatter();
-        visitor =
-            xmlFormatter.createVisitor(
-                new FileOutputStream(new File(reportDirectory, "coverage.xml")));
-        break;
-
-      default:
-        throw new RuntimeException("Unable to parse format: " + reportFormat);
+    Set<String> unknownFormats = Sets.difference(reportFormats, KNOWN_REPORT_FORMATS);
+    if (!unknownFormats.isEmpty()) {
+      throw new RuntimeException(
+          "Unable to parse formats: " + reportFormats.stream().collect(joining(",")));
     }
 
+    // Create a concrete report visitors based on some supplied
+    // configuration. In this case we use the defaults
+    List<IReportVisitor> visitors = new ArrayList<>();
+    if (reportFormats.contains("csv")) {
+      reportDirectory.mkdirs();
+      CSVFormatter csvFormatter = new CSVFormatter();
+      visitors.add(
+          csvFormatter.createVisitor(
+              new FileOutputStream(new File(reportDirectory, "coverage.csv"))));
+    }
+
+    if (reportFormats.contains("html")) {
+      HTMLFormatter htmlFormatter = new HTMLFormatter();
+      visitors.add(htmlFormatter.createVisitor(new FileMultiReportOutput(reportDirectory)));
+    }
+
+    if (reportFormats.contains("xml")) {
+      reportDirectory.mkdirs();
+      XMLFormatter xmlFormatter = new XMLFormatter();
+      visitors.add(
+          xmlFormatter.createVisitor(
+              new FileOutputStream(new File(reportDirectory, "coverage.xml"))));
+    }
+
+    IReportVisitor visitor = new MultiReportVisitor(visitors);
     // Initialize the report with all of the execution and session
     // information. At this point the report doesn't know about the
     // structure of the report being created
