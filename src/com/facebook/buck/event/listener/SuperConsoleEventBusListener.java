@@ -322,10 +322,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     Iterable<String> renderedLines =
         Iterables.concat(
             MoreIterables.zipAndConcat(
-                Iterables.cycle(ansi.clearLine()), logLines, Iterables.cycle(ansi.clearToTheEndOfLine() + "\n")),
+                Iterables.cycle(ansi.clearLine()),
+                logLines,
+                Iterables.cycle(ansi.clearToTheEndOfLine() + "\n")),
             ansi.asNoWrap(
                 MoreIterables.zipAndConcat(
-                    Iterables.cycle(ansi.clearLine()), lines, Iterables.cycle(ansi.clearToTheEndOfLine() + "\n"))));
+                    Iterables.cycle(ansi.clearLine()),
+                    lines,
+                    Iterables.cycle(ansi.clearToTheEndOfLine() + "\n"))));
 
     // Number of lines remaining to clear because of old output once we displayed
     // the new output.
@@ -358,7 +362,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    * @param currentTimeMillis The time in ms to use when computing elapsed times.
    */
   @VisibleForTesting
-  ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
+  public ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     logEventPair(
@@ -372,17 +376,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         Optional.of(this.minimumDurationMillisecondsToShowWatchman),
         lines);
 
-    logEventPair(
-        "Parsing buck files",
-        /* suffix */ Optional.empty(),
-        currentTimeMillis,
-        /* offsetMs */ 0L,
-        buckFilesParsingEvents.values(),
-        getEstimatedProgressOfParsingBuckFiles(),
-        Optional.of(this.minimumDurationMillisecondsToShowParse),
-        lines);
-
     long parseTime =
+        logEventPair(
+            "Parsing buck files",
+            /* suffix */ Optional.empty(),
+            currentTimeMillis,
+            /* offsetMs */ 0L,
+            buckFilesParsingEvents.values(),
+            getEstimatedProgressOfParsingBuckFiles(),
+            Optional.of(this.minimumDurationMillisecondsToShowParse),
+            lines);
+
+    long actionGraphTime =
         logEventPair(
             "Creating action graph",
             /* suffix */ Optional.empty(),
@@ -415,7 +420,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
-    if (buildStarted == null || parseTime == UNFINISHED_EVENT_PAIR) {
+    if (buildStarted == null
+        || parseTime == UNFINISHED_EVENT_PAIR
+        || actionGraphTime == UNFINISHED_EVENT_PAIR) {
       return lines.build();
     }
 

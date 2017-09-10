@@ -23,6 +23,7 @@ java_immutables_library(
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/event/listener:listener",
         "//test/com/facebook/buck/test:test",
     ],
