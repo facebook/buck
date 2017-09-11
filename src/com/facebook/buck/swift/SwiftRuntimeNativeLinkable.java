@@ -103,16 +103,10 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
     // Fall back to shared if static isn't supported on this platform.
     if (type == Linker.LinkableDepType.SHARED || swiftRuntimePaths.isEmpty()) {
-      argsBuilder.addAll(
-          StringArg.from(
-              "-Xlinker",
-              "-rpath",
-              "-Xlinker",
-              "@executable_path/Frameworks",
-              "-Xlinker",
-              "-rpath",
-              "-Xlinker",
-              "@loader_path/Frameworks"));
+      for (Path rpath : swiftPlatform.getSwiftSharedLibraryRunPaths()) {
+        argsBuilder.addAll(StringArg.from("-Xlinker", "-rpath", "-Xlinker", rpath.toString()));
+      }
+
       swiftRuntimePaths = swiftPlatform.getSwiftRuntimePaths();
     } else {
       // Static linking requires force-loading Swift libs, since the dependency

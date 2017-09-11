@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -43,4 +44,11 @@ interface AbstractSwiftPlatform {
    *     directory will contain libs like libswiftCore.a and others.
    */
   Set<Path> getSwiftStaticRuntimePaths();
+
+  /**
+   * @return A set of search paths used by the dynamic linker loader to find of linked shared
+   *     libraries. Each of the paths is usually referred as an "rpath". For example, on iOS,
+   *     "@executable_path/Frameworks" is a common rpath.
+   */
+  ImmutableList<Path> getSwiftSharedLibraryRunPaths();
 }
