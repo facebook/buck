@@ -228,19 +228,7 @@ public class KnownBuildRuleTypes {
     return new Builder();
   }
 
-  public static KnownBuildRuleTypes createInstance(
-      BuckConfig config,
-      ProjectFilesystem filesystem,
-      ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver,
-      SdkEnvironment sdkEnvironment)
-      throws InterruptedException, IOException {
-    return createBuilder(
-            config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment)
-        .build();
-  }
-
-  static Builder createBuilder(
+  static KnownBuildRuleTypes createInstance(
       BuckConfig config,
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
@@ -641,7 +629,7 @@ public class KnownBuildRuleTypes {
 
     builder.register(VersionedAliasDescription.of());
 
-    return builder;
+    return builder.build();
   }
 
   public static class Builder {
