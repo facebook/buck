@@ -41,6 +41,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -246,41 +247,34 @@ class PostEnterCanonicalizer {
         {
           MemberSelectTree memberSelectTree = (MemberSelectTree) tree;
           Name identifier = memberSelectTree.getIdentifier();
-          TreePath baseTypeTreePath = new TreePath(treePath, memberSelectTree.getExpression());
-          StandaloneTypeMirror baseType = (StandaloneTypeMirror) getCanonicalType(baseTypeTreePath);
+          StandaloneTypeMirror baseType =
+              (StandaloneTypeMirror)
+                  getCanonicalType(new TreePath(treePath, memberSelectTree.getExpression()));
 
+          ArtificialQualifiedNameable baseElement;
           if (baseType.getKind() == TypeKind.PACKAGE) {
-            CharSequence fullyQualifiedName = TreeBackedTrees.treeToName(memberSelectTree);
+            baseElement = ((StandalonePackageType) baseType).asElement();
             if (isProbablyPackageName(identifier)) {
-              return types.getPackageType(elements.getOrCreatePackageElement(fullyQualifiedName));
-            } else {
-              StandalonePackageType packageType = (StandalonePackageType) baseType;
-              ArtificialPackageElement packageElement = packageType.asElement();
-              return types.getDeclaredType(
-                  elements.getOrCreateTypeElement(packageElement, fullyQualifiedName));
+              return types.getPackageType(
+                  elements.getOrCreatePackageElement((PackageElement) baseElement, identifier));
             }
           } else {
-            StandaloneDeclaredType baseDeclaredType = (StandaloneDeclaredType) baseType;
-            DeclaredType enclosingType;
-            if (baseDeclaredType.getEnclosingType().getKind() == TypeKind.NONE) {
-              enclosingType = null;
-            } else {
+            baseElement = (ArtificialQualifiedNameable) ((DeclaredType) baseType).asElement();
+          }
+
+          DeclaredType enclosingType = null;
+          if (baseType.getKind() == TypeKind.DECLARED
+              && !(baseType instanceof InferredDeclaredType)) {
+            DeclaredType baseDeclaredType = (DeclaredType) baseType;
+            if (!baseDeclaredType.getTypeArguments().isEmpty()
+                || baseDeclaredType.getEnclosingType().getKind() != TypeKind.NONE) {
               enclosingType = baseDeclaredType;
             }
-
-            if (baseDeclaredType instanceof InferredDeclaredType
-                || baseDeclaredType.getTypeArguments().isEmpty()) {
-              return types.getDeclaredType(
-                  enclosingType,
-                  elements.getOrCreateTypeElement(
-                      (ArtificialElement) baseDeclaredType.asElement(), identifier));
-            } else {
-              return types.getDeclaredType(
-                  baseDeclaredType,
-                  elements.getOrCreateTypeElement(
-                      (ArtificialElement) baseDeclaredType.asElement(), identifier));
-            }
           }
+
+          ArtificialTypeElement typeElement =
+              elements.getOrCreateTypeElement(baseElement, identifier);
+          return types.getDeclaredType(enclosingType, typeElement);
         }
       case IDENTIFIER:
         {
@@ -294,15 +288,14 @@ class PostEnterCanonicalizer {
           IdentifierTree identifierTree = (IdentifierTree) tree;
           Name identifier = identifierTree.getName();
           if (isProbablyPackageName(identifier)) {
-            return types.getPackageType(elements.getOrCreatePackageElement(identifier));
+            return types.getPackageType(elements.getOrCreatePackageElement(null, identifier));
           }
-          return types.getDeclaredType(
-              elements.getOrCreateTypeElement(
-                  (ArtificialElement)
-                      elements.getCanonicalElement(
-                          Preconditions.checkNotNull(
-                              javacTrees.getElement(new TreePath(treePath.getCompilationUnit())))),
-                  identifier));
+          ArtificialPackageElement packageElement =
+              (ArtificialPackageElement)
+                  elements.getCanonicalElement(
+                      Preconditions.checkNotNull(
+                          javacTrees.getElement(new TreePath(treePath.getCompilationUnit()))));
+          return types.getDeclaredType(elements.getOrCreateTypeElement(packageElement, identifier));
         }
         // $CASES-OMITTED$
       default:

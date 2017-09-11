@@ -31,6 +31,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -126,11 +127,12 @@ class TreeBackedElements implements Elements {
     return element;
   }
 
-  public ArtificialPackageElement getOrCreatePackageElement(CharSequence qualifiedNameString) {
-    Name qualifiedName = getName(qualifiedNameString);
+  public ArtificialPackageElement getOrCreatePackageElement(
+      @Nullable PackageElement enclosingPackage, Name simpleName) {
+    Name qualifiedName = getFullyQualifiedName(enclosingPackage, simpleName);
     ArtificialPackageElement result = getPackageElement(qualifiedName);
     if (result == null) {
-      result = new InferredPackageElement(getSimpleName(qualifiedNameString), qualifiedName);
+      result = new InferredPackageElement(simpleName, qualifiedName);
       knownPackages.put(qualifiedName, result);
     }
     return result;
@@ -160,13 +162,11 @@ class TreeBackedElements implements Elements {
   }
 
   public ArtificialTypeElement getOrCreateTypeElement(
-      ArtificialElement enclosingElement, CharSequence fullyQualifiedCharSequence) {
-    Name fullyQualifiedName = getName(fullyQualifiedCharSequence);
+      ArtificialQualifiedNameable enclosingElement, Name simpleName) {
+    Name fullyQualifiedName = getFullyQualifiedName(enclosingElement, simpleName);
     ArtificialTypeElement result = (ArtificialTypeElement) getTypeElement(fullyQualifiedName);
     if (result == null) {
-      result =
-          new InferredTypeElement(
-              getSimpleName(fullyQualifiedCharSequence), fullyQualifiedName, enclosingElement);
+      result = new InferredTypeElement(simpleName, fullyQualifiedName, enclosingElement);
     }
     return result;
   }
@@ -292,9 +292,18 @@ class TreeBackedElements implements Elements {
     throw new UnsupportedOperationException();
   }
 
-  private Name getSimpleName(CharSequence qualifiedNameSeq) {
-    String qualifiedName = qualifiedNameSeq.toString();
+  private Name getFullyQualifiedName(
+      @Nullable QualifiedNameable enclosingElement, Name simpleName) {
+    for (int i = 0; i < simpleName.length(); i++) {
+      if (simpleName.charAt(i) == '.') {
+        throw new IllegalArgumentException(String.format("%s is not a simple name", simpleName));
+      }
+    }
 
-    return getName(qualifiedName.substring(qualifiedName.lastIndexOf(".") + 1));
+    if (enclosingElement == null || enclosingElement.getQualifiedName().length() == 0) {
+      return simpleName;
+    } else {
+      return getName(String.format("%s.%s", enclosingElement.getQualifiedName(), simpleName));
+    }
   }
 }
