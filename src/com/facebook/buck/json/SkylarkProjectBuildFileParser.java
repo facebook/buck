@@ -59,6 +59,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
       ImmutableSet.of("visibility", "within_view");
+  private static final String PACKAGE_NAME_GLOBAL = "PACKAGE_NAME";
 
   private final FileSystem fileSystem;
   private final TypeCoercerFactory typeCoercerFactory;
@@ -125,7 +126,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList.Builder<Map<String, Object>> builder = ImmutableList.builder();
     try (Mutability mutability = Mutability.create("BUCK")) {
       Environment env = Environment.builder(mutability).build();
-      setupBuckRules(buildFile, builder, env);
+      env.setupDynamic(PACKAGE_NAME_GLOBAL, getBasePath(buildFile));
+      setupBuckRules(builder, env);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
@@ -135,19 +137,25 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
+   * @return The path path of the provided {@code buildFile}. For example, for {@code
+   *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
+   *     would return {@code src/bar}.
+   */
+  private String getBasePath(Path buildFile) {
+    return Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse("");
+  }
+
+  /**
    * Sets up native Buck rules in Skylark environment.
    *
    * <p>This makes Buck rules like {@code java_library} available in build files.
    */
-  private void setupBuckRules(
-      Path buildFile, ImmutableList.Builder<Map<String, Object>> builder, Environment env) {
+  private void setupBuckRules(ImmutableList.Builder<Map<String, Object>> builder, Environment env) {
     for (Description<?> description : options.getDescriptions()) {
-      String basePath =
-          Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
-              .map(MorePaths::pathWithUnixSeparators)
-              .orElse("");
       String name = Description.getBuildRuleType(description).getName();
-      env.setup(name, newRuleDefinition(description, basePath, builder));
+      env.setup(name, newRuleDefinition(description, builder));
     }
   }
 
@@ -158,14 +166,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * capture passed attribute values in a map and adds them to the {@code ruleRegistry}.
    *
    * @param ruleClass The name of the rule to to define.
-   * @param basePath The base path of the build file.
    * @param ruleRegistry The registry of invoked rules with corresponding values.
    * @return Skylark function to handle the Buck rule.
    */
   private BuiltinFunction newRuleDefinition(
-      Description<?> ruleClass,
-      String basePath,
-      ImmutableList.Builder<Map<String, Object>> ruleRegistry) {
+      Description<?> ruleClass, ImmutableList.Builder<Map<String, Object>> ruleRegistry) {
     String name = Description.getBuildRuleType(ruleClass).getName();
     return new BuiltinFunction(
         name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
@@ -176,7 +181,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           throws EvalException, InterruptedException {
         ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
-                .put("buck.base_path", basePath)
+                .put("buck.base_path", env.lookup(PACKAGE_NAME_GLOBAL))
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo> allParamInfo =
             CoercedTypeCache.INSTANCE.getAllParamInfo(

@@ -131,4 +131,18 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
   }
+
+  @Test
+  public void packageNameIsProvided() throws Exception {
+    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    projectFilesystem.mkdirs(buildFile.getParent());
+    projectFilesystem.writeContentsToPath(
+        "prebuilt_jar(name='guava', binary_jar=PACKAGE_NAME)", buildFile);
+
+    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
+    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    assertThat(rule.get("binaryJar"), equalTo("src/test"));
+  }
 }
