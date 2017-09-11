@@ -84,4 +84,27 @@ public class SwiftNativeLinkableTest {
             "-Xlinker",
             "@loader_path/Frameworks"));
   }
+
+  @Test
+  public void testStaticLinkerFlagsOnMac() {
+    SwiftPlatform swiftPlatform =
+        SwiftPlatforms.build("macosx", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+
+    ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
+    SwiftRuntimeNativeLinkable.populateLinkerArguments(
+        sharedArgsBuilder, swiftPlatform, Linker.LinkableDepType.SHARED);
+
+    ImmutableList<Arg> sharedArgs = sharedArgsBuilder.build();
+    assertEquals(
+        Arg.stringify(sharedArgs, sourcePathResolver),
+        ImmutableList.of(
+            "-Xlinker",
+            "-rpath",
+            "-Xlinker",
+            "@executable_path/../Frameworks",
+            "-Xlinker",
+            "-rpath",
+            "-Xlinker",
+            "@loader_path/../Frameworks"));
+  }
 }

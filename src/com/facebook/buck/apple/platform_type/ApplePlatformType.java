@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.platform_type;
 
 public enum ApplePlatformType {
   MAC,

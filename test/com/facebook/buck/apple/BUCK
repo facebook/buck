@@ -217,6 +217,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
+        "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
