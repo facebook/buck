@@ -5,6 +5,9 @@ java_library(
 
 java_library(
   name = 'hidden',
+  srcs = [
+    'Other.java',
+  ],
 )
 
 java_library(
