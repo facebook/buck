@@ -414,7 +414,7 @@ class PostEnterCanonicalizer {
                   continue;
                 }
 
-                TreePath importTreePath = new TreePath(rootPath, compilationUnitTree);
+                TreePath importTreePath = new TreePath(rootPath, importTree);
                 TreePath importedIdentifierTreePath =
                     new TreePath(importTreePath, importedIdentifierTree);
                 result.put(importedIdentifierTree.getIdentifier(), importedIdentifierTreePath);
