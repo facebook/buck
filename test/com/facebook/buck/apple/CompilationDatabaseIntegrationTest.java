@@ -38,7 +38,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,9 +87,6 @@ public class CompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
 
-    ImmutableSet<String> frameworks =
-        ImmutableSet.of(
-            Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString());
     String pathToPrivateHeaders =
         BuildTargets.getGenPath(
                 filesystem,
@@ -123,7 +119,6 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("EXExample/EXExampleModel.m.o"),
         /* isLibrary */ true,
         fileToEntry,
-        frameworks,
         includes);
     assertFlags(
         filesystem,
@@ -134,7 +129,6 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("EXExample/EXUser.mm.o"),
         /* isLibrary */ true,
         fileToEntry,
-        frameworks,
         includes);
     assertFlags(
         filesystem,
@@ -146,7 +140,6 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("EXExample/Categories/NSString+Palindrome.m.o"),
         /* isLibrary */ true,
         fileToEntry,
-        frameworks,
         includes);
   }
 
@@ -164,10 +157,6 @@ public class CompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
 
-    ImmutableSet<String> frameworks =
-        ImmutableSet.of(
-            Paths.get("/System/Library/Frameworks/Foundation.framework").getParent().toString(),
-            Paths.get("/System/Library/Frameworks/UIKit.framework").getParent().toString());
     String pathToPrivateHeaders =
         BuildTargets.getGenPath(
                 filesystem,
@@ -201,7 +190,6 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("Weather/EXViewController.m.o"),
         /* isLibrary */ false,
         fileToEntry,
-        frameworks,
         includes);
     assertFlags(
         filesystem,
@@ -212,7 +200,6 @@ public class CompilationDatabaseIntegrationTest {
         Paths.get("Weather/main.m.o"),
         /* isLibrary */ false,
         fileToEntry,
-        frameworks,
         includes);
   }
 
@@ -223,7 +210,6 @@ public class CompilationDatabaseIntegrationTest {
       Path outputPath,
       boolean isLibrary,
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
-      ImmutableSet<String> additionalFrameworks,
       Iterable<String> includes)
       throws IOException {
     Path tmpRoot = tmp.getRoot().toRealPath();
@@ -276,11 +262,6 @@ public class CompilationDatabaseIntegrationTest {
     for (String include : includes) {
       commandArgs.add("-I");
       commandArgs.add(include);
-    }
-
-    for (String framework : additionalFrameworks) {
-      commandArgs.add("-F");
-      commandArgs.add(sdkRoot + framework);
     }
 
     String output =
