@@ -63,6 +63,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/skylark:skylark",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:object_mapper",
         "//src/com/facebook/buck/util:process_executor",

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.skylark.Glob;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -120,13 +121,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
     // configured for terminals that support it.
     PrintingEventHandler eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
+    com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
     BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(
-            ParserInputSource.create(fileSystem.getPath(buildFile.toString())), eventHandler);
+        BuildFileAST.parseBuildFile(ParserInputSource.create(buildFilePath), eventHandler);
     ImmutableList.Builder<Map<String, Object>> builder = ImmutableList.builder();
     try (Mutability mutability = Mutability.create("BUCK")) {
       Environment env = Environment.builder(mutability).build();
-      env.setupDynamic(PACKAGE_NAME_GLOBAL, getBasePath(buildFile));
+      String basePath = getBasePath(buildFile);
+      env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
+      env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
       setupBuckRules(builder, env);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {

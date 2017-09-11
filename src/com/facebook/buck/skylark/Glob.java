@@ -54,7 +54,7 @@ import java.util.List;
  *   env.setup("glob", Glob.create(basePath));
  * </pre>
  */
-class Glob {
+public class Glob {
 
   private static final String GLOB_FUNCTION_NAME = "glob";
 

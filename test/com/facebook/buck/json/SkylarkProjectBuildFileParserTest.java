@@ -30,6 +30,8 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hamcrest.Matchers;
@@ -67,7 +69,7 @@ public class SkylarkProjectBuildFileParserTest {
 
   @Test
   public void canParsePrebuiltJarRule() throws Exception {
-    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
     projectFilesystem.mkdirs(buildFile.getParent());
     projectFilesystem.writeContentsToPath(
         "prebuilt_jar("
@@ -97,7 +99,7 @@ public class SkylarkProjectBuildFileParserTest {
 
   @Test
   public void detectsInvalidAttribute() throws Exception {
-    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
     projectFilesystem.mkdirs(buildFile.getParent());
     projectFilesystem.writeContentsToPath(
         "prebuilt_jar("
@@ -116,7 +118,7 @@ public class SkylarkProjectBuildFileParserTest {
 
   @Test
   public void detectsMissingRequiredAttribute() throws Exception {
-    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
     projectFilesystem.mkdirs(buildFile.getParent());
     projectFilesystem.writeContentsToPath(
         "prebuilt_jar("
@@ -134,7 +136,7 @@ public class SkylarkProjectBuildFileParserTest {
 
   @Test
   public void packageNameIsProvided() throws Exception {
-    java.nio.file.Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
     projectFilesystem.mkdirs(buildFile.getParent());
     projectFilesystem.writeContentsToPath(
         "prebuilt_jar(name='guava', binary_jar=PACKAGE_NAME)", buildFile);
@@ -144,5 +146,24 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
     Map<String, Object> rule = allRulesAndMetaRules.get(0);
     assertThat(rule.get("binaryJar"), equalTo("src/test"));
+  }
+
+  @Test
+  public void globFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Path buildFile = directory.resolve("BUCK");
+    Files.createDirectories(directory);
+    projectFilesystem.writeContentsToPath(
+        "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))", buildFile);
+    Files.createFile(directory.resolve("file1"));
+    Files.createFile(directory.resolve("file2"));
+    Files.createFile(directory.resolve("bad_file"));
+    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
+    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    assertThat(
+        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
+        equalTo(ImmutableList.of("file1", "file2")));
   }
 }
