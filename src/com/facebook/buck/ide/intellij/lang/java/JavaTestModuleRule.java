@@ -20,10 +20,17 @@ import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
+import java.util.Optional;
 
 public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.CoreArg> {
 
@@ -41,7 +48,30 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
 
   @Override
   public void apply(TargetNode<JavaTestDescription.CoreArg, ?> target, ModuleBuildContext context) {
-    addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
+    Optional<Path> presetResourcesRoot = target.getConstructorArg().getResourcesRoot();
+    ImmutableSortedSet<SourcePath> resources = target.getConstructorArg().getResources();
+    ImmutableSet<Path> resourcePaths;
+    if (presetResourcesRoot.isPresent()) {
+      resourcePaths =
+          getResourcePaths(target.getConstructorArg().getResources(), presetResourcesRoot.get());
+      addResourceFolders(
+          IjResourceFolderType.JAVA_TEST_RESOURCE,
+          resourcePaths,
+          presetResourcesRoot.get(),
+          context);
+    } else {
+      resourcePaths = getResourcePaths(resources);
+      ImmutableMultimap<Path, Path> resourcesRootsToResources =
+          getResourcesRootsToResources(resourcePaths);
+      for (Path resourcesRoot : resourcesRootsToResources.keySet()) {
+        addResourceFolders(
+            IjResourceFolderType.JAVA_TEST_RESOURCE,
+            resourcesRootsToResources.get(resourcesRoot),
+            resourcesRoot,
+            context);
+      }
+    }
+    addDepsAndTestSources(target, true /* wantsPackagePrefix */, context, resourcePaths);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
   }
 

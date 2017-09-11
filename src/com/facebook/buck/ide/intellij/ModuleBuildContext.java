@@ -21,6 +21,8 @@ import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.model.BuildTarget;
@@ -164,23 +166,52 @@ public class ModuleBuildContext {
     Path path = folder.getPath();
     IjFolder otherFolder = sourceFoldersMergeMap.get(path);
     if (otherFolder != null) {
-      folder = mergeAllowingTestToBePromotedToSource(folder, otherFolder);
+      folder = mergePromotingToSourceIfDifferent(folder, otherFolder);
     }
     sourceFoldersMergeMap.put(path, folder);
   }
 
-  private IjFolder mergeAllowingTestToBePromotedToSource(IjFolder from, IjFolder to) {
-    if ((from instanceof TestFolder && to instanceof SourceFolder)
-        || (to instanceof TestFolder && from instanceof SourceFolder)) {
-      return new SourceFolder(
+  /**
+   * Merges the two folders according to the following rules:
+   *
+   * <ul>
+   *   <li>Folders of the same type merge normally.
+   *   <li>A resource folder and a test resource folder should become a regular resource folder.
+   *   <li>A folder that contains both regular and test sources should become a source folder.
+   *   <li>A folder that contains any kind of source and any kind of resource will not work
+   *       correctly if the resources_root is different from the src_root, since buck allows
+   *       individual files to be marked as sources/resources, but IntelliJ's granularity is only at
+   *       the folder level. Thus, we try to handle this by promoting these to source folders (or
+   *       test folders if it is test + resource), but there isn't really a good way around it.
+   * </ul>
+   */
+  private IjFolder mergePromotingToSourceIfDifferent(IjFolder from, IjFolder to) {
+    if (from.getClass().equals(to.getClass())) {
+      return from.merge(to);
+    }
+
+    // If both are resource folders of different types, we merge them into a regular resource
+    // folder.
+    if (ResourceFolder.class.isInstance(from) && ResourceFolder.class.isInstance(to)) {
+      Path resourcesRoot = ((ResourceFolder) to).getResourcesRoot();
+      return new JavaResourceFolder(to.getPath(), resourcesRoot, IjFolder.combineInputs(from, to));
+    }
+
+    // If one is a test folder and one is a resource folder, we merge them into a test folder. Note
+    // that as per the comment for this function, this may not necessarily work correctly.
+    if ((from.getClass().equals(TestFolder.class) && ResourceFolder.class.isInstance(to))
+        || (to.getClass().equals(TestFolder.class) && ResourceFolder.class.isInstance(from))) {
+      return new TestFolder(
           to.getPath(),
           from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),
           IjFolder.combineInputs(from, to));
     }
 
-    Preconditions.checkArgument(from.getClass() == to.getClass());
-
-    return from.merge(to);
+    // If we're not sure what to do otherwise, use SourceFolder.
+    return new SourceFolder(
+        to.getPath(),
+        from.getWantsPackagePrefix() || to.getWantsPackagePrefix(),
+        IjFolder.combineInputs(from, to));
   }
 
   public void addDeps(Iterable<BuildTarget> buildTargets, DependencyType dependencyType) {

@@ -22,15 +22,22 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.CommonDescriptionArg;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +49,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implements IjModuleRule<T> {
 
@@ -65,7 +73,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
    * @return index of path to set of inputs in that path
    */
   protected static ImmutableMultimap<Path, Path> getSourceFoldersToInputsIndex(
-      ImmutableSet<Path> paths) {
+      ImmutableCollection<Path> paths) {
     Path defaultParent = Paths.get("");
     return paths
         .stream()
@@ -100,14 +108,39 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     }
   }
 
+  protected void addResourceFolders(
+      ResourceFolderFactory factory,
+      ImmutableMultimap<Path, Path> foldersToInputsIndex,
+      Path resourcesRoot,
+      ModuleBuildContext context) {
+    for (Map.Entry<Path, Collection<Path>> entry : foldersToInputsIndex.asMap().entrySet()) {
+      context.addSourceFolder(
+          factory.create(
+              entry.getKey(),
+              resourcesRoot,
+              ImmutableSortedSet.copyOf(Ordering.natural(), entry.getValue())));
+    }
+  }
+
   private void addDepsAndFolder(
       IJFolderFactory folderFactory,
       DependencyType dependencyType,
       TargetNode<T, ?> targetNode,
       boolean wantsPackagePrefix,
-      ModuleBuildContext context) {
+      ModuleBuildContext context,
+      ImmutableSet<Path> resourcePaths) {
     ImmutableMultimap<Path, Path> foldersToInputsIndex =
         getSourceFoldersToInputsIndex(targetNode.getInputs());
+
+    if (!resourcePaths.isEmpty()) {
+      foldersToInputsIndex =
+          foldersToInputsIndex
+              .entries()
+              .stream()
+              .filter(entry -> !resourcePaths.contains(entry.getValue()))
+              .collect(MoreCollectors.toImmutableMultimap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
     addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
     addDeps(foldersToInputsIndex, targetNode, dependencyType, context);
 
@@ -118,6 +151,30 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     }
   }
 
+  private void addDepsAndFolder(
+      IJFolderFactory folderFactory,
+      DependencyType dependencyType,
+      TargetNode<T, ?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context) {
+    addDepsAndFolder(
+        folderFactory, dependencyType, targetNode, wantsPackagePrefix, context, ImmutableSet.of());
+  }
+
+  protected void addDepsAndSources(
+      TargetNode<T, ?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context,
+      ImmutableSet<Path> resourcePaths) {
+    addDepsAndFolder(
+        SourceFolder.FACTORY,
+        DependencyType.PROD,
+        targetNode,
+        wantsPackagePrefix,
+        context,
+        resourcePaths);
+  }
+
   protected void addDepsAndSources(
       TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
     addDepsAndFolder(
@@ -125,9 +182,77 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   }
 
   protected void addDepsAndTestSources(
+      TargetNode<T, ?> targetNode,
+      boolean wantsPackagePrefix,
+      ModuleBuildContext context,
+      ImmutableSet<Path> resourcePaths) {
+    addDepsAndFolder(
+        TestFolder.FACTORY,
+        DependencyType.TEST,
+        targetNode,
+        wantsPackagePrefix,
+        context,
+        resourcePaths);
+  }
+
+  protected void addDepsAndTestSources(
       TargetNode<T, ?> targetNode, boolean wantsPackagePrefix, ModuleBuildContext context) {
     addDepsAndFolder(
         TestFolder.FACTORY, DependencyType.TEST, targetNode, wantsPackagePrefix, context);
+  }
+
+  protected ImmutableSet<Path> getResourcePaths(Collection<SourcePath> resources) {
+    return resources
+        .stream()
+        .filter(PathSourcePath.class::isInstance)
+        .map(PathSourcePath.class::cast)
+        .map(PathSourcePath::getRelativePath)
+        .collect(MoreCollectors.toImmutableSet());
+  }
+
+  protected ImmutableSet<Path> getResourcePaths(
+      Collection<SourcePath> resources, Path resourcesRoot) {
+    return resources
+        .stream()
+        .filter(PathSourcePath.class::isInstance)
+        .map(PathSourcePath.class::cast)
+        .map(PathSourcePath::getRelativePath)
+        .filter(path -> path.startsWith(resourcesRoot))
+        .collect(MoreCollectors.toImmutableSet());
+  }
+
+  protected ImmutableMultimap<Path, Path> getResourcesRootsToResources(
+      ImmutableSet<Path> resourcePaths) {
+    final JavaPackageFinder packageFinder =
+        projectConfig.getJavaBuckConfig().createDefaultJavaPackageFinder();
+    return resourcePaths
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableMultimap(
+                path ->
+                    MorePaths.stripCommonSuffix(
+                            path.getParent(), packageFinder.findJavaPackageFolder(path))
+                        .getFirst(),
+                Function.identity()));
+  }
+
+  // This function should only be called if resources_root is present. If there is no
+  // resources_root, then we use the java src_roots option from .buckconfig for the resource root,
+  // so marking the containing folder of the resources as a regular source folder will work
+  // correctly. On the other hand, if there is a resources_root, then for resources under this root,
+  // we need to create java-resource folders with the correct relativeOutputPath set. We also return
+  // a filter that removes the resources that we've added, so that folders containing those
+  // resources will not be added as regular source folders.
+  protected void addResourceFolders(
+      IjResourceFolderType ijResourceFolderType,
+      ImmutableCollection<Path> resourcePaths,
+      Path resourcesRoot,
+      ModuleBuildContext context) {
+    addResourceFolders(
+        ijResourceFolderType.getFactory(),
+        getSourceFoldersToInputsIndex(resourcePaths),
+        resourcesRoot,
+        context);
   }
 
   private void addDeps(

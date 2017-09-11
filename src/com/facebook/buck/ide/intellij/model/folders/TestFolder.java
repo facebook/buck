@@ -24,7 +24,7 @@ public class TestFolder extends InclusiveFolder {
 
   public static final IJFolderFactory FACTORY = TestFolder::new;
 
-  TestFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
+  public TestFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);
   }
 

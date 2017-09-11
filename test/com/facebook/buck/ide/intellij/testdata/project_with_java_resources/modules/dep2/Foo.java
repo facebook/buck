@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,12 +14,6 @@
  * under the License.
  */
 
-package com.facebook.buck.ide.intellij.model.folders;
+package com.example;
 
-import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-
-/** Interface for factory classes which can create each type of source folder. */
-public interface IJFolderFactory {
-  IjFolder create(Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs);
-}
+public class Foo {}
