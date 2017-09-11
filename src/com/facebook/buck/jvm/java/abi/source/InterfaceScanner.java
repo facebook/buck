@@ -34,6 +34,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 
 /**
  * Examines the non-private interfaces of types defined in one or more {@link CompilationUnitTree}s
@@ -72,22 +73,37 @@ class InterfaceScanner {
       /** Reports types that are imported via single-type imports */
       @Override
       public Void visitImport(ImportTree node, Void aVoid) {
-        if (node.isStatic()) {
-          // Static import; we care only about type imports
-          return null;
-        }
-
         MemberSelectTree typeNameTree = (MemberSelectTree) node.getQualifiedIdentifier();
         if (typeNameTree.getIdentifier().contentEquals("*")) {
           // Star import; caller doesn't care
           return null;
         }
 
-        // Single-type import; report to listener
         TreePath importedTypePath = new TreePath(getCurrentPath(), typeNameTree);
-        TypeElement importedType =
-            (TypeElement) Preconditions.checkNotNull(trees.getElement(importedTypePath));
-        listener.onTypeImported(importedType);
+
+        if (!node.isStatic()) {
+          // Single-type import; report to listener
+          Element importedElement = Preconditions.checkNotNull(trees.getElement(importedTypePath));
+          if (importedElement.getKind().isClass() || importedElement.getKind().isInterface()) {
+            listener.onTypeImported((TypeElement) importedElement);
+          }
+        } else {
+          // Static imports import all accessible elements of a given mame, so javac doesn't
+          // give us an Element for the full import expression like it does for a single-type
+          // import. We must scan the enclosing type to see if there's any nested class of
+          // the given name.
+          TreePath enclosingTypePath = new TreePath(importedTypePath, typeNameTree.getExpression());
+          Element enclosingType = Preconditions.checkNotNull(trees.getElement(enclosingTypePath));
+          for (TypeElement nestedType :
+              ElementFilter.typesIn(enclosingType.getEnclosedElements())) {
+            if (nestedType.getSimpleName().equals(typeNameTree.getIdentifier())) {
+              if (trees.isAccessible(trees.getScope(getCurrentPath()), nestedType)) {
+                listener.onTypeImported(nestedType);
+              }
+              break;
+            }
+          }
+        }
         return null;
       }
 

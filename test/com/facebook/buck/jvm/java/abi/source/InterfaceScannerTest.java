@@ -446,7 +446,46 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
   }
 
   @Test
-  public void testIgnoresStaticImports() throws IOException {
+  public void testFindsStaticImportsOfNestedTypes() throws IOException {
+    findTypeReferences("import static java.text.DateFormat.Field;", "class Foo { }");
+
+    assertThat(
+        importedTypes,
+        Matchers.containsInAnyOrder(elements.getTypeElement("java.text.DateFormat.Field")));
+  }
+
+  @Test
+  public void testDoesNotFindInaccessibleStaticImportsOfNestedTypes() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "com/facebook/bar/Bar.java",
+            Joiner.on('\n')
+                .join(
+                    "package com.facebook.bar;",
+                    "public class Bar {",
+                    "  public static void Inner() {}",
+                    "private static class Inner { }",
+                    "}")));
+    findTypeReferences("import static com.facebook.bar.Bar.Inner;", "class Foo { }");
+
+    assertThat(importedTypes, Matchers.empty());
+  }
+
+  @Test
+  public void testStaticImportsOfMissingNestedTypesDoNotCompile() throws IOException {
+    findTypeReferencesErrorsOK("import static java.text.DateFormat.Missing;", "class Foo { }");
+
+    assertError(
+        "Foo.java:1: error: cannot find symbol\n"
+            + "import static java.text.DateFormat.Missing;\n"
+            + "^\n"
+            + "  symbol:   static Missing\n"
+            + "  location: class");
+    assertThat(importedTypes, Matchers.empty());
+  }
+
+  @Test
+  public void testIgnoresStaticImportsOfMethods() throws IOException {
     findTypeReferences("import static java.util.Collections.*;", "class Foo { }");
 
     assertThat(importedTypes, Matchers.empty());
