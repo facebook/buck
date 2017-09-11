@@ -93,6 +93,10 @@ class PostEnterCanonicalizer {
     return result;
   }
 
+  protected TypeMirror getCanonicalType(TreePath classNamePath) {
+    return getCanonicalType(getUnderlyingType(classNamePath), classNamePath);
+  }
+
   public TypeMirror getCanonicalType(
       @PropagatesNullable TypeMirror typeMirror, @Nullable TreePath parent, @Nullable Tree child) {
     return getCanonicalType(
@@ -209,14 +213,12 @@ class PostEnterCanonicalizer {
                   .map(
                       arg -> {
                         TreePath argPath = new TreePath(treePath, arg);
-                        return getCanonicalType(getUnderlyingType(argPath), argPath);
+                        return getCanonicalType(argPath);
                       })
                   .toArray(TypeMirror[]::new);
 
           TreePath baseTypeTreePath = new TreePath(treePath, parameterizedTypeTree.getType());
-          DeclaredType baseType =
-              (DeclaredType)
-                  getCanonicalType(getUnderlyingType(baseTypeTreePath), baseTypeTreePath);
+          DeclaredType baseType = (DeclaredType) getCanonicalType(baseTypeTreePath);
 
           TypeMirror enclosingType = baseType.getEnclosingType();
           if (enclosingType.getKind() == TypeKind.NONE) {
@@ -232,24 +234,20 @@ class PostEnterCanonicalizer {
         {
           WildcardTree wildcardTree = (WildcardTree) tree;
           TreePath boundTreePath = new TreePath(treePath, wildcardTree.getBound());
-          return types.getWildcardType(
-              null, getCanonicalType(getUnderlyingType(boundTreePath), boundTreePath));
+          return types.getWildcardType(null, getCanonicalType(boundTreePath));
         }
       case EXTENDS_WILDCARD:
         {
           WildcardTree wildcardTree = (WildcardTree) tree;
           TreePath boundTreePath = new TreePath(treePath, wildcardTree.getBound());
-          return types.getWildcardType(
-              getCanonicalType(getUnderlyingType(boundTreePath), boundTreePath), null);
+          return types.getWildcardType(getCanonicalType(boundTreePath), null);
         }
       case MEMBER_SELECT:
         {
           MemberSelectTree memberSelectTree = (MemberSelectTree) tree;
           Name identifier = memberSelectTree.getIdentifier();
           TreePath baseTypeTreePath = new TreePath(treePath, memberSelectTree.getExpression());
-          StandaloneTypeMirror baseType =
-              (StandaloneTypeMirror)
-                  getCanonicalType(getUnderlyingType(baseTypeTreePath), baseTypeTreePath);
+          StandaloneTypeMirror baseType = (StandaloneTypeMirror) getCanonicalType(baseTypeTreePath);
 
           if (baseType.getKind() == TypeKind.PACKAGE) {
             CharSequence fullyQualifiedName = TreeBackedTrees.treeToName(memberSelectTree);
@@ -289,8 +287,7 @@ class PostEnterCanonicalizer {
           // If it's imported, then it must be a class; look it up
           TreePath importedIdentifierPath = getImportedIdentifier(treePath);
           if (importedIdentifierPath != null) {
-            return getCanonicalType(
-                getUnderlyingType(importedIdentifierPath), importedIdentifierPath);
+            return getCanonicalType(importedIdentifierPath);
           }
 
           // Infer the type by heuristic
@@ -374,7 +371,7 @@ class PostEnterCanonicalizer {
                 TreePath classNamePath =
                     new TreePath(valueTreePath, ((MemberSelectTree) leaf).getExpression());
 
-                return getCanonicalType(getUnderlyingType(classNamePath), classNamePath);
+                return getCanonicalType(classNamePath);
               } else {
                 javacTrees.printMessage(
                     Diagnostic.Kind.ERROR,
