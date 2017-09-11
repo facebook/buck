@@ -95,6 +95,9 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     if (disabledWarningShown) {
       return;
     }
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
     if (timeoutNanos < 0) {
       timeoutNanos = 0;
     }
@@ -120,7 +123,9 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
         LOG.debug("Waiting for Watchman query [%s]...", query);
-        console.getStdErr().getRawStream().format("Waiting for watchman query...\n");
+        if (!console.getVerbosity().isSilent()) {
+          console.getStdErr().getRawStream().format("Waiting for watchman query...\n");
+        }
         try {
           return future.get(remainingNanos, TimeUnit.NANOSECONDS);
         } catch (TimeoutException te) {
