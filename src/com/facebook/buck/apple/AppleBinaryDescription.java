@@ -95,7 +95,7 @@ public class AppleBinaryDescription
           LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   private final CxxBinaryDescription delegate;
-  private final SwiftLibraryDescription swiftDelegate;
+  private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
@@ -109,7 +109,8 @@ public class AppleBinaryDescription
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
     this.delegate = delegate;
-    this.swiftDelegate = swiftDelegate;
+    this.swiftDelegate =
+        appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
@@ -129,7 +130,9 @@ public class AppleBinaryDescription
 
     builder.addAll(localDomains);
     delegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
-    swiftDelegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    swiftDelegate
+        .flatMap(swift -> swift.flavorDomains())
+        .ifPresent(domains -> builder.addAll(domains));
 
     ImmutableSet<FlavorDomain<?>> result = builder.build();
 
@@ -150,7 +153,7 @@ public class AppleBinaryDescription
     }
     ImmutableSet<Flavor> delegateFlavors =
         ImmutableSet.copyOf(Sets.difference(flavors, NON_DELEGATE_FLAVORS));
-    if (swiftDelegate.hasFlavors(delegateFlavors)) {
+    if (swiftDelegate.map(swift -> swift.hasFlavors(delegateFlavors)).orElse(false)) {
       return true;
     }
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
@@ -395,9 +398,18 @@ public class AppleBinaryDescription
     }
 
     ImmutableSortedSet.Builder<BuildTarget> extraCxxDepsBuilder = ImmutableSortedSet.naturalOrder();
+    final BuildRuleParams inputParams = params;
     Optional<BuildRule> swiftCompanionBuildRule =
-        swiftDelegate.createCompanionBuildRule(
-            targetGraph, buildTarget, projectFilesystem, params, resolver, cellRoots, args);
+        swiftDelegate.flatMap(
+            swift ->
+                swift.createCompanionBuildRule(
+                    targetGraph,
+                    buildTarget,
+                    projectFilesystem,
+                    inputParams,
+                    resolver,
+                    cellRoots,
+                    args));
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.
