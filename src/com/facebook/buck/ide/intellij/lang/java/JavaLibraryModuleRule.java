@@ -22,10 +22,16 @@ import com.facebook.buck.ide.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.CoreArg> {
@@ -45,7 +51,27 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
   @Override
   public void apply(
       TargetNode<JavaLibraryDescription.CoreArg, ?> target, ModuleBuildContext context) {
-    addDepsAndSources(target, true /* wantsPackagePrefix */, context);
+    Optional<Path> presetResourcesRoot = target.getConstructorArg().getResourcesRoot();
+    ImmutableSortedSet<SourcePath> resources = target.getConstructorArg().getResources();
+    ImmutableSet<Path> resourcePaths;
+    if (presetResourcesRoot.isPresent()) {
+      resourcePaths = getResourcePaths(resources, presetResourcesRoot.get());
+      addResourceFolders(
+          IjResourceFolderType.JAVA_RESOURCE, resourcePaths, presetResourcesRoot.get(), context);
+    } else {
+      resourcePaths = getResourcePaths(resources);
+      ImmutableMultimap<Path, Path> resourcesRootsToResources =
+          getResourcesRootsToResources(resourcePaths);
+      for (Path resourcesRoot : resourcesRootsToResources.keySet()) {
+        addResourceFolders(
+            IjResourceFolderType.JAVA_RESOURCE,
+            resourcesRootsToResources.get(resourcesRoot),
+            resourcesRoot,
+            context);
+      }
+    }
+
+    addDepsAndSources(target, true /* wantsPackagePrefix */, context, resourcePaths);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
     context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));

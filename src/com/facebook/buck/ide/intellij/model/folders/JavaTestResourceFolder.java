@@ -16,38 +16,31 @@
 
 package com.facebook.buck.ide.intellij.model.folders;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
-  public abstract String getType();
+public class JavaTestResourceFolder extends ResourceFolder {
 
-  public abstract String getUrl();
+  public static final ResourceFolderFactory FACTORY = JavaTestResourceFolder::new;
 
-  public abstract Path getPath();
-
-  public abstract boolean getIsTestSource();
-
-  public abstract boolean getIsResourceFolder();
-
-  public abstract IjResourceFolderType getIjResourceFolderType();
-
-  @Nullable
-  public abstract Path getRelativeOutputPath();
-
-  @Nullable
-  public abstract String getPackagePrefix();
+  public JavaTestResourceFolder(
+      Path path, @Nullable Path resourcesRoot, ImmutableSortedSet<Path> inputs) {
+    super(path, resourcesRoot, inputs);
+  }
 
   @Override
-  public int compareTo(IjSourceFolder o) {
-    if (this == o) {
-      return 0;
-    }
+  public IjResourceFolderType getResourceFolderType() {
+    return IjResourceFolderType.JAVA_TEST_RESOURCE;
+  }
 
-    return getUrl().compareTo(o.getUrl());
+  @Override
+  protected IJFolderFactory getFactory() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ResourceFolderFactory getResourceFactory() {
+    return FACTORY;
   }
 }

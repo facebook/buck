@@ -18,28 +18,59 @@ package com.facebook.buck.ide.intellij;
 
 import com.facebook.buck.ide.intellij.model.folders.IJFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolderFactory;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
+import com.google.common.base.Preconditions;
+import javax.annotation.Nullable;
 
 public enum FolderTypeWithPackageInfo {
-  SOURCE_FOLDER_WITH_PACKAGE_INFO(true, SourceFolder.FACTORY, SourceFolder.class),
-  SOURCE_FOLDER_WITHOUT_PACKAGE_INFO(false, SourceFolder.FACTORY, SourceFolder.class),
-  TEST_FOLDER_WITH_PACKAGE_INFO(true, TestFolder.FACTORY, TestFolder.class),
-  TEST_FOLDER_WITHOUT_PACKAGE_INFO(false, TestFolder.FACTORY, TestFolder.class);
-
-  public static final int FOLDER_TYPES_COUNT = values().length;
+  SOURCE_FOLDER_WITH_PACKAGE_INFO(
+      true, false, SourceFolder.FACTORY, null, SourceFolder.class, null),
+  SOURCE_FOLDER_WITHOUT_PACKAGE_INFO(
+      false, false, SourceFolder.FACTORY, null, SourceFolder.class, null),
+  TEST_FOLDER_WITH_PACKAGE_INFO(true, false, TestFolder.FACTORY, null, TestFolder.class, null),
+  TEST_FOLDER_WITHOUT_PACKAGE_INFO(false, false, TestFolder.FACTORY, null, TestFolder.class, null),
+  // The factories for resource and test resource folders should never be called from here. Instead,
+  // they should be called using those provided in ResouceFolderType. Thus, we set them to null.
+  JAVA_RESOURCE_FOLDER(
+      false,
+      true,
+      null,
+      JavaResourceFolder.FACTORY,
+      JavaResourceFolder.class,
+      IjResourceFolderType.JAVA_RESOURCE),
+  JAVA_TEST_RESOURCE_FOLDER(
+      false,
+      true,
+      null,
+      JavaTestResourceFolder.FACTORY,
+      JavaTestResourceFolder.class,
+      IjResourceFolderType.JAVA_TEST_RESOURCE);
 
   private final boolean wantsPackagePrefix;
-  private final IJFolderFactory folderFactory;
+  private final boolean isResourceFolder;
+  private final @Nullable IJFolderFactory folderFactory;
+  private final @Nullable ResourceFolderFactory resourceFolderFactory;
   private final Class<? extends IjFolder> folderTypeClass;
+  private final @Nullable IjResourceFolderType ijResourceFolderType;
 
   FolderTypeWithPackageInfo(
       boolean wantsPackagePrefix,
-      IJFolderFactory folderFactory,
-      Class<? extends IjFolder> folderTypeClass) {
+      boolean isResourceFolder,
+      @Nullable IJFolderFactory folderFactory,
+      @Nullable ResourceFolderFactory resourceFolderFactory,
+      Class<? extends IjFolder> folderTypeClass,
+      @Nullable IjResourceFolderType ijResourceFolderType) {
     this.wantsPackagePrefix = wantsPackagePrefix;
+    this.isResourceFolder = isResourceFolder;
     this.folderFactory = folderFactory;
+    this.resourceFolderFactory = resourceFolderFactory;
     this.folderTypeClass = folderTypeClass;
+    this.ijResourceFolderType = ijResourceFolderType;
   }
 
   public static FolderTypeWithPackageInfo fromFolder(IjFolder folder) {
@@ -51,13 +82,17 @@ public enum FolderTypeWithPackageInfo {
       return folder.getWantsPackagePrefix()
           ? TEST_FOLDER_WITH_PACKAGE_INFO
           : TEST_FOLDER_WITHOUT_PACKAGE_INFO;
+    } else if (folder instanceof JavaResourceFolder) {
+      return JAVA_RESOURCE_FOLDER;
+    } else if (folder instanceof JavaTestResourceFolder) {
+      return JAVA_TEST_RESOURCE_FOLDER;
     } else {
       throw new IllegalArgumentException(String.format("Cannot detect folder type: %s", folder));
     }
   }
 
   public IJFolderFactory getFolderFactory() {
-    return folderFactory;
+    return Preconditions.checkNotNull(folderFactory);
   }
 
   public Class<? extends IjFolder> getFolderTypeClass() {
@@ -66,5 +101,17 @@ public enum FolderTypeWithPackageInfo {
 
   public boolean wantsPackagePrefix() {
     return wantsPackagePrefix;
+  }
+
+  public ResourceFolderFactory getResourceFolderFactory() {
+    return Preconditions.checkNotNull(resourceFolderFactory);
+  }
+
+  public boolean isResourceFolder() {
+    return isResourceFolder;
+  }
+
+  public IjResourceFolderType getIjResourceFolderType() {
+    return Preconditions.checkNotNull(ijResourceFolderType);
   }
 }
