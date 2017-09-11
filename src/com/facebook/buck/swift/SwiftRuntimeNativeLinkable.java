@@ -25,7 +25,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -73,6 +75,27 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
       ImmutableSet<LanguageExtensions> languageExtensions) {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
+    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
+    populateLinkerArguments(linkerArgsBuilder, swiftPlatform, type);
+    inputBuilder.addAllArgs(linkerArgsBuilder.build());
+
+    return inputBuilder.build();
+  }
+
+  @Override
+  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    return Linkage.ANY;
+  }
+
+  @Override
+  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
+    return ImmutableMap.of();
+  }
+
+  public static void populateLinkerArguments(
+      ImmutableList.Builder<Arg> argsBuilder,
+      SwiftPlatform swiftPlatform,
+      Linker.LinkableDepType type) {
     ImmutableSet<Path> swiftRuntimePaths =
         type == Linker.LinkableDepType.SHARED
             ? ImmutableSet.of()
@@ -80,7 +103,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
     // Fall back to shared if static isn't supported on this platform.
     if (type == Linker.LinkableDepType.SHARED || swiftRuntimePaths.isEmpty()) {
-      inputBuilder.addAllArgs(
+      argsBuilder.addAll(
           StringArg.from(
               "-Xlinker",
               "-rpath",
@@ -94,21 +117,10 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
     } else {
       // Static linking requires force-loading Swift libs, since the dependency
       // discovery mechanism is disabled otherwise.
-      inputBuilder.addAllArgs(StringArg.from("-Xlinker", "-force_load_swift_libs"));
+      argsBuilder.addAll(StringArg.from("-Xlinker", "-force_load_swift_libs"));
     }
     for (Path swiftRuntimePath : swiftRuntimePaths) {
-      inputBuilder.addAllArgs(StringArg.from("-L", swiftRuntimePath.toString()));
+      argsBuilder.addAll(StringArg.from("-L", swiftRuntimePath.toString()));
     }
-    return inputBuilder.build();
-  }
-
-  @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-    return ImmutableMap.of();
   }
 }
