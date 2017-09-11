@@ -48,6 +48,7 @@ abstract class TreeBackedElement extends TreeBackedAnnotatedConstruct implements
       @Nullable TreeBackedElement enclosingElement,
       @Nullable TreePath treePath,
       @Nullable PostEnterCanonicalizer canonicalizer) {
+    super(underlyingElement);
     this.underlyingElement = underlyingElement;
     this.enclosingElement = enclosingElement;
     // Some element types don't appear as members of enclosingElement.getEnclosedElements, so
