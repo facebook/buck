@@ -89,6 +89,12 @@ genrule(
   out = 'out',
 )
 
+genrule(
+  name = 'echo_labels_of',
+  cmd = 'echo $(query_targets "labels(provided_deps, //other:exporter)") > $OUT',
+  out = 'out',
+)
+
 java_library(
   name = 'lib_a',
   srcs = ['A.java'],

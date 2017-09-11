@@ -184,6 +184,11 @@ public class GenruleDescriptionIntegrationTest {
     expectGenruleOutput(":ensure_parsing_if_this_is_only_ref", ImmutableList.of("//other:other"));
   }
 
+  @Test
+  public void testGettingLabelsInQueryCanFindTargetDep() throws Exception {
+    expectGenruleOutput(":echo_labels_of", ImmutableList.of("//other:hidden"));
+  }
+
   private void expectOutputPathsGenruleOutput(String genrule, List<String> expectedOutputs)
       throws Exception {
     expectGenruleOutput(

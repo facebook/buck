@@ -2,3 +2,17 @@ java_library(
   name = 'other',
   visibility = [ 'PUBLIC' ],
 )
+
+java_library(
+  name = 'hidden',
+)
+
+java_library(
+  name = 'exporter',
+  provided_deps = [
+    ':hidden',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

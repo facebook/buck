@@ -26,6 +26,7 @@ import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
 import com.facebook.buck.query.KindFunction;
+import com.facebook.buck.query.LabelsFunction;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
@@ -171,7 +172,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
-    throw new UnsupportedOperationException();
+    return QueryTargetAccessor.getTargetsInAttribute(getNode(target), attribute);
   }
 
   @Override
@@ -209,7 +210,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
           new DepsFunction(),
           new DepsFunction.FirstOrderDepsFunction(),
           new KindFunction(),
-          new FilterFunction());
+          new FilterFunction(),
+          new LabelsFunction());
 
   @Override
   public Iterable<QueryFunction> getFunctions() {
