@@ -29,11 +29,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStylePackageVisibleTuple
@@ -90,6 +90,7 @@ abstract class AbstractCxxIncludePaths {
         MoreIterables.zipAndConcat(
             Iterables.cycle("-F"),
             FluentIterable.from(getFPaths())
+                .filter(x -> !x.isSDKROOTFrameworkPath())
                 .transform(frameworkPathTransformer)
                 .transform(Object::toString)
                 .toSortedSet(Ordering.natural())));
