@@ -51,6 +51,7 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
         cellRoots,
         javaBuckConfig);
     this.scalaBuckConfig = scalaBuckConfig;
+    setCompileAgainstAbis(false);
   }
 
   public ScalaLibraryBuilder setArgs(ScalaLibraryDescription.CoreArg args) {
