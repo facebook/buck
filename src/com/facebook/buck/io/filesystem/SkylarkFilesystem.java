@@ -130,10 +130,8 @@ public class SkylarkFilesystem extends AbstractFileSystemWithCustomStat {
 
   @Override
   protected Collection<Path> getDirectoryEntries(Path path) throws IOException {
-    return filesystem
-        .getDirectoryContents(toJavaPath(path))
-        .stream()
-        .map(p -> getPath(p.toAbsolutePath().toString()))
+    return Files.list(toJavaPath(path))
+        .map(p -> getPath(p.toString()))
         .collect(MoreCollectors.toImmutableList());
   }
 
