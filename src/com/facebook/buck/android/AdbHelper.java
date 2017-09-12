@@ -30,6 +30,7 @@ import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
@@ -167,7 +168,18 @@ public class AdbHelper implements AndroidDevicesHelper {
                 new CommandThreadFactory(getClass().getSimpleName()), adbThreadCount));
 
     for (final AndroidDevice device : devices) {
-      futures.add(executorService.submit(() -> func.apply(device)));
+      futures.add(
+          executorService.submit(
+              () -> {
+                try (SimplePerfEvent.Scope ignored =
+                    SimplePerfEvent.scope(
+                        getBuckEventBus(),
+                        PerfEventId.of("adbCall " + description),
+                        "device_serial",
+                        device.getSerialNumber())) {
+                  return func.apply(device);
+                }
+              }));
     }
 
     // Wait for all executions to complete or fail.
