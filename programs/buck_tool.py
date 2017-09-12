@@ -212,8 +212,10 @@ class BuckTool(object):
             try:
                 # Get the number of columns in the terminal.
                 with open(os.devnull, 'w') as devnull:
-                    columns = check_output(["tput", "cols"], stderr=devnull).strip()
-                    env['BUCK_TERM_COLUMNS'] = columns
+                    stty_size_str = check_output(["stty", "size"], stderr=devnull).strip()
+                    stty_size = stty_size_str.split(' ')
+                    if len(stty_size) >= 2:
+                        env['BUCK_TERM_COLUMNS'] = stty_size[1]
             except CalledProcessError:
                 # If the call to tput fails, we use the default.
                 pass
