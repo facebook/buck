@@ -72,7 +72,6 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
@@ -412,7 +411,8 @@ public class KnownBuildRuleTypes {
     FlavorDomain<HaskellPlatform> haskellPlatforms =
         FlavorDomain.from(
             "Haskell platform", haskellBuckConfig.getPlatforms(cxxPlatforms.getValues()));
-    HaskellPlatform defaultHaskellPlatform = haskellPlatforms.getValue(DefaultCxxPlatforms.FLAVOR);
+    HaskellPlatform defaultHaskellPlatform =
+        haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
     builder.register(new HaskellLibraryDescription(haskellPlatforms, cxxBuckConfig));
     builder.register(new HaskellBinaryDescription(defaultHaskellPlatform, haskellPlatforms));
     builder.register(new HaskellPrebuiltLibraryDescription());
