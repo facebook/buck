@@ -1123,7 +1123,7 @@ public class ProjectGenerator {
       } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
         TargetNode<AppleBundleDescriptionArg, ?> bundleLoader = bundleLoaderNode.get();
         String bundleLoaderProductName =
-            getProductNameForBuildTarget(bundleLoader.getBuildTarget());
+            getProductName(bundleLoader, bundleLoader.getBuildTarget());
         String bundleLoaderBundleName =
             bundleLoaderProductName
                 + "."
