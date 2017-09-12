@@ -1,5 +1,5 @@
 java_library(
-    name = "skylark",
+    name = "function",
     srcs = ["Glob.java"],
     visibility = ["PUBLIC"],
     deps = [

@@ -17,8 +17,8 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.Escaper;

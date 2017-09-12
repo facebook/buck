@@ -20,11 +20,11 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;

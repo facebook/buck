@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.skylark;
+package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;

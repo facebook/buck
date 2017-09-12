@@ -19,13 +19,13 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
@@ -72,14 +72,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.OptionDef;
-import org.kohsuke.args4j.spi.Messages;
-import org.kohsuke.args4j.spi.OptionHandler;
-import org.kohsuke.args4j.spi.Parameters;
-import org.kohsuke.args4j.spi.Setter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -98,6 +90,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.OptionDef;
+import org.kohsuke.args4j.spi.Messages;
+import org.kohsuke.args4j.spi.OptionHandler;
+import org.kohsuke.args4j.spi.Parameters;
+import org.kohsuke.args4j.spi.Setter;
 
 public class TestCommand extends BuildCommand {
 
@@ -714,8 +714,8 @@ public class TestCommand extends BuildCommand {
   }
 
   /**
-   * args4j does not support parsing repeated (or delimiter separated) Enums by default.
-   * {@link CoverageReportFormatsHandler} implements args4j behavior for CoverageReportFormat.
+   * args4j does not support parsing repeated (or delimiter separated) Enums by default. {@link
+   * CoverageReportFormatsHandler} implements args4j behavior for CoverageReportFormat.
    */
   public static class CoverageReportFormatsHandler extends OptionHandler<CoverageReportFormat> {
 

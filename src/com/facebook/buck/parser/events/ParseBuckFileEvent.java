@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.parser.events;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;

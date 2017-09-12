@@ -77,6 +77,7 @@ java_immutables_library(
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/parser/events:events",
         "//src/com/facebook/buck/rules:build_event",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rule_key",

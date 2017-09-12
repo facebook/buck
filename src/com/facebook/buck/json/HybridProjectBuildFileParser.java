@@ -16,6 +16,9 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

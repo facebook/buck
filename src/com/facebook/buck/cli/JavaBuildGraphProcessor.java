@@ -18,11 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;

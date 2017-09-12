@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.skylark;
+package com.facebook.buck.skylark.function;
 
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;

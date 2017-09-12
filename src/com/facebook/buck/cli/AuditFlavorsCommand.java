@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FlavorDomain;
@@ -25,6 +24,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;

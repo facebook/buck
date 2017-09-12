@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.parser.exceptions;
 
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import java.io.IOException;
@@ -32,7 +32,7 @@ public class BuildFileParseException extends Exception
     super(message);
   }
 
-  static BuildFileParseException createForUnknownParseError(String message) {
+  public static BuildFileParseException createForUnknownParseError(String message) {
     return new BuildFileParseException(message);
   }
 
@@ -44,7 +44,8 @@ public class BuildFileParseException extends Exception
     }
   }
 
-  static BuildFileParseException createForBuildFileParseError(Path buildFile, IOException cause) {
+  public static BuildFileParseException createForBuildFileParseError(
+      Path buildFile, IOException cause) {
     String message = String.format("Buck wasn't able to parse %s", buildFile);
     return new BuildFileParseException(formatMessageWithCause(message, cause));
   }

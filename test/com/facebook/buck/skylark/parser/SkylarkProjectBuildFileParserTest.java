@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -23,6 +23,8 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;

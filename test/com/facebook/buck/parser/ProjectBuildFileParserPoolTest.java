@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.json.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.google.common.base.Function;

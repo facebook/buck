@@ -23,7 +23,6 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleExceptio
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
@@ -34,6 +33,7 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildRule;

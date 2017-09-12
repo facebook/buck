@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.parser.options;
 
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;

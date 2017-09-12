@@ -14,16 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.events.ParseBuckFileEvent;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.skylark.Glob;
+import com.facebook.buck.skylark.function.Glob;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

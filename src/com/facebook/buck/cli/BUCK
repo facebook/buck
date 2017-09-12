@@ -261,6 +261,8 @@ java_immutables_library(
         "//src/com/facebook/buck/zip:constants",
         "//src/com/facebook/buck/zip:stream",
         "//src/com/facebook/buck/zip:unzip",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/parser/api:api",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:tools-sdk-common",
         "//third-party/java/aosp:aosp",

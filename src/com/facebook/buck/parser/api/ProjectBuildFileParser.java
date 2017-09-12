@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.json;
+package com.facebook.buck.parser.api;
 
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
