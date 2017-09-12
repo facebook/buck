@@ -572,27 +572,17 @@ public class AndroidBinaryGraphEnhancer {
         continue;
       }
 
-      // See whether the corresponding IntermediateDexRule has already been added to the
-      // ruleResolver.
-      BuildTarget originalTarget = javaLibrary.getBuildTarget();
-      BuildTarget preDexTarget = originalTarget.withAppendedFlavors(DEX_FLAVOR);
-      Optional<BuildRule> preDexRule = ruleResolver.getRuleOptional(preDexTarget);
-      if (preDexRule.isPresent()) {
-        preDexDeps.put(
-            apkModuleGraph.findModuleForTarget(buildTarget),
-            (DexProducedFromJavaLibrary) preDexRule.get());
-        continue;
-      }
-
-      // Create the IntermediateDexRule and add it to both the ruleResolver and preDexDeps.
-      BuildRuleParams paramsForPreDex =
-          buildRuleParams.withDeclaredDeps(
-              ImmutableSortedSet.of(ruleResolver.getRule(javaLibrary.getBuildTarget())));
-      DexProducedFromJavaLibrary preDex =
-          new DexProducedFromJavaLibrary(
-              preDexTarget, projectFilesystem, paramsForPreDex, javaLibrary);
-      ruleResolver.addToIndex(preDex);
-      preDexDeps.put(apkModuleGraph.findModuleForTarget(buildTarget), preDex);
+      BuildRule preDexRule =
+          ruleResolver.computeIfAbsent(
+              javaLibrary.getBuildTarget().withAppendedFlavors(DEX_FLAVOR),
+              preDexTarget -> {
+                BuildRuleParams paramsForPreDex =
+                    buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
+                return new DexProducedFromJavaLibrary(
+                    preDexTarget, projectFilesystem, paramsForPreDex, javaLibrary);
+              });
+      preDexDeps.put(
+          apkModuleGraph.findModuleForTarget(buildTarget), (DexProducedFromJavaLibrary) preDexRule);
     }
     return preDexDeps.build();
   }
