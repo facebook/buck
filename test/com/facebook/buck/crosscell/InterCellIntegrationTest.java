@@ -145,11 +145,8 @@ public class InterCellIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectWorkspace primary = createWorkspace("inter-cell/multi-cell/primary");
-    primary.setUp();
     ProjectWorkspace secondary = createWorkspace("inter-cell/multi-cell/secondary");
-    secondary.setUp();
     ProjectWorkspace ternary = createWorkspace("inter-cell/multi-cell/ternary");
-    ternary.setUp();
     registerCell(secondary, "ternary", ternary);
     registerCell(primary, "secondary", secondary);
     registerCell(primary, "ternary", ternary);
