@@ -96,6 +96,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
+  private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -161,6 +162,10 @@ public class WorkspaceAndProjectGenerator {
 
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     return requiredBuildTargetsBuilder.build();
+  }
+
+  private ImmutableSet<Path> getXcconfigPaths() {
+    return xcconfigPathsBuilder.build();
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -267,7 +272,9 @@ public class WorkspaceAndProjectGenerator {
             .stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableList());
-    ImmutableMap<String, Object> data = ImmutableMap.of("required-targets", requiredTargetsStrings);
+    ImmutableMap<String, Object> data =
+        ImmutableMap.of(
+            "required-targets", requiredTargetsStrings, "xcconfig-paths", getXcconfigPaths());
     String jsonString = ObjectMappers.WRITER.writeValueAsString(data);
     rootCell
         .getFilesystem()
@@ -360,6 +367,7 @@ public class WorkspaceAndProjectGenerator {
                           relativeTargetCell.resolve(result.getProjectPath()),
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
+                          result.getXcconfigPaths(),
                           result.getBuildTargetToGeneratedTargetMap());
                   return result;
                 }));
@@ -389,6 +397,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
       GenerationResult result) {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
+    xcconfigPathsBuilder.addAll(result.getXcconfigPaths());
     buildTargetToPbxTargetMapBuilder.putAll(result.getBuildTargetToGeneratedTargetMap());
     for (PBXTarget target : result.getBuildTargetToGeneratedTargetMap().values()) {
       targetToProjectPathMapBuilder.put(target, result.getProjectPath());
@@ -459,6 +468,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getProjectPath(),
         generator.isProjectGenerated(),
         requiredBuildTargets,
+        generator.getXcconfigPaths(),
         buildTargetToGeneratedTargetMap);
   }
 
@@ -500,6 +510,7 @@ public class WorkspaceAndProjectGenerator {
             generator.getProjectPath(),
             generator.isProjectGenerated(),
             generator.getRequiredBuildTargets(),
+            generator.getXcconfigPaths(),
             generator.getBuildTargetToGeneratedTargetMap());
     workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(

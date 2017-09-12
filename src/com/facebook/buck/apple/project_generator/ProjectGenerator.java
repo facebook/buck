@@ -283,6 +283,7 @@ public class ProjectGenerator {
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
+  private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -401,6 +402,10 @@ public class ProjectGenerator {
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     return requiredBuildTargetsBuilder.build();
+  }
+
+  public ImmutableSet<Path> getXcconfigPaths() {
+    return xcconfigPathsBuilder.build();
   }
 
   // Returns true if we ran the project generation and we decided to eventually generate
@@ -1810,6 +1815,8 @@ public class ProjectGenerator {
 
       PBXFileReference fileReference = getConfigurationFileReference(targetGroup, xcconfigPath);
       outputConfiguration.setBaseConfigurationReference(fileReference);
+
+      xcconfigPathsBuilder.add(xcconfigPath);
     }
   }
 

@@ -1,3 +1,8 @@
+EMPTY_CONFIGS = {
+  'Debug': {},
+  'Release': {},
+}
+
 apple_library(
   name='lib',
   srcs=[
@@ -5,6 +10,7 @@ apple_library(
     ':gen',
     'other_cell//:gen',
   ],
+  configs=EMPTY_CONFIGS,
 )
 
 genrule(
