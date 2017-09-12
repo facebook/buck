@@ -47,7 +47,13 @@ public class ZipFileDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       ZipFileDescriptionArg args) {
-    return new Zip(buildTarget, projectFilesystem, params, args.getOut(), args.getSrcs());
+    return new Zip(
+        buildTarget,
+        projectFilesystem,
+        params,
+        args.getOut(),
+        args.getSrcs(),
+        args.getFlatten());
   }
 
   @BuckStyleImmutable
@@ -56,6 +62,11 @@ public class ZipFileDescription
     @Value.Default
     default String getOut() {
       return getName() + ".zip";
+    }
+
+    @Value.Default
+    default boolean getFlatten() {
+      return false;
     }
   }
 }

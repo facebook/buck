@@ -42,16 +42,19 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final boolean flatten;
 
   public Zip(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String outputName,
-      ImmutableSortedSet<SourcePath> sources) {
+      ImmutableSortedSet<SourcePath> sources,
+      boolean flatten) {
     super(buildTarget, projectFilesystem, params);
     this.name = outputName;
     this.sources = sources;
+    this.flatten = flatten;
   }
 
   private Path getOutput() {
@@ -91,7 +94,7 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getProjectFilesystem(),
             output,
             ImmutableSortedSet.of(),
-            /* junk paths */ false,
+            flatten,
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             scratchDir));
 
