@@ -180,9 +180,6 @@ public class DoctorCommandIntegrationTest {
   @Test
   public void testReportSuccessfulUpload() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempFolder.getRoot());
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
-    workspace.setUp();
     // Set the last-modified time of the build command first so our user input will select it
     Path buildCommandLogDir = filesystem.resolve(LOG_PATH).getParent();
     filesystem.setLastModifiedTime(buildCommandLogDir, FileTime.from(Instant.now()));
@@ -259,10 +256,6 @@ public class DoctorCommandIntegrationTest {
 
   @Test
   public void testJsonUpload() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
-    workspace.setUp();
-
     try (HttpdForTests httpd = new HttpdForTests()) {
       httpd.addHandler(
           new AbstractHandler() {
@@ -317,9 +310,6 @@ public class DoctorCommandIntegrationTest {
   @Test
   public void testExtraInfo() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempFolder.getRoot());
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
-    workspace.setUp();
 
     DoctorConfig doctorConfig =
         createDoctorConfig(0, "python, extra.py", DoctorProtocolVersion.SIMPLE);
@@ -362,9 +352,6 @@ public class DoctorCommandIntegrationTest {
   @Test
   public void testReportUploadFailure() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(tempFolder.getRoot());
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
-    workspace.setUp();
 
     try (HttpdForTests httpd = new HttpdForTests()) {
       httpd.addHandler(
