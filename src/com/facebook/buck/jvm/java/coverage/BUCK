@@ -4,6 +4,7 @@ java_library(
     visibility = [],  # Only visible to this build file.
     deps = [
         "//third-party/java/jacoco:jacoco",
+        "//third-party/java/guava:guava",
         "//third-party/java/plexus:plexus-utils",
     ],
 )
