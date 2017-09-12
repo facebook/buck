@@ -48,7 +48,13 @@ public class ZipFileDescription
       CellPathResolver cellRoots,
       ZipFileDescriptionArg args) {
     return new Zip(
-        buildTarget, projectFilesystem, params, args.getOut(), args.getSrcs(), args.getFlatten());
+        buildTarget,
+        projectFilesystem,
+        params,
+        args.getOut(),
+        args.getSrcs(),
+        args.getFlatten(),
+        args.getMergeSourceZips());
   }
 
   @BuckStyleImmutable
@@ -62,6 +68,11 @@ public class ZipFileDescription
     @Value.Default
     default boolean getFlatten() {
       return false;
+    }
+
+    @Value.Default
+    default boolean getMergeSourceZips() {
+      return true;
     }
   }
 }
