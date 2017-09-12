@@ -58,7 +58,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
   }
 
   @Override
-  QueryOutputsMacro fromQuery(Query query) {
+  public QueryOutputsMacro fromQuery(Query query) {
     return QueryOutputsMacro.of(query);
   }
 

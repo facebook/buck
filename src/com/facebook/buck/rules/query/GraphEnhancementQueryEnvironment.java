@@ -25,6 +25,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
+import com.facebook.buck.query.InputsFunction;
 import com.facebook.buck.query.KindFunction;
 import com.facebook.buck.query.LabelsFunction;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -61,6 +62,7 @@ import java.util.stream.Stream;
  *  deps
  *  inputs
  *  except
+ *  inputs
  *  intersect
  *  filter
  *  kind
@@ -211,7 +213,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
           new DepsFunction.FirstOrderDepsFunction(),
           new KindFunction(),
           new FilterFunction(),
-          new LabelsFunction());
+          new LabelsFunction(),
+          new InputsFunction());
 
   @Override
   public Iterable<QueryFunction> getFunctions() {
