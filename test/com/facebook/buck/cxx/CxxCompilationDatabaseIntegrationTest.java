@@ -185,9 +185,6 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void libraryCompilationDatabase() throws InterruptedException, IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "compilation_database", tmp);
-    workspace.setUp();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
@@ -269,9 +266,6 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void testCompilationDatabase() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "compilation_database", tmp);
-    workspace.setUp();
     BuildTarget target = BuildTargetFactory.newInstance("//:test#default,compilation-database");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
@@ -325,9 +319,6 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void testUberCompilationDatabase() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "compilation_database", tmp);
-    workspace.setUp();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:test#default,uber-compilation-database");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
