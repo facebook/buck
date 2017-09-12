@@ -146,7 +146,6 @@ public class ProjectWorkspace {
       };
 
   private boolean isSetUp = false;
-  private boolean manageLocalConfigs = false;
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private final Path templatePath;
   private final Path destPath;
@@ -227,23 +226,26 @@ public class ProjectWorkspace {
       Files.walkFileTree(destPath, copyDirVisitor);
     }
 
-    if (!Files.exists(getPath(".buckconfig.local"))) {
-      manageLocalConfigs = true;
-
-      // Enable the JUL build log.  This log is very verbose but rarely useful,
-      // so it's disabled by default.
-      addBuckConfigLocalOption("log", "jul_build_log", "true");
-
-      // Disable the directory cache by default.  Tests that want to enable it can call
-      // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
-      // exist, however (we assume the test knows what it is doing at that point).
-      addBuckConfigLocalOption("cache", "mode", "");
-
-      // Limit the number of threads by default to prevent multiple integration tests running at the
-      // same time from creating a quadratic number of threads. Tests can disable this using
-      // `disableThreadLimitOverride`.
-      addBuckConfigLocalOption("build", "threads", "2");
+    if (Files.exists(getPath(".buckconfig.local"))) {
+      throw new IllegalStateException(
+          "Found a .buckconfig.local in the ProjectWorkspace template, which is illegal."
+              + "  Use addBuckConfigLocalOption instead."
+              + "  This can also happen if workspace.setUp() is called twice.");
     }
+
+    // Enable the JUL build log.  This log is very verbose but rarely useful,
+    // so it's disabled by default.
+    addBuckConfigLocalOption("log", "jul_build_log", "true");
+
+    // Disable the directory cache by default.  Tests that want to enable it can call
+    // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
+    // exist, however (we assume the test knows what it is doing at that point).
+    addBuckConfigLocalOption("cache", "mode", "");
+
+    // Limit the number of threads by default to prevent multiple integration tests running at the
+    // same time from creating a quadratic number of threads. Tests can disable this using
+    // `disableThreadLimitOverride`.
+    addBuckConfigLocalOption("build", "threads", "2");
 
     // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
     // from buck-out while watchman indexes/touches files.
@@ -277,10 +279,6 @@ public class ProjectWorkspace {
   }
 
   private void saveBuckConfigLocal() throws IOException {
-    Preconditions.checkArgument(
-        manageLocalConfigs,
-        "ProjectWorkspace cannot modify .buckconfig.local because "
-            + "a custom one is already present in the test data directory");
     StringBuilder contents = new StringBuilder();
     for (Map.Entry<String, Map<String, String>> section : localConfigs.entrySet()) {
       contents.append("[").append(section.getKey()).append("]\n\n");
