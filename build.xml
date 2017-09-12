@@ -518,6 +518,7 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.7.201606060606.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-20.0.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
       </fileset>
