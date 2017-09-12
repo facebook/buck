@@ -43,6 +43,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -71,8 +72,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
-
-// import com.facebook.buck.io.ProjectFilesystem;
 
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
@@ -235,6 +234,8 @@ public class WorkspaceAndProjectGenerator {
         buildTargetToPbxTargetMapBuilder,
         targetToProjectPathMapBuilder);
 
+    writeWorkspaceMetaData(outputDirectory, workspaceName);
+
     if (projectGeneratorOptions.contains(
         ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY)) {
       return workspaceGenerator.getWorkspaceDir();
@@ -254,6 +255,23 @@ public class WorkspaceAndProjectGenerator {
 
       return workspaceGenerator.writeWorkspace();
     }
+  }
+
+  private void writeWorkspaceMetaData(Path outputDirectory, String workspaceName)
+      throws IOException {
+    Path path =
+        combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace");
+    rootCell.getFilesystem().mkdirs(path);
+    ImmutableList<String> requiredTargetsStrings =
+        getRequiredBuildTargets()
+            .stream()
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableList());
+    ImmutableMap<String, Object> data = ImmutableMap.of("required-targets", requiredTargetsStrings);
+    String jsonString = ObjectMappers.WRITER.writeValueAsString(data);
+    rootCell
+        .getFilesystem()
+        .writeContentsToPath(jsonString, path.resolve("buck-project.meta.json"));
   }
 
   private void generateProjects(

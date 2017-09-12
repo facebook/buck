@@ -371,4 +371,15 @@ public class ProjectIntegrationTest {
             "//Apps:TestApp");
     result.assertSuccess();
   }
+
+  @Test
+  public void testGeneratingProjectMetadataWithGenrule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "target_using_genrule_source", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("project", "//lib:lib");
+    workspace.verify();
+  }
 }
