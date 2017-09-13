@@ -20,7 +20,7 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 /**
- * Class providing the type for macros used in `$(query_outputs ...)` macro strings. The
+ * Class providing the type for macros used in `$(query_paths ...)` macro strings. The
  * implementation is provided by the {@link QueryMacro} base class.
  */
 @Value.Immutable
