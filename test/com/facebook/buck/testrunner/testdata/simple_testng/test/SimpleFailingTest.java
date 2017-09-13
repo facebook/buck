@@ -20,11 +20,6 @@ import org.testng.annotations.Test;
 
 public class SimpleFailingTest {
 
-  @Test(expectedExceptions = RuntimeException.class)
-  public void victory() {
-    System.out.println("all i do is win");
-  }
-
   @Test
   public void defeat() {
     throw new RuntimeException();

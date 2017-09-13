@@ -37,7 +37,7 @@ public class TestNGIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_testng", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult simpleTestNGTestResult = workspace.runBuckCommand("test", "//test:SimpleTest");
+    ProcessResult simpleTestNGTestResult = workspace.runBuckCommand("test", "//test:simple-test");
     simpleTestNGTestResult.assertSuccess();
   }
 
@@ -48,7 +48,7 @@ public class TestNGIntegrationTest {
     workspace.setUp();
 
     ProcessResult simpleFailingTestNGTestResult =
-        workspace.runBuckCommand("test", "//test:SimpleFailingTest");
+        workspace.runBuckCommand("test", "//test:simple-failing-test");
     simpleFailingTestNGTestResult.assertTestFailure();
   }
 
@@ -59,7 +59,7 @@ public class TestNGIntegrationTest {
     workspace.setUp();
 
     ProcessResult injectionTestNGTestResult =
-        workspace.runBuckCommand("test", "//test:InjectionTest");
+        workspace.runBuckCommand("test", "//test:injection-test");
     injectionTestNGTestResult.assertSuccess();
     // Make sure that we didn't just skip over the class.
     assertThat(injectionTestNGTestResult.getStderr(), containsString("1 Passed"));

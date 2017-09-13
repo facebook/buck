@@ -1,5 +1,5 @@
 java_test(
-  name = 'SimpleTest',
+  name = 'simple-test',
   test_type = 'testng',
   srcs = ['SimpleTest.java'],
   deps = [
@@ -8,7 +8,7 @@ java_test(
 )
 
 java_test(
-  name = 'SimpleFailingTest',
+  name = 'simple-failing-test',
   test_type = 'testng',
   srcs = ['SimpleFailingTest.java'],
   deps = [
@@ -17,7 +17,7 @@ java_test(
 )
 
 java_test(
-  name = 'InjectionTest',
+  name = 'injection-test',
   test_type = 'testng',
   srcs = ['InjectionTest.java'],
   deps = [
