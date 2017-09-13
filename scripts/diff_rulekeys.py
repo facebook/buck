@@ -7,6 +7,7 @@ import argparse
 import collections
 import hashlib
 import io
+import itertools
 import gzip
 import codecs
 import os
@@ -372,6 +373,13 @@ def reportOnInterestingPaths(paths):
 
     return result
 
+
+def diffValues(left_values, right_values):
+    left_diff, right_diff = zip(*filter(lambda (left, right): left != right,
+                                        itertools.izip_longest(left_values, right_values)))
+    return filter(lambda l: l is not None, left_diff), filter(lambda l: l is not None, right_diff)
+
+
 def diffInternal(
         label,
         left_s,
@@ -394,8 +402,13 @@ def diffInternal(
         left_values = left_s.get(key, set([]))
         right_values = right_s.get(key, set([]))
 
-        left_with_keys = left_info.getRuleKeyRefs(left_values)
-        right_with_keys = right_info.getRuleKeyRefs(right_values)
+        if left_values == right_values:
+            continue
+
+        left_diff_values, right_diff_values = diffValues(left_values, right_values)
+
+        left_with_keys = left_info.getRuleKeyRefs(left_diff_values)
+        right_with_keys = right_info.getRuleKeyRefs(right_diff_values)
 
         did_align_for_deps = False
         if key.endswith(('Deps', 'deps')):
