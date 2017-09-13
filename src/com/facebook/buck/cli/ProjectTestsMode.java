@@ -38,4 +38,4 @@ public enum ProjectTestsMode {
   public String toString() {
     return value;
   }
-};
+}

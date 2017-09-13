@@ -44,12 +44,6 @@
   </rule>
 
   <rule ref="rulesets/java/unusedcode.xml">
-    <!--
-      Including the public keyword in interface methods is acceptable: this
-      makes it easier to copy/paste them.
-    -->
-    <exclude name="UnusedModifier" />
-
     <!-- This rule is buggy (http://sourceforge.net/p/pmd/bugs/792/ and others). -->
     <exclude name="UnusedPrivateMethod" />
   </rule>

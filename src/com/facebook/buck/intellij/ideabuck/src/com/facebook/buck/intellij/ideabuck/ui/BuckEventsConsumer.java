@@ -46,7 +46,6 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsSummar
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFileManager;
@@ -76,8 +75,6 @@ public class BuckEventsConsumer
         BuckConsoleEventConsumer,
         CompilerErrorConsumer,
         BuckInstallFinishedConsumer {
-
-  private static final Logger LOG = Logger.getInstance(BuckEventsConsumer.class);
 
   private Project mProject;
 

@@ -145,7 +145,7 @@ public class CxxPythonExtensionDescription
         .resolve(getExtensionName(moduleName));
   }
 
-  private ImmutableList<com.facebook.buck.rules.args.Arg> getExtensionArgs(
+  private ImmutableList<Arg> getExtensionArgs(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -230,7 +230,7 @@ public class CxxPythonExtensionDescription
                 sandboxTree)
             .requirePreprocessAndCompileRules(srcs);
 
-    ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
             args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
         .stream()

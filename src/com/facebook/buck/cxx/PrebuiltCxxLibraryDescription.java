@@ -646,8 +646,7 @@ public class PrebuiltCxxLibraryDescription
 
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
-        ImmutableList.Builder<com.facebook.buck.rules.args.Arg> linkerArgsBuilder =
-            ImmutableList.builder();
+        ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
         linkerArgsBuilder.addAll(
             StringArg.from(Preconditions.checkNotNull(getExportedLinkerFlags(cxxPlatform))));
 
@@ -684,8 +683,7 @@ public class PrebuiltCxxLibraryDescription
             }
           }
         }
-        final ImmutableList<com.facebook.buck.rules.args.Arg> linkerArgs =
-            linkerArgsBuilder.build();
+        final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
         return NativeLinkableInput.of(linkerArgs, args.getFrameworks(), args.getLibraries());
       }

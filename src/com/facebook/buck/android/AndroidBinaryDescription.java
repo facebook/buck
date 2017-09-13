@@ -457,7 +457,7 @@ public class AndroidBinaryDescription
     }
   }
 
-  private Optional<com.facebook.buck.rules.args.Arg> getPostFilterResourcesArgs(
+  private Optional<Arg> getPostFilterResourcesArgs(
       AndroidBinaryDescriptionArg arg,
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
@@ -493,9 +493,9 @@ public class AndroidBinaryDescription
           buildTarget, SECTION, CONFIG_PARAM_REDEX);
     }
 
-    java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
+    java.util.function.Function<String, Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply;
-    List<com.facebook.buck.rules.args.Arg> redexExtraArgs =
+    List<Arg> redexExtraArgs =
         arg.getRedexExtraArgs().stream().map(macroArgFunction).collect(Collectors.toList());
 
     return Optional.of(
