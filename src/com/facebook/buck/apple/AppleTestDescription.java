@@ -208,8 +208,9 @@ public class AppleTestDescription
       }
     }
 
+    // UI test bundles do not use the test host as their bundle_loader, but instead a stub app
     Optional<TestHostInfo> testHostInfo;
-    if (args.getTestHostApp().isPresent()) {
+    if (args.getTestHostApp().isPresent() && !args.getIsUiTest()) {
       testHostInfo =
           Optional.of(
               createTestHostInfo(

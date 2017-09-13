@@ -46,6 +46,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -494,5 +495,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public boolean isUiTest() {
     return isUiTest;
+  }
+
+  @VisibleForTesting
+  public boolean hasTestHost() {
+    return testHostApp.isPresent();
   }
 }
