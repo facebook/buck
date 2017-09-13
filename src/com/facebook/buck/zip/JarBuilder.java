@@ -339,7 +339,8 @@ public class JarBuilder {
   }
 
   private boolean isDuplicateAllowed(String name) {
-    return !shouldDisallowAllDuplicates && !name.endsWith(".class") && !name.endsWith("/");
+    return isService(name)
+        || (!shouldDisallowAllDuplicates && !name.endsWith(".class") && !name.endsWith("/"));
   }
 
   private static class SingletonJarEntryContainer implements JarEntryContainer {
