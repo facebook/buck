@@ -1,5 +1,6 @@
 import unittest
 import tempfile
+import gzip
 
 from diff_rulekeys import *
 
@@ -405,6 +406,28 @@ class TestRuleKeyDiff(unittest.TestCase):
             '//:top left:aa != right:bb',
         ]
         self.assertEqual(result, expected)
+
+    def testParseGzippedFile(self):
+        lines = [
+            makeRuleKeyLine(
+                name="//:top",
+                key="aabb",
+                srcs={'JavaLib1.java': 'aabb'}
+            )]
+        with tempfile.NamedTemporaryFile(suffix=".gz") as file_path:
+            with gzip.open(file_path.name, 'wb') as f:
+                f.write('\n'.join(lines))
+
+            result = compute_rulekey_mismatches(RuleKeyStructureInfo(file_path.name),
+                                                RuleKeyStructureInfo(MockFile([
+                                                    makeRuleKeyLine(
+                                                        name="//:top",
+                                                        key="cabb",
+                                                        srcs={'JavaLib1.java': 'cabb'}
+                                                    ),
+                                                ])))
+            expected = ['//:top left:aabb != right:cabb']
+            self.assertEqual(result, expected)
 
 
 def makeRuleKeyLine(key="aabb", name="//:name", srcs=None,

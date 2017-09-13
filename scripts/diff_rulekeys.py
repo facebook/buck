@@ -7,6 +7,8 @@ import argparse
 import collections
 import hashlib
 import io
+import gzip
+import codecs
 import os
 import re
 import sys
@@ -291,6 +293,14 @@ class RuleKeyStructureInfo(object):
 
     @staticmethod
     def _parseBuckOut(file_path):
+        if file_path.endswith('.gz'):
+            with gzip.open(file_path, 'rb') as raw_log:
+                info = codecs.lookup('utf-8')
+                utf8_log = codecs.StreamReaderWriter(
+                        raw_log,
+                        info.streamreader,
+                        info.streamwriter)
+                return RuleKeyStructureInfo._parseLogFile(utf8_log)
         with io.open(file_path, mode='r', encoding='utf-8') as buck_out:
             return RuleKeyStructureInfo._parseLogFile(buck_out)
 
