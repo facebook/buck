@@ -365,16 +365,9 @@ public class AppleBinaryDescription
 
       ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
       for (BuildTarget thinTarget : fatBinaryInfo.get().getThinTargets()) {
-        Optional<BuildRule> existingThinRule = resolver.getRuleOptional(thinTarget);
-        if (existingThinRule.isPresent()) {
-          thinRules.add(existingThinRule.get());
-          continue;
-        }
-        BuildRule thinRule =
+        thinRules.add(
             requireThinBinary(
-                targetGraph, thinTarget, projectFilesystem, params, resolver, cellRoots, args);
-        resolver.addToIndex(thinRule);
-        thinRules.add(thinRule);
+                targetGraph, thinTarget, projectFilesystem, params, resolver, cellRoots, args));
       }
       return MultiarchFileInfos.requireMultiarchRule(
           buildTarget, projectFilesystem, params, resolver, fatBinaryInfo.get(), thinRules.build());
