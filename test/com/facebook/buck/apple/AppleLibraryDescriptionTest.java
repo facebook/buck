@@ -17,7 +17,10 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -31,9 +34,11 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -43,6 +48,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -82,5 +88,41 @@ public class AppleLibraryDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
+  }
+
+  @Test
+  public void swiftMetadata() throws Exception {
+    final SourcePath objCSourcePath = new FakeSourcePath("foo.m");
+    final SourcePath swiftSourcePath = new FakeSourcePath("bar.swift");
+
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:library");
+    TargetNode<?, ?> binaryNode =
+        new AppleLibraryBuilder(binaryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(objCSourcePath), SourceWithFlags.of(swiftSourcePath)))
+            .build();
+
+    BuildRuleResolver buildRuleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraphFactory.newInstance(binaryNode),
+            new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildTarget swiftMetadataTarget =
+        binaryTarget.withFlavors(
+            AppleLibraryDescription.MetadataType.APPLE_SWIFT_METADATA.getFlavor());
+    Optional<AppleLibrarySwiftMetadata> metadata =
+        buildRuleResolver.requireMetadata(swiftMetadataTarget, AppleLibrarySwiftMetadata.class);
+    assertTrue(metadata.isPresent());
+
+    assertEquals(metadata.get().getNonSwiftSources().size(), 1);
+    SourcePath expectedObjCSourcePath =
+        metadata.get().getNonSwiftSources().iterator().next().getSourcePath();
+    assertSame(objCSourcePath, expectedObjCSourcePath);
+
+    assertEquals(metadata.get().getSwiftSources().size(), 1);
+    SourcePath expectedSwiftSourcePath =
+        metadata.get().getSwiftSources().iterator().next().getSourcePath();
+    assertSame(swiftSourcePath, expectedSwiftSourcePath);
   }
 }

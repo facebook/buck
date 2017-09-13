@@ -122,6 +122,25 @@ public class AppleLibraryDescription
     }
   }
 
+  enum MetadataType implements FlavorConvertible {
+    APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
+    ;
+
+    private final Flavor flavor;
+
+    MetadataType(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+  }
+
+  public static final FlavorDomain<MetadataType> METADATA_TYPE =
+      FlavorDomain.from("Apple Library Metadata Type", AppleLibraryDescription.MetadataType.class);
+
   public static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
@@ -504,14 +523,14 @@ public class AppleLibraryDescription
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
+    final SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
     // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
       CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxLibraryDescriptionArg(
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
-          delegateArg,
-          args,
-          buildTarget);
+          pathResolver, delegateArg, args, buildTarget);
       return delegate.createMetadata(
           buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
     }
@@ -541,6 +560,20 @@ public class AppleLibraryDescription
       BuildRule buildRule = resolver.requireRule(buildTarget);
       sourcePaths.add(buildRule.getSourcePathToOutput());
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+    }
+
+    Optional<Map.Entry<Flavor, MetadataType>> metaType =
+        METADATA_TYPE.getFlavorAndValue(buildTarget);
+
+    if (metaType.isPresent()) {
+      switch (metaType.get().getValue()) {
+        case APPLE_SWIFT_METADATA:
+          {
+            AppleLibrarySwiftMetadata metadata =
+                AppleLibrarySwiftMetadata.from(args.getSrcs(), pathResolver);
+            return Optional.of(metadata).map(metadataClass::cast);
+          }
+      }
     }
 
     return Optional.empty();

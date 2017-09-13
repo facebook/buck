@@ -38,12 +38,17 @@ public class SwiftDescriptions {
   /** Utility class: do not instantiate. */
   private SwiftDescriptions() {}
 
+  public static boolean isSwiftSource(
+      SourceWithFlags source, SourcePathResolver sourcePathResolver) {
+    return MorePaths.getFileExtension(sourcePathResolver.getAbsolutePath(source.getSourcePath()))
+        .equalsIgnoreCase(SWIFT_EXTENSION);
+  }
+
   static ImmutableSortedSet<SourcePath> filterSwiftSources(
       SourcePathResolver sourcePathResolver, ImmutableSet<SourceWithFlags> srcs) {
     ImmutableSortedSet.Builder<SourcePath> swiftSrcsBuilder = ImmutableSortedSet.naturalOrder();
     for (SourceWithFlags source : srcs) {
-      if (MorePaths.getFileExtension(sourcePathResolver.getAbsolutePath(source.getSourcePath()))
-          .equalsIgnoreCase(SWIFT_EXTENSION)) {
+      if (isSwiftSource(source, sourcePathResolver)) {
         swiftSrcsBuilder.add(source.getSourcePath());
       }
     }
