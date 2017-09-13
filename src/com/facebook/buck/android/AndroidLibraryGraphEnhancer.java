@@ -31,8 +31,8 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -86,20 +86,23 @@ public class AndroidLibraryGraphEnhancer {
 
   public Optional<DummyRDotJava> getBuildableForAndroidResources(
       BuildRuleResolver ruleResolver, boolean createBuildableIfEmptyDeps) {
+    // Check if it exists first, since deciding whether to actually create it requires some
+    // computation.
     Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(dummyRDotJavaBuildTarget);
     if (previouslyCreated.isPresent()) {
       return previouslyCreated.map(input -> (DummyRDotJava) input);
     }
+
     SortedSet<BuildRule> originalDeps = originalBuildRuleParams.getBuildDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
 
     switch (resourceDependencyMode) {
       case FIRST_ORDER:
         androidResourceDeps =
-            FluentIterable.from(originalDeps)
+            RichStream.from(originalDeps)
                 .filter(HasAndroidResourceDeps.class)
                 .filter(input -> input.getRes() != null)
-                .toSet();
+                .toImmutableSet();
         break;
       case TRANSITIVE:
         androidResourceDeps =
@@ -115,30 +118,34 @@ public class AndroidLibraryGraphEnhancer {
       return Optional.empty();
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-
-    JavacToJarStepFactory compileToJarStepFactory =
-        new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
-    BuildRuleParams dummyRDotJavaParams =
-        compileToJarStepFactory.addInputs(
-            // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
-            // that is used to build it
-            originalBuildRuleParams.withoutDeclaredDeps().withoutExtraDeps(), ruleFinder);
-
-    DummyRDotJava dummyRDotJava =
-        new DummyRDotJava(
+    BuildRule dummyRDotJava =
+        ruleResolver.computeIfAbsent(
             dummyRDotJavaBuildTarget,
-            projectFilesystem,
-            dummyRDotJavaParams,
-            ruleFinder,
-            androidResourceDeps,
-            compileToJarStepFactory,
-            forceFinalResourceIds,
-            resourceUnionPackage,
-            finalRName,
-            useOldStyleableFormat);
-    ruleResolver.addToIndex(dummyRDotJava);
+            ignored -> {
+              SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
 
-    return Optional.of(dummyRDotJava);
+              JavacToJarStepFactory compileToJarStepFactory =
+                  new JavacToJarStepFactory(
+                      javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
+              BuildRuleParams dummyRDotJavaParams =
+                  compileToJarStepFactory.addInputs(
+                      // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
+                      // that is used to build it
+                      originalBuildRuleParams.withoutDeclaredDeps().withoutExtraDeps(), ruleFinder);
+
+              return new DummyRDotJava(
+                  dummyRDotJavaBuildTarget,
+                  projectFilesystem,
+                  dummyRDotJavaParams,
+                  ruleFinder,
+                  androidResourceDeps,
+                  compileToJarStepFactory,
+                  forceFinalResourceIds,
+                  resourceUnionPackage,
+                  finalRName,
+                  useOldStyleableFormat);
+            });
+
+    return Optional.of((DummyRDotJava) dummyRDotJava);
   }
 }
