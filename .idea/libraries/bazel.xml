@@ -5,7 +5,7 @@
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/bazel/skylark-lang_deploy.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/bazel/skylark-lang_deploy-src.jar!/" />
     </SOURCES>
   </library>
 </component>
