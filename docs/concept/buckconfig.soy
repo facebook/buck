@@ -1935,16 +1935,6 @@ cxx_library(
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
-  {param name: 'java_library_sdk_names' /}
-  {param example_value: '1.6 => Java SDK 1.6, 1.8 => Java SDK 1.8' /}
-  {param description}
-    SDK names which should be used in IntelliJ modules generated
-    from <code>java_library</code> rules with non-default <code>source</code> option.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'intellij' /}
   {param name: 'jdk_name' /}
   {param example_value: 'Java SDK 1.6' /}
   {param description}

@@ -599,11 +599,7 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testOverrideSdkFromBuckConfig() throws Exception {
-    IjModuleFactory factory =
-        createIjModuleFactory(
-            FakeBuckConfig.builder()
-                .setSections("[intellij]", "java_library_sdk_names = 1.8 => TestSDK")
-                .build());
+    IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
     TargetNode<?, ?> defaultJavaNode =
