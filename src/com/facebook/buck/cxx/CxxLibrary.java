@@ -78,6 +78,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
   private final boolean reexportAllHeaderDependencies;
+  private final Optional<CxxLibraryDescriptionDelegate> delegate;
   /**
    * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
    * to link at link time. Setting this to false makes this library invisible to linking, so it and
@@ -111,7 +112,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedSet<BuildTarget> tests,
       boolean canBeAsset,
       boolean propagateLinkables,
-      boolean reexportAllHeaderDependencies) {
+      boolean reexportAllHeaderDependencies,
+      Optional<CxxLibraryDescriptionDelegate> delegate) {
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.deps = deps;
@@ -129,6 +131,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.canBeAsset = canBeAsset;
     this.propagateLinkables = propagateLinkables;
     this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
+    this.delegate = delegate;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -160,6 +163,18 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+    CxxPreprocessorInput publicHeaders = getPublicCxxPreprocessorInput(cxxPlatform);
+    Optional<CxxPreprocessorInput> pluginHeaders =
+        delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
+
+    if (pluginHeaders.isPresent()) {
+      return CxxPreprocessorInput.concat(ImmutableList.of(publicHeaders, pluginHeaders.get()));
+    }
+
+    return publicHeaders;
+  }
+
+  private CxxPreprocessorInput getPublicCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
   }
 
@@ -279,6 +294,13 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
             SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput())));
       }
     }
+
+    // We want to construct a flavored build target that includes a platform because it would allow
+    // the plugin to extract a more specific platform (not necessarily a CxxPlatform,
+    // e.g., ApplePlatform).
+    BuildTarget targeWithPlatform = getBuildTarget().withFlavors(cxxPlatform.getFlavor());
+    delegate.ifPresent(
+        p -> p.populateLinkerArguments(targeWithPlatform, ruleResolver, type, linkerArgsBuilder));
 
     final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
