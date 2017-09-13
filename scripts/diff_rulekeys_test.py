@@ -1,4 +1,3 @@
-import os
 import unittest
 import tempfile
 
@@ -11,6 +10,9 @@ class MockFile(object):
 
     def readlines(self):
         return self._lines
+
+    def __iter__(self):
+        return self._lines.__iter__()
 
 
 class TestRuleKeyDiff(unittest.TestCase):

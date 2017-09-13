@@ -6,15 +6,11 @@ from __future__ import unicode_literals
 import argparse
 import collections
 import hashlib
-import codecs
-import itertools
+import io
 import os
 import re
 import sys
 
-RULE_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+RuleKey\s+(.*)')
-INVOCATION_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+InvocationInfo\s+(.*)')
-INVOCATION_VALUE_REGEX = re.compile(r'(\w+)=\[([^]]*)\]')
 PATH_VALUE_REGEX = re.compile(r'path\(([^:]+):\w+\)')
 LOGGER_NAME = 'com.facebook.buck.rules.keys.RuleKeyBuilder'
 TAG_NAME = 'RuleKey'
@@ -240,8 +236,7 @@ class RuleKeyStructureInfo(object):
 
 
     @staticmethod
-    def _parseRuleKeyLine(match):
-        rule_key = match.groups()[1]
+    def _parseRuleKeyLine(rule_key):
         if rule_key.endswith('='):
             return (rule_key[:-1], {})
         top_key, structure = rule_key.split('=', 1)
@@ -249,51 +244,54 @@ class RuleKeyStructureInfo(object):
         # character. We know that all values take the form name(..):name(..):
         # so we can cheat and split on ): instead
         structure_entries = structure.split('):')
-        structure_entries = [e + ')' for e in structure_entries if len(e) > 0]
         structure_map = collections.OrderedDict()
         last_key = None
 
-        def appendValue(m, key, val):
-            if key in m:
-                m[key].append(val)
-            else:
-                m[key] = [val]
-
         for e in reversed(structure_entries):
+            # Entries do not have their trailing ')', which was chomped by the split.
+            # These are added back as needed.
             if len(e) == 0:
                 continue
             elif e.startswith('key('):
-                last_key = e[4:-1]
+                last_key = e[4:]
             else:
-                appendValue(structure_map, last_key, e)
+                d = structure_map.get(last_key)
+                if d is None:
+                    structure_map[last_key] = [e + ')']
+                else:
+                    d.append(e + ')')
 
-        return (top_key, structure_map)
+        return top_key, structure_map
 
-    @staticmethod
-    def _parseLogFile(buck_out):
+    RULE_LINE_REGEX = re.compile(r'(\[[^\]]+\])+\s+RuleKey\s+(.*)')
+    INVOCATION_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+InvocationInfo\s+(.*)')
+    INVOCATION_VALUE_REGEX = re.compile(r'(\w+)=\[([^]]*)\]')
+
+    @classmethod
+    def _parseLogFile(cls, buck_out):
         rule_key_structures = []
         invocation_info_line = None
-        for line in buck_out.readlines():
+        for line in buck_out:
             if invocation_info_line is None:
-                invocation_match = INVOCATION_LINE_REGEX.match(line)
+                invocation_match = cls.INVOCATION_LINE_REGEX.match(line)
                 if invocation_match is not None:
                     invocation_info_line = invocation_match.groups()[1]
-            match = RULE_LINE_REGEX.match(line)
+            match = cls.RULE_LINE_REGEX.match(line)
             if match is None:
                 continue
-            parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match)
+            parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match.group(2))
             rule_key_structures.append(parsed_line)
 
         invocation_info = {}
         if invocation_info_line is not None:
             invocation_info = dict(
-                    INVOCATION_VALUE_REGEX.findall(invocation_info_line))
+                cls.INVOCATION_VALUE_REGEX.findall(invocation_info_line))
 
         return (rule_key_structures, invocation_info)
 
     @staticmethod
     def _parseBuckOut(file_path):
-        with codecs.open(file_path, 'r', 'utf-8') as buck_out:
+        with io.open(file_path, mode='r', encoding='utf-8') as buck_out:
             return RuleKeyStructureInfo._parseLogFile(buck_out)
 
     @staticmethod
