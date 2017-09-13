@@ -69,6 +69,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final JavacCompilationMode compilationMode;
+  private final boolean requiredForSourceAbi;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
@@ -84,7 +85,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      JavacCompilationMode compilationMode) {
+      JavacCompilationMode compilationMode,
+      boolean requiredForSourceAbi) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
@@ -93,6 +95,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.compilationMode = compilationMode;
+    this.requiredForSourceAbi = requiredForSourceAbi;
   }
 
   @Override
@@ -111,6 +114,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   new StubGenerator(
                       getTargetVersion(options),
                       javacTask.getElements(),
+                      javacTask.getMessager(),
                       jarBuilder,
                       context.getEventSink());
               stubGenerator.generate(topLevelTypes);
@@ -238,7 +242,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           Throwables.propagateIfPossible(t.getCause(), IOException.class);
           throw new RuntimeException(t.getCause());
         default:
-          // An error should already have been reported, so we need not do anything.
+          if (buildSuccessful()) {
+            Throwables.propagateIfPossible(t, IOException.class);
+            throw new RuntimeException(t);
+          }
+
+          // An error was already reported, so we need not do anything.
           return;
       }
     }
@@ -353,7 +362,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
-                new FileManagerBootClasspathOracle(fileManager),
+                new DefaultInterfaceValidatorCallback(fileManager, requiredForSourceAbi),
                 compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
                     ? Diagnostic.Kind.ERROR
                     : Diagnostic.Kind.WARNING);

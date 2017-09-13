@@ -22,6 +22,8 @@ import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -95,6 +97,7 @@ public class AndroidInstrumentationApkDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AndroidInstrumentationApkDescriptionArg args) {
+    params = params.withoutExtraDeps();
     BuildRule installableApk = resolver.getRule(args.getApk());
     if (!(installableApk instanceof HasInstallableApk)) {
       throw new HumanReadableException(
@@ -131,7 +134,7 @@ public class AndroidInstrumentationApkDescription
             cellRoots,
             AndroidBinary.AaptMode.AAPT1,
             ResourceCompressionMode.DISABLED,
-            FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
+            FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
@@ -177,9 +180,7 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
-        params
-            .withExtraDeps(enhancementResult.getFinalDeps())
-            .copyAppendingExtraDeps(rulesToExcludeFromDex),
+        params,
         ruleFinder,
         proGuardConfig.getProguardJarOverride(),
         proGuardConfig.getProguardMaxHeapSize(),

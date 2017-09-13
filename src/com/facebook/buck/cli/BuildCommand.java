@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
@@ -41,7 +43,6 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildClientEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -52,6 +53,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
@@ -361,7 +363,7 @@ public class BuildCommand extends AbstractCommand {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
-      return run(params, pool.getExecutor(), ImmutableSet.of());
+      return run(params, pool, ImmutableSet.of());
     }
   }
 
@@ -385,7 +387,7 @@ public class BuildCommand extends AbstractCommand {
 
   protected int run(
       CommandRunnerParams params,
-      WeightedListeningExecutorService executorService,
+      CommandThreadManager commandThreadManager,
       ImmutableSet<String> additionalTargets)
       throws IOException, InterruptedException {
     if (!additionalTargets.isEmpty()) {
@@ -394,8 +396,7 @@ public class BuildCommand extends AbstractCommand {
     BuildEvent.Started started = postBuildStartedEvent(params);
     int exitCode = 0;
     try {
-      ActionAndTargetGraphs graphs = createGraphs(params, executorService);
-      exitCode = executeBuildAndProcessResult(params, executorService, graphs);
+      exitCode = executeBuildAndProcessResult(params, commandThreadManager);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       exitCode = 1;
@@ -418,7 +419,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private ActionAndTargetGraphs createGraphs(
-      CommandRunnerParams params, WeightedListeningExecutorService executorService)
+      CommandRunnerParams params, ListeningExecutorService executorService)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService);
@@ -456,26 +457,34 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private int executeBuildAndProcessResult(
-      CommandRunnerParams params,
-      WeightedListeningExecutorService executorService,
-      ActionAndTargetGraphs graphs)
-      throws IOException, InterruptedException {
+      CommandRunnerParams params, CommandThreadManager commandThreadManager)
+      throws IOException, InterruptedException, ActionGraphCreationException {
     int exitCode;
+    ActionAndTargetGraphs graphs = null;
     if (useDistributedBuild) {
-      Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
-          computeDistBuildState(params, graphs, executorService);
-      BuildJobState jobState = stateAndCells.getFirst();
-      DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
       DistBuildClientStatsTracker distBuildClientStatsTracker =
           new DistBuildClientStatsTracker(distBuildConfig.getBuildLabel());
+
+      distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
+      distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
+
+      graphs = createGraphs(params, commandThreadManager.getListeningExecutorService());
+
+      distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
+
+      Pair<BuildJobState, DistBuildCellIndexer> stateAndCells =
+          computeDistBuildState(params, graphs, commandThreadManager.getListeningExecutorService());
+      BuildJobState jobState = stateAndCells.getFirst();
+      DistBuildCellIndexer distBuildCellIndexer = stateAndCells.getSecond();
+
       try {
         exitCode =
             executeDistBuild(
                 params,
                 distBuildConfig,
                 graphs,
-                executorService,
+                commandThreadManager.getWeightedListeningExecutorService(),
                 params.getCell().getFilesystem(),
                 params.getFileHashCache(),
                 jobState,
@@ -496,7 +505,12 @@ public class BuildCommand extends AbstractCommand {
         }
       }
     } else {
-      exitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
+      graphs = createGraphs(params, commandThreadManager.getListeningExecutorService());
+      exitCode =
+          executeLocalBuild(
+              params,
+              graphs.actionGraph,
+              commandThreadManager.getWeightedListeningExecutorService());
     }
     if (exitCode == 0) {
       exitCode = processSuccessfulBuild(params, graphs);
@@ -543,7 +557,7 @@ public class BuildCommand extends AbstractCommand {
   private Pair<BuildJobState, DistBuildCellIndexer> computeDistBuildState(
       final CommandRunnerParams params,
       ActionAndTargetGraphs graphs,
-      final WeightedListeningExecutorService executorService)
+      final ListeningExecutorService executorService)
       throws IOException, InterruptedException {
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
@@ -699,9 +713,9 @@ public class BuildCommand extends AbstractCommand {
           LOG.error(errorMessage);
         }
 
-        distBuildClientStats.startPerformLocalBuildTimer();
+        distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
         int localBuildExitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
-        distBuildClientStats.stopPerformLocalBuildTimer();
+        distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
         distBuildClientStats.setLocalBuildExitCode(localBuildExitCode);
         distBuildClientStats.setPerformedLocalBuild(true);
 
@@ -719,6 +733,7 @@ public class BuildCommand extends AbstractCommand {
           LOG.error("Failed to publish distributed build client cache request event", ex);
         }
 
+        distBuildClientStats.startTimer(POST_BUILD_ANALYSIS);
         DistBuildPostBuildAnalysis postBuildAnalysis =
             new DistBuildPostBuildAnalysis(
                 params.getInvocationInfo().get().getBuildId(),
@@ -736,9 +751,12 @@ public class BuildCommand extends AbstractCommand {
                 ConsoleEvent.warning(
                     "Details of distributed build analysis: %s",
                     relativePathToSummaryFile.toString()));
+        distBuildClientStats.stopTimer(POST_BUILD_ANALYSIS);
 
         exitCode = localBuildExitCode;
       }
+
+      distBuildClientStats.stopTimer(POST_DISTRIBUTED_BUILD_LOCAL_STEPS);
 
       params
           .getBuckEventBus()
@@ -851,15 +869,12 @@ public class BuildCommand extends AbstractCommand {
     buildTargets = targetGraphAndBuildTargets.getBuildTargets();
     buildTargetsHaveBeenCalculated = true;
     ActionGraphAndResolver actionGraphAndResolver =
-        Preconditions.checkNotNull(
-            params
-                .getActionGraphCache()
-                .getActionGraph(
-                    params.getBuckEventBus(),
-                    params.getBuckConfig().isActionGraphCheckingEnabled(),
-                    params.getBuckConfig().isSkipActionGraphCache(),
-                    targetGraphAndBuildTargets.getTargetGraph(),
-                    params.getBuckConfig().getKeySeed()));
+        params
+            .getActionGraphCache()
+            .getActionGraph(
+                params.getBuckEventBus(),
+                targetGraphAndBuildTargets.getTargetGraph(),
+                params.getBuckConfig());
 
     // If the user specified an explicit build target, use that.
     if (justBuildTarget != null) {

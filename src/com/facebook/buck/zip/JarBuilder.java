@@ -66,6 +66,7 @@ public class JarBuilder {
   @Nullable private String mainClass;
   @Nullable private Path manifestFile;
   private boolean shouldMergeManifests;
+  private boolean shouldDisallowAllDuplicates;
   private boolean shouldHashEntries;
   private Predicate<? super CustomZipEntry> removeEntryPredicate = entry -> false;
   private List<JarEntryContainer> sourceContainers = new ArrayList<>();
@@ -113,6 +114,11 @@ public class JarBuilder {
 
   public JarBuilder setShouldMergeManifests(boolean shouldMergeManifests) {
     this.shouldMergeManifests = shouldMergeManifests;
+    return this;
+  }
+
+  public JarBuilder setShouldDisallowAllDuplicates(boolean shouldDisallowAllDuplicates) {
+    this.shouldDisallowAllDuplicates = shouldDisallowAllDuplicates;
     return this;
   }
 
@@ -333,7 +339,8 @@ public class JarBuilder {
   }
 
   private boolean isDuplicateAllowed(String name) {
-    return !name.endsWith(".class") && !name.endsWith("/");
+    return isService(name)
+        || (!shouldDisallowAllDuplicates && !name.endsWith(".class") && !name.endsWith("/"));
   }
 
   private static class SingletonJarEntryContainer implements JarEntryContainer {

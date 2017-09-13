@@ -44,4 +44,10 @@ public final class OutputPath {
   Path getPath() {
     return path;
   }
+
+  public static class Internals {
+    public static Path getPathFrom(OutputPath outputPath) {
+      return outputPath.getPath();
+    }
+  }
 }

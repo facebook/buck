@@ -20,6 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
@@ -33,6 +37,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -62,7 +67,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @Test
   public void testNdkLibrary() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -136,7 +142,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     CxxLibrary cxxLibrary =
         (CxxLibrary)
@@ -205,7 +212,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @Test(expected = HumanReadableException.class)
   public void testEmptyNativePlatformsWithNativeLinkables() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     CxxLibrary cxxLibrary =
         (CxxLibrary)
@@ -246,7 +254,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @Test
   public void testEmptyNativePlatformsWithNativeLinkableAssets() throws Exception {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     CxxLibrary cxxLibrary =
         (CxxLibrary)
@@ -323,7 +332,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         TargetGraphFactory.newInstance(
             ImmutableList.of(cxxLibraryDescription1, cxxLibraryDescription2));
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     CxxLibrary cxxLibrary1 =
         (CxxLibrary)
             cxxLibraryBuilder1.build(ruleResolver, new FakeProjectFilesystem(), targetGraph);

@@ -22,6 +22,7 @@ python_library(
 python_binary(
     name = "gen_buck_info",
     main = "gen_buck_info.py",
+    visibility = ["PUBLIC"],
     deps = [
         ":buck_version",
     ],
@@ -71,9 +72,6 @@ BUCK_CORE_RESOURCES = {
     "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
     "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
     "external_executor_jar": "//src/com/facebook/buck/step/external:executor",
-
-    # TODO(#5448619): We currently don't have a great way of packaging up
-    # entire directories into a PEX file.
 }
 
 python_library(
@@ -96,22 +94,15 @@ python_library(
     ],
 )
 
-def interpreter_override_args():
-  """Determine interpreter override arguments based on a buck config.
-
-  For example, `--config user.buck_pex_interpreter=python2` will generate a pex
-  which invokes `python2` instead of the default, `python<major>.<minor>`.
-  """
-  val = read_config('user', 'buck_pex_interpreter', '')
-  if val != '':
-    return ['--python-shebang', '/usr/bin/env ' + val]
-  else:
-    return []
+load("//programs:macro_defs", "interpreter_override_args")
 
 python_binary(
     name = "buck",
     build_args = interpreter_override_args(),
     main = "buck.py",
+    visibility = [
+        "//scripts/packages/debian:debian",
+    ],
     deps = [
         ":bucklib",
         ":subprocutils",
@@ -122,6 +113,9 @@ python_binary(
     name = "buckd",
     build_args = interpreter_override_args(),
     main = "buckd.py",
+    visibility = [
+        "//scripts/packages/debian:debian",
+    ],
     deps = [
         ":bucklib",
         ":subprocutils",

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -158,7 +159,9 @@ public class NdkCxxPlatforms {
                         ? 13
                         : ndkVersion.startsWith("14.")
                             ? 14
-                            : ndkVersion.startsWith("15.") ? 15 : -1;
+                            : ndkVersion.startsWith("15.")
+                                ? 15
+                                : ndkVersion.startsWith("16.") ? 16 : -1;
   }
 
   public static String getDefaultGccVersionForNdk(Optional<String> ndkVersion) {
@@ -641,8 +644,12 @@ public class NdkCxxPlatforms {
         .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
         .setSymbolNameTool(
             new PosixNmSymbolNameTool(getGccTool(toolchainPaths, "nm", version, executableFinder)))
-        .setAr(new GnuArchiver(getGccTool(toolchainPaths, "ar", version, executableFinder)))
-        .setRanlib(getGccTool(toolchainPaths, "ranlib", version, executableFinder))
+        .setAr(
+            ArchiverProvider.from(
+                new GnuArchiver(getGccTool(toolchainPaths, "ar", version, executableFinder))))
+        .setRanlib(
+            new ConstantToolProvider(
+                getGccTool(toolchainPaths, "ranlib", version, executableFinder)))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
         .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)

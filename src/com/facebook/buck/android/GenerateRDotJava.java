@@ -21,11 +21,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -40,9 +39,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class GenerateRDotJava extends AbstractBuildRule {
   @AddToRuleKey private final EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes;
   @AddToRuleKey private final SourcePath pathToRDotTxtFile;
   @AddToRuleKey private final Optional<SourcePath> pathToOverrideSymbolsFile;
@@ -51,11 +51,13 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
 
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private FilteredResourcesProvider resourcesProvider;
+  // TODO(cjhopman): allResourceDeps is used for getBuildDeps(), can that just use resourceDeps?
+  private final ImmutableSortedSet<BuildRule> allResourceDeps;
+  private final SourcePathRuleFinder ruleFinder;
 
   GenerateRDotJava(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
       SourcePath pathToRDotTxtFile,
@@ -63,15 +65,13 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
       boolean shouldBuildStringSourceMap,
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        buildRuleParams.copyAppendingExtraDeps(
-            getAllDeps(ruleFinder, pathToRDotTxtFile, resourceDeps, resourcesProvider)));
+    super(buildTarget, projectFilesystem);
+    this.ruleFinder = ruleFinder;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.pathToRDotTxtFile = pathToRDotTxtFile;
     this.resourceUnionPackage = resourceUnionPackage;
     this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
+    this.allResourceDeps = resourceDeps;
     this.resourceDeps =
         resourceDeps
             .stream()
@@ -81,17 +81,14 @@ public class GenerateRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps 
     this.pathToOverrideSymbolsFile = resourcesProvider.getOverrideSymbolsPath();
   }
 
-  private static ImmutableSortedSet<BuildRule> getAllDeps(
-      SourcePathRuleFinder ruleFinder,
-      SourcePath pathToRDotTxtFile,
-      ImmutableSortedSet<BuildRule> resourceDeps,
-      FilteredResourcesProvider resourcesProvider) {
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     builder
         .addAll(
             ruleFinder.filterBuildRuleInputs(
                 pathToRDotTxtFile, resourcesProvider.getOverrideSymbolsPath().orElse(null)))
-        .addAll(resourceDeps);
+        .addAll(allResourceDeps);
     resourcesProvider.getResourceFilterRule().ifPresent(builder::add);
     return builder.build();
   }

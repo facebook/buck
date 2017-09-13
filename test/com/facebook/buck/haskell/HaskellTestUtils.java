@@ -42,6 +42,7 @@ class HaskellTestUtils {
           .setCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
+          .setHaddock(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setHaskellVersion(HaskellVersion.of(8))
           .setShouldCacheLinks(true)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
@@ -92,7 +93,7 @@ class HaskellTestUtils {
     ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
     Process process = Runtime.getRuntime().exec(cmd.toArray(new String[cmd.size()]));
     String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
-    Pattern versionPattern = Pattern.compile(".*version ([0-9]+)(?:[.][0-9]+(?:[.][0-9]+)?)?");
+    Pattern versionPattern = Pattern.compile(".*version ([0-9]+).*");
     Matcher matcher = versionPattern.matcher(output.trim());
     assertTrue(
         String.format(

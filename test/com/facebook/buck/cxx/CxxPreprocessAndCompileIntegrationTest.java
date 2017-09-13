@@ -677,7 +677,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void canCompileSourcesFromOtherCells() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "cxx_preprocess_and_compile_can_compile_sources_from_other_cells", tmp);
+            this,
+            "cxx_preprocess_and_compile_can_compile_sources_from_other_cells",
+            tmp.newFolder());
     workspace.setUp();
     workspace
         .runBuckBuild(
@@ -687,5 +689,17 @@ public class CxxPreprocessAndCompileIntegrationTest {
             "-c",
             "cxx.untracked_headers_whitelist=" + "/usr/.*")
         .assertSuccess();
+  }
+
+  @Test
+  public void languageFlagCanBeOverridden() throws IOException {
+    assumeTrue(
+        "Windows does not use gcc style language parameters.",
+        Platform.detect() != Platform.WINDOWS);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "override_lang", tmp.newFolder());
+    workspace.setUp();
+    workspace.runBuckBuild("//:c-as-c").assertFailure();
+    workspace.runBuckBuild("//:c-as-cxx").assertSuccess();
   }
 }

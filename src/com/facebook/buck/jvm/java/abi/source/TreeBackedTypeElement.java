@@ -22,7 +22,6 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.util.TreePath;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.Name;
@@ -58,6 +57,11 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   }
 
   @Override
+  TreePath getTreePath() {
+    return Preconditions.checkNotNull(super.getTreePath());
+  }
+
+  @Override
   ClassTree getTree() {
     return tree;
   }
@@ -68,7 +72,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   }
 
   @Override
-  protected void addEnclosedElement(Element element) {
+  public void addEnclosedElement(Element element) {
     if (!(element instanceof TreeBackedElement)) {
       throw new IllegalArgumentException();
     }
@@ -111,7 +115,10 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
   @Override
   public TypeMirror getSuperclass() {
     if (superclass == null) {
-      superclass = getCanonicalizer().getCanonicalType(underlyingElement.getSuperclass());
+      superclass =
+          getCanonicalizer()
+              .getCanonicalType(
+                  underlyingElement.getSuperclass(), getTreePath(), tree.getExtendsClause());
     }
 
     return superclass;
@@ -122,11 +129,11 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
     if (interfaces == null) {
       interfaces =
           Collections.unmodifiableList(
-              underlyingElement
-                  .getInterfaces()
-                  .stream()
-                  .map(getCanonicalizer()::getCanonicalType)
-                  .collect(Collectors.toList()));
+              getCanonicalizer()
+                  .getCanonicalTypes(
+                      underlyingElement.getInterfaces(),
+                      getTreePath(),
+                      tree.getImplementsClause()));
     }
     return interfaces;
   }

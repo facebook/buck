@@ -78,6 +78,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -104,8 +106,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /** Utility class for running tests from {@link TestRule}s which have been built. */
 public class TestRunning {
@@ -417,7 +417,7 @@ public class TestRunning {
                 buildContext.getSourcePathResolver(),
                 ruleFinder,
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
-                options.getCoverageReportFormat(),
+                options.getCoverageReportFormats(),
                 options.getCoverageReportTitle(),
                 javaBuckConfig.getDefaultJavacOptions().getSpoolMode()
                     == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
@@ -675,7 +675,7 @@ public class TestRunning {
       SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       Path outputDirectory,
-      CoverageReportFormat format,
+      Set<CoverageReportFormat> formats,
       String title,
       boolean useIntermediateClassesDir,
       Optional<String> coverageIncludes,
@@ -712,7 +712,7 @@ public class TestRunning {
         srcDirectories.build(),
         pathsToJars.build(),
         outputDirectory,
-        format,
+        formats,
         title,
         coverageIncludes,
         coverageExcludes);

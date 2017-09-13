@@ -1,6 +1,6 @@
-import os
 import unittest
 import tempfile
+import gzip
 
 from diff_rulekeys import *
 
@@ -11,6 +11,9 @@ class MockFile(object):
 
     def readlines(self):
         return self._lines
+
+    def __iter__(self):
+        return self._lines.__iter__()
 
 
 class TestRuleKeyDiff(unittest.TestCase):
@@ -89,7 +92,7 @@ class TestRuleKeyDiff(unittest.TestCase):
                 "number(1):key(num):number(2):key(num):")
         info = RuleKeyStructureInfo(MockFile([line]))
         self.assertEqual(
-                info.getByKey("00aa")['num'],
+                info.getByKey("00aa").get('num'),
                 ["number(2)", "number(1)"])
 
     def test_simple_diff(self):
@@ -403,6 +406,28 @@ class TestRuleKeyDiff(unittest.TestCase):
             '//:top left:aa != right:bb',
         ]
         self.assertEqual(result, expected)
+
+    def testParseGzippedFile(self):
+        lines = [
+            makeRuleKeyLine(
+                name="//:top",
+                key="aabb",
+                srcs={'JavaLib1.java': 'aabb'}
+            )]
+        with tempfile.NamedTemporaryFile(suffix=".gz") as file_path:
+            with gzip.open(file_path.name, 'wb') as f:
+                f.write('\n'.join(lines))
+
+            result = compute_rulekey_mismatches(RuleKeyStructureInfo(file_path.name),
+                                                RuleKeyStructureInfo(MockFile([
+                                                    makeRuleKeyLine(
+                                                        name="//:top",
+                                                        key="cabb",
+                                                        srcs={'JavaLib1.java': 'cabb'}
+                                                    ),
+                                                ])))
+            expected = ['//:top left:aabb != right:cabb']
+            self.assertEqual(result, expected)
 
 
 def makeRuleKeyLine(key="aabb", name="//:name", srcs=None,

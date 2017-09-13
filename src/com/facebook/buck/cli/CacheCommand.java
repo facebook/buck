@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.LazyPath;
@@ -71,6 +72,9 @@ public class CacheCommand extends AbstractCommand {
     ParseEvent.Started parseStart = ParseEvent.started(ImmutableList.of());
     eventBus.post(parseStart);
     eventBus.post(ParseEvent.finished(parseStart, 0, Optional.empty()));
+    ActionGraphEvent.Started actionGraphStart = ActionGraphEvent.started();
+    eventBus.post(actionGraphStart);
+    eventBus.post(ActionGraphEvent.finished(actionGraphStart));
   }
 
   @Override
@@ -107,7 +111,7 @@ public class CacheCommand extends AbstractCommand {
     try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
-      WeightedListeningExecutorService executor = pool.getExecutor();
+      WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
 
       fakeOutParseEvents(params.getBuckEventBus());
 
@@ -185,6 +189,7 @@ public class CacheCommand extends AbstractCommand {
         return String.format("%s %s", typeString, cacheResult.getCacheError());
       case HIT:
         return String.format("%s %s", typeString, cacheResult.getCacheSource());
+      case SKIPPED:
       case MISS:
       case IGNORED:
       case LOCAL_KEY_UNCHANGED_HIT:

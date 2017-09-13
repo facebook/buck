@@ -16,6 +16,8 @@
 
 package com.facebook.buck.event;
 
+import java.util.OptionalInt;
+
 /** Base class for events about building up the action graph from the target graph. */
 public abstract class ActionGraphEvent extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
@@ -39,7 +41,11 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
   }
 
   public static Finished finished(Started started) {
-    return new Finished(started);
+    return new Finished(started, OptionalInt.empty());
+  }
+
+  public static Finished finished(Started started, int count) {
+    return new Finished(started, OptionalInt.of(count));
   }
 
   public static class Started extends ActionGraphEvent {
@@ -55,14 +61,20 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
   }
 
   public static class Finished extends ActionGraphEvent {
+    private OptionalInt nodeCount;
 
-    public Finished(Started started) {
+    public Finished(Started started, OptionalInt count) {
       super(started.getEventKey());
+      nodeCount = count;
     }
 
     @Override
     public String getEventName() {
       return "BuildActionGraphFinished";
+    }
+
+    public OptionalInt getNodeCount() {
+      return nodeCount;
     }
   }
 

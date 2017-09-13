@@ -40,14 +40,14 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.events.ParseBuckFileEvent;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -82,13 +82,6 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
-import com.google.devtools.build.lib.util.BlazeClock;
-import com.google.devtools.build.lib.vfs.FileSystemUtils;
-import com.google.devtools.build.lib.vfs.inmemoryfs.InMemoryFileSystem;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -2189,22 +2182,31 @@ public class ParserTest {
   }
 
   @Test
-  public void testSkylark() throws Exception {
-    InMemoryFileSystem fileSystem = new InMemoryFileSystem(BlazeClock.instance());
-    com.google.devtools.build.lib.vfs.Path root = fileSystem.getPath("/");
-    com.google.devtools.build.lib.vfs.Path buckFile = root.getChild("BUCK");
-    FileSystemUtils.writeContentAsLatin1(buckFile, "x = 1 + 2");
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(ParserInputSource.create(buckFile), null);
-    try (Mutability mutability = Mutability.create("test")) {
-      Environment env = Environment.builder(mutability).build();
-      assertTrue(buildFileAst.exec(env, /* eventHandler */ null));
-      assertEquals(env.lookup("x"), 3);
-    }
+  public void testSkylarkSyntaxParsing() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("\n")
+            .join(
+                ImmutableList.of(
+                    "# BUILD FILE SYNTAX: SKYLARK",
+                    "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setSections("[parser]", "polyglot_parsing_enabled=true")
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
-    return Preconditions.checkNotNull(ActionGraphCache.getFreshActionGraph(eventBus, targetGraph))
+    return Preconditions.checkNotNull(
+            ActionGraphCache.getFreshActionGraph(eventBus, targetGraph, false))
         .getResolver();
   }
 

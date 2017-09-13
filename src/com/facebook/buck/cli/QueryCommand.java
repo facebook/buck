@@ -18,9 +18,9 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -121,11 +121,11 @@ public class QueryCommand extends AbstractCommand {
             new PerBuildState(
                 params.getParser(),
                 params.getBuckEventBus(),
-                pool.getExecutor(),
+                pool.getListeningExecutorService(),
                 params.getCell(),
                 getEnableParserProfiling(),
                 PerBuildState.SpeculativeParsing.ENABLED)) {
-      ListeningExecutorService executor = pool.getExecutor();
+      ListeningExecutorService executor = pool.getListeningExecutorService();
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(params, parserState, executor, getEnableParserProfiling());
       return formatAndRunQuery(params, env);

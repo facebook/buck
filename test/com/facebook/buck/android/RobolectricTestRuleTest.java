@@ -31,6 +31,7 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -118,7 +119,8 @@ public class RobolectricTestRuleTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -167,7 +169,8 @@ public class RobolectricTestRuleTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -199,7 +202,8 @@ public class RobolectricTestRuleTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -246,7 +250,8 @@ public class RobolectricTestRuleTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -277,7 +282,8 @@ public class RobolectricTestRuleTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
@@ -328,7 +334,8 @@ public class RobolectricTestRuleTest {
             resGenRuleNode, assetsGenRuleNode, res2Node, robolectricTestNode);
 
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);

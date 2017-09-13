@@ -38,7 +38,8 @@ public class BuildableSupportTest {
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule1 = makeRule(target, filesystem, "rule1");
     BuildRule rule2 = makeRule(target, filesystem, "rule2");
     BuildRule rule3 = makeRule(target, filesystem, "rule3");

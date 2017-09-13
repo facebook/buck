@@ -16,7 +16,6 @@
 
 package com.facebook.buck.lua;
 
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -58,9 +57,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
 
   abstract SourcePathRuleFinder getRuleFinder();
 
-  abstract LuaConfig getLuaConfig();
-
-  abstract CxxPlatform getCxxPlatform();
+  abstract LuaPlatform getLuaPlatform();
 
   abstract BuildTarget getTarget();
 
@@ -96,7 +93,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                         getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 
-    final Tool lua = getLuaConfig().getLua().resolve(getRuleResolver());
+    final Tool lua = getLuaPlatform().getLua().resolve(getRuleResolver());
     WriteStringTemplateRule writeStringTemplateRule =
         getRuleResolver()
             .addToIndex(
@@ -122,7 +119,8 @@ abstract class AbstractLuaScriptStarter implements Starter {
                                 getRelativePythonModulesDir().get().toString())
                             : "nil",
                         "EXT_SUFFIX",
-                        Escaper.escapeAsPythonString(getCxxPlatform().getSharedLibraryExtension())),
+                        Escaper.escapeAsPythonString(
+                            getLuaPlatform().getCxxPlatform().getSharedLibraryExtension())),
                     /* executable */ true));
 
     return writeStringTemplateRule.getSourcePathToOutput();

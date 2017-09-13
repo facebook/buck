@@ -60,7 +60,6 @@ public class InferHelper {
       throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(testCase, scenarioName, temporaryFolder);
-    workspace.setUp();
 
     Path fakeInferRootPath = fakeInferRootPathOpt.orElse(workspace.getPath("fake-infer"));
 

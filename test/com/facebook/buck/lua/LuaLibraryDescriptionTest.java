@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -48,7 +49,8 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
@@ -65,7 +67,8 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
@@ -82,7 +85,8 @@ public class LuaLibraryDescriptionTest {
             .setBaseModule("blah");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     LuaLibrary library = builder.build(resolver, filesystem, targetGraph);
     assertThat(
@@ -115,7 +119,8 @@ public class LuaLibraryDescriptionTest {
         TargetGraphFactory.newInstance(
             libraryABuilder.build(), libraryBBuilder.build(), ruleBuilder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary rule = (LuaLibrary) resolver.requireRule(ruleBuilder.getTarget());
     assertThat(
         RichStream.from(rule.getLuaPackageDeps(CxxPlatformUtils.DEFAULT_PLATFORM))

@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
@@ -99,7 +102,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey private final SourcePath keystorePath;
   @AddToRuleKey private final SourcePath keystorePropertiesPath;
-  @AddToRuleKey private final AndroidBinary.PackageType packageType;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
   @AddToRuleKey private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   @AddToRuleKey private final Optional<Integer> optimizationPasses;
@@ -151,6 +153,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap;
 
+  @AddToRuleKey private final Optional<SourcePath> appModularityResult;
+
+  @AddToRuleKey
+  private final Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
+      moduleMappedClasspathEntriesForConsistency;
+
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
@@ -161,7 +169,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ProjectFilesystem filesystem,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
-      AndroidBinary.PackageType packageType,
       DexSplitMode dexSplitMode,
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       Optional<Integer> optimizationPasses,
@@ -191,13 +198,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePath aaptGeneratedProguardConfigFile,
       Optional<String> dxMaxHeapSize,
       ImmutableList<SourcePath> proguardConfigs,
-      boolean isCompressResources) {
+      boolean isCompressResources,
+      Optional<SourcePath> appModularityResult) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
 
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
-    this.packageType = packageType;
     this.dexSplitMode = dexSplitMode;
     this.sdkProguardConfig = sdkProguardConfig;
     this.optimizationPasses = optimizationPasses;
@@ -291,7 +298,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         enhancementResult.getPreDexMerge().map(PreDexMerge::getSourcePathToPrimaryDex);
     if (isPreDexed) {
       Preconditions.checkState(!preprocessJavaClassesBash.isPresent());
-      Preconditions.checkState(!packageType.isBuildWithObfuscation());
       this.classpathEntriesToDexSourcePaths = Optional.empty();
       this.moduleMappedClasspathEntriesToDex = Optional.empty();
     } else {
@@ -305,6 +311,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       this.moduleMappedClasspathEntriesToDex =
           Optional.of(
               convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
+    }
+    this.appModularityResult = appModularityResult;
+    if (appModularityResult.isPresent()) {
+      this.moduleMappedClasspathEntriesForConsistency =
+          Optional.of(
+              convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
+    } else {
+      this.moduleMappedClasspathEntriesForConsistency = Optional.empty();
     }
   }
 
@@ -698,6 +712,43 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       BuildableContext buildableContext,
       BuildContext buildContext,
       ImmutableList.Builder<Step> steps) {
+
+    Optional<Path> proguardFullConfigFile = Optional.empty();
+    Optional<Path> proguardMappingFile = Optional.empty();
+    if (shouldProguard()) {
+      Path proguardConfigDir = getProguardTextFilesPath();
+      proguardFullConfigFile = Optional.of(proguardConfigDir.resolve("configuration.txt"));
+      proguardMappingFile = Optional.of(proguardConfigDir.resolve("mapping.txt"));
+    }
+
+    if (appModularityResult.isPresent()) {
+      ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
+          moduleMappedClasspathEntriesForConsistency
+              .get()
+              .entrySet()
+              .stream()
+              .flatMap(
+                  entry ->
+                      entry
+                          .getValue()
+                          .stream()
+                          .map(
+                              v ->
+                                  new AbstractMap.SimpleEntry<>(
+                                      entry.getKey(),
+                                      buildContext.getSourcePathResolver().getAbsolutePath(v))))
+              .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
+
+      steps.add(
+          AndroidModuleConsistencyStep.ensureModuleConsistency(
+              buildContext.getSourcePathResolver().getRelativePath(appModularityResult.get()),
+              additionalDexStoreToJarPathMap,
+              filesystem,
+              proguardFullConfigFile,
+              proguardMappingFile,
+              skipProguard));
+    }
+
     if (isPreDexed) {
       ImmutableSortedSet<Path> secondaryDexDirs;
       if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
@@ -837,7 +888,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     }
 
     // Execute proguard if desired (transforms input classpaths).
-    if (packageType.isBuildWithObfuscation()) {
+    if (shouldProguard()) {
       classpathEntriesToDex =
           addProguardCommands(
               classpathEntriesToDex,
@@ -1030,12 +1081,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     if (shouldSplitDex()) {
       Optional<Path> proguardFullConfigFile = Optional.empty();
       Optional<Path> proguardMappingFile = Optional.empty();
-      if (packageType.isBuildWithObfuscation()) {
+      if (shouldProguard()) {
         Path proguardConfigDir = getProguardTextFilesPath();
         proguardFullConfigFile = Optional.of(proguardConfigDir.resolve("configuration.txt"));
         proguardMappingFile = Optional.of(proguardConfigDir.resolve("mapping.txt"));
       }
-
       // DexLibLoader expects that metadata.txt and secondary jar files are under this dir
       // in assets.
 
@@ -1230,7 +1280,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     // being executed.  For example, aapt is internally threaded by default when preprocessing
     // images.
     EnumSet<DxStep.Option> dxOptions =
-        AndroidBinary.PackageType.RELEASE.equals(packageType)
+        shouldProguard()
             ? EnumSet.of(DxStep.Option.NO_LOCALS)
             : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
     Path selectedPrimaryDexPath = primaryDexPath;
@@ -1273,6 +1323,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               AndroidBinary.SECONDARY_DEX_SUBDIR);
       steps.add(intraDexReorderStep);
     }
+  }
+
+  private boolean shouldProguard() {
+    return proguardConfig.isPresent()
+        || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(sdkProguardConfig);
   }
 
   boolean shouldSplitDex() {

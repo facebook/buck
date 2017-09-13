@@ -18,7 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -26,6 +30,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -37,10 +42,13 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.base.Functions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.File;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +62,8 @@ public class JavacStepTest {
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -104,7 +113,8 @@ public class JavacStepTest {
   public void failedCompileSendsStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -157,7 +167,8 @@ public class JavacStepTest {
   public void existingBootclasspathDirSucceeds() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
@@ -209,10 +220,73 @@ public class JavacStepTest {
   }
 
   @Test
+  public void bootclasspathResolvedToAbsolutePath() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions =
+        JavacOptions.builder()
+            .setSourceLevel("8.0")
+            .setTargetLevel("8.0")
+            .setBootclasspath("/this-totally-exists:relative-path")
+            .build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
+
+    JavacStep step =
+        new JavacStep(
+            NoOpClassUsageFileWriter.instance(),
+            fakeJavac,
+            javacOptions,
+            BuildTargetFactory.newInstance("//foo:bar"),
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            CompilerParameters.builder()
+                .setOutputDirectory(Paths.get("output"))
+                .setGeneratedCodeDirectory(Paths.get("generated"))
+                .setWorkingDirectory(Paths.get("working"))
+                .setDepFilePath(Paths.get("depFile"))
+                .setSourceFilePaths(ImmutableSortedSet.of())
+                .setPathToSourcesList(Paths.get("pathToSrcsList"))
+                .setClasspathEntries(ImmutableSortedSet.of())
+                .build(),
+            Optional.empty(),
+            null);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+
+    String description = step.getDescription(executionContext);
+    List<String> options =
+        Splitter.on(",")
+            .trimResults()
+            .splitToList(Splitter.on("Delimiter").splitToList(description).get(0));
+    assertThat(options, hasItem("-bootclasspath"));
+    int bootclasspathIndex = options.indexOf("-bootclasspath");
+    String bootclasspath = options.get(bootclasspathIndex + 1);
+    assertThat(bootclasspath, not(isEmptyString()));
+    for (String path : Splitter.on(File.pathSeparator).split(bootclasspath)) {
+      assertTrue(Paths.get(path).isAbsolute());
+    }
+  }
+
+  @Test
   public void missingBootclasspathDirFailsWithError() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();

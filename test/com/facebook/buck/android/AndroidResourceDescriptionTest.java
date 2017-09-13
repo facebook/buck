@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -181,7 +182,8 @@ public class AndroidResourceDescriptionTest {
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNode);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     AndroidResource resource = (AndroidResource) resolver.requireRule(target);
 
     ImmutableList<BuildRule> deps = ImmutableList.copyOf(resource.getBuildDeps());

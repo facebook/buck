@@ -29,7 +29,9 @@ import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.ide.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
+import com.facebook.buck.ide.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -515,18 +517,17 @@ public class IjProjectTemplateDataPreparer {
   }
 
   /**
-   * IntelliJ may not be able to find classes on the compiler output path if the jar_spool_mode is
-   * set to direct_to_jar.
+   * IntelliJ may not be able to find classes on the compiler output path if the jars are retrieved
+   * from the network cache.
    */
   private void addAndroidCompilerOutputPath(
       Map<String, Object> androidProperties, IjModule module, Path moduleBasePath) {
     // The compiler output path is relative to the project root
     Optional<Path> compilerOutputPath = module.getCompilerOutputPath();
     if (compilerOutputPath.isPresent()) {
-      Path relativeCompilerOutputPath = moduleBasePath.relativize(compilerOutputPath.get());
       androidProperties.put(
           "compiler_output_path",
-          "/" + MorePaths.pathWithUnixSeparators(relativeCompilerOutputPath));
+          IjProjectPaths.toModuleDirRelativeString(compilerOutputPath.get(), moduleBasePath));
     }
   }
 
@@ -554,13 +555,23 @@ public class IjProjectTemplateDataPreparer {
 
     private IjSourceFolder createSourceFolder(
         IjFolder folder, Path moduleLocationBasePath, @Nullable String packagePrefix) {
+      Path relativeOutputPath = null;
+      IjResourceFolderType ijResourceFolderType = IjResourceFolderType.JAVA_RESOURCE;
+      if (folder instanceof ResourceFolder) {
+        ResourceFolder resourceFolder = (ResourceFolder) folder;
+        relativeOutputPath = resourceFolder.getRelativeOutputPath();
+        ijResourceFolderType = resourceFolder.getResourceFolderType();
+      }
+
       return IjSourceFolder.builder()
           .setType(folder.getIjName())
           .setUrl(
               IjProjectPaths.toModuleDirRelativeString(folder.getPath(), moduleLocationBasePath))
           .setPath(folder.getPath())
           .setIsTestSource(folder instanceof TestFolder)
-          .setIsAndroidResources(folder instanceof AndroidResourceFolder)
+          .setIsResourceFolder(folder.isResourceFolder())
+          .setIjResourceFolderType(ijResourceFolderType)
+          .setRelativeOutputPath(relativeOutputPath)
           .setPackagePrefix(packagePrefix)
           .build();
     }

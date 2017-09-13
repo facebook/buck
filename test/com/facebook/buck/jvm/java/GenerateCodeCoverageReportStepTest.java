@@ -31,6 +31,10 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,15 +45,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 public class GenerateCodeCoverageReportStepTest {
 
@@ -95,7 +96,7 @@ public class GenerateCodeCoverageReportStepTest {
             SOURCE_DIRECTORIES,
             jarFiles,
             Paths.get(OUTPUT_DIRECTORY),
-            CoverageReportFormat.HTML,
+            EnumSet.of(CoverageReportFormat.HTML),
             "TitleFoo",
             Optional.empty(),
             Optional.empty());
@@ -132,7 +133,7 @@ public class GenerateCodeCoverageReportStepTest {
             SOURCE_DIRECTORIES,
             jarFiles,
             Paths.get(OUTPUT_DIRECTORY),
-            CoverageReportFormat.HTML,
+            EnumSet.of(CoverageReportFormat.HTML),
             "TitleFoo",
             Optional.empty(),
             Optional.empty()) {
@@ -166,7 +167,7 @@ public class GenerateCodeCoverageReportStepTest {
             SOURCE_DIRECTORIES,
             jarFiles,
             Paths.get(OUTPUT_DIRECTORY),
-            CoverageReportFormat.HTML,
+            EnumSet.of(CoverageReportFormat.HTML),
             "TitleFoo",
             Optional.empty(),
             Optional.empty()) {

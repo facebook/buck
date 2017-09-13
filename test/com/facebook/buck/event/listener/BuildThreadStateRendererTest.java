@@ -61,7 +61,8 @@ public class BuildThreadStateRendererTest {
 
   @Test
   public void emptyInput() {
-    BuildThreadStateRenderer renderer = createRenderer(2100, ImmutableMap.of(), ImmutableMap.of());
+    BuildThreadStateRenderer renderer =
+        createRenderer(2100, ImmutableMap.of(), ImmutableMap.of(), 80 /* outputMaxColumns */);
     assertThat(renderLines(renderer, true), is(equalTo(ImmutableList.<String>of())));
     assertThat(renderLines(renderer, false), is(equalTo(ImmutableList.<String>of())));
     assertThat(renderShortStatus(renderer, true), is(equalTo(ImmutableList.<String>of())));
@@ -84,33 +85,65 @@ public class BuildThreadStateRendererTest {
                 3L, Optional.empty(),
                 4L, Optional.empty(),
                 5L, Optional.empty(),
-                8L, createStepStartedEventOptional(1, 3700, "step B")));
+                8L, createStepStartedEventOptional(1, 3700, "step B")),
+            80 /* outputMaxColumns */);
     assertThat(
         renderLines(renderer, true),
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  4.4s (running step A[2.7s])",
-                    " |=> //:target1...  3.3s (preparing)",
-                    " |=> //:target3...  2.6s (preparing)",
-                    " |=> //:target4...  1.2s (running step B[0.5s])",
-                    " |=> IDLE"))));
+                    " - //:target2... 4.4s (running step A[2.7s])",
+                    " - //:target1... 3.3s (preparing)",
+                    " - //:target3... 2.6s (preparing)",
+                    " - //:target4... 1.2s (running step B[0.5s])",
+                    " - IDLE"))));
     assertThat(
         renderLines(renderer, false),
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  4.4s (running step A[2.7s])",
-                    " |=> //:target3...  2.6s (preparing)",
-                    " |=> //:target1...  3.3s (preparing)",
-                    " |=> IDLE",
-                    " |=> //:target4...  1.2s (running step B[0.5s])"))));
+                    " - //:target2... 4.4s (running step A[2.7s])",
+                    " - //:target3... 2.6s (preparing)",
+                    " - //:target1... 3.3s (preparing)",
+                    " - IDLE",
+                    " - //:target4... 1.2s (running step B[0.5s])"))));
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
     assertThat(
         renderShortStatus(renderer, false),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[ ]", "[:]"))));
+  }
+
+  @Test
+  public void testSmallWidth() {
+    BuildThreadStateRenderer renderer =
+        createRenderer(
+            4200,
+            ImmutableMap.of(
+                1L, createRuleBeginningEventOptional(1, 1200, 1400, RULE2),
+                3L, createRuleBeginningEventOptional(3, 2300, 700, RULE3),
+                4L, createRuleBeginningEventOptional(4, 1100, 200, RULE1),
+                5L, Optional.empty(),
+                8L, createRuleBeginningEventOptional(6, 3000, 0, RULE4)),
+            ImmutableMap.of(
+                1L, createStepStartedEventOptional(1, 1500, "step A"),
+                3L, Optional.empty(),
+                4L, Optional.empty(),
+                5L, Optional.empty(),
+                8L, createStepStartedEventOptional(1, 3700, "step B")),
+            20 /* outputMaxColumns */);
+    // Output is truncated.
+    assertThat(
+        renderLines(renderer, true),
+        is(
+            equalTo(
+                ImmutableList.of(
+                    " - //:target... 4.4s",
+                    " - //:target... 3.3s",
+                    " - //:target... 2.6s",
+                    " - //:target... 1.2s",
+                    " - IDLE"))));
   }
 
   @Test
@@ -129,16 +162,17 @@ public class BuildThreadStateRendererTest {
                 1L, createStepStartedEventOptional(1, 1500, "step A"),
                 4L, Optional.empty(),
                 5L, Optional.empty(),
-                8L, createStepStartedEventOptional(1, 3700, "step B")));
+                8L, createStepStartedEventOptional(1, 3700, "step B")),
+            80 /* outputMaxColumns */);
     assertThat(
         renderLines(renderer, true),
         is(
             equalTo(
                 ImmutableList.of(
                     // one missing build rule - no output
-                    " |=> //:target3...  2.6s (preparing)", // missing step information
-                    " |=> //:target4...  1.2s (running step B[0.5s])",
-                    " |=> IDLE")))); // missing accumulated time - show as IDLE
+                    " - //:target3... 2.6s (preparing)", // missing step information
+                    " - //:target4... 1.2s (running step B[0.5s])",
+                    " - IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
         renderShortStatus(renderer, true), is(equalTo(ImmutableList.of("[:]", "[:]", "[ ]"))));
   }
@@ -177,11 +211,14 @@ public class BuildThreadStateRendererTest {
   private BuildThreadStateRenderer createRenderer(
       long timeMs,
       Map<Long, Optional<? extends BuildRuleEvent.BeginningBuildRuleEvent>> buildEvents,
-      Map<Long, Optional<? extends LeafEvent>> runningSteps) {
+      Map<Long, Optional<? extends LeafEvent>> runningSteps,
+      int outputMaxColumns) {
     return new BuildThreadStateRenderer(
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
+        outputMaxColumns, /* outputMaxColumns */
+        0, /* minimumDurationMillis */
         runningSteps,
         new BuildRuleThreadTracker(buildEvents, ImmutableMap.of()));
   }

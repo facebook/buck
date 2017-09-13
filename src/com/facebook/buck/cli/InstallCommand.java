@@ -37,7 +37,6 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -46,6 +45,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
@@ -215,7 +215,7 @@ public class InstallCommand extends BuildCommand {
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {
-        installHelperTargets = getInstallHelperTargets(params, pool.getExecutor());
+        installHelperTargets = getInstallHelperTargets(params, pool.getListeningExecutorService());
       } catch (BuildTargetException | BuildFileParseException e) {
         params
             .getBuckEventBus()
@@ -224,7 +224,7 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Build the targets
-      exitCode = super.run(params, pool.getExecutor(), installHelperTargets);
+      exitCode = super.run(params, pool, installHelperTargets);
       if (exitCode != 0) {
         return exitCode;
       }

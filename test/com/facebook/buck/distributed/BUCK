@@ -2,9 +2,7 @@ standard_java_test(
     name = "distributed",
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -68,6 +66,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/query:query",

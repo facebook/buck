@@ -30,6 +30,9 @@ public enum CacheResultType {
   /** The rule was uncachable */
   IGNORED(/* success */ false),
 
+  /** The cache skipped checking this result */
+  SKIPPED(false),
+
   /** Artifact cache not queried because the local cache key was unchanged. */
   LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
   ;

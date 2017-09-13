@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -61,7 +61,7 @@ public class ScalaLibraryIntegrationTest {
     try {
       new ScalaBuckConfig(FakeBuckConfig.builder().build())
           .getScalac(
-              new BuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     } catch (HumanReadableException e) {
       assumeNoException("Could not find local scalac", e);
@@ -101,5 +101,21 @@ public class ScalaLibraryIntegrationTest {
             .trim();
 
     assertThat(secondRuleKey, not(equalTo(firstRuleKey)));
+  }
+
+  @Test(timeout = (2 * 60 * 1000))
+  public void shouldCompileMixedJavaAndScalaSources() throws Exception {
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                "scala.compiler=//:scala-compiler",
+                "//:bin_mixed",
+                "--",
+                "world!")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.containsString("Hello WORLD!"));
   }
 }

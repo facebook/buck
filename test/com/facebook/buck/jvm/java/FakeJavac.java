@@ -71,7 +71,8 @@ public class FakeJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
-      JavacCompilationMode compilationMode) {
+      JavacCompilationMode compilationMode,
+      boolean requiredForSourceAbi) {
     return new Invocation() {
       @Override
       public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {
@@ -102,7 +103,7 @@ public class FakeJavac implements Javac {
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList) {
-    throw new UnsupportedOperationException();
+    return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
   }
 
   @Override

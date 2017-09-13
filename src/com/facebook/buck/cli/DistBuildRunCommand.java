@@ -110,6 +110,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     timeStatsTracker.startTimer(SlaveEvents.TOTAL_RUNTIME);
+    timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
     Console console = params.getConsole();
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       if (slaveEventListener != null) {
@@ -150,18 +151,22 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           Optional<StampedeId> stampedeId = getStampedeIdOptional();
           DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
 
+          // Note that we cannot use the same pool of build threads for file materialization
+          // because usually all build threads are waiting for files to be materialized, and
+          // there is no thread left for the FileContentsProvider(s) to use.
           FileContentsProvider multiSourceFileContentsProvider =
               DistBuildFactory.createMultiSourceContentsProvider(
                   service,
                   new DistBuildConfig(state.getRootCell().getBuckConfig()),
                   fileMaterializationStatsTracker,
                   params.getScheduledExecutor(),
+                  params.getExecutors().get(ExecutorPool.CPU),
                   getGlobalCacheDirOptional());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
                   state,
                   params,
-                  pool.getExecutor(),
+                  pool.getWeightedListeningExecutorService(),
                   service,
                   Preconditions.checkNotNull(distBuildMode),
                   coordinatorPort,
@@ -170,7 +175,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   multiSourceFileContentsProvider,
                   distBuildConfig);
 
-          int returnCode = distBuildExecutor.buildAndReturnExitCode(timeStatsTracker);
+          distBuildExecutor.createBuildEngineDelegate(timeStatsTracker);
+          timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
+
+          // All preparation work is done, so start building.
+          int returnCode = distBuildExecutor.buildAndReturnExitCode();
           multiSourceFileContentsProvider.close();
           timeStatsTracker.stopTimer(SlaveEvents.TOTAL_RUNTIME);
 

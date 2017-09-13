@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -115,7 +116,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
           .build();
 
   public static AppleBundleDestinations platformDestinations(ApplePlatform platform) {
-    if (platform.getName().contains("osx")) {
+    if (platform.getType() == ApplePlatformType.MAC) {
       return AppleBundleDestinations.OSX_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_DESTINATIONS;
@@ -123,7 +124,7 @@ abstract class AbstractAppleBundleDestinations implements RuleKeyAppendable {
   }
 
   public static AppleBundleDestinations platformFrameworkDestinations(ApplePlatform platform) {
-    if (platform.getName().contains("osx")) {
+    if (platform.getType() == ApplePlatformType.MAC) {
       return AppleBundleDestinations.OSX_FRAMEWORK_DESTINATIONS;
     } else {
       return AppleBundleDestinations.IOS_FRAMEWORK_DESTINATIONS;

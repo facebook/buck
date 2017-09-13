@@ -56,6 +56,15 @@ abstract class AbstractCacheResult {
           Optional.empty(),
           Optional.empty(),
           Optional.empty());
+  public static final CacheResult SKIPPED_RESULT =
+      CacheResult.of(
+          CacheResultType.SKIPPED,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.of(ImmutableMap.of()),
+          Optional.empty(),
+          Optional.empty());
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -153,6 +162,10 @@ abstract class AbstractCacheResult {
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
+  }
+
+  public static CacheResult skipped() {
+    return SKIPPED_RESULT;
   }
 
   public static CacheResult miss() {

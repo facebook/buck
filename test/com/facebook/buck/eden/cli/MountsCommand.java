@@ -17,6 +17,7 @@
 package com.facebook.buck.eden.cli;
 
 import com.facebook.buck.eden.EdenClient;
+import com.facebook.buck.eden.EdenClientPool;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
@@ -28,12 +29,14 @@ import java.util.List;
 
 public class MountsCommand implements Command {
   @Override
-  public int run(EdenClient client) throws EdenError, IOException, TException {
-    List<MountInfo> mountInfos = client.getMountInfos();
+  public int run(EdenClientPool pool) throws EdenError, IOException, TException {
+    EdenClient client = pool.getClient();
+    List<MountInfo> mountInfos = client.listMounts();
     System.out.printf("Number of mounts: %d\n", mountInfos.size());
     for (MountInfo info : mountInfos) {
       System.out.println(info.mountPoint);
-      EdenMount mount = client.getMountFor(Paths.get(info.mountPoint)).get();
+      EdenMount mount =
+          EdenMount.createEdenMountForProjectRoot(Paths.get(info.mountPoint), pool).get();
       List<Path> bindMounts = mount.getBindMounts();
       System.out.printf("    Number of bind mounts: %d\n", bindMounts.size());
       for (Path bindMount : bindMounts) {

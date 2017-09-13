@@ -8,9 +8,7 @@ java_test(
         # Resource-only rule: not picked up by autodeps.
         "//src/com/facebook/buck/android/agent:manifest-as-resource",
         "//src/com/facebook/buck/android/redex:options",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",

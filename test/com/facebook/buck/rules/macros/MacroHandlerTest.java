@@ -31,6 +31,7 @@ import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +60,7 @@ public class MacroHandlerTest {
     target = BuildTargetFactory.newInstance("//:test");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     resolver =
-        new BuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(builder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     builder.build(resolver, filesystem);

@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -38,9 +40,20 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
-      ScalaBuckConfig scalaBuckConfig) {
-    super(targetGraph, buildTarget, projectFilesystem, params, buildRuleResolver, cellRoots);
+      ScalaBuckConfig scalaBuckConfig,
+      JavaBuckConfig javaBuckConfig) {
+    super(
+        targetGraph,
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        cellRoots,
+        javaBuckConfig);
     this.scalaBuckConfig = scalaBuckConfig;
+
+    // See https://github.com/facebook/buck/issues/1386
+    setCompileAgainstAbis(false);
   }
 
   public ScalaLibraryBuilder setArgs(ScalaLibraryDescription.CoreArg args) {
@@ -60,6 +73,12 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
     return new BuilderHelper();
   }
 
+  @Override
+  public ScalaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
+    super.setJavacOptions(javacOptions);
+    return this;
+  }
+
   protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
     @Override
     protected ConfiguredCompiler buildConfiguredCompiler() {
@@ -71,7 +90,9 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
           buildRuleResolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
           scalaBuckConfig.getCompilerFlags(),
           extraArguments,
-          buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()));
+          buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
+          getJavac(),
+          Preconditions.checkNotNull(getJavacOptions()));
     }
   }
 }

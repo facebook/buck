@@ -31,6 +31,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellPathResolver;
@@ -97,7 +98,8 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetH).build());
 
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
@@ -161,7 +163,8 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetB).build());
 
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     GraphEnhancementQueryEnvironment fooEnv =
         new GraphEnhancementQueryEnvironment(

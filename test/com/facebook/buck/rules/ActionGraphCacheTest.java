@@ -25,7 +25,6 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -60,7 +59,6 @@ public class ActionGraphCacheTest {
   private TargetNode<?, ?> nodeB;
   private TargetGraph targetGraph;
   private BuckEventBus eventBus;
-  private BroadcastEventListener broadcastEventListener;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
   private final int keySeed = 0;
 
@@ -81,8 +79,6 @@ public class ActionGraphCacheTest {
 
     eventBus =
         BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
-    broadcastEventListener = new BroadcastEventListener();
-    broadcastEventListener.addEventBus(eventBus);
 
     eventBus.register(
         new Object() {
@@ -95,18 +91,18 @@ public class ActionGraphCacheTest {
 
   @Test
   public void hitOnCache() throws InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
 
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(
-            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     // The 1st time you query the ActionGraph it's a cache miss.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
     ActionGraphAndResolver resultRun2 =
         cache.getActionGraph(
-            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
@@ -122,10 +118,10 @@ public class ActionGraphCacheTest {
 
   @Test
   public void missOnCache() {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
     ActionGraphAndResolver resultRun1 =
         cache.getActionGraph(
-            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     // Each time you call it for a different TargetGraph so all calls should be misses.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
@@ -136,14 +132,15 @@ public class ActionGraphCacheTest {
             CHECK_GRAPHS,
             /* skipActionGraphCache */ false,
             targetGraph.getSubgraph(ImmutableSet.of(nodeB)),
-            keySeed);
+            keySeed,
+            false);
 
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 2);
 
     ActionGraphAndResolver resultRun3 =
         cache.getActionGraph(
-            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+            eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 3);
 
@@ -163,9 +160,9 @@ public class ActionGraphCacheTest {
 
   @Test
   public void missWithTargetGraphHashMatch() {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
     cache.getActionGraph(
-        eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+        eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
     cache.getActionGraph(
@@ -173,7 +170,8 @@ public class ActionGraphCacheTest {
         CHECK_GRAPHS,
         /* skipActionGraphCache */ false,
         TargetGraphFactory.newInstance(nodeA, createTargetNode("B")),
-        keySeed);
+        keySeed,
+        false);
 
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphHashMatch.class));
     assertEquals(2, countEventsOf(ActionGraphEvent.Cache.Miss.class));
@@ -184,11 +182,11 @@ public class ActionGraphCacheTest {
   public void compareActionGraphsBasedOnRuleKeys() {
     ActionGraphAndResolver resultRun1 =
         ActionGraphCache.getFreshActionGraph(
-            eventBus, new DefaultTargetNodeToBuildRuleTransformer(), targetGraph);
+            eventBus, new DefaultTargetNodeToBuildRuleTransformer(), targetGraph, false);
 
     ActionGraphAndResolver resultRun2 =
         ActionGraphCache.getFreshActionGraph(
-            eventBus, new DefaultTargetNodeToBuildRuleTransformer(), targetGraph);
+            eventBus, new DefaultTargetNodeToBuildRuleTransformer(), targetGraph, false);
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
@@ -201,19 +199,19 @@ public class ActionGraphCacheTest {
 
   @Test
   public void cacheInvalidationBasedOnEvents() throws IOException, InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
+    ActionGraphCache cache = new ActionGraphCache();
     Path file = tmpFilePath.newFile("foo.txt");
 
     // Fill the cache. An overflow event should invalidate the cache.
     cache.getActionGraph(
-        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(WatchmanOverflowEvent.of(tmpFilePath.getRoot(), "testing"));
     assertTrue(cache.isCacheEmpty());
 
     // Fill the cache. Add a file and ActionGraphCache should be invalidated.
     cache.getActionGraph(
-        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(
         WatchmanPathEvent.of(tmpFilePath.getRoot(), WatchmanPathEvent.Kind.CREATE, file));
@@ -221,7 +219,7 @@ public class ActionGraphCacheTest {
 
     //Re-fill cache. Remove a file and ActionGraphCache should be invalidated.
     cache.getActionGraph(
-        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(
         WatchmanPathEvent.of(tmpFilePath.getRoot(), WatchmanPathEvent.Kind.DELETE, file));
@@ -229,12 +227,12 @@ public class ActionGraphCacheTest {
 
     // Re-fill cache. Modify contents of a file, ActionGraphCache should NOT be invalidated.
     cache.getActionGraph(
-        eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+        eventBus, CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertFalse(cache.isCacheEmpty());
     cache.invalidateBasedOn(
         WatchmanPathEvent.of(tmpFilePath.getRoot(), WatchmanPathEvent.Kind.MODIFY, file));
     cache.getActionGraph(
-        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed);
+        eventBus, NOT_CHECK_GRAPHS, /* skipActionGraphCache */ false, targetGraph, keySeed, false);
     assertFalse(cache.isCacheEmpty());
 
     // We should have 4 cache misses and 1 hit from when you request the same graph after a file

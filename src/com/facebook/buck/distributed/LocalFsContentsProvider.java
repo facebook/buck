@@ -29,6 +29,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,12 +57,12 @@ public class LocalFsContentsProvider implements FileContentsProvider {
   }
 
   @Override
-  public boolean materializeFileContents(BuildJobStateFileHashEntry entry, Path targetAbsPath)
-      throws IOException {
+  public ListenableFuture<Boolean> materializeFileContentsAsync(
+      BuildJobStateFileHashEntry entry, Path targetAbsPath) {
     RuleKey key = new RuleKey(entry.getSha1());
-    CacheResult cacheResult =
-        Futures.getUnchecked(dirCache.fetchAsync(key, LazyPath.ofInstance(targetAbsPath)));
-    return cacheResult.getType() == CacheResultType.HIT;
+    return Futures.transform(
+        dirCache.fetchAsync(key, LazyPath.ofInstance(targetAbsPath)),
+        (CacheResult result) -> result.getType() == CacheResultType.HIT);
   }
 
   public void writeFileAndGetInputStream(BuildJobStateFileHashEntry entry, Path absPath)

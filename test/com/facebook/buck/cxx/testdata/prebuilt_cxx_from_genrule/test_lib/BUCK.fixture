@@ -7,8 +7,7 @@ cxx_library(
 genrule(
   name = 'gen_prebuilt_foo',
   out = 'gen_prebuilt_bar',
-  bash = 'mkdir -p $OUT && cp $(location :bar#shared,default) $OUT' \
-    '&& cd $OUT && for f in *; do mv "${f}" "${f/libtest_lib_bar/libfoo}"; done;'
+  bash = 'cp $(location :bar#static,default) $OUT',
 )
 genrule(
   name = 'gen_prebuilt_foo_headers',
@@ -17,8 +16,7 @@ genrule(
 )
 prebuilt_cxx_library(
   name = 'foo',
-  visibility = [ 'PUBLIC', ],
-  lib_dir = '$(location :gen_prebuilt_foo)',
-  include_dirs = ['$(location :gen_prebuilt_foo_headers)'],
-
+  static_lib = ':gen_prebuilt_foo',
+  header_dirs = [':gen_prebuilt_foo_headers'],
+  visibility = ['PUBLIC'],
 )

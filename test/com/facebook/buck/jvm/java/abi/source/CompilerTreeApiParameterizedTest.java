@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
+import java.io.IOException;
+import java.util.Map;
 import org.junit.runners.Parameterized;
 
 /**
@@ -45,5 +47,13 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
 
   protected boolean testingTrees() {
     return implementation == TREES;
+  }
+
+  @Override
+  protected void withClasspath(Map<String, String> fileNamesToContents) throws IOException {
+    if (testingTrees()) {
+      return;
+    }
+    super.withClasspath(fileNamesToContents);
   }
 }

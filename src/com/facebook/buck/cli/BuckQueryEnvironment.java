@@ -25,13 +25,13 @@ import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
@@ -136,8 +136,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       boolean enableProfiling) {
     return from(
         params.getCell(),
-        OwnersReport.builder(
-            params.getCell(), params.getParser(), params.getBuckEventBus(), params.getConsole()),
+        OwnersReport.builder(params.getCell(), params.getParser(), params.getBuckEventBus()),
         parserState,
         executor,
         new TargetPatternEvaluator(

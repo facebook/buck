@@ -35,6 +35,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -57,7 +58,8 @@ public class JavaSourceJarTest {
   @Test
   public void outputNameShouldIndicateThatTheOutputIsASrcJar() {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//example:target");
 
     JavaSourceJar rule =
@@ -103,7 +105,7 @@ public class JavaSourceJarTest {
         FakeBuildContext.withSourcePathResolver(
                 DefaultSourcePathResolver.from(
                     new SourcePathRuleFinder(
-                        new BuildRuleResolver(
+                        new SingleThreadedBuildRuleResolver(
                             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))))
             .withJavaPackageFinder(finderStub);
     ImmutableList<Step> steps = rule.getBuildSteps(buildContext, new FakeBuildableContext());

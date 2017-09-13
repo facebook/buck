@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +58,7 @@ public class OutputToFileExpanderUtilsTest {
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     TargetNode<?, ?> node = builder.build();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
     builder.build(resolver, filesystem);
 

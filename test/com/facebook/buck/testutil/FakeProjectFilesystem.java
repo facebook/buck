@@ -255,7 +255,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public FakeProjectFilesystem(Path root) {
-    this(new FakeClock(0), root, ImmutableSet.of());
+    this(FakeClock.DO_NOT_CARE, root, ImmutableSet.of());
   }
 
   public FakeProjectFilesystem(Clock clock) {
@@ -263,7 +263,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   public FakeProjectFilesystem(Set<Path> files) {
-    this(new FakeClock(0), DEFAULT_ROOT, files);
+    this(FakeClock.DO_NOT_CARE, DEFAULT_ROOT, files);
   }
 
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {

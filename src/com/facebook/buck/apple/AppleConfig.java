@@ -263,6 +263,17 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_header_symlink_tree_only", false);
   }
 
+  public boolean shouldUseSwiftDelegate() {
+    // TODO(mgd): Remove Swift delegation from Apple rules
+    return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);
+  }
+
+  public AppleAssetCatalog.ValidationType assetCatalogValidation() {
+    return delegate
+        .getEnum(APPLE_SECTION, "asset_catalog_validation", AppleAssetCatalog.ValidationType.class)
+        .orElse(AppleAssetCatalog.ValidationType.XCODE);
+  }
+
   public String getTestLogDirectoryEnvironmentVariable() {
     return delegate
         .getValue(APPLE_SECTION, "test_log_directory_environment_variable")

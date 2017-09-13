@@ -31,6 +31,9 @@ class DevNull(object):
   def write(self, *args, **kw):
     pass
 
+  def flush(self):
+    pass
+
 
 class PEX(object):  # noqa: T000
   """PEX, n. A self-contained python environment."""

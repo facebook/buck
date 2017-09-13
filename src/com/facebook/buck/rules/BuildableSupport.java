@@ -18,8 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
-import com.facebook.buck.rules.keys.RuleKeyHasher;
 import com.facebook.buck.rules.keys.RuleKeyScopedHasher;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import java.io.IOException;
 import java.nio.file.Path;

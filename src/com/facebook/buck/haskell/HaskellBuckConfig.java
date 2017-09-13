@@ -78,6 +78,7 @@ public class HaskellBuckConfig {
         .setLinker(getTool(section, "linker", "ghc"))
         .setLinkerFlags(getFlags(section, "linker_flags").orElse(ImmutableList.of()))
         .setPackager(getTool(section, "packager", "ghc-pkg"))
+        .setHaddock(getTool(section, "haddock", "haddock"))
         .setShouldCacheLinks(delegate.getBooleanValue(section, "cache_links", true))
         .setShouldUsedOldBinaryOutputLocation(
             delegate.getBoolean(section, "old_binary_output_location"))

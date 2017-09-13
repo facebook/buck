@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
@@ -537,6 +538,9 @@ public class DistBuildClientExecutorTest {
     replay(mockEventBus);
     replay(mockLogStateTracker);
 
+    // Normally LOCAL_PREPARATION get started in BuildCommand, so simulate that here,
+    // otherwise when we stop the timer it will fail with an exception about not being started.
+    distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
     distBuildClientExecutor.executeAndPrintFailuresToEventBus(
         directExecutor,
         fakeProjectFilesystem,

@@ -28,8 +28,8 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RawText;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiDirectory;
@@ -39,8 +39,8 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.PsiShortNamesCache;
 import com.intellij.psi.util.PsiUtilCore;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -50,9 +50,9 @@ import org.jetbrains.annotations.Nullable;
 public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
 
   private static final Pattern UNSOLVED_DEPENDENCY_PATTERN =
-      Pattern.compile("^(package|import)\\s*([\\w\\.]*);?\\s*$");
+      Pattern.compile("^(package|import)?\\s*([\\w\\./]*);?\\s*$");
   private static final Pattern SOLVED_DEPENDENCY_PATTERN =
-      Pattern.compile("^\\s*[\\w/]*:[\\w]+\\s*$");
+      Pattern.compile("^\\s*[\\w/-]*:[\\w-]+\\s*$");
 
   @Nullable
   @Override
@@ -109,15 +109,18 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
   }
 
   /**
-   * Automatically convert to buck dependency pattern Example 1: "import
-   * com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity"
+   * Automatically convert to buck dependency pattern. Note that these examples only work if the
+   * file(s) exist!
    *
-   * <p>Example 2: "package com.example.activity;" -> "//java/com/example/activity:activity"
+   * <p>Example 1: "import com.example.activity.MyFirstActivity" ->
+   * "//java/com/example/activity:activity",
    *
-   * <p>Example 3: "com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity"
+   * <p>Example 2: "package com.example.activity;" -> "//java/com/example/activity:activity",
+   *
+   * <p>Example 3: "com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity",
    *
    * <p>Example 4: "/Users/tim/tb/java/com/example/activity/BUCK" ->
-   * "//java/com/example/activity:activity"
+   * "//java/com/example/activity:activity",
    *
    * <p>Example 5 //apps/myapp:app -> "//apps/myapp:app",
    */
@@ -125,15 +128,20 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     Iterable<String> paths = Splitter.on('\n').trimResults().omitEmptyStrings().split(text);
     List<String> results = new ArrayList<>();
     for (String path : paths) {
+      String resolution = null;
+
       Matcher matcher = UNSOLVED_DEPENDENCY_PATTERN.matcher(path);
       if (matcher.matches()) {
-        results.add(resolveUnsolvedBuckDependency(element, project, matcher.group(2)));
+        resolution = resolveUnsolvedBuckDependency(element, project, matcher.group(2));
       } else if (SOLVED_DEPENDENCY_PATTERN.matcher(path).matches()) {
-        results.add(buildSolvedBuckDependency(path));
-      } else {
+        resolution = buildSolvedBuckDependency(path);
+      } // else we don't know how to format this
+
+      if (resolution == null) {
         // Any non-target results in no formatting
         return text;
       }
+      results.add(resolution);
     }
     return Joiner.on('\n').skipNulls().join(results);
   }
@@ -151,8 +159,8 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     return stringBuilder.append(path).append("\",").toString();
   }
 
+  @Nullable
   private String resolveUnsolvedBuckDependency(PsiElement element, Project project, String path) {
-    String original = path;
     VirtualFile buckFile = referenceNameToBuckFile(project, path);
     if (buckFile != null) {
       path = buckFile.getPath().replaceFirst(project.getBasePath(), "");
@@ -171,27 +179,45 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
       }
       return path;
     } else {
-      return original;
+      return null;
     }
   }
 
   private VirtualFile referenceNameToBuckFile(Project project, String reference) {
     // First test if it is a absolute path of a file.
-    File tryFile = new File(reference);
-    if (tryFile != null) {
-      VirtualFile file = VfsUtil.findFileByIoFile(tryFile, true);
+    {
+      VirtualFileManager virtualFileManager = VirtualFileManager.getInstance();
+      VirtualFile file = virtualFileManager.findFileByUrl("file://" + reference);
+      if (file == null) {
+        // We might be in an integration test ...
+        file = virtualFileManager.findFileByUrl("temp://" + reference);
+      }
       if (file != null) {
         return BuckBuildUtil.getBuckFileFromDirectory(file.getParent());
       }
     }
 
     // Try class firstly.
-    PsiClass classElement =
-        JavaPsiFacade.getInstance(project)
-            .findClass(reference, GlobalSearchScope.allScope(project));
-    if (classElement != null) {
-      VirtualFile file = PsiUtilCore.getVirtualFile(classElement);
-      return BuckBuildUtil.getBuckFileFromDirectory(file.getParent());
+    {
+      PsiClass foundClass = null;
+      GlobalSearchScope projectScope = GlobalSearchScope.allScope(project);
+      if (reference.indexOf('.') >= 0) {
+        // A fully qualified name
+        foundClass = JavaPsiFacade.getInstance(project).findClass(reference, projectScope);
+      } else {
+        // A short name
+        final PsiClass[] classes =
+            PsiShortNamesCache.getInstance(project).getClassesByName(reference, projectScope);
+        if (classes != null && classes.length == 1) {
+          foundClass = classes[0];
+        }
+        // TODO(shemitz) Can we show a chooser if we have multiple candidates?
+        // That might be confusing with multi-line pastes
+      }
+      if (foundClass != null) {
+        VirtualFile file = PsiUtilCore.getVirtualFile(foundClass);
+        return BuckBuildUtil.getBuckFileFromDirectory(file.getParent());
+      }
     }
 
     // Then try package.

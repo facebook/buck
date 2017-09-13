@@ -29,4 +29,4 @@ abstract class AbstractNativeLinkableCacheKey {
   public abstract Linker.LinkableDepType getType();
 
   public abstract boolean getForceLinkWhole();
-};
+}

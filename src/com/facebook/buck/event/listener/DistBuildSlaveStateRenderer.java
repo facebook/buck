@@ -38,7 +38,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
 
   @Override
   public String getExecutorCollectionLabel() {
-    return "SERVERS";
+    return "Servers";
   }
 
   @Override
@@ -58,23 +58,23 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   public String renderStatusLine(long slaveID, StringBuilder lineBuilder) {
     Preconditions.checkArgument(slaveID >= 0 && slaveID < slaveStatuses.size());
     BuildSlaveStatus status = slaveStatuses.get((int) slaveID);
-    lineBuilder.append(String.format(" SERVER %d)=> ", slaveID));
+    lineBuilder.append(String.format(" Server %d: ", slaveID));
 
     if (status.getTotalRulesCount() == 0) {
-      lineBuilder.append("PROCESSING BUILD GRAPH...");
+      lineBuilder.append("Creating action graph...");
     } else {
-      String prefix = "IDLE";
+      String prefix = "Idle";
       if (status.getRulesStartedCount() != 0) {
-        prefix = String.format("WORKING ON %d JOBS", status.getRulesStartedCount());
+        prefix = String.format("Working on %d jobs", status.getRulesStartedCount());
       }
 
       ImmutableList.Builder<String> columns = new ImmutableList.Builder<>();
       columns.add(
           String.format(
-              "BUILT %d/%d JOBS", status.getRulesFinishedCount(), status.getTotalRulesCount()));
+              "built %d/%d jobs", status.getRulesFinishedCount(), status.getTotalRulesCount()));
 
       if (status.getRulesFailureCount() != 0) {
-        columns.add(String.format("%d JOBS FAILED", status.getRulesFailureCount()));
+        columns.add(String.format("%d jobs failed", status.getRulesFailureCount()));
       }
 
       if (status.isSetCacheRateStats()) {
@@ -83,13 +83,13 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
                 status.getCacheRateStats());
         columns.add(
             String.format(
-                "%d [%.1f%%] CACHE MISS",
+                "%d [%.1f%%] cache miss",
                 cacheStats.getCacheMissCount(), cacheStats.getCacheMissRate()));
 
         if (cacheStats.getCacheErrorCount() != 0) {
           columns.add(
               String.format(
-                  "%d [%.1f%%] CACHE ERRORS",
+                  "%d [%.1f%%] cache errors",
                   cacheStats.getCacheErrorCount(), cacheStats.getCacheErrorRate()));
         }
       }
@@ -97,18 +97,17 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
       if (status.getHttpArtifactUploadsScheduledCount() > 0) {
         columns.add(
             String.format(
-                "%d/%d UPLOADED",
+                "%d/%d uploaded",
                 status.getHttpArtifactUploadsSuccessCount(),
                 status.getHttpArtifactUploadsScheduledCount()));
 
         if (status.getHttpArtifactUploadsFailureCount() > 0) {
           columns.add(
-              String.format("%d UPLOAD ERRORS", status.getHttpArtifactUploadsFailureCount()));
+              String.format("%d upload errors", status.getHttpArtifactUploadsFailureCount()));
         }
       }
 
-      lineBuilder.append(
-          String.format("%s... (%s)", prefix, Joiner.on(", ").join(columns.build())));
+      lineBuilder.append(String.format("%s... %s", prefix, Joiner.on(", ").join(columns.build())));
     }
 
     if (status.getRulesFailureCount() != 0) {

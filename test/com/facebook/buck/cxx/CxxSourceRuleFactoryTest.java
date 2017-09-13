@@ -45,6 +45,7 @@ import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -104,7 +105,8 @@ public class CxxSourceRuleFactoryTest {
     public void createPreprocessAndCompileBuildRulePropagatesCxxPreprocessorDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -145,7 +147,8 @@ public class CxxSourceRuleFactoryTest {
     public void preprocessFlagsFromPlatformArePropagated() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -210,7 +213,8 @@ public class CxxSourceRuleFactoryTest {
     public void createCompileBuildRulePropagatesBuildRuleSourcePathDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -252,7 +256,8 @@ public class CxxSourceRuleFactoryTest {
     public void createCompileBuildRulePicOption() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       Path scratchDir = Paths.get("scratchDir");
@@ -329,7 +334,8 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void checkPrefixHeaderIsIncluded() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -377,7 +383,8 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void duplicateRuleFetchedFromResolverShouldCreateTheSameTarget() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -415,7 +422,8 @@ public class CxxSourceRuleFactoryTest {
     public void createPreprocessAndCompileBuildRulePropagatesToolDeps() throws Exception {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -513,7 +521,8 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void test() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
@@ -610,7 +619,8 @@ public class CxxSourceRuleFactoryTest {
 
     // Some common boilerplate.
     private BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     private SourcePathRuleFinder sourcePathRuleFinder = new SourcePathRuleFinder(buildRuleResolver);
     private SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(sourcePathRuleFinder);
@@ -731,7 +741,8 @@ public class CxxSourceRuleFactoryTest {
       Assume.assumeTrue(sourceType.isPreprocessable());
 
       BuildRuleResolver ruleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -816,7 +827,8 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void test() {
       BuildRuleResolver buildRuleResolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
       SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");

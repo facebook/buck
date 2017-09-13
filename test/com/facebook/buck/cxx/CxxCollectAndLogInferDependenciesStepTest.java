@@ -26,6 +26,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
+import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -37,6 +38,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -205,7 +207,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(testBuildRuleResolver));
 
@@ -263,7 +266,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     BuildRuleParams buildRuleParams2 = TestBuildRuleParams.create();
 
     BuildRuleResolver testBuildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(testBuildRuleResolver));
 

@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -145,7 +144,7 @@ public class JsLibraryDescription
       }
       return new LibraryBuilder(targetGraph, resolver, buildTarget, params, sourcesToFlavors)
           .setSources(args.getSrcs())
-          .setLibraryDependencies(args.getLibs(), deps)
+          .setLibraryDependencies(deps)
           .build(projectFilesystem, worker);
     }
   }
@@ -180,9 +179,6 @@ public class JsLibraryDescription
     Optional<String> getExtraArgs();
 
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<BuildTarget> getLibs();
 
     BuildTarget getWorker();
 
@@ -234,23 +230,13 @@ public class JsLibraryDescription
       return this;
     }
 
-    private LibraryBuilder setLibraryDependencies(
-        ImmutableSortedSet<BuildTarget> libs, Stream<BuildTarget> deps) {
-
-      final BuildTarget[] targets =
-          Stream.concat(libs.stream(), deps)
-              .map(t -> JsUtil.verifyIsJsLibraryTarget(t, baseTarget, targetGraph))
-              .map(hasFlavors() ? this::addFlavorsToLibraryTarget : Function.identity())
-              .toArray(BuildTarget[]::new);
-
-      final ImmutableList.Builder<JsLibrary> builder = ImmutableList.builder();
-      for (BuildTarget target : targets) {
-        // `requireRule()` needed for dependencies to flavored versions
-        BuildRule rule = resolver.requireRule(target);
-        Preconditions.checkState(rule instanceof JsLibrary);
-        builder.add((JsLibrary) rule);
-      }
-      this.libraryDependencies = builder.build();
+    private LibraryBuilder setLibraryDependencies(Stream<BuildTarget> deps) {
+      this.libraryDependencies =
+          deps.map(hasFlavors() ? this::addFlavorsToLibraryTarget : Function.identity())
+              // `requireRule()` needed for dependencies to flavored versions
+              .map(resolver::requireRule)
+              .map(this::verifyIsJsLibraryRule)
+              .collect(MoreCollectors.toImmutableList());
       return this;
     }
 
@@ -286,6 +272,20 @@ public class JsLibraryDescription
 
     private BuildTarget addFlavorsToLibraryTarget(BuildTarget unflavored) {
       return unflavored.withAppendedFlavors(baseTarget.getFlavors());
+    }
+
+    JsLibrary verifyIsJsLibraryRule(BuildRule rule) {
+      if (!(rule instanceof JsLibrary)) {
+        BuildTarget target = rule.getBuildTarget();
+        throw new HumanReadableException(
+            "js_library target '%s' can only depend on other js_library targets, but one of its "
+                + "dependencies, '%s', is of type %s.",
+            baseTarget,
+            target,
+            Description.getBuildRuleType(targetGraph.get(target).getDescription()).getName());
+      }
+
+      return (JsLibrary) rule;
     }
   }
 

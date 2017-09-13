@@ -6,18 +6,75 @@ from __future__ import unicode_literals
 import argparse
 import collections
 import hashlib
-import codecs
+import io
 import itertools
+import gzip
+import codecs
 import os
 import re
 import sys
 
-RULE_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+RuleKey\s+(.*)')
-INVOCATION_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+InvocationInfo\s+(.*)')
-INVOCATION_VALUE_REGEX = re.compile(r'(\w+)=\[([^]]*)\]')
 PATH_VALUE_REGEX = re.compile(r'path\(([^:]+):\w+\)')
 LOGGER_NAME = 'com.facebook.buck.rules.keys.RuleKeyBuilder'
-TAG_NAME = 'RuleKey'
+NAME_FINDER = '"):key(.name)'
+
+
+class LazyStructureMap(object):
+    def __init__(self, data):
+        self._data = data
+        self._map = None
+
+        self._name = None
+        name_end = data.find(NAME_FINDER)
+        if name_end != -1 and '.type' in data:
+            name_start = data.rfind('("', 0, name_end) + 2
+            self._name = data[name_start:name_end]
+
+    def get(self, key, default=None):
+        return self._get().get(key, default)
+
+    def name(self):
+        return self._name
+
+    def keys(self):
+        return self._get().keys()
+
+    def _get(self):
+        if self._map is None:
+            self._map = self._compute()
+            self._data = None
+
+        return self._map
+
+    def __eq__(self, other):
+        if self._map is not None or other._map is not None:
+            return self._get() == other._get()
+        return self._data == other._data
+
+    def _compute(self):
+        # Because BuildTargets have ':' in them we can't just split on that
+        # character. We know that all values take the form name(..):name(..):
+        # so we can cheat and split on ): instead
+        structure = self._data
+        structure_entries = structure.split('):')
+        structure_map = collections.OrderedDict()
+        last_key = None
+
+        for e in reversed(structure_entries):
+            # Entries do not have their trailing ')', which was chomped by the split.
+            # These are added back as needed.
+            if len(e) == 0:
+                continue
+            elif e.startswith('key('):
+                last_key = e[4:]
+            else:
+                d = structure_map.get(last_key)
+                if d is None:
+                    structure_map[last_key] = [e + ')']
+                else:
+                    d.append(e + ')')
+
+        return structure_map
 
 
 def parseArgs():
@@ -182,7 +239,7 @@ class RuleKeyStructureInfo(object):
         struct = self.getByKey(key)
         if struct is None:
             return None
-        return RuleKeyStructureInfo._nameFromStruct(struct)
+        return struct.name()
 
     def getByName(self, name):
         key = self._name_to_key.get(name)
@@ -209,15 +266,6 @@ class RuleKeyStructureInfo(object):
         return len(self._entries)
 
     @staticmethod
-    def _nameFromStruct(structure):
-        name = None
-        if '.name' in structure and '.type' in structure:
-            name = list(structure['.name'])[0]
-            if name.startswith('string("'):
-                name = name[8:-2]
-        return name
-
-    @staticmethod
     def _makeKeyToStructureMap(entries):
         result = {}
         for e in entries:
@@ -232,7 +280,7 @@ class RuleKeyStructureInfo(object):
         result = {}
         for e in entries:
             top_key, structure = e
-            name = RuleKeyStructureInfo._nameFromStruct(structure)
+            name = structure.name()
             if name is None:
                 continue
             result[name] = top_key
@@ -240,60 +288,49 @@ class RuleKeyStructureInfo(object):
 
 
     @staticmethod
-    def _parseRuleKeyLine(match):
-        rule_key = match.groups()[1]
+    def _parseRuleKeyLine(rule_key):
         if rule_key.endswith('='):
             return (rule_key[:-1], {})
         top_key, structure = rule_key.split('=', 1)
-        # Because BuildTargets have ':' in them we can't just split on that
-        # character. We know that all values take the form name(..):name(..):
-        # so we can cheat and split on ): instead
-        structure_entries = structure.split('):')
-        structure_entries = [e + ')' for e in structure_entries if len(e) > 0]
-        structure_map = collections.OrderedDict()
-        last_key = None
+        return (top_key, LazyStructureMap(structure))
 
-        def appendValue(m, key, val):
-            if key in m:
-                m[key].append(val)
-            else:
-                m[key] = [val]
+    RULE_LINE_REGEX = re.compile(r'(\[[^\]]+\])+\s+RuleKey\s+(.*)')
+    INVOCATION_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+InvocationInfo\s+(.*)')
+    INVOCATION_VALUE_REGEX = re.compile(r'(\w+)=\[([^]]*)\]')
 
-        for e in reversed(structure_entries):
-            if len(e) == 0:
-                continue
-            elif e.startswith('key('):
-                last_key = e[4:-1]
-            else:
-                appendValue(structure_map, last_key, e)
-
-        return (top_key, structure_map)
-
-    @staticmethod
-    def _parseLogFile(buck_out):
+    @classmethod
+    def _parseLogFile(cls, buck_out):
         rule_key_structures = []
         invocation_info_line = None
-        for line in buck_out.readlines():
+        for line in buck_out:
             if invocation_info_line is None:
-                invocation_match = INVOCATION_LINE_REGEX.match(line)
+                invocation_match = cls.INVOCATION_LINE_REGEX.match(line)
                 if invocation_match is not None:
                     invocation_info_line = invocation_match.groups()[1]
-            match = RULE_LINE_REGEX.match(line)
+            match = cls.RULE_LINE_REGEX.match(line)
             if match is None:
                 continue
-            parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match)
+            parsed_line = RuleKeyStructureInfo._parseRuleKeyLine(match.group(2))
             rule_key_structures.append(parsed_line)
 
         invocation_info = {}
         if invocation_info_line is not None:
             invocation_info = dict(
-                    INVOCATION_VALUE_REGEX.findall(invocation_info_line))
+                cls.INVOCATION_VALUE_REGEX.findall(invocation_info_line))
 
         return (rule_key_structures, invocation_info)
 
     @staticmethod
     def _parseBuckOut(file_path):
-        with codecs.open(file_path, 'r', 'utf-8') as buck_out:
+        if file_path.endswith('.gz'):
+            with gzip.open(file_path, 'rb') as raw_log:
+                info = codecs.lookup('utf-8')
+                utf8_log = codecs.StreamReaderWriter(
+                        raw_log,
+                        info.streamreader,
+                        info.streamwriter)
+                return RuleKeyStructureInfo._parseLogFile(utf8_log)
+        with io.open(file_path, mode='r', encoding='utf-8') as buck_out:
             return RuleKeyStructureInfo._parseLogFile(buck_out)
 
     @staticmethod
@@ -336,6 +373,13 @@ def reportOnInterestingPaths(paths):
 
     return result
 
+
+def diffValues(left_values, right_values):
+    left_diff, right_diff = zip(*filter(lambda (left, right): left != right,
+                                        itertools.izip_longest(left_values, right_values)))
+    return filter(lambda l: l is not None, left_diff), filter(lambda l: l is not None, right_diff)
+
+
 def diffInternal(
         label,
         left_s,
@@ -358,24 +402,32 @@ def diffInternal(
         left_values = left_s.get(key, set([]))
         right_values = right_s.get(key, set([]))
 
-        left_with_keys = left_info.getRuleKeyRefs(left_values)
-        right_with_keys = right_info.getRuleKeyRefs(right_values)
+        if left_values == right_values:
+            continue
+
+        left_diff_values, right_diff_values = diffValues(left_values, right_values)
+
+        left_with_keys = left_info.getRuleKeyRefs(left_diff_values)
+        right_with_keys = right_info.getRuleKeyRefs(right_diff_values)
 
         did_align_for_deps = False
         if key.endswith(('Deps', 'deps')):
+            right_names = [right_info.getNameForKey(right_key) for (_, right_key) in
+                           right_with_keys]
+            right_index = dict([(right_name, i) for (i, right_name) in enumerate(right_names)])
             for left_idx, (left_v, left_key) in enumerate(left_with_keys):
                 left_name = left_info.getNameForKey(left_key)
                 if left_name is None or left_idx >= len(right_with_keys):
                     continue
-                right_idx = None
-                for j, (right_v, right_key) in enumerate(right_with_keys):
-                    if right_info.getNameForKey(right_key) == left_name:
-                        right_idx = j
-                        break
+                right_idx = right_index.get(left_name)
                 if right_idx is None:
                     continue
                 if right_idx != left_idx:
+                    right_name = right_names[left_idx]
                     swap_entries_in_list(right_with_keys, right_idx, left_idx)
+                    swap_entries_in_list(right_names, right_idx, left_idx)
+                    right_index[right_name] = right_idx
+                    right_index[left_name] = left_idx
                     did_align_for_deps = True
 
         if did_align_for_deps:

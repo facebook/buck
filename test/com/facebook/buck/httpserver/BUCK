@@ -11,9 +11,7 @@ java_test(
     resources = glob(["*.soy"]),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
@@ -147,9 +145,7 @@ java_test(
     srcs = CACHE_INTEGRATION_SRCS,
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",

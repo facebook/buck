@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.lang.model.AnnotatedConstruct;
 
 /**
  * An implementation of {@link javax.lang.model.AnnotatedConstruct} that uses only the information
@@ -28,7 +29,12 @@ import java.util.List;
  * more information.
  */
 public class TreeBackedAnnotatedConstruct implements ArtificialAnnotatedConstruct {
+  private final AnnotatedConstruct underlyingConstruct;
   private final List<TreeBackedAnnotationMirror> annotationMirrors = new ArrayList<>();
+
+  public TreeBackedAnnotatedConstruct(AnnotatedConstruct underlyingConstruct) {
+    this.underlyingConstruct = underlyingConstruct;
+  }
 
   /* package */ void addAnnotationMirror(TreeBackedAnnotationMirror annotationMirror) {
     annotationMirrors.add(annotationMirror);
@@ -41,11 +47,11 @@ public class TreeBackedAnnotatedConstruct implements ArtificialAnnotatedConstruc
 
   @Override
   public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-    throw new UnsupportedOperationException();
+    return underlyingConstruct.getAnnotation(annotationType);
   }
 
   @Override
   public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-    throw new UnsupportedOperationException();
+    return underlyingConstruct.getAnnotationsByType(annotationType);
   }
 }

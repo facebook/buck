@@ -20,39 +20,56 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
-public class MergeAndroidResourceSources extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class MergeAndroidResourceSources extends AbstractBuildRule {
 
   private final Path destinationDirectory;
   private final Path tempDirectory;
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
   @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public MergeAndroidResourceSources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder,
       ImmutableCollection<SourcePath> directories) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
     this.originalDirectories = directories;
     this.destinationDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__merged_resources_%s__");
     this.tempDirectory =
         BuildTargets.getScratchPath(
             getProjectFilesystem(), buildTarget, "__merged_resources_%s_tmp__");
+    this.buildDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                BuildableSupport.deriveDeps(this, ruleFinder)
+                    .collect(MoreCollectors.toImmutableSortedSet()));
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   @Override

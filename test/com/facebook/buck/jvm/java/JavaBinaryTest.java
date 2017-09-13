@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -72,7 +73,8 @@ public class JavaBinaryTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(guavaNode, libraryNode);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
@@ -92,6 +94,7 @@ public class JavaBinaryTest {
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,
+                false,
                 null,
                 /* blacklist */ ImmutableSet.of(),
                 ImmutableSet.of(),

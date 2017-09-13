@@ -16,7 +16,7 @@
 
 package com.facebook.buck.dalvik;
 
-import com.facebook.buck.android.APKModule;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMultimap;

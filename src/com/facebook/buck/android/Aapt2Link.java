@@ -21,11 +21,10 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -40,6 +39,8 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -49,43 +50,48 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */
-public class Aapt2Link extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean noAutoVersion;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
 
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
+
   Aapt2Link(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Aapt2Compile> compileRules,
       ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
       ManifestEntries manifestEntries,
       boolean noAutoVersion) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        buildRuleParams
-            .withDeclaredDeps(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compileRules)
-                    .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
-                    .addAll(ruleFinder.filterBuildRuleInputs(manifest))
-                    .build())
-            .withoutExtraDeps());
+    super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
     this.noAutoVersion = noAutoVersion;
+    this.buildDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compileRules)
+                    .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
+                    .addAll(ruleFinder.filterBuildRuleInputs(manifest))
+                    .build());
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   @Override

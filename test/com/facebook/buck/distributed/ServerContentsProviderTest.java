@@ -23,10 +23,14 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.testutil.FakeExecutor;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +39,7 @@ import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ServerContentsProviderTest {
@@ -47,21 +52,30 @@ public class ServerContentsProviderTest {
   private static final String HASH4 = "face";
   private static final String HASH5 = "book";
 
-  private static final String FILE1 = "my";
-  private static final String FILE2 = "super";
-  private static final String FILE3 = "cool";
-  private static final String FILE4 = "contents";
+  private static final String FILE_CONTENTS1 = "my";
+  private static final String FILE_CONTENTS2 = "super";
+  private static final String FILE_CONTENTS3 = "cool";
+  private static final String FILE_CONTENTS4 = "contents";
+
+  private Path path1, path2, path3, path4, path5;
+
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private DistBuildService distBuildService;
   private ServerContentsProvider provider;
-  private FakeExecutor fakeExecutor;
+  private FakeExecutor fakeScheduledExecutor;
   private FileMaterializationStatsTracker statsTracker;
 
   @Before
   public void setUp() {
     distBuildService = EasyMock.createMock(DistBuildService.class);
-    fakeExecutor = new FakeExecutor();
+    fakeScheduledExecutor = new FakeExecutor();
     statsTracker = EasyMock.createStrictMock(FileMaterializationStatsTracker.class);
+    path1 = tmp.getRoot().resolve("file1");
+    path2 = tmp.getRoot().resolve("file2");
+    path3 = tmp.getRoot().resolve("file3");
+    path4 = tmp.getRoot().resolve("file4");
+    path5 = tmp.getRoot().resolve("file5");
   }
 
   @After
@@ -74,7 +88,12 @@ public class ServerContentsProviderTest {
   private void initProvider(long bufferPeriodMs, int bufferMaxSize) {
     provider =
         new ServerContentsProvider(
-            distBuildService, fakeExecutor, statsTracker, bufferPeriodMs, bufferMaxSize);
+            distBuildService,
+            fakeScheduledExecutor,
+            MoreExecutors.newDirectExecutorService(),
+            statsTracker,
+            bufferPeriodMs,
+            bufferMaxSize);
   }
 
   @Test
@@ -83,17 +102,17 @@ public class ServerContentsProviderTest {
     initProvider(1, 100);
 
     ImmutableMap.Builder<String, byte[]> result1 = new ImmutableMap.Builder<>();
-    result1.put(HASH1, FILE1.getBytes(StandardCharsets.UTF_8));
-    result1.put(HASH2, FILE2.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH1, HASH2)))
+    result1.put(HASH1, FILE_CONTENTS1.getBytes(StandardCharsets.UTF_8));
+    result1.put(HASH2, FILE_CONTENTS2.getBytes(StandardCharsets.UTF_8));
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH1, HASH2)))
         .andReturn(result1.build())
         .once();
     statsTracker.recordPeriodicCasMultiFetch(EasyMock.anyLong());
     expectLastCall().once();
 
     ImmutableMap.Builder<String, byte[]> result2 = new ImmutableMap.Builder<>();
-    result2.put(HASH3, FILE3.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH3)))
+    result2.put(HASH3, FILE_CONTENTS3.getBytes(StandardCharsets.UTF_8));
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH3)))
         .andReturn(result2.build())
         .once();
     statsTracker.recordPeriodicCasMultiFetch(EasyMock.anyLong());
@@ -101,25 +120,34 @@ public class ServerContentsProviderTest {
     replay(distBuildService);
     replay(statsTracker);
 
-    Future<byte[]> future1, future2, future3;
-    future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH1));
-    future2 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH2));
-    fakeExecutor.drain();
+    Future<?> future1, future2, future3;
+    future1 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH1), path1);
+    future2 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH2), path2);
+    fakeScheduledExecutor.drain();
     future1.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     future2.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-    future3 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH3));
-    fakeExecutor.drain();
+    future3 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH3), path3);
+    fakeScheduledExecutor.drain();
     future3.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
     // Extra run to check for calls with zero HashCodes.
-    fakeExecutor.drain();
+    fakeScheduledExecutor.drain();
 
     verify(distBuildService);
     verify(statsTracker);
-    Assert.assertArrayEquals(FILE1.getBytes(StandardCharsets.UTF_8), future1.get());
-    Assert.assertArrayEquals(FILE2.getBytes(StandardCharsets.UTF_8), future2.get());
-    Assert.assertArrayEquals(FILE3.getBytes(StandardCharsets.UTF_8), future3.get());
+    Assert.assertArrayEquals(
+        FILE_CONTENTS1.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path1));
+    Assert.assertArrayEquals(
+        FILE_CONTENTS2.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path2));
+    Assert.assertArrayEquals(
+        FILE_CONTENTS3.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path3));
   }
 
   @Test
@@ -130,9 +158,9 @@ public class ServerContentsProviderTest {
 
     // We should get request for 2 files first.
     ImmutableMap.Builder<String, byte[]> result1 = new ImmutableMap.Builder<>();
-    result1.put(HASH1, FILE1.getBytes(StandardCharsets.UTF_8));
-    result1.put(HASH2, FILE2.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH1, HASH2)))
+    result1.put(HASH1, FILE_CONTENTS1.getBytes(StandardCharsets.UTF_8));
+    result1.put(HASH2, FILE_CONTENTS2.getBytes(StandardCharsets.UTF_8));
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH1, HASH2)))
         .andReturn(result1.build())
         .once();
     statsTracker.recordFullBufferCasMultiFetch(EasyMock.anyLong());
@@ -140,9 +168,9 @@ public class ServerContentsProviderTest {
 
     // Then 2 again.
     ImmutableMap.Builder<String, byte[]> result2 = new ImmutableMap.Builder<>();
-    result2.put(HASH3, FILE3.getBytes(StandardCharsets.UTF_8));
-    result2.put(HASH4, FILE4.getBytes(StandardCharsets.UTF_8));
-    expect(distBuildService.multiFetchSourceFiles(ImmutableList.of(HASH3, HASH4)))
+    result2.put(HASH3, FILE_CONTENTS3.getBytes(StandardCharsets.UTF_8));
+    result2.put(HASH4, FILE_CONTENTS4.getBytes(StandardCharsets.UTF_8));
+    expect(distBuildService.multiFetchSourceFiles(ImmutableSet.of(HASH3, HASH4)))
         .andReturn(result2.build())
         .once();
     statsTracker.recordFullBufferCasMultiFetch(EasyMock.anyLong());
@@ -152,12 +180,22 @@ public class ServerContentsProviderTest {
     replay(distBuildService);
     replay(statsTracker);
 
-    Future<byte[]> future1, future2, future3, future4, future5;
-    future1 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH1));
-    future2 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH2));
-    future3 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH3));
-    future4 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH4));
-    future5 = provider.fetchFileContentsAsync(new BuildJobStateFileHashEntry().setSha1(HASH5));
+    Future<?> future1, future2, future3, future4, future5;
+    future1 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH1), path1);
+    future2 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH2), path2);
+    future3 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH3), path3);
+    future4 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH4), path4);
+    future5 =
+        provider.materializeFileContentsAsync(
+            new BuildJobStateFileHashEntry().setSha1(HASH5), path5);
     // We should not need to drain the scheduler.
     // Scheduler is only supposed to be used for periodic cleanup.
     future1.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -167,10 +205,14 @@ public class ServerContentsProviderTest {
 
     verify(distBuildService);
     verify(statsTracker);
-    Assert.assertArrayEquals(FILE1.getBytes(StandardCharsets.UTF_8), future1.get());
-    Assert.assertArrayEquals(FILE2.getBytes(StandardCharsets.UTF_8), future2.get());
-    Assert.assertArrayEquals(FILE3.getBytes(StandardCharsets.UTF_8), future3.get());
-    Assert.assertArrayEquals(FILE4.getBytes(StandardCharsets.UTF_8), future4.get());
+    Assert.assertArrayEquals(
+        FILE_CONTENTS1.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path1));
+    Assert.assertArrayEquals(
+        FILE_CONTENTS2.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path2));
+    Assert.assertArrayEquals(
+        FILE_CONTENTS3.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path3));
+    Assert.assertArrayEquals(
+        FILE_CONTENTS4.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(path4));
 
     try {
       future5.get(FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

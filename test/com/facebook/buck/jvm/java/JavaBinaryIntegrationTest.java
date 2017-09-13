@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -32,11 +34,13 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.jar.JarFile;
 import org.junit.Before;
 import org.junit.Rule;
@@ -189,6 +193,34 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     assertThat(result.getStderr(), containsString(libJar));
     // Should show the original exception.
     assertThat(result.getStderr(), containsString("ZipError"));
+  }
+
+  @Test
+  public void testBootclasspathPathResolution() throws IOException {
+    String systemBootclasspath = System.getProperty("sun.boot.class.path");
+    setUpProjectWorkspaceForScenario("fat_jar");
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckBuild(
+            "//:bin-output",
+            "--config",
+            "java.source_level=8",
+            "--config",
+            String.format("java.bootclasspath-8=clowntown.jar:%s", systemBootclasspath),
+            "-v",
+            "5");
+    result.assertSuccess();
+    List<String> verboseLogs =
+        Splitter.on('\n').trimResults().omitEmptyStrings().splitToList(result.getStderr());
+    // Check the javac invocations for properly a resolved bootclasspath and that we aren't
+    // accidentally mixing bootclasspaths
+    assertThat(
+        verboseLogs,
+        hasItem(
+            allOf(
+                containsString("javac"),
+                containsString("-bootclasspath"),
+                containsString(workspace.getPath("clowntown.jar").toString()))));
   }
 
   private ProjectWorkspace setUpProjectWorkspaceForScenario(String scenario) throws IOException {

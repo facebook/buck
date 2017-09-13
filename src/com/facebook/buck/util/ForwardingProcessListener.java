@@ -17,17 +17,23 @@
 package com.facebook.buck.util;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 
 public class ForwardingProcessListener implements ListeningProcessExecutor.ProcessListener {
 
-  private final WritableByteChannel stdout;
-  private final WritableByteChannel stderr;
+  private final OutputStream stdout;
+  private final OutputStream stderr;
+  private final WritableByteChannel stdoutChannel;
+  private final WritableByteChannel stderrChannel;
 
-  public ForwardingProcessListener(WritableByteChannel stdout, WritableByteChannel stderr) {
+  public ForwardingProcessListener(OutputStream stdout, OutputStream stderr) {
     this.stdout = stdout;
     this.stderr = stderr;
+    this.stdoutChannel = Channels.newChannel(stdout);
+    this.stderrChannel = Channels.newChannel(stderr);
   }
 
   @Override
@@ -41,7 +47,8 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
   @Override
   public void onStdout(ByteBuffer buffer, boolean closed) {
     try {
-      stdout.write(buffer);
+      stdoutChannel.write(buffer);
+      stdout.flush();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -50,7 +57,8 @@ public class ForwardingProcessListener implements ListeningProcessExecutor.Proce
   @Override
   public void onStderr(ByteBuffer buffer, boolean closed) {
     try {
-      stderr.write(buffer);
+      stderrChannel.write(buffer);
+      stderr.flush();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

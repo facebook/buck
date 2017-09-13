@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -40,12 +41,17 @@ import org.objectweb.asm.ClassVisitor;
 class ElementsReader implements LibraryReader {
   private final SourceVersion targetVersion;
   private final Elements elements;
+  private final Messager messager;
   private final Supplier<Map<Path, Element>> allElements;
 
   ElementsReader(
-      SourceVersion targetVersion, Elements elements, Iterable<Element> topLevelElements) {
+      SourceVersion targetVersion,
+      Elements elements,
+      Messager messager,
+      Iterable<Element> topLevelElements) {
     this.targetVersion = targetVersion;
     this.elements = elements;
+    this.messager = messager;
     this.allElements =
         Suppliers.memoize(
             () -> {
@@ -68,7 +74,7 @@ class ElementsReader implements LibraryReader {
   @Override
   public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
     Element element = Preconditions.checkNotNull(allElements.get().get(relativePath));
-    new ClassVisitorDriverFromElement(targetVersion, elements).driveVisitor(element, cv);
+    new ClassVisitorDriverFromElement(targetVersion, elements, messager).driveVisitor(element, cv);
   }
 
   @Override

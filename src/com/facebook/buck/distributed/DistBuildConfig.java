@@ -100,7 +100,7 @@ public class DistBuildConfig {
   }
 
   public boolean materializeSourceFilesOnDemand() {
-    return buckConfig.getBooleanValue(STAMPEDE_SECTION, MATERIALIZE_SOURCE_FILES_ON_DEMAND, true);
+    return buckConfig.getBooleanValue(STAMPEDE_SECTION, MATERIALIZE_SOURCE_FILES_ON_DEMAND, false);
   }
 
   public Optional<ImmutableList<String>> getOptionalPathWhitelist() {

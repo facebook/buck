@@ -18,10 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
@@ -48,13 +50,28 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setLibName(String libName) {
-    getArgForPopulating().setLibName(Optional.of(libName));
+  public PrebuiltCxxLibraryBuilder setSharedLib(SourcePath lib) {
+    getArgForPopulating().setSharedLib(lib);
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setLibDir(String libDir) {
-    getArgForPopulating().setLibDir(Optional.of(libDir));
+  public PrebuiltCxxLibraryBuilder setStaticLib(SourcePath lib) {
+    getArgForPopulating().setStaticLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPlatformStaticLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformStaticLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setVersionedStaticLib(VersionMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setVersionedStaticLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setStaticPicLib(SourcePath lib) {
+    getArgForPopulating().setStaticPicLib(lib);
     return this;
   }
 
@@ -122,6 +139,11 @@ public class PrebuiltCxxLibraryBuilder
   public PrebuiltCxxLibraryBuilder setVersionedSubDir(
       VersionMatchedCollection<String> versionedSubDir) {
     getArgForPopulating().setVersionedSubDir(Optional.of(versionedSubDir));
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+    getArgForPopulating().setPreferredLinkage(linkage);
     return this;
   }
 }

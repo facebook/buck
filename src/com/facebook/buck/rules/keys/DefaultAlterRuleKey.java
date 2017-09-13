@@ -21,7 +21,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 class DefaultAlterRuleKey implements AlterRuleKey {
   private final ValueExtractor valueExtractor;
 
-  public DefaultAlterRuleKey(ValueExtractor valueExtractor) {
+  DefaultAlterRuleKey(ValueExtractor valueExtractor) {
     this.valueExtractor = valueExtractor;
   }
 

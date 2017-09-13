@@ -36,17 +36,21 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
+      int outputMaxColumns,
+      long minimumDurationMillis,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
       BuildRuleThreadTracker buildRuleThreadTracker) {
     this.threadInformationMap =
-        getThreadInformationMap(currentTimeMs, runningStepsByThread, buildRuleThreadTracker);
+        getThreadInformationMap(
+            currentTimeMs, minimumDurationMillis, runningStepsByThread, buildRuleThreadTracker);
     this.commonThreadStateRenderer =
         new CommonThreadStateRenderer(
-            ansi, formatTimeFunction, currentTimeMs, threadInformationMap);
+            ansi, formatTimeFunction, currentTimeMs, outputMaxColumns, threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(
       long currentTimeMs,
+      long minimumDurationMillis,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
       BuildRuleThreadTracker buildRuleThreadTracker) {
     ImmutableMap.Builder<Long, ThreadRenderingInformation> threadInformationMapBuilder =
@@ -68,6 +72,9 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
             currentTimeMs
                 - buildRuleEvent.get().getTimestamp()
                 + buildRuleEvent.get().getDuration().getWallMillisDuration();
+      }
+      if (elapsedTimeMs < minimumDurationMillis) {
+        continue;
       }
       threadInformationMapBuilder.put(
           threadId,

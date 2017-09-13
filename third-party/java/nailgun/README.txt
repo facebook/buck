@@ -1,12 +1,12 @@
 nailgun-server-0.9.2-SNAPSHOT.jar and nailgun-server-0.9.2-SNAPSHOT-sources.jar were
-built from https://github.com/martylamb/nailgun
+built from https://github.com/ilya-klyuchnikov/nailgun
 
 To regenerate these jars:
 
  0) install maven (brew install maven)
- 1) git clone https://github.com/martylamb/nailgun
+ 1) git clone https://github.com/ilya-klyuchnikov/nailgun
  2) cd nailgun
- 3) git checkout e7fa6c7e4fc3e4acf049b2ec2f02373e96e848d2
+ 3) git checkout 79e1e71b996c9e5ed893b4f272dab24aa5ae8c28
  4) mvn clean package
  5) copy nailgun-server/target/nailgun-server-0.9.2-SNAPSHOT.jar and
     nailgun-server/target/nailgun-server-0.9.2-SNAPSHOT-sources.jar to your buck/third-party/java/nailgun directory

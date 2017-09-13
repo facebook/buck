@@ -10,9 +10,7 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -168,9 +166,7 @@ standard_java_test(
     name = "d",
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.xml.DocumentLocation;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.SortedSet;
@@ -25,6 +27,11 @@ import javax.annotation.Nullable;
 
 class AndroidResourceIndexCollector implements ResourceCollector {
   private final SortedSet<AndroidResourceIndexEntry> resources = new TreeSet<>();
+  private final ProjectFilesystem projectFilesystem;
+
+  public AndroidResourceIndexCollector(ProjectFilesystem projectFilesystem) {
+    this.projectFilesystem = projectFilesystem;
+  }
 
   @Override
   public void addIntResourceIfNotPresent(
@@ -68,6 +75,15 @@ class AndroidResourceIndexCollector implements ResourceCollector {
 
   public void addResource(
       RDotTxtEntry.RType rType, String name, DocumentLocation documentLocation, Path path) {
+    // attempt to convert from symlink to real path
+    Path root = projectFilesystem.getRootPath();
+    path = root.resolve(path);
+    try {
+      path = path.toFile().exists() ? root.relativize(path.toRealPath()) : path;
+    } catch (IOException e) {
+      throw new RuntimeException("failed in conversion from symlink to real path: " + path);
+    }
+
     resources.add(
         AndroidResourceIndexEntry.of(
             rType,

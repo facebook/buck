@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -391,8 +390,7 @@ public class Watchman implements AutoCloseable {
       throws InterruptedException, IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    ForwardingProcessListener listener =
-        new ForwardingProcessListener(Channels.newChannel(stdout), Channels.newChannel(stderr));
+    ForwardingProcessListener listener = new ForwardingProcessListener(stdout, stderr);
     ListeningProcessExecutor.LaunchedProcess process =
         executor.launchProcess(
             ProcessExecutorParams.builder()
@@ -410,10 +408,7 @@ public class Watchman implements AutoCloseable {
       // rest of the timeout period.
       long remainingNanos = timeoutNanos - (clock.nanoTime() - startTimeNanos);
       if (remainingNanos > 0) {
-        console
-            .getStdErr()
-            .getRawStream()
-            .format("Waiting for Watchman command [%s]...\n", Joiner.on(" ").join(args));
+        console.getStdErr().getRawStream().format("Waiting for watchman...\n");
         exitCode = executor.waitForProcess(process, remainingNanos, TimeUnit.NANOSECONDS);
       }
     }

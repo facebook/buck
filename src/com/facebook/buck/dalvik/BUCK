@@ -22,7 +22,6 @@ java_binary(
     main_class = "com.facebook.buck.dalvik.DalvikStatsTool",
     deps = [
         ":dalvik",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
@@ -93,7 +92,7 @@ java_library(
     ],
     deps = [
         ":dalvik_stats_tool",
-        "//src/com/facebook/buck/android:apkmodule",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/log:api",

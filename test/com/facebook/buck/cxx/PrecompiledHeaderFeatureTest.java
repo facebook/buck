@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -95,7 +96,8 @@ public class PrecompiledHeaderFeatureTest {
     public void test() {
       final String headerFilename = "foo.h";
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       CxxPreprocessAndCompile rule =
           preconfiguredSourceRuleFactoryBuilder(resolver)
               .setCxxPlatform(getPlatform())
@@ -148,7 +150,8 @@ public class PrecompiledHeaderFeatureTest {
     @Test
     public void rejectPchParameterIfSourceTypeDoesntSupportPch() {
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new SingleThreadedBuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       CxxPlatform platform =
           PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
               new MungingDebugPathSanitizer(
@@ -193,7 +196,7 @@ public class PrecompiledHeaderFeatureTest {
       class TestData {
         public CxxPrecompiledHeader generate(Path from) {
           BuildRuleResolver resolver =
-              new BuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
           CxxSourceRuleFactory factory =
               preconfiguredSourceRuleFactoryBuilder(resolver)
@@ -235,7 +238,7 @@ public class PrecompiledHeaderFeatureTest {
       class TestData {
         public CxxPrecompiledHeader generate(Iterable<String> flags) {
           BuildRuleResolver resolver =
-              new BuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
           CxxSourceRuleFactory factory =
               preconfiguredSourceRuleFactoryBuilder(resolver)
@@ -270,7 +273,7 @@ public class PrecompiledHeaderFeatureTest {
       class TestData {
         public CxxPrecompiledHeader generate(String flags) {
           BuildRuleResolver resolver =
-              new BuildRuleResolver(
+              new SingleThreadedBuildRuleResolver(
                   TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
           CxxSourceRuleFactory factory =
               preconfiguredSourceRuleFactoryBuilder(resolver)

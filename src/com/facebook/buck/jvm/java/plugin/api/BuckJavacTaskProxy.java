@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.annotation.processing.Messager;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -79,4 +80,6 @@ public interface BuckJavacTaskProxy extends JavaCompiler.CompilationTask {
   Elements getElements();
 
   Types getTypes();
+
+  Messager getMessager();
 }

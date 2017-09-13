@@ -38,6 +38,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -73,7 +74,8 @@ public class CxxCompilationDatabaseTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
     BuildRuleResolver testBuildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(testBuildRuleResolver);
     SourcePathResolver testSourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
@@ -184,12 +186,12 @@ public class CxxCompilationDatabaseTest {
                 root + "/test.cpp",
                 ImmutableList.of(
                     "compiler",
+                    "-x",
+                    "c++",
                     "-isystem",
                     "/foo/bar",
                     "-isystem",
                     "/test",
-                    "-x",
-                    "c++",
                     "-c",
                     "-MD",
                     "-MF",

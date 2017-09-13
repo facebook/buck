@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.android.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 
 public interface AbstractCxxLibrary

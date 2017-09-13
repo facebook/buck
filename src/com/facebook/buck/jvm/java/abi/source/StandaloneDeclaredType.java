@@ -62,6 +62,13 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
     this.enclosingType = enclosingType;
   }
 
+  /* package */ StandaloneDeclaredType(TypeElement typeElement) {
+    super(TypeKind.DECLARED, Collections.emptyList());
+    this.typeElement = typeElement;
+    this.typeArguments = Collections.emptyList();
+    this.enclosingType = this;
+  }
+
   @Override
   public Element asElement() {
     return typeElement;

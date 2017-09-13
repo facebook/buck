@@ -180,7 +180,8 @@ public class ExternalJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
-      JavacCompilationMode compilationMode) {
+      JavacCompilationMode compilationMode,
+      boolean requiredForSourceAbi) {
     return new Invocation() {
       @Override
       public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {

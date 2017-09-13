@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-public interface JvmLibraryArg extends CommonDescriptionArg {
+public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSourceAbiArg {
   Optional<String> getSource();
 
   Optional<String> getTarget();

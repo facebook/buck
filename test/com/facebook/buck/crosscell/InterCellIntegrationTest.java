@@ -38,17 +38,17 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -145,11 +145,8 @@ public class InterCellIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectWorkspace primary = createWorkspace("inter-cell/multi-cell/primary");
-    primary.setUp();
     ProjectWorkspace secondary = createWorkspace("inter-cell/multi-cell/secondary");
-    secondary.setUp();
     ProjectWorkspace ternary = createWorkspace("inter-cell/multi-cell/ternary");
-    ternary.setUp();
     registerCell(secondary, "ternary", ternary);
     registerCell(primary, "secondary", secondary);
     registerCell(primary, "ternary", ternary);
@@ -270,8 +267,53 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    primary.runBuckBuild("//:lib").assertSuccess();
+    primary.runBuckBuild("//:primary_lib").assertSuccess();
     primary.runBuckBuild("//:java-binary", "-v", "5").assertSuccess();
+  }
+
+  @Test
+  public void shouldBeAbleToCompileWithBootclasspathXCell() throws IOException {
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/java/primary", "inter-cell/java/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+
+    String systemBootclasspath = System.getProperty("sun.boot.class.path");
+    ProjectWorkspace.ProcessResult result =
+        primary.runBuckBuild(
+            "//:java-binary",
+            "--config",
+            "java.source_level=7",
+            "--config",
+            "java.target_level=7",
+            "--config",
+            String.format("//java.bootclasspath-7=primary.jar:%s", systemBootclasspath),
+            "--config",
+            String.format("secondary//java.bootclasspath-7=secondary.jar:%s", systemBootclasspath),
+            "-v",
+            "5");
+    result.assertSuccess();
+
+    List<String> verboseLogs =
+        Splitter.on('\n').trimResults().omitEmptyStrings().splitToList(result.getStderr());
+    // Check the javac invocations for properly a resolved bootclasspath and that we aren't
+    // accidentally mixing bootclasspaths
+    assertThat(
+        verboseLogs,
+        Matchers.hasItem(
+            Matchers.allOf(
+                containsString("javac"),
+                containsString("-bootclasspath"),
+                containsString("/primary.jar"),
+                containsString("primary_lib"))));
+    assertThat(
+        verboseLogs,
+        Matchers.hasItem(
+            Matchers.allOf(
+                containsString("javac"),
+                containsString("-bootclasspath"),
+                containsString("/secondary.jar"),
+                containsString("secondary_lib"),
+                not(containsString("primary_lib")))));
   }
 
   @Test
@@ -583,7 +625,7 @@ public class InterCellIntegrationTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new BuildRuleResolver(
+                new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
@@ -600,6 +642,56 @@ public class InterCellIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
+
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, Matchers.hasItem("G"));
+    assertThat(info.symbols.global, Matchers.hasItem("H"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+  }
+
+  @Test
+  public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/android/primary", "inter-cell/android/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        primary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+    TestDataHelper.overrideBuckconfig(
+        secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
+
+    NdkCxxPlatform platform =
+        AndroidNdkHelper.getNdkCxxPlatform(primary, primary.asCell().getFilesystem());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(
+            new SourcePathRuleFinder(
+                new SingleThreadedBuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+    Path tmpDir = tmp.newFolder("merging_tmp");
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
+    SymbolsAndDtNeeded info;
+    Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_deps");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1g.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
+    zipInspector.assertFileExists("lib/x86/libI.so");
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
     assertThat(info.symbols.global, Matchers.hasItem("A"));

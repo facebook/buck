@@ -66,7 +66,7 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
 
   @Override
   public KotlinLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
-    this.javacOptions = javacOptions;
+    super.setJavacOptions(javacOptions);
     return this;
   }
 
@@ -83,7 +83,7 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
           extraKotlincArguments,
           extraClasspathFromContextFunction,
           getJavac(),
-          Preconditions.checkNotNull(javacOptions));
+          Preconditions.checkNotNull(getJavacOptions()));
     }
   }
 }

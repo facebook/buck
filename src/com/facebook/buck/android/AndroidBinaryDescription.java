@@ -21,10 +21,11 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.RelinkerMode;
-import com.facebook.buck.android.FilterResourcesStep.ResourceFilter;
+import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -116,7 +117,8 @@ public class AndroidBinaryDescription
       ImmutableSet.of(
           PACKAGE_STRING_ASSETS_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR,
-          AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR);
+          AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
+          AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_SOURCE_MAP_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
@@ -171,6 +173,8 @@ public class AndroidBinaryDescription
             PerfEventId.of("AndroidBinaryDescription"),
             "target",
             buildTarget.toString())) {
+      params = params.withoutExtraDeps();
+
       // All of our supported flavors are constructed as side-effects
       // of the main target.
       for (Flavor flavor : FLAVORS) {
@@ -205,7 +209,7 @@ public class AndroidBinaryDescription
       }
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
-          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
+          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
 
       // If the old boolean version of this argument was specified, make sure the new form
       // was not specified, and allow the old form to override the default.
@@ -221,7 +225,7 @@ public class AndroidBinaryDescription
         androidSdkProguardConfig =
             args.getUseAndroidProguardConfigWithOptimizations().orElse(false)
                 ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
-                : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
+                : ProGuardObfuscateStep.SdkProguardType.NONE;
       }
 
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
@@ -237,9 +241,15 @@ public class AndroidBinaryDescription
       DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
       PackageType packageType = getPackageType(args);
+      boolean shouldProguard =
+          args.getProguardConfig().isPresent()
+              || (args.getAndroidSdkProguardConfig().isPresent()
+                  && !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
+                      args.getAndroidSdkProguardConfig().get()));
+
       boolean shouldPreDex =
           !args.getDisablePreDex()
-              && PackageType.DEBUG.equals(packageType)
+              && !shouldProguard
               && !args.getPreprocessJavaClassesBash().isPresent();
 
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
@@ -284,7 +294,7 @@ public class AndroidBinaryDescription
               args.getNativeLibraryMergeGlue(),
               args.getNativeLibraryMergeCodeGenerator(),
               args.getNativeLibraryMergeLocalizedSymbols(),
-              args.getNativeLibraryProguardConfigGenerator(),
+              shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
               args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
               dxExecutorService,
               args.getManifestEntries(),
@@ -312,43 +322,24 @@ public class AndroidBinaryDescription
               .filter(JavaLibrary.class)
               .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
 
-      Optional<RedexOptions> redexOptions = getRedexOptions(buildTarget, resolver, cellRoots, args);
-
-      ImmutableSortedSet<BuildRule> redexExtraDeps =
-          redexOptions
-              .map(
-                  a ->
-                      a.getRedexExtraArgs()
-                          .stream()
-                          .flatMap(arg -> arg.getDeps(ruleFinder).stream())
-                          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())))
-              .orElse(ImmutableSortedSet.of());
-
       AndroidBinary androidBinary =
           new AndroidBinary(
               buildTarget,
               projectFilesystem,
-              params
-                  .withExtraDeps(result.getFinalDeps())
-                  .copyAppendingExtraDeps(
-                      ruleFinder.filterBuildRuleInputs(
-                          result.getPackageableCollection().getProguardConfigs()))
-                  .copyAppendingExtraDeps(rulesToExcludeFromDex)
-                  .copyAppendingExtraDeps(redexExtraDeps),
+              params,
               ruleFinder,
               proGuardConfig.getProguardJarOverride(),
               proGuardConfig.getProguardMaxHeapSize(),
               Optional.of(args.getProguardJvmArgs()),
               proGuardConfig.getProguardAgentPath(),
               (Keystore) keystore,
-              packageType,
               dexSplitMode,
               args.getNoDx(),
               androidSdkProguardConfig,
               args.getOptimizationPasses(),
               args.getProguardConfig(),
               args.isSkipProguard(),
-              redexOptions,
+              getRedexOptions(buildTarget, resolver, cellRoots, args),
               args.getResourceCompression(),
               args.getCpuFilters(),
               resourceFilter,
@@ -366,7 +357,8 @@ public class AndroidBinaryDescription
               args.getManifestEntries(),
               javaOptions.getJavaRuntimeLauncher(),
               dxConfig.getDxMaxHeapSize(),
-              args.getIsCacheable());
+              args.getIsCacheable(),
+              args.getAndroidAppModularityResult());
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(
@@ -465,7 +457,7 @@ public class AndroidBinaryDescription
     }
   }
 
-  private Optional<com.facebook.buck.rules.args.Arg> getPostFilterResourcesArgs(
+  private Optional<Arg> getPostFilterResourcesArgs(
       AndroidBinaryDescriptionArg arg,
       BuildTarget buildTarget,
       BuildRuleResolver resolver,
@@ -501,9 +493,9 @@ public class AndroidBinaryDescription
           buildTarget, SECTION, CONFIG_PARAM_REDEX);
     }
 
-    java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
+    java.util.function.Function<String, Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver)::apply;
-    List<com.facebook.buck.rules.args.Arg> redexExtraArgs =
+    List<Arg> redexExtraArgs =
         arg.getRedexExtraArgs().stream().map(macroArgFunction).collect(Collectors.toList());
 
     return Optional.of(
@@ -595,6 +587,8 @@ public class AndroidBinaryDescription
     Optional<SourcePath> getSecondaryDexTailClassesFile();
 
     Set<BuildTarget> getApplicationModuleTargets();
+
+    Optional<SourcePath> getAndroidAppModularityResult();
 
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
 

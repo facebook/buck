@@ -37,7 +37,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
 
   public FakeListeningProcessExecutor(
       Multimap<ProcessExecutorParams, FakeListeningProcessState> processStates) {
-    this(Functions.forMap(processStates.asMap()), new SettableFakeClock(0, 0));
+    this(Functions.forMap(processStates.asMap()), SettableFakeClock.DO_NOT_CARE);
   }
 
   public FakeListeningProcessExecutor(

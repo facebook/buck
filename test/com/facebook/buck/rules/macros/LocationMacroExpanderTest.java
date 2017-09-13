@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -72,7 +73,8 @@ public class LocationMacroExpanderTest {
   public void testShouldWarnUsersWhenThereIsNoOutputForARuleButLocationRequested()
       throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:java"))
         .build(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
@@ -96,7 +98,8 @@ public class LocationMacroExpanderTest {
   public void replaceLocationOfFullyQualifiedBuildTarget() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildRule javaBinary = createSampleJavaBinaryRule(ruleResolver);
@@ -129,7 +132,7 @@ public class LocationMacroExpanderTest {
             .setOut("out")
             .build();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(node), new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = resolver.requireRule(node.getBuildTarget());
     LocationMacroExpander macroExpander = new LocationMacroExpander();

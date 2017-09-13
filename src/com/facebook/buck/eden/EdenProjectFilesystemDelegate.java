@@ -20,6 +20,7 @@ import com.facebook.buck.config.Config;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
@@ -32,6 +33,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
+
+  private static final Logger LOG = Logger.get(EdenProjectFilesystemDelegate.class);
 
   /**
    * Config option in the {@code [eden]} section of {@code .buckconfig} to disable going through
@@ -98,8 +101,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     if (entry.isPresent() && !isUnderBindMount(entry.get())) {
       try {
         return mount.getSha1(entry.get());
-      } catch (TException e) {
-        throw new IOException(e);
+      } catch (TException | IOException e) {
+        LOG.info(e, "Failed when fetching SHA-1 for %s", path);
       } catch (EdenError e) {
         if (retryWithRealPathIfEdenError) {
           // It's possible that an EdenError was thrown because entry.get() was a path to a symlink,
@@ -110,7 +113,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
             return computeSha1(realPath, /* retryWithRealPathIfEdenError */ false);
           }
         }
-        throw new IOException(e);
       }
     }
 

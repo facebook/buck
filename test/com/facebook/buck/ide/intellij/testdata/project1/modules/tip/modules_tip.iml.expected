@@ -15,7 +15,7 @@
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
-    <output url="file://$MODULE_DIR$/../../buck-out/bin/modules/tip/lib__tip__classes" />
+    <output url="jar://$MODULE_DIR$/../../buck-out/gen/modules/tip/lib__tip__output/tip.jar!/" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../buck-out/android/modules/tip/gen">
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/tip/gen" isTestSource="false" />
@@ -24,10 +24,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="modules_dep1" scope="COMPILE" />
     <orderEntry type="library" name="//libs:generated" scope="TEST" level="project" />
     <orderEntry type="library" name="//libs:guava" scope="COMPILE" level="project" />
     <orderEntry type="library" name="//libs:jsr305" scope="COMPILE" level="project" />
     <orderEntry type="library" name="//libs:junit" scope="TEST" level="project" />
+    <orderEntry type="module" module-name="modules_dep1" scope="COMPILE" />
   </component>
 </module>

@@ -39,4 +39,9 @@ public class AndroidResourceFolder extends SelfMergingOnlyFolder {
   public IJFolderFactory getFactory() {
     return FACTORY;
   }
+
+  @Override
+  public boolean isResourceFolder() {
+    return true;
+  }
 }

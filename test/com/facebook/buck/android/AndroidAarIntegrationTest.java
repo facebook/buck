@@ -82,6 +82,36 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
+  public void testBuildAndroidAarWithDerivedDeps() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_aar_build/caseC", tmp);
+    workspace.setUp();
+    String target = "//:app";
+    workspace.runBuckBuild(target).assertSuccess();
+
+    Path aar =
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+    ZipInspector zipInspector = new ZipInspector(aar);
+    zipInspector.assertFileExists("AndroidManifest.xml");
+    zipInspector.assertFileExists("classes.jar");
+    zipInspector.assertFileExists("R.txt");
+    zipInspector.assertFileExists("assets/a.txt");
+    zipInspector.assertFileExists("assets/b.txt");
+    zipInspector.assertFileExists("res/raw/helloworld.txt");
+    zipInspector.assertFileExists("res/values/values.xml");
+    zipInspector.assertFileContents(
+        "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
+
+    Path contents = tmp.getRoot().resolve("aar-contents");
+    Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
+      assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
+    }
+  }
+
+  @Test
   public void testBuildConfigNotIncludedInAarByDefault() throws InterruptedException, IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);

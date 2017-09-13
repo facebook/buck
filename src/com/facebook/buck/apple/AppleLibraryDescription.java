@@ -122,11 +122,30 @@ public class AppleLibraryDescription
     }
   }
 
+  enum MetadataType implements FlavorConvertible {
+    APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
+    ;
+
+    private final Flavor flavor;
+
+    MetadataType(Flavor flavor) {
+      this.flavor = flavor;
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+  }
+
+  public static final FlavorDomain<MetadataType> METADATA_TYPE =
+      FlavorDomain.from("Apple Library Metadata Type", AppleLibraryDescription.MetadataType.class);
+
   public static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   private final CxxLibraryDescription delegate;
-  private final SwiftLibraryDescription swiftDelegate;
+  private final Optional<SwiftLibraryDescription> swiftDelegate;
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain;
   private final Flavor defaultCxxFlavor;
   private final CodeSignIdentityStore codeSignIdentityStore;
@@ -142,7 +161,8 @@ public class AppleLibraryDescription
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
     this.delegate = delegate;
-    this.swiftDelegate = swiftDelegate;
+    this.swiftDelegate =
+        appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.codeSignIdentityStore = codeSignIdentityStore;
@@ -163,7 +183,7 @@ public class AppleLibraryDescription
 
     builder.addAll(localDomains);
     delegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
-    swiftDelegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    swiftDelegate.flatMap(s -> s.flavorDomains()).ifPresent(domains -> builder.addAll(domains));
 
     ImmutableSet<FlavorDomain<?>> result = builder.build();
 
@@ -181,7 +201,7 @@ public class AppleLibraryDescription
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains)
         || delegate.hasFlavors(flavors)
-        || swiftDelegate.hasFlavors(flavors);
+        || swiftDelegate.map(swift -> swift.hasFlavors(flavors)).orElse(false);
   }
 
   @Override
@@ -259,7 +279,8 @@ public class AppleLibraryDescription
         args.getTests(),
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
-        appleConfig.cacheBundlesAndPackages());
+        appleConfig.cacheBundlesAndPackages(),
+        appleConfig.assetCatalogValidation());
   }
 
   /**
@@ -431,9 +452,18 @@ public class AppleLibraryDescription
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver, delegateArg, args, buildTarget);
 
+    final BuildRuleParams inputParams = params;
     Optional<BuildRule> swiftCompanionBuildRule =
-        swiftDelegate.createCompanionBuildRule(
-            targetGraph, buildTarget, projectFilesystem, params, resolver, cellRoots, args);
+        swiftDelegate.flatMap(
+            swift ->
+                swift.createCompanionBuildRule(
+                    targetGraph,
+                    buildTarget,
+                    projectFilesystem,
+                    inputParams,
+                    resolver,
+                    cellRoots,
+                    args));
     if (swiftCompanionBuildRule.isPresent()) {
       // when creating a swift target, there is no need to proceed with apple binary rules,
       // otherwise, add this swift rule as a dependency.
@@ -468,7 +498,8 @@ public class AppleLibraryDescription
               bundleLoader,
               blacklist,
               extraCxxDeps,
-              transitiveCxxDeps);
+              transitiveCxxDeps,
+              Optional.empty());
       return resolver.addToIndex(rule);
     }
   }
@@ -493,14 +524,14 @@ public class AppleLibraryDescription
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
+    final SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
     // Forward to C/C++ library description.
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
       CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxLibraryDescriptionArg(
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
-          delegateArg,
-          args,
-          buildTarget);
+          pathResolver, delegateArg, args, buildTarget);
       return delegate.createMetadata(
           buildTarget, resolver, cellRoots, delegateArg.build(), selectedVersions, metadataClass);
     }
@@ -530,6 +561,20 @@ public class AppleLibraryDescription
       BuildRule buildRule = resolver.requireRule(buildTarget);
       sourcePaths.add(buildRule.getSourcePathToOutput());
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+    }
+
+    Optional<Map.Entry<Flavor, MetadataType>> metaType =
+        METADATA_TYPE.getFlavorAndValue(buildTarget);
+
+    if (metaType.isPresent()) {
+      switch (metaType.get().getValue()) {
+        case APPLE_SWIFT_METADATA:
+          {
+            AppleLibrarySwiftMetadata metadata =
+                AppleLibrarySwiftMetadata.from(args.getSrcs(), pathResolver);
+            return Optional.of(metadata).map(metadataClass::cast);
+          }
+      }
     }
 
     return Optional.empty();

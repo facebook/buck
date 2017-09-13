@@ -31,6 +31,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -46,6 +47,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -64,11 +66,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -93,15 +97,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private static final Logger LOG = Logger.get(SuperConsoleEventBusListener.class);
 
   @VisibleForTesting static final String EMOJI_BUNNY = "\uD83D\uDC07";
-  @VisibleForTesting static final String EMOJI_SNAIL = "\uD83D\uDC0C";
-  @VisibleForTesting static final String EMOJI_WHALE = "\uD83D\uDC33";
-  @VisibleForTesting static final String EMOJI_BEACH = "\uD83C\uDFD6";
   @VisibleForTesting static final String EMOJI_DESERT = "\uD83C\uDFDD";
   @VisibleForTesting static final String EMOJI_ROLODEX = "\uD83D\uDCC7";
-
-  @VisibleForTesting
-  static final Optional<String> NEW_DAEMON_INSTANCE_MSG =
-      createParsingMessage(EMOJI_WHALE, "New buck daemon");
 
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
@@ -139,6 +136,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int threadLineLimitOnWarning;
   private final int threadLineLimitOnError;
   private final boolean shouldAlwaysSortThreadsByTime;
+  private final long buildRuleMinimumDurationMillis;
 
   private final DateFormat dateFormat;
   private int lastNumLinesPrinted;
@@ -151,8 +149,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Object distBuildSlaveTrackerLock = new Object();
 
+  private long minimumDurationMillisecondsToShowParse;
+  private long minimumDurationMillisecondsToShowActionGraph;
+  private long minimumDurationMillisecondsToShowWatchman;
+  private boolean hideEmptyDownload;
+
   @GuardedBy("distBuildSlaveTrackerLock")
   private final Map<RunId, BuildSlaveStatus> distBuildSlaveTracker;
+
+  private final Set<String> actionGraphCacheMessage = new HashSet<>();
+
+  /** Maximum width of the terminal. */
+  private final int outputMaxColumns;
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -164,7 +172,38 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Locale locale,
       Path testLogPath,
       TimeZone timeZone) {
-    super(console, clock, locale, executionEnvironment);
+    this(
+        config,
+        console,
+        clock,
+        summaryVerbosity,
+        executionEnvironment,
+        webServer,
+        locale,
+        testLogPath,
+        timeZone,
+        500L,
+        500L,
+        1000L,
+        true);
+  }
+
+  @VisibleForTesting
+  public SuperConsoleEventBusListener(
+      SuperConsoleConfig config,
+      Console console,
+      Clock clock,
+      TestResultSummaryVerbosity summaryVerbosity,
+      ExecutionEnvironment executionEnvironment,
+      Optional<WebServer> webServer,
+      Locale locale,
+      Path testLogPath,
+      TimeZone timeZone,
+      long minimumDurationMillisecondsToShowParse,
+      long minimumDurationMillisecondsToShowActionGraph,
+      long minimumDurationMillisecondsToShowWatchman,
+      boolean hideEmptyDownload) {
+    super(console, clock, locale, executionEnvironment, false, config.getNumberOfSlowRulesToShow());
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
     this.webServer = webServer;
@@ -194,12 +233,31 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.threadLineLimitOnWarning = config.getThreadLineLimitOnWarning();
     this.threadLineLimitOnError = config.getThreadLineLimitOnError();
     this.shouldAlwaysSortThreadsByTime = config.shouldAlwaysSortThreadsByTime();
+    this.buildRuleMinimumDurationMillis = config.getBuildRuleMinimumDurationMillis();
+    this.minimumDurationMillisecondsToShowParse = minimumDurationMillisecondsToShowParse;
+    this.minimumDurationMillisecondsToShowActionGraph =
+        minimumDurationMillisecondsToShowActionGraph;
+    this.minimumDurationMillisecondsToShowWatchman = minimumDurationMillisecondsToShowWatchman;
+    this.hideEmptyDownload = hideEmptyDownload;
 
     this.dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
     this.dateFormat.setTimeZone(timeZone);
 
     // Using LinkedHashMap because we want a predictable iteration order.
     this.distBuildSlaveTracker = new LinkedHashMap<>();
+
+    int outputMaxColumns = 80;
+    Optional<String> columnsStr = executionEnvironment.getenv("BUCK_TERM_COLUMNS");
+    if (columnsStr.isPresent()) {
+      try {
+        outputMaxColumns = Integer.parseInt(columnsStr.get());
+      } catch (NumberFormatException e) {
+        LOG.debug(
+            "the environment variable BUCK_TERM_COLUMNS did not contain a valid value: %s",
+            columnsStr.get());
+      }
+    }
+    this.outputMaxColumns = outputMaxColumns;
   }
 
   /** Schedules a runnable that updates the console output at a fixed interval. */
@@ -228,7 +286,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting
   synchronized void render() {
     LOG.verbose("Rendering");
-    String lastRenderClear = clearLastRender();
+    int previousNumLinesPrinted = lastNumLinesPrinted;
     ImmutableList<String> lines = createRenderLinesAtTime(clock.currentTimeMillis());
     ImmutableList<String> logLines = createLogRenderLines();
     lastNumLinesPrinted = lines.size();
@@ -245,15 +303,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         stderrDirty = console.getStdErr().isDirty();
         if (stdoutDirty || stderrDirty) {
           stopRenderScheduler();
-        } else if (!lastRenderClear.isEmpty() || !lines.isEmpty() || !logLines.isEmpty()) {
-          Iterable<String> renderedLines =
-              Iterables.concat(
-                  MoreIterables.zipAndConcat(logLines, Iterables.cycle("\n")),
-                  ansi.asNoWrap(MoreIterables.zipAndConcat(lines, Iterables.cycle("\n"))));
-          StringBuilder fullFrame = new StringBuilder(lastRenderClear);
-          for (String part : renderedLines) {
-            fullFrame.append(part);
-          }
+        } else if (previousNumLinesPrinted != 0 || !lines.isEmpty() || !logLines.isEmpty()) {
+          String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
           console.getStdErr().getRawStream().print(fullFrame);
         }
       }
@@ -264,50 +315,91 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
   }
 
+  private String renderFullFrame(
+      ImmutableList<String> logLines, ImmutableList<String> lines, int previousNumLinesPrinted) {
+    int currentNumLines = lines.size();
+
+    Iterable<String> renderedLines =
+        Iterables.concat(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle(ansi.clearLine()),
+                logLines,
+                Iterables.cycle(ansi.clearToTheEndOfLine() + "\n")),
+            ansi.asNoWrap(
+                MoreIterables.zipAndConcat(
+                    Iterables.cycle(ansi.clearLine()),
+                    lines,
+                    Iterables.cycle(ansi.clearToTheEndOfLine() + "\n"))));
+
+    // Number of lines remaining to clear because of old output once we displayed
+    // the new output.
+    int remainingLinesToClear =
+        previousNumLinesPrinted > currentNumLines ? previousNumLinesPrinted - currentNumLines : 0;
+
+    StringBuilder fullFrame = new StringBuilder();
+    // We move the cursor back to the top.
+    for (int i = 0; i < previousNumLinesPrinted; i++) {
+      fullFrame.append(ansi.cursorPreviousLine(1));
+    }
+    // We display the new output.
+    for (String part : renderedLines) {
+      fullFrame.append(part);
+    }
+    // We clear the remaining lines of the old output.
+    for (int i = 0; i < remainingLinesToClear; i++) {
+      fullFrame.append(ansi.clearLine() + "\n");
+    }
+    // We move the cursor at the end of the new output.
+    for (int i = 0; i < remainingLinesToClear; i++) {
+      fullFrame.append(ansi.cursorPreviousLine(1));
+    }
+    return fullFrame.toString();
+  }
+
   /**
    * Creates a list of lines to be rendered at a given time.
    *
    * @param currentTimeMillis The time in ms to use when computing elapsed times.
    */
   @VisibleForTesting
-  ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
+  public ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     logEventPair(
-        "PROCESSING FILESYSTEM CHANGES",
+        "Processing filesystem changes",
         Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
         watchmanStarted,
         watchmanFinished,
         Optional.empty(),
-        Optional.of(1000L),
-        lines);
-
-    logEventPair(
-        "PARSING BUCK FILES",
-        /* suffix */ Optional.empty(),
-        currentTimeMillis,
-        /* offsetMs */ 0L,
-        projectBuildFileParseStarted,
-        projectBuildFileParseFinished,
-        getEstimatedProgressOfProcessingBuckFiles(),
-        Optional.empty(),
+        Optional.of(this.minimumDurationMillisecondsToShowWatchman),
         lines);
 
     long parseTime =
         logEventPair(
-            "PROCESSING BUCK FILES",
-            /* suffix */ parsingStatus,
+            "Parsing buck files",
+            /* suffix */ Optional.empty(),
             currentTimeMillis,
             /* offsetMs */ 0L,
-            buckFilesProcessing.values(),
-            getEstimatedProgressOfProcessingBuckFiles(),
-            Optional.empty(),
+            buckFilesParsingEvents.values(),
+            getEstimatedProgressOfParsingBuckFiles(),
+            Optional.of(this.minimumDurationMillisecondsToShowParse),
+            lines);
+
+    long actionGraphTime =
+        logEventPair(
+            "Creating action graph",
+            /* suffix */ Optional.empty(),
+            currentTimeMillis,
+            /* offsetMs */ 0L,
+            actionGraphEvents.values(),
+            getEstimatedProgressOfParsingBuckFiles(),
+            Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
 
     logEventPair(
-        "GENERATING PROJECT",
+        "Generating project",
         Optional.empty(),
         currentTimeMillis,
         /* offsetMs */ 0L,
@@ -318,7 +410,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     logEventPair(
-        "REFRESHING SPARSE CHECKOUT",
+        "Refreshing sparse checkout",
         createAutoSparseStatusMessage(autoSparseSummary),
         currentTimeMillis,
         /* offsetMs */ 0L,
@@ -328,7 +420,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     // If parsing has not finished, then there is no build rule information to print yet.
-    if (buildStarted == null || parseTime == UNFINISHED_EVENT_PAIR) {
+    if (buildStarted == null
+        || parseTime == UNFINISHED_EVENT_PAIR
+        || actionGraphTime == UNFINISHED_EVENT_PAIR) {
       return lines.build();
     }
 
@@ -343,7 +437,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (distBuildStarted != null) {
       long distBuildMs =
           logEventPair(
-              "DISTBUILD",
+              "Distributed build",
               getOptionalDistBuildLineSuffix(),
               currentTimeMillis,
               0,
@@ -368,7 +462,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     // TODO(shivanker): Add a similar source file upload line for distributed build.
-    lines.add(getNetworkStatsLine(buildFinished));
+    Pair<Long, SizeUnit> bytesDownloaded = networkStatsKeeper.getBytesDownloaded();
+    if (bytesDownloaded.getFirst() > 0 || !this.hideEmptyDownload) {
+      lines.add(getNetworkStatsLine(buildFinished));
+    }
 
     // Check to see if the build encompasses the time spent parsing. This is true for runs of
     // buck build but not so for runs of e.g. buck project. If so, subtract parse times
@@ -376,13 +473,17 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long buildStartedTime = buildStarted.getTimestamp();
     long buildFinishedTime =
         buildFinished != null ? buildFinished.getTimestamp() : currentTimeMillis;
-    Collection<EventPair> processingEvents =
-        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesProcessing.values());
-    long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
+    Collection<EventPair> filteredBuckFilesParsingEvents =
+        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesParsingEvents.values());
+    Collection<EventPair> filteredActionGraphEvents =
+        getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
+    long offsetMs =
+        getTotalCompletedTimeFromEventPairs(filteredBuckFilesParsingEvents)
+            + getTotalCompletedTimeFromEventPairs(filteredActionGraphEvents);
 
     long totalBuildMs =
         logEventPair(
-            "BUILDING",
+            "Building",
             getOptionalBuildLineSuffix(),
             currentTimeMillis,
             offsetMs, // parseTime,
@@ -394,6 +495,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // If the Daemon is running and serving web traffic, print the URL to the Chrome Trace.
     getBuildTraceURLLine(lines);
+    getTotalTimeLine(lines);
+    showTopSlowBuildRules(lines);
 
     if (totalBuildMs == UNFINISHED_EVENT_PAIR) {
       MultiStateRenderer renderer =
@@ -401,6 +504,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              outputMaxColumns,
+              buildRuleMinimumDurationMillis,
               threadsToRunningStep,
               buildRuleThreadTracker);
       renderLines(renderer, lines, maxThreadLines, shouldAlwaysSortThreadsByTime);
@@ -408,7 +513,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long testRunTime =
         logEventPair(
-            "TESTING",
+            "Testing",
             renderTestSuffix(),
             currentTimeMillis,
             0, /* offsetMs */
@@ -424,6 +529,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               ansi,
               formatTimeFunction,
               currentTimeMillis,
+              outputMaxColumns,
               threadsToRunningTestSummaryEvent,
               threadsToRunningTestStatusMessageEvent,
               threadsToRunningStep,
@@ -432,7 +538,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
 
     logEventPair(
-        "INSTALLING",
+        "Installing",
         /* suffix */ Optional.empty(),
         currentTimeMillis,
         0L,
@@ -446,16 +552,32 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     return lines.build();
   }
 
+  @SuppressWarnings("unused")
   private void getBuildTraceURLLine(ImmutableList.Builder<String> lines) {
     if (buildFinished != null && webServer.isPresent()) {
       Optional<Integer> port = webServer.get().getPort();
       if (port.isPresent()) {
-        lines.add(
-            String.format(
-                locale,
-                "    Details: http://localhost:%s/trace/%s",
-                port.get(),
-                buildFinished.getBuildId()));
+        LOG.debug(
+            "Build logs: http://localhost:%s/trace/%s", port.get(), buildFinished.getBuildId());
+      }
+    }
+  }
+
+  private void getTotalTimeLine(ImmutableList.Builder<String> lines) {
+    if (projectGenerationStarted == null) {
+      // project generation never started
+      // we only output total time if build started and finished
+      if (buildStarted != null && buildFinished != null) {
+        long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
+        lines.add("  Total time: " + formatElapsedTime(durationMs));
+      }
+    } else {
+      // project generation started, it may or may not contain a build
+      // we wait for generation to finish to output time
+      if (projectGenerationFinished != null) {
+        long durationMs =
+            projectGenerationFinished.getTimestamp() - projectGenerationStarted.getTimestamp();
+        lines.add("  Total time: " + formatElapsedTime(durationMs));
       }
     }
   }
@@ -466,9 +588,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     synchronized (distBuildStatusLock) {
       if (!distBuildStatus.isPresent()) {
-        columns.add("STATUS: INIT");
+        columns.add("status: init");
       } else {
-        columns.add("STATUS: " + distBuildStatus.get().getStatus());
+        columns.add("status: " + distBuildStatus.get().getStatus().toLowerCase());
 
         int totalUploadErrorsCount = 0;
         int totalFilesMaterialized = 0;
@@ -492,34 +614,34 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (aggregatedCacheStats.getTotalRulesCount() != 0) {
           columns.add(
               String.format(
-                  "%d [%.1f%%] CACHE MISS",
+                  "%d [%.1f%%] cache miss",
                   aggregatedCacheStats.getCacheMissCount(),
                   aggregatedCacheStats.getCacheMissRate()));
 
           if (aggregatedCacheStats.getCacheErrorCount() != 0) {
             columns.add(
                 String.format(
-                    "%d [%.1f%%] CACHE ERRORS",
+                    "%d [%.1f%%] cache errors",
                     aggregatedCacheStats.getCacheErrorCount(),
                     aggregatedCacheStats.getCacheErrorRate()));
           }
         }
 
         if (totalUploadErrorsCount > 0) {
-          columns.add(String.format("%d UPLOAD ERRORS", totalUploadErrorsCount));
+          columns.add(String.format("%d upload errors", totalUploadErrorsCount));
         }
 
         if (totalFilesMaterialized > 0) {
-          columns.add(String.format("%d FILES MATERIALIZED", totalFilesMaterialized));
+          columns.add(String.format("%d files materialized", totalFilesMaterialized));
         }
 
         if (distBuildStatus.get().getMessage().isPresent()) {
-          columns.add("[" + distBuildStatus.get().getMessage().get() + "]");
+          columns.add(distBuildStatus.get().getMessage().get());
         }
       }
     }
 
-    parseLine = "(" + Joiner.on(", ").join(columns) + ")";
+    parseLine = Joiner.on(", ").join(columns);
     return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
@@ -563,7 +685,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     if (useCompressedLine) {
       lineBuilder.delete(0, lineBuilder.length());
-      lineBuilder.append(" |=> ");
+      lineBuilder.append(" - ");
       lineBuilder.append(threadsWithShortStatus);
       if (fullLines == 0) {
         lineBuilder.append(String.format(" %s:", renderer.getExecutorCollectionLabel()));
@@ -598,19 +720,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       return Optional.empty();
     }
-  }
-
-  /**
-   * @return A string of ansi characters that will clear the last set of lines printed by {@link
-   *     SuperConsoleEventBusListener#createRenderLinesAtTime(long)}.
-   */
-  private String clearLastRender() {
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < lastNumLinesPrinted; ++i) {
-      result.append(ansi.cursorPreviousLine(1));
-      result.append(ansi.clearLine());
-    }
-    return result.toString();
   }
 
   @Override
@@ -814,6 +923,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
+    if (console.getVerbosity().isSilent() && !event.getLevel().equals(Level.SEVERE)) {
+      return;
+    }
     logEvents.add(event);
   }
 
@@ -822,53 +934,79 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     logEvents.add(ConsoleEvent.severe(line));
   }
 
+  private void printInfoDirectlyOnce(String line) {
+    if (console.getVerbosity().isSilent()) {
+      return;
+    }
+    if (!actionGraphCacheMessage.contains(line)) {
+      logEvents.add(ConsoleEvent.info(line));
+      actionGraphCacheMessage.add(line);
+    }
+  }
+
   @Subscribe
   @SuppressWarnings("unused")
   public void actionGraphCacheHit(ActionGraphEvent.Cache.Hit event) {
-    parsingStatus =
-        isZeroFileChanges
-            ? createParsingMessage(EMOJI_BEACH, "(Watchman reported no changes)")
-            : createParsingMessage(EMOJI_BUNNY, "");
+    // We don't need to report when it's fast.
+    if (isZeroFileChanges) {
+      LOG.debug("Action graph cache hit: Watchman reported no changes");
+    } else {
+      LOG.debug("Action graph cache hit");
+    }
+    parsingStatus = Optional.of("actionGraphCacheHit");
   }
 
   @Subscribe
   public void watchmanOverflow(WatchmanStatusEvent.Overflow event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, event.getReason());
+    printInfoDirectlyOnce(
+        "Action graph will be rebuilt because there was an issue with watchman:\n"
+            + event.getReason());
+    parsingStatus = Optional.of("watchmanOverflow: " + event.getReason());
+  }
+
+  private void printFileAddedOrRemoved() {
+    printInfoDirectlyOnce("Action graph will be rebuilt because files have been added or removed.");
   }
 
   @Subscribe
   public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File added: " + event.getFilename());
+    LOG.debug("Watchman notified about file addition: " + event.getFilename());
+    printFileAddedOrRemoved();
+    parsingStatus = Optional.of("watchmanFileCreation");
   }
 
   @Subscribe
   public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
-    parsingStatus = createParsingMessage(EMOJI_SNAIL, "File removed: " + event.getFilename());
+    LOG.debug("Watchman notified about file deletion: " + event.getFilename());
+    printFileAddedOrRemoved();
+    parsingStatus = Optional.of("watchmanFileDeletion");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void watchmanZeroFileChanges(WatchmanStatusEvent.ZeroFileChanges event) {
     isZeroFileChanges = true;
-    parsingStatus = createParsingMessage(EMOJI_BEACH, "Watchman reported no changes");
+    parsingStatus = Optional.of("watchmanZeroFileChanges");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void daemonNewInstance(DaemonEvent.NewDaemonInstance event) {
-    parsingStatus = NEW_DAEMON_INSTANCE_MSG;
+    parsingStatus = Optional.of("daemonNewInstance");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
-    parsingStatus = createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation");
+    printInfoDirectlyOnce("Action graph will be rebuilt because symlinks are used.");
+    parsingStatus = Optional.of("symlinkInvalidation");
   }
 
   @Subscribe
+  @SuppressWarnings("unused")
   public void envVariableChange(ParsingEvent.EnvVariableChange event) {
-    parsingStatus =
-        createParsingMessage(EMOJI_SNAIL, "Environment variable changes: " + event.getDiff());
+    printInfoDirectlyOnce("Action graph will be rebuilt because environment variables changed.");
+    parsingStatus = Optional.of("envVariableChange");
   }
 
   @VisibleForTesting
@@ -899,6 +1037,18 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         String.format(
             "%d new sparse rules imported, %d files added to the working copy",
             sparse_summary.getIncludeRulesAdded(), sparse_summary.getFilesAdded()));
+  }
+
+  @Override
+  protected String formatElapsedTime(long elapsedTimeMs) {
+    long minutes = elapsedTimeMs / 60_000L;
+    long seconds = elapsedTimeMs / 1000 - (minutes * 60);
+    long milliseconds = elapsedTimeMs % 1000;
+    if (elapsedTimeMs >= 60_000L) {
+      return String.format("%02d:%02d.%d min", minutes, seconds, milliseconds / 100);
+    } else {
+      return String.format("%d.%d sec", seconds, milliseconds / 100);
+    }
   }
 
   @VisibleForTesting

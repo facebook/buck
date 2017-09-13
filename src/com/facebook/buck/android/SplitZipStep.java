@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.dalvik.DalvikAwareZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;

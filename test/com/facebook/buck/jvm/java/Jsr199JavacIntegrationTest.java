@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -140,7 +141,8 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
-                JavacCompilationMode.FULL)
+                JavacCompilationMode.FULL,
+                false)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -159,7 +161,8 @@ public class Jsr199JavacIntegrationTest {
   public void shouldWriteResolvedBuildTargetSourcePathsToClassesFile()
       throws IOException, InterruptedException {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = new FakeBuildRule("//:fake");
     resolver.addToIndex(rule);
 
@@ -190,7 +193,8 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
-                JavacCompilationMode.FULL)
+                JavacCompilationMode.FULL,
+                false)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -243,7 +247,8 @@ public class Jsr199JavacIntegrationTest {
   @Test
   public void shouldUseSpecifiedJavacJar() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule rule = new FakeBuildRule("//:fake");
     resolver.addToIndex(rule);
 
@@ -289,7 +294,8 @@ public class Jsr199JavacIntegrationTest {
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
-              JavacCompilationMode.FULL)
+              JavacCompilationMode.FULL,
+              false)
           .buildClasses();
       fail("Did not expect compilation to succeed");
     } catch (OutOfMemoryError ex) {

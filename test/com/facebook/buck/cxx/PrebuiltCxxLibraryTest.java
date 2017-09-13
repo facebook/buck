@@ -26,9 +26,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -52,23 +54,24 @@ public class PrebuiltCxxLibraryTest {
 
     GenruleBuilder genSrcBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_libx"))
-            .setOut("gen_libx")
+            .setOut("libx.a")
             .setCmd("something");
     BuildTarget target = BuildTargetFactory.newInstance("//:x");
     PrebuiltCxxLibraryBuilder builder =
-        new PrebuiltCxxLibraryBuilder(target).setLibName("x").setLibDir("$(location //:gen_libx)");
+        new PrebuiltCxxLibraryBuilder(target)
+            .setStaticLib(new DefaultBuildTargetSourcePath(genSrcBuilder.getTarget()));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildRule genSrc = genSrcBuilder.build(resolver, filesystem, targetGraph);
     filesystem.writeContentsToPath(
-        "class Test {}",
-        pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()).resolve("libx.a"));
+        "class Test {}", pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()));
 
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, targetGraph);
     lib.getNativeLinkableInput(platform, Linker.LinkableDepType.STATIC);

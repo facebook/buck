@@ -1,0 +1,14 @@
+java_test(
+    name = "external",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/model:model",
+        "//src/com/facebook/buck/test/external:events",
+        "//src/com/facebook/buck/test/selectors:selectors",
+        "//test/com/facebook/buck/model:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

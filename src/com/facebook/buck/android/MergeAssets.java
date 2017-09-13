@@ -21,11 +21,12 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -35,8 +36,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,6 +57,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -64,7 +68,7 @@ import java.util.zip.ZipFile;
  * <p>Android's ApkBuilder seemingly would do this, but it doesn't actually compress the assets that
  * are added.
  */
-public class MergeAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class MergeAssets extends AbstractBuildRule {
   // TODO(cjhopman): This should be an input-based rule, but the asset directories are from symlink
   // trees and the file hash caches don't currently handle those correctly. The symlink trees
   // shouldn't actually be necessary anymore as we can just take the full list of source paths
@@ -72,22 +76,27 @@ public class MergeAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final ImmutableSet<SourcePath> assetsDirectories;
   @AddToRuleKey private Optional<SourcePath> baseApk;
 
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
+
   public MergeAssets(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        buildRuleParams.copyAppendingExtraDeps(
-            ImmutableSortedSet.copyOf(
-                ruleFinder.filterBuildRuleInputs(
-                    FluentIterable.from(assetsDirectories).append(baseApk.orElse(null))))));
+    super(buildTarget, projectFilesystem);
     this.baseApk = baseApk;
     this.assetsDirectories = assetsDirectories;
+    this.buildDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                BuildableSupport.deriveDeps(this, ruleFinder)
+                    .collect(MoreCollectors.toImmutableSortedSet()));
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   @Override

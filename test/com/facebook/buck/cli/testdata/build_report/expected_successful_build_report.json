@@ -1,0 +1,16 @@
+{
+  "success" : true,
+  "results" : {
+    "//:rule_with_output" : {
+      "success" : true,
+      "type" : "BUILT_LOCALLY",
+      "output" : "buck-out/gen/rule_with_output/rule_with_output.txt"
+    },
+    "//:rule_without_output" : {
+      "success" : true,
+      "type" : "BUILT_LOCALLY",
+      "output" : null
+    }
+  },
+  "failures" : { }
+}

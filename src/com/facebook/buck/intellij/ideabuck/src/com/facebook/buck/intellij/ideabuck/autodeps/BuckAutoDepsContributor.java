@@ -76,7 +76,7 @@ public class BuckAutoDepsContributor implements PsiDocumentManager.Listener {
 
           @Override
           public void documentChanged(DocumentEvent documentEvent) {
-            if (!BuckSettingsProvider.getInstance().getState().enableAutoDeps) {
+            if (!BuckSettingsProvider.getInstance().isAutoDepsEnabled()) {
               return; // autodeps off, don't bother
             }
             VirtualFile documentFile = FileDocumentManager.getInstance().getFile(document);

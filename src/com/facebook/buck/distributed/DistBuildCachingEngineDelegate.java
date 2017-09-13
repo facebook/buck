@@ -22,20 +22,52 @@ import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Implementation of {@link CachingBuildEngineDelegate} for use when building from a state file in
  * distributed build.
  */
 public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegate {
-  private final StackedFileHashCache remoteStackedFileHashCache;
+  private static final long DEFAULT_PENDING_FILE_MATERIALIZATION_TIMEOUT_SECONDS = 30;
 
+  private final StackedFileHashCache remoteStackedFileHashCache;
+  private final ImmutableList<MaterializerDummyFileHashCache> materializerFileHashCaches;
   private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
       materializingRuleKeyFactories;
+  private final long pendingFileMaterializationTimeoutSeconds;
+
+  public DistBuildCachingEngineDelegate(
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
+      StackedFileHashCache remoteStackedFileHashCache,
+      StackedFileHashCache materializingStackedFileHashCache,
+      long pendingFileMaterializationTimeoutSeconds) {
+    this.remoteStackedFileHashCache = remoteStackedFileHashCache;
+    this.pendingFileMaterializationTimeoutSeconds = pendingFileMaterializationTimeoutSeconds;
+    this.materializingRuleKeyFactories =
+        DistBuildFileHashes.createRuleKeyFactories(
+            sourcePathResolver, ruleFinder, materializingStackedFileHashCache, /* keySeed */ 0);
+
+    this.materializerFileHashCaches =
+        materializingStackedFileHashCache
+            .getCaches()
+            .stream()
+            .filter(cache -> cache instanceof MaterializerDummyFileHashCache)
+            .map(cache -> (MaterializerDummyFileHashCache) cache)
+            .collect(MoreCollectors.toImmutableList());
+  }
 
   /**
    * @param sourcePathResolver Distributed build source parse resolver.
@@ -48,10 +80,12 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache remoteStackedFileHashCache,
       StackedFileHashCache materializingStackedFileHashCache) {
-    this.remoteStackedFileHashCache = remoteStackedFileHashCache;
-    materializingRuleKeyFactories =
-        DistBuildFileHashes.createRuleKeyFactories(
-            sourcePathResolver, ruleFinder, materializingStackedFileHashCache, /* keySeed */ 0);
+    this(
+        sourcePathResolver,
+        ruleFinder,
+        remoteStackedFileHashCache,
+        materializingStackedFileHashCache,
+        DEFAULT_PENDING_FILE_MATERIALIZATION_TIMEOUT_SECONDS);
   }
 
   @Override
@@ -63,8 +97,29 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
   public void onRuleAboutToBeBuilt(BuildRule buildRule) {
     try {
       materializingRuleKeyFactories.get(buildRule.getProjectFilesystem()).build(buildRule);
+      waitForPendingFileMaterialization();
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private void waitForPendingFileMaterialization() {
+    List<ListenableFuture<?>> fileMaterializationFutures =
+        new ArrayList<>(materializerFileHashCaches.size());
+    for (MaterializerDummyFileHashCache cache : materializerFileHashCaches) {
+      fileMaterializationFutures.add(cache.getMaterializationFuturesAsList());
+    }
+
+    ListenableFuture<?> pendingFilesFuture = Futures.allAsList(fileMaterializationFutures);
+
+    try {
+      pendingFilesFuture.get(pendingFileMaterializationTimeoutSeconds, TimeUnit.SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(
+          String.format(
+              "Unexpected error encountered while waiting for files to be materialized: [%s].",
+              e.getMessage()),
+          e);
     }
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -115,6 +116,10 @@ abstract class AbstractApplePlatform
   @Value.Default
   public boolean getAppIncludesFrameworks() {
     return false;
+  }
+
+  public ApplePlatformType getType() {
+    return ApplePlatformType.of(getName());
   }
 
   public static boolean needsCodeSign(String name) {

@@ -91,6 +91,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
+import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildTarget;
@@ -109,6 +110,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasTests;
 import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -281,6 +283,7 @@ public class ProjectGenerator {
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
+  private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -320,8 +323,10 @@ public class ProjectGenerator {
     this.defaultPathResolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
+                new SingleThreadedBuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new DefaultTargetNodeToBuildRuleTransformer(),
+                    buckEventBus)));
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -397,6 +402,10 @@ public class ProjectGenerator {
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     return requiredBuildTargetsBuilder.build();
+  }
+
+  public ImmutableSet<Path> getXcconfigPaths() {
+    return xcconfigPathsBuilder.build();
   }
 
   // Returns true if we ran the project generation and we decided to eventually generate
@@ -757,10 +766,10 @@ public class ProjectGenerator {
           node.castArg(PrebuiltAppleFrameworkDescriptionArg.class)
               .ifPresent(
                   prebuiltFramework -> {
-                    // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case a static
-                    // framework is used, they can escape the incorrect project generation by marking its
-                    // preferred linkage static (what does preferred linkage even mean for a prebuilt thing?
-                    // none of this makes sense anyways).
+                    // Technically (see Apple Tech Notes 2435), static frameworks are lies. In case
+                    // a static framework is used, they can escape the incorrect project generation
+                    // by marking its preferred linkage static (what does preferred linkage even
+                    // mean for a prebuilt thing? none of this makes sense anyways).
                     if (prebuiltFramework.getConstructorArg().getPreferredLinkage()
                         != NativeLinkable.Linkage.STATIC) {
                       filteredRules.add(node);
@@ -892,7 +901,8 @@ public class ProjectGenerator {
         };
 
     BuildRuleResolver emptyBuildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), buckEventBus);
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     for (StringWithMacros flag : flags) {
       StringWithMacrosArg.of(
@@ -927,7 +937,8 @@ public class ProjectGenerator {
 
     TargetNode<?, ?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
     final BuildTarget buildTarget = buildTargetNode.getBuildTarget();
-    final boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftCode(targetNode);
+    final boolean containsSwiftCode =
+        projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
     String buildTargetName = getProductNameForBuildTarget(buildTarget);
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
@@ -1011,9 +1022,9 @@ public class ProjectGenerator {
                 .castArg(AppleTestDescriptionArg.class)
                 .flatMap(
                     testNode -> {
-                      // only application tests share a runtime with their host application and need to
-                      // avoid linking dependencies already linked by the host.
-                      // we know this is an application test if it is not a UI test and has a bundle loader.
+                      // only application tests share a runtime with their host application and need
+                      // to avoid linking dependencies already linked by the host. we know this is
+                      // an application test if it is not a UI test and has a bundle loader.
                       return testNode.getConstructorArg().getIsUiTest()
                           ? Optional.empty()
                           : bundleLoaderNode;
@@ -1021,6 +1032,37 @@ public class ProjectGenerator {
                 .map(this::collectRecursiveLibraryDependencies)
                 .orElse(ImmutableSet.of());
         mutator.setArchives(Sets.difference(targetNodeDeps, excludedDeps));
+      }
+
+      if (!includeFrameworks && isFocusedOnTarget) {
+        // If the current target, which is non-shared (e.g., static lib), depends on other focused
+        // targets which include Swift code, we must ensure those are treated as dependencies so
+        // that Xcode builds the targets in the correct order. Unfortunately, those deps can be
+        // part of other projects which would require cross-project references.
+        //
+        // Thankfully, there's an easy workaround because we can just create a phony copy phase
+        // which depends on the outputs of the deps (i.e., the static libs). The copy phase
+        // will effectively say "Copy libX.a from Products Dir into Products Dir" which is a nop.
+        // To be on the safe side, we're explicitly marking the copy phase as only running for
+        // deployment postprocessing (i.e., "Copy only when installing") which is activated
+        // via Product -> Archive in Xcode.
+        ImmutableSet<PBXFileReference> swiftDeps =
+            collectRecursiveLibraryDependenciesWithSwiftSources(targetNode);
+        if (!swiftDeps.isEmpty()) {
+          CopyFilePhaseDestinationSpec.Builder destSpecBuilder =
+              CopyFilePhaseDestinationSpec.builder();
+          destSpecBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
+          PBXCopyFilesBuildPhase copyFiles = new PBXCopyFilesBuildPhase(destSpecBuilder.build());
+          copyFiles.setRunOnlyForDeploymentPostprocessing(Optional.of(Boolean.TRUE));
+          copyFiles.setName(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
+
+          for (PBXFileReference fileRef : swiftDeps) {
+            PBXBuildFile buildFile = new PBXBuildFile(fileRef);
+            copyFiles.getFiles().add(buildFile);
+          }
+
+          mutator.setSwiftDependenciesBuildPhase(copyFiles);
+        }
       }
 
       // TODO(Task #3772930): Go through all dependencies of the rule
@@ -1034,11 +1076,13 @@ public class ProjectGenerator {
       collectBuildScriptDependencies(
           targetGraph.getAll(targetNode.getDeclaredDeps()), preScriptPhases, postScriptPhases);
       if (isFocusedOnTarget) {
-        mutator.setPreBuildRunScriptPhasesFromTargetNodes(preScriptPhases.build());
+        mutator.setPreBuildRunScriptPhasesFromTargetNodes(
+            preScriptPhases.build(), buildRuleResolverForNode);
         if (copyFilesPhases.isPresent()) {
           mutator.setCopyFilesPhases(copyFilesPhases.get());
         }
-        mutator.setPostBuildRunScriptPhasesFromTargetNodes(postScriptPhases.build());
+        mutator.setPostBuildRunScriptPhasesFromTargetNodes(
+            postScriptPhases.build(), buildRuleResolverForNode);
       }
     }
 
@@ -1079,7 +1123,7 @@ public class ProjectGenerator {
       } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
         TargetNode<AppleBundleDescriptionArg, ?> bundleLoader = bundleLoaderNode.get();
         String bundleLoaderProductName =
-            getProductNameForBuildTarget(bundleLoader.getBuildTarget());
+            getProductName(bundleLoader, bundleLoader.getBuildTarget());
         String bundleLoaderBundleName =
             bundleLoaderProductName
                 + "."
@@ -1225,7 +1269,8 @@ public class ProjectGenerator {
                         buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
 
         ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
-        appendConfigsBuilder.putAll(getFrameworkAndLibrarySearchPathConfigs(targetNode));
+        appendConfigsBuilder.putAll(
+            getFrameworkAndLibrarySearchPathConfigs(targetNode, includeFrameworks));
         appendConfigsBuilder.put(
             "HEADER_SEARCH_PATHS",
             Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)));
@@ -1382,7 +1427,8 @@ public class ProjectGenerator {
   }
 
   private void addPBXTargetDependency(PBXNativeTarget pbxTarget, BuildTarget dependency) {
-    // Xcode appears to only support target dependencies if both targets are within the same project.
+    // Xcode appears to only support target dependencies if both targets are within the same
+    // project.
     // If the desired target dependency is not in the same project, then just ignore it.
     if (!isBuiltByCurrentProject(dependency)) {
       return;
@@ -1409,7 +1455,7 @@ public class ProjectGenerator {
   }
 
   private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
-      TargetNode<?, ?> node) {
+      TargetNode<?, ?> node, boolean includeFrameworks) {
     HashSet<String> frameworkSearchPaths = new HashSet<>();
     frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> librarySearchPaths = new HashSet<>();
@@ -1441,6 +1487,7 @@ public class ProjectGenerator {
                   .getConstructorArg()
                   .getFrameworks()
                   .stream()
+                  .filter(x -> !x.isSDKROOTFrameworkPath())
                   .map(
                       frameworkPath ->
                           FrameworkPath.getUnexpandedSearchPath(
@@ -1481,6 +1528,22 @@ public class ProjectGenerator {
                         }
                       });
             });
+
+    if (includeFrameworks) {
+      // When Xcode compiles static Swift libs, it will include linker commands (LC_LINKER_OPTION)
+      // that will be carried over for the final binary to link to the appropriate Swift overlays
+      // and libs. This means that the final binary must be able to locate the Swift libs in the
+      // library search path. If an Xcode target includes Swift, Xcode will automatically append
+      // the Swift lib folder when invoking the linker. Unfortunately, this will not happen if
+      // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
+      // Xcode does to make sure binaries link successfully if they use Swift directly or
+      // transitively.
+      ImmutableSet<PBXFileReference> swiftDeps =
+          collectRecursiveLibraryDependenciesWithSwiftSources(node);
+      if (swiftDeps.size() > 0) {
+        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
+      }
+    }
 
     ImmutableMap.Builder<String, String> results =
         ImmutableMap.<String, String>builder()
@@ -1752,6 +1815,8 @@ public class ProjectGenerator {
 
       PBXFileReference fileReference = getConfigurationFileReference(targetGroup, xcconfigPath);
       outputConfiguration.setBaseConfigurationReference(fileReference);
+
+      xcconfigPathsBuilder.add(xcconfigPath);
     }
   }
 
@@ -1771,7 +1836,8 @@ public class ProjectGenerator {
       ImmutableList.Builder<TargetNode<?, ?>> preRules,
       ImmutableList.Builder<TargetNode<?, ?>> postRules) {
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription) {
+      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription
+          || targetNode.getDescription() instanceof JsBundleDescription) {
         postRules.add(targetNode);
         requiredBuildTargetsBuilder.add(targetNode.getBuildTarget());
       } else if (targetNode.getDescription() instanceof XcodePostbuildScriptDescription) {
@@ -2075,7 +2141,7 @@ public class ProjectGenerator {
                   .setDestination(PBXCopyFilesBuildPhase.Destination.XPC)
                   .setPath("$(CONTENTS_FOLDER_PATH)/XPCServices")
                   .build());
-          //$CASES-OMITTED$
+          // $CASES-OMITTED$
         default:
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS));
@@ -2233,7 +2299,7 @@ public class ProjectGenerator {
     }
 
     TargetNode<? extends AppleNativeTargetDescriptionArg, ?> appleNode = maybeAppleNode.get();
-    if (!projGenerationStateCache.targetContainsSwiftCode(appleNode)) {
+    if (!projGenerationStateCache.targetContainsSwiftSourceCode(appleNode)) {
       return ImmutableMap.of();
     }
 
@@ -2596,18 +2662,34 @@ public class ProjectGenerator {
                     .orElse(ImmutableList.of()));
   }
 
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependenciesWithOptions(
+      TargetNode<?, ?> targetNode, boolean containsSwiftSources) {
+
+    FluentIterable<TargetNode<?, ?>> libsWithSources =
+        FluentIterable.from(
+                AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                    targetGraph,
+                    Optional.of(dependenciesCache),
+                    AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                    targetNode,
+                    AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
+            .filter(this::isLibraryWithSourcesToCompile);
+
+    if (containsSwiftSources) {
+      libsWithSources = libsWithSources.filter(this::isLibraryWithSwiftSources);
+    }
+
+    return libsWithSources.transform(this::getLibraryFileReference).toSet();
+  }
+
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependencies(
       TargetNode<?, ?> targetNode) {
-    return FluentIterable.from(
-            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                targetGraph,
-                Optional.of(dependenciesCache),
-                AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                targetNode,
-                AppleBuildRules.XCODE_TARGET_DESCRIPTION_CLASSES))
-        .filter(this::isLibraryWithSourcesToCompile)
-        .transform(this::getLibraryFileReference)
-        .toSet();
+    return collectRecursiveLibraryDependenciesWithOptions(targetNode, false);
+  }
+
+  private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependenciesWithSwiftSources(
+      TargetNode<?, ?> targetNode) {
+    return collectRecursiveLibraryDependenciesWithOptions(targetNode, true);
   }
 
   private SourceTreePath getProductsSourceTreePath(TargetNode<?, ?> targetNode) {
@@ -2812,6 +2894,16 @@ public class ProjectGenerator {
       return false;
     }
     return (library.get().getConstructorArg().getSrcs().size() != 0);
+  }
+
+  private boolean isLibraryWithSwiftSources(TargetNode<?, ?> input) {
+    Optional<TargetNode<CxxLibraryDescription.CommonArg, ?>> library =
+        getLibraryNode(targetGraph, input);
+    if (!library.isPresent()) {
+      return false;
+    }
+
+    return projGenerationStateCache.targetContainsSwiftSourceCode(library.get());
   }
 
   /** @return product type of a bundle containing a dylib. */

@@ -31,6 +31,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.file.Paths;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -268,7 +268,7 @@ public class ProjectCommand extends BuildCommand {
     try (CommandThreadManager pool =
         new CommandThreadManager("Project", getConcurrencyLimit(params.getBuckConfig()))) {
 
-      ListeningExecutorService executor = pool.getExecutor();
+      ListeningExecutorService executor = pool.getListeningExecutorService();
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       int result;
@@ -418,8 +418,8 @@ public class ProjectCommand extends BuildCommand {
         new ForwardingProcessListener(
             // Using rawStream to avoid shutting down SuperConsole. This is safe to do
             // because this process finishes before we start parsing process.
-            Channels.newChannel(params.getConsole().getStdOut().getRawStream()),
-            Channels.newChannel(params.getConsole().getStdErr().getRawStream()));
+            params.getConsole().getStdOut().getRawStream(),
+            params.getConsole().getStdErr().getRawStream());
     ListeningProcessExecutor.LaunchedProcess process =
         processExecutor.launchProcess(processExecutorParams, processListener);
     try {
@@ -493,6 +493,11 @@ public class ProjectCommand extends BuildCommand {
     @Override
     public boolean isProcessAnnotations() {
       return processAnnotations;
+    }
+
+    @Override
+    public Verbosity getVerbosity() {
+      return getConsole().getVerbosity();
     }
   }
 

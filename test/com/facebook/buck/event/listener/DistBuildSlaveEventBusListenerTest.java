@@ -57,6 +57,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -84,7 +85,7 @@ public class DistBuildSlaveEventBusListenerTest {
   private StampedeId stampedeId;
   private DistBuildService distBuildServiceMock;
   private BuckEventBus eventBus;
-  private SettableFakeClock clock = new SettableFakeClock(0, 0);
+  private SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
   private FileMaterializationStatsTracker fileMaterializationStatsTracker;
   private FakeDistBuildSlaveTimingStatsTracker slaveStatsTracker;
 
@@ -483,9 +484,11 @@ public class DistBuildSlaveEventBusListenerTest {
             .setTargetGraphDeserializationTimeMillis(0)
             .setActionGraphCreationTimeMillis(ACTION_GRAPH_CREATION_TIME_MS)
             .setSourceFilePreloadTimeMillis(0)
-            .setTotalBuildtimeMillis(0);
+            .setTotalBuildtimeMillis(0)
+            .setDistBuildPreparationTimeMillis(0);
 
     BuildSlaveFinishedStats expectedFinishedStats = new BuildSlaveFinishedStats();
+    expectedFinishedStats.setHostname(HostnameFetching.getHostname());
     expectedFinishedStats.setBuildSlaveStatus(status);
     expectedFinishedStats.setFileMaterializationStats(fileMaterializationStats);
     expectedFinishedStats.setBuildSlavePerStageTimingStats(timingStats);

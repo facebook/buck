@@ -39,13 +39,7 @@ public class TestProgramRunner extends DefaultProgramRunner {
   }
 
   private void checkBuckSettings() throws ExecutionException {
-    final BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
-    if (state == null) {
-      throw new ExecutionException(
-          "Please specify the buck executable path!\n"
-              + "Preference -> Tools -> Buck -> Path to Buck executable");
-    }
-    final String exec = state.buckExecutable;
+    String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
     if (exec == null) {
       throw new ExecutionException(
           "Please specify the buck executable path!\n"

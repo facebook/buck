@@ -302,4 +302,20 @@ public class ParserIntegrationTest {
     bigFileTree.visit(path -> Files.write(path, modifiedContents));
     workspace.runBuckdCommand("build", "//foo/bar:bar").assertSuccess();
   }
+
+  @Test
+  public void testSkylarkParsingOfJavaTargets() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "skylark", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//java/bar:bar", "-c", "parser.polyglot_parsing_enabled=true")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("//java/bar:main", "-c", "parser.polyglot_parsing_enabled=true")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("//java/bar:bar_test", "-c", "parser.polyglot_parsing_enabled=true")
+        .assertSuccess();
+  }
 }

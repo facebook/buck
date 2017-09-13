@@ -24,7 +24,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.projectview.ProjectView;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -39,6 +38,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -197,12 +197,7 @@ public class IjProjectCommandHelper {
   }
 
   private ActionGraphAndResolver getActionGraph(TargetGraph targetGraph) {
-    return actionGraphCache.getActionGraph(
-        buckEventBus,
-        buckConfig.isActionGraphCheckingEnabled(),
-        buckConfig.isSkipActionGraphCache(),
-        targetGraph,
-        buckConfig.getKeySeed());
+    return actionGraphCache.getActionGraph(buckEventBus, targetGraph, buckConfig);
   }
 
   private TargetGraph getProjectGraphForIde(

@@ -16,16 +16,19 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 
 public class StandalonePackageType extends StandaloneTypeMirror implements NoType {
-  private final PackageElement packageElement;
+  private final ArtificialPackageElement packageElement;
 
-  public StandalonePackageType(PackageElement packageElement) {
+  public StandalonePackageType(ArtificialPackageElement packageElement) {
     super(TypeKind.PACKAGE);
     this.packageElement = packageElement;
+  }
+
+  public ArtificialPackageElement asElement() {
+    return packageElement;
   }
 
   @Override

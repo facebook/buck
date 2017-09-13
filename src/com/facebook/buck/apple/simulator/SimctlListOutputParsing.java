@@ -19,6 +19,7 @@ package com.facebook.buck.apple.simulator;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +31,8 @@ public class SimctlListOutputParsing {
   private static final String DEVICE_UDID_GROUP = "udid";
   private static final String DEVICE_STATE_GROUP = "state";
   private static final String DEVICE_UNAVAILABLE_GROUP = "unavailable";
+
+  private static final String TERM_ESCS = "(?:\\u001B\\[[;\\d]*[mK])*";
 
   private static final Pattern SIMCTL_LIST_DEVICES_PATTERN =
       Pattern.compile(
@@ -54,8 +57,9 @@ public class SimctlListOutputParsing {
    * simulatorsBuilder}.
    */
   public static void parseOutput(
-      String output, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) {
+      String output, ImmutableSet.Builder<AppleSimulator> simulatorsBuilder) throws IOException {
     for (String line : MoreStrings.lines(output)) {
+      line = line.replaceAll(TERM_ESCS, "");
       parseLine(line, simulatorsBuilder);
     }
   }

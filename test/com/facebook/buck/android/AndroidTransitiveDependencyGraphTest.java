@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
@@ -33,7 +34,8 @@ public class AndroidTransitiveDependencyGraphTest {
   @Test
   public void findManifestFilesWithTransitiveDeps() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildRule dep3 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep3"))
             .setManifestFile(new FakeSourcePath("manifest3.xml"))

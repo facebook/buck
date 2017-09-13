@@ -67,12 +67,12 @@ public class AndroidFullExopackageBinaryIntegrationTest {
   }
 
   @Test
-  public void testEditingNativeGetsAbiHit() throws IOException {
+  public void testEditingNativeGetsRuleKeyHit() throws IOException {
     // Change the binary and ensure that we re-run apkbuilder.
     workspace.replaceFileContents("native/cxx/lib.cpp", "return 3", "return 7");
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(RESOURCES_EXOPACKAGE_TARGET).assertSuccess();
-    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(RESOURCES_EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetHadMatchingRuleKey(RESOURCES_EXOPACKAGE_TARGET);
   }
 
   @Test

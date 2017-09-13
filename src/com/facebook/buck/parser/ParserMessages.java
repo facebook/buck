@@ -16,9 +16,9 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.HumanReadableException;
 
 public class ParserMessages {

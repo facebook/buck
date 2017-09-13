@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -81,7 +82,8 @@ public class NdkLibraryDescriptionTest {
   @Test
   public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
     FakeBuildRule transitiveInput = resolver.addToIndex(new FakeBuildRule("//:transitive_input"));
     transitiveInput.setOutputFile("out");

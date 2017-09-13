@@ -243,4 +243,15 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public boolean getFreezeGlobals() {
     return getDelegate().getBooleanValue("parser", "freeze_globals", false);
   }
+
+  /**
+   * @return boolean flag indicating whether support for parsing build files using non default
+   *     syntax (currently Python DSL).
+   *     <p>For a list of supported syntax see {@link
+   *     com.facebook.buck.json.HybridProjectBuildFileParser.Syntax}.
+   */
+  @Value.Lazy
+  public boolean isPolyglotParsingEnabled() {
+    return getDelegate().getBooleanValue("parser", "polyglot_parsing_enabled", false);
+  }
 }

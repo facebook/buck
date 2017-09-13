@@ -35,6 +35,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -64,7 +65,8 @@ public class ExternallyBuiltApplePackageTest {
   private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private BuildRuleParams params = TestBuildRuleParams.create();
   private BuildRuleResolver resolver =
-      new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      new SingleThreadedBuildRuleResolver(
+          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
   private ApplePackageConfigAndPlatformInfo config =
       ApplePackageConfigAndPlatformInfo.of(
           ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),

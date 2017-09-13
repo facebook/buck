@@ -48,7 +48,7 @@ public class TestWithBuckd extends ExternalResource {
             ImmutableSet.of(temporaryPaths.getRoot()),
             getWatchmanEnv(),
             new TestConsole(),
-            new FakeClock(0),
+            FakeClock.DO_NOT_CARE,
             Optional.empty());
 
     // We assume watchman has been installed and configured properly on the system, and that setting

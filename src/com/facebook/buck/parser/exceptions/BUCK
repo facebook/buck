@@ -1,0 +1,8 @@
+java_library(
+    name = "exceptions",
+    srcs = glob([
+        "*.java",
+    ]),
+    visibility = ["PUBLIC"],
+    deps = ["//src/com/facebook/buck/util:exceptions"],
+)

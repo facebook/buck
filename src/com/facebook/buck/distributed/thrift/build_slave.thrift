@@ -88,6 +88,7 @@ struct BuildSlavePerStageTimingStats {
     4: optional i64 targetGraphDeserializationTimeMillis;
     5: optional i64 actionGraphCreationTimeMillis;
     6: optional i64 totalBuildtimeMillis;
+    7: optional i64 distBuildPreparationTimeMillis;
 }
 
 struct BuildSlaveFinishedStats {
@@ -95,4 +96,5 @@ struct BuildSlaveFinishedStats {
     2: optional i32 exitCode;
     3: optional FileMaterializationStats fileMaterializationStats;
     4: optional BuildSlavePerStageTimingStats buildSlavePerStageTimingStats;
+    5: optional string hostname;
 }

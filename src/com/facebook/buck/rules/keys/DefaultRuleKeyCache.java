@@ -30,7 +30,6 @@ import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -97,7 +96,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   private final LongAdder totalLoadTime = new LongAdder();
   private final LongAdder evictionCount = new LongAdder();
 
-  public DefaultRuleKeyCache(Clock clock) {
+  DefaultRuleKeyCache(Clock clock) {
     this.clock = clock;
   }
 
@@ -165,12 +164,12 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   }
 
   @VisibleForTesting
-  public boolean isCached(BuildRule rule) {
+  boolean isCached(BuildRule rule) {
     return isCachedNode(rule);
   }
 
   @VisibleForTesting
-  public boolean isCached(AddsToRuleKey appendable) {
+  boolean isCached(AddsToRuleKey appendable) {
     return isCachedNode(appendable);
   }
 
@@ -209,16 +208,6 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
     }
   }
 
-  @Override
-  public void invalidateInputsMatchingRelativePath(Path path) {
-    Preconditions.checkArgument(!path.isAbsolute());
-    invalidateInputs(
-        inputsIndex
-            .keySet()
-            .stream()
-            .filter(input -> path.equals(input.getPath()))
-            .collect(Collectors.toList()));
-  }
   /**
    * Invalidate all inputs *not* from the given {@link ProjectFilesystem}s and their transitive
    * dependents.
@@ -273,16 +262,12 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   @Override
   public ImmutableList<Map.Entry<BuildRule, V>> getCachedBuildRules() {
     ImmutableList.Builder<Map.Entry<BuildRule, V>> builder = ImmutableList.builder();
-    cache
-        .entrySet()
-        .forEach(
-            entry -> {
-              if (entry.getKey().delegate instanceof BuildRule) {
-                builder.add(
-                    new AbstractMap.SimpleEntry<>(
-                        (BuildRule) entry.getKey().delegate, entry.getValue().get()));
-              }
-            });
+    cache.forEach(
+        (key, value) -> {
+          if (key.delegate instanceof BuildRule) {
+            builder.add(new AbstractMap.SimpleEntry<>((BuildRule) key.delegate, value.get()));
+          }
+        });
     return builder.build();
   }
 

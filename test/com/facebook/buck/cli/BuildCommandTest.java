@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -57,7 +58,8 @@ public class BuildCommandTest {
   @Before
   public void setUp() {
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
@@ -101,7 +103,10 @@ public class BuildCommandTest {
             + "\n"
             + "\u001B[31mFAIL\u001B[0m //fake:rule2\n"
             + "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n"
-            + "\u001B[31mFAIL\u001B[0m //fake:rule4\n";
+            + "\u001B[31mFAIL\u001B[0m //fake:rule4\n"
+            + "\n"
+            + " ** Summary of failures encountered during the build **\n"
+            + "Rule //fake:rule2 FAILED because some.\n";
     String observedReport =
         new BuildReport(buildExecutionResult, resolver)
             .generateForConsole(

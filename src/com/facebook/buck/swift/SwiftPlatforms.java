@@ -16,9 +16,12 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.rules.Tool;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,7 +33,10 @@ public class SwiftPlatforms {
   public static SwiftPlatform build(
       String platformName, Set<Path> toolchainPaths, Tool swiftc, Optional<Tool> swiftStdLibTool) {
     SwiftPlatform.Builder builder =
-        SwiftPlatform.builder().setSwiftc(swiftc).setSwiftStdlibTool(swiftStdLibTool);
+        SwiftPlatform.builder()
+            .setSwiftc(swiftc)
+            .setSwiftStdlibTool(swiftStdLibTool)
+            .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName));
 
     for (Path toolchainPath : toolchainPaths) {
       Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);
@@ -44,5 +50,17 @@ public class SwiftPlatforms {
       }
     }
     return builder.build();
+  }
+
+  private static ImmutableList<Path> buildSharedRunPaths(String platformName) {
+    ApplePlatformType platformType = ApplePlatformType.of(platformName);
+    if (platformType == ApplePlatformType.MAC) {
+      return ImmutableList.of(
+          Paths.get("@executable_path", "..", "Frameworks"),
+          Paths.get("@loader_path", "..", "Frameworks"));
+    }
+
+    return ImmutableList.of(
+        Paths.get("@executable_path", "Frameworks"), Paths.get("@loader_path", "Frameworks"));
   }
 }

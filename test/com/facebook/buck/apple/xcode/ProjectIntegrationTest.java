@@ -352,4 +352,34 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testBuckProjectFocusWithTests() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_focus_with_tests", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.ide=xcode",
+            "--with-tests",
+            "--focus",
+            "//Tests:",
+            "//Apps:TestApp");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testGeneratingProjectMetadataWithGenrule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "target_using_genrule_source", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("project", "//lib:lib");
+    workspace.verify();
+  }
 }

@@ -16,9 +16,7 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -37,6 +35,8 @@ java_test(
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+        "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
         "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/doctor/config:config",
@@ -179,9 +179,7 @@ java_test(
     run_test_separately = True,
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",

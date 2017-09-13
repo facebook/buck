@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -50,7 +51,8 @@ public class StringWithMacrosArgTest {
       TestCellPathResolver.get(new FakeProjectFilesystem());
 
   private final BuildRuleResolver resolver =
-      new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      new SingleThreadedBuildRuleResolver(
+          TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
 
   @Test
   public void getDeps() throws NoSuchBuildTargetException {

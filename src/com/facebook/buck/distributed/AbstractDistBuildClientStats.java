@@ -38,7 +38,13 @@ abstract class AbstractDistBuildClientStats {
 
   abstract Optional<Integer> localBuildExitCode();
 
+  abstract Optional<Long> postDistBuildLocalStepsDurationMs();
+
   abstract Optional<Long> localBuildDurationMs();
+
+  abstract Optional<Long> localPreparationDurationMs();
+
+  abstract Optional<Long> localGraphConstructionDurationMs();
 
   abstract Optional<Long> performDistributedBuildDurationMs();
 
@@ -55,4 +61,8 @@ abstract class AbstractDistBuildClientStats {
   abstract Optional<Long> missingFilesUploadedCount();
 
   abstract Optional<Long> materializeSlaveLogsDurationMs();
+
+  abstract Optional<Long> publishBuildSlaveFinishedStatsDurationMs();
+
+  abstract Optional<Long> postBuildAnalysisDurationMs();
 }

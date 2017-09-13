@@ -1,13 +1,14 @@
 java_test(
     name = "rules",
-    srcs = glob(["*Test.java"]),
+    srcs = glob([
+        "*Test.java",
+        "modern/**/*.java",
+    ]),
     has_immutable_types = True,
     resources = glob(["testdata/**"]),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -97,6 +98,7 @@ java_test(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",
@@ -195,14 +197,15 @@ java_immutables_library(
         ["*.java"],
         excludes = ["*Test.java"],
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/parser:rule_pattern",
+    ],
     visibility = [
         "//test/...",
     ],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
@@ -248,7 +251,6 @@ java_immutables_library(
         "//src/com/facebook/buck/model:macros",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/query:query",

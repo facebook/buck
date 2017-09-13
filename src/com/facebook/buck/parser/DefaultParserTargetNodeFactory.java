@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
@@ -53,7 +54,7 @@ import java.util.Optional;
 
 /**
  * Creates {@link TargetNode} instances from raw data coming in form the {@link
- * com.facebook.buck.json.ProjectBuildFileParser}.
+ * ProjectBuildFileParser}.
  */
 public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<TargetNode<?, ?>> {
 

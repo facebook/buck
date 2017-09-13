@@ -21,6 +21,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -131,7 +132,7 @@ public class CommandAliasBuilder
     nodes.add(build());
     TargetGraph graph = TargetGraphFactory.newInstance(nodes);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
 
     return new BuildResult(
         (CommandAlias) resolver.requireRule(getTarget()), getPopulatedArg(), resolver);

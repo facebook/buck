@@ -33,7 +33,10 @@ public class ServerHealthManagerTest {
           URI.create("http://localhost:8484"),
           URI.create("http://localhost:2121"));
 
-  private static final long NOW_MILLIS = 0;
+  private static final long NOW_MILLIS = 1409702151000L;
+  private static final long NOW_NANO_TIME = 3000000;
+  private static final FakeClock NOW_FAKE_CLOCK =
+      FakeClock.builder().currentTimeMillis(NOW_MILLIS).nanoTime(NOW_NANO_TIME).build();
   private static final int RANGE_MILLIS = 42;
   private static final float MAX_ERROR_PERCENTAGE = 0.1f;
   private static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 42;
@@ -93,7 +96,7 @@ public class ServerHealthManagerTest {
         RANGE_MILLIS,
         MAX_ACCEPTABLE_LATENCY_MILLIS,
         eventBus,
-        new FakeClock(NOW_MILLIS));
+        NOW_FAKE_CLOCK);
   }
 
   private static void reportErrorToAll(ServerHealthManager manager, int numberOfErrors) {

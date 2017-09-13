@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import java.util.Optional;
 import java.util.regex.Pattern;
 

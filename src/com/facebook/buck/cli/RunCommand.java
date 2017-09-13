@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -172,8 +171,7 @@ public final class RunCommand extends AbstractCommand {
               .build();
       ForwardingProcessListener processListener =
           new ForwardingProcessListener(
-              Channels.newChannel(params.getConsole().getStdOut()),
-              Channels.newChannel(params.getConsole().getStdErr()));
+              params.getConsole().getStdOut(), params.getConsole().getStdErr());
       ListeningProcessExecutor.LaunchedProcess process =
           processExecutor.launchProcess(processExecutorParams, processListener);
       try {

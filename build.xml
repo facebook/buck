@@ -135,6 +135,7 @@
     <include name="stringtemplate/ST-4.0.8.jar" />
     <include name="thrift/libthrift-0.10.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
+    <include name="bazel/skylark-lang_deploy.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
@@ -274,6 +275,7 @@
         <include name="${bootstrapper.src.dir}/**/*.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
+        <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
       </javac-params>
@@ -323,6 +325,7 @@
       <javac-params>
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Preconditions.java" />
+        <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
       </javac-params>
@@ -517,6 +520,7 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.7.7.201606060606.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/asm/asm-debug-all-5.0.3.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-20.0.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
       </fileset>

@@ -191,6 +191,47 @@ public class StubJarTest {
   }
 
   @Test
+  public void stubsOverloadedMethods() throws IOException {
+    tester
+        .setSourceFile(
+            "Dependency.java", "package com.example.buck;", "public class Dependency {", "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "Dependency2.java", "package com.example.buck;", "public class Dependency2 {", "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public void overloaded(Dependency d) { }",
+            "  public void overloaded(String s) { }",
+            "  public void overloaded(Dependency2 d) { }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "",
+            "  // access flags 0x1",
+            "  public overloaded(Lcom/example/buck/Dependency;)V",
+            "",
+            "  // access flags 0x1",
+            "  public overloaded(Ljava/lang/String;)V",
+            "",
+            "  // access flags 0x1",
+            "  public overloaded(Lcom/example/buck/Dependency2;)V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void preservesThrowsClauses() throws IOException {
     tester
         .setSourceFile(
@@ -236,7 +277,7 @@ public class StubJarTest {
             "  public <init>()V",
             "",
             "  // access flags 0x1",
-            "  // signature <E:Ljava/io/IOException;>()V^TE;",
+            "  // signature <E::Ljava/io/IOException;>()V^TE;",
             "  // declaration: void throwSomeStuff<E extends java.io.IOException>() throws E",
             "  public throwSomeStuff()V throws java/io/IOException ",
             "}")
@@ -256,7 +297,7 @@ public class StubJarTest {
             "com/example/buck/A",
             "// class version 52.0 (52)",
             "// access flags 0x21",
-            "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
+            "// signature <T::Ljava/lang/Object;>Ljava/lang/Object;",
             "// declaration: com/example/buck/A<T>",
             "public class com/example/buck/A {",
             "",
@@ -368,10 +409,10 @@ public class StubJarTest {
             "  public INNERCLASS com/example/buck/A$C com/example/buck/A C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
-            "  // access flags 0x0",
-            "  INNERCLASS com/example/buck/F$G com/example/buck/F G",
-            "  // access flags 0x0",
-            "  INNERCLASS com/example/buck/F$H com/example/buck/F H",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/F$G com/example/buck/F G",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/F$H com/example/buck/F H",
             "",
             "  // access flags 0x0",
             "  Z first",
@@ -451,7 +492,7 @@ public class StubJarTest {
             "com/example/buck/A",
             "// class version 52.0 (52)",
             "// access flags 0x601",
-            "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
+            "// signature <T::Ljava/lang/Object;>Ljava/lang/Object;",
             "// declaration: com/example/buck/A<T>",
             "public abstract interface com/example/buck/A {",
             "",
@@ -597,8 +638,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/Outer$Inner$Nested {",
             "",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/Outer$Inner$Nested com/example/buck/Outer$Inner Nested",
             "",
@@ -694,7 +735,7 @@ public class StubJarTest {
             "com/example/buck/A",
             "// class version 52.0 (52)",
             "// access flags 0x21",
-            "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
+            "// signature <T::Ljava/lang/Object;>Ljava/lang/Object;",
             "// declaration: com/example/buck/A<T>",
             "public class com/example/buck/A {",
             "",
@@ -724,7 +765,7 @@ public class StubJarTest {
             "com/example/buck/A",
             "// class version 52.0 (52)",
             "// access flags 0x21",
-            "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
+            "// signature <T::Ljava/lang/Object;>Ljava/lang/Object;",
             "// declaration: com/example/buck/A<T>",
             "public class com/example/buck/A {",
             "",
@@ -743,6 +784,28 @@ public class StubJarTest {
             "  public compareWith(Ljava/lang/Object;)Ljava/lang/Comparable;",
             "}")
         .createAndCheckStubJar();
+  }
+
+  @Test
+  public void providesNiceErrorWhenAnnotationMissing() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    createAnnotationFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  @Foo",
+            "  public void cheese(String key) {}",
+            "}")
+        .addExpectedCompileError(
+            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_abi = True to its build rule.\n"
+                + "  @Foo\n"
+                + "  ^")
+        .createStubJar();
   }
 
   @Test
@@ -850,14 +913,14 @@ public class StubJarTest {
             "com/example/buck/A",
             "// class version 52.0 (52)",
             "// access flags 0x21",
-            "// signature <T:Ljava/lang/Object;>Ljava/lang/Object;",
+            "// signature <T::Ljava/lang/Object;>Ljava/lang/Object;",
             "// declaration: com/example/buck/A<T>",
             "public class com/example/buck/A {",
             "",
             "",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : CLASS_TYPE_PARAMETER 0, null // invisible",
-            "  // access flags 0x2609",
-            "  public static abstract INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -887,14 +950,14 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x2609",
-            "  public static abstract INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
             "",
             "  // access flags 0x0",
-            "  // signature <T:Ljava/lang/Object;>(Ljava/lang/String;)V",
+            "  // signature <T::Ljava/lang/Object;>(Ljava/lang/String;)V",
             "  // declaration: void foo<T>(java.lang.String)",
             "  foo(Ljava/lang/String;)V",
             "  @Lcom/example/buck/Foo$TypeAnnotation;() : METHOD_TYPE_PARAMETER 0, null // invisible",
@@ -926,8 +989,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x2609",
-            "  public static abstract INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/Foo$TypeAnnotation com/example/buck/Foo TypeAnnotation",
             "",
             "  // access flags 0x0",
             "  // signature Ljava/util/List<Ljava/lang/String;>;",
@@ -1113,14 +1176,16 @@ public class StubJarTest {
 
   @Test
   public void preservesAnnotationsWithTypeValues() throws IOException {
-    notYetImplementedForMissingClasspath();
-
     createAnnotationFullJar()
-        .addFullJarToClasspath()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java", "package com.example.buck;", "public class Dependency { }")
+        .createStubJar()
+        .addStubJarToClasspath()
         .setSourceFile(
             "A.java",
             "package com.example.buck;",
-            "@Foo(typeValue=String.class)",
+            "@Foo(typeValue=Dependency.class)",
             "public @interface A {}")
         .addExpectedStub(
             "com/example/buck/A",
@@ -1129,7 +1194,62 @@ public class StubJarTest {
             "public abstract @interface com/example/buck/A implements java/lang/annotation/Annotation  {",
             "",
             "",
-            "  @Lcom/example/buck/Foo;(typeValue=java.lang.String.class)",
+            "  @Lcom/example/buck/Foo;(typeValue=com.example.buck.Dependency.class)",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void providesNiceErrorWhenConstantMissing() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    createAnnotationFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java",
+            "package com.example.buck;",
+            "public class Dependency { public static final String STRING = \"string\";}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "@Foo(stringValue=Dependency.STRING)",
+            "public @interface A {}")
+        .addExpectedCompileError(
+            "A.java:2: error: Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.\n"
+                + "@Foo(stringValue=Dependency.STRING)\n"
+                + "                           ^")
+        .createStubJar();
+  }
+
+  @Test
+  public void preservesAnnotationsWithConstantValues() throws IOException {
+    notYetImplementedForMissingClasspath();
+
+    createAnnotationFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "Dependency.java",
+            "package com.example.buck;",
+            "public class Dependency { public static final String STRING = \"string\";}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "@Foo(stringValue=Dependency.STRING)",
+            "public @interface A {}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x2601",
+            "public abstract @interface com/example/buck/A implements java/lang/annotation/Annotation  {",
+            "",
+            "",
+            "  @Lcom/example/buck/Foo;(stringValue=\"string\")",
             "}")
         .createAndCheckStubJar();
   }
@@ -1207,6 +1327,10 @@ public class StubJarTest {
   public void preservesAnnotationDefaultValues() throws IOException {
     tester
         .setSourceFile(
+            "Dependency.java", "package com.example.buck;", "public class Dependency { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
             "Foo.java",
             "package com.example.buck;",
             "import java.lang.annotation.*;",
@@ -1216,7 +1340,7 @@ public class StubJarTest {
             "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
             "  Retention[] annotationArrayValue() default {@Retention(RetentionPolicy.SOURCE), @Retention(RetentionPolicy.CLASS), @Retention(RetentionPolicy.RUNTIME)};",
             "  RetentionPolicy enumValue () default RetentionPolicy.CLASS;",
-            "  Class typeValue() default Foo.class;",
+            "  Class typeValue() default Dependency.class;",
             "}")
         .addExpectedStub(
             "com/example/buck/Foo",
@@ -1247,7 +1371,7 @@ public class StubJarTest {
             "",
             "  // access flags 0x401",
             "  public abstract typeValue()Ljava/lang/Class;",
-            "    default=com.example.buck.Foo.class",
+            "    default=com.example.buck.Dependency.class",
             "}")
         .createAndCheckStubJar();
   }
@@ -1810,10 +1934,10 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A$B$C$D {",
             "",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/A$B$C com/example/buck/A$B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/A$B$C com/example/buck/A$B C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B$C$D com/example/buck/A$B$C D",
             "",
@@ -1851,8 +1975,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A$B$C {",
             "",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/A$B com/example/buck/A B",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/A$B$C com/example/buck/A$B C",
             "  // access flags 0x1",
@@ -1975,10 +2099,10 @@ public class StubJarTest {
             "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
             // Inenrclass entries for references to other classes are sorted. Otherwise the order
             // in class-based ABIs could be influenced by references inside method bodies.
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/B$C com/example/buck/B C",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
             "  // access flags 0x0",
             "  Lcom/example/buck/B$C$D; field1",
@@ -2004,8 +2128,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/B$C$D {",
             "",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
             "  // access flags 0x1",
             "  public INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
@@ -2091,10 +2215,10 @@ public class StubJarTest {
             "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
             // Inenrclass entries for references to other classes are sorted. Otherwise the order
             // in class-based ABIs could be influenced by references inside method bodies.
-            "  // access flags 0x9",
-            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
-            "  // access flags 0x9",
-            "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
             "  // access flags 0x0",
             "  Lcom/example/buck/B$C$D; field1",
@@ -2120,8 +2244,8 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/B$C$D {",
             "",
-            "  // access flags 0x9",
-            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
             "  // access flags 0x9",
             "  public static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
@@ -2207,10 +2331,10 @@ public class StubJarTest {
             "  INNERCLASS com/example/buck/A$Inner com/example/buck/A Inner",
             // Inenrclass entries for references to other classes are sorted. Otherwise the order
             // in class-based ABIs could be influenced by references inside method bodies.
-            "  // access flags 0x9",
-            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
-            "  // access flags 0x4019",
-            "  public final static enum INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
             "  // access flags 0x0",
             "  Lcom/example/buck/B$C$D; field1",
@@ -2238,8 +2362,8 @@ public class StubJarTest {
             "// declaration: com/example/buck/B$C$D extends java.lang.Enum<com.example.buck.B$C$D>",
             "public final enum com/example/buck/B$C$D extends java/lang/Enum  {",
             "",
-            "  // access flags 0x9",
-            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$C com/example/buck/B C",
             "  // access flags 0x4019",
             "  public final static enum INNERCLASS com/example/buck/B$C$D com/example/buck/B$C D",
             "",
@@ -2311,10 +2435,10 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
-            "  // access flags 0x1",
-            "  public INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
             "",
             "  // access flags 0x1",
             "  public Lcom/example/buck/imported/Imported$Inner$Innerer; field",
@@ -2348,8 +2472,8 @@ public class StubJarTest {
             "",
             "",
             "  @Lcom/example/buck/Anno;(value=com.example.buck.B$Inner.class) // invisible",
-            "  // access flags 0x0",
-            "  INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/B$Inner com/example/buck/B Inner",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -2773,8 +2897,6 @@ public class StubJarTest {
 
   @Test
   public void shouldIncludeInnerClassTypeParameterReferenceInMethodParameter() throws IOException {
-    notYetImplementedForMissingClasspath();
-
     tester
         .setSourceFile(
             "Outer.java",
@@ -2798,8 +2920,8 @@ public class StubJarTest {
             "// access flags 0x601",
             "public abstract interface com/example/buck/A {",
             "",
-            "  // access flags 0x4019",
-            "  public final static enum INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/Outer$Inner com/example/buck/Outer Inner",
             "",
             "  // access flags 0x401",
             "  // signature (Ljava/util/Set<Lcom/example/buck/Outer$Inner;>;)V",
@@ -2887,6 +3009,202 @@ public class StubJarTest {
             "public class A {",
             "  private Outer.Inner field;", // Reference the inner class
             "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void stubsWithNestedClassReferencesCanBeCompiledAgainst() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck;",
+            "public class Dep<T> {",
+            "  public static class Nested<U> {",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "UsesDepNested.java",
+            "package com.example.buck;",
+            "public class UsesDepNested {",
+            "  public Dep.Nested<Integer> nested;",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public UsesDepNested uses;", // Load the inner class reference first
+            "  public Dep.Nested<Integer> nested;", // See if it messes up usage
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void stubsWithNestedEnumReferencesCanBeCompiledAgainst() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck;",
+            "public class Dep {",
+            "  public static enum Nested {",
+            "    One,",
+            "    Two",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "UsesDepNested.java",
+            "package com.example.buck;",
+            "public class UsesDepNested {",
+            "  public Dep.Nested nested;",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public UsesDepNested uses;", // Load the inner class reference first
+            "  public Enum nested = Dep.Nested.One;", // See if it messes up usage
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void stubsWithNestedInterfaceReferencesCanBeCompiledAgainst() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck;",
+            "public class Dep<T> {",
+            "  public interface Nested<U> {",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "UsesDepNested.java",
+            "package com.example.buck;",
+            "public class UsesDepNested {",
+            "  public Dep.Nested<Integer> nested;",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public UsesDepNested uses;", // Load the inner class reference first
+            "  public Dep.Nested<Integer> nested;", // See if it messes up usage
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void stubsWithNestedInterfaceReferencesDetectIncorrectUsage() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck;",
+            "public class Dep<T> {",
+            "  public interface Nested<U> {",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "UsesDepNested.java",
+            "package com.example.buck;",
+            "public class UsesDepNested {",
+            "  public Dep.Nested<Integer> nested;",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public UsesDepNested uses;", // Load the inner class reference first
+            "  public Dep<String>.Nested<Integer> nested;", // See if it messes up usage
+            "}")
+        .addExpectedCompileError(
+            "A.java:4: error: cannot select a static class from a parameterized type\n"
+                + "  public Dep<String>.Nested<Integer> nested;\n"
+                + "                    ^")
+        .testCanCompile();
+  }
+
+  @Test
+  public void stubsWithInnerClassReferencesCanBeCompiledAgainst() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck;",
+            "public class Dep<T> {",
+            "  public class Inner<U> {",
+            "    public class Innerer<V> { }",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "UsesDepInner.java",
+            "package com.example.buck;",
+            "public class UsesDepInner {",
+            "  public Dep<String>.Inner<Integer>.Innerer<Long> inner;",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public UsesDepInner uses;", // Load the inner class reference first
+            "  public Dep<String>.Inner<Integer>.Innerer<Long> inner;", // See if it messes up usage
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void stubsWithInnerClassReferencesDetectIncorrectUsage() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck;",
+            "public class Dep<T> {",
+            "  public class Inner<U> {",
+            "    public class Innerer<V> { }",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "UsesDepInner.java",
+            "package com.example.buck;",
+            "public class UsesDepInner {",
+            "  public Dep<String>.Inner<Integer>.Innerer<Long> inner;",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public UsesDepInner uses;", // Load the inner class reference first
+            "  public Dep<String>.Inner.Innerer<Long> inner;", // See if it messes up usage
+            "}")
+        .addExpectedCompileError(
+            "A.java:4: error: improperly formed type, type arguments given on a raw type\n"
+                + "  public Dep<String>.Inner.Innerer<Long> inner;\n"
+                + "                                  ^")
+        .addExpectedCompileError(
+            "A.java:4: error: improperly formed type, some parameters are missing\n"
+                + "  public Dep<String>.Inner.Innerer<Long> inner;\n"
+                + "                    ^")
         .testCanCompile();
   }
 
@@ -3492,8 +3810,8 @@ public class StubJarTest {
             "",
             "",
             "  @Lcom/example/buck/A$Anno;() // invisible",
-            "  // access flags 0x2609",
-            "  public static abstract INNERCLASS com/example/buck/A$Anno com/example/buck/A Anno",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/A$Anno com/example/buck/A Anno",
             "}")
         .createAndCheckStubJar();
   }
@@ -3664,54 +3982,6 @@ public class StubJarTest {
         .createAndCheckStubJar();
   }
 
-  private Path createStubJar(
-      SortedSet<Path> classpath,
-      DeterministicManifest manifest,
-      String fileName,
-      String source,
-      Path outputDir)
-      throws IOException {
-    Path stubJar = outputDir.resolve("stub.jar");
-    JarBuilder jarBuilder = new JarBuilder();
-
-    try (TestCompiler testCompiler = new TestCompiler()) {
-      testCompiler.init();
-      if (manifest != null) {
-        testCompiler.setManifest(manifest);
-      }
-      testCompiler.useFrontendOnlyJavacTask();
-      testCompiler.addSourceFileContents(fileName, source);
-      testCompiler.addClasspath(classpath);
-      testCompiler.setProcessors(
-          ImmutableList.of(
-              new AbstractProcessor() {
-                @Override
-                public Set<String> getSupportedAnnotationTypes() {
-                  return Collections.singleton("*");
-                }
-
-                @Override
-                public boolean process(
-                    Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-                  return false;
-                }
-              }));
-      StubGenerator generator =
-          new StubGenerator(
-              SourceVersion.RELEASE_8,
-              testCompiler.getElements(),
-              jarBuilder,
-              new JavacEventSinkToBuckEventBusBridge(
-                  new DefaultBuckEventBus(new FakeClock(0), new BuildId())));
-
-      testCompiler.addPostEnterCallback(generator::generate);
-      testCompiler.enter();
-      testCompiler.getClasses().writeToJar(jarBuilder);
-      jarBuilder.createJarFile(stubJar);
-    }
-    return stubJar;
-  }
-
   private Path createStubJar(Path fullJar) throws IOException {
     Path stubJar = fullJar.getParent().resolve("stub.jar");
     new StubJar(fullJar).setSourceAbiCompatible(true).writeTo(filesystem, stubJar);
@@ -3754,6 +4024,7 @@ public class StubJarTest {
             "@Target(value={CONSTRUCTOR, FIELD, METHOD, PARAMETER, TYPE})",
             "public @interface Foo {",
             "  int primitiveValue() default 0;",
+            "  String stringValue() default \"default\";",
             "  String[] stringArrayValue() default {\"Hello\"};",
             "  Retention annotationValue() default @Retention(RetentionPolicy.SOURCE);",
             "  Retention[] annotationArrayValue() default {};",
@@ -3787,6 +4058,7 @@ public class StubJarTest {
     private List<String> actualStubManifest;
     private String sourceFileName = "";
     private String sourceFileContents = "";
+    private ImmutableSortedSet<Path> universalClasspath = EMPTY_CLASSPATH;
     private ImmutableSortedSet<Path> classpath = EMPTY_CLASSPATH;
     private Path stubJarPath;
     private Path fullJarPath;
@@ -3903,13 +4175,78 @@ public class StubJarTest {
     public Tester createStubJar() throws IOException {
       File outputDir = temp.newFolder();
       if (testingMode != MODE_JAR_BASED) {
-        stubJarPath =
-            StubJarTest.this.createStubJar(
-                testingMode == MODE_SOURCE_BASED ? classpath : Collections.emptySortedSet(),
-                manifest,
-                sourceFileName,
-                sourceFileContents,
-                outputDir.toPath());
+        SortedSet<Path> classpath1 =
+            testingMode == MODE_SOURCE_BASED
+                ? ImmutableSortedSet.<Path>naturalOrder()
+                    .addAll(universalClasspath)
+                    .addAll(classpath)
+                    .build()
+                : universalClasspath;
+        Path stubJar = outputDir.toPath().resolve("stub.jar");
+        JarBuilder jarBuilder = new JarBuilder();
+
+        try (TestCompiler testCompiler = new TestCompiler()) {
+          testCompiler.init();
+          if (manifest != null) {
+            testCompiler.setManifest(manifest);
+          }
+          testCompiler.useFrontendOnlyJavacTask();
+          testCompiler.addSourceFileContents(sourceFileName, sourceFileContents);
+          testCompiler.addClasspath(classpath1);
+          testCompiler.setProcessors(
+              Collections.singletonList(
+                  new AbstractProcessor() {
+                    @Override
+                    public Set<String> getSupportedAnnotationTypes() {
+                      return Collections.singleton("*");
+                    }
+
+                    @Override
+                    public SourceVersion getSupportedSourceVersion() {
+                      return SourceVersion.RELEASE_8;
+                    }
+
+                    @Override
+                    public Set<String> getSupportedOptions() {
+                      return Collections.emptySet();
+                    }
+
+                    @Override
+                    public boolean process(
+                        Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                      return false;
+                    }
+                  }));
+          StubGenerator generator =
+              new StubGenerator(
+                  SourceVersion.RELEASE_8,
+                  testCompiler.getElements(),
+                  testCompiler.getMessager(),
+                  jarBuilder,
+                  new JavacEventSinkToBuckEventBusBridge(
+                      new DefaultBuckEventBus(FakeClock.DO_NOT_CARE, new BuildId())));
+
+          testCompiler.addPostEnterCallback(generator::generate);
+          testCompiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());
+          testCompiler.enter();
+
+          if (expectedCompileErrors.isEmpty()) {
+            testCompiler.getClasses().writeToJar(jarBuilder);
+            jarBuilder.createJarFile(stubJar);
+          } else {
+            List<String> actualCompileErrors =
+                testCompiler
+                    .getDiagnosticMessages()
+                    .stream()
+                    .map(
+                        diagnostic ->
+                            diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
+                    .collect(Collectors.toList());
+
+            assertEquals(expectedCompileErrors, actualCompileErrors);
+          }
+        }
+        stubJarPath = stubJar;
       } else {
         compileFullJar();
         stubJarPath = StubJarTest.this.createStubJar(fullJarPath);
@@ -3922,7 +4259,10 @@ public class StubJarTest {
       File outputDir = temp.newFolder();
       fullJarPath =
           compileToJar(
-              classpath,
+              ImmutableSortedSet.<Path>naturalOrder()
+                  .addAll(classpath)
+                  .addAll(universalClasspath)
+                  .build(),
               Collections.emptyList(),
               manifest,
               sourceFileName,
@@ -3945,11 +4285,19 @@ public class StubJarTest {
       return this;
     }
 
+    public Tester addFullJarToClasspathAlways() throws IOException {
+      universalClasspath =
+          ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(fullJarPath).build();
+      resetActuals();
+      return this;
+    }
+
     public void testCanCompile() throws IOException {
       File outputDir = temp.newFolder();
       try (TestCompiler compiler = new TestCompiler()) {
         compiler.init();
         compiler.addSourceFileContents(sourceFileName, sourceFileContents);
+        compiler.addClasspath(universalClasspath);
         compiler.addClasspath(classpath);
         compiler.setProcessors(Collections.emptyList());
         compiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());

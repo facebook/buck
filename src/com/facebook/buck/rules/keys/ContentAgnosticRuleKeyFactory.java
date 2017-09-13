@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;

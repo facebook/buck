@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 public class FieldValueExtractor implements ValueExtractor {
   private final Field field;
 
-  public FieldValueExtractor(Field field) {
+  FieldValueExtractor(Field field) {
     this.field = field;
   }
 

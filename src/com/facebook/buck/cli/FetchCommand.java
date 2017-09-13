@@ -22,10 +22,10 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.file.StackedDownloader;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildEvent;
@@ -82,7 +82,7 @@ public class FetchCommand extends BuildCommand {
                     params.getBuckEventBus(),
                     params.getCell(),
                     getEnableParserProfiling(),
-                    pool.getExecutor(),
+                    pool.getListeningExecutorService(),
                     parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), getArguments()),
                     parserConfig.getDefaultFlavorsMode());
         if (params.getBuckConfig().getBuildVersions()) {
@@ -91,7 +91,10 @@ public class FetchCommand extends BuildCommand {
         actionGraphAndResolver =
             Preconditions.checkNotNull(
                 ActionGraphCache.getFreshActionGraph(
-                    params.getBuckEventBus(), ruleGenerator, result.getTargetGraph()));
+                    params.getBuckEventBus(),
+                    ruleGenerator,
+                    result.getTargetGraph(),
+                    params.getBuckConfig().isActionGraphParallelizationEnabled()));
         buildTargets = ruleGenerator.getDownloadableTargets();
       } catch (BuildTargetException | BuildFileParseException | VersionException e) {
         params
@@ -114,7 +117,7 @@ public class FetchCommand extends BuildCommand {
           CachingBuildEngine buildEngine =
               new CachingBuildEngine(
                   localCachingBuildEngineDelegate,
-                  pool.getExecutor(),
+                  pool.getWeightedListeningExecutorService(),
                   new DefaultStepRunner(),
                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),

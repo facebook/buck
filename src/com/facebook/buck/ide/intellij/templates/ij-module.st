@@ -45,7 +45,7 @@
     %if(androidFacet.compiler_output_path)%inherit-compiler-output="false"%else%inherit-compiler-output="true"%endif%>
 %endif%
     %if(androidFacet.compiler_output_path)%
-    <output url="file://$MODULE_DIR$%androidFacet.compiler_output_path%" />
+    <output url="%androidFacet.compiler_output_path%" />
     %endif%
     <exclude-output />
 %if(androidFacet.enabled)%
@@ -58,7 +58,10 @@
       <%generatedFolder.type% url="%generatedFolder.url%" %\\%
         isTestSource="%generatedFolder.isTestSource%" generated="true" %\\%
         %if(generatedFolder.packagePrefix)%packagePrefix="%generatedFolder.packagePrefix%" %endif%%\\%
-        %if(generatedFolder.isAndroidResources)%type="java-resource" %endif%/>
+        %if(generatedFolder.isResourceFolder)%%\\%
+          type="%generatedFolder.ijResourceFolderType%" %\\%
+          %if(generatedFolder.relativeOutputPath)%relativeOutputPath="%generatedFolder.relativeOutputPath%" %endif%%\\%
+        %endif%/>
     </content>
 }%%contentRoots:{contentRoot |
     <content url="%contentRoot.url%">
@@ -66,7 +69,10 @@
       <%folder.type% url="%folder.url%" %\\%
         isTestSource="%folder.isTestSource%" %\\%
         %if(folder.packagePrefix)%packagePrefix="%folder.packagePrefix%" %endif%%\\%
-        %if(folder.isAndroidResources)%type="java-resource" %endif%/>
+        %if(folder.isResourceFolder)%%\\%
+          type="%folder.ijResourceFolderType%" %\\%
+          %if(folder.relativeOutputPath)%relativeOutputPath="%folder.relativeOutputPath%" %endif%%\\%
+        %endif%/>
 }%    </content>
 }%%if(sdk)%    <orderEntry type="jdk" jdkName="%sdk%" jdkType="%sdkType%" />
 %else%    <orderEntry type="inheritedJdk" />

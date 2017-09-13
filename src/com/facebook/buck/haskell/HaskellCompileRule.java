@@ -48,6 +48,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -290,6 +291,11 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
           .putAll(super.getEnvironmentVariables(context))
           .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
           .build();
+    }
+
+    @Override
+    protected boolean shouldPrintStderr(Verbosity verbosity) {
+      return !verbosity.isSilent();
     }
 
     @Override

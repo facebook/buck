@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.FilterResourcesStep.ImageScaler;
+import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -68,8 +68,8 @@ public class FilterResourcesStepTest {
       }
     }
 
-    FilterResourcesStep command =
-        new FilterResourcesStep(
+    FilterResourcesSteps filterResourcesSteps =
+        new FilterResourcesSteps(
             filesystem,
             inResDirToOutResDirMap,
             /* filterByDensity */ true,
@@ -78,7 +78,7 @@ public class FilterResourcesStepTest {
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(ResourceFilters.Density.MDPI),
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             new ImageScaler() {
               @Override
               public boolean isAvailable(ExecutionContext context) {
@@ -103,8 +103,19 @@ public class FilterResourcesStepTest {
       assertEquals(baseDestination.toFile(), nextDestination.getParent().toFile());
     }
 
-    // Execute command.
-    assertThat(command.execute(TestExecutionContext.newInstance()).getExitCode(), Matchers.is(0));
+    // Execute commands
+    assertThat(
+        filterResourcesSteps
+            .getCopyStep()
+            .execute(TestExecutionContext.newInstance())
+            .getExitCode(),
+        Matchers.is(0));
+    assertThat(
+        filterResourcesSteps
+            .getScaleStep()
+            .execute(TestExecutionContext.newInstance())
+            .getExitCode(),
+        Matchers.is(0));
 
     assertTrue(filesystem.isFile(baseDestination.resolve("1/drawable-mdpi/some.png")));
   }
@@ -187,8 +198,8 @@ public class FilterResourcesStepTest {
           resDir.resolve(String.format("%s-%s", folderName, excludedDensity)).resolve(file));
     }
 
-    FilterResourcesStep command =
-        new FilterResourcesStep(
+    FilterResourcesSteps filterResourcesSteps =
+        new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
             /* filterByDPI */ true,
@@ -197,9 +208,10 @@ public class FilterResourcesStepTest {
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
-    command.execute(null);
+    filterResourcesSteps.getCopyStep().execute(null);
+    filterResourcesSteps.getScaleStep().execute(null);
 
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
       if (folderName.equals("drawable")) {
@@ -233,8 +245,8 @@ public class FilterResourcesStepTest {
     filesystem.createNewFile(
         resDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file));
 
-    FilterResourcesStep command =
-        new FilterResourcesStep(
+    FilterResourcesSteps filterResourcesSteps =
+        new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
             /* filterByDPI */ true,
@@ -243,9 +255,10 @@ public class FilterResourcesStepTest {
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
-    command.execute(null);
+    filterResourcesSteps.getCopyStep().execute(null);
+    filterResourcesSteps.getScaleStep().execute(null);
 
     assertThat(
         filesystem,
@@ -278,8 +291,8 @@ public class FilterResourcesStepTest {
           resDir.resolve(String.format("%s-%s", folderName, providedDensity)).resolve(file));
     }
 
-    FilterResourcesStep command =
-        new FilterResourcesStep(
+    FilterResourcesSteps filterResourcesSteps =
+        new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
             /* filterByDPI */ true,
@@ -288,9 +301,10 @@ public class FilterResourcesStepTest {
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
-    command.execute(null);
+    filterResourcesSteps.getCopyStep().execute(null);
+    filterResourcesSteps.getScaleStep().execute(null);
 
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
       if (folderName.equals("drawable") || folderName.equals("values")) {
@@ -332,8 +346,8 @@ public class FilterResourcesStepTest {
           resDir.resolve(String.format("%s-%s", folderName, targetDensityIncluded)).resolve(file));
     }
 
-    FilterResourcesStep command =
-        new FilterResourcesStep(
+    FilterResourcesSteps filterResourcesSteps =
+        new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
             /* filterByDPI */ true,
@@ -342,9 +356,10 @@ public class FilterResourcesStepTest {
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
-    command.execute(null);
+    filterResourcesSteps.getCopyStep().execute(null);
+    filterResourcesSteps.getScaleStep().execute(null);
 
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
       if (folderName.equals("drawable") || folderName.equals("values")) {
@@ -379,8 +394,8 @@ public class FilterResourcesStepTest {
     filesystem.createNewFile(
         resDir.resolve(String.format("values-%s", targetDensity)).resolve(file));
 
-    FilterResourcesStep command =
-        new FilterResourcesStep(
+    FilterResourcesSteps filterResourcesSteps =
+        new FilterResourcesSteps(
             filesystem,
             ImmutableBiMap.of(resDir, resOutDir),
             /* filterByDPI */ true,
@@ -389,9 +404,10 @@ public class FilterResourcesStepTest {
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
-    command.execute(null);
+    filterResourcesSteps.getCopyStep().execute(null);
+    filterResourcesSteps.getScaleStep().execute(null);
 
     assertThat(
         filesystem,
@@ -403,14 +419,14 @@ public class FilterResourcesStepTest {
   }
 
   private static void assertMatchesRegex(String path, String language, String country) {
-    Matcher matcher = FilterResourcesStep.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path);
+    Matcher matcher = FilterResourcesSteps.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path);
     assertTrue(matcher.matches());
     assertEquals(language, matcher.group(1));
     assertEquals(country, matcher.group(2));
   }
 
   private static void assertNotMatchesRegex(String path) {
-    assertFalse(FilterResourcesStep.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path).matches());
+    assertFalse(FilterResourcesSteps.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path).matches());
   }
 
   private static Predicate<Path> getTestPathPredicate(
@@ -418,8 +434,8 @@ public class FilterResourcesStepTest {
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales)
       throws IOException, InterruptedException {
-    FilterResourcesStep step =
-        new FilterResourcesStep(
+    FilterResourcesSteps step =
+        new FilterResourcesSteps(
             null,
             /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
             /* filterByDensity */ false,
@@ -428,7 +444,7 @@ public class FilterResourcesStepTest {
             /* locales */ locales,
             DefaultFilteredDirectoryCopier.getInstance(),
             /* targetDensities */ null,
-            FilterResourcesStep.DefaultDrawableFinder.getInstance(),
+            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
 
     return step.getFilteringPredicate(TestExecutionContext.newInstance());

@@ -30,9 +30,14 @@ import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -61,7 +66,7 @@ class TreeBackedEnter {
     this.elements = elements;
     this.types = types;
     this.javacTrees = javacTrees;
-    canonicalizer = new PostEnterCanonicalizer(elements, types);
+    canonicalizer = new PostEnterCanonicalizer(elements, types, javacTrees);
   }
 
   public void enter(CompilationUnitTree compilationUnit) {
@@ -203,10 +208,51 @@ class TreeBackedEnter {
     public Void visitType(TypeElement e, Void v) {
       TreeBackedTypeElement newClass = elements.enterElement(e, this::newTreeBackedType);
       try (ElementContext c = new ElementContext(newClass)) {
-        super.visitType(e, v);
+        super.scan(reallyGetEnclosedElements(e, getCurrentPath()), v);
         super.scan(e.getTypeParameters(), v);
         return null;
       }
+    }
+
+    /**
+     * When some method parameters might be ErrorTypes, javac will ignore overloads when entering
+     * elements. On the flip side, there are no trees for generated elements like default
+     * constructors. To make sure we find all the elements, we look at both sources and merge the
+     * lists.
+     */
+    private List<? extends Element> reallyGetEnclosedElements(TypeElement e, TreePath path) {
+      // fromElement contains the elements that the compiler found or generated. Because of
+      // the weird ErrorType behavior, this will be missing elements that the user wrote.
+      List<? extends Element> fromElement = e.getEnclosedElements();
+      Queue<? extends Element> fromElementQueue = new ArrayDeque<>(fromElement);
+      Set<? extends Element> fromElementSet = new HashSet<>(fromElement);
+
+      // fromTree contains the elements that the user wrote. It will be missing compiler-generated
+      // elements.
+      List<? extends Element> fromTree =
+          ((ClassTree) path.getLeaf())
+              .getMembers()
+              .stream()
+              .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
+              .filter(element -> element != null) // Null can happen for static initializers
+              .collect(Collectors.toList());
+      Set<? extends Element> fromTreeSet = new HashSet<>(fromTree);
+
+      List<Element> result = new ArrayList<>();
+      for (Element elementFromTree : fromTree) {
+        if (fromElementSet.contains(elementFromTree)) {
+          // Output any compiler-generated elements that come before this one in the compiler's
+          // element list.
+          Element elementFromElement = fromElementQueue.poll();
+          while (elementFromElement != null && !fromTreeSet.contains(elementFromElement)) {
+            result.add(elementFromElement);
+            elementFromElement = fromElementQueue.poll();
+          }
+        }
+        result.add(elementFromTree);
+      }
+
+      return result;
     }
 
     @Override
@@ -237,7 +283,7 @@ class TreeBackedEnter {
     }
 
     private TreeBackedPackageElement newTreeBackedPackage(PackageElement underlyingPackage) {
-      return new TreeBackedPackageElement(underlyingPackage, canonicalizer);
+      return new TreeBackedPackageElement(underlyingPackage);
     }
 
     private TreeBackedTypeElement newTreeBackedType(TypeElement underlyingType) {

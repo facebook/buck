@@ -19,7 +19,7 @@ package com.facebook.buck.ide.intellij.model.folders;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
-/** Interface for factory classes which can create each type of folder. */
+/** Interface for factory classes which can create each type of source folder. */
 public interface IJFolderFactory {
   IjFolder create(Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs);
 }

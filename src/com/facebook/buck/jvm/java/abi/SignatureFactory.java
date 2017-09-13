@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,28 +88,14 @@ class SignatureFactory {
         public Void visitTypeParameter(TypeParameterElement element, SignatureVisitor visitor) {
           visitor.visitFormalTypeParameter(element.getSimpleName().toString());
           for (TypeMirror boundType : element.getBounds()) {
-            if (isClassType(boundType)) {
-              boundType.accept(typeVisitorAdapter, visitor.visitClassBound());
-            } else {
-              boundType.accept(typeVisitorAdapter, visitor.visitInterfaceBound());
-            }
+            // We can't know whether an inferred type is a class or interface, but it turns out
+            // the compiler does not distinguish between them when reading signatures, so we can
+            // write inferred types as interface bounds. We go ahead and write all bounds as
+            // interface bounds to make the SourceAbiCompatibleSignatureVisitor possible.
+            boundType.accept(typeVisitorAdapter, visitor.visitInterfaceBound());
           }
 
           return null;
-        }
-
-        private boolean isClassType(TypeMirror type) {
-          if (type.getKind() == TypeKind.TYPEVAR) {
-            // For the purposes of signatures, typevar bounds are considered class bounds
-            return true;
-          }
-
-          if (type.getKind() != TypeKind.DECLARED) {
-            return false;
-          }
-
-          DeclaredType declaredType = (DeclaredType) type;
-          return declaredType.asElement().getKind().isClass();
         }
 
         @Override
@@ -228,7 +215,16 @@ class SignatureFactory {
           int numTypes = enclosingTypes.size();
           for (int i = 0; i < numTypes; i++) {
             DeclaredType type = enclosingTypes.get(i);
-            List<? extends TypeMirror> typeArguments = type.getTypeArguments();
+            List<? extends TypeMirror> typeArguments;
+            try {
+              typeArguments = type.getTypeArguments();
+            } catch (CannotInferException e) {
+              // InferredDeclaredTypes can only be obtained by calling asType on an
+              // InferredTypeElement. Types that are used in signature generation are not obtained
+              // in this manner, so they should always be StandaloneDeclaredTypes and this exception
+              // should never happen.
+              throw new AssertionError("Unexpected inferred type.", e);
+            }
             if (calledVisitClassType) {
               visitor.visitInnerClassType(type.asElement().getSimpleName().toString());
             } else if (!typeArguments.isEmpty() || i == numTypes - 1) {
@@ -386,7 +382,15 @@ class SignatureFactory {
 
           @Override
           public Boolean visitDeclared(DeclaredType t, Void aVoid) {
-            return !t.getTypeArguments().isEmpty() || usesGenerics(t.getEnclosingType());
+            try {
+              return !t.getTypeArguments().isEmpty() || usesGenerics(t.getEnclosingType());
+            } catch (CannotInferException e) {
+              // InferredDeclaredTypes can only be obtained by calling asType on an
+              // InferredTypeElement. Types that are used in signature generation are not obtained
+              // in this manner, so they should always be StandaloneDeclaredTypes and this exception
+              // should never happen.
+              throw new AssertionError("Unexpected inferred type", e);
+            }
           }
         },
         null);

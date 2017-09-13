@@ -1,0 +1,100 @@
+{namespace buck.load}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'load()' /}
+    {param navid: 'function_load' /}
+    {param prettify: true /}
+    {param description}
+      The load() function is used to include definitions (macros and constants) from
+      another file.
+    {/param}
+    {param content}
+
+{call buck.function}
+{param status: 'FROZEN' /}
+{param overview}
+The {call buck.fn_load/} function is used to include definitions ({call buck.macros/} and constants)
+from another file.
+<p>
+The {call buck.fn_load/} function executes a file of build-file-style
+code in the context of the current build file, so code in the included file may
+reference Buck functions, such as {call buck.java_library/}, {call buck.java_test/}, etc.,
+as well as {call buck.fn_load/} itself!
+<p>
+The motivation behind {call buck.fn_load/} is to avoid
+copy-and-pasting code across multiple build files. Often, loaded files will
+contain data declarations (as shown in the example below) or definitions of
+macros for creating more complex build rules.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'label' /}
+  {param desc}
+  The label identifying file containing {call buck.macros/} and constants. It's
+  exactly the same as build target syntax but all macro files are assumed to be
+  implicitly exported using <pre>buck.export_file</pre> with its original name, so
+  a macro file <pre>defs</pre> from <pre>package</pre>pre> directory is accessible
+  using <pre>//package:defs</pre>pre> syntax.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'symbols...' /}
+  {param desc}
+  Names of macros and constants to import from <code>path</code>. In {call buck.fn_load/} function
+  keyword arguments have special meaning and can be used to change names of imported symbols. For
+  example, <code>load("//tools/build_rules:build_defs", my_rule="some_rule")</code> will export{sp}
+  <code>some_rule</code> from <code>build_defs</code> and make it available under the name{sp}
+  <code>my_rule</code>. This can be useful to avoid name collisions with local definitions.
+  {/param}
+{/call}
+
+{/param}
+
+{param examples}
+Suppose the file <code>core/DEFS</code> contains the following:
+{literal}<pre class="prettyprint lang-py">
+JARS_TO_EXCLUDE_FROM_DX = [
+  'third_party/guava/guava-14.0.1.jar',
+  'third_party/jackson/jackson-core-2.7.8.jar',
+  'third_party/jackson/jackson-databind-2.7.8.jar',
+  'third_party/jackson/jackson-datatype-guava-2.0.4.jar',
+]
+</pre>{/literal}
+
+Then another build file could include the array using
+{sp}<code>load()</code>. This eliminates the need to
+copy-and-paste definitions across build files:
+
+{literal}<pre class="prettyprint lang-py">
+load('//core:DEFS', 'JARS_TO_EXCLUDE_FROM_DX')
+
+android_binary(
+  name = 'example',
+  # ...
+  no_dx = JARS_TO_EXCLUDE_FROM_DX,
+)
+</pre>{/literal}
+
+Alternatively, to make an imported symbol available under a different name,
+keywords can be used instead:
+{literal}<pre class="prettyprint lang-py">
+load('//core:DEFS', no_dx='JARS_TO_EXCLUDE_FROM_DX')
+
+android_binary(
+  name = 'example',
+  # ...
+  no_dx = no_dx,
+)
+</pre>{/literal}
+
+{/param}
+
+{/call} // buck.function
+    {/param} // content
+  {/call}
+{/template}

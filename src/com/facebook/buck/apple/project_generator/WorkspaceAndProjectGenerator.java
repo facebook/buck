@@ -28,6 +28,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -42,12 +43,14 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -69,8 +72,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
-
-// import com.facebook.buck.io.ProjectFilesystem;
 
 public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
@@ -95,6 +96,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
+  private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -160,6 +162,10 @@ public class WorkspaceAndProjectGenerator {
 
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     return requiredBuildTargetsBuilder.build();
+  }
+
+  private ImmutableSet<Path> getXcconfigPaths() {
+    return xcconfigPathsBuilder.build();
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -233,6 +239,8 @@ public class WorkspaceAndProjectGenerator {
         buildTargetToPbxTargetMapBuilder,
         targetToProjectPathMapBuilder);
 
+    writeWorkspaceMetaData(outputDirectory, workspaceName);
+
     if (projectGeneratorOptions.contains(
         ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY)) {
       return workspaceGenerator.getWorkspaceDir();
@@ -252,6 +260,25 @@ public class WorkspaceAndProjectGenerator {
 
       return workspaceGenerator.writeWorkspace();
     }
+  }
+
+  private void writeWorkspaceMetaData(Path outputDirectory, String workspaceName)
+      throws IOException {
+    Path path =
+        combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace");
+    rootCell.getFilesystem().mkdirs(path);
+    ImmutableList<String> requiredTargetsStrings =
+        getRequiredBuildTargets()
+            .stream()
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableList());
+    ImmutableMap<String, Object> data =
+        ImmutableMap.of(
+            "required-targets", requiredTargetsStrings, "xcconfig-paths", getXcconfigPaths());
+    String jsonString = ObjectMappers.WRITER.writeValueAsString(data);
+    rootCell
+        .getFilesystem()
+        .writeContentsToPath(jsonString, path.resolve("buck-project.meta.json"));
   }
 
   private void generateProjects(
@@ -340,6 +367,7 @@ public class WorkspaceAndProjectGenerator {
                           relativeTargetCell.resolve(result.getProjectPath()),
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
+                          result.getXcconfigPaths(),
                           result.getBuildTargetToGeneratedTargetMap());
                   return result;
                 }));
@@ -369,6 +397,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
       GenerationResult result) {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
+    xcconfigPathsBuilder.addAll(result.getXcconfigPaths());
     buildTargetToPbxTargetMapBuilder.putAll(result.getBuildTargetToGeneratedTargetMap());
     for (PBXTarget target : result.getBuildTargetToGeneratedTargetMap().values()) {
       targetToProjectPathMapBuilder.put(target, result.getProjectPath());
@@ -439,6 +468,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getProjectPath(),
         generator.isProjectGenerated(),
         requiredBuildTargets,
+        generator.getXcconfigPaths(),
         buildTargetToGeneratedTargetMap);
   }
 
@@ -480,6 +510,7 @@ public class WorkspaceAndProjectGenerator {
             generator.getProjectPath(),
             generator.isProjectGenerated(),
             generator.getRequiredBuildTargets(),
+            generator.getXcconfigPaths(),
             generator.getBuildTargetToGeneratedTargetMap());
     workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(
@@ -670,10 +701,20 @@ public class WorkspaceAndProjectGenerator {
           if (!(node.getConstructorArg() instanceof HasTests)) {
             continue;
           }
-          for (BuildTarget explicitTestTarget : ((HasTests) node.getConstructorArg()).getTests()) {
-            if (!focusModules.isFocusedOn(explicitTestTarget)) {
-              continue;
-            }
+          ImmutableList<BuildTarget> focusedTests =
+              ((HasTests) node.getConstructorArg())
+                  .getTests()
+                  .stream()
+                  .filter(t -> focusModules.isFocusedOn(t))
+                  .collect(MoreCollectors.toImmutableList());
+          // Show a warning if the target is not focused but the tests are.
+          if (focusedTests.size() > 0 && !focusModules.isFocusedOn(node.getBuildTarget())) {
+            buckEventBus.post(
+                ConsoleEvent.warning(
+                    "Skipping tests of %s since it's not focused", node.getBuildTarget()));
+            continue;
+          }
+          for (BuildTarget explicitTestTarget : focusedTests) {
             Optional<TargetNode<?, ?>> explicitTestNode =
                 targetGraph.getOptional(explicitTestTarget);
             if (explicitTestNode.isPresent()) {

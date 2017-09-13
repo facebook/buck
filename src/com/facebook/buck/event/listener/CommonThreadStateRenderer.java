@@ -37,6 +37,9 @@ public class CommonThreadStateRenderer {
   /** Amount of time a rule can run before we render it with as an error. */
   private static final long ERROR_THRESHOLD_MS = 30000;
 
+  /** Maximum width of the terminal. */
+  private final int outputMaxColumns;
+
   private final Ansi ansi;
   private final Function<Long, String> formatTimeFunction;
   private final long currentTimeMs;
@@ -46,11 +49,13 @@ public class CommonThreadStateRenderer {
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
+      int outputMaxColumns,
       final ImmutableMap<Long, ThreadRenderingInformation> threadInformationMap) {
     this.ansi = ansi;
     this.formatTimeFunction = formatTimeFunction;
     this.currentTimeMs = currentTimeMs;
     this.threadInformationMap = threadInformationMap;
+    this.outputMaxColumns = outputMaxColumns;
   }
 
   public int getThreadCount() {
@@ -92,14 +97,36 @@ public class CommonThreadStateRenderer {
       Optional<String> placeholderStepInformation,
       long elapsedTimeMs,
       StringBuilder lineBuilder) {
-    lineBuilder.append(" |=> ");
+    String linePrefix = " - ";
+    lineBuilder.append(linePrefix);
     if (!startEvent.isPresent() || !buildTarget.isPresent()) {
       lineBuilder.append("IDLE");
       return ansi.asSubtleText(lineBuilder.toString());
     } else {
-      lineBuilder.append(buildTarget.get());
-      lineBuilder.append("...  ");
-      lineBuilder.append(formatElapsedTime(elapsedTimeMs));
+      String buildTargetStr = buildTarget.get().toString();
+      String ellipsis = "... ";
+      String elapsedTimeStr = formatElapsedTime(elapsedTimeMs);
+      if (linePrefix.length()
+              + buildTargetStr.length()
+              + ellipsis.length()
+              + elapsedTimeStr.length()
+          > outputMaxColumns) {
+        buildTargetStr =
+            buildTargetStr.substring(
+                0,
+                outputMaxColumns
+                    - (linePrefix.length() + elapsedTimeStr.length() + ellipsis.length()));
+      }
+      lineBuilder.append(buildTargetStr);
+      lineBuilder.append(ellipsis);
+      lineBuilder.append(elapsedTimeStr);
+      if (linePrefix.length()
+              + buildTargetStr.length()
+              + ellipsis.length()
+              + elapsedTimeStr.length()
+          >= outputMaxColumns) {
+        return lineBuilder.toString();
+      }
 
       if (runningStep.isPresent() && stepCategory.isPresent()) {
         lineBuilder.append(" (running ");

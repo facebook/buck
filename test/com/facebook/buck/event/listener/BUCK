@@ -10,9 +10,7 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
@@ -145,9 +143,7 @@ standard_java_test(
     name = "listener",
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -242,6 +238,7 @@ standard_java_test(
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:config",
         "//src/com/facebook/buck/test:test",
+        "//src/com/facebook/buck/test/external:events",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/timing:timing",

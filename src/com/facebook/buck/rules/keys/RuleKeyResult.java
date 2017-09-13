@@ -30,7 +30,7 @@ public class RuleKeyResult<R> {
   /** All inputs this rule key's value depends on. */
   public final Iterable<RuleKeyInput> inputs;
 
-  public RuleKeyResult(R result, Iterable<?> deps, Iterable<RuleKeyInput> inputs) {
+  RuleKeyResult(R result, Iterable<?> deps, Iterable<RuleKeyInput> inputs) {
     this.result = result;
     this.deps = deps;
     this.inputs = inputs;

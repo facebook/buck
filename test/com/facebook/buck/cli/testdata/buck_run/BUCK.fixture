@@ -1,0 +1,25 @@
+java_library(
+    name = "hello-java-lib",
+    srcs = ["hello.java"],
+)
+    
+java_binary(
+    name = "hello-java",
+    main_class = "hello",
+    deps = ["//:hello-java-lib"],
+)
+
+cxx_binary(
+    name = "hello-cxx",
+    srcs = ["hello.cpp"],
+)
+
+python_binary(
+    name = "hello-python",
+    main = "hello.py",
+)
+
+python_binary(
+    name = "pwd",
+    main = "pwd.py",
+)

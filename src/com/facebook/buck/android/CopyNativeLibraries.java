@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;

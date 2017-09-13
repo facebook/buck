@@ -35,6 +35,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
@@ -91,7 +92,7 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386")
             .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(
                 new AppleTestBuilder(sandboxTarget)
                     .setInfoPlist(new FakeSourcePath("Info.plist"))
@@ -124,7 +125,8 @@ public class AppleBuildRulesTest {
             buildTarget,
             projectFilesystem,
             params,
-            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
             TestCellBuilder.createCellRoots(projectFilesystem),
             AppleLibraryDescriptionArg.builder().setName("lib").build());
 

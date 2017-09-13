@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 

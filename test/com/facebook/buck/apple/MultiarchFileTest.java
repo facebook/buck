@@ -42,6 +42,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -131,7 +132,7 @@ public class MultiarchFileTest {
     BuildTarget sandboxTarget =
         BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(
+        new SingleThreadedBuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
@@ -163,7 +164,8 @@ public class MultiarchFileTest {
   @Test
   public void descriptionWithMultipleDifferentSdksShouldFail() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     try {
       nodeBuilderFactory
@@ -183,7 +185,8 @@ public class MultiarchFileTest {
   @Test
   public void ruleWithSpecialBuildActionShouldFail() throws Exception {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     HumanReadableException exception = null;
     Iterable<Flavor> forbiddenFlavors =
         ImmutableList.<Flavor>builder()

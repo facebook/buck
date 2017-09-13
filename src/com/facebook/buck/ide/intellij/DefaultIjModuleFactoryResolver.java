@@ -25,6 +25,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -126,7 +127,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   @Override
   public Optional<Path> getCompilerOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    Path compilerOutputPath = CompilerParameters.getClassesDir(buildTarget, projectFilesystem);
+    Path compilerOutputPath = DefaultJavaLibrary.getOutputJarPath(buildTarget, projectFilesystem);
     return Optional.of(compilerOutputPath);
   }
 

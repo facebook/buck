@@ -25,11 +25,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum SizeUnit {
-  BYTES(0, "B"),
-  KILOBYTES(1, "KB"),
-  MEGABYTES(2, "MB"),
-  GIGABYTES(3, "GB"),
-  TERABYTES(4, "TB");
+  BYTES(0, "bytes"),
+  KILOBYTES(1, "Kbytes"),
+  MEGABYTES(2, "Mbytes"),
+  GIGABYTES(3, "Gbytes"),
+  TERABYTES(4, "Tbytes");
 
   private final int ordinal;
   private final String abbreviation;

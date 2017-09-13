@@ -10,9 +10,7 @@ java_immutables_library(
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
@@ -143,9 +141,7 @@ standard_java_test(
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",

@@ -73,7 +73,7 @@ public class DefaultJavaLibraryBuilder {
   protected ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
       ExtraClasspathFromContextFunction.EMPTY;
   protected boolean sourceAbisAllowed = true;
-  @Nullable protected JavacOptions javacOptions = null;
+  @Nullable protected JavacOptions initialJavacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
   @Nullable private ConfiguredCompiler configuredCompiler;
 
@@ -145,7 +145,7 @@ public class DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
-    this.javacOptions = javacOptions;
+    this.initialJavacOptions = javacOptions;
     return this;
   }
 
@@ -270,6 +270,7 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private ZipArchiveDependencySupplier abiClasspath;
     @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
     @Nullable private BuildTarget abiJar;
+    @Nullable private JavacOptions javacOptions;
 
     protected DefaultJavaLibrary build() {
       return getLibraryRule(false);
@@ -373,7 +374,8 @@ public class DefaultJavaLibraryBuilder {
                 fullJarProvidedDeps,
                 getAbiJar(),
                 mavenCoords,
-                tests);
+                tests,
+                getRequiredForSourceAbi());
 
         if (sourceAbiRule != null) {
           libraryRule.setSourceAbi(sourceAbiRule);
@@ -385,6 +387,10 @@ public class DefaultJavaLibraryBuilder {
       }
 
       return libraryRule;
+    }
+
+    protected final boolean getRequiredForSourceAbi() {
+      return args != null && args.getRequiredForSourceAbi();
     }
 
     private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex) {
@@ -562,7 +568,7 @@ public class DefaultJavaLibraryBuilder {
 
     protected ConfiguredCompiler buildConfiguredCompiler() {
       return new JavacToJarStepFactory(
-          getJavac(), Preconditions.checkNotNull(javacOptions), extraClasspathFromContextFunction);
+          getJavac(), getJavacOptions(), extraClasspathFromContextFunction);
     }
 
     protected final JarBuildStepsFactory getJarBuildStepsFactory() {
@@ -585,7 +591,19 @@ public class DefaultJavaLibraryBuilder {
           getAbiClasspath(),
           trackClassUsage,
           getFinalCompileTimeClasspathSourcePaths(),
-          classesToRemoveFromJar);
+          classesToRemoveFromJar,
+          getRequiredForSourceAbi());
+    }
+
+    protected final JavacOptions getJavacOptions() {
+      if (javacOptions == null) {
+        javacOptions = buildJavacOptions();
+      }
+      return javacOptions;
+    }
+
+    protected JavacOptions buildJavacOptions() {
+      return Preconditions.checkNotNull(initialJavacOptions);
     }
   }
 

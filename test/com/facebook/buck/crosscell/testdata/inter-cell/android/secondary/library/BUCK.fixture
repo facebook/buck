@@ -3,7 +3,7 @@ cxx_library(
   srcs = ['I.c'],
   soname = 'libI.so',
   deps = [
-    '//merge:H',
+    '//merge:G',
   ],
   visibility = ['PUBLIC'],
 )

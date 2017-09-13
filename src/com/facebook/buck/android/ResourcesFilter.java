@@ -19,18 +19,18 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -45,9 +45,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -55,6 +57,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.apache.commons.compress.utils.IOUtils;
@@ -73,7 +76,7 @@ import org.apache.commons.compress.utils.IOUtils;
  *   <li>The set of non-english {@code strings.xml} files identified by the resource filter.
  * </ul>
  */
-public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class ResourcesFilter extends AbstractBuildRule
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
 
   private static final String STRING_FILES_KEY = "string_files";
@@ -103,13 +106,16 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
   }
 
+  private final ImmutableSortedSet<BuildRule> resourceRules;
+  private final ImmutableCollection<BuildRule> rulesWithResourceDirectories;
+  private final SourcePathRuleFinder ruleFinder;
   // Rule key correctness is ensured by depping on all android_resource rules in
-  // Builder.setAndroidResourceDepsFinder()
+  // Builder.setAndroidResourceDepsFinder(). See getBuildDeps().
   private final ImmutableList<SourcePath> resDirectories;
   private final ImmutableSet<SourcePath> whitelistedStringDirs;
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
-  @AddToRuleKey private final FilterResourcesStep.ResourceFilter resourceFilter;
+  @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
   @AddToRuleKey private final Optional<Arg> postFilterResourcesCmd;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -117,14 +123,19 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ResourcesFilter(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> resourceRules,
+      ImmutableCollection<BuildRule> rulesWithResourceDirectories,
+      SourcePathRuleFinder ruleFinder,
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
-      FilterResourcesStep.ResourceFilter resourceFilter,
+      FilterResourcesSteps.ResourceFilter resourceFilter,
       Optional<Arg> postFilterResourcesCmd) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.resourceRules = resourceRules;
+    this.rulesWithResourceDirectories = rulesWithResourceDirectories;
+    this.ruleFinder = ruleFinder;
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.locales = locales;
@@ -166,6 +177,18 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(resourceRules)
+        .addAll(rulesWithResourceDirectories)
+        .addAll(
+            RichStream.from(postFilterResourcesCmd)
+                .flatMap(a -> a.getDeps(ruleFinder).stream())
+                .toOnceIterable())
+        .build();
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, final BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -189,9 +212,11 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .collect(MoreCollectors.toImmutableList());
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
-    final FilterResourcesStep filterResourcesStep =
-        createFilterResourcesStep(whitelistedStringPaths, locales, inResDirToOutResDirMap);
-    steps.add(filterResourcesStep);
+    final FilterResourcesSteps filterResourcesSteps =
+        createFilterResourcesSteps(whitelistedStringPaths, locales, inResDirToOutResDirMap);
+    steps.add(filterResourcesSteps.getCopyStep());
+    maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
+    steps.add(filterResourcesSteps.getScaleStep());
 
     final ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
     // The list of strings.xml files is only needed to build string assets
@@ -205,24 +230,6 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
     for (Path outputResourceDir : filteredResDirectories) {
       buildableContext.recordArtifact(outputResourceDir);
     }
-
-    postFilterResourcesCmd.ifPresent(
-        cmd -> {
-          OutputStream filterResourcesDataOutputStream = null;
-          try {
-            Path filterResourcesDataPath = getFilterResourcesDataPath();
-            getProjectFilesystem().createParentDirs(filterResourcesDataPath);
-            filterResourcesDataOutputStream =
-                getProjectFilesystem().newFileOutputStream(filterResourcesDataPath);
-            writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
-            buildableContext.recordArtifact(filterResourcesDataPath);
-            addPostFilterCommandSteps(cmd, context.getSourcePathResolver(), steps);
-          } catch (IOException e) {
-            throw new RuntimeException("Could not generate/save filter resources data json", e);
-          } finally {
-            IOUtils.closeQuietly(filterResourcesDataOutputStream);
-          }
-        });
 
     steps.add(
         new AbstractExecutionStep("record_build_output") {
@@ -244,6 +251,30 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
         });
 
     return steps.build();
+  }
+
+  private void maybeAddPostFilterCmdStep(
+      BuildContext context,
+      BuildableContext buildableContext,
+      ImmutableList.Builder<Step> steps,
+      ImmutableBiMap<Path, Path> inResDirToOutResDirMap) {
+    postFilterResourcesCmd.ifPresent(
+        cmd -> {
+          OutputStream filterResourcesDataOutputStream = null;
+          try {
+            Path filterResourcesDataPath = getFilterResourcesDataPath();
+            getProjectFilesystem().createParentDirs(filterResourcesDataPath);
+            filterResourcesDataOutputStream =
+                getProjectFilesystem().newFileOutputStream(filterResourcesDataPath);
+            writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
+            buildableContext.recordArtifact(filterResourcesDataPath);
+            addPostFilterCommandSteps(cmd, context.getSourcePathResolver(), steps);
+          } catch (IOException e) {
+            throw new RuntimeException("Could not generate/save filter resources data json", e);
+          } finally {
+            IOUtils.closeQuietly(filterResourcesDataOutputStream);
+          }
+        });
   }
 
   @VisibleForTesting
@@ -286,9 +317,9 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
    * Sets up filtering of resources, images/drawables and strings in particular, based on build rule
    * parameters {@link #resourceFilter} and {@link #resourceCompressionMode}.
    *
-   * <p>{@link com.facebook.buck.android.FilterResourcesStep.ResourceFilter} {@code resourceFilter}
-   * determines which drawables end up in the APK (based on density - mdpi, hdpi etc), and also
-   * whether higher density drawables get scaled down to the specified density (if not present).
+   * <p>{@link FilterResourcesSteps.ResourceFilter} {@code resourceFilter} determines which
+   * drawables end up in the APK (based on density - mdpi, hdpi etc), and also whether higher
+   * density drawables get scaled down to the specified density (if not present).
    *
    * <p>{@link #resourceCompressionMode} determines whether non-english string resources are
    * packaged separately as assets (and not bundled together into the {@code resources.arsc} file).
@@ -297,12 +328,12 @@ public class ResourcesFilter extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *     inside these directories.
    */
   @VisibleForTesting
-  FilterResourcesStep createFilterResourcesStep(
+  FilterResourcesSteps createFilterResourcesSteps(
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       ImmutableBiMap<Path, Path> resSourceToDestDirMap) {
-    FilterResourcesStep.Builder filterResourcesStepBuilder =
-        FilterResourcesStep.builder()
+    FilterResourcesSteps.Builder filterResourcesStepBuilder =
+        FilterResourcesSteps.builder()
             .setProjectFilesystem(getProjectFilesystem())
             .setInResToOutResDirMap(resSourceToDestDirMap)
             .setResourceFilter(resourceFilter);

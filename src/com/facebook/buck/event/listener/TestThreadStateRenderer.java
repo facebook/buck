@@ -40,6 +40,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
       Ansi ansi,
       Function<Long, String> formatTimeFunction,
       long currentTimeMs,
+      int outputMaxColumns,
       Map<Long, Optional<? extends TestSummaryEvent>> testSummariesByThread,
       Map<Long, Optional<? extends TestStatusMessageEvent>> testStatusMessagesByThread,
       Map<Long, Optional<? extends LeafEvent>> runningStepsByThread,
@@ -53,7 +54,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
             buildRuleThreadTracker);
     this.commonThreadStateRenderer =
         new CommonThreadStateRenderer(
-            ansi, formatTimeFunction, currentTimeMs, threadInformationMap);
+            ansi, formatTimeFunction, currentTimeMs, outputMaxColumns, threadInformationMap);
   }
 
   private static ImmutableMap<Long, ThreadRenderingInformation> getThreadInformationMap(

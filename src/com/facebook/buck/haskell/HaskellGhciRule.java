@@ -437,6 +437,9 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new StringTemplateStep(
             ghciScriptTemplate, getProjectFilesystem(), script, templateArgs.build()));
     steps.add(new MakeExecutableStep(getProjectFilesystem(), script));
+
+    buildableContext.recordArtifact(dir);
+
     return steps.build();
   }
 }

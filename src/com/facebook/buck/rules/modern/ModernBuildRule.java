@@ -31,6 +31,8 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
+import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Supplier;
@@ -69,12 +71,12 @@ public class ModernBuildRule<T extends Buildable>
       ProjectFilesystem filesystem,
       T buildable,
       SourcePathRuleFinder ruleFinder) {
-    this.classInfo = DefaultClassInfo.from(buildable);
+    this.classInfo = DefaultClassInfoFactory.forBuildable(buildable);
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
     this.buildable = buildable;
     this.deps = Suppliers.memoize(this::computeDeps);
-    this.inputRuleResolver = new InputRuleResolver(ruleFinder);
+    this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.outputPathResolver =
         new DefaultOutputPathResolver(this.getProjectFilesystem(), this.getBuildTarget());

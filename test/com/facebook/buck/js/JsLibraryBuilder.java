@@ -47,11 +47,6 @@ public class JsLibraryBuilder
     return this;
   }
 
-  JsLibraryBuilder setLibs(ImmutableSortedSet<BuildTarget> libs) {
-    getArgForPopulating().setLibs(libs);
-    return this;
-  }
-
   JsLibraryBuilder setSrcs(ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> srcs) {
     getArgForPopulating().setSrcs(srcs);
     return this;

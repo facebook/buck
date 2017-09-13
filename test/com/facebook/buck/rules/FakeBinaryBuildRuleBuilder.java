@@ -111,10 +111,11 @@ public class FakeBinaryBuildRuleBuilder
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractFakeBinaryArg extends CommonDescriptionArg {
+  interface AbstractFakeBinaryArg extends CommonDescriptionArg, HasDeclaredDeps {
     ImmutableList<String> getCommand();
 
     @Value.NaturalOrder
+    @Override
     ImmutableSortedSet<BuildTarget> getDeps();
 
     @Value.NaturalOrder

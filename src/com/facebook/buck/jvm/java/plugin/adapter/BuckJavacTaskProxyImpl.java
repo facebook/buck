@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -108,6 +109,11 @@ public class BuckJavacTaskProxyImpl implements BuckJavacTaskProxy {
   @Override
   public Types getTypes() {
     return javacTask.getTypes();
+  }
+
+  @Override
+  public Messager getMessager() {
+    return new TreesMessager(javacTask.getTrees());
   }
 
   @Override

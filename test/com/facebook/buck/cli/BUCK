@@ -83,10 +83,8 @@ java_library(
     ],
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -263,9 +261,7 @@ java_test(
     run_test_separately = True,
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -426,9 +422,7 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/android:apkmodule",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:packageable",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
@@ -498,6 +492,7 @@ java_test(
         "//src/com/facebook/buck/parser:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/python:support",
         "//src/com/facebook/buck/query:query",
@@ -527,6 +522,7 @@ java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/swift:platform",
         "//src/com/facebook/buck/swift:swift",
+        "//src/com/facebook/buck/test:config",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
@@ -600,6 +596,7 @@ java_test(
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jetty:jetty",
+        "//third-party/java/jimfs:jimfs",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
@@ -610,5 +607,15 @@ java_test(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+)
+
+python_test(
+    name = "buck_run",
+    srcs = [
+        "buck_run_test.py",
+    ],
+    deps = [
+        "//test/com/facebook/buck/testutil/integration:integration-py",
     ],
 )

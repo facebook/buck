@@ -19,8 +19,10 @@ package com.facebook.buck.test;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 import org.immutables.value.Value;
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -56,8 +58,8 @@ abstract class AbstractTestRunningOptions {
   public abstract Optional<String> getPathToJavaAgent();
 
   @Value.Default
-  public CoverageReportFormat getCoverageReportFormat() {
-    return CoverageReportFormat.HTML;
+  public Set<CoverageReportFormat> getCoverageReportFormats() {
+    return EnumSet.of(CoverageReportFormat.HTML);
   }
 
   @Value.Default

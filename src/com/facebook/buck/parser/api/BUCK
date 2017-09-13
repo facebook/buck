@@ -1,0 +1,13 @@
+java_library(
+    name = "api",
+    srcs = glob([
+        "*.java",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//third-party/java/guava:guava",
+    ],
+)

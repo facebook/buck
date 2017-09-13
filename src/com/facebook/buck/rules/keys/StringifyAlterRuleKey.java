@@ -35,7 +35,7 @@ class StringifyAlterRuleKey implements AlterRuleKey {
 
   private final ValueExtractor valueExtractor;
 
-  public StringifyAlterRuleKey(ValueExtractor valueExtractor) {
+  StringifyAlterRuleKey(ValueExtractor valueExtractor) {
     this.valueExtractor = valueExtractor;
   }
 

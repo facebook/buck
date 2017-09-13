@@ -24,6 +24,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
@@ -62,6 +63,11 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
   public static Finished.Builder newFinishedEventBuilder(Started event) {
     return new Finished.Builder(event);
+  }
+
+  public static HttpArtifactCacheEvent.MultiFetchStarted newMultiFetchStartedEvent(
+      ImmutableList<RuleKey> ruleKeys) {
+    return new MultiFetchStarted(ImmutableSet.copyOf(ruleKeys));
   }
 
   public static class Scheduled extends HttpArtifactCacheEvent {
@@ -276,5 +282,11 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     Optional<Long> getArtifactSizeBytes();
 
     Optional<String> getErrorMessage();
+  }
+
+  static class MultiFetchStarted extends Started {
+    public MultiFetchStarted(ImmutableSet<RuleKey> ruleKeys) {
+      super(Operation.MULTI_FETCH, ruleKeys);
+    }
   }
 }

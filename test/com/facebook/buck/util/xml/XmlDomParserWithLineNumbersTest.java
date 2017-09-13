@@ -61,6 +61,6 @@ public class XmlDomParserWithLineNumbersTest {
                 .getFirstChild()
                 .getNextSibling()
                 .getUserData(PositionalXmlHandler.LOCATION_USER_DATA_KEY);
-    assertEquals(DocumentLocation.of(11, 44), documentLocation);
+    assertEquals(DocumentLocation.of(10, 43), documentLocation);
   }
 }

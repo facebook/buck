@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
@@ -436,6 +437,16 @@ class NativeLibraryMergeEnhancer {
           getStructuralDeps(
               constituents, NativeLinkable::getNativeLinkableExportedDeps, mergeResults);
 
+      ProjectFilesystem targetProjectFilesystem = projectFilesystem;
+      if (!constituents.isActuallyMerged()) {
+        // There is only one target
+        BuildTarget target = preMergeLibs.iterator().next().getBuildTarget();
+        if (!target.getCellPath().equals(projectFilesystem.getRootPath())) {
+          // Switch the target project filesystem
+          targetProjectFilesystem = ruleResolver.getRule(target).getProjectFilesystem();
+        }
+      }
+
       MergedLibNativeLinkable mergedLinkable =
           new MergedLibNativeLinkable(
               cxxBuckConfig,
@@ -443,7 +454,7 @@ class NativeLibraryMergeEnhancer {
               pathResolver,
               ruleFinder,
               baseBuildTarget,
-              projectFilesystem,
+              targetProjectFilesystem,
               constituents,
               orderedDeps,
               orderedExportedDeps,
@@ -863,40 +874,36 @@ class NativeLibraryMergeEnhancer {
       }
 
       String soname = getSoname(cxxPlatform);
-      BuildTarget target = getBuildTargetForPlatform(cxxPlatform);
-      Optional<BuildRule> ruleOptional = ruleResolver.getRuleOptional(target);
-      BuildRule rule = null;
-      if (ruleOptional.isPresent()) {
-        rule = ruleOptional.get();
-      } else {
-        rule =
-            CxxLinkableEnhancer.createCxxLinkableBuildRule(
-                cxxBuckConfig,
-                cxxPlatform,
-                projectFilesystem,
-                ruleResolver,
-                pathResolver,
-                ruleFinder,
-                target,
-                Linker.LinkType.SHARED,
-                Optional.of(soname),
-                BuildTargets.getGenPath(projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
-                // Android Binaries will use share deps by default.
-                Linker.LinkableDepType.SHARED,
-                /* thinLto */ false,
-                Iterables.concat(
-                    getNativeLinkableDepsForPlatform(cxxPlatform),
-                    getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
-                Optional.empty(),
-                Optional.empty(),
-                ImmutableSet.of(),
-                ImmutableSet.of(),
-                getImmediateNativeLinkableInput(cxxPlatform),
-                constituents.isActuallyMerged()
-                    ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
-                    : Optional.empty());
-        ruleResolver.addToIndex(rule);
-      }
+      BuildRule rule =
+          ruleResolver.computeIfAbsent(
+              getBuildTargetForPlatform(cxxPlatform),
+              target ->
+                  CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                      cxxBuckConfig,
+                      cxxPlatform,
+                      projectFilesystem,
+                      ruleResolver,
+                      pathResolver,
+                      ruleFinder,
+                      target,
+                      Linker.LinkType.SHARED,
+                      Optional.of(soname),
+                      BuildTargets.getGenPath(
+                          projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
+                      // Android Binaries will use share deps by default.
+                      Linker.LinkableDepType.SHARED,
+                      /* thinLto */ false,
+                      Iterables.concat(
+                          getNativeLinkableDepsForPlatform(cxxPlatform),
+                          getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      ImmutableSet.of(),
+                      ImmutableSet.of(),
+                      getImmediateNativeLinkableInput(cxxPlatform),
+                      constituents.isActuallyMerged()
+                          ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
+                          : Optional.empty()));
       return ImmutableMap.of(soname, rule.getSourcePathToOutput());
     }
   }

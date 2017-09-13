@@ -32,5 +32,7 @@ abstract class AbstractGenerationResult {
 
   public abstract ImmutableSet<BuildTarget> getRequiredBuildTargets();
 
+  public abstract ImmutableSet<Path> getXcconfigPaths();
+
   public abstract ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
 }

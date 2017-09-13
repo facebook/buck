@@ -19,10 +19,10 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 import static com.google.common.base.Throwables.throwIfInstanceOf;
 
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;

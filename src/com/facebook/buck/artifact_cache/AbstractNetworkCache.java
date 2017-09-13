@@ -22,6 +22,8 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.NoHealthyServersException;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -83,20 +85,19 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     }
 
     @Override
-    public FetchEvents fetchScheduled(RuleKey ruleKey) {
-      // TODO(cjhopman): Send a scheduled event this when fetch is actually async.
+    public void fetchScheduled(RuleKey ruleKey) {
+      // TODO(cjhopman): Send an event for this.
+    }
 
+    @Override
+    public FetchRequestEvents fetchStarted(RuleKey ruleKey) {
       HttpArtifactCacheEvent.Started startedEvent =
           HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
       HttpArtifactCacheEvent.Finished.Builder eventBuilder =
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       eventBuilder.getFetchBuilder().setRequestedRuleKey(ruleKey);
-      return new FetchEvents() {
-        @Override
-        public void started() {
-          dispatcher.post(startedEvent);
-        }
-
+      dispatcher.post(startedEvent);
+      return new FetchRequestEvents() {
         @Override
         public void finished(FetchResult fetchResult) {
           eventBuilder.setTarget(fetchResult.getBuildTarget());
@@ -112,24 +113,65 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
 
         @Override
         public void failed(IOException e, String msg, CacheResult result) {
-          if (isNoHealthyServersException(e)) {
-            errorReporter.reportFailureToEventBus(
-                "NoHealthyServers",
-                String.format(
-                    "\n"
-                        + "Failed to fetch %s over %s:\n"
-                        + "Buck encountered a critical network failure.\n"
-                        + "Please check your network connection and retry."
-                        + "\n",
-                    ruleKey, name));
-          } else {
-            String key = String.format("store:%s", e.getClass().getSimpleName());
-            errorReporter.reportFailure(e, key, msg);
-          }
+          reportFetchFailure(ruleKey, e, msg);
           eventBuilder.getFetchBuilder().setErrorMessage(msg).setFetchResult(result);
           dispatcher.post(eventBuilder.build());
         }
       };
+    }
+
+    @Override
+    public MultiFetchRequestEvents multiFetchStarted(ImmutableList<RuleKey> ruleKeys) {
+      Joiner ruleKeysStr = Joiner.on(", ");
+      LOG.debug("multiFetchStarted for <%s>.", ruleKeysStr.join(ruleKeys));
+      HttpArtifactCacheEvent.MultiFetchStarted startedEvent =
+          HttpArtifactCacheEvent.newMultiFetchStartedEvent(ruleKeys);
+      HttpArtifactCacheEvent.Finished.Builder eventBuilder =
+          HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+      dispatcher.post(startedEvent);
+      return new MultiFetchRequestEvents() {
+        @Override
+        public void skipped(int keyIndex) {
+          LOG.debug("multiFetchSkipped for %s.", ruleKeys.get(keyIndex));
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void finished(int keyIndex, FetchResult thisResult) {
+          LOG.debug(
+              "multiFetchFinished for %s with result %s.",
+              ruleKeys.get(keyIndex), thisResult.getCacheResult().getType());
+          // TODO(cjhopman): implement.
+        }
+
+        @Override
+        public void failed(int keyIndex, IOException e, String msg, CacheResult result) {
+          reportFetchFailure(ruleKeys.get(keyIndex), e, msg);
+          // TODO(cjhopman): implement this.
+        }
+
+        @Override
+        public void close() {
+          dispatcher.post(eventBuilder.build());
+        }
+      };
+    }
+
+    private void reportFetchFailure(RuleKey ruleKey, IOException e, String msg) {
+      if (isNoHealthyServersException(e)) {
+        errorReporter.reportFailureToEventBus(
+            "NoHealthyServers",
+            String.format(
+                "\n"
+                    + "Failed to fetch %s over %s:\n"
+                    + "Buck encountered a critical network failure.\n"
+                    + "Please check your network connection and retry."
+                    + "\n",
+                ruleKey, name));
+      } else {
+        String key = String.format("store:%s", e.getClass().getSimpleName());
+        errorReporter.reportFailure(e, key, msg);
+      }
     }
 
     @Override
@@ -145,34 +187,35 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       return new StoreEvents() {
         @Override
-        public void started() {
+        public StoreRequestEvents started() {
           dispatcher.post(startedEvent);
           finishedEventBuilder.getStoreBuilder().setRuleKeys(info.getRuleKeys());
           finishedEventBuilder
               .getStoreBuilder()
               .setArtifactSizeBytes(artifactSizeBytes)
               .setRuleKeys(info.getRuleKeys());
-        }
+          return new StoreRequestEvents() {
+            @Override
+            public void finished(StoreResult result) {
+              finishedEventBuilder
+                  .getStoreBuilder()
+                  .setArtifactContentHash(result.getArtifactContentHash())
+                  .setRequestSizeBytes(result.getRequestSizeBytes())
+                  .setWasStoreSuccessful(result.getWasStoreSuccessful());
+              dispatcher.post(finishedEventBuilder.build());
+            }
 
-        @Override
-        public void finished(StoreResult result) {
-          finishedEventBuilder
-              .getStoreBuilder()
-              .setArtifactContentHash(result.getArtifactContentHash())
-              .setRequestSizeBytes(result.getRequestSizeBytes())
-              .setWasStoreSuccessful(result.getWasStoreSuccessful());
-          dispatcher.post(finishedEventBuilder.build());
-        }
-
-        @Override
-        public void failed(IOException e, String errorMessage) {
-          String key = String.format("store:%s", e.getClass().getSimpleName());
-          errorReporter.reportFailure(e, key, errorMessage);
-          finishedEventBuilder
-              .getStoreBuilder()
-              .setWasStoreSuccessful(false)
-              .setErrorMessage(errorMessage);
-          dispatcher.post(finishedEventBuilder.build());
+            @Override
+            public void failed(IOException e, String errorMessage) {
+              String key = String.format("store:%s", e.getClass().getSimpleName());
+              errorReporter.reportFailure(e, key, errorMessage);
+              finishedEventBuilder
+                  .getStoreBuilder()
+                  .setWasStoreSuccessful(false)
+                  .setErrorMessage(errorMessage);
+              dispatcher.post(finishedEventBuilder.build());
+            }
+          };
         }
       };
     }

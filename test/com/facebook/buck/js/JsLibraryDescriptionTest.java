@@ -169,9 +169,9 @@ public class JsLibraryDescriptionTest {
 
     JsTestScenario scenario =
         scenarioBuilder
-            .libraryWithDeps(a)
-            .libraryWithDeps(b)
-            .libraryWithDeps(c, b)
+            .library(a)
+            .library(b)
+            .library(c, b)
             .appleLibraryWithDeps(l, a, c)
             .bundleWithDeps(x, l)
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
@@ -197,11 +197,7 @@ public class JsLibraryDescriptionTest {
     BuildTarget b = BuildTargetFactory.newInstance("//direct:dep");
 
     JsTestScenario scenario =
-        scenarioBuilder
-            .libraryWithDeps(a)
-            .libraryWithDeps(b)
-            .library(target, Query.of(a.toString()), b)
-            .build();
+        scenarioBuilder.library(a).library(b).library(target, Query.of(a.toString()), b).build();
 
     JsLibrary lib = scenario.resolver.getRuleWithType(target, JsLibrary.class);
     ImmutableSortedSet<BuildRule> deps = scenario.resolver.getAllRules(ImmutableList.of(a, b));

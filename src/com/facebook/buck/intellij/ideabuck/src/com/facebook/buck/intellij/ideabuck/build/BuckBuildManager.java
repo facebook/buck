@@ -66,10 +66,7 @@ public class BuckBuildManager {
 
   /** Get saved target for this project from settings. */
   public String getCurrentSavedTarget(Project project) {
-    if (BuckSettingsProvider.getInstance().getState().lastAlias == null) {
-      return null;
-    }
-    return BuckSettingsProvider.getInstance().getState().lastAlias.get(project.getBasePath());
+    return BuckSettingsProvider.getInstance().getLastAliasForProject(project);
   }
 
   public BuckCommandHandler getCurrentRunningBuckCommandHandler() {
@@ -155,7 +152,7 @@ public class BuckBuildManager {
     }
     Project project = handler.project();
 
-    String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
+    String exec = BuckSettingsProvider.getInstance().resolveBuckExecutable();
     if (exec == null) {
       BuckToolWindowFactory.outputConsoleMessage(
           project,

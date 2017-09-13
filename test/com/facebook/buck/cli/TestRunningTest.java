@@ -43,6 +43,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildEngine;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
@@ -122,7 +123,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
 
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -159,7 +161,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -194,7 +197,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -224,7 +228,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -275,7 +280,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
 
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary javaLibrary = (JavaLibrary) ruleResolver.requireRule(javaLibraryTarget);
@@ -492,7 +498,7 @@ public class TestRunningTest {
     DefaultStepRunner stepRunner = new DefaultStepRunner();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new BuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     int ret =
         TestRunning.runTests(
@@ -661,7 +667,7 @@ public class TestRunningTest {
     DefaultStepRunner stepRunner = new DefaultStepRunner();
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new BuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     int ret =
         TestRunning.runTests(
@@ -763,7 +769,7 @@ public class TestRunningTest {
     BuildTarget failingTestTarget = BuildTargetFactory.newInstance("//:failingtest");
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
-            new BuildRuleResolver(
+            new SingleThreadedBuildRuleResolver(
                 TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeTestRule failingTest =

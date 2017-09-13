@@ -78,7 +78,7 @@ public class AndroidResourceDescription
       InternalFlavor.of("android-resource-index");
 
   @VisibleForTesting
-  static final Flavor ASSETS_SYMLINK_TREE_FLAVOR = InternalFlavor.of("assets-symlink-tree");
+  public static final Flavor ASSETS_SYMLINK_TREE_FLAVOR = InternalFlavor.of("assets-symlink-tree");
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
@@ -144,12 +144,11 @@ public class AndroidResourceDescription
           resDir.isPresent(),
           "Tried to require rule %s, but no resource dir is preset.",
           buildTarget);
-      params =
-          params
-              .withDeclaredDeps(
-                  ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())))
-              .withoutExtraDeps();
-      return new Aapt2Compile(buildTarget, projectFilesystem, params, resDir.get());
+      return new Aapt2Compile(
+          buildTarget,
+          projectFilesystem,
+          ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
+          resDir.get());
     }
 
     params =

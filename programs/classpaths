@@ -64,6 +64,7 @@ third-party/java/sqlite/sqlite-jdbc-3.20.0.jar
 third-party/java/stringtemplate/ST-4.0.8.jar
 third-party/java/thrift/libthrift-0.10.0.jar
 third-party/java/xz-java-1.5/xz-1.5.jar
+third-party/java/bazel/skylark-lang_deploy.jar
 # maven/aether libs
 third-party/java/aether/aether-api-1.0.2.v20150114.jar
 third-party/java/aether/aether-connector-basic-1.0.2.v20150114.jar

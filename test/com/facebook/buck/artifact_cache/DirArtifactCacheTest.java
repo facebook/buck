@@ -35,6 +35,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -109,7 +110,8 @@ public class DirArtifactCacheTest {
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -140,7 +142,8 @@ public class DirArtifactCacheTest {
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -185,7 +188,8 @@ public class DirArtifactCacheTest {
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -241,7 +245,8 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
@@ -341,7 +346,8 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     assertFalse(inputRuleX.equals(inputRuleY));
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
@@ -396,7 +402,8 @@ public class DirArtifactCacheTest {
     assertFalse(inputRuleX.equals(inputRuleZ));
     assertFalse(inputRuleY.equals(inputRuleZ));
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);
@@ -609,7 +616,8 @@ public class DirArtifactCacheTest {
     BuildRule inputRuleY = new BuildRuleForTest(fileY);
     BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
     BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ruleResolver.addToIndex(inputRuleX);
     ruleResolver.addToIndex(inputRuleY);
     ruleResolver.addToIndex(inputRuleZ);

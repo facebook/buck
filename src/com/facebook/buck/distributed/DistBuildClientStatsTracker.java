@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.distributed;
 
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -25,10 +27,14 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
 
 public class DistBuildClientStatsTracker {
-  @VisibleForTesting
-  protected enum DistBuildClientStat {
+  public enum DistBuildClientStat {
+    LOCAL_PREPARATION, // Measures everything that happens before starting distributed build
+    LOCAL_GRAPH_CONSTRUCTION,
     PERFORM_DISTRIBUTED_BUILD,
     PERFORM_LOCAL_BUILD,
+    POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
+    PUBLISH_BUILD_SLAVE_FINISHED_STATS,
+    POST_BUILD_ANALYSIS,
     CREATE_DISTRIBUTED_BUILD,
     UPLOAD_MISSING_FILES,
     UPLOAD_TARGET_GRAPH,
@@ -36,6 +42,22 @@ public class DistBuildClientStatsTracker {
     SET_BUCK_VERSION,
     MATERIALIZE_SLAVE_LOGS,
   }
+
+  private static final DistBuildClientStat[] REQUIRED_STATS = {
+    LOCAL_PREPARATION,
+    LOCAL_GRAPH_CONSTRUCTION,
+    PERFORM_DISTRIBUTED_BUILD,
+    POST_DISTRIBUTED_BUILD_LOCAL_STEPS,
+    CREATE_DISTRIBUTED_BUILD,
+    UPLOAD_MISSING_FILES,
+    UPLOAD_TARGET_GRAPH,
+    UPLOAD_BUCK_DOT_FILES,
+    SET_BUCK_VERSION,
+    // POST_BUILD_ANALYSIS only happens if remote build was successful
+    // PUBLISH_BUILD_SLAVE_FINISHED_STATS is optional
+    // MATERIALIZE_SLAVE_LOGS is optional
+    // PERFORM_LOCAL_BUILD only happens if remote build was successful
+  };
 
   @GuardedBy("this")
   private final Map<DistBuildClientStat, Stopwatch> stopwatchesByType = new HashMap<>();
@@ -78,30 +100,17 @@ public class DistBuildClientStatsTracker {
     if (performedLocalBuild) {
       Preconditions.checkArgument(localBuildExitCode.isPresent());
       Preconditions.checkNotNull(
-          durationsMsByType.get(DistBuildClientStat.PERFORM_LOCAL_BUILD),
-          "No time was recorded for stat: " + DistBuildClientStat.PERFORM_LOCAL_BUILD);
+          durationsMsByType.get(PERFORM_LOCAL_BUILD),
+          "No time was recorded for stat: " + PERFORM_LOCAL_BUILD);
+      Preconditions.checkNotNull(
+          durationsMsByType.get(POST_BUILD_ANALYSIS),
+          "No time was recorded for stat: " + POST_BUILD_ANALYSIS);
     }
 
-    Preconditions.checkNotNull(
-        durationsMsByType.get(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD),
-        "No time was recorded for stat: " + DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD);
-    Preconditions.checkNotNull(
-        durationsMsByType.get(DistBuildClientStat.CREATE_DISTRIBUTED_BUILD),
-        "No time was recorded for stat: " + DistBuildClientStat.CREATE_DISTRIBUTED_BUILD);
-    Preconditions.checkNotNull(
-        durationsMsByType.get(DistBuildClientStat.UPLOAD_MISSING_FILES),
-        "No time was recorded for stat: " + DistBuildClientStat.UPLOAD_MISSING_FILES);
-    Preconditions.checkNotNull(
-        durationsMsByType.get(DistBuildClientStat.UPLOAD_TARGET_GRAPH),
-        "No time was recorded for stat: " + DistBuildClientStat.UPLOAD_TARGET_GRAPH);
-    Preconditions.checkNotNull(
-        durationsMsByType.get(DistBuildClientStat.UPLOAD_BUCK_DOT_FILES),
-        "No time was recorded for stat: " + DistBuildClientStat.UPLOAD_BUCK_DOT_FILES);
-    Preconditions.checkNotNull(
-        durationsMsByType.get(DistBuildClientStat.SET_BUCK_VERSION),
-        "No time was recorded for stat: " + DistBuildClientStat.SET_BUCK_VERSION);
-
-    // MATERIALIZE_SLAVE_LOGS is optional even if no buck client errors.
+    for (DistBuildClientStat stat : REQUIRED_STATS) {
+      Preconditions.checkNotNull(
+          durationsMsByType.get(stat), "No time was recorded for stat: " + stat);
+    }
   }
 
   @GuardedBy("this")
@@ -137,23 +146,23 @@ public class DistBuildClientStatsTracker {
 
     if (performedLocalBuild) {
       builder.setLocalBuildExitCode(localBuildExitCode);
-      builder.setLocalBuildDurationMs(getDurationOrEmpty(DistBuildClientStat.PERFORM_LOCAL_BUILD));
+      builder.setLocalBuildDurationMs(getDurationOrEmpty(PERFORM_LOCAL_BUILD));
+      builder.setPostBuildAnalysisDurationMs(getDurationOrEmpty(POST_BUILD_ANALYSIS));
     }
 
-    builder.setPerformDistributedBuildDurationMs(
-        getDurationOrEmpty(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD));
-    builder.setCreateDistributedBuildDurationMs(
-        getDurationOrEmpty(DistBuildClientStat.CREATE_DISTRIBUTED_BUILD));
-    builder.setUploadMissingFilesDurationMs(
-        getDurationOrEmpty(DistBuildClientStat.UPLOAD_MISSING_FILES));
-    builder.setUploadTargetGraphDurationMs(
-        getDurationOrEmpty(DistBuildClientStat.UPLOAD_TARGET_GRAPH));
-    builder.setUploadBuckDotFilesDurationMs(
-        getDurationOrEmpty(DistBuildClientStat.UPLOAD_BUCK_DOT_FILES));
-    builder.setSetBuckVersionDurationMs(getDurationOrEmpty(DistBuildClientStat.SET_BUCK_VERSION));
-
-    builder.setMaterializeSlaveLogsDurationMs(
-        getDurationOrEmpty(DistBuildClientStat.MATERIALIZE_SLAVE_LOGS));
+    builder.setLocalPreparationDurationMs(getDurationOrEmpty(LOCAL_PREPARATION));
+    builder.setLocalGraphConstructionDurationMs(getDurationOrEmpty(LOCAL_GRAPH_CONSTRUCTION));
+    builder.setPostDistBuildLocalStepsDurationMs(
+        getDurationOrEmpty(POST_DISTRIBUTED_BUILD_LOCAL_STEPS));
+    builder.setPerformDistributedBuildDurationMs(getDurationOrEmpty(PERFORM_DISTRIBUTED_BUILD));
+    builder.setCreateDistributedBuildDurationMs(getDurationOrEmpty(CREATE_DISTRIBUTED_BUILD));
+    builder.setUploadMissingFilesDurationMs(getDurationOrEmpty(UPLOAD_MISSING_FILES));
+    builder.setUploadTargetGraphDurationMs(getDurationOrEmpty(UPLOAD_TARGET_GRAPH));
+    builder.setUploadBuckDotFilesDurationMs(getDurationOrEmpty(UPLOAD_BUCK_DOT_FILES));
+    builder.setSetBuckVersionDurationMs(getDurationOrEmpty(SET_BUCK_VERSION));
+    builder.setMaterializeSlaveLogsDurationMs(getDurationOrEmpty(MATERIALIZE_SLAVE_LOGS));
+    builder.setPublishBuildSlaveFinishedStatsDurationMs(
+        getDurationOrEmpty(PUBLISH_BUILD_SLAVE_FINISHED_STATS));
 
     builder.setMissingFilesUploadedCount(missingFilesUploadedCount);
 
@@ -184,70 +193,6 @@ public class DistBuildClientStatsTracker {
     this.isLocalFallbackBuildEnabled = Optional.of(isLocalFallbackBuildEnabled);
   }
 
-  public void startCreateBuildTimer() {
-    startTimer(DistBuildClientStat.CREATE_DISTRIBUTED_BUILD);
-  }
-
-  public void stopCreateBuildTimer() {
-    stopTimer(DistBuildClientStat.CREATE_DISTRIBUTED_BUILD);
-  }
-
-  public void startUploadMissingFilesTimer() {
-    startTimer(DistBuildClientStat.UPLOAD_MISSING_FILES);
-  }
-
-  public void stopUploadMissingFilesTimer() {
-    stopTimer(DistBuildClientStat.UPLOAD_MISSING_FILES);
-  }
-
-  public void startUploadTargetGraphTimer() {
-    startTimer(DistBuildClientStat.UPLOAD_TARGET_GRAPH);
-  }
-
-  public void stopUploadTargetGraphTimer() {
-    stopTimer(DistBuildClientStat.UPLOAD_TARGET_GRAPH);
-  }
-
-  public void startUploadBuckDotFilesTimer() {
-    startTimer(DistBuildClientStat.UPLOAD_BUCK_DOT_FILES);
-  }
-
-  public void stopUploadBuckDotFilesTimer() {
-    stopTimer(DistBuildClientStat.UPLOAD_BUCK_DOT_FILES);
-  }
-
-  public void startSetBuckVersionTimer() {
-    startTimer(DistBuildClientStat.SET_BUCK_VERSION);
-  }
-
-  public void stopSetBuckVersionTimer() {
-    stopTimer(DistBuildClientStat.SET_BUCK_VERSION);
-  }
-
-  public void startPerformDistributedBuildTimer() {
-    startTimer(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD);
-  }
-
-  public void stopPerformDistributedBuildTimer() {
-    stopTimer(DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD);
-  }
-
-  public void startPerformLocalBuildTimer() {
-    startTimer(DistBuildClientStat.PERFORM_LOCAL_BUILD);
-  }
-
-  public void stopPerformLocalBuildTimer() {
-    stopTimer(DistBuildClientStat.PERFORM_LOCAL_BUILD);
-  }
-
-  public void startMaterializeSlaveLogsTimer() {
-    startTimer(DistBuildClientStat.MATERIALIZE_SLAVE_LOGS);
-  }
-
-  public void stopMaterializeSlaveLogsTimer() {
-    stopTimer(DistBuildClientStat.MATERIALIZE_SLAVE_LOGS);
-  }
-
   public boolean hasStampedeId() {
     return stampedeId.isPresent();
   }
@@ -265,12 +210,12 @@ public class DistBuildClientStatsTracker {
     durationsMsByType.put(stat, duration);
   }
 
-  private synchronized void startTimer(DistBuildClientStat stat) {
+  public synchronized void startTimer(DistBuildClientStat stat) {
     Stopwatch stopwatch = Stopwatch.createStarted();
     stopwatchesByType.put(stat, stopwatch);
   }
 
-  private synchronized void stopTimer(DistBuildClientStat stat) {
+  public synchronized void stopTimer(DistBuildClientStat stat) {
     Preconditions.checkNotNull(
         stopwatchesByType.get(stat),
         "Cannot stop timer for stat: [" + stat + "] as it was not started.");

@@ -27,6 +27,7 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -171,7 +172,8 @@ public class DBuckConfigTest {
   /** Returns the path of a Tool. */
   private String toolPath(Tool tool) {
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return tool.getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)))
         .get(0);
   }

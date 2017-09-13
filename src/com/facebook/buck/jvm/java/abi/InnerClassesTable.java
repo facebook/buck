@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -138,7 +139,19 @@ public class InnerClassesTable {
                   element.getEnclosingElement().asType().accept(this, null);
                 }
 
-                return super.visitDeclared(t, aVoid);
+                try {
+                  return super.visitDeclared(t, aVoid);
+                } catch (CannotInferException e) {
+                  // We cannot know the enclosing type or type arguments of an inferred type, so
+                  // we can't visit them for type references. However, inferred type mirrors are
+                  // only returned from asType on an inferred type element. If there were
+                  // type arguments in the code, we'd have a StandaloneDeclaredType instead of
+                  // an InferredType. Similarly, the enclosing type will be visited by way of
+                  // visiting the enclosing element above. So it's safe to just ignore the
+                  // exception.
+
+                  return null;
+                }
               }
             }.scan(type);
           }
@@ -186,7 +199,11 @@ public class InnerClassesTable {
             descriptorFactory.getInternalName(element),
             descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
             element.getSimpleName().toString(),
-            accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+            element == topElement
+                ? accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER
+                // It is not strictly required to mark enclosing classes ACC_STATIC here, but it
+                // does make SourceAbiCompatibleVisitor's job easier.
+                : Opcodes.ACC_STATIC);
       }
     }
 
@@ -210,7 +227,20 @@ public class InnerClassesTable {
                   descriptorFactory.getInternalName(element),
                   descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
                   element.getSimpleName().toString(),
-                  accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
+                  // We cannot know the access flags of an inferred type element. However, the only
+                  // flag that matters in the InnerClasses table is ACC_STATIC. When reading the
+                  // InnerClasses table, the compiler may create ClassSymbols for types it hasn't
+                  // seen before, and the absence of ACC_STATIC will cause it to mark those
+                  // ClassSymbols as inner classes, and it will not correct that when later loading
+                  // the class from its definitive class file. However, it is safe to mark
+                  // everything with ACC_STATIC, because the compiler *will* properly update
+                  // non-static classes when loading their definitive class files.
+                  // (http://hg.openjdk.java.net/jdk8u/jdk8u/langtools/file/9986bf97a48d/src/share/classes/com/sun/tools/javac/jvm/ClassReader.java#l2272)
+                  //
+                  // We mark everything ACC_STATIC (rather than just the inferred types) so that
+                  // we can more easily update the class ABI to match so that ABI diffing still
+                  // works for testing.
+                  Opcodes.ACC_STATIC);
             });
   }
 }

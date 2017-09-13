@@ -241,7 +241,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
     compile(
         Joiner.on('\n')
             .join(
-                "import java.lang.annotation.*",
+                "import java.lang.annotation.*;",
                 "public @interface Foo {",
                 "  RetentionPolicy value() default RetentionPolicy.SOURCE;",
                 "}"));
@@ -268,7 +268,7 @@ public class TreeBackedAnnotationValueTest extends CompilerTreeApiParameterizedT
     compile(
         Joiner.on('\n')
             .join(
-                "import java.lang.annotation.*",
+                "import java.lang.annotation.*;",
                 "public @interface Foo {",
                 "  FooEnum value() default FooEnum.Bar;",
                 "}",

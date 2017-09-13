@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.ide.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
+import com.facebook.buck.ide.intellij.model.folders.JavaResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -30,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -55,6 +57,11 @@ public class IjSourceRootSimplifierTest {
 
   private static IjFolder buildNonCoalescingFolder(String path) {
     return new AndroidResourceFolder(Paths.get(path));
+  }
+
+  private static IjFolder buildJavaResourceFolder(String path, String resourcesRoot) {
+    return new JavaResourceFolder(
+        Paths.get(path), Paths.get(resourcesRoot), ImmutableSortedSet.of());
   }
 
   private static JavaPackageFinder fakePackageFinder() {
@@ -112,6 +119,18 @@ public class IjSourceRootSimplifierTest {
             .simplify(0, ImmutableSet.of(left, right, parent), Paths.get(""), ImmutableSet.of())
             .values(),
         Matchers.contains(parent));
+  }
+
+  @Test
+  public void testMergedResourceFoldersShareSameResourcesRoot() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder left = buildJavaResourceFolder("res/left", "res");
+    IjFolder right = buildJavaResourceFolder("res/right", "res");
+    assertThat(
+        simplifier
+            .simplify(0, ImmutableSet.of(left, right), Paths.get(""), ImmutableSet.of())
+            .values(),
+        Matchers.contains(buildJavaResourceFolder("res", "res")));
   }
 
   @Test
@@ -220,6 +239,18 @@ public class IjSourceRootSimplifierTest {
   }
 
   @Test
+  public void testDifferentResourcesRootsAreNotMerged() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder left = buildJavaResourceFolder("res/test/left", "res/test");
+    IjFolder right = buildJavaResourceFolder("res/test/right", "res");
+    assertThat(
+        simplifier
+            .simplify(0, ImmutableSet.of(left, right), Paths.get(""), ImmutableSet.of())
+            .values(),
+        Matchers.containsInAnyOrder(left, right));
+  }
+
+  @Test
   public void testMergingIntoBiggerNumberOfSourceFolders() {
     IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
     IjFolder aaSource = buildSourceFolder("a/a");
@@ -323,6 +354,20 @@ public class IjSourceRootSimplifierTest {
                 ImmutableSet.of())
             .values(),
         Matchers.containsInAnyOrder(parentSource, rightSource));
+  }
+
+  @Test
+  public void testDifferentResourcesRootAreNotMergedIntoParent() {
+    IjSourceRootSimplifier simplifier = new IjSourceRootSimplifier(fakePackageFinder());
+    IjFolder parent = buildJavaResourceFolder("res/test", "res/test");
+    IjFolder left = buildJavaResourceFolder("res/test/left", "res/test");
+    IjFolder right = buildJavaResourceFolder("res/test/right", "res");
+
+    assertThat(
+        simplifier
+            .simplify(0, ImmutableSet.of(parent, left, right), Paths.get(""), ImmutableSet.of())
+            .values(),
+        Matchers.containsInAnyOrder(parent, right));
   }
 
   @Test

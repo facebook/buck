@@ -82,6 +82,7 @@ public class JarDirectoryStep implements Step {
             .setMainClass(parameters.getMainClass().orElse(null))
             .setManifestFile(parameters.getManifestFile().map(filesystem::resolve).orElse(null))
             .setShouldMergeManifests(parameters.getMergeManifests())
+            .setShouldDisallowAllDuplicates(parameters.getDisallowAllDuplicates())
             .setShouldHashEntries(parameters.getHashEntries())
             .setRemoveEntryPredicate(parameters.getRemoveEntryPredicate())
             .createJarFile(filesystem.resolve(parameters.getJarPath())));

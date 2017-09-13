@@ -38,6 +38,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleRule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
@@ -88,7 +89,8 @@ public class SupportedTargetTypeRegistry {
   public SupportedTargetTypeRegistry(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      JavaPackageFinder packageFinder) {
     addToIndex(
         new AndroidBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(
@@ -97,8 +99,12 @@ public class SupportedTargetTypeRegistry {
         new AndroidResourceModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new JavaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new JavaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(
+        new JavaLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, projectConfig, packageFinder));
+    addToIndex(
+        new JavaTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, projectConfig, packageFinder));
     addToIndex(
         new RobolectricTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(

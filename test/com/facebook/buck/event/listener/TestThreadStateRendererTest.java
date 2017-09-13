@@ -91,21 +91,21 @@ public class TestThreadStateRendererTest {
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  3.2s (running step A[2.7s])",
-                    " |=> //:target1...  3.1s",
-                    " |=> //:target3...  1.9s (running Test A[2.6s])",
-                    " |=> //:target4...  1.2s (running Test B[0.4s])",
-                    " |=> IDLE"))));
+                    " - //:target2... 3.2s (running step A[2.7s])",
+                    " - //:target1... 3.1s",
+                    " - //:target3... 1.9s (running Test A[2.6s])",
+                    " - //:target4... 1.2s (running Test B[0.4s])",
+                    " - IDLE"))));
     assertThat(
         renderLines(renderer, false),
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  3.2s (running step A[2.7s])",
-                    " |=> //:target3...  1.9s (running Test A[2.6s])",
-                    " |=> //:target1...  3.1s",
-                    " |=> IDLE",
-                    " |=> //:target4...  1.2s (running Test B[0.4s])"))));
+                    " - //:target2... 3.2s (running step A[2.7s])",
+                    " - //:target3... 1.9s (running Test A[2.6s])",
+                    " - //:target1... 3.1s",
+                    " - IDLE",
+                    " - //:target4... 1.2s (running Test B[0.4s])"))));
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
@@ -148,11 +148,11 @@ public class TestThreadStateRendererTest {
         is(
             equalTo(
                 ImmutableList.of(
-                    " |=> //:target2...  3.2s (running step A[2.7s])",
-                    " |=> //:target1...  3.1s",
-                    " |=> //:target3...  1.9s (running Test A[2.6s])",
-                    " |=> //:target4...  1.2s (running Installing Sim[0.4s])",
-                    " |=> IDLE"))));
+                    " - //:target2... 3.2s (running step A[2.7s])",
+                    " - //:target1... 3.1s",
+                    " - //:target3... 1.9s (running Test A[2.6s])",
+                    " - //:target4... 1.2s (running Installing Sim[0.4s])",
+                    " - IDLE"))));
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[:]", "[ ]"))));
@@ -186,10 +186,10 @@ public class TestThreadStateRendererTest {
             equalTo(
                 ImmutableList.of(
                     // missing test rule - no output
-                    " |=> //:target1...  3.1s", // missing test summary
-                    " |=> //:target3...  1.9s", // missing step information
-                    " |=> //:target4...  1.2s",
-                    " |=> IDLE")))); // missing accumulated time - show as IDLE
+                    " - //:target1... 3.1s", // missing test summary
+                    " - //:target3... 1.9s", // missing step information
+                    " - //:target4... 1.2s",
+                    " - IDLE")))); // missing accumulated time - show as IDLE
     assertThat(
         renderShortStatus(renderer, true),
         is(equalTo(ImmutableList.of("[:]", "[:]", "[:]", "[ ]"))));
@@ -242,6 +242,7 @@ public class TestThreadStateRendererTest {
         ANSI,
         FORMAT_TIME_FUNCTION,
         timeMs,
+        80, /* outputMaxColumns */
         testSummaries,
         testStatusMessages,
         runningSteps,

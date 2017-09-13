@@ -60,6 +60,7 @@ public final class Ansi {
       new String[ANSI_PREVIOUS_LINE_STRING_CACHE_MAX_LINES];
 
   private static final String ANSI_ERASE_LINE = String.format(ERASE_IN_LINE, 2);
+  private static final String ANSI_ERASE_TO_THE_END_OF_LINE = String.format(ERASE_IN_LINE, 0);
 
   private final boolean isAnsiTerminal;
 
@@ -188,6 +189,11 @@ public final class Ansi {
   /** Clears the line the cursor is currently on. */
   public String clearLine() {
     return clearLineString;
+  }
+
+  /** Clears from the cursor to the end of line. */
+  public String clearToTheEndOfLine() {
+    return ANSI_ERASE_TO_THE_END_OF_LINE;
   }
 
   public static enum SeverityLevel {

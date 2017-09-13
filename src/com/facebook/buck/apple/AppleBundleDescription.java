@@ -172,7 +172,8 @@ public class AppleBundleDescription
         args.getTests(),
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
-        appleConfig.cacheBundlesAndPackages());
+        appleConfig.cacheBundlesAndPackages(),
+        appleConfig.assetCatalogValidation());
   }
 
   /**

@@ -64,7 +64,7 @@ public class ProgressEstimator {
   private final AtomicInteger numberOfStartedRules = new AtomicInteger(0);
   private final AtomicInteger numberOfFinishedRules = new AtomicInteger(0);
 
-  private final AtomicDouble processingFilesProgress = new AtomicDouble(-1.0);
+  private final AtomicDouble parsingFilesProgress = new AtomicDouble(-1.0);
   private final AtomicDouble projectGenerationProgress = new AtomicDouble(-1.0);
   private final AtomicDouble buildProgress = new AtomicDouble(-1.0);
 
@@ -83,14 +83,14 @@ public class ProgressEstimator {
   public void didParseBuckRules(int amount) {
     numberOfParsedRules.addAndGet(amount);
     numberOfParsedBUCKFiles.incrementAndGet();
-    calculateProcessingFilesEstimatedProgress();
+    calculateParsingBuckFilesEstimatedProgress();
   }
 
   public void didFinishParsing() {
     if (command != null) {
       expectedNumberOfParsedRules.set(numberOfParsedRules.get());
       expectedNumberOfParsedBUCKFiles.set(numberOfParsedBUCKFiles.get());
-      calculateProcessingFilesEstimatedProgress();
+      calculateParsingBuckFilesEstimatedProgress();
       updateEstimatedBuckFilesParsingValues(command);
     }
   }
@@ -163,7 +163,7 @@ public class ProgressEstimator {
         expectedNumberOfGeneratedProjectFiles.set(
             commandEstimations.get(EXPECTED_NUMBER_OF_GENERATED_PROJECT_FILES).intValue());
       }
-      calculateProcessingFilesEstimatedProgress();
+      calculateParsingBuckFilesEstimatedProgress();
     }
   }
 
@@ -237,11 +237,11 @@ public class ProgressEstimator {
   }
 
   /**
-   * @return Estimated progress of processing files stage. If return value is absent, it's
-   *     impossible to compute the estimated progress.
+   * @return Estimated progress of parsing files stage. If return value is absent, it's impossible
+   *     to compute the estimated progress.
    */
-  public Optional<Double> getEstimatedProgressOfProcessingBuckFiles() {
-    return wrapValueIntoOptional(processingFilesProgress.get());
+  public Optional<Double> getEstimatedProgressOfParsingBuckFiles() {
+    return wrapValueIntoOptional(parsingFilesProgress.get());
   }
 
   private Optional<Double> wrapValueIntoOptional(double value) {
@@ -252,7 +252,7 @@ public class ProgressEstimator {
     }
   }
 
-  private void calculateProcessingFilesEstimatedProgress() {
+  private void calculateParsingBuckFilesEstimatedProgress() {
     double expectedNumberRules = expectedNumberOfParsedRules.doubleValue();
     double expectedNumberOfBUCKFiles = expectedNumberOfParsedBUCKFiles.doubleValue();
 
@@ -266,7 +266,7 @@ public class ProgressEstimator {
       newValue = Math.floor(newValue * 100.0) / 100.0;
     }
 
-    double oldValue = processingFilesProgress.getAndSet(newValue);
+    double oldValue = parsingFilesProgress.getAndSet(newValue);
     if (oldValue != newValue) {
       buckEventBus.post(ProgressEvent.parsingProgressUpdated(newValue));
     }

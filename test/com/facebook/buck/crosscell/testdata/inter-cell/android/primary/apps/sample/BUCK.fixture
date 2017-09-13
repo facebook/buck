@@ -31,3 +31,23 @@ android_binary(
   native_library_merge_glue = '//native/merge:glue_1',
   native_library_merge_code_generator = '//native/merge:codegen',
 )
+
+android_binary(
+  name = 'app_with_merged_cross_cell_deps',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/merge:A',
+    'secondary//merge:G',
+    'secondary//library:I',
+  ],
+  native_library_merge_map = {
+    'lib1.so': [
+      '.*/merge:[AB]',
+      '.*/merge:[GH]',
+    ],
+  },
+  native_library_merge_glue = '//native/merge:glue_1',
+  native_library_merge_code_generator = '//native/merge:codegen',
+)

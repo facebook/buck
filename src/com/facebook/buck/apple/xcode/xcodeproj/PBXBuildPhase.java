@@ -43,6 +43,10 @@ public abstract class PBXBuildPhase extends PBXProjectItem {
     this.name = name;
   }
 
+  public Optional<String> getName() {
+    return name;
+  }
+
   @Override
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);

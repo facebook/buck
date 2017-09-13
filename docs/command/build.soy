@@ -36,8 +36,9 @@ Buck. To build a rule, pass its target to buck build:
   {param desc}
   Specifies a file where a JSON summary of the build output should be written.
   Note that <code>--build-report</code> can be used without <code>--keep-going</code>,
-  though if <code>--keep-going</code> is not specified, the report will only be written
-  if all of the targets are built successfully. Here is a sample build report:
+  though if <code>--keep-going</code> is not specified, the generated report may be partial and not
+  include information about the targets that buck haven't had a chance to try to build.
+  Here is a sample build report:
   <p>
 <pre class="prettyprint lang-js">{literal}
 {
