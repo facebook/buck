@@ -412,19 +412,22 @@ def diffInternal(
 
         did_align_for_deps = False
         if key.endswith(('Deps', 'deps')):
+            right_names = [right_info.getNameForKey(right_key) for (_, right_key) in
+                           right_with_keys]
+            right_index = dict([(right_name, i) for (i, right_name) in enumerate(right_names)])
             for left_idx, (left_v, left_key) in enumerate(left_with_keys):
                 left_name = left_info.getNameForKey(left_key)
                 if left_name is None or left_idx >= len(right_with_keys):
                     continue
-                right_idx = None
-                for j, (right_v, right_key) in enumerate(right_with_keys):
-                    if right_info.getNameForKey(right_key) == left_name:
-                        right_idx = j
-                        break
+                right_idx = right_index.get(left_name)
                 if right_idx is None:
                     continue
                 if right_idx != left_idx:
+                    right_name = right_names[left_idx]
                     swap_entries_in_list(right_with_keys, right_idx, left_idx)
+                    swap_entries_in_list(right_names, right_idx, left_idx)
+                    right_index[right_name] = right_idx
+                    right_index[left_name] = left_idx
                     did_align_for_deps = True
 
         if did_align_for_deps:
