@@ -15,7 +15,65 @@ import sys
 
 PATH_VALUE_REGEX = re.compile(r'path\(([^:]+):\w+\)')
 LOGGER_NAME = 'com.facebook.buck.rules.keys.RuleKeyBuilder'
-TAG_NAME = 'RuleKey'
+NAME_FINDER = '"):key(.name)'
+
+
+class LazyStructureMap(object):
+    def __init__(self, data):
+        self._data = data
+        self._map = None
+
+        self._name = None
+        name_end = data.find(NAME_FINDER)
+        if name_end != -1 and '.type' in data:
+            name_start = data.rfind('("', 0, name_end) + 2
+            self._name = data[name_start:name_end]
+
+    def get(self, key, default=None):
+        return self._get().get(key, default)
+
+    def name(self):
+        return self._name
+
+    def keys(self):
+        return self._get().keys()
+
+    def _get(self):
+        if self._map is None:
+            self._map = self._compute()
+            self._data = None
+
+        return self._map
+
+    def __eq__(self, other):
+        if self._map is not None or other._map is not None:
+            return self._get() == other._get()
+        return self._data == other._data
+
+    def _compute(self):
+        # Because BuildTargets have ':' in them we can't just split on that
+        # character. We know that all values take the form name(..):name(..):
+        # so we can cheat and split on ): instead
+        structure = self._data
+        structure_entries = structure.split('):')
+        structure_map = collections.OrderedDict()
+        last_key = None
+
+        for e in reversed(structure_entries):
+            # Entries do not have their trailing ')', which was chomped by the split.
+            # These are added back as needed.
+            if len(e) == 0:
+                continue
+            elif e.startswith('key('):
+                last_key = e[4:]
+            else:
+                d = structure_map.get(last_key)
+                if d is None:
+                    structure_map[last_key] = [e + ')']
+                else:
+                    d.append(e + ')')
+
+        return structure_map
 
 
 def parseArgs():
@@ -180,7 +238,7 @@ class RuleKeyStructureInfo(object):
         struct = self.getByKey(key)
         if struct is None:
             return None
-        return RuleKeyStructureInfo._nameFromStruct(struct)
+        return struct.name()
 
     def getByName(self, name):
         key = self._name_to_key.get(name)
@@ -207,15 +265,6 @@ class RuleKeyStructureInfo(object):
         return len(self._entries)
 
     @staticmethod
-    def _nameFromStruct(structure):
-        name = None
-        if '.name' in structure and '.type' in structure:
-            name = list(structure['.name'])[0]
-            if name.startswith('string("'):
-                name = name[8:-2]
-        return name
-
-    @staticmethod
     def _makeKeyToStructureMap(entries):
         result = {}
         for e in entries:
@@ -230,7 +279,7 @@ class RuleKeyStructureInfo(object):
         result = {}
         for e in entries:
             top_key, structure = e
-            name = RuleKeyStructureInfo._nameFromStruct(structure)
+            name = structure.name()
             if name is None:
                 continue
             result[name] = top_key
@@ -242,28 +291,7 @@ class RuleKeyStructureInfo(object):
         if rule_key.endswith('='):
             return (rule_key[:-1], {})
         top_key, structure = rule_key.split('=', 1)
-        # Because BuildTargets have ':' in them we can't just split on that
-        # character. We know that all values take the form name(..):name(..):
-        # so we can cheat and split on ): instead
-        structure_entries = structure.split('):')
-        structure_map = collections.OrderedDict()
-        last_key = None
-
-        for e in reversed(structure_entries):
-            # Entries do not have their trailing ')', which was chomped by the split.
-            # These are added back as needed.
-            if len(e) == 0:
-                continue
-            elif e.startswith('key('):
-                last_key = e[4:]
-            else:
-                d = structure_map.get(last_key)
-                if d is None:
-                    structure_map[last_key] = [e + ')']
-                else:
-                    d.append(e + ')')
-
-        return top_key, structure_map
+        return (top_key, LazyStructureMap(structure))
 
     RULE_LINE_REGEX = re.compile(r'(\[[^\]]+\])+\s+RuleKey\s+(.*)')
     INVOCATION_LINE_REGEX = re.compile(r'.*(\[[^\]+]\])*\s+InvocationInfo\s+(.*)')

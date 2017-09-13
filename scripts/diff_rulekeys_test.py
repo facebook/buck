@@ -92,7 +92,7 @@ class TestRuleKeyDiff(unittest.TestCase):
                 "number(1):key(num):number(2):key(num):")
         info = RuleKeyStructureInfo(MockFile([line]))
         self.assertEqual(
-                info.getByKey("00aa")['num'],
+                info.getByKey("00aa").get('num'),
                 ["number(2)", "number(1)"])
 
     def test_simple_diff(self):
