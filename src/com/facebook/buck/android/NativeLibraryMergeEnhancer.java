@@ -874,40 +874,36 @@ class NativeLibraryMergeEnhancer {
       }
 
       String soname = getSoname(cxxPlatform);
-      BuildTarget target = getBuildTargetForPlatform(cxxPlatform);
-      Optional<BuildRule> ruleOptional = ruleResolver.getRuleOptional(target);
-      BuildRule rule = null;
-      if (ruleOptional.isPresent()) {
-        rule = ruleOptional.get();
-      } else {
-        rule =
-            CxxLinkableEnhancer.createCxxLinkableBuildRule(
-                cxxBuckConfig,
-                cxxPlatform,
-                projectFilesystem,
-                ruleResolver,
-                pathResolver,
-                ruleFinder,
-                target,
-                Linker.LinkType.SHARED,
-                Optional.of(soname),
-                BuildTargets.getGenPath(projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
-                // Android Binaries will use share deps by default.
-                Linker.LinkableDepType.SHARED,
-                /* thinLto */ false,
-                Iterables.concat(
-                    getNativeLinkableDepsForPlatform(cxxPlatform),
-                    getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
-                Optional.empty(),
-                Optional.empty(),
-                ImmutableSet.of(),
-                ImmutableSet.of(),
-                getImmediateNativeLinkableInput(cxxPlatform),
-                constituents.isActuallyMerged()
-                    ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
-                    : Optional.empty());
-        ruleResolver.addToIndex(rule);
-      }
+      BuildRule rule =
+          ruleResolver.computeIfAbsent(
+              getBuildTargetForPlatform(cxxPlatform),
+              target ->
+                  CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                      cxxBuckConfig,
+                      cxxPlatform,
+                      projectFilesystem,
+                      ruleResolver,
+                      pathResolver,
+                      ruleFinder,
+                      target,
+                      Linker.LinkType.SHARED,
+                      Optional.of(soname),
+                      BuildTargets.getGenPath(
+                          projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
+                      // Android Binaries will use share deps by default.
+                      Linker.LinkableDepType.SHARED,
+                      /* thinLto */ false,
+                      Iterables.concat(
+                          getNativeLinkableDepsForPlatform(cxxPlatform),
+                          getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      ImmutableSet.of(),
+                      ImmutableSet.of(),
+                      getImmediateNativeLinkableInput(cxxPlatform),
+                      constituents.isActuallyMerged()
+                          ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
+                          : Optional.empty()));
       return ImmutableMap.of(soname, rule.getSourcePathToOutput());
     }
   }
