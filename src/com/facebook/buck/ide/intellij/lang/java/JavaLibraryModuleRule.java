@@ -24,6 +24,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -36,11 +37,15 @@ import java.util.Optional;
 
 public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescription.CoreArg> {
 
+  private final JavaPackageFinder packageFinder;
+
   public JavaLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      JavaPackageFinder packageFinder) {
     super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    this.packageFinder = packageFinder;
   }
 
   @Override
@@ -61,7 +66,7 @@ public class JavaLibraryModuleRule extends BaseIjModuleRule<JavaLibraryDescripti
     } else {
       resourcePaths = getResourcePaths(resources);
       ImmutableMultimap<Path, Path> resourcesRootsToResources =
-          getResourcesRootsToResources(resourcePaths);
+          getResourcesRootsToResources(packageFinder, resourcePaths);
       for (Path resourcesRoot : resourcesRootsToResources.keySet()) {
         addResourceFolders(
             IjResourceFolderType.JAVA_RESOURCE,

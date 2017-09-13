@@ -45,7 +45,10 @@ import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
+import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -694,6 +697,10 @@ public class DefaultIjModuleFactoryTest {
                 true)
             : IjProjectBuckConfig.create(
                 buckConfig, AggregationMode.AUTO, null, "", "", false, false, false, false, true);
+    JavaPackageFinder packageFinder =
+        (buckConfig == null)
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem,
@@ -746,7 +753,8 @@ public class DefaultIjModuleFactoryTest {
                 return Optional.empty();
               }
             },
-            projectConfig);
+            projectConfig,
+            packageFinder);
     return new DefaultIjModuleFactory(projectFilesystem, typeRegistry);
   }
 

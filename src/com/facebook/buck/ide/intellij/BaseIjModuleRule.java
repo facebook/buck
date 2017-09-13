@@ -222,9 +222,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   }
 
   protected ImmutableMultimap<Path, Path> getResourcesRootsToResources(
-      ImmutableSet<Path> resourcePaths) {
-    final JavaPackageFinder packageFinder =
-        projectConfig.getJavaBuckConfig().createDefaultJavaPackageFinder();
+      JavaPackageFinder packageFinder, ImmutableSet<Path> resourcePaths) {
     return resourcePaths
         .stream()
         .collect(

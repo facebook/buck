@@ -41,6 +41,9 @@ import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectElement;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -68,6 +71,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -652,6 +656,10 @@ public class IjModuleGraphTest {
         IjProjectBuckConfig.create(
             buckConfig, aggregationMode, null, "", "", false, false, false, false, true);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    JavaPackageFinder packageFinder =
+        (buckConfig == null)
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             filesystem,
@@ -703,7 +711,8 @@ public class IjModuleGraphTest {
                 return Optional.empty();
               }
             },
-            projectConfig);
+            projectConfig,
+            packageFinder);
     IjModuleFactory moduleFactory = new DefaultIjModuleFactory(filesystem, typeRegistry);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraphFactory.from(

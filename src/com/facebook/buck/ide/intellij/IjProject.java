@@ -87,7 +87,8 @@ public class IjProject {
             projectFilesystem,
             requiredBuildTargets);
     SupportedTargetTypeRegistry typeRegistry =
-        new SupportedTargetTypeRegistry(projectFilesystem, moduleFactoryResolver, projectConfig);
+        new SupportedTargetTypeRegistry(
+            projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);
     IjModuleGraph moduleGraph =
         IjModuleGraphFactory.from(
             projectFilesystem,

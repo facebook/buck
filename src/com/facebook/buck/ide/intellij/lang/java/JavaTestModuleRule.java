@@ -22,6 +22,7 @@ import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -34,11 +35,15 @@ import java.util.Optional;
 
 public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.CoreArg> {
 
+  private final JavaPackageFinder packageFinder;
+
   public JavaTestModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
-      IjProjectConfig projectConfig) {
+      IjProjectConfig projectConfig,
+      JavaPackageFinder packageFinder) {
     super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    this.packageFinder = packageFinder;
   }
 
   @Override
@@ -62,7 +67,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
     } else {
       resourcePaths = getResourcePaths(resources);
       ImmutableMultimap<Path, Path> resourcesRootsToResources =
-          getResourcesRootsToResources(resourcePaths);
+          getResourcesRootsToResources(packageFinder, resourcePaths);
       for (Path resourcesRoot : resourcesRootsToResources.keySet()) {
         addResourceFolders(
             IjResourceFolderType.JAVA_TEST_RESOURCE,
