@@ -1175,14 +1175,12 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse) {
-    BuildTarget target = createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor());
-    SymlinkTree tree = resolver.getRuleOptionalWithType(target, SymlinkTree.class).orElse(null);
-    if (tree == null) {
-      tree =
-          resolver.addToIndex(
-              createSharedLibrarySymlinkTree(buildTarget, filesystem, cxxPlatform, deps, traverse));
-    }
-    return tree;
+    return (SymlinkTree)
+        resolver.computeIfAbsent(
+            createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
+            ignored ->
+                createSharedLibrarySymlinkTree(
+                    buildTarget, filesystem, cxxPlatform, deps, traverse));
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {

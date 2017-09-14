@@ -697,18 +697,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     private SymlinkTree requireSymlinkTree(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules) {
-      BuildTarget symlinkTreeTarget =
-          CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget(
-              buildTarget, cxxPlatform.getFlavor());
-      SymlinkTree symlinkTree =
-          resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orElse(null);
-      if (symlinkTree == null) {
-        symlinkTree =
-            resolver.addToIndex(
-                CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                    buildTarget, filesystem, cxxPlatform, rules, NativeLinkable.class::isInstance));
-      }
-      return symlinkTree;
+      return CxxDescriptionEnhancer.requireSharedLibrarySymlinkTree(
+          buildTarget, filesystem, resolver, cxxPlatform, rules, NativeLinkable.class::isInstance);
     }
 
     /**
