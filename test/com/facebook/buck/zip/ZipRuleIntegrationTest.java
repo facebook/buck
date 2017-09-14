@@ -24,17 +24,18 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import java.io.IOException;
-import java.nio.file.Path;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class ZipRuleIntegrationTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void shouldZipSources() throws IOException {

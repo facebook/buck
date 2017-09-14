@@ -40,10 +40,14 @@ import java.nio.file.Path;
 public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasOutputName, SupportsInputBasedRuleKey {
 
-  @AddToRuleKey private final String name;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
-  @AddToRuleKey private final boolean flatten;
-  @AddToRuleKey private final boolean mergeSourceZips;
+  @AddToRuleKey
+  private final String name;
+  @AddToRuleKey
+  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey
+  private final boolean flatten;
+  @AddToRuleKey
+  private final boolean mergeSourceZips;
 
   public Zip(
       BuildTarget buildTarget,
