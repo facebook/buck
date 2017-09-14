@@ -94,11 +94,12 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
   }
 
   /**
-   * Pick a linkage, any linkage. Just pick your favorite. This will be overridden by config anyway.
+   * Linkage doesn't matter for PCHs, but use care not to change it from the rest of the builds'
+   * rules' preferred linkage.
    */
   @Override
   public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.SHARED;
+    return Linkage.ANY;
   }
 
   /** Doesn't really apply to us. No shared libraries to add here. */
