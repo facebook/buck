@@ -32,6 +32,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Type;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -83,10 +84,7 @@ public class SkylarkProjectBuildFileParserTest {
             + ")",
         buildFile);
 
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("guava"));
     assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
     assertThat(
@@ -143,10 +141,7 @@ public class SkylarkProjectBuildFileParserTest {
     projectFilesystem.writeContentsToPath(
         "prebuilt_jar(name='guava', binary_jar=PACKAGE_NAME)", buildFile);
 
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("binaryJar"), equalTo("src/test"));
   }
 
@@ -160,12 +155,46 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createFile(directory.resolve("file1"));
     Files.createFile(directory.resolve("file2"));
     Files.createFile(directory.resolve("bad_file"));
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(
         Type.STRING_LIST.convert(rule.get("licenses"), "license"),
         equalTo(ImmutableList.of("file1", "file2")));
+  }
+
+  @Test
+  public void testImportVariable() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'JAR')\n" + "prebuilt_jar(name='foo', binary_jar=JAR)",
+        buildFile);
+    projectFilesystem.writeContentsToPath("JAR='jar'", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
+  public void testImportFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  private Map<String, Object> getSingleRule(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
+    return allRulesAndMetaRules.get(0);
   }
 }
