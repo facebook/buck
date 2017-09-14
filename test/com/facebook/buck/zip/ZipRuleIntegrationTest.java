@@ -106,4 +106,28 @@ public class ZipRuleIntegrationTest {
       assertThat(beans, Matchers.notNullValue());
     }
   }
+
+  @Test
+  public void shouldNotMergeSourceJarsIfRequested() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-merge", tmp);
+    workspace.setUp();
+
+    Path zip = workspace.buildAndReturnOutput("//example:no-merge");
+
+    // Gather expected file names
+    Path sourceJar = workspace.buildAndReturnOutput("//example:cake#src");
+    Path actualJar = workspace.buildAndReturnOutput("//example:cake");
+
+    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+      ZipArchiveEntry item = zipFile.getEntry(sourceJar.getFileName().toString());
+      assertThat(item, Matchers.notNullValue());
+
+      item = zipFile.getEntry(actualJar.getFileName().toString());
+      assertThat(item, Matchers.notNullValue());
+
+      item = zipFile.getEntry("cake.txt");
+      assertThat(item, Matchers.notNullValue());
+    }
+  }
 }

@@ -88,6 +88,8 @@ java_immutables_library(
 java_immutables_library(
     name = "rules",
     srcs = [
+        "CopyingFileBundler.java",
+        "FileBundler.java",
         "SrcZipAwareFileBundler.java",
         "Zip.java",
         "ZipFileDescription.java",

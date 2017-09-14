@@ -43,6 +43,7 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
   @AddToRuleKey private final boolean flatten;
+  @AddToRuleKey private final boolean mergeSourceZips;
 
   public Zip(
       BuildTarget buildTarget,
@@ -50,11 +51,13 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       String outputName,
       ImmutableSortedSet<SourcePath> sources,
-      boolean flatten) {
+      boolean flatten,
+      boolean mergeSourceZips) {
     super(buildTarget, projectFilesystem, params);
     this.name = outputName;
     this.sources = sources;
     this.flatten = flatten;
+    this.mergeSourceZips = mergeSourceZips;
   }
 
   private Path getOutput() {
@@ -86,7 +89,12 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
 
-    SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(getBuildTarget());
+    FileBundler bundler;
+    if (mergeSourceZips) {
+      bundler = new SrcZipAwareFileBundler(getBuildTarget());
+    } else {
+      bundler = new CopyingFileBundler(getBuildTarget());
+    }
     bundler.copy(getProjectFilesystem(), context, steps, scratchDir, sources);
 
     steps.add(

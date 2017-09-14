@@ -1,0 +1,15 @@
+java_library(
+    name = "cake",
+    srcs = ["A.java"],
+)
+
+# A zip file made entirely of cake
+zip_file(
+    name = "no-merge",
+    srcs = [
+      ":cake",
+      ":cake#src",
+      "cake.txt",
+    ],
+    merge_source_zips = False,
+)
