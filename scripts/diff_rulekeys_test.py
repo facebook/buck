@@ -81,14 +81,14 @@ class TestRuleKeyDiff(unittest.TestCase):
                 set(['a.java', 'c.java', 'C.java']))
 
     def test_structure_info(self):
-        line = ("[v] RuleKey 00aa=string(\"//:rule\"):key(.name):" +
-                "number(1):key(version):string(\"Rule\"):key(.type):")
+        line = ("[v] RuleKey 00aa=string(\"//:rule\"):key(.target_name):" +
+                "number(1):key(version):string(\"Rule\"):key(.build_rule_type):")
         info = RuleKeyStructureInfo(MockFile([line]))
         self.assertEqual(info.getNameForKey("00aa"), "//:rule")
 
     def test_structure_info_list(self):
-        line = ("[v] RuleKey 00aa=string(\"//:rule\"):key(.name):" +
-                "number(1):key(version):string(\"Rule\"):key(.type):" +
+        line = ("[v] RuleKey 00aa=string(\"//:rule\"):key(.target_name):" +
+                "number(1):key(version):string(\"Rule\"):key(.build_rule_type):" +
                 "number(1):key(num):number(2):key(num):")
         info = RuleKeyStructureInfo(MockFile([line]))
         self.assertEqual(
@@ -262,9 +262,9 @@ class TestRuleKeyDiff(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_simple_diff_with_custom_names(self):
-        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(.name):" +
+        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(.target_name):" +
                 "path(JavaLib1.java:{hash}):key(srcs):" +
-                "string(\"t\"):key(.type):")
+                "string(\"t\"):key(.build_rule_type):")
         left_line = line.format(key="aabb", hash="ll")
         right_line = line.format(key="aabb", hash="rr")
         result = diff("//:lib",
@@ -283,9 +283,9 @@ class TestRuleKeyDiff(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_length_diff(self):
-        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(.name):" +
+        line = ("[v] RuleKey {key}=string(\"//:lib\"):key(.target_name):" +
                 "{srcs}:" +
-                "string(\"t\"):key(.type):")
+                "string(\"t\"):key(.build_rule_type):")
         left_srcs = ["path(%s):key(srcs)" % p for p in ['a:1', 'b:2', 'c:3']]
         left_line = line.format(key="aabb", srcs=":".join(left_srcs))
         right_srcs = left_srcs[:-1]
@@ -438,9 +438,9 @@ def makeRuleKeyLine(key="aabb", name="//:name", srcs=None,
                        for p, h in srcs.iteritems()])
     deps_t = ":".join(['ruleKey(sha1={h}):key(deps)'.format(h=h)
                        for h in deps])
-    template = ("[v] RuleKey {key}=string(\"{name}\"):key(.name):" +
+    template = ("[v] RuleKey {key}=string(\"{name}\"):key(.target_name):" +
                 "{srcs_t}:"
-                "string(\"{ruleType}\"):key(.type):" +
+                "string(\"{ruleType}\"):key(.build_rule_type):" +
                 "{deps_t}:")
     return template.format(key=key, name=name, srcs_t=srcs_t,
                            ruleType=ruleType, deps_t=deps_t)

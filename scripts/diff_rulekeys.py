@@ -16,7 +16,7 @@ import sys
 
 PATH_VALUE_REGEX = re.compile(r'path\(([^:]+):\w+\)')
 LOGGER_NAME = 'com.facebook.buck.rules.keys.RuleKeyBuilder'
-NAME_FINDER = '"):key(.name)'
+NAME_FINDER = '"):key(.target_name)'
 
 
 class LazyStructureMap(object):
@@ -26,7 +26,7 @@ class LazyStructureMap(object):
 
         self._name = None
         name_end = data.find(NAME_FINDER)
-        if name_end != -1 and '.type' in data:
+        if name_end != -1 and '.build_rule_type' in data:
             name_start = data.rfind('("', 0, name_end) + 2
             self._name = data[name_start:name_end]
 

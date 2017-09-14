@@ -98,9 +98,9 @@ TOKEN_TYPE_REGEX = re.compile(r'([a-zA-Z]+)\(')
 TOKEN_VALUE_REGEX = re.compile(r'[a-zA-Z]+\((.*)\)')
 CONTAINER_LENGTH_REGEX = re.compile(r'container\(.*,len=(\d+)\)')
 
-TARGET_NAME_TOKEN_PATTERN = r'key\(\.name\)'
-TARGET_NAME_FIELD_PATTERN = r'\.name'
-RULEKEY_TYPE_FIELD_PATTERN = r'\.key_type'
+TARGET_NAME_TOKEN_PATTERN = r'key\(\.target_name\)'
+TARGET_NAME_FIELD_PATTERN = r'\.target_name'
+RULEKEY_TYPE_FIELD_PATTERN = r'\.rule_key_type'
 
 def token_type(token):
     match = TOKEN_TYPE_REGEX.match(token)

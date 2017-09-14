@@ -34,11 +34,11 @@ public class RuleKeyFieldLoader {
   void setFields(RuleKeyObjectSink builder, BuildRule buildRule, RuleKeyType ruleKeyType) {
     // "." is not a valid first character for a field name, nor a valid character for rule attribute
     // name and so the following fields will never collide with other stuff.
-    builder.setReflectively(".seed", seed);
-    builder.setReflectively(".name", buildRule.getBuildTarget().getFullyQualifiedName());
-    builder.setReflectively(".type", buildRule.getType());
-    builder.setReflectively(".version", BuckVersion.getVersion());
-    builder.setReflectively(".key_type", ruleKeyType);
+    builder.setReflectively(".cache_key_seed", seed);
+    builder.setReflectively(".target_name", buildRule.getBuildTarget().getFullyQualifiedName());
+    builder.setReflectively(".build_rule_type", buildRule.getType());
+    builder.setReflectively(".buckversion", BuckVersion.getVersion());
+    builder.setReflectively(".rule_key_type", ruleKeyType);
 
     // We currently cache items using their full buck-out path, so make sure this is reflected in
     // the rule key.
