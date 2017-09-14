@@ -207,11 +207,6 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       Iterable<? extends TypeElement> result =
           (Iterable<? extends TypeElement>)
               javacTask.getClass().getMethod("enter").invoke(javacTask);
-      if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
-        fail(
-            "Compilation failed! Diagnostics:\n"
-                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
-      }
       return result;
     } catch (IllegalAccessException | NoSuchMethodException e) {
       throw new AssertionError(e);
@@ -219,9 +214,17 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       Throwable cause = e.getCause();
       if (cause instanceof IOException) {
         throw (IOException) cause;
+      } else if (!getDiagnosticMessages().isEmpty()) {
+        return Collections.emptyList();
       }
 
       throw new AssertionError(e);
+    } finally {
+      if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
+        fail(
+            "Compilation failed! Diagnostics:\n"
+                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
+      }
     }
   }
 

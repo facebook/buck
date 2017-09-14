@@ -2410,7 +2410,6 @@ public class StubJarTest {
 
   @Test
   public void stubsImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
-    notYetImplementedForSource();
     tester
         .setSourceFile(
             "Imported.java",
@@ -2447,6 +2446,102 @@ public class StubJarTest {
             "  public <init>()V",
             "}")
         .createAndCheckStubJar();
+  }
+
+  @Test
+  public void stubsStaticImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
+    tester
+        .setSourceFile(
+            "Imported.java",
+            "package com.example.buck.imported;",
+            "public class Imported {",
+            "  public static class Inner {",
+            "    public static class Innerer { }",
+            "  }",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import static com.example.buck.imported.Imported.Inner.Innerer;",
+            "public class A {",
+            "  public Innerer field;",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
+            "",
+            "  // access flags 0x1",
+            "  public Lcom/example/buck/imported/Imported$Inner$Innerer; field",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void detectsStaticImportedReferencesToMissingInnerClassesOfOtherTypes()
+      throws IOException {
+    tester
+        .setSourceFile(
+            "ImportedBase.java",
+            "package com.example.buck.imported;",
+            "public class ImportedBase {",
+            "  public static class Inner {",
+            "    public static class Innerer { }",
+            "  }",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "Imported.java",
+            "package com.example.buck.imported;",
+            "public class Imported extends ImportedBase { }")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import static com.example.buck.imported.Imported.Inner;",
+            "public class A {",
+            "  public Inner field;",
+            "}");
+
+    if (testingMode == MODE_SOURCE_BASED_MISSING_DEPS) {
+      tester
+          .addExpectedCompileError(
+              "A.java:2: error: com.example.buck.imported.Imported does not contain a type named Inner. If it comes from a superclass or interface, import it from there.\n"
+                  + "import static com.example.buck.imported.Imported.Inner;\n"
+                  + "                                                ^")
+          .createStubJar();
+    } else {
+      tester
+          .addExpectedStub(
+              "com/example/buck/A",
+              "// class version 52.0 (52)",
+              "// access flags 0x21",
+              "public class com/example/buck/A {",
+              "",
+              "  // access flags 0x8",
+              "  static INNERCLASS com/example/buck/imported/ImportedBase$Inner com/example/buck/imported/ImportedBase Inner",
+              "",
+              "  // access flags 0x1",
+              "  public Lcom/example/buck/imported/ImportedBase$Inner; field",
+              "",
+              "  // access flags 0x1",
+              "  public <init>()V",
+              "}")
+          .createAndCheckStubJar();
+    }
   }
 
   @Test
@@ -4287,7 +4382,10 @@ public class StubJarTest {
 
     public Tester addFullJarToClasspathAlways() throws IOException {
       universalClasspath =
-          ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(fullJarPath).build();
+          ImmutableSortedSet.<Path>naturalOrder()
+              .addAll(universalClasspath)
+              .add(fullJarPath)
+              .build();
       resetActuals();
       return this;
     }
