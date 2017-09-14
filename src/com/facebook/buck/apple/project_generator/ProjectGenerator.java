@@ -128,6 +128,7 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCommonArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -284,6 +285,8 @@ public class ProjectGenerator {
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
   private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+  private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
+      ImmutableList.builder();
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -404,8 +407,14 @@ public class ProjectGenerator {
     return requiredBuildTargetsBuilder.build();
   }
 
+  // Returns a set of generated xcconfig files.
   public ImmutableSet<Path> getXcconfigPaths() {
     return xcconfigPathsBuilder.build();
+  }
+
+  // Returns the list of infos about the files that we need to copy during Xcode build.
+  public ImmutableList<CopyInXcode> getFilesToCopyInXcode() {
+    return filesToCopyInXcodeBuilder.build();
   }
 
   // Returns true if we ran the project generation and we decided to eventually generate
@@ -1067,22 +1076,35 @@ public class ProjectGenerator {
 
       // TODO(Task #3772930): Go through all dependencies of the rule
       // and add any shell script rules here
-      ImmutableList.Builder<TargetNode<?, ?>> preScriptPhases = ImmutableList.builder();
-      ImmutableList.Builder<TargetNode<?, ?>> postScriptPhases = ImmutableList.builder();
+      ImmutableList.Builder<TargetNode<?, ?>> preScriptPhasesBuilder = ImmutableList.builder();
+      ImmutableList.Builder<TargetNode<?, ?>> postScriptPhasesBuilder = ImmutableList.builder();
       if (bundle.isPresent() && targetNode != bundle.get() && isFocusedOnTarget) {
         collectBuildScriptDependencies(
-            targetGraph.getAll(bundle.get().getDeclaredDeps()), preScriptPhases, postScriptPhases);
+            targetGraph.getAll(bundle.get().getDeclaredDeps()),
+            preScriptPhasesBuilder,
+            postScriptPhasesBuilder);
       }
       collectBuildScriptDependencies(
-          targetGraph.getAll(targetNode.getDeclaredDeps()), preScriptPhases, postScriptPhases);
+          targetGraph.getAll(targetNode.getDeclaredDeps()),
+          preScriptPhasesBuilder,
+          postScriptPhasesBuilder);
       if (isFocusedOnTarget) {
+        ImmutableList<TargetNode<?, ?>> preScriptPhases = preScriptPhasesBuilder.build();
+        ImmutableList<TargetNode<?, ?>> postScriptPhases = postScriptPhasesBuilder.build();
+
         mutator.setPreBuildRunScriptPhasesFromTargetNodes(
-            preScriptPhases.build(), buildRuleResolverForNode);
+            preScriptPhases, buildRuleResolverForNode);
         if (copyFilesPhases.isPresent()) {
           mutator.setCopyFilesPhases(copyFilesPhases.get());
         }
         mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-            postScriptPhases.build(), buildRuleResolverForNode);
+            postScriptPhases, buildRuleResolverForNode);
+
+        ImmutableList<TargetNode<?, ?>> scriptPhases =
+            Stream.concat(preScriptPhases.stream(), postScriptPhases.stream())
+                .collect(MoreCollectors.toImmutableList());
+        mutator.collectFilesToCopyInXcode(
+            filesToCopyInXcodeBuilder, scriptPhases, projectCell, buildRuleResolverForNode);
       }
     }
 

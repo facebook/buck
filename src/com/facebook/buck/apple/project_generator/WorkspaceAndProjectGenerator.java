@@ -97,6 +97,8 @@ public class WorkspaceAndProjectGenerator {
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+  private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
+      ImmutableList.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -166,6 +168,10 @@ public class WorkspaceAndProjectGenerator {
 
   private ImmutableSet<Path> getXcconfigPaths() {
     return xcconfigPathsBuilder.build();
+  }
+
+  private ImmutableList<CopyInXcode> getFilesToCopyInXcode() {
+    return filesToCopyInXcodeBuilder.build();
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -274,7 +280,12 @@ public class WorkspaceAndProjectGenerator {
             .collect(MoreCollectors.toImmutableList());
     ImmutableMap<String, Object> data =
         ImmutableMap.of(
-            "required-targets", requiredTargetsStrings, "xcconfig-paths", getXcconfigPaths());
+            "required-targets",
+            requiredTargetsStrings,
+            "xcconfig-paths",
+            getXcconfigPaths(),
+            "copy-in-xcode",
+            getFilesToCopyInXcode());
     String jsonString = ObjectMappers.WRITER.writeValueAsString(data);
     rootCell
         .getFilesystem()
@@ -368,6 +379,7 @@ public class WorkspaceAndProjectGenerator {
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
                           result.getXcconfigPaths(),
+                          result.getFilesToCopyInXcode(),
                           result.getBuildTargetToGeneratedTargetMap());
                   return result;
                 }));
@@ -398,6 +410,7 @@ public class WorkspaceAndProjectGenerator {
       GenerationResult result) {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
     xcconfigPathsBuilder.addAll(result.getXcconfigPaths());
+    filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
     buildTargetToPbxTargetMapBuilder.putAll(result.getBuildTargetToGeneratedTargetMap());
     for (PBXTarget target : result.getBuildTargetToGeneratedTargetMap().values()) {
       targetToProjectPathMapBuilder.put(target, result.getProjectPath());
@@ -469,6 +482,7 @@ public class WorkspaceAndProjectGenerator {
         generator.isProjectGenerated(),
         requiredBuildTargets,
         generator.getXcconfigPaths(),
+        generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap);
   }
 
@@ -511,6 +525,7 @@ public class WorkspaceAndProjectGenerator {
             generator.isProjectGenerated(),
             generator.getRequiredBuildTargets(),
             generator.getXcconfigPaths(),
+            generator.getFilesToCopyInXcode(),
             generator.getBuildTargetToGeneratedTargetMap());
     workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(

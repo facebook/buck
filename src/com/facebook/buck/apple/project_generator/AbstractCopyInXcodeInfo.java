@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -15,27 +15,29 @@
  */
 package com.facebook.buck.apple.project_generator;
 
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractGenerationResult {
-  public abstract Path getProjectPath();
+abstract class AbstractCopyInXcode {
 
-  public abstract boolean isProjectGenerated();
+  public enum SourceType {
+    FILE,
+    FOLDER_CONTENTS,
+  };
 
-  public abstract ImmutableSet<BuildTarget> getRequiredBuildTargets();
+  public enum DestinationBase {
+    UNLOCALIZED_RESOURCES,
+    TEMPDIR,
+  };
 
-  public abstract ImmutableSet<Path> getXcconfigPaths();
+  public abstract SourceType getSourceType();
 
-  public abstract ImmutableList<CopyInXcode> getFilesToCopyInXcode();
+  public abstract Path getSourcePath();
 
-  public abstract ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
+  public abstract DestinationBase getDestinationBase();
+
+  public abstract Path getDestinationPath();
 }
