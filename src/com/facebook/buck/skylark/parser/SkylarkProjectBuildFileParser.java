@@ -136,9 +136,39 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     BuildFileAST buildFileAst =
         BuildFileAST.parseBuildFile(ParserInputSource.create(buildFilePath), eventHandler);
 
+    ImmutableList.Builder<Map<String, Object>> rawRuleBuilder = ImmutableList.builder();
+    Environment.Frame buckGlobals = getBuckGlobals(rawRuleBuilder);
+    ImmutableMap<String, Environment.Extension> importMap =
+        buildImportMap(buildFileAst.getImports(), eventHandler);
+
+    try (Mutability mutability = Mutability.create("BUCK")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setImportedExtensions(importMap)
+              .setGlobals(buckGlobals)
+              .build();
+      String basePath = getBasePath(buildFile);
+      env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
+      env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
+      boolean exec = buildFileAst.exec(env, eventHandler);
+      if (!exec) {
+        throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
+      }
+      return rawRuleBuilder.build();
+    }
+  }
+
+  /**
+   * @return The map from skylark import string like {@code //pkg:build_rules.bzl} to an {@link
+   *     Environment.Extension}.
+   */
+  private ImmutableMap<String, Environment.Extension> buildImportMap(
+      bazel.shaded.com.google.common.collect.ImmutableList<SkylarkImport> skylarkImports,
+      PrintingEventHandler eventHandler)
+      throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
         ImmutableMap.builder();
-    for (SkylarkImport skylarkImport : buildFileAst.getImports()) {
+    for (SkylarkImport skylarkImport : skylarkImports) {
       try (Mutability mutability =
           Mutability.create("importing " + skylarkImport.getImportString())) {
         Environment extensionEnv = Environment.builder(mutability).build();
@@ -154,23 +184,22 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         extensionMapBuilder.put(skylarkImport.getImportString(), extension);
       }
     }
+    return extensionMapBuilder.build();
+  }
 
-    ImmutableList.Builder<Map<String, Object>> rawRuleBuilder = ImmutableList.builder();
-    try (Mutability mutability = Mutability.create("BUCK")) {
-      Environment env =
-          Environment.builder(mutability)
-              .setImportedExtensions(extensionMapBuilder.build())
-              .build();
-      String basePath = getBasePath(buildFile);
-      env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
-      env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
-      setupBuckRules(rawRuleBuilder, env);
-      boolean exec = buildFileAst.exec(env, eventHandler);
-      if (!exec) {
-        throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
-      }
-      return rawRuleBuilder.build();
+  /**
+   * @return The environment frame with configured buck globals. This includes built-in rules like
+   *     {@code java_library}.
+   */
+  private Environment.Frame getBuckGlobals(
+      ImmutableList.Builder<Map<String, Object>> rawRuleBuilder) {
+    Environment.Frame buckGlobals;
+    try (Mutability mutability = Mutability.create("global")) {
+      Environment globalEnv = Environment.builder(mutability).build();
+      setupBuckRules(rawRuleBuilder, globalEnv);
+      buckGlobals = globalEnv.getGlobals();
     }
+    return buckGlobals;
   }
 
   /**
