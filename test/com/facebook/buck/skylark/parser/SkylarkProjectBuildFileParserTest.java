@@ -190,6 +190,21 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(rule.get("binaryJar"), equalTo("jar"));
   }
 
+  @Test
+  public void testImportFunctionUsingBuiltInRule() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'guava_jar')\n" + "guava_jar(name='foo')", buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def guava_jar(name):\n  prebuilt_jar(name=name, binary_jar='foo.jar')", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableList<Map<String, Object>> allRulesAndMetaRules =

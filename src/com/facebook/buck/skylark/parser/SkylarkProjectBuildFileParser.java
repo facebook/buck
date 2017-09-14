@@ -139,7 +139,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList.Builder<Map<String, Object>> rawRuleBuilder = ImmutableList.builder();
     Environment.Frame buckGlobals = getBuckGlobals(rawRuleBuilder);
     ImmutableMap<String, Environment.Extension> importMap =
-        buildImportMap(buildFileAst.getImports(), eventHandler);
+        buildImportMap(buildFileAst.getImports(), buckGlobals, eventHandler);
 
     try (Mutability mutability = Mutability.create("BUCK")) {
       Environment env =
@@ -164,6 +164,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ImmutableMap<String, Environment.Extension> buildImportMap(
       bazel.shaded.com.google.common.collect.ImmutableList<SkylarkImport> skylarkImports,
+      Environment.Frame buckGlobals,
       PrintingEventHandler eventHandler)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
@@ -171,7 +172,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     for (SkylarkImport skylarkImport : skylarkImports) {
       try (Mutability mutability =
           Mutability.create("importing " + skylarkImport.getImportString())) {
-        Environment extensionEnv = Environment.builder(mutability).build();
+        Environment extensionEnv = Environment.builder(mutability).setGlobals(buckGlobals).build();
         com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
         BuildFileAST extensionAst =
             BuildFileAST.parseSkylarkFile(ParserInputSource.create(extensionPath), eventHandler);
