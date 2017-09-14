@@ -36,6 +36,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
+import com.google.devtools.build.lib.syntax.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -196,7 +197,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList.Builder<Map<String, Object>> rawRuleBuilder) {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
-      Environment globalEnv = Environment.builder(mutability).build();
+      Environment globalEnv =
+          Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
       setupBuckRules(rawRuleBuilder, globalEnv);
       buckGlobals = globalEnv.getGlobals();
     }

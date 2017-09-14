@@ -205,6 +205,36 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
   }
 
+  @Test
+  public void canUseBuiltInListFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    projectFilesystem.writeContentsToPath(
+        "prebuilt_jar(name='a', binary_jar='a.jar', licenses=list(('l1', 'l2')))", buildFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(
+        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
+        equalTo(ImmutableList.of("l1", "l2")));
+  }
+
+  @Test
+  public void canUseBuiltInListFunctionInExtension() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'guava_jar')\n" + "guava_jar(name='foo')", buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def guava_jar(name):\n  prebuilt_jar(name=name, binary_jar='foo.jar', licenses=list(('l1', 'l2')))",
+        extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(
+        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
+        equalTo(ImmutableList.of("l1", "l2")));
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableList<Map<String, Object>> allRulesAndMetaRules =
