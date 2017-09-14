@@ -86,12 +86,36 @@ public class AppleAssetCatalogTest {
   }
 
   @Test
-  public void missingImagesetContentsJsonPassesXcodeValidation() throws IOException {
+  public void missingContentsJsonPassXcodeValidation() throws IOException {
     String catalogName = "catalog.xcassets";
     tmp.newFolder(catalogName);
     tmp.newFile(String.format("%s/Contents.json", catalogName));
+    String appiconsetName = String.format("%s/some.appiconset", catalogName);
+    tmp.newFolder(appiconsetName);
+    String brandassetsName = String.format("%s/some.brandassets", catalogName);
+    tmp.newFolder(brandassetsName);
+    String cubetexturesetName = String.format("%s/some.cubetextureset", catalogName);
+    tmp.newFolder(cubetexturesetName);
+    String datasetName = String.format("%s/some.dataset", catalogName);
+    tmp.newFolder(datasetName);
     String imagesetName = String.format("%s/some.imageset", catalogName);
     tmp.newFolder(imagesetName);
+    String imagestackName = String.format("%s/some.imagestack", catalogName);
+    tmp.newFolder(imagestackName);
+    String launchimageName = String.format("%s/some.launchimage", catalogName);
+    tmp.newFolder(launchimageName);
+    String mipmapsetName = String.format("%s/some.mipmapset", catalogName);
+    tmp.newFolder(mipmapsetName);
+    String stickerName = String.format("%s/some.sticker", catalogName);
+    tmp.newFolder(stickerName);
+    String stickerpackName = String.format("%s/some.stickerpack", catalogName);
+    tmp.newFolder(stickerpackName);
+    String stickersequenceName = String.format("%s/some.stickersequence", catalogName);
+    tmp.newFolder(stickersequenceName);
+    String texturesetName = String.format("%s/some.textureset", catalogName);
+    tmp.newFolder(texturesetName);
+    String complicationsetName = String.format("%s/some.complicationset", catalogName);
+    tmp.newFolder(complicationsetName);
 
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
@@ -178,12 +202,10 @@ public class AppleAssetCatalogTest {
   }
 
   @Test
-  public void missingCatalogContentsJsonFailsStrictValidation() throws IOException {
+  public void missingCatalogContentsJsonPassesStrictValidation() throws IOException {
     String catalogName = "catalog.xcassets";
     tmp.newFolder(catalogName);
 
-    exception.expect(HumanReadableException.class);
-    exception.expectMessage("catalog.xcassets doesn't have Contents.json");
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
         BuildTargetFactory.newInstance("//:foobar"),
@@ -193,15 +215,51 @@ public class AppleAssetCatalogTest {
   }
 
   @Test
-  public void missingImagesetContentsJsonFailsStrictValidation() throws IOException {
+  public void missingContentsJsonFailStrictValidation() throws IOException {
     String catalogName = "catalog.xcassets";
     tmp.newFolder(catalogName);
     tmp.newFile(String.format("%s/Contents.json", catalogName));
+    String appiconsetName = String.format("%s/some.appiconset", catalogName);
+    tmp.newFolder(appiconsetName);
+    String brandassetsName = String.format("%s/some.brandassets", catalogName);
+    tmp.newFolder(brandassetsName);
+    String cubetexturesetName = String.format("%s/some.cubetextureset", catalogName);
+    tmp.newFolder(cubetexturesetName);
+    String datasetName = String.format("%s/some.dataset", catalogName);
+    tmp.newFolder(datasetName);
     String imagesetName = String.format("%s/some.imageset", catalogName);
     tmp.newFolder(imagesetName);
+    String imagestackName = String.format("%s/some.imagestack", catalogName);
+    tmp.newFolder(imagestackName);
+    String launchimageName = String.format("%s/some.launchimage", catalogName);
+    tmp.newFolder(launchimageName);
+    String mipmapsetName = String.format("%s/some.mipmapset", catalogName);
+    tmp.newFolder(mipmapsetName);
+    String stickerName = String.format("%s/some.sticker", catalogName);
+    tmp.newFolder(stickerName);
+    String stickerpackName = String.format("%s/some.stickerpack", catalogName);
+    tmp.newFolder(stickerpackName);
+    String stickersequenceName = String.format("%s/some.stickersequence", catalogName);
+    tmp.newFolder(stickersequenceName);
+    String texturesetName = String.format("%s/some.textureset", catalogName);
+    tmp.newFolder(texturesetName);
+    String complicationsetName = String.format("%s/some.complicationset", catalogName);
+    tmp.newFolder(complicationsetName);
 
     exception.expect(HumanReadableException.class);
+    exception.expectMessage("some.appiconset doesn't have Contents.json");
+    exception.expectMessage("some.brandassets doesn't have Contents.json");
+    exception.expectMessage("some.cubetextureset doesn't have Contents.json");
+    exception.expectMessage("some.dataset doesn't have Contents.json");
     exception.expectMessage("some.imageset doesn't have Contents.json");
+    exception.expectMessage("some.imagestack doesn't have Contents.json");
+    exception.expectMessage("some.launchimage doesn't have Contents.json");
+    exception.expectMessage("some.mipmapset doesn't have Contents.json");
+    exception.expectMessage("some.sticker doesn't have Contents.json");
+    exception.expectMessage("some.stickerpack doesn't have Contents.json");
+    exception.expectMessage("some.stickersequence doesn't have Contents.json");
+    exception.expectMessage("some.textureset doesn't have Contents.json");
+    exception.expectMessage("some.complicationset doesn't have Contents.json");
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
         BuildTargetFactory.newInstance("//:foobar"),

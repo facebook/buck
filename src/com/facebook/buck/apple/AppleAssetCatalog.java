@@ -35,6 +35,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,6 +70,22 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Optional<String> launchImage;
 
   @AddToRuleKey private final AppleAssetCatalogDescription.Optimization optimization;
+
+  private static final ImmutableSet<String> TYPES_REQUIRING_CONTENTS_JSON =
+      ImmutableSet.of(
+          "appiconset",
+          "brandassets",
+          "cubetextureset",
+          "dataset",
+          "imageset",
+          "imagestack",
+          "launchimage",
+          "mipmapset",
+          "sticker",
+          "stickerpack",
+          "stickersequence",
+          "textureset",
+          "complicationset");
 
   AppleAssetCatalog(
       BuildTarget buildTarget,
@@ -190,13 +207,21 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ProjectFilesystem projectFilesystem)
       throws HumanReadableException {
     try {
-      boolean mainContentsJsonPresent = false;
       for (Path asset : projectFilesystem.getDirectoryContents(catalogPath)) {
-        if (asset.getFileName().toString().equals("Contents.json")) {
-          mainContentsJsonPresent = true;
+        String assetName = asset.getFileName().toString();
+        if (assetName.equals("Contents.json")) {
           continue;
         }
 
+        String[] parts = assetName.split("\\.");
+        if (parts.length < 2) {
+          errors.add(String.format("Unexpected file in %s: '%s'", catalogPath, assetName));
+        }
+        String assetType = parts[parts.length - 1];
+
+        if (!TYPES_REQUIRING_CONTENTS_JSON.contains(assetType)) {
+          continue;
+        }
         boolean contentsJsonPresent = false;
         for (Path assetContentPath : projectFilesystem.getDirectoryContents(asset)) {
           String filename = assetContentPath.getFileName().toString();
@@ -205,11 +230,12 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
             continue;
           }
 
+          if (!assetType.equals("imageset")) {
+            continue;
+          }
           // Lowercase asset name in case we're building on a case sensitive file system.
           String filenameKey = filename.toLowerCase();
-          if (!asset.toString().endsWith(".imageset")) {
-            continue;
-          } else if (catalogPathsForImageNames.containsKey(filenameKey)) {
+          if (catalogPathsForImageNames.containsKey(filenameKey)) {
             Path existingCatalogPath = catalogPathsForImageNames.get(filenameKey);
             if (catalogPath.equals(existingCatalogPath)) {
               continue;
@@ -232,9 +258,6 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
         }
       }
 
-      if (!mainContentsJsonPresent) {
-        errors.add(String.format("%s doesn't have Contents.json", catalogPath));
-      }
     } catch (IOException e) {
       throw new HumanReadableException(
           "Failed to process asset catalog at %s: %s", catalogPath, e.getMessage());
