@@ -727,6 +727,12 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
+      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+        return args.getSupportsMergedLinking()
+            .orElse(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
+      }
+
+      @Override
       public Iterable<AndroidPackageable> getRequiredPackageables() {
         return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
       }
@@ -927,6 +933,8 @@ public class PrebuiltCxxLibraryDescription
     default boolean isSupportsSharedLibraryInterface() {
       return false;
     }
+
+    Optional<Boolean> getSupportsMergedLinking();
 
     default boolean isNewApiUsed() {
       return getHeaderDirs().isPresent()

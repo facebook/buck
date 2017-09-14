@@ -32,7 +32,7 @@ public class OmnibusRootsTest {
   public void excludedAndIncludedDeps() throws NoSuchBuildTargetException {
     OmnibusRootNode transitiveRoot = new OmnibusRootNode("//:transitive_root");
     NativeLinkable excludedDep =
-        new OmnibusSharedOnlyNode(
+        new OmnibusExcludedNode(
             "//:excluded_dep", ImmutableList.<NativeLinkable>of(transitiveRoot));
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(excludedDep));
 

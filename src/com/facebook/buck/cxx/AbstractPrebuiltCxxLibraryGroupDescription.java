@@ -300,6 +300,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
+      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+        return getPreferredLinkage(cxxPlatform) != Linkage.SHARED;
+      }
+
+      @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
           CxxPlatform cxxPlatform) {
         if (!isPlatformSupported(cxxPlatform)) {

@@ -18,19 +18,19 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 
-/** Created by agallagher on 9/18/16. */
-class OmnibusSharedOnlyNode extends OmnibusNode {
+/** A node that is always excluded from omnibus linking. */
+class OmnibusExcludedNode extends OmnibusNode {
 
-  public OmnibusSharedOnlyNode(String target, Iterable<? extends NativeLinkable> deps) {
+  public OmnibusExcludedNode(String target, Iterable<? extends NativeLinkable> deps) {
     super(target, deps);
   }
 
-  public OmnibusSharedOnlyNode(String target) {
+  public OmnibusExcludedNode(String target) {
     super(target);
   }
 
   @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.SHARED;
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+    return false;
   }
 }

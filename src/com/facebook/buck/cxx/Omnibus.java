@@ -166,7 +166,7 @@ public class Omnibus {
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(getDeps(nativeLinkable, cxxPlatform), NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
-        if (nativeLinkable.getPreferredLinkage(cxxPlatform) == NativeLinkable.Linkage.SHARED) {
+        if (!nativeLinkable.supportsOmnibusLinking(cxxPlatform)) {
           excluded.add(target);
         }
         return deps.keySet();

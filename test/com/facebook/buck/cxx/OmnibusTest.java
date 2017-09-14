@@ -105,7 +105,7 @@ public class OmnibusTest {
   @Test
   public void excludedAndIncludedDeps() throws NoSuchBuildTargetException {
     NativeLinkable a = new OmnibusNode("//:a");
-    NativeLinkable b = new OmnibusSharedOnlyNode("//:b");
+    NativeLinkable b = new OmnibusExcludedNode("//:b");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
@@ -161,7 +161,7 @@ public class OmnibusTest {
   public void excludedDepExcludesTransitiveDep() throws NoSuchBuildTargetException {
     NativeLinkable a = new OmnibusNode("//:a");
     NativeLinkable b = new OmnibusNode("//:b");
-    NativeLinkable c = new OmnibusSharedOnlyNode("//:c", ImmutableList.of(b));
+    NativeLinkable c = new OmnibusExcludedNode("//:c", ImmutableList.of(b));
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, c));
 
     // Verify the spec.

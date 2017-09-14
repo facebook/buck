@@ -311,3 +311,15 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .supports_merged_linking}
+{call buck.arg}
+  {param name : 'supports_merged_linking' /}
+  {param default : 'True' /}
+  {param desc}
+  Whether this rule supports building with the merged linking strategy when building for non-native
+  binaries (e.g. when using {call buckconfig.python_native_link_strategy /}s <code>merged</code> setting).
+  {/param}
+{/call}
+{/template}
