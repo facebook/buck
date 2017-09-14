@@ -1838,7 +1838,8 @@ public class ProjectGenerator {
       PBXFileReference fileReference = getConfigurationFileReference(targetGroup, xcconfigPath);
       outputConfiguration.setBaseConfigurationReference(fileReference);
 
-      xcconfigPathsBuilder.add(xcconfigPath);
+      xcconfigPathsBuilder.add(
+          projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath());
     }
   }
 

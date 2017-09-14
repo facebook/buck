@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
@@ -96,7 +97,8 @@ public class WorkspaceAndProjectGenerator {
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
-  private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+  private final ImmutableSortedSet.Builder<Path> xcconfigPathsBuilder =
+      ImmutableSortedSet.naturalOrder();
   private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
       ImmutableList.builder();
   private final HalideBuckConfig halideBuckConfig;
@@ -409,7 +411,13 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
       GenerationResult result) {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
-    xcconfigPathsBuilder.addAll(result.getXcconfigPaths());
+    ImmutableSortedSet<Path> relativeXcconfigPaths =
+        result
+            .getXcconfigPaths()
+            .stream()
+            .map((Path p) -> rootCell.getFilesystem().relativize(p))
+            .collect(MoreCollectors.toImmutableSortedSet());
+    xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
     filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
     buildTargetToPbxTargetMapBuilder.putAll(result.getBuildTargetToGeneratedTargetMap());
     for (PBXTarget target : result.getBuildTargetToGeneratedTargetMap().values()) {
