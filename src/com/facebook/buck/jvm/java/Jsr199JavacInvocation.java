@@ -124,10 +124,18 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             }
           });
 
-      javacTask.parse();
-      // JavacTask.call would stop between these phases if there were an error, so we do too.
-      if (buildSuccessful()) {
-        javacTask.enter();
+      try {
+        javacTask.parse();
+        // JavacTask.call would stop between these phases if there were an error, so we do too.
+        if (buildSuccessful()) {
+          javacTask.enter();
+        }
+      } catch (RuntimeException e) {
+        throw new HumanReadableException(
+            String.format(
+                "The compiler crashed when run without dependencies. There is probably an error in the source code. Try building %s to reveal it.",
+                invokingRule.getUnflavoredBuildTarget().toString()),
+            e);
       }
       frontendRunAttempted = true;
 
