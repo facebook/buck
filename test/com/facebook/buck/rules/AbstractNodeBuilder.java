@@ -93,23 +93,20 @@ public abstract class AbstractNodeBuilder<
     return builder;
   }
 
-  public final TBuildRule build(BuildRuleResolver resolver) throws NoSuchBuildTargetException {
+  public final TBuildRule build(BuildRuleResolver resolver) {
     return build(resolver, filesystem, TargetGraph.EMPTY);
   }
 
-  public final TBuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph)
-      throws NoSuchBuildTargetException {
+  public final TBuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph) {
     return build(resolver, filesystem, targetGraph);
   }
 
-  public final TBuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem)
-      throws NoSuchBuildTargetException {
+  public final TBuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem) {
     return build(resolver, filesystem, TargetGraph.EMPTY);
   }
 
   public final TBuildRule build(
-      BuildRuleResolver resolver, ProjectFilesystem filesystem, TargetGraph targetGraph)
-      throws NoSuchBuildTargetException {
+      BuildRuleResolver resolver, ProjectFilesystem filesystem, TargetGraph targetGraph) {
 
     // The BuildRule determines its deps by extracting them from the rule parameters.
     BuildRuleParams params = createBuildRuleParams(resolver);

@@ -67,14 +67,10 @@ public class WorkerToolDescriptionTest {
   }
 
   private static BuildTarget wrapExeInCommandAlias(BuildRuleResolver resolver, BuildRule shBinary) {
-    try {
-      return new CommandAliasBuilder(BuildTargetFactory.newInstance("//:no_output"))
-          .setExe(shBinary.getBuildTarget())
-          .build(resolver)
-          .getBuildTarget();
-    } catch (NoSuchBuildTargetException e) {
-      throw new RuntimeException(e);
-    }
+    return new CommandAliasBuilder(BuildTargetFactory.newInstance("//:no_output"))
+        .setExe(shBinary.getBuildTarget())
+        .build(resolver)
+        .getBuildTarget();
   }
 
   private static WorkerTool createWorkerTool(
