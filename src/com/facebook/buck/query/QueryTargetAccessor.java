@@ -17,6 +17,7 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
@@ -24,6 +25,7 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -33,7 +35,8 @@ public class QueryTargetAccessor {
 
   private static final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
-  private QueryTargetAccessor() {}
+  private QueryTargetAccessor() {
+  }
 
   public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TargetNode<T, ?> node, String attribute) {
@@ -52,7 +55,7 @@ public class QueryTargetAccessor {
           if (value instanceof Path) {
             builder.add(QueryFileTarget.of(new PathSourcePath(node.getFilesystem(), (Path) value)));
           } else if (value instanceof SourcePath) {
-            builder.add(QueryFileTarget.of((SourcePath) value));
+            builder.add(extractSourcePath((SourcePath) value));
           } else if (value instanceof BuildTarget) {
             builder.add(extractBuildTargetContainer((BuildTarget) value));
           }
@@ -61,7 +64,18 @@ public class QueryTargetAccessor {
     return builder.build();
   }
 
-  /** Filters the objects in the given attribute that satisfy the given predicate. */
+  public static QueryTarget extractSourcePath(SourcePath sourcePath) {
+    if (sourcePath instanceof PathSourcePath) {
+      return QueryFileTarget.of(sourcePath);
+    } else if (sourcePath instanceof BuildTargetSourcePath) {
+      return QueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
+    }
+    throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
+  }
+
+  /**
+   * Filters the objects in the given attribute that satisfy the given predicate.
+   */
   public static <T> ImmutableSet<Object> filterAttributeContents(
       TargetNode<T, ?> node, String attribute, final Predicate<Object> predicate) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
