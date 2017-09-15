@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -82,8 +83,10 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final boolean enableObjcInterop;
   private final Optional<SourcePath> bridgingHeader;
+
   @SuppressWarnings("unused")
   private final SwiftBuckConfig swiftBuckConfig;
+
   @AddToRuleKey private final Preprocessor cPreprocessor;
 
   private final PreprocessorFlags cxxDeps;
@@ -120,10 +123,11 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.version = version;
-    this.compilerFlags = new ImmutableList.Builder<Arg>()
-        .addAll(StringArg.from(swiftBuckConfig.getFlags().orElse(ImmutableSet.of())))
-        .addAll(compilerFlags)
-        .build();
+    this.compilerFlags =
+        new ImmutableList.Builder<Arg>()
+            .addAll(StringArg.from(swiftBuckConfig.getFlags().orElse(ImmutableSet.of())))
+            .addAll(compilerFlags)
+            .build();
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
@@ -281,5 +285,41 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   Arg getFileListLinkArg() {
     return FileListableLinkerInputArg.withSourcePathArg(
         SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), objectPath)));
+  }
+
+  /** @return {@link SourcePath} relative to the project filesystem given a {@link Path}. */
+  private SourcePath buildSourcePathForPath(Path path) {
+    ProjectFilesystem fs = getProjectFilesystem();
+    Path relativePath = fs.getRootPath().relativize(path.toAbsolutePath());
+    return new PathSourcePath(fs, relativePath);
+  }
+
+  /** @return The name of the Swift module. */
+  public String getModuleName() {
+    return moduleName;
+  }
+
+  /** @return {@link SourcePath} to the output object file (i.e., .o file) */
+  public SourcePath getObjectPath() {
+    // Ensures that users of the object path can depend on this build target
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), objectPath);
+  }
+
+  /** @return File name of the Objective-C Generated Interface Header. */
+  public String getObjCGeneratedHeaderFileName() {
+    return headerPath.getFileName().toString();
+  }
+
+  /** @return {@link SourcePath} of the Objective-C Generated Interface Header. */
+  public SourcePath getObjCGeneratedHeaderPath() {
+    return buildSourcePathForPath(headerPath);
+  }
+
+  /**
+   * @return {@link SourcePath} to the directory containing outputs from the compilation process
+   *     (object files, Swift module metadata, etc).
+   */
+  public SourcePath getOutputPath() {
+    return buildSourcePathForPath(outputPath);
   }
 }
