@@ -136,6 +136,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
     BuildFileAST buildFileAst =
         BuildFileAST.parseBuildFile(ParserInputSource.create(buildFilePath), eventHandler);
+    if (buildFileAst.containsErrors()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          "Cannot parse build file " + buildFile);
+    }
 
     ImmutableList.Builder<Map<String, Object>> rawRuleBuilder = ImmutableList.builder();
     Environment.Frame buckGlobals = getBuckGlobals(rawRuleBuilder);
@@ -147,6 +151,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           Environment.builder(mutability)
               .setImportedExtensions(importMap)
               .setGlobals(buckGlobals)
+              .setPhase(Environment.Phase.LOADING)
               .build();
       String basePath = getBasePath(buildFile);
       env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);

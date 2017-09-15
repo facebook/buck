@@ -219,6 +219,19 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void functionDefinitionsAreNotAllowedInBuildFiles() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    projectFilesystem.writeContentsToPath("def foo():\n  pass", buildFile);
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot parse build file " + buildFile);
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
   public void canUseBuiltInListFunctionInExtension() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
