@@ -17,10 +17,12 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
@@ -43,6 +45,28 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
   }
 
   @Test
+  public void testGetConstantValueDelegatedValueMissing() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "Bar.java",
+            Joiner.on('\n')
+                .join("public class Bar {", "  public static final int CONSTANT = 42;", "}")));
+
+    compile(
+        Joiner.on('\n')
+            .join("public class Foo {", "  public static final int CONSTANT = Bar.CONSTANT;", "}"));
+
+    VariableElement variable = findField("CONSTANT", elements.getTypeElement("Foo"));
+
+    if (testingJavac()) {
+      assertEquals(42, variable.getConstantValue());
+    } else {
+      assertNull(variable.getConstantValue());
+    }
+    assertThat(testCompiler.getDiagnosticMessages(), Matchers.empty());
+  }
+
+  @Test
   public void testGetConstantValueComplexValue() throws IOException {
     compile(
         Joiner.on('\n')
@@ -56,6 +80,34 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
     VariableElement variable = findField("CONSTANT", elements.getTypeElement("Foo"));
 
     assertEquals(42, variable.getConstantValue());
+  }
+
+  @Test
+  public void testGetConstantValueComplexValueMissing() throws IOException {
+    withClasspath(
+        ImmutableMap.of(
+            "Bar.java",
+            Joiner.on('\n')
+                .join("public class Bar {", "  public static final boolean ADD = true;", "}")));
+
+    compile(
+        Joiner.on('\n')
+            .join(
+                "public class Foo {",
+                "  private static final boolean ADD = Bar.ADD;",
+                "  private static final int A = 40;",
+                "  private static final int B = 2;",
+                "  public static final int CONSTANT = ADD ? A + B : 42;",
+                "}"));
+
+    VariableElement variable = findField("CONSTANT", elements.getTypeElement("Foo"));
+
+    if (testingJavac()) {
+      assertEquals(42, variable.getConstantValue());
+    } else {
+      assertNull(variable.getConstantValue());
+    }
+    assertThat(testCompiler.getDiagnosticMessages(), Matchers.empty());
   }
 
   @Test
