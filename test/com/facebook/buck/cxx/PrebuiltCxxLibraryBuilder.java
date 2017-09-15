@@ -55,6 +55,11 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setPlatformSharedLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformSharedLib(lib);
+    return this;
+  }
+
   public PrebuiltCxxLibraryBuilder setStaticLib(SourcePath lib) {
     getArgForPopulating().setStaticLib(lib);
     return this;

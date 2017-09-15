@@ -544,7 +544,11 @@ public class KnownBuildRuleTypes {
     builder.register(new IosReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(
         new JavaBinaryDescription(
-            defaultJavaOptions, defaultJavacOptions, defaultJavaCxxPlatform, javaConfig));
+            defaultJavaOptions,
+            defaultJavacOptions,
+            javaConfig,
+            defaultJavaCxxPlatform,
+            cxxPlatforms));
     builder.register(new JavaAnnotationProcessorDescription());
     builder.register(new JavaLibraryDescription(javaConfig, defaultJavacOptions));
     builder.register(
@@ -553,7 +557,8 @@ public class KnownBuildRuleTypes {
             defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
-            defaultJavaCxxPlatform));
+            defaultJavaCxxPlatform,
+            cxxPlatforms));
     builder.register(new JsBundleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());

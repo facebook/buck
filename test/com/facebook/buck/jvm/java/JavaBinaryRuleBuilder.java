@@ -20,9 +20,11 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -32,14 +34,32 @@ public class JavaBinaryRuleBuilder
         JavaBinaryDescriptionArg.Builder, JavaBinaryDescriptionArg, JavaBinaryDescription,
         JavaBinary> {
 
-  public JavaBinaryRuleBuilder(BuildTarget target) {
+  private JavaBinaryRuleBuilder(
+      BuildTarget target,
+      JavaOptions javaOptions,
+      JavacOptions javacOptions,
+      JavaBuckConfig javaBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new JavaBinaryDescription(
-            DEFAULT_JAVA_OPTIONS,
-            DEFAULT_JAVAC_OPTIONS,
-            CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build())),
-            JavaBuckConfig.of(FakeBuckConfig.builder().build())),
+            javaOptions, javacOptions, javaBuckConfig, defaultCxxPlatform, cxxPlatforms),
         target);
+  }
+
+  public JavaBinaryRuleBuilder(
+      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this(
+        target,
+        DEFAULT_JAVA_OPTIONS,
+        DEFAULT_JAVAC_OPTIONS,
+        JavaBuckConfig.of(FakeBuckConfig.builder().build()),
+        defaultCxxPlatform,
+        cxxPlatforms);
+  }
+
+  public JavaBinaryRuleBuilder(BuildTarget target) {
+    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
 
   public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
@@ -54,6 +74,11 @@ public class JavaBinaryRuleBuilder
 
   public JavaBinaryRuleBuilder addTest(BuildTarget test) {
     getArgForPopulating().addTests(test);
+    return this;
+  }
+
+  public JavaBinaryRuleBuilder setDefaultCxxPlatform(Flavor flavor) {
+    getArgForPopulating().setDefaultCxxPlatform(flavor);
     return this;
   }
 }

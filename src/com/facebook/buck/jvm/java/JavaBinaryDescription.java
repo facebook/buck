@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -37,7 +38,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -55,25 +55,32 @@ public class JavaBinaryDescription
 
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = InternalFlavor.of("inner-jar");
 
-  private final JavacOptions javacOptions;
-  private final CxxPlatform cxxPlatform;
   private final JavaOptions javaOptions;
+  private final JavacOptions javacOptions;
   private final JavaBuckConfig javaBuckConfig;
+  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public JavaBinaryDescription(
       JavaOptions javaOptions,
       JavacOptions javacOptions,
-      CxxPlatform cxxPlatform,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.javaOptions = javaOptions;
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
-    this.javaBuckConfig = Preconditions.checkNotNull(javaBuckConfig);
+    this.javacOptions = javacOptions;
+    this.javaBuckConfig = javaBuckConfig;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
   public Class<JavaBinaryDescriptionArg> getConstructorArgType() {
     return JavaBinaryDescriptionArg.class;
+  }
+
+  private CxxPlatform getCxxPlatform(AbstractJavaBinaryDescriptionArg args) {
+    return args.getDefaultCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform);
   }
 
   @Override
@@ -88,7 +95,7 @@ public class JavaBinaryDescription
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableMap<String, SourcePath> nativeLibraries =
-        JavaLibraryRules.getNativeLibraries(params.getBuildDeps(), cxxPlatform);
+        JavaLibraryRules.getNativeLibraries(params.getBuildDeps(), getCxxPlatform(args));
     BuildTarget binaryBuildTarget = buildTarget;
     BuildRuleParams binaryParams = params;
 
@@ -153,17 +160,17 @@ public class JavaBinaryDescription
       AbstractJavaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+    extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+  }
+
+  @VisibleForTesting
+  public CxxPlatform getDefaultCxxPlatform() {
+    return defaultCxxPlatform;
   }
 
   @Override
   public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
     return true;
-  }
-
-  @VisibleForTesting
-  public CxxPlatform getCxxPlatform() {
-    return cxxPlatform;
   }
 
   @BuckStyleImmutable
@@ -181,5 +188,7 @@ public class JavaBinaryDescription
     Optional<Path> getMetaInfDirectory();
 
     ImmutableSet<Pattern> getBlacklist();
+
+    Optional<Flavor> getDefaultCxxPlatform();
   }
 }

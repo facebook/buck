@@ -343,13 +343,13 @@ public class KnownBuildRuleTypesTest {
         (JavaBinaryDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));
     assertThat(
-        javaBinaryDescription.getCxxPlatform(),
+        javaBinaryDescription.getDefaultCxxPlatform(),
         Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
     JavaTestDescription javaTestDescription =
         (JavaTestDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_test"));
     assertThat(
-        javaTestDescription.getCxxPlatform(),
+        javaTestDescription.getDefaultCxxPlatform(),
         Matchers.equalTo(knownBuildRuleTypes.getCxxPlatforms().getValue(flavor)));
   }
 

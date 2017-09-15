@@ -264,4 +264,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();
   }
+
+  public ImmutableMap<String, SourcePath> getNativeLibraries() {
+    return nativeLibraries;
+  }
 }
