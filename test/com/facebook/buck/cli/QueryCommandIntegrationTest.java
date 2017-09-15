@@ -32,20 +32,21 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
 
 public class QueryCommandIntegrationTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule
+  public TemporaryPaths tmp = new TemporaryPaths();
 
   private static JsonNode parseJSON(String content) throws IOException {
     return ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
@@ -611,7 +612,7 @@ public class QueryCommandIntegrationTest {
     public Path getProfilerPath() {
       return profilerPath;
     }
-  };
+  }
 
   @Test
   public void testQueryProfileParser() throws IOException {

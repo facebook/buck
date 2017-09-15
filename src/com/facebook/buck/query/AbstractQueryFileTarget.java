@@ -16,8 +16,8 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @BuckStyleImmutable
@@ -25,7 +25,7 @@ import org.immutables.value.Value;
 abstract class AbstractQueryFileTarget implements QueryTarget {
 
   @Value.Parameter
-  abstract Path getPath();
+  abstract SourcePath getPath();
 
   @Override
   public int compareTo(QueryTarget other) {
@@ -38,7 +38,6 @@ abstract class AbstractQueryFileTarget implements QueryTarget {
 
   @Override
   public String toString() {
-    String separator = getPath().getFileSystem().getSeparator();
-    return getPath().toString().replace(separator, "/");
+    return getPath().toString();
   }
 }

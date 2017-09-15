@@ -32,7 +32,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -80,16 +79,16 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
                 BuildRule rule =
                     resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
                 return Optional.ofNullable(rule.getSourcePathToOutput())
-                    .map(pathResolver::getAbsolutePath)
                     .orElse(null);
               } else if (QueryFileTarget.class.isAssignableFrom(queryTarget.getClass())) {
-                return ((QueryFileTarget) queryTarget).getPath().toAbsolutePath();
+                return ((QueryFileTarget) queryTarget).getPath();
               } else {
                 throw new HumanReadableException("Unknown query target type: " + queryTarget);
               }
             })
         .filter(Objects::nonNull)
-        .map(Path::toString)
+        .map(pathResolver::getAbsolutePath)
+        .map(Object::toString)
         .sorted()
         .collect(Collectors.joining(" "));
   }
