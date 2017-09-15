@@ -4,6 +4,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/model:build_id",
         "//third-party/java/guava:guava",
     ],
 )

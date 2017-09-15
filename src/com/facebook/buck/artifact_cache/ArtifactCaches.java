@@ -550,7 +550,7 @@ public class ArtifactCaches implements ArtifactCacheFactory {
     ArtifactCacheBuckConfig.MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
     if (multiFetchType == ArtifactCacheBuckConfig.MultiFetchType.EXPERIMENT) {
       multiFetchType =
-          RandomizedTrial.getGroup(
+          RandomizedTrial.getGroupStable(
               ArtifactCacheBuckConfig.MULTI_FETCH, ArtifactCacheBuckConfig.MultiFetchType.class);
       switch (multiFetchType) {
         case DISABLED:
