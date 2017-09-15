@@ -17,7 +17,6 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;

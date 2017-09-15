@@ -25,7 +25,6 @@ java_library(
 java_immutables_library(
     name = "source_path",
     srcs = [
-        "AbstractExopackageInfo.java",
         "BuildTargetSourcePath.java",
         "DefaultBuildTargetSourcePath.java",
         "ExplicitBuildTargetSourcePath.java",

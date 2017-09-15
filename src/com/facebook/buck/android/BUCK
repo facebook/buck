@@ -325,6 +325,7 @@ UTILS_SRCS = [
     "DefaultAndroidDirectoryResolver.java",
     "DefaultAndroidManifestReader.java",
     "HasInstallableApk.java",
+    "exopackage/AbstractExopackageInfo.java",
     "exopackage/AndroidDevice.java",
     "exopackage/AndroidDevicesHelper.java",
     "exopackage/PackageInfo.java",

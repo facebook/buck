@@ -14,11 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.rules;
+package com.facebook.buck.android.exopackage;
 
-import com.facebook.buck.rules.ExopackageInfo.DexInfo;
-import com.facebook.buck.rules.ExopackageInfo.NativeLibsInfo;
-import com.facebook.buck.rules.ExopackageInfo.ResourcesInfo;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import java.util.List;
@@ -54,11 +52,11 @@ abstract class AbstractExopackageInfo {
     List<SourcePath> getResourcesPaths();
   }
 
-  public abstract Optional<DexInfo> getDexInfo();
+  public abstract Optional<ExopackageInfo.DexInfo> getDexInfo();
 
-  public abstract Optional<NativeLibsInfo> getNativeLibsInfo();
+  public abstract Optional<ExopackageInfo.NativeLibsInfo> getNativeLibsInfo();
 
-  public abstract Optional<ResourcesInfo> getResourcesInfo();
+  public abstract Optional<ExopackageInfo.ResourcesInfo> getResourcesInfo();
 
   @Value.Check
   protected void check() {
