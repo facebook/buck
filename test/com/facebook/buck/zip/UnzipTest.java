@@ -23,7 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.zip.ZipConstants;
@@ -60,10 +60,10 @@ public class UnzipTest {
   @Test
   public void testExtractZipFile() throws InterruptedException, IOException {
 
-    try (Zip zip = new Zip(zipFile, true)) {
-      zip.add("1.bin", DUMMY_FILE_CONTENTS);
-      zip.add("subdir/2.bin", DUMMY_FILE_CONTENTS);
-      zip.addDir("emptydir");
+    try (ZipArchive zipArchive = new ZipArchive(this.zipFile, true)) {
+      zipArchive.add("1.bin", DUMMY_FILE_CONTENTS);
+      zipArchive.add("subdir/2.bin", DUMMY_FILE_CONTENTS);
+      zipArchive.addDir("emptydir");
     }
 
     Path extractFolder = tmpFolder.newFolder();

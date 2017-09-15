@@ -31,6 +31,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
+import com.facebook.buck.util.zip.Zip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -292,7 +293,7 @@ public class BuildInfoRecorder {
           Files.createTempFile(
               "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip");
       buildMetadata = getBuildMetadata();
-      projectFilesystem.createZip(pathsToIncludeInZip, zip);
+      Zip.create(projectFilesystem, pathsToIncludeInZip, zip);
     } catch (IOException e) {
       eventBus.post(
           ConsoleEvent.info(

@@ -30,6 +30,7 @@ import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.zip.Zip;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.collect.FluentIterable;
@@ -403,9 +404,9 @@ public class ProjectFilesystemTest {
     Path exe = tmp.newFile("test.exe");
     MoreFiles.makeExecutable(exe);
 
-    // Archive it into a zipfile using `ProjectFileSystem.createZip`.
+    // Archive it into a zipfile using `Zip.create`.
     Path zipFile = tmp.getRoot().resolve("test.zip");
-    filesystem.createZip(ImmutableList.of(exe), zipFile);
+    Zip.create(filesystem, ImmutableList.of(exe), zipFile);
 
     // Now unpack the archive (using apache's common-compress, as it preserves
     // executable permissions) and verify that the archive entry has executable
@@ -427,9 +428,9 @@ public class ProjectFilesystemTest {
     // Create a empty executable file.
     Path exe = tmp.newFile("foo");
 
-    // Archive it into a zipfile using `ProjectFileSystem.createZip`.
+    // Archive it into a zipfile using `Zip.create`.
     Path zipFile = tmp.getRoot().resolve("test.zip");
-    filesystem.createZip(ImmutableList.of(exe), zipFile);
+    Zip.create(filesystem, ImmutableList.of(exe), zipFile);
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
@@ -468,8 +469,8 @@ public class ProjectFilesystemTest {
 
     Path output = tmp.newFile("out.zip");
 
-    filesystem.createZip(
-        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
+    Zip.create(
+        filesystem, ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
 
     ZipInspector zipInspector = new ZipInspector(output);
     assertEquals(ImmutableSet.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
@@ -484,7 +485,8 @@ public class ProjectFilesystemTest {
 
     Path output = tmp.newFile("out.zip");
 
-    filesystem.createZip(
+    Zip.create(
+        filesystem,
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"), Paths.get("empty")),
         output);
 
@@ -501,8 +503,8 @@ public class ProjectFilesystemTest {
 
     Path output = tmp.newFile("out.zip");
 
-    filesystem.createZip(
-        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
+    Zip.create(
+        filesystem, ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
 
     ImmutableCollection<Path> actualContents =
         ImmutableSortedSet.copyOf(Unzip.getZipMembers(filesystem.resolve(output)));

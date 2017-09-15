@@ -41,7 +41,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.JsonMatcher;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -733,8 +733,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
           BuildTargets.getGenPath(filesystem, binary2Target, "%s.jar")
         }) {
       Path file = workspace.getPath(filename);
-      try (Zip zip = new Zip(file, /* for writing? */ false)) {
-        Set<String> allNames = zip.getFileNames();
+      try (ZipArchive zipArchive = new ZipArchive(file, /* for writing? */ false)) {
+        Set<String> allNames = zipArchive.getFileNames();
         // Representative file from provided_deps we don't expect to be there.
         assertFalse(allNames.contains("org/junit/Test.class"));
 

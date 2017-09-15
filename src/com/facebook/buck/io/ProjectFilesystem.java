@@ -23,9 +23,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.facebook.buck.util.zip.CustomZipEntry;
-import com.facebook.buck.util.zip.CustomZipOutputStream;
-import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -42,7 +39,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -76,7 +72,6 @@ import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -907,32 +902,6 @@ public class ProjectFilesystem {
   /** Returns the target of the specified symbolic link. */
   public Path readSymLink(Path path) throws IOException {
     return Files.readSymbolicLink(getPathForRelativePath(path));
-  }
-
-  /**
-   * Takes a sequence of paths relative to the project root and writes a zip file to {@code out}
-   * with the contents and structure that matches that of the specified paths.
-   */
-  public void createZip(Collection<Path> pathsToIncludeInZip, Path out) throws IOException {
-    try (CustomZipOutputStream zip = ZipOutputStreams.newOutputStream(out)) {
-      for (Path path : pathsToIncludeInZip) {
-        boolean isDirectory = isDirectory(path);
-        CustomZipEntry entry = new CustomZipEntry(path, isDirectory);
-
-        // We want deterministic ZIPs, so avoid mtimes.
-        entry.setFakeTime();
-
-        entry.setExternalAttributes(getFileAttributesForZipEntry(path));
-
-        zip.putNextEntry(entry);
-        if (!isDirectory) {
-          try (InputStream input = newFileInputStream(path)) {
-            ByteStreams.copy(input, zip);
-          }
-        }
-        zip.closeEntry();
-      }
-    }
   }
 
   public Manifest getJarManifest(Path path) throws IOException {

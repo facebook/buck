@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -106,8 +106,8 @@ public class FlavoredTargetsParserIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:example");
 
     // Take a look at the contents of 'output'. It should be a source jar.
-    try (Zip zip = new Zip(output, /* for writing? */ false)) {
-      Set<String> fileNames = zip.getFileNames();
+    try (ZipArchive zipArchive = new ZipArchive(output, /* for writing? */ false)) {
+      Set<String> fileNames = zipArchive.getFileNames();
 
       assertTrue(fileNames.toString(), fileNames.contains("B.java"));
     }

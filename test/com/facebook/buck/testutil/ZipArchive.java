@@ -43,7 +43,7 @@ import java.util.Set;
  * content to the zip and by not providing a way of extracting individual entries (just the names of
  * the entries).
  */
-public class Zip implements AutoCloseable {
+public class ZipArchive implements AutoCloseable {
 
   // Java 7 introduced an abstraction for modeling file systems. One of the implementations that
   // ships with the JRE is one that handles Zip files. This allows us to work on zip files directly
@@ -60,7 +60,7 @@ public class Zip implements AutoCloseable {
    * @param forWriting Whether the zip file should be opened for writing or not.
    * @throws IOException Should something terrible occur.
    */
-  public Zip(Path zip, boolean forWriting) throws IOException {
+  public ZipArchive(Path zip, boolean forWriting) throws IOException {
     String extension = MorePaths.getFileExtension(zip);
     assertTrue(
         "zip name must end with .zip for file type detection to work",

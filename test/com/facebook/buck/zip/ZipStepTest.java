@@ -28,7 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
@@ -86,8 +86,9 @@ public class ZipStepTest {
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(
+          ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zipArchive.getFileNames());
     }
   }
 
@@ -112,8 +113,8 @@ public class ZipStepTest {
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file2.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file2.txt"), zipArchive.getFileNames());
     }
   }
 
@@ -138,13 +139,13 @@ public class ZipStepTest {
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Make sure we have the right attributes.
-    try (ZipFile zip = new ZipFile(out.toFile())) {
-      ZipArchiveEntry entry = zip.getEntry("child/");
+    try (ZipFile zipFile = new ZipFile(out.toFile())) {
+      ZipArchiveEntry entry = zipFile.getEntry("child/");
       assertNotEquals(entry.getUnixMode() & MoreFiles.S_IFDIR, 0);
     }
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zipArchive.getFileNames());
     }
   }
 
@@ -172,9 +173,9 @@ public class ZipStepTest {
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file.txt"), zip.getFileNames());
-      byte[] contents = zip.readFully("file.txt");
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file.txt"), zipArchive.getFileNames());
+      byte[] contents = zipArchive.readFully("file.txt");
 
       assertArrayEquals("example content".getBytes(), contents);
     }
@@ -185,8 +186,8 @@ public class ZipStepTest {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
-    try (Zip zip = new Zip(out, true)) {
-      zip.add("file1.txt", "");
+    try (ZipArchive zipArchive = new ZipArchive(out, true)) {
+      zipArchive.add("file1.txt", "");
     }
 
     ZipStep step =
@@ -219,8 +220,8 @@ public class ZipStepTest {
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file1.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt"), zipArchive.getFileNames());
     }
   }
 
@@ -243,8 +244,8 @@ public class ZipStepTest {
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zip.getDirNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zipArchive.getDirNames());
     }
 
     // Directories should be stored, not deflated as this sometimes causes issues
@@ -284,14 +285,14 @@ public class ZipStepTest {
 
     // Use apache's common-compress to parse the zip file, since it reads the central
     // directory and will verify it's valid.
-    try (ZipFile zip = new ZipFile(out.toFile())) {
-      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+    try (ZipFile zipFile = new ZipFile(out.toFile())) {
+      Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
       ZipArchiveEntry entry1 = entries.nextElement();
-      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry1)));
+      assertArrayEquals(contents, ByteStreams.toByteArray(zipFile.getInputStream(entry1)));
       ZipArchiveEntry entry2 = entries.nextElement();
-      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry2)));
+      assertArrayEquals(contents, ByteStreams.toByteArray(zipFile.getInputStream(entry2)));
       ZipArchiveEntry entry3 = entries.nextElement();
-      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry3)));
+      assertArrayEquals(contents, ByteStreams.toByteArray(zipFile.getInputStream(entry3)));
     }
   }
 

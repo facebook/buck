@@ -34,7 +34,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePosixFilePermissions;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
@@ -95,8 +95,8 @@ public class ZipOutputStreamTest {
       CustomZipOutputStream ignored = ZipOutputStreams.newOutputStream(output, mode);
       ignored.close();
 
-      try (Zip zip = new Zip(output, /* forWriting */ false)) {
-        assertTrue(zip.getFileNames().isEmpty());
+      try (ZipArchive zipArchive = new ZipArchive(output, /* forWriting */ false)) {
+        assertTrue(zipArchive.getFileNames().isEmpty());
       }
     }
 

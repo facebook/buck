@@ -37,7 +37,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
@@ -177,7 +177,7 @@ public class BuildInfoRecorderTest {
                 info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
 
             // Verify zip contents
-            try (Zip zip = new Zip(output.getPath(), /* forWriting */ false)) {
+            try (ZipArchive zip = new ZipArchive(output.getPath(), /* forWriting */ false)) {
               assertEquals(
                   ImmutableSet.of(
                       "",
