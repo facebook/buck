@@ -505,6 +505,12 @@ public class XCodeProjectCommandHelper {
 
   private void checkForAndKillXcodeIfRunning(boolean enablePrompt)
       throws InterruptedException, IOException {
+    if (!enablePrompt) {
+      // We don't even check if Xcode is running because pkill can hang.
+      LOG.debug("Prompt to kill Xcode is disabled");
+      return;
+    }
+
     if (!processManager.isPresent()) {
       LOG.warn("Could not check if Xcode is running (no process manager)");
       return;
@@ -516,7 +522,7 @@ public class XCodeProjectCommandHelper {
     }
 
     boolean canPromptResult = canPrompt(environment);
-    if (enablePrompt && canPromptResult) {
+    if (canPromptResult) {
       if (prompt(
           "Xcode is currently running. Buck will modify files Xcode currently has "
               + "open, which can cause it to become unstable.\n\n"
