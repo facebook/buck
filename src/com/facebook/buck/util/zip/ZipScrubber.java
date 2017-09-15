@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
-import com.facebook.buck.util.zip.ZipConstants;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -28,7 +27,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 
 /** Tool to eliminate non-deterministic or problematic bits of zip files. */
-class ZipScrubber {
+public class ZipScrubber {
   private ZipScrubber() {}
 
   private static final int EXTENDED_TIMESTAMP_ID = 0x5455;
@@ -39,7 +38,7 @@ class ZipScrubber {
     }
   }
 
-  static void scrubZip(Path zipPath) throws IOException {
+  public static void scrubZip(Path zipPath) throws IOException {
     try (FileChannel channel =
         FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
