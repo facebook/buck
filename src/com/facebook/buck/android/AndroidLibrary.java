@@ -153,9 +153,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       setJavacOptions(javacOptions);
       setArgs(args);
       // Set only if this is not Scala/Kotlin
-      if (!args.getLanguage().filter(l -> l != JvmLanguage.JAVA).isPresent()) {
-        setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
-      }
+      setCompileAgainstAbis(
+          javaBuckConfig.shouldCompileAgainstAbis()
+              && !args.getLanguage().filter(l -> l != JvmLanguage.JAVA).isPresent());
     }
 
     @Override
