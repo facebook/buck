@@ -23,7 +23,6 @@ java_immutables_library(
         ":worker",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:BuckPaths",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/model:macros",

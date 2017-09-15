@@ -1,13 +1,3 @@
-BUCK_PATHS_SRCS = [
-    "AbstractBuckPaths.java",
-]
-
-java_immutables_library(
-    name = "BuckPaths",
-    srcs = BUCK_PATHS_SRCS,
-    visibility = ["PUBLIC"],
-)
-
 DEFAULT_FILESYSTEM_DELEGATE_SRCS = [
     "DefaultProjectFilesystemDelegate.java",
 ]
@@ -169,7 +159,6 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
         excludes = (
-            BUCK_PATHS_SRCS +
             DEFAULT_FILESYSTEM_DELEGATE_SRCS +
             FINDER_SRCS +
             MORE_PATHS_SRCS +
@@ -180,7 +169,6 @@ java_immutables_library(
         ),
     ),
     exported_deps = [
-        ":BuckPaths",
         ":ProjectFilesystemDelegate",
         ":ProjectFilesystemDelegateFactory",
         ":more-paths",
