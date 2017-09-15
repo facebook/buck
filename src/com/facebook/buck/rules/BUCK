@@ -319,27 +319,6 @@ java_immutables_library(
 )
 
 java_library(
-    name = "transformer",
-    srcs = [
-        "DefaultTargetNodeToBuildRuleTransformer.java",
-    ],
-    exported_deps = [
-        ":abstract_description_arg",
-        ":build_rule",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        ":interfaces",
-        ":rule_key",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/rules/query:query",
-        "//third-party/java/guava:guava",
-    ],
-)
-
-java_library(
     name = "target_graph_hashing",
     srcs = [
         "TargetGraphHashing.java",
@@ -416,6 +395,7 @@ java_immutables_library(
         "CachingBuildRuleBuilder.java",
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",
+        "DefaultTargetNodeToBuildRuleTransformer.java",
         "ExternalTestRunnerRule.java",
         "FilesystemBuildInfoStore.java",
         "HasInstallHelpers.java",
@@ -449,7 +429,6 @@ java_immutables_library(
         ":caching_build_engine_delegates",
         ":interfaces",
         ":rule_key",
-        ":transformer",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
@@ -470,6 +449,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/sqlite:sqlite",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
