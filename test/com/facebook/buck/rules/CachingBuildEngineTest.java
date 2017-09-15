@@ -75,7 +75,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
@@ -200,7 +199,7 @@ public class CachingBuildEngineTest {
 
     protected final InMemoryArtifactCache cache = new InMemoryArtifactCache();
     protected final FakeBuckEventListener listener = new FakeBuckEventListener();
-    protected FakeProjectFilesystem filesystem;
+    protected ProjectFilesystem filesystem;
     protected BuildInfoStoreManager buildInfoStoreManager;
     protected BuildInfoStore buildInfoStore;
     protected FileHashCache fileHashCache;
@@ -225,8 +224,8 @@ public class CachingBuildEngineTest {
     }
 
     @Before
-    public void setUp() throws IOException {
-      filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    public void setUp() throws Exception {
+      filesystem = new ProjectFilesystem(tmp.getRoot());
       buildInfoStoreManager = new BuildInfoStoreManager();
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
@@ -333,7 +332,9 @@ public class CachingBuildEngineTest {
             @Override
             public StepExecutionResult execute(ExecutionContext context)
                 throws IOException, InterruptedException {
-              filesystem.touch(pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput()));
+              Path outputPath = pathResolver.getRelativePath(ruleToTest.getSourcePathToOutput());
+              filesystem.mkdirs(outputPath.getParent());
+              filesystem.touch(outputPath);
               return StepExecutionResult.SUCCESS;
             }
           });
@@ -1340,7 +1341,6 @@ public class CachingBuildEngineTest {
                 .build(buildContext, TestExecutionContext.newInstance(), rule)
                 .getResult()
                 .get();
-        assertTrue(service.shutdownNow().isEmpty());
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
         assertThat(
             Preconditions.checkNotNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
@@ -1359,6 +1359,7 @@ public class CachingBuildEngineTest {
                 .getStatus(),
             equalTo(BuildRuleStatus.SUCCESS));
       }
+      assertTrue(service.shutdownNow().isEmpty());
     }
 
     @Test
@@ -1440,7 +1441,7 @@ public class CachingBuildEngineTest {
         assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
         // Clear the file system.
-        filesystem.clear();
+        filesystem.deleteRecursivelyIfExists(Paths.get(""));
         buildInfoStore.deleteMetadata(target);
       }
       // Now run a second build that gets a cache hit.  We use an empty `FakeFileHashCache` which
@@ -1588,20 +1589,20 @@ public class CachingBuildEngineTest {
       resolver.addToIndex(rule);
 
       // Prepopulate the recorded paths metadata.
+      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(
                   pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Prepopulate the cache with an artifact indexed by the input-based rule key.
       Path artifact = tmp.newFile("artifact.zip");
       writeEntriesToZip(
           artifact,
           ImmutableMap.of(
-              BuildInfo.getPathToMetadataDirectory(target, filesystem)
-                  .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(
                   ImmutableList.of(
                       pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
@@ -1697,19 +1698,19 @@ public class CachingBuildEngineTest {
           "stuff", pathResolver.getRelativePath(rule.getSourcePathToOutput()));
 
       // Prepopulate the recorded paths metadata.
+      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(
                   pathResolver.getRelativePath(rule.getSourcePathToOutput()).toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       if (previousRuleKey.isPresent()) {
         // Prepopulate the input rule key on disk.
         filesystem.writeContentsToPath(
             previousRuleKey.get().toString(),
-            BuildInfo.getPathToMetadataDirectory(target, filesystem)
-                .resolve(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY));
+            metadataDirectory.resolve(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY));
       }
 
       // Create the build engine.
@@ -1794,6 +1795,7 @@ public class CachingBuildEngineTest {
               .build(resolver, filesystem);
       final Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -2006,6 +2008,7 @@ public class CachingBuildEngineTest {
           };
 
       // Prepare an input file that should appear in the dep file.
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("something", input);
       RuleKey depFileRuleKey =
           depFileFactory
@@ -2088,21 +2091,20 @@ public class CachingBuildEngineTest {
 
       // Prepopulate the dep file rule key and dep file.
       RuleKey depFileRuleKey = depFileFactory.build(rule, ImmutableList.of()).getRuleKey();
+
+      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
       final String emptyDepFileContents = "[]";
       filesystem.writeContentsToPath(
-          emptyDepFileContents,
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE));
+          emptyDepFileContents, metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Now modify the input file and invalidate it in the cache.
       filesystem.writeContentsToPath("something else", inputFile);
@@ -2119,11 +2121,7 @@ public class CachingBuildEngineTest {
       // The dep file should still be empty, yet the target will rebuild because of the change
       // to the non-dep-file-eligible input file
       String newDepFile =
-          filesystem
-              .readLines(
-                  BuildInfo.getPathToMetadataDirectory(target, filesystem)
-                      .resolve(BuildInfo.MetadataKey.DEP_FILE))
-              .get(0);
+          filesystem.readLines(metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE)).get(0);
       assertEquals(emptyDepFileContents, newDepFile);
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, getSuccess(result));
     }
@@ -2181,6 +2179,7 @@ public class CachingBuildEngineTest {
           };
 
       // Prepare an input file that should appear in the dep file.
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("something", input);
       RuleKey depFileRuleKey =
           depFileFactory
@@ -2188,21 +2187,20 @@ public class CachingBuildEngineTest {
               .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
+      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(fileToDepFileEntryString(input))),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Now delete the input and invalidate it in the cache.
       filesystem.deleteFileAtPath(input);
@@ -2274,6 +2272,7 @@ public class CachingBuildEngineTest {
           new FakeRuleKeyFactory(ImmutableMap.of(rule.getBuildTarget(), new RuleKey("aa")));
 
       // Prepare an input file that should appear in the dep file.
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("something", input);
 
       RuleKey depFileRuleKey =
@@ -2282,21 +2281,20 @@ public class CachingBuildEngineTest {
               .getRuleKey();
 
       // Prepopulate the dep file rule key and dep file.
+      Path metadataDirectory = BuildInfo.getPathToMetadataDirectory(target, filesystem);
+      filesystem.mkdirs(metadataDirectory);
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY));
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(
               ImmutableList.of(fileToDepFileEntryString(input))),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.DEP_FILE));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.DEP_FILE));
 
       // Prepopulate the recorded paths metadata.
       filesystem.writeContentsToPath(
           ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Run the build.
       CachingBuildEngine cachingBuildEngine = engineWithDepFileFactory(depFileRuleKeyFactory);
@@ -2346,6 +2344,7 @@ public class CachingBuildEngineTest {
               .build(resolver, filesystem);
       final Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
       // Create another input that will be ineligible for the dep file. Such inputs should still
@@ -2459,6 +2458,7 @@ public class CachingBuildEngineTest {
               .build(resolver, filesystem);
       final Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -2582,6 +2582,7 @@ public class CachingBuildEngineTest {
               .build(resolver, filesystem);
       final Path input =
           pathResolver.getRelativePath(Preconditions.checkNotNull(genrule.getSourcePathToOutput()));
+      filesystem.mkdirs(input.getParent());
       filesystem.writeContentsToPath("contents", input);
 
       // Create a simple rule which just writes a file.
@@ -2896,8 +2897,9 @@ public class CachingBuildEngineTest {
           pathResolver,
           ImmutableSet.of(input),
           ImmutableSet.of(input));
-      try (OutputStream outputStream =
-          filesystem.newFileOutputStream(CachingBuildRuleBuilder.getManifestPath(rule))) {
+      Path manifestPath = CachingBuildRuleBuilder.getManifestPath(rule);
+      filesystem.mkdirs(manifestPath.getParent());
+      try (OutputStream outputStream = filesystem.newFileOutputStream(manifestPath)) {
         manifest.serialize(outputStream);
       }
 
@@ -3313,7 +3315,7 @@ public class CachingBuildEngineTest {
               .get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result1.getSuccess());
 
-      filesystem.clear();
+      filesystem.deleteRecursivelyIfExists(Paths.get(""));
       buildInfoStore.deleteMetadata(target);
 
       // Run the build and extract the event.
