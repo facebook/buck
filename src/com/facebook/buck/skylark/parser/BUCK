@@ -20,5 +20,6 @@ java_library(
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/bazel:skylark-lang",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )
