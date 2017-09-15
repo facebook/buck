@@ -77,7 +77,6 @@ java_test(
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/rules/query:types",
-        "//src/com/facebook/buck/rules:action_graph_cache",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:caching_build_engine_delegates",
         "//src/com/facebook/buck/rules:interfaces",
