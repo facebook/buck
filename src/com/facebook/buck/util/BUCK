@@ -158,7 +158,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/io:BuckPaths",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/zip:unzip",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
     ],
 )

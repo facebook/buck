@@ -32,7 +32,7 @@ import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
