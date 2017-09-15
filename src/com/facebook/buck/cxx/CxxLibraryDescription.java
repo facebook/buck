@@ -246,6 +246,7 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
 
+    // TODO(T21900747): Fix dependence on order of object paths
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> cxxObjects =
         requireCxxObjects(
