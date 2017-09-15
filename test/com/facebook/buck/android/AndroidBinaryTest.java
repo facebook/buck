@@ -110,6 +110,8 @@ public class AndroidBinaryTest {
             .setManifest(new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
             .setKeystore(keystoreRule.getBuildTarget())
             .setPackageType("release")
+            // Force no predexing.
+            .setPreprocessJavaClassesBash("cp")
             .build(ruleResolver);
 
     AndroidPackageableCollection packageableCollection =
@@ -120,6 +122,7 @@ public class AndroidBinaryTest {
 
     androidBinary
         .getBuildableForTests()
+        .getNonPredexedBuildableForTests()
         .addProguardCommands(
             packageableCollection
                 .getClasspathEntriesToDex()
@@ -332,6 +335,8 @@ public class AndroidBinaryTest {
             .setLinearAllocHardLimit(0)
             .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
+            // Force no predexing.
+            .setPreprocessJavaClassesBash("cp")
             .build(ruleResolver);
 
     Set<Path> classpath = new HashSet<>();
@@ -345,6 +350,7 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getBuildableForTests()
+        .getNonPredexedBuildableForTests()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
@@ -384,6 +390,8 @@ public class AndroidBinaryTest {
             .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
             .setIntraDexReorderResources(true, reorderTool, reorderData)
+            // Force no predexing.
+            .setPreprocessJavaClassesBash("cp")
             .build(ruleResolver);
 
     Set<Path> classpath = new HashSet<>();
@@ -397,6 +405,7 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getBuildableForTests()
+        .getNonPredexedBuildableForTests()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
