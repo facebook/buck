@@ -52,6 +52,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -152,6 +153,7 @@ public class AppleLibraryDescription
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
+  private final SwiftBuckConfig swiftBuckConfig;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -160,7 +162,8 @@ public class AppleLibraryDescription
       Flavor defaultCxxFlavor,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleConfig appleConfig) {
+      AppleConfig appleConfig,
+      SwiftBuckConfig swiftBuckConfig) {
     this.delegate = delegate;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
@@ -169,6 +172,7 @@ public class AppleLibraryDescription
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
+    this.swiftBuckConfig = swiftBuckConfig;
   }
 
   @Override
@@ -218,6 +222,31 @@ public class AppleLibraryDescription
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
           targetGraph, buildTarget, projectFilesystem, params, resolver, args);
+    } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_COMPILE)) {
+      CxxPlatform cxxPlatform =
+          delegate
+              .getCxxPlatforms()
+              .getValue(buildTarget)
+              .orElseThrow(IllegalArgumentException::new);
+
+      // TODO(mgd): Must handle 'default' platform
+      AppleCxxPlatform applePlatform =
+          appleCxxPlatformFlavorDomain
+              .getValue(buildTarget)
+              .orElseThrow(IllegalArgumentException::new);
+
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      return AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
+          buildTarget,
+          cellRoots,
+          resolver,
+          ruleFinder,
+          params,
+          args,
+          projectFilesystem,
+          cxxPlatform,
+          applePlatform,
+          swiftBuckConfig);
     } else {
       return createLibraryBuildRule(
           targetGraph,
