@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.WatchmanPathEvent;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
 import com.google.caliper.Param;

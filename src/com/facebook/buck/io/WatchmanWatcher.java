@@ -14,23 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectWatch;
-import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.Watchman.Capability;
-import com.facebook.buck.io.WatchmanClient;
-import com.facebook.buck.io.WatchmanCursor;
-import com.facebook.buck.io.WatchmanDiagnostic;
-import com.facebook.buck.io.WatchmanDiagnosticEvent;
-import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

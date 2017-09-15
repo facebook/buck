@@ -14,21 +14,20 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectWatch;
-import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

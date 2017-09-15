@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;

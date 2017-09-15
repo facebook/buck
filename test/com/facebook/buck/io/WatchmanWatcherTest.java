@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.io;
 
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
@@ -31,17 +31,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.FakeWatchmanClient;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectWatch;
-import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanCursor;
-import com.facebook.buck.io.WatchmanDiagnostic;
-import com.facebook.buck.io.WatchmanDiagnosticEvent;
-import com.facebook.buck.io.WatchmanDiagnosticEventListener;
-import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
