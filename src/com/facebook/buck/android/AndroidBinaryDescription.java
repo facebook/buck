@@ -296,6 +296,7 @@ public class AndroidBinaryDescription
               args.getNativeLibraryMergeLocalizedSymbols(),
               shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
               args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
+              args.getRelinkerWhitelist(),
               dxExecutorService,
               args.getManifestEntries(),
               cxxBuckConfig,
@@ -686,6 +687,8 @@ public class AndroidBinaryDescription
     default boolean isEnableRelinker() {
       return false;
     }
+
+    ImmutableList<Pattern> getRelinkerWhitelist();
 
     @Value.Default
     default ManifestEntries getManifestEntries() {

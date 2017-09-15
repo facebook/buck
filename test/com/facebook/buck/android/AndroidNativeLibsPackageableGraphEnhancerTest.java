@@ -94,6 +94,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
@@ -169,6 +170,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
@@ -240,6 +242,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
@@ -282,6 +285,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
@@ -363,6 +367,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
 
     AndroidPackageableCollector collector =

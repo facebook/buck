@@ -45,6 +45,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -75,6 +76,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
+  private final ImmutableList<Pattern> relinkerWhitelist;
   private final RelinkerMode relinkerMode;
   private final APKModuleGraph apkModuleGraph;
 
@@ -96,6 +98,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
+      ImmutableList<Pattern> relinkerWhitelist,
       APKModuleGraph apkModuleGraph) {
     this.projectFilesystem = projectFilesystem;
     this.originalBuildTarget = originalBuildTarget;
@@ -110,6 +113,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
     this.nativeLibraryMergeGlue = nativeLibraryMergeGlue;
     this.relinkerMode = relinkerMode;
+    this.relinkerWhitelist = relinkerWhitelist;
     this.apkModuleGraph = apkModuleGraph;
   }
 
@@ -268,7 +272,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               cxxBuckConfig,
               nativePlatforms,
               nativeLinkableLibs,
-              nativeLinkableLibsAssets);
+              nativeLinkableLibsAssets,
+              relinkerWhitelist);
 
       nativeLinkableLibs = relinker.getRelinkedLibs();
       nativeLinkableLibsAssets = relinker.getRelinkedLibsAssets();

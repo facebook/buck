@@ -2,6 +2,9 @@
 
 #include "bot.h"
 
+int preservedMid() {
+  return 1;
+}
 int unused(int) {
   return 0;
 }

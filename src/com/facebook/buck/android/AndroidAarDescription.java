@@ -43,6 +43,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -249,6 +250,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
         packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();

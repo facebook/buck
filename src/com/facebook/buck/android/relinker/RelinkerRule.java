@@ -56,8 +56,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -69,6 +71,9 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Tool objdump;
   @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
   @AddToRuleKey @Nullable private final Linker linker;
+
+  @AddToRuleKey(stringify = true)
+  private final ImmutableList<Pattern> symbolWhitelist;
 
   private final BuildRuleParams buildRuleParams;
   private final CxxBuckConfig cxxBuckConfig;
@@ -86,7 +91,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       CxxBuckConfig cxxBuckConfig,
       SourcePath baseLibSourcePath,
       @Nullable Linker linker,
-      ImmutableList<Arg> linkerArgs) {
+      ImmutableList<Arg> linkerArgs,
+      ImmutableList<Pattern> symbolWhitelist) {
     super(
         buildTarget, projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs));
     this.pathResolver = resolver;
@@ -98,6 +104,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.symbolsNeededPaths = symbolsNeededPaths;
     this.baseLibSourcePath = baseLibSourcePath;
     this.linker = linker;
+    this.symbolWhitelist = symbolWhitelist;
   }
 
   private static BuildRuleParams withDepsFromArgs(
@@ -106,7 +113,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(ruleFinder))));
   }
 
-  private static String getVersionScript(Set<String> needed, Set<String> provided) {
+  private static String getVersionScript(
+      Set<String> needed, Set<String> provided, List<Pattern> whitelist) {
     Set<String> keep =
         new ImmutableSet.Builder<String>()
             .addAll(Sets.intersection(needed, provided))
@@ -119,6 +127,11 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       }
                       if (s.contains("Java_")) {
                         return true;
+                      }
+                      for (Pattern pattern : whitelist) {
+                        if (pattern.matcher(s).matches()) {
+                          return true;
+                        }
                       }
                       return false;
                     }))
@@ -255,7 +268,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       throws IOException, InterruptedException {
     Symbols sym = getSymbols(executor, getBaseLibPath());
     Set<String> defined = Sets.difference(sym.all, sym.undefined);
-    String versionScript = getVersionScript(symbolsNeeded, defined);
+    String versionScript = getVersionScript(symbolsNeeded, defined, symbolWhitelist);
 
     Files.write(
         absolutify(getRelativeVersionFilePath()),

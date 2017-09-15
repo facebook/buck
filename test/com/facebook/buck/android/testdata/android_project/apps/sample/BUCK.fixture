@@ -220,6 +220,9 @@ android_binary(
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
   enable_relinker = True,
+  relinker_whitelist = [
+    "^_Z12preserved(Bot|Mid)v$",
+  ],
   cpu_filters = [],
   deps = [
     '//res/com/sample/base:base',

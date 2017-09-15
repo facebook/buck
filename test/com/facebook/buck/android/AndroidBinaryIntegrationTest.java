@@ -671,6 +671,25 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testNativeRelinkerWhitelist() throws IOException, InterruptedException {
+    SymbolGetter syms = getSymbolGetter();
+    Symbols sym;
+
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
+
+    // The test data has "^_Z12preserved(Bot|Mid)v$" as the only whitelist pattern, so
+    // we don't expect preservedTop to survive.
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
+    assertFalse(sym.all.contains("_Z12preservedTopv"));
+
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    assertTrue(sym.global.contains("_Z12preservedMidv"));
+
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    assertTrue(sym.global.contains("_Z12preservedBotv"));
+  }
+
+  @Test
   public void testNativeRelinkerModular() throws IOException, InterruptedException {
     SymbolGetter syms = getSymbolGetter();
     Symbols sym;

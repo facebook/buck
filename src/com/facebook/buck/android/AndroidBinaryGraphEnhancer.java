@@ -157,6 +157,7 @@ public class AndroidBinaryGraphEnhancer {
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       Optional<BuildTarget> nativeLibraryProguardConfigGenerator,
       RelinkerMode relinkerMode,
+      ImmutableList<Pattern> relinkerWhitelist,
       ListeningExecutorService dxExecutorService,
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
@@ -202,6 +203,7 @@ public class AndroidBinaryGraphEnhancer {
             nativeLibraryMergeGlue,
             nativeLibraryMergeLocalizedSymbols,
             relinkerMode,
+            relinkerWhitelist,
             apkModuleGraph);
     this.androidBinaryResourcesGraphEnhancer =
         new AndroidBinaryResourcesGraphEnhancer(
