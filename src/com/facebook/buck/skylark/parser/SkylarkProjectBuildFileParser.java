@@ -165,9 +165,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Mutability mutability,
       ImmutableList.Builder<Map<String, Object>> rawRuleBuilder)
       throws IOException, InterruptedException, BuildFileParseException {
-    Environment.Frame buckGlobals = getBuckGlobals(rawRuleBuilder);
+    Environment.Frame buckGlobals = getBuckGlobals();
+    ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions(rawRuleBuilder);
     ImmutableMap<String, Environment.Extension> importMap =
-        buildImportMap(buildFileAst.getImports(), buckGlobals, eventHandler);
+        buildImportMap(buildFileAst.getImports(), buckGlobals, buckRuleFunctions, eventHandler);
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
@@ -177,6 +178,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     String basePath = getBasePath(buildFile);
     env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
     env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
+    for (BuiltinFunction buckRuleFunction : buckRuleFunctions) {
+      env.setup(buckRuleFunction.getName(), buckRuleFunction);
+    }
     return env;
   }
 
@@ -187,6 +191,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private ImmutableMap<String, Environment.Extension> buildImportMap(
       bazel.shaded.com.google.common.collect.ImmutableList<SkylarkImport> skylarkImports,
       Environment.Frame buckGlobals,
+      ImmutableList<BuiltinFunction> buckRuleFunctions,
       PrintingEventHandler eventHandler)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
@@ -195,6 +200,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       try (Mutability mutability =
           Mutability.create("importing " + skylarkImport.getImportString())) {
         Environment extensionEnv = Environment.builder(mutability).setGlobals(buckGlobals).build();
+        for (BuiltinFunction buckRuleFunction : buckRuleFunctions) {
+          extensionEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+        }
         com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
         BuildFileAST extensionAst =
             BuildFileAST.parseSkylarkFile(ParserInputSource.create(extensionPath), eventHandler);
@@ -214,13 +222,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return The environment frame with configured buck globals. This includes built-in rules like
    *     {@code java_library}.
    */
-  private Environment.Frame getBuckGlobals(
-      ImmutableList.Builder<Map<String, Object>> rawRuleBuilder) {
+  private Environment.Frame getBuckGlobals() {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
           Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
-      setupBuckRules(rawRuleBuilder, globalEnv);
       buckGlobals = globalEnv.getGlobals();
     }
     return buckGlobals;
@@ -250,15 +256,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
-   * Sets up native Buck rules in Skylark environment.
-   *
-   * <p>This makes Buck rules like {@code java_library} available in build files.
+   * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
-  private void setupBuckRules(ImmutableList.Builder<Map<String, Object>> builder, Environment env) {
+  private ImmutableList<BuiltinFunction> getBuckRuleFunctions(
+      ImmutableList.Builder<Map<String, Object>> builder) {
+    ImmutableList.Builder<BuiltinFunction> ruleFunctionsBuilder = ImmutableList.builder();
     for (Description<?> description : options.getDescriptions()) {
-      String name = Description.getBuildRuleType(description).getName();
-      env.setup(name, newRuleDefinition(description, builder));
+      ruleFunctionsBuilder.add(newRuleDefinition(description, builder));
     }
+    return ruleFunctionsBuilder.build();
   }
 
   /**
