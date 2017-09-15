@@ -99,6 +99,7 @@ RULES_SRCS = [
     "NativeLibraryBuildRule.java",
     "NdkLibrary.java",
     "NdkLibraryDescription.java",
+    "NonPreDexedDexBuildable.java",
     "PackageStringAssets.java",
     "PreDexMerge.java",
     "PreDexedFilesSorter.java",
