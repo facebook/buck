@@ -140,28 +140,44 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       throw BuildFileParseException.createForUnknownParseError(
           "Cannot parse build file " + buildFile);
     }
-
     ImmutableList.Builder<Map<String, Object>> rawRuleBuilder = ImmutableList.builder();
-    Environment.Frame buckGlobals = getBuckGlobals(rawRuleBuilder);
-    ImmutableMap<String, Environment.Extension> importMap =
-        buildImportMap(buildFileAst.getImports(), buckGlobals, eventHandler);
-
-    try (Mutability mutability = Mutability.create("BUCK")) {
+    try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       Environment env =
-          Environment.builder(mutability)
-              .setImportedExtensions(importMap)
-              .setGlobals(buckGlobals)
-              .setPhase(Environment.Phase.LOADING)
-              .build();
-      String basePath = getBasePath(buildFile);
-      env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
-      env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
+          createBuildFileEvaluationEnvironment(
+              buildFile, buildFilePath, buildFileAst, eventHandler, mutability, rawRuleBuilder);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
       }
       return rawRuleBuilder.build();
     }
+  }
+
+  /**
+   * @return The environment that can be used for evaluating build files. It includes built-in
+   *     functions like {@code glob} and native rules like {@code java_library}.
+   */
+  private Environment createBuildFileEvaluationEnvironment(
+      Path buildFile,
+      com.google.devtools.build.lib.vfs.Path buildFilePath,
+      BuildFileAST buildFileAst,
+      PrintingEventHandler eventHandler,
+      Mutability mutability,
+      ImmutableList.Builder<Map<String, Object>> rawRuleBuilder)
+      throws IOException, InterruptedException, BuildFileParseException {
+    Environment.Frame buckGlobals = getBuckGlobals(rawRuleBuilder);
+    ImmutableMap<String, Environment.Extension> importMap =
+        buildImportMap(buildFileAst.getImports(), buckGlobals, eventHandler);
+    Environment env =
+        Environment.builder(mutability)
+            .setImportedExtensions(importMap)
+            .setGlobals(buckGlobals)
+            .setPhase(Environment.Phase.LOADING)
+            .build();
+    String basePath = getBasePath(buildFile);
+    env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
+    env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
+    return env;
   }
 
   /**
