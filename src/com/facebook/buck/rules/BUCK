@@ -158,7 +158,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/versions:versions",
-        "//src/com/facebook/buck/zip:rules",
+        "//src/com/facebook/buck/zip/rules:rules",
         "//third-party/java/bazel:skylark-lang",
     ],
 )

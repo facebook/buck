@@ -160,7 +160,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionedAliasDescription;
-import com.facebook.buck.zip.ZipFileDescription;
+import com.facebook.buck.zip.rules.ZipFileDescription;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

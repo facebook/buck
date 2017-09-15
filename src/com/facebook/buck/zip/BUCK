@@ -12,6 +12,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/thrift:thrift",
+        "//src/com/facebook/buck/zip/rules:rules",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
         "//test/com/facebook/buck/zip:zip",
@@ -26,38 +27,5 @@ java_immutables_library(
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util/zip:zip",
-    ],
-)
-
-java_immutables_library(
-    name = "rules",
-    srcs = [
-        "CopyingFileBundler.java",
-        "FileBundler.java",
-        "SrcZipAwareFileBundler.java",
-        "Zip.java",
-        "ZipFileDescription.java",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/rules:types",
-        "//test/com/facebook/buck/zip:zip",
-    ],
-    deps = [
-        ":steps",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/java:support",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:interfaces",
-        "//src/com/facebook/buck/rules:source_path",
-        "//src/com/facebook/buck/rules/keys:keys",
-        "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/step/fs:fs",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util/zip:zip",
-        "//src/com/facebook/buck/versions:versions",
-        "//third-party/java/guava:guava",
-        "//third-party/java/infer-annotations:infer-annotations",
     ],
 )
