@@ -42,6 +42,8 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.MoreCollectors;
@@ -260,6 +262,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     TargetNode<?, ?> node = getNode(target);
     return node.getInputs()
         .stream()
+        .map(path -> new PathSourcePath(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(MoreCollectors.toImmutableSet());
   }
@@ -446,7 +449,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
           MorePaths.relativize(
               rootPath, cell.getFilesystem().resolve(path.get()).resolve(cell.getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
-      builder.add(QueryFileTarget.of(buildFilePath));
+      SourcePath sourcePath = new PathSourcePath(cell.getFilesystem(), buildFilePath);
+      builder.add(QueryFileTarget.of(sourcePath));
     }
     return builder.build();
   }

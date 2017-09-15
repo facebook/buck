@@ -52,7 +52,7 @@ public class QueryTargetAccessor {
     info.traverse(
         value -> {
           if (value instanceof Path) {
-            builder.add(QueryFileTarget.of((Path) value));
+            builder.add(QueryFileTarget.of(new PathSourcePath(node.getFilesystem(), (Path) value)));
           } else if (value instanceof SourcePath) {
             builder.add(extractSourcePath((SourcePath) value));
           } else if (value instanceof BuildTarget) {
@@ -61,6 +61,15 @@ public class QueryTargetAccessor {
         },
         node.getConstructorArg());
     return builder.build();
+  }
+
+  public static QueryTarget extractSourcePath(SourcePath sourcePath) {
+    if (sourcePath instanceof PathSourcePath) {
+      return QueryFileTarget.of(sourcePath);
+    } else if (sourcePath instanceof BuildTargetSourcePath) {
+      return QueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
+    }
+    throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
   }
 
   /** Filters the objects in the given attribute that satisfy the given predicate. */
@@ -84,15 +93,6 @@ public class QueryTargetAccessor {
         },
         node.getConstructorArg());
     return builder.build();
-  }
-
-  public static QueryTarget extractSourcePath(SourcePath sourcePath) {
-    if (sourcePath instanceof PathSourcePath) {
-      return QueryFileTarget.of(((PathSourcePath) sourcePath).getRelativePath());
-    } else if (sourcePath instanceof BuildTargetSourcePath) {
-      return QueryBuildTarget.of(((BuildTargetSourcePath) sourcePath).getTarget());
-    }
-    throw new HumanReadableException("Unsupported source path type: %s", sourcePath.getClass());
   }
 
   public static QueryTarget extractBuildTargetContainer(BuildTarget buildTargetContainer) {

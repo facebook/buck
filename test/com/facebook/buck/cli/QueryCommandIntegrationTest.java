@@ -611,7 +611,7 @@ public class QueryCommandIntegrationTest {
     public Path getProfilerPath() {
       return profilerPath;
     }
-  };
+  }
 
   @Test
   public void testQueryProfileParser() throws IOException {

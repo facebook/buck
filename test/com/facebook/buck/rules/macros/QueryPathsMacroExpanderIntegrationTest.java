@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -25,7 +26,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -45,11 +45,11 @@ public class QueryPathsMacroExpanderIntegrationTest {
     String seen = new String(Files.readAllBytes(result), UTF_8).trim();
 
     Path expected = workspace.buildAndReturnOutput("//:beta");
+    assertTrue(expected.isAbsolute());
     assertEquals(expected.toString(), seen);
   }
 
   @Test
-  @Ignore("Fails because of https://github.com/facebook/buck/issues/1527")
   public void macroResultsCanBeFiles() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query-paths", tmp);
@@ -61,6 +61,7 @@ public class QueryPathsMacroExpanderIntegrationTest {
     String seen = new String(Files.readAllBytes(result), UTF_8).trim();
 
     Path expected = workspace.getPath("beta.txt");
+    assertTrue(expected.isAbsolute());
     assertEquals(expected.toString(), seen);
   }
 }
