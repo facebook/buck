@@ -139,7 +139,6 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
-        "//src/com/facebook/buck/zip:constants",
         "//src/com/facebook/buck/zip:unzip",
         "//test/com/facebook/buck/cli:FakeBuckConfig",
         "//test/com/facebook/buck/testutil/integration:util",

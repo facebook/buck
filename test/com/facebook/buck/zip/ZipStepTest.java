@@ -32,6 +32,7 @@ import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

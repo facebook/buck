@@ -86,7 +86,6 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
-        "//src/com/facebook/buck/zip:constants",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:ddmlib",
         "//third-party/java/android:tools-sdk-common",

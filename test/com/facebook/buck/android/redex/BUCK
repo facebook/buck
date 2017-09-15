@@ -80,7 +80,6 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
-        "//src/com/facebook/buck/zip:constants",
         "//test/com/facebook/buck/step:testutil",
         "//third-party/java/aosp:aosp",
         "//third-party/java/asm:asm",

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
 public enum ZipCompressionLevel {
   MIN_COMPRESSION_LEVEL(0),

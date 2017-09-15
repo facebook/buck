@@ -34,7 +34,6 @@ java_immutables_library(
         "//test/com/facebook/buck/zip:zip",
     ],
     deps = [
-        ":constants",
         ":unzip",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -62,7 +61,6 @@ java_immutables_library(
         "//test/com/facebook/buck/zip:zip",
     ],
     deps = [
-        ":constants",
         ":steps",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/jvm/java:support",
@@ -75,16 +73,9 @@ java_immutables_library(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/zip:zip",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
-)
-
-java_library(
-    name = "constants",
-    srcs = [
-        "ZipCompressionLevel.java",
-    ],
-    visibility = ["PUBLIC"],
 )
