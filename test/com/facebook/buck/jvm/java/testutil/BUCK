@@ -9,7 +9,6 @@ java_library(
         "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/jvm/java:config",
-        "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/cli:FakeBuckConfig",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/junit:junit",

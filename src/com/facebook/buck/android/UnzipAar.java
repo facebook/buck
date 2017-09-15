@@ -41,7 +41,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;

@@ -53,7 +53,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

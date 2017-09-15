@@ -16,6 +16,7 @@
 
 package com.facebook.buck.zip;
 
+import com.facebook.buck.util.zip.ZipConstants;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

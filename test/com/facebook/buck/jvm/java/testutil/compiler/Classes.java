@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.testutil.compiler;
 
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.objectweb.asm.ClassVisitor;

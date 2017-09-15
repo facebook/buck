@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.function.ThrowingSupplier;

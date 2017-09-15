@@ -120,7 +120,6 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
         "//src/com/facebook/buck/zip:constants",
-        "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/model:testutil",

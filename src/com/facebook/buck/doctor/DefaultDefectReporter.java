@@ -16,7 +16,7 @@
 
 package com.facebook.buck.doctor;
 
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
@@ -32,9 +32,9 @@ import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.zip.CustomZipEntry;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

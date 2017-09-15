@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
@@ -148,8 +148,8 @@ public class CustomZipOutputStream extends OutputStream {
   }
 
   /**
-   * State of a {@link com.facebook.buck.zip.CustomZipOutputStream}. Certain operations are only
-   * available when the stream is in a particular state.
+   * State of a {@link CustomZipOutputStream}. Certain operations are only available when the stream
+   * is in a particular state.
    */
   private static enum State {
     CLEAN, // Open but no data written.

@@ -69,7 +69,6 @@ standard_java_test(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
-        "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",

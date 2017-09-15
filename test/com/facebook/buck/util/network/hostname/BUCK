@@ -42,7 +42,6 @@ standard_java_test(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
-        "//src/com/facebook/buck/zip:stream",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",

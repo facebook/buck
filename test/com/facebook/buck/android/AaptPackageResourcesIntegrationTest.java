@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipConstants;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;

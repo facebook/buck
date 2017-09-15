@@ -30,7 +30,7 @@ import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

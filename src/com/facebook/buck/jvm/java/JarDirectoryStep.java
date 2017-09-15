@@ -20,7 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Joiner;
 import java.io.IOException;
 import java.nio.file.Path;

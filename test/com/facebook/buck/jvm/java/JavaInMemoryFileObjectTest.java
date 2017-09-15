@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.TestJar;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

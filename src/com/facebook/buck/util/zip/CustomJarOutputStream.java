@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;

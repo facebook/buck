@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.java.testutil.compiler;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.zip.CustomZipEntry;
-import com.facebook.buck.zip.JarBuilder;
-import com.facebook.buck.zip.JarEntrySupplier;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarEntrySupplier;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

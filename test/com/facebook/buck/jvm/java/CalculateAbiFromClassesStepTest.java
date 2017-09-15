@@ -25,7 +25,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.util.zip.CustomJarOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

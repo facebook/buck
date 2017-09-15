@@ -14,9 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
-
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
+package com.facebook.buck.util.zip;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.RichStream;
@@ -136,7 +134,8 @@ public class JarBuilder {
   public int createJarFile(Path outputFile) throws IOException {
     Preconditions.checkArgument(outputFile.isAbsolute());
     try (CustomJarOutputStream jar =
-        ZipOutputStreams.newJarOutputStream(outputFile, APPEND_TO_ZIP)) {
+        ZipOutputStreams.newJarOutputStream(
+            outputFile, ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP)) {
       jar.setEntryHashingEnabled(shouldHashEntries);
       this.outputFile = outputFile;
 

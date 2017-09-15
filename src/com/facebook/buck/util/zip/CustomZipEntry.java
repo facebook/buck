@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
 import static java.util.zip.Deflater.BEST_COMPRESSION;
 import static java.util.zip.Deflater.NO_COMPRESSION;

@@ -100,7 +100,6 @@ java_binary(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
-        "//src/com/facebook/buck/zip:stream",
         "//third-party/java/aether:aether-api",
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",

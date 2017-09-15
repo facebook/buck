@@ -14,7 +14,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
         "//src/com/facebook/buck/util/function:function",
-        "//src/com/facebook/buck/zip:stream",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/asm:asm",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",

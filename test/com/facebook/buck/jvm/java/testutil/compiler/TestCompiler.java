@@ -24,7 +24,7 @@ import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TreesMessager;
-import com.facebook.buck.zip.DeterministicManifest;
+import com.facebook.buck.util.zip.DeterministicManifest;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.sun.source.tree.CompilationUnitTree;

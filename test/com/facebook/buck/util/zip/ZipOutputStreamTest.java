@@ -14,12 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.zip;
+package com.facebook.buck.util.zip;
 
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates;
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Calendar.SEPTEMBER;
 import static java.util.zip.Deflater.BEST_COMPRESSION;

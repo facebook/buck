@@ -31,6 +31,8 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
+import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
@@ -254,9 +256,9 @@ public class ZipStepTest {
   }
 
   /**
-   * Tests a couple bugs: 1) {@link com.facebook.buck.zip.OverwritingZipOutputStreamImpl} was
-   * writing uncompressed zip entries incorrectly. 2) {@link ZipStep} wasn't setting the output size
-   * when writing uncompressed entries.
+   * Tests a couple bugs: 1) {@link OverwritingZipOutputStreamImpl} was writing uncompressed zip
+   * entries incorrectly. 2) {@link ZipStep} wasn't setting the output size when writing
+   * uncompressed entries.
    */
   @Test
   public void minCompressionWritesCorrectZipFile() throws Exception {

@@ -16,7 +16,7 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.zip.CustomJarOutputStream;
+import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
