@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
+import com.facebook.buck.jvm.java.abi.source.api.ErrorSuppressingDiagnosticListener;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TreesMessager;
@@ -277,13 +278,23 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
         options.add(Joiner.on(File.pathSeparatorChar).join(classpath));
       }
 
+      ErrorSuppressingDiagnosticListener errorSuppressingDiagnosticListener =
+          new ErrorSuppressingDiagnosticListener(diagnosticCollector);
       JavacTask innerTask =
           (JavacTask)
               javaCompiler.getTask(
-                  null, fileManager, diagnosticCollector, options, null, sourceFiles);
+                  null,
+                  fileManager,
+                  useFrontendOnlyJavacTask
+                      ? errorSuppressingDiagnosticListener
+                      : diagnosticCollector,
+                  options,
+                  null,
+                  sourceFiles);
 
       if (useFrontendOnlyJavacTask) {
         javacTask = new FrontendOnlyJavacTask(innerTask);
+        errorSuppressingDiagnosticListener.setTask(innerTask);
       } else {
         javacTask = new BuckJavacTask(innerTask);
       }

@@ -63,7 +63,6 @@ public class FrontendOnlyJavacTask extends BuckJavacTask {
     super(task);
     javacTask = task;
 
-    addTaskListener(new SuppressEnterErrorsTaskListener(task));
     // Add the entering plugin first so that all other plugins and annotation processors will
     // run with the TreeBackedElements already entered
     addPlugin(new EnteringPlugin());
