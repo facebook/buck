@@ -111,6 +111,14 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
+      public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
+        return HaskellHaddockInput.builder()
+            .addAllInterfaces(ImmutableList.of())
+            .addAllOutputDirs(ImmutableList.of())
+            .build();
+      }
+
+      @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
         return ImmutableList.of();
       }

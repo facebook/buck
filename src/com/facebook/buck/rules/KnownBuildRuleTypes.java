@@ -93,6 +93,7 @@ import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.haskell.HaskellBinaryDescription;
 import com.facebook.buck.haskell.HaskellBuckConfig;
 import com.facebook.buck.haskell.HaskellGhciDescription;
+import com.facebook.buck.haskell.HaskellHaddockDescription;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
 import com.facebook.buck.haskell.HaskellPlatform;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
@@ -414,6 +415,7 @@ public class KnownBuildRuleTypes {
             "Haskell platform", haskellBuckConfig.getPlatforms(cxxPlatforms.getValues()));
     HaskellPlatform defaultHaskellPlatform =
         haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
+    builder.register(new HaskellHaddockDescription(defaultHaskellPlatform, haskellPlatforms));
     builder.register(new HaskellLibraryDescription(haskellPlatforms, cxxBuckConfig));
     builder.register(new HaskellBinaryDescription(defaultHaskellPlatform, haskellPlatforms));
     builder.register(new HaskellPrebuiltLibraryDescription());

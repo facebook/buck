@@ -28,4 +28,7 @@ public interface HaskellCompileDep {
   /** @return the {@link HaskellCompileInput} object that contributes to compilation. */
   HaskellCompileInput getCompileInput(
       HaskellPlatform platform, Linker.LinkableDepType depType, boolean hsProfile);
+
+  /** @return the {#link HaskellHaddockInput} object for compilation */
+  HaskellHaddockInput getHaddockInput(HaskellPlatform platform);
 }
