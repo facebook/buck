@@ -174,7 +174,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     return publicHeaders;
   }
 
-  private CxxPreprocessorInput getPublicCxxPreprocessorInput(CxxPlatform cxxPlatform) {
+  public CxxPreprocessorInput getPublicCxxPreprocessorInput(CxxPlatform cxxPlatform) {
     return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC);
   }
 

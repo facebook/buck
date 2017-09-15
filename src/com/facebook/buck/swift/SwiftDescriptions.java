@@ -55,7 +55,7 @@ public class SwiftDescriptions {
     return swiftSrcsBuilder.build();
   }
 
-  static void populateSwiftLibraryDescriptionArg(
+  public static void populateSwiftLibraryDescriptionArg(
       final SourcePathResolver sourcePathResolver,
       SwiftLibraryDescriptionArg.Builder output,
       final CxxLibraryDescription.CommonArg args,

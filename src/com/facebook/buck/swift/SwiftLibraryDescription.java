@@ -412,6 +412,43 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
     }
   }
 
+  public static SwiftCompile createSwiftCompileRule(
+      CxxPlatform cxxPlatform,
+      SwiftPlatform swiftPlatform,
+      SwiftBuckConfig swiftBuckConfig,
+      BuildTarget buildTarget,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
+      ProjectFilesystem projectFilesystem,
+      SwiftLibraryDescriptionArg args,
+      Preprocessor preprocessor,
+      PreprocessorFlags preprocessFlags) {
+    final BuildTarget buildTargetCopy = buildTarget;
+    return new SwiftCompile(
+        cxxPlatform,
+        swiftBuckConfig,
+        buildTarget,
+        projectFilesystem,
+        params,
+        swiftPlatform.getSwiftc(),
+        args.getFrameworks(),
+        args.getModuleName().orElse(buildTarget.getShortName()),
+        BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
+        args.getSrcs(),
+        args.getVersion(),
+        RichStream.from(args.getCompilerFlags())
+            .map(
+                f ->
+                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
+                        buildTargetCopy, cellRoots, resolver, cxxPlatform, f))
+            .toImmutableList(),
+        args.getEnableObjcInterop(),
+        args.getBridgingHeader(),
+        preprocessor,
+        preprocessFlags);
+  }
+
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
     return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR)
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);

@@ -99,7 +99,7 @@ public class AppleLibraryDescription
           LinkerMapMode.NO_LINKER_MAP.getFlavor(),
           InternalFlavor.of("default"));
 
-  private enum Type implements FlavorConvertible {
+  public enum Type implements FlavorConvertible {
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SANDBOX(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
@@ -108,6 +108,7 @@ public class AppleLibraryDescription
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
+    SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
     ;
 
     private final Flavor flavor;
