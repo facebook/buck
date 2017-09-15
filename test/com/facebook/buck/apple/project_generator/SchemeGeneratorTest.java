@@ -906,4 +906,56 @@ public class SchemeGeneratorTest {
         buildActionNode.getAttributes().getNamedItem("parallelizeBuildables").getNodeValue(),
         equalTo("YES"));
   }
+
+  @Test
+  public void serializesEnvironmentVariables() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
+    rootTarget.setProductType(ProductType.STATIC_LIBRARY);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> environmentVariables =
+        ImmutableMap.of(SchemeActionType.LAUNCH, ImmutableMap.of("ENV_VARIABLE", "IS_SET"));
+
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
+            true /* parallelizeBuild */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            Optional.of(environmentVariables),
+            XCScheme.LaunchAction.LaunchStyle.AUTO);
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+    XPath buildActionXpath = xpathFactory.newXPath();
+    XPathExpression buildActionExpr =
+        buildActionXpath.compile("//LaunchAction/EnvironmentVariables/EnvironmentVariable");
+    NodeList envVariableList = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    assertThat(envVariableList.getLength(), is(1));
+    Node envVar = envVariableList.item(0);
+    assertThat(envVar.getAttributes().getNamedItem("key").getNodeValue(), equalTo("ENV_VARIABLE"));
+    assertThat(envVar.getAttributes().getNamedItem("value").getNodeValue(), equalTo("IS_SET"));
+  }
 }
