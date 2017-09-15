@@ -73,6 +73,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   private final JarContentsSupplier outputJarContentsSupplier;
+  private final BuildOutputInitializer<Object> buildOutputInitializer;
   @AddToRuleKey JavacToJarStepFactory compileStepFactory;
   @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
@@ -139,6 +140,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.finalRName = finalRName;
     this.abiInputs = abiInputs;
     this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
   private static ImmutableList<SourcePath> abiPaths(Iterable<HasAndroidResourceDeps> deps) {
@@ -283,7 +285,7 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
-    return new BuildOutputInitializer<>(getBuildTarget(), this);
+    return buildOutputInitializer;
   }
 
   private class CheckDummyRJarNotEmptyStep implements Step {

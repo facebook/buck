@@ -47,6 +47,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   private final JarContentsSupplier outputJarContents;
+  private final BuildOutputInitializer<Object> buildOutputInitializer;
 
   public CalculateAbiFromSource(
       BuildTarget buildTarget,
@@ -60,6 +61,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
     this.outputJarContents =
         new JarContentsSupplier(
             DefaultSourcePathResolver.from(ruleFinder), getSourcePathToOutput());
+    buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
   @Override
@@ -87,7 +89,7 @@ public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtr
 
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
-    return new BuildOutputInitializer<>(getBuildTarget(), this);
+    return buildOutputInitializer;
   }
 
   @Override

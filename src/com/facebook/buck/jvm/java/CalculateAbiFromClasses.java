@@ -54,6 +54,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
 
   private final Path outputPath;
   private final JarContentsSupplier abiJarContentsSupplier;
+  private BuildOutputInitializer<Object> buildOutputInitializer;
 
   public CalculateAbiFromClasses(
       BuildTarget buildTarget,
@@ -67,6 +68,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
     this.sourceAbiCompatible = sourceAbiCompatible;
     this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
     this.abiJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
   public static CalculateAbiFromClasses of(
@@ -144,6 +146,6 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
 
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
-    return new BuildOutputInitializer<>(getBuildTarget(), this);
+    return buildOutputInitializer;
   }
 }

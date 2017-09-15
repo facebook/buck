@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import javax.annotation.Nullable;
 
@@ -24,7 +25,7 @@ import javax.annotation.Nullable;
  * Delegates the actual reading of disk-cached data to the {@link InitializableFromDisk} and is
  * responsible for safely storing and retrieving the in-memory data structures.
  */
-public class BuildOutputInitializer<T> {
+public final class BuildOutputInitializer<T> {
 
   private final BuildTarget buildTarget;
   private final InitializableFromDisk<T> initializableFromDisk;
@@ -37,8 +38,14 @@ public class BuildOutputInitializer<T> {
     this.initializableFromDisk = initializableFromDisk;
   }
 
-  public T initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    return initializableFromDisk.initializeFromDisk(onDiskBuildInfo);
+  public void invalidate() {
+    buildOutput = null;
+  }
+
+  public void initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
+    if (buildOutput == null) {
+      buildOutput = initializableFromDisk.initializeFromDisk(onDiskBuildInfo);
+    }
   }
 
   /**
@@ -49,14 +56,12 @@ public class BuildOutputInitializer<T> {
    *
    * @throws IllegalStateException if this method has already been invoked.
    */
-  public void setBuildOutput(T buildOutput) throws IllegalStateException {
+  @VisibleForTesting
+  public void setBuildOutputForTests(T buildOutput) throws IllegalStateException {
     this.buildOutput = buildOutput;
   }
 
-  /**
-   * @return the value passed to {@link #setBuildOutput(Object)}.
-   * @throws IllegalStateException if {@link #setBuildOutput(Object)} has not been invoked yet.
-   */
+  /** The initialized buildOutput. */
   public T getBuildOutput() throws IllegalStateException {
     if (buildOutput == null) {
       throw new IllegalStateException(

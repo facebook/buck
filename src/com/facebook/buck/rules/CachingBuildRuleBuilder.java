@@ -1076,6 +1076,12 @@ class CachingBuildRuleBuilder {
         });
   }
 
+  private void invalidateInitializeFromDiskState() {
+    if (rule instanceof InitializableFromDisk) {
+      ((InitializableFromDisk<?>) rule).getBuildOutputInitializer().invalidate();
+    }
+  }
+
   private ListenableFuture<CacheResult> fetch(
       ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
@@ -1126,6 +1132,9 @@ class CachingBuildRuleBuilder {
       LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
       return cacheResult;
     }
+
+    invalidateInitializeFromDiskState();
+
     Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
 
@@ -1209,9 +1218,10 @@ class CachingBuildRuleBuilder {
   }
 
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable) throws IOException {
-    BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
-    T buildOutput = buildOutputInitializer.initializeFromDisk(onDiskBuildInfo);
-    buildOutputInitializer.setBuildOutput(buildOutput);
+    try (Scope ignored = LeafEvents.scope(eventBus, "initialize_from_disk")) {
+      BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
+      buildOutputInitializer.initializeFromDisk(onDiskBuildInfo);
+    }
   }
 
   /** @return whether we should upload the given rules artifacts to cache. */
@@ -1654,6 +1664,8 @@ class CachingBuildRuleBuilder {
      */
     private void executeCommandsNowThatDepsAreBuilt()
         throws InterruptedException, StepFailedException {
+
+      invalidateInitializeFromDiskState();
 
       LOG.debug("Building locally: %s", rule);
       // Attempt to get an approximation of how long it takes to actually run the command.

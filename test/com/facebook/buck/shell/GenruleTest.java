@@ -328,7 +328,7 @@ public class GenruleTest {
             .build(resolver);
     workerTool
         .getBuildOutputInitializer()
-        .setBuildOutput(
+        .setBuildOutputForTests(
             workerTool.initializeFromDisk(
                 new FakeOnDiskBuildInfo()
                     .putMetadata(

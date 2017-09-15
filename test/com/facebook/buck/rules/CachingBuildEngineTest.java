@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -123,6 +124,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -3455,6 +3457,306 @@ public class CachingBuildEngineTest {
     }
   }
 
+  public static class InitializableFromDiskTests extends CommonFixture {
+    private static final String DEPFILE_INPUT_CONTENT = "depfile input";
+    private static final String NON_DEPFILE_INPUT_CONTENT = "depfile input";
+    private PathSourcePath depfileInput;
+    private PathSourcePath nonDepfileInput;
+    private NoopBuildRuleWithValueAddedToRuleKey dependency;
+    private AbstractCachingBuildRuleWithInputs buildRule;
+    private ArtifactCache artifactCache;
+    private BuildRuleSuccessType lastSuccessType;
+
+    private static class NoopBuildRuleWithValueAddedToRuleKey extends NoopBuildRule {
+      @AddToRuleKey private int value = 0;
+
+      public NoopBuildRuleWithValueAddedToRuleKey(
+          BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+        super(buildTarget, projectFilesystem);
+      }
+
+      @Override
+      public SortedSet<BuildRule> getBuildDeps() {
+        return ImmutableSortedSet.of();
+      }
+    }
+
+    public InitializableFromDiskTests(CachingBuildEngine.MetadataStorage storageType)
+        throws IOException {
+      super(storageType);
+    }
+
+    @Test
+    public void runTestForAllSuccessTypes() throws Exception {
+      // This is done to ensure that every success type is covered by a test.
+      // TODO(cjhopman): add test for failed case.
+      for (BuildRuleSuccessType successType : EnumSet.allOf(BuildRuleSuccessType.class)) {
+        reset();
+        switch (successType) {
+          case BUILT_LOCALLY:
+            testBuiltLocally();
+            break;
+          case FETCHED_FROM_CACHE:
+            testFetchedFromCache();
+            break;
+          case MATCHING_RULE_KEY:
+            testMatchingRuleKey();
+            break;
+          case FETCHED_FROM_CACHE_INPUT_BASED:
+            testFetchedFromCacheInputBased();
+            break;
+          case FETCHED_FROM_CACHE_MANIFEST_BASED:
+            testFetchedFromCacheManifestBased();
+            break;
+          case MATCHING_INPUT_BASED_RULE_KEY:
+            testMatchingInputBasedKey();
+            break;
+          case MATCHING_DEP_FILE_RULE_KEY:
+            testMatchingDepFileKey();
+            break;
+            // Every success type should be covered by a test. Don't add a default clause here.
+        }
+        assertEquals(lastSuccessType, successType);
+      }
+    }
+
+    @Test
+    public void testMatchingRuleKey() throws Exception {
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertEquals(
+          "Matching rule key should not invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testMatchingInputBasedKey() throws Exception {
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      dependency.value = 1;
+      assertEquals(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertEquals(
+          "Matching input based rule key should not invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testMatchingDepFileKey() throws Exception {
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeNonDepfileInput("something else");
+      assertEquals(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertEquals(
+          "Matching rule key should not invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testFetchedFromCache() throws Exception {
+      // write to cache
+      String newContent = "new content";
+      writeDepfileInput(newContent);
+      // populate cache
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      doClean();
+
+      writeDepfileInput(DEPFILE_INPUT_CONTENT);
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput(newContent);
+      assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Fetching from cache should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testFetchedFromCacheInputBased() throws Exception {
+      // write to cache
+      String newContent = "new content";
+      writeDepfileInput(newContent);
+      // populate cache
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      doClean();
+
+      writeDepfileInput(DEPFILE_INPUT_CONTENT);
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      dependency.value = 1;
+      writeDepfileInput(newContent);
+      assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, doBuild().getSuccess());
+
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Fetching from cache should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testFetchedFromCacheManifestBased() throws Exception {
+      // write to cache
+      String newContent = "new content";
+      writeDepfileInput(newContent);
+      // populate cache
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      doClean();
+
+      writeDepfileInput(DEPFILE_INPUT_CONTENT);
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput(newContent);
+      writeNonDepfileInput(newContent);
+      assertEquals(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED, doBuild().getSuccess());
+
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Fetching from cache should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    @Test
+    public void testBuiltLocally() throws Exception {
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object firstState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      writeDepfileInput("new content");
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, doBuild().getSuccess());
+      assertTrue(buildRule.isInitializedFromDisk());
+      Object secondState = buildRule.getBuildOutputInitializer().getBuildOutput();
+
+      assertNotEquals(
+          "Building locally should invalidate InitializableFromDisk state.",
+          firstState,
+          secondState);
+    }
+
+    private BuildEngineBuildContext createBuildContext(BuildId buildId) {
+      return BuildEngineBuildContext.builder()
+          .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
+          .setClock(new DefaultClock())
+          .setBuildId(buildId)
+          .setArtifactCache(artifactCache)
+          .build();
+    }
+
+    private void writeDepfileInput(String content) throws IOException {
+      filesystem.mkdirs(depfileInput.getRelativePath().getParent());
+      filesystem.writeContentsToPath(content, depfileInput.getRelativePath());
+    }
+
+    private void writeNonDepfileInput(String content) throws IOException {
+      filesystem.mkdirs(nonDepfileInput.getRelativePath().getParent());
+      filesystem.writeContentsToPath(content, nonDepfileInput.getRelativePath());
+    }
+
+    @Before
+    public void setUpChild() throws Exception {
+      depfileInput = new PathSourcePath(filesystem, Paths.get("path/in/depfile"));
+      nonDepfileInput = new PathSourcePath(filesystem, Paths.get("path/not/in/depfile"));
+      dependency =
+          new NoopBuildRuleWithValueAddedToRuleKey(
+              BUILD_TARGET.withFlavors(InternalFlavor.of("noop")), filesystem);
+      buildRule =
+          createInputBasedRule(
+              filesystem,
+              resolver,
+              ImmutableSortedSet.of(dependency),
+              ImmutableList.of(),
+              ImmutableList.of(),
+              null,
+              ImmutableList.of(),
+              ImmutableSortedSet.of(depfileInput, nonDepfileInput),
+              ImmutableSortedSet.of(depfileInput));
+      reset();
+    }
+
+    public void reset() throws IOException {
+      writeDepfileInput(DEPFILE_INPUT_CONTENT);
+      writeNonDepfileInput(NON_DEPFILE_INPUT_CONTENT);
+      dependency.value = 0;
+      artifactCache = new InMemoryArtifactCache();
+      lastSuccessType = null;
+      doClean();
+    }
+
+    private BuildResult doBuild() throws Exception {
+      fileHashCache.invalidateAll();
+      try (CachingBuildEngine cachingBuildEngine =
+          cachingBuildEngineFactory()
+              .setDepFiles(CachingBuildEngine.DepFiles.CACHE)
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      new DefaultRuleKeyFactory(
+                          FIELD_LOADER, fileHashCache, pathResolver, ruleFinder),
+                      new InputBasedRuleKeyFactory(
+                          FIELD_LOADER,
+                          fileHashCache,
+                          pathResolver,
+                          ruleFinder,
+                          NO_INPUT_FILE_SIZE_LIMIT),
+                      new DefaultDependencyFileRuleKeyFactory(
+                          FIELD_LOADER, fileHashCache, pathResolver, ruleFinder)))
+              .build()) {
+        BuildResult result =
+            cachingBuildEngine
+                .build(
+                    createBuildContext(new BuildId()),
+                    TestExecutionContext.newInstance(),
+                    buildRule)
+                .getResult()
+                .get();
+        lastSuccessType = result.getSuccess();
+        return result;
+      }
+    }
+
+    private void doClean() throws IOException {
+      buildInfoStoreManager.close();
+      buildInfoStoreManager = new BuildInfoStoreManager();
+      filesystem.deleteRecursivelyIfExists(Paths.get("buck-out"));
+      Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
+      buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
+      System.out.println(
+          buildInfoStore.readMetadata(dependency.getBuildTarget(), BuildInfo.MetadataKey.RULE_KEY));
+    }
+  }
+
 
   // TODO(mbolin): Test that when the success files match, nothing is built and nothing is
   // written back to the cache.
@@ -3481,6 +3783,31 @@ public class CachingBuildEngineTest {
     BuildableAbstractCachingBuildRule rule =
         new BuildableAbstractCachingBuildRule(
             buildTarget, filesystem, deps, pathToOutputFile, buildSteps, postBuildSteps);
+    ruleResolver.addToIndex(rule);
+    return rule;
+  }
+
+  private static AbstractCachingBuildRuleWithInputs createInputBasedRule(
+      ProjectFilesystem filesystem,
+      BuildRuleResolver ruleResolver,
+      ImmutableSortedSet<BuildRule> deps,
+      List<Step> buildSteps,
+      ImmutableList<Step> postBuildSteps,
+      @Nullable String pathToOutputFile,
+      ImmutableList<Flavor> flavors,
+      ImmutableSortedSet<SourcePath> inputs,
+      ImmutableSortedSet<SourcePath> depfileInputs) {
+    BuildTarget buildTarget = BUILD_TARGET.withFlavors(flavors);
+    AbstractCachingBuildRuleWithInputs rule =
+        new AbstractCachingBuildRuleWithInputs(
+            buildTarget,
+            filesystem,
+            pathToOutputFile,
+            buildSteps,
+            postBuildSteps,
+            deps,
+            inputs,
+            depfileInputs);
     ruleResolver.addToIndex(rule);
     return rule;
   }
@@ -3524,8 +3851,6 @@ public class CachingBuildEngineTest {
     private final List<Step> buildSteps;
     private final ImmutableList<Step> postBuildSteps;
     private final BuildOutputInitializer<Object> buildOutputInitializer;
-
-    private boolean isInitializedFromDisk = false;
 
     private BuildableAbstractCachingBuildRule(
         BuildTarget buildTarget,
@@ -3572,7 +3897,6 @@ public class CachingBuildEngineTest {
 
     @Override
     public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-      isInitializedFromDisk = true;
       return new Object();
     }
 
@@ -3582,7 +3906,48 @@ public class CachingBuildEngineTest {
     }
 
     public boolean isInitializedFromDisk() {
-      return isInitializedFromDisk;
+      return getBuildOutputInitializer().getBuildOutput() != null;
+    }
+  }
+
+  private static class AbstractCachingBuildRuleWithInputs extends BuildableAbstractCachingBuildRule
+      implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
+    @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
+    private final ImmutableSortedSet<SourcePath> depfileInputs;
+
+    private AbstractCachingBuildRuleWithInputs(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        @Nullable String pathToOutputFile,
+        List<Step> buildSteps,
+        ImmutableList<Step> postBuildSteps,
+        ImmutableSortedSet<BuildRule> deps,
+        ImmutableSortedSet<SourcePath> inputs,
+        ImmutableSortedSet<SourcePath> depfileInputs) {
+      super(buildTarget, projectFilesystem, deps, pathToOutputFile, buildSteps, postBuildSteps);
+      this.inputs = inputs;
+      this.depfileInputs = depfileInputs;
+    }
+
+    @Override
+    public boolean useDependencyFileRuleKeys() {
+      return true;
+    }
+
+    @Override
+    public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+      return path -> true;
+    }
+
+    @Override
+    public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+      return path -> false;
+    }
+
+    @Override
+    public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
+        BuildContext context, CellPathResolver cellPathResolver) throws IOException {
+      return ImmutableList.copyOf(depfileInputs);
     }
   }
 

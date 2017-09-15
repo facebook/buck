@@ -172,7 +172,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     DefaultJavaLibrary javaLibrary = JavaLibraryBuilder.createBuilder("//foo:bar").build(resolver);
     javaLibrary
         .getBuildOutputInitializer()
-        .setBuildOutput(new JavaLibrary.Data(ImmutableSortedMap.of()));
+        .setBuildOutputForTests(new JavaLibrary.Data(ImmutableSortedMap.of()));
 
     BuildContext context = FakeBuildContext.NOOP_CONTEXT;
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -212,7 +212,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         JavaLibraryBuilder.createBuilder("//foo:bar").build(resolver);
     accumulateClassNames
         .getBuildOutputInitializer()
-        .setBuildOutput(
+        .setBuildOutputForTests(
             new JavaLibrary.Data(
                 ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"))));
 
@@ -233,7 +233,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
       throws IOException {
     BuildOutputInitializer<T> buildOutputInitializer =
         initializableFromDisk.getBuildOutputInitializer();
-    buildOutputInitializer.setBuildOutput(
+    buildOutputInitializer.setBuildOutputForTests(
         initializableFromDisk.initializeFromDisk(onDiskBuildInfo));
   }
 
