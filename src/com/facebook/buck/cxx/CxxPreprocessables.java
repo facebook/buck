@@ -215,14 +215,21 @@ public class CxxPreprocessables {
               @Override
               public ImmutableMap<BuildTarget, CxxPreprocessorInput> load(
                   @Nonnull CxxPlatform key) {
-                Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
-                builder.put(
-                    preprocessorDep.getBuildTarget(), preprocessorDep.getCxxPreprocessorInput(key));
-                for (CxxPreprocessorDep dep : preprocessorDep.getCxxPreprocessorDeps(key)) {
-                  builder.putAll(dep.getTransitiveCxxPreprocessorInput(key));
-                }
-                return ImmutableMap.copyOf(builder);
+                return computeTransitiveCxxToPreprocessorInputMap(key, preprocessorDep, true);
               }
             });
+  }
+
+  public static ImmutableMap<BuildTarget, CxxPreprocessorInput>
+      computeTransitiveCxxToPreprocessorInputMap(
+          @Nonnull CxxPlatform key, CxxPreprocessorDep preprocessorDep, boolean includeDep) {
+    Map<BuildTarget, CxxPreprocessorInput> builder = new LinkedHashMap<>();
+    if (includeDep) {
+      builder.put(preprocessorDep.getBuildTarget(), preprocessorDep.getCxxPreprocessorInput(key));
+    }
+    for (CxxPreprocessorDep dep : preprocessorDep.getCxxPreprocessorDeps(key)) {
+      builder.putAll(dep.getTransitiveCxxPreprocessorInput(key));
+    }
+    return ImmutableMap.copyOf(builder);
   }
 }
