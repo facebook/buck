@@ -353,10 +353,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     // Create the .dex files if we aren't doing pre-dexing.
     DexFilesInfo dexFilesInfo = addFinalDxSteps(buildableContext, context, steps);
 
-    ////
-    // BE VERY CAREFUL adding any code below here.
-    // Any inputs to apkbuilder must be reflected in the hash returned by getAbiKeyForDeps.
-    ////
+    if (dexFilesInfo.proguardTextFilesPath.isPresent()) {
+      steps.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              dexFilesInfo.proguardTextFilesPath.get(),
+              getProguardTextFilesPath(),
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
 
     ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
@@ -492,7 +496,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     Path apkPath = getFinalApkPath();
     Path apkToAlign = apkToRedexAndAlign;
 
-    // redex
     if (applyRedex) {
       Path proguardConfigDir = getProguardTextFilesPath();
       Path redexedApk = getRedexedApkPath();
@@ -760,7 +763,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       }
       return new DexFilesInfo(
           buildContext.getSourcePathResolver().getRelativePath(predexedPrimaryDexPath.get()),
-          secondaryDexDirs);
+          secondaryDexDirs,
+          Optional.empty());
     }
 
     return nonPreDexedDexBuildable.get().addDxSteps(buildableContext, buildContext, steps);
@@ -787,16 +791,22 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private static class DexFilesInfo {
     final Path primaryDexPath;
     final ImmutableSet<Path> secondaryDexDirs;
+    final Optional<Path> proguardTextFilesPath;
 
-    DexFilesInfo(Path primaryDexPath, ImmutableSet<Path> secondaryDexDirs) {
+    DexFilesInfo(
+        Path primaryDexPath,
+        ImmutableSet<Path> secondaryDexDirs,
+        Optional<Path> proguardTextFilesPath) {
       this.primaryDexPath = primaryDexPath;
       this.secondaryDexDirs = secondaryDexDirs;
+      this.proguardTextFilesPath = proguardTextFilesPath;
     }
   }
 
   /** All native-libs-as-assets are copied to this directory before running apkbuilder. */
   private Path getPathForNativeLibsAsAssets() {
-    return getBinPath("__native_libs_as_assets_%s__");
+    return BuildTargets.getScratchPath(
+        getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
   }
 
   Path getMergedThirdPartyJarsPath() {
@@ -827,25 +837,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     return path.resolve(getBuildTarget().getShortName() + ".redex.apk");
   }
 
-  private Path getBinPath(String format) {
-    return getBinPath(getProjectFilesystem(), getBuildTarget(), format);
-  }
-
-  private static Path getBinPath(
-      ProjectFilesystem filesystem, BuildTarget buildTarget, String format) {
-    return BuildTargets.getScratchPath(filesystem, buildTarget, format);
-  }
-
   /**
    * Directory of text files used by proguard. Unforunately, this contains both inputs and outputs.
    */
   private Path getProguardTextFilesPath() {
-    return getProguardTextFilesPath(getProjectFilesystem(), getBuildTarget());
-  }
-
-  private static Path getProguardTextFilesPath(
-      ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    return BuildTargets.getGenPath(filesystem, buildTarget, "%s/proguard");
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/proguard");
   }
 
   @VisibleForTesting
@@ -960,6 +956,23 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       this.shouldSplitDex = shouldSplitDex;
     }
 
+    @VisibleForTesting
+    Path getProguardConfigDir() {
+      Preconditions.checkState(shouldProguard);
+      return getRootScratchPath().resolve("proguard");
+    }
+
+    @VisibleForTesting
+    Path getProguardInputsDir() {
+      Preconditions.checkState(shouldProguard);
+      return getRootScratchPath().resolve("proguard_inputs");
+    }
+
+    private Path getRootScratchPath() {
+      return BuildTargets.getScratchPath(
+          getProjectFilesystem(), getBuildTarget(), "%s/non_predexed_root");
+    }
+
     ProjectFilesystem getProjectFilesystem() {
       return filesystem;
     }
@@ -968,8 +981,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       return buildTarget;
     }
 
-    Path getBinPath(String format) {
-      return AndroidBinaryBuildable.getBinPath(getProjectFilesystem(), getBuildTarget(), format);
+    Path getBinPath(String name) {
+      return getRootScratchPath().resolve("bin").resolve(name);
     }
 
     private Path getNonPredexedPrimaryDexPath() {
@@ -1012,8 +1025,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       if (preprocessJavaClassesBash.isPresent()) {
         // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
         // directory.
-        Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in_%s");
-        Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out_%s");
+        Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in");
+        Path preprocessJavaClassesOutDir = getBinPath("java_classes_preprocess_out");
         Path ESCAPED_PARENT = getProjectFilesystem().getPath("_.._");
 
         ImmutableList.Builder<Pair<Path, Path>> pathToTargetBuilder = ImmutableList.builder();
@@ -1160,7 +1173,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           additionalDexStoreToJarPathMap,
           buildContext);
 
-      return new DexFilesInfo(primaryDexPath, secondaryDexDirectoriesBuilder.build());
+      return new DexFilesInfo(
+          primaryDexPath,
+          secondaryDexDirectoriesBuilder.build(),
+          shouldProguard ? Optional.of(getProguardConfigDir()) : Optional.empty());
     }
 
     Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(
@@ -1216,7 +1232,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             buildContext.getSourcePathResolver().getAbsolutePath(proguardConfig.get()));
       }
 
-      Path proguardConfigDir = getProguardTextFilesPath(getProjectFilesystem(), getBuildTarget());
       // Transform our input classpath to a set of output locations for each input classpath.
       // TODO(devjasta): the output path we choose is the result of a slicing function against
       // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
@@ -1226,7 +1241,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               .collect(
                   MoreCollectors.toImmutableMap(
                       java.util.function.Function.identity(),
-                      (path) -> getProguardOutputFromInputClasspath(proguardConfigDir, path)));
+                      (path) -> getProguardOutputFromInputClasspath(getProguardInputsDir(), path)));
 
       // Run ProGuard on the classpath entries.
       ProGuardObfuscateStep.create(
@@ -1245,7 +1260,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           proguardJvmArgs,
           inputOutputEntries,
           buildContext.getSourcePathResolver().getAllAbsolutePaths(additionalJarsForProguard),
-          proguardConfigDir,
+          getProguardConfigDir(),
           buildableContext,
           buildContext,
           skipProguard,
@@ -1288,8 +1303,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       final Supplier<Set<Path>> primaryInputsToDex;
       final Optional<Path> secondaryDexDir;
       final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
-      Path secondaryDexParentDir = getBinPath("__%s_secondary_dex__/");
-      Path additionalDexParentDir = getBinPath("__%s_additional_dex__/");
+      Path secondaryDexParentDir = getBinPath("__secondary_dex__/");
+      Path additionalDexParentDir = getBinPath("__additional_dex__/");
       Path additionalDexAssetsDir = additionalDexParentDir.resolve("assets");
       final Optional<ImmutableSet<Path>> additionalDexDirs;
 
@@ -1297,16 +1312,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         Optional<Path> proguardFullConfigFile = Optional.empty();
         Optional<Path> proguardMappingFile = Optional.empty();
         if (shouldProguard) {
-          Path proguardConfigDir =
-              getProguardTextFilesPath(getProjectFilesystem(), getBuildTarget());
-          proguardFullConfigFile = Optional.of(proguardConfigDir.resolve("configuration.txt"));
-          proguardMappingFile = Optional.of(proguardConfigDir.resolve("mapping.txt"));
+          proguardFullConfigFile = Optional.of(getProguardConfigDir().resolve("configuration.txt"));
+          proguardMappingFile = Optional.of(getProguardConfigDir().resolve("mapping.txt"));
         }
         // DexLibLoader expects that metadata.txt and secondary jar files are under this dir
         // in assets.
 
         // Intermediate directory holding the primary split-zip jar.
-        Path splitZipDir = getBinPath("__%s_split_zip__");
+        Path splitZipDir = getBinPath("__split_zip__");
 
         steps.addAll(
             MakeCleanDirectoryStep.of(
@@ -1330,7 +1343,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         // important because SmartDexingCommand will try to dx every entry in this directory.  It
         // does this because it's impossible to know what outputs split-zip will generate until it
         // runs.
-        final Path secondaryZipDir = getBinPath("__%s_secondary_zip__");
+        final Path secondaryZipDir = getBinPath("__secondary_zip__");
 
         steps.addAll(
             MakeCleanDirectoryStep.of(
@@ -1339,7 +1352,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
         // Intermediate directory holding the directories holding _ONLY_ the additional split-zip
         // jar files that are intended for that dex store.
-        final Path additionalDexStoresZipDir = getBinPath("__%s_dex_stores_zip__");
+        final Path additionalDexStoresZipDir = getBinPath("__dex_stores_zip__");
 
         steps.addAll(
             MakeCleanDirectoryStep.of(
@@ -1367,7 +1380,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         // Run the split-zip command which is responsible for dividing the large set of input
         // classpaths into a more compact set of jar files such that no one jar file when dexed will
         // yield a dex artifact too large for dexopt or the dx method limit to handle.
-        Path zipSplitReportDir = getBinPath("__%s_split_zip_report__");
+        Path zipSplitReportDir = getBinPath("__split_zip_report__");
 
         steps.addAll(
             MakeCleanDirectoryStep.of(
@@ -1483,7 +1496,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
       // Stores checksum information from each invocation to intelligently decide when dx needs
       // to be re-run.
-      Path successDir = getBinPath("__%s_smart_dex__/.success");
+      Path successDir = getBinPath("__smart_dex__/.success");
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(

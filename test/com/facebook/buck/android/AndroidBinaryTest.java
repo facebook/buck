@@ -103,15 +103,14 @@ public class AndroidBinaryTest {
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
         ImmutableSortedSet.of(libraryOneRule.getBuildTarget(), libraryTwoRule.getBuildTarget());
     BuildRule keystoreRule = addKeystoreRule(ruleResolver);
+    FakeSourcePath proguardConfig = new FakeSourcePath("proguard.cfg");
     AndroidBinary androidBinary =
         AndroidBinaryBuilder.createBuilder(binaryBuildTarget)
             .setOriginalDeps(originalDepsTargets)
             .setBuildTargetsToExcludeFromDex(ImmutableSet.of(libraryTwoRule.getBuildTarget()))
             .setManifest(new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"))
             .setKeystore(keystoreRule.getBuildTarget())
-            .setPackageType("release")
-            // Force no predexing.
-            .setPreprocessJavaClassesBash("cp")
+            .setProguardConfig(proguardConfig)
             .build(ruleResolver);
 
     AndroidPackageableCollection packageableCollection =
@@ -142,8 +141,15 @@ public class AndroidBinaryTest {
             androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
 
     Path proguardOutputDir =
-        BuildTargets.getGenPath(
-            androidBinary.getProjectFilesystem(), binaryBuildTarget, "%s/proguard/");
+        androidBinary
+            .getBuildableForTests()
+            .getNonPredexedBuildableForTests()
+            .getProguardConfigDir();
+    Path proguardInputsDir =
+        androidBinary
+            .getBuildableForTests()
+            .getNonPredexedBuildableForTests()
+            .getProguardInputsDir();
     ImmutableSet<Path> expectedRecordedArtifacts =
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
@@ -163,7 +169,8 @@ public class AndroidBinaryTest {
         /* proguardMaxHeapSize */ "1024M",
         /* proguardAgentPath */ Optional.empty(),
         aaptProguardDir.resolve("proguard.txt"),
-        /* customProguardConfigs */ ImmutableSet.of(),
+        /* customProguardConfigs */ ImmutableSet.of(
+            proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath())),
         ProGuardObfuscateStep.SdkProguardType.NONE,
         /* optimizationPasses */ Optional.empty(),
         /* proguardJvmArgs */ Optional.empty(),
@@ -173,7 +180,7 @@ public class AndroidBinaryTest {
                     libraryOneRule.getBuildTarget(),
                     "lib__%s__output")
                 .resolve(libraryOneRule.getBuildTarget().getShortName() + ".jar"),
-            proguardOutputDir.resolve(
+            proguardInputsDir.resolve(
                 BuildTargets.getGenPath(
                         libraryOneRule.getProjectFilesystem(),
                         libraryOneRule.getBuildTarget(),

@@ -157,4 +157,9 @@ public class AndroidBinaryBuilder
     getArgForPopulating().setPreprocessJavaClassesBash(command);
     return this;
   }
+
+  public AndroidBinaryBuilder setProguardConfig(SourcePath path) {
+    getArgForPopulating().setProguardConfig(path);
+    return this;
+  }
 }
