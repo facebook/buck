@@ -77,7 +77,6 @@ java_immutables_library(
         "//test/com/facebook/buck/jvm/java:java",
         "//test/com/facebook/buck/lua:lua",
         "//test/com/facebook/buck/python:",
-        "//test/com/facebook/buck/thrift:thrift",
         "//test/com/facebook/buck/versions:",
     ],
     deps = [
