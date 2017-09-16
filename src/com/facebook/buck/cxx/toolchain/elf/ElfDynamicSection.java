@@ -79,6 +79,8 @@ public class ElfDynamicSection {
     DT_RUNPATH(29, Type.STRING),
     DT_FLAGS(30, Type.OTHER),
     DT_GNU_HASH(0x6ffffef5, Type.OTHER),
+    DT_TLSDESC_PLT(0x6ffffef6, Type.OTHER),
+    DT_TLSDESC_GOT(0x6ffffef7, Type.OTHER),
     DT_VERSYM(0x6ffffff0, Type.OTHER),
     DT_RELACOUNT(0x6ffffff9, Type.OTHER),
     DT_RELCOUNT(0x6ffffffa, Type.OTHER),
