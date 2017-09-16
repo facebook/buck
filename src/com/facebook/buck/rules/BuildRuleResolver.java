@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public interface BuildRuleResolver {
@@ -70,6 +71,9 @@ public interface BuildRuleResolver {
    */
   @Nullable
   BuckEventBus getEventBus();
+
+  /** Returns a parallel version of the stream if the BuildRuleResolver supports parallelism. */
+  <T> Stream<T> maybeParallelize(Stream<T> stream);
 
   // Convenience methods offering alternate access patterns.
 

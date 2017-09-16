@@ -24,6 +24,7 @@ import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -142,5 +143,10 @@ public class SingleThreadedBuildRuleResolver implements BuildRuleResolver {
   @Nullable
   public BuckEventBus getEventBus() {
     return eventBus;
+  }
+
+  @Override
+  public <T> Stream<T> maybeParallelize(Stream<T> stream) {
+    return stream;
   }
 }

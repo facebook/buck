@@ -29,6 +29,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -130,6 +131,11 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   @Override
   public BuckEventBus getEventBus() {
     return eventBus;
+  }
+
+  @Override
+  public <T> Stream<T> maybeParallelize(Stream<T> stream) {
+    return stream.parallel();
   }
 
   private boolean isInForkJoinPool() {
