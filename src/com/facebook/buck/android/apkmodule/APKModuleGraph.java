@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -262,7 +264,7 @@ public class APKModuleGraph {
     apkModuleGraph.addNode(rootAPKModuleSupplier.get());
 
     if (getSeedConfigMap().isPresent()) {
-      HashMultimap<BuildTarget, String> targetToContainingApkModulesMap =
+      Multimap<BuildTarget, String> targetToContainingApkModulesMap =
           mapTargetsToContainingModules();
       generateSharedModules(apkModuleGraph, targetToContainingApkModulesMap);
     }
@@ -305,9 +307,9 @@ public class APKModuleGraph {
    *
    * @return the Multimap containing targets and the seed modules that contain them
    */
-  private HashMultimap<BuildTarget, String> mapTargetsToContainingModules() {
-    final HashMultimap<BuildTarget, String> targetToContainingApkModuleNameMap =
-        HashMultimap.create();
+  private Multimap<BuildTarget, String> mapTargetsToContainingModules() {
+    final Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
+        MultimapBuilder.treeKeys().treeSetValues().build();
     for (Map.Entry<String, List<BuildTarget>> seedConfig : getSeedConfigMap().get().entrySet()) {
       final String seedModuleName = seedConfig.getKey();
       for (BuildTarget seedTarget : seedConfig.getValue()) {
@@ -342,7 +344,7 @@ public class APKModuleGraph {
    */
   private void generateSharedModules(
       MutableDirectedGraph<APKModule> apkModuleGraph,
-      HashMultimap<BuildTarget, String> targetToContainingApkModulesMap) {
+      Multimap<BuildTarget, String> targetToContainingApkModulesMap) {
 
     // Sort the targets into APKModuleBuilders based on their seed dependencies
     final Map<ImmutableSet<String>, APKModule> combinedModuleHashToModuleMap = new HashMap<>();
