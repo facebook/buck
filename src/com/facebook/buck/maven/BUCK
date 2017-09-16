@@ -42,7 +42,7 @@ java_library(
     srcs = UTIL_SRCS,
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/aether:aether-connector-basic",
         "//third-party/java/aether:aether-transport-file",
         "//third-party/java/aether:aether-transport-http",

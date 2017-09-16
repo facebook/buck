@@ -269,7 +269,6 @@ java_test(
         "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
-        "//src/com/facebook/buck/util:object_mapper",
         "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

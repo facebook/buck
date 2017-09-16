@@ -113,7 +113,6 @@ java_immutables_library(
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:object_mapper",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/zip:zip",

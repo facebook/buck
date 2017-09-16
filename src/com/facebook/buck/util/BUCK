@@ -103,25 +103,6 @@ java_immutables_library(
     ],
 )
 
-OBJECT_MAPPER_SRCS = [
-    "ObjectMappers.java",
-]
-
-java_library(
-    name = "object_mapper",
-    srcs = OBJECT_MAPPER_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":exceptions",
-        "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/jackson:jackson-datatype-guava",
-        "//third-party/java/jackson:jackson-datatype-jdk8",
-    ],
-)
-
 PACKAGED_RESOURCE_SRCS = [
     "PackagedResource.java",
 ]
@@ -143,7 +124,6 @@ java_immutables_library(
     name = "util",
     srcs = glob(
         excludes = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
-                   OBJECT_MAPPER_SRCS +
                    PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
         includes = ["*.java"],
     ),
@@ -155,10 +135,12 @@ java_immutables_library(
     ],
     deps = [
         ":exceptions",
-        ":object_mapper",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jackson:jackson-datatype-guava",
+        "//third-party/java/jackson:jackson-datatype-jdk8",
     ],
 )

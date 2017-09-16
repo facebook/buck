@@ -6,7 +6,7 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-core",
         "//third-party/java/jackson:jackson-databind",

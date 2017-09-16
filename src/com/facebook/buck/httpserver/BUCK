@@ -59,7 +59,7 @@ java_library(
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/rules:build_event",
         "//src/com/facebook/buck/rules:rules",
-        "//src/com/facebook/buck/util:object_mapper",
+        "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/trace:trace",
         "//third-party/java/closure-templates:closure-templates",
         "//third-party/java/jackson:jackson-databind",
