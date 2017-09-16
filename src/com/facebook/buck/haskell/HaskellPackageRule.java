@@ -38,6 +38,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -301,6 +302,11 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       this.resolver = resolver;
       this.args = args;
       this.env = env;
+    }
+
+    @Override
+    protected boolean shouldPrintStderr(Verbosity verbosity) {
+      return !verbosity.isSilent();
     }
 
     @Override

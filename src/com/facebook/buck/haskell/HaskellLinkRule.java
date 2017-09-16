@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -113,6 +114,11 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                             Iterables.cycle("-optl"),
                             Arg.stringify(linkerArgs, buildContext.getSourcePathResolver())))
                     .build();
+              }
+
+              @Override
+              protected boolean shouldPrintStderr(Verbosity verbosity) {
+                return !verbosity.isSilent();
               }
 
               @Override
