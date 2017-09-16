@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -195,41 +196,47 @@ public class ActionGraphCache {
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph) {
-    ForkJoinPool pool = ForkJoinPool.commonPool();
-    BuildRuleResolver resolver =
-        new MultiThreadedBuildRuleResolver(pool, targetGraph, transformer, eventBus);
-    HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
-
-    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
-      @Override
-      public void visit(TargetNode<?, ?> node) {
-        CompletableFuture<BuildRule>[] depFutures =
-            targetGraph
-                .getOutgoingNodesFor(node)
-                .stream()
-                .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
-                .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
-        futures.put(
-            node.getBuildTarget(),
-            CompletableFuture.allOf(depFutures)
-                .thenApplyAsync(ignored -> resolver.requireRule(node.getBuildTarget()), pool));
-      }
-    }.traverse();
-
-    // Wait for completion. The results are ignored as we only care about the rules populated in the
-    // resolver, which is a superset of the rules generated directly from target nodes.
+    // TODO(yiding): inject the pool or allow parallelism to be configured.
+    ForkJoinPool pool =
+        MostExecutors.forkJoinPoolWithThreadLimit(Runtime.getRuntime().availableProcessors(), 16);
     try {
-      CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
-          .join();
-    } catch (CompletionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw new IllegalStateException("unexpected checked exception", e);
-    }
+      BuildRuleResolver resolver =
+          new MultiThreadedBuildRuleResolver(pool, targetGraph, transformer, eventBus);
+      HashMap<BuildTarget, CompletableFuture<BuildRule>> futures = new HashMap<>();
 
-    return ActionGraphAndResolver.builder()
-        .setActionGraph(new ActionGraph(resolver.getBuildRules()))
-        .setResolver(resolver)
-        .build();
+      new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
+        @Override
+        public void visit(TargetNode<?, ?> node) {
+          CompletableFuture<BuildRule>[] depFutures =
+              targetGraph
+                  .getOutgoingNodesFor(node)
+                  .stream()
+                  .map(dep -> Preconditions.checkNotNull(futures.get(dep.getBuildTarget())))
+                  .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
+          futures.put(
+              node.getBuildTarget(),
+              CompletableFuture.allOf(depFutures)
+                  .thenApplyAsync(ignored -> resolver.requireRule(node.getBuildTarget()), pool));
+        }
+      }.traverse();
+
+      // Wait for completion. The results are ignored as we only care about the rules populated in the
+      // resolver, which is a superset of the rules generated directly from target nodes.
+      try {
+        CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[futures.size()]))
+            .join();
+      } catch (CompletionException e) {
+        Throwables.throwIfUnchecked(e.getCause());
+        throw new IllegalStateException("unexpected checked exception", e);
+      }
+
+      return ActionGraphAndResolver.builder()
+          .setActionGraph(new ActionGraph(resolver.getBuildRules()))
+          .setResolver(resolver)
+          .build();
+    } finally {
+      pool.shutdownNow();
+    }
   }
 
   private static ActionGraphAndResolver createActionGraphSerially(

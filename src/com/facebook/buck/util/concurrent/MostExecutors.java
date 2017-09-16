@@ -18,6 +18,8 @@ package com.facebook.buck.util.concurrent;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -139,5 +141,42 @@ public class MostExecutors {
     if (!terminated) {
       throw exception;
     }
+  }
+
+  /**
+   * Construct a ForkJoinPool with a stricter thread limit.
+   *
+   * <p>ForkJoinPool by default will create a new thread to handle pending work whenever an existing
+   * thread becomes blocked on a task and cannot work steal. In cases when many tasks would block on
+   * a slow running dependency, it can trigger thread creation for all those tasks.
+   *
+   * <p>Note that limiting the maximum threads will impact the ability for ManagedBlockers to cause
+   * the pool to create new worker threads, leading to potential deadlock if many ManagedBlockers
+   * are used.
+   */
+  public static ForkJoinPool forkJoinPoolWithThreadLimit(int parallelism, int spares) {
+    AtomicInteger activeThreads = new AtomicInteger(0);
+    return new ForkJoinPool(
+        parallelism,
+        pool -> {
+          if (activeThreads.get() > parallelism + spares) {
+            return null;
+          }
+          return new ForkJoinWorkerThread(pool) {
+            @Override
+            protected void onStart() {
+              super.onStart();
+              activeThreads.incrementAndGet();
+            }
+
+            @Override
+            protected void onTermination(Throwable exception) {
+              activeThreads.decrementAndGet();
+              super.onTermination(exception);
+            }
+          };
+        },
+        /* handler */ null,
+        /* asyncMode */ false);
   }
 }
