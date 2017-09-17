@@ -214,6 +214,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
         BuildFileAST extensionAst =
             BuildFileAST.parseSkylarkFile(ParserInputSource.create(extensionPath), eventHandler);
+        if (extensionAst.containsErrors()) {
+          throw BuildFileParseException.createForUnknownParseError(
+              "Cannot parse extension file " + skylarkImport.getImportString());
+        }
         Environment.Builder envBuilder = Environment.builder(mutability).setGlobals(buckGlobals);
         if (!extensionAst.getImports().isEmpty()) {
           envBuilder.setImportedExtensions(
@@ -225,7 +229,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         boolean success = extensionAst.exec(extensionEnv, eventHandler);
         if (!success) {
           throw BuildFileParseException.createForUnknownParseError(
-              "Cannot parse extension file " + skylarkImport.getImportString());
+              "Cannot evaluate extension file " + skylarkImport.getImportString());
         }
         Environment.Extension extension = new Environment.Extension(extensionEnv);
         extensionMapBuilder.put(skylarkImport.getImportString(), extension);

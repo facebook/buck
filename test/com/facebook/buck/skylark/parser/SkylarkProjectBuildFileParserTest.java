@@ -281,6 +281,22 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(rule.get("binaryJar"), equalTo("jar"));
   }
 
+  @Test
+  public void parsingOfExtensionWithSyntacticErrorsFails() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'\nj j", extensionFile);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot parse extension file //src/test:build_rules.bzl");
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableList<Map<String, Object>> allRulesAndMetaRules =
