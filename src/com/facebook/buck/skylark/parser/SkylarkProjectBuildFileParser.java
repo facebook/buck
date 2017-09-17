@@ -158,7 +158,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               buildFile, buildFilePath, buildFileAst, eventHandler, mutability, rawRuleBuilder);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {
-        throw BuildFileParseException.createForUnknownParseError("Cannot parse build file");
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot evaluate build file " + buildFile);
       }
       return rawRuleBuilder.build();
     }

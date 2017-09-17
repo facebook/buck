@@ -233,6 +233,19 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void evaluationErrorIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    projectFilesystem.writeContentsToPath("foo()", buildFile);
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate build file " + buildFile);
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
   public void canUseBuiltInListFunctionInExtension() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
