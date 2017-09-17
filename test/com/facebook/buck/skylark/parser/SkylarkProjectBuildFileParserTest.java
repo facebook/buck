@@ -262,6 +262,25 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(ImmutableList.of("l1", "l2")));
   }
 
+  @Test
+  public void testImportFunctionFromExtension() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Path extensionExtensionFile = directory.resolve("extension_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def get_name():\n  return 'jar'", extensionExtensionFile);
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:extension_rules.bzl', 'get_name')", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableList<Map<String, Object>> allRulesAndMetaRules =

@@ -211,11 +211,17 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     for (SkylarkImport skylarkImport : skylarkImports) {
       try (Mutability mutability =
           Mutability.create("importing " + skylarkImport.getImportString())) {
-        Environment extensionEnv = Environment.builder(mutability).setGlobals(buckGlobals).build();
-        extensionEnv.setup("native", new NativeModule(buckRuleFunctions));
         com.google.devtools.build.lib.vfs.Path extensionPath = getImportPath(skylarkImport);
         BuildFileAST extensionAst =
             BuildFileAST.parseSkylarkFile(ParserInputSource.create(extensionPath), eventHandler);
+        Environment.Builder envBuilder = Environment.builder(mutability).setGlobals(buckGlobals);
+        if (!extensionAst.getImports().isEmpty()) {
+          envBuilder.setImportedExtensions(
+              buildImportMap(
+                  extensionAst.getImports(), buckGlobals, buckRuleFunctions, eventHandler));
+        }
+        Environment extensionEnv = envBuilder.build();
+        extensionEnv.setup("native", new NativeModule(buckRuleFunctions));
         boolean success = extensionAst.exec(extensionEnv, eventHandler);
         if (!success) {
           throw BuildFileParseException.createForUnknownParseError(
