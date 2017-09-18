@@ -318,11 +318,14 @@ public class AppleTestDescription
           xctoolZipBuildRule.getBuildTarget().withAppendedFlavors(UNZIP_XCTOOL_FLAVOR);
       final Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
-      if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
-        BuildRuleParams unzipXctoolParams =
-            params.withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule)).withoutExtraDeps();
-        resolver.addToIndex(
-            new AbstractBuildRuleWithDeclaredAndExtraDeps(
+      resolver.computeIfAbsent(
+          unzipXctoolTarget,
+          ignored -> {
+            BuildRuleParams unzipXctoolParams =
+                params
+                    .withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule))
+                    .withoutExtraDeps();
+            return new AbstractBuildRuleWithDeclaredAndExtraDeps(
                 unzipXctoolTarget, projectFilesystem, unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
@@ -351,8 +354,8 @@ public class AppleTestDescription
               public SourcePath getSourcePathToOutput() {
                 return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
               }
-            });
-      }
+            };
+          });
       return Optional.of(
           new ExplicitBuildTargetSourcePath(
               unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
