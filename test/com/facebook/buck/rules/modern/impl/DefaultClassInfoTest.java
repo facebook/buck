@@ -25,12 +25,17 @@ import static org.junit.Assert.*;
 import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
@@ -38,6 +43,7 @@ import com.facebook.buck.rules.modern.InputDataRetriever;
 import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.rules.modern.InputPathResolver;
 import com.facebook.buck.rules.modern.InputRuleResolver;
+import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputData;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
@@ -284,6 +290,37 @@ public class DefaultClassInfoTest {
       assertThat(e.getMessage(), Matchers.containsString("must be final (BadBase.value)"));
       assertThat(e.getMessage(), Matchers.containsString("DerivedFromBadBased"));
       throw e;
+    }
+  }
+
+  @Test
+  public void testSimpleModernBuildRule() {
+    // Just tests that we can construct a class info from a "direct" ModernBuildRule.
+    DefaultClassInfoFactory.forBuildable(
+        new NoOpModernBuildRule(
+            BuildTargetFactory.newInstance("//some:target"),
+            new FakeProjectFilesystem(),
+            new SourcePathRuleFinder(
+                new SingleThreadedBuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()))));
+  }
+
+  static class NoOpModernBuildRule extends ModernBuildRule<NoOpModernBuildRule>
+      implements Buildable {
+    NoOpModernBuildRule(
+        BuildTarget buildTarget, ProjectFilesystem filesystem, SourcePathRuleFinder finder) {
+      super(buildTarget, filesystem, finder, NoOpModernBuildRule.class);
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        EventDispatcher eventDispatcher,
+        ProjectFilesystem filesystem,
+        InputPathResolver inputPathResolver,
+        InputDataRetriever inputDataRetriever,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      return ImmutableList.of();
     }
   }
 }

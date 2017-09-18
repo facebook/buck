@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRule;
@@ -51,6 +52,53 @@ import javax.annotation.Nullable;
  * BuildRule/AbstractBuildRule are intentionally final to keep users on the safe path.
  *
  * <p>Deps, outputs and rulekeys are derived from the fields of the {@link Buildable}.
+ *
+ * <p>For simple ModernBuildRules (e.g. those that don't have any fields that can't be added to the
+ * rulekey), the build rule class itself can (and should) implement Buildable. In this case, the
+ * constructor taking a {@code Class<T>} should be used.
+ *
+ * <p>Example:
+ *
+ * <pre>{@code
+ * class WriteData extends ModernBuildRule<WriteData> implements Buildable {
+ *   final String data;
+ *   public WriteData(
+ *       SourcePathRuleFinder ruleFinder,
+ *       BuildTarget buildTarget,
+ *       ProjectFilesystem projectFilesystem,
+ *       String data) {
+ *     super(buildTarget, projectFilesystem, ruleFinder, WriteData.class);
+ *     this.data = data;
+ *   }
+ *
+ *   ...
+ * }
+ * }</pre>
+ *
+ * <p>Some BuildRules contain more information than just that added to the rulekey and used for
+ * getBuildSteps(). For these rules, the part used for getBuildSteps should be split out into its
+ * own implementation of Buildable.
+ *
+ * <p>Example:
+ *
+ * <pre>{@code
+ * class CopyData extends ModernBuildRule<CopyData.Impl> implements Buildable {
+ *   BuildRule other;
+ *   public WriteData(
+ *       SourcePathRuleFinder ruleFinder,
+ *       BuildTarget buildTarget,
+ *       ProjectFilesystem projectFilesystem,
+ *       BuildRule other) {
+ *     super(buildTarget, projectFilesystem, ruleFinder, new Impl("hello"));
+ *     this.other = other;
+ *   }
+ *
+ *   private static class Impl implements Buildable {
+ *     ...
+ *   }
+ *   ...
+ * }
+ * }</pre>
  */
 public class ModernBuildRule<T extends Buildable>
     implements BuildRule,
@@ -58,28 +106,45 @@ public class ModernBuildRule<T extends Buildable>
         SupportsInputBasedRuleKey,
         InitializableFromDisk<ModernBuildRule.DataHolder> {
   private final BuildTarget buildTarget;
-  private final T buildable;
-  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
   private final ProjectFilesystem filesystem;
-  private final ClassInfo<T> classInfo;
   private final InputRuleResolver inputRuleResolver;
   private final BuildOutputInitializer<DataHolder> buildOutputInitializer;
   private final OutputPathResolver outputPathResolver;
 
+  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
+  private final T buildable;
+  private final ClassInfo<T> classInfo;
+
   protected ModernBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
-      T buildable,
+      SourcePathRuleFinder finder,
+      Class<T> clazz) {
+    this(buildTarget, filesystem, Either.ofRight(clazz), finder);
+  }
+
+  protected ModernBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      SourcePathRuleFinder ruleFinder,
+      T buildable) {
+    this(buildTarget, filesystem, Either.ofLeft(buildable), ruleFinder);
+  }
+
+  private ModernBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      Either<T, Class<T>> buildableSource,
       SourcePathRuleFinder ruleFinder) {
-    this.classInfo = DefaultClassInfoFactory.forBuildable(buildable);
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-    this.buildable = buildable;
     this.deps = Suppliers.memoize(this::computeDeps);
     this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.outputPathResolver =
         new DefaultOutputPathResolver(this.getProjectFilesystem(), this.getBuildTarget());
+    this.buildable = buildableSource.transform(b -> b, clz -> clz.cast(this));
+    this.classInfo = DefaultClassInfoFactory.forBuildable(this.buildable);
   }
 
   private ImmutableSortedSet<BuildRule> computeDeps() {
