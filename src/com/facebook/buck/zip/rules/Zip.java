@@ -16,82 +16,72 @@
 
 package com.facebook.buck.zip.rules;
 
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
+import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.InputDataRetriever;
+import com.facebook.buck.rules.modern.InputPath;
+import com.facebook.buck.rules.modern.InputPathResolver;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
-public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasOutputName, SupportsInputBasedRuleKey {
-
-  @AddToRuleKey private final String name;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
-  @AddToRuleKey private final boolean flatten;
-  @AddToRuleKey private final boolean mergeSourceZips;
+public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
+  private final String name;
+  private final ImmutableSortedSet<InputPath> sources;
+  private final OutputPath output;
+  private final boolean flatten;
+  private final boolean mergeSourceZips;
 
   public Zip(
+      SourcePathRuleFinder ruleFinder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       String outputName,
       ImmutableSortedSet<SourcePath> sources,
       boolean flatten,
       boolean mergeSourceZips) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
+
     this.name = outputName;
-    this.sources = sources;
+    this.sources =
+        sources.stream().map(InputPath::new).collect(MoreCollectors.toImmutableSortedSet());
+    this.output = new OutputPath(name);
     this.flatten = flatten;
     this.mergeSourceZips = mergeSourceZips;
   }
 
-  private Path getOutput() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
-        .resolve(this.name);
-  }
-
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-
-    Path output = getOutput();
-    Path scratchDir =
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.zip.scratch");
+      EventDispatcher eventDispatcher,
+      ProjectFilesystem filesystem,
+      InputPathResolver inputPathResolver,
+      InputDataRetriever inputDataRetriever,
+      OutputPathResolver outputPathResolver,
+      BuildCellRelativePathFactory buildCellPathFactory) {
+    Path outputPath = outputPathResolver.resolvePath(this.output);
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(
-        RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+    ImmutableSortedSet<SourcePath> sourcePathSources =
+        sources
+            .stream()
+            .map(InputPath::getLimitedSourcePath)
+            .collect(MoreCollectors.toImmutableSortedSet());
 
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
+    Path scratchDir = outputPathResolver.getTempPath();
 
     FileBundler bundler;
     if (mergeSourceZips) {
@@ -100,31 +90,28 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
       bundler = new CopyingFileBundler(getBuildTarget());
     }
     bundler.copy(
-        getProjectFilesystem(),
-        new DefaultBuildCellRelativePathFactory(
-            context.getBuildCellRootPath(), getProjectFilesystem(), Optional.empty()),
+        filesystem,
+        buildCellPathFactory,
         steps,
         scratchDir,
-        sources,
-        context.getSourcePathResolver());
+        sourcePathSources,
+        inputPathResolver.getLimitedSourcePathResolver());
 
     steps.add(
         new ZipStep(
-            getProjectFilesystem(),
-            output,
+            filesystem,
+            outputPath,
             ImmutableSortedSet.of(),
             flatten,
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             scratchDir));
-
-    buildableContext.recordArtifact(output);
 
     return steps.build();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutput());
+    return getSourcePath(output);
   }
 
   @Override

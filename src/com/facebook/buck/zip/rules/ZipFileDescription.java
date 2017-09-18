@@ -25,6 +25,7 @@ import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.HasDeclaredDeps;
 import com.facebook.buck.rules.HasSrcs;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
@@ -48,9 +49,9 @@ public class ZipFileDescription
       CellPathResolver cellRoots,
       ZipFileDescriptionArg args) {
     return new Zip(
+        new SourcePathRuleFinder(resolver),
         buildTarget,
         projectFilesystem,
-        params,
         args.getOut(),
         args.getSrcs(),
         args.getFlatten(),
