@@ -282,6 +282,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
           new DistBuildSlaveEventBusListener(
               getStampedeId(),
               runId,
+              Preconditions.checkNotNull(distBuildMode, "Dist build mode not set"),
               new DefaultClock(),
               timeStatsTracker,
               fileMaterializationStatsTracker,

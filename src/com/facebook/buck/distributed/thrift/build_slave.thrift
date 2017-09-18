@@ -97,4 +97,5 @@ struct BuildSlaveFinishedStats {
     3: optional FileMaterializationStats fileMaterializationStats;
     4: optional BuildSlavePerStageTimingStats buildSlavePerStageTimingStats;
     5: optional string hostname;
+    6: optional string distBuildMode;
 }

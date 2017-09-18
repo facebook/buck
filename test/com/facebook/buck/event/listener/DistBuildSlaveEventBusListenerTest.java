@@ -29,6 +29,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.DistBuildUtil;
@@ -107,6 +108,7 @@ public class DistBuildSlaveEventBusListenerTest {
         new DistBuildSlaveEventBusListener(
             stampedeId,
             runId,
+            DistBuildMode.REMOTE_BUILD,
             clock,
             slaveStatsTracker,
             fileMaterializationStatsTracker,
@@ -492,6 +494,7 @@ public class DistBuildSlaveEventBusListenerTest {
     expectedFinishedStats.setBuildSlaveStatus(status);
     expectedFinishedStats.setFileMaterializationStats(fileMaterializationStats);
     expectedFinishedStats.setBuildSlavePerStageTimingStats(timingStats);
+    expectedFinishedStats.setDistBuildMode("REMOTE_BUILD");
     expectedFinishedStats.setExitCode(EXIT_CODE);
 
     distBuildServiceMock.uploadBuildSlaveConsoleEvents(eq(stampedeId), eq(runId), anyObject());

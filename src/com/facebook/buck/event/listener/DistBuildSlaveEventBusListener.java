@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
+import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.DistBuildUtil;
@@ -91,6 +92,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
   private final DistBuildSlaveTimingStatsTracker slaveStatsTracker;
+  private final DistBuildMode distBuildMode;
 
   private volatile @Nullable DistBuildService distBuildService;
   private volatile Optional<Integer> exitCode = Optional.empty();
@@ -99,6 +101,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
       RunId runId,
+      DistBuildMode distBuildMode,
       Clock clock,
       DistBuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
@@ -106,6 +109,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     this(
         stampedeId,
         runId,
+        distBuildMode,
         clock,
         slaveStatsTracker,
         fileMaterializationStatsTracker,
@@ -116,6 +120,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
       RunId runId,
+      DistBuildMode distBuildMode,
       Clock clock,
       DistBuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
@@ -127,6 +132,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
     this.networkScheduler = networkScheduler;
+    this.distBuildMode = distBuildMode;
 
     scheduledServerUpdates =
         networkScheduler.scheduleAtFixedRate(
@@ -201,6 +207,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     BuildSlaveFinishedStats finishedStats =
         new BuildSlaveFinishedStats()
             .setHostname(hostname)
+            .setDistBuildMode(distBuildMode.name())
             .setBuildSlaveStatus(createBuildSlaveStatus())
             .setFileMaterializationStats(
                 fileMaterializationStatsTracker.getFileMaterializationStats())
