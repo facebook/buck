@@ -30,6 +30,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -55,6 +57,10 @@ public class ThriftCoordinatorServer implements Closeable {
   private final Object lock;
   private final CompletableFuture<Integer> exitCodeFuture;
   private final StampedeId stampedeId;
+
+  // TODO(ruibm): minions should look at build job status if coordinator goes offline.
+  private final Set<String> runningMinions = new HashSet<>();
+  private int exitCode = 0;
 
   @Nullable private TNonblockingServerSocket transport;
   @Nullable private TThreadedSelectorServer server;
@@ -134,6 +140,20 @@ public class ThriftCoordinatorServer implements Closeable {
     }
   }
 
+  private void removeRunningMinion(String minionId) {
+    runningMinions.remove(minionId);
+    LOG.debug(
+        String.format(
+            "Minion [%s] has finished. Removing from list of running minions. [%s] remaining minions",
+            minionId, runningMinions.size()));
+
+    // Once all minions have finished (or failed) then shut down the coordinator.
+    if (runningMinions.size() == 0) {
+      LOG.debug(String.format("All minions have finished. Setting exit code to [%s]", exitCode));
+      setBuildExitCode(exitCode);
+    }
+  }
+
   private class CoordinatorServiceHandler implements CoordinatorService.Iface {
     @Override
     public GetTargetsToBuildResponse getTargetsToBuild(GetTargetsToBuildRequest request)
@@ -144,12 +164,15 @@ public class ThriftCoordinatorServer implements Closeable {
       synchronized (lock) {
         Preconditions.checkArgument(request.isSetMinionId());
 
+        runningMinions.add(request.getMinionId());
+
         GetTargetsToBuildResponse response = new GetTargetsToBuildResponse();
         if (allocator.isBuildFinished()) {
           LOG.debug(
               String.format(
                   "Minion [%s] is being told to exit because the build has finished.",
                   request.minionId));
+          removeRunningMinion(request.getMinionId());
           return response.setAction(GetTargetsToBuildAction.CLOSE_CLIENT);
         }
 
@@ -180,20 +203,18 @@ public class ThriftCoordinatorServer implements Closeable {
         Preconditions.checkArgument(request.isSetBuildExitCode());
         FinishedBuildingResponse response = new FinishedBuildingResponse();
         if (request.getBuildExitCode() != 0) {
-          setBuildExitCode(request.getBuildExitCode());
+          exitCode = request.getBuildExitCode();
+          removeRunningMinion(request.getMinionId());
           response.setContinueBuilding(false);
         } else {
           allocator.finishedBuildingTargets(request.getMinionId());
-          if (getExitCode().isDone()) {
+
+          if (allocator.isBuildFinished()) {
+            // Build has finished in all Minions successfully!!
+            removeRunningMinion(request.getMinionId());
             response.setContinueBuilding(false);
           } else {
-            if (allocator.isBuildFinished()) {
-              // Build has finished in all Minions successfully!!
-              setBuildExitCode(0);
-              response.setContinueBuilding(false);
-            } else {
-              response.setContinueBuilding(true);
-            }
+            response.setContinueBuilding(true);
           }
         }
 
