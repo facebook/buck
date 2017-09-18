@@ -30,6 +30,7 @@ def get_buck_version(project):
 def revision_exists(repo, revision):
     returncode = subprocess.call(
         ['git', 'rev-parse', '--verify', revision],
+        stdout=sys.stderr,
         cwd=repo.buck_dir)
     return returncode == 0
 
