@@ -22,15 +22,16 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellPathResolver;
+import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +43,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -67,16 +69,19 @@ public class SrcZipAwareFileBundlerTest {
     Files.createFile(subDirectoryFile3);
 
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(basePath);
+    DefaultSourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(
+            new SourcePathRuleFinder(
+                new SingleThreadedBuildRuleResolver(
+                    TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     bundler.copy(
         filesystem,
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    new SingleThreadedBuildRuleResolver(
-                        TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())))),
+        new DefaultBuildCellRelativePathFactory(
+            new FakeProjectFilesystem().getRootPath(), filesystem, Optional.empty()),
         immutableStepList,
         dest,
-        immutableSortedSet);
+        immutableSortedSet,
+        pathResolver);
 
     ImmutableList<Step> builtStepList = immutableStepList.build();
 

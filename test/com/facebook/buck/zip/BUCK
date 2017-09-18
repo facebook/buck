@@ -85,6 +85,7 @@ java_test(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/shell:steps",

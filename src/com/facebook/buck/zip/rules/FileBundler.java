@@ -18,9 +18,9 @@ package com.facebook.buck.zip.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
@@ -103,26 +103,27 @@ public abstract class FileBundler {
 
   public void copy(
       ProjectFilesystem filesystem,
-      BuildContext context,
+      BuildCellRelativePathFactory buildCellRelativePathFactory,
       ImmutableList.Builder<Step> steps,
       Path destinationDir,
-      ImmutableSortedSet<SourcePath> toCopy) {
+      ImmutableSortedSet<SourcePath> toCopy,
+      SourcePathResolver pathResolver) {
 
-    Map<Path, Path> relativeMap =
-        createRelativeMap(filesystem, context.getSourcePathResolver(), toCopy);
+    Map<Path, Path> relativeMap = createRelativeMap(filesystem, pathResolver, toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
       Path absolutePath = Preconditions.checkNotNull(pathEntry.getValue());
       Path destination = destinationDir.resolve(relativePath);
 
-      addCopySteps(filesystem, context, steps, relativePath, absolutePath, destination);
+      addCopySteps(
+          filesystem, buildCellRelativePathFactory, steps, relativePath, absolutePath, destination);
     }
   }
 
   protected abstract void addCopySteps(
       ProjectFilesystem filesystem,
-      BuildContext context,
+      BuildCellRelativePathFactory buildCellRelativePathFactory,
       ImmutableList.Builder<Step> steps,
       Path relativePath,
       Path absolutePath,

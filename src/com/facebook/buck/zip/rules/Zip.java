@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -38,6 +39,7 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasOutputName, SupportsInputBasedRuleKey {
@@ -97,7 +99,14 @@ public class Zip extends AbstractBuildRuleWithDeclaredAndExtraDeps
     } else {
       bundler = new CopyingFileBundler(getBuildTarget());
     }
-    bundler.copy(getProjectFilesystem(), context, steps, scratchDir, sources);
+    bundler.copy(
+        getProjectFilesystem(),
+        new DefaultBuildCellRelativePathFactory(
+            context.getBuildCellRootPath(), getProjectFilesystem(), Optional.empty()),
+        steps,
+        scratchDir,
+        sources,
+        context.getSourcePathResolver());
 
     steps.add(
         new ZipStep(
