@@ -23,15 +23,18 @@ import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleStatus;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 public class DistBuildPostBuildAnalysis {
@@ -97,16 +100,16 @@ public class DistBuildPostBuildAnalysis {
 
   private Map<String, BuildRuleMachineLogEntry> extractBuildRulesFromFile(Path machineLogFile)
       throws IOException {
-    try (Stream<String> logFiles = Files.lines(machineLogFile)) {
-      return extractBuildRules(logFiles);
-    }
+    List<String> logLines = Files.readAllLines(machineLogFile);
+    return extractBuildRules(logLines);
   }
 
   @VisibleForTesting
-  static Map<String, BuildRuleMachineLogEntry> extractBuildRules(Stream<String> lines)
+  static Map<String, BuildRuleMachineLogEntry> extractBuildRules(List<String> lines)
       throws IOException {
     List<String> ruleFinishedEvents =
         lines
+            .stream()
             .filter(line -> line.startsWith(PREFIX_BUILD_RULE_FINISHED))
             .map(line -> line.substring(PREFIX_BUILD_RULE_FINISHED.length()))
             .collect(Collectors.toList());
@@ -213,6 +216,38 @@ public class DistBuildPostBuildAnalysis {
     return outputLogFile;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  static class MinimalBuildRuleKeys {
+    @Nullable public RuleKey ruleKey;
+    @Nullable public RuleKey inputRuleKey;
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  static class MinimalBuildRuleInformation {
+    public String name = "";
+    public String type = "";
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  static class RuleDuration {
+    public long wallMillisDuration = 0;
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  static class RuleCacheResult {
+    @Nullable public CacheResultType type;
+  }
+
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  static class RuleFinishedEvent {
+    public MinimalBuildRuleKeys ruleKeys = new MinimalBuildRuleKeys();
+    public MinimalBuildRuleInformation buildRule = new MinimalBuildRuleInformation();
+    public RuleDuration duration = new RuleDuration();
+    @Nullable public BuildRuleStatus status;
+    public RuleCacheResult cacheResult = new RuleCacheResult();
+    public String outputHash = "";
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractBuildRuleMachineLogEntry {
@@ -236,38 +271,44 @@ public class DistBuildPostBuildAnalysis {
         throws IOException {
       BuildRuleMachineLogEntry.Builder builder = BuildRuleMachineLogEntry.builder();
 
-      // Using JsonNode.path instead of JsonNode.get to avoid intermediate null pointers.
-      JsonNode ruleFinishedEventNode = ObjectMappers.READER.readTree(json);
-      JsonNode ruleKeysNode = ruleFinishedEventNode.path("ruleKeys");
+      RuleFinishedEvent parsedJson =
+          ObjectMappers.READER.readValue(
+              ObjectMappers.createParser(json.getBytes(StandardCharsets.UTF_8)),
+              new TypeReference<RuleFinishedEvent>() {});
 
-      String ruleName = ruleFinishedEventNode.path("buildRule").path("name").asText();
-      if (ruleName.length() > 0) {
-        builder.setRuleName(ruleName);
+      if (!parsedJson.buildRule.name.isEmpty()) {
+        builder.setRuleName(parsedJson.buildRule.name);
       }
 
-      String ruleType = ruleFinishedEventNode.path("buildRule").path("type").asText();
-      if (ruleType.length() > 0) {
-        builder.setRuleType(ruleType);
+      if (!parsedJson.buildRule.type.isEmpty()) {
+        builder.setRuleType(parsedJson.buildRule.type);
       }
 
-      Long duration = ruleFinishedEventNode.path("duration").path("wallMillisDuration").asLong();
-      builder.setWallMillisDuration(duration);
+      builder.setWallMillisDuration(parsedJson.duration.wallMillisDuration);
 
-      builder.setRuleKey(ruleKeysNode.path("ruleKey").path("hashCode").asText());
+      if (parsedJson.ruleKeys.ruleKey == null) {
+        throw new RuntimeException(
+            String.format(
+                "Invalid entry in machine-log file. Missing default rule-key for rule name: [%s].",
+                parsedJson.buildRule.name));
+      }
+      builder.setRuleKey(parsedJson.ruleKeys.ruleKey.getHashCode().toString());
 
-      builder.setInputRuleKey(ruleKeysNode.path("inputRuleKey").path("hashCode").asText());
-
-      String buildRuleStatus = ruleFinishedEventNode.path("status").asText();
-      if (buildRuleStatus.length() > 0) {
-        builder.setBuildRuleStatus(BuildRuleStatus.valueOf(buildRuleStatus));
+      if (parsedJson.ruleKeys.inputRuleKey != null) {
+        builder.setInputRuleKey(parsedJson.ruleKeys.inputRuleKey.getHashCode().toString());
+      } else {
+        builder.setInputRuleKey("");
       }
 
-      String cacheResultType = ruleFinishedEventNode.path("cacheResult").path("type").asText();
-      if (cacheResultType.length() > 0) {
-        builder.setCacheResultType(CacheResultType.valueOf(cacheResultType));
+      if (parsedJson.status != null) {
+        builder.setBuildRuleStatus(parsedJson.status);
       }
 
-      builder.setOutputHash(ruleFinishedEventNode.path("outputHash").asText());
+      if (parsedJson.cacheResult.type != null) {
+        builder.setCacheResultType(parsedJson.cacheResult.type);
+      }
+
+      builder.setOutputHash(parsedJson.outputHash);
 
       return builder.build();
     }

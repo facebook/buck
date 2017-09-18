@@ -42,7 +42,7 @@ public class RuleKey {
 
   private final HashCode hashCode;
 
-  public RuleKey(HashCode hashCode) {
+  public RuleKey(@JsonProperty("hashCode") HashCode hashCode) {
     this.hashCode = hashCode;
   }
 

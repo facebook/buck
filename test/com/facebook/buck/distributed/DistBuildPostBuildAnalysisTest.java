@@ -147,7 +147,10 @@ public class DistBuildPostBuildAnalysisTest {
 
     Map<String, BuildRuleMachineLogEntry> resultMap =
         DistBuildPostBuildAnalysis.extractBuildRules(
-            ruleEvents.stream().map(event -> buildRuleFinishedAsMachineReadable(event)));
+            ruleEvents
+                .stream()
+                .map(event -> buildRuleFinishedAsMachineReadable(event))
+                .collect(Collectors.toList()));
 
     Assert.assertEquals(2, resultMap.keySet().size());
     Assert.assertTrue(
