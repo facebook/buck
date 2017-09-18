@@ -22,7 +22,7 @@
   <change-notes><![CDATA[
 <h3>3.3</h3>
 <ul>
-  <li>...</li>
+  <li>"Optimize Imports" now removes duplicate dependencies.</li>
 </ul>
 
 <h3>3.2</h3>
