@@ -30,6 +30,7 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.IOException;
@@ -295,6 +296,65 @@ public class SkylarkProjectBuildFileParserTest {
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage("Cannot parse extension file //src/test:build_rules.bzl");
     parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void canImportExtensionFromAnotherCell() throws Exception {
+    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path anotherCell = projectFilesystem.resolve("tp2");
+    Path extensionDirectory = anotherCell.resolve("ext");
+    Files.createDirectories(extensionDirectory);
+    Path extensionFile = extensionDirectory.resolve("build_rules.bzl");
+
+    parser =
+        SkylarkProjectBuildFileParser.using(
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(cell.getRoot())
+                .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+                .setIgnorePaths(ImmutableSet.of())
+                .setBuildFileName("BUCK")
+                .setDescriptions(cell.getAllDescriptions())
+                .setBuildFileImportWhitelist(ImmutableList.of())
+                .setPythonInterpreter("skylark")
+                .setCellRoots(ImmutableMap.of("tp2", anotherCell))
+                .build(),
+            BuckEventBusForTests.newInstance(),
+            SkylarkFilesystem.using(projectFilesystem),
+            new DefaultTypeCoercerFactory());
+
+    projectFilesystem.writeContentsToPath(
+        "load('@tp2//ext:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
+  public void attemptToLoadInvalidCellIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path anotherCell = projectFilesystem.resolve("tp2");
+    Path extensionDirectory = anotherCell.resolve("ext");
+    Files.createDirectories(extensionDirectory);
+    Path extensionFile = extensionDirectory.resolve("build_rules.bzl");
+
+    projectFilesystem.writeContentsToPath(
+        "load('@invalid_repo//ext:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage(
+        "@invalid_repo//ext:build_rules.bzl references an unknown repository invalid_repo");
+    getSingleRule(buildFile);
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

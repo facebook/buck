@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
+import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -253,15 +254,28 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
-   * @return The path to a Skylark extension. For example, for {@code load(//pkg:foo.bzl)} import it
-   *     would return {@code /path/to/repo/pkg/foo.bzl}. Current implementation does not support
-   *     imports from other cells, so {@link #EMPTY_LABEL} is used for resolving paths of imports.
-   *     TODO(ttsugrii): add support for imports from other cells.
+   * @return The path to a Skylark extension. For example, for {@code load("//pkg:foo.bzl", "foo")}
+   *     import it would return {@code /path/to/repo/pkg/foo.bzl} and for {@code
+   *     load("@repo//pkg:foo.bzl", "foo")} it would return {@code /repo/pkg/foo.bzl} assuming that
+   *     {@code repo} is located at {@code /repo}.
    */
-  private com.google.devtools.build.lib.vfs.Path getImportPath(SkylarkImport skylarkImport) {
-    PathFragment relativeExtensionPath = skylarkImport.getLabel(EMPTY_LABEL).toPathFragment();
-    return fileSystem.getPath(
-        options.getProjectRoot().resolve(relativeExtensionPath.toString()).toString());
+  private com.google.devtools.build.lib.vfs.Path getImportPath(SkylarkImport skylarkImport)
+      throws BuildFileParseException {
+    Label extensionLabel = skylarkImport.getLabel(EMPTY_LABEL);
+    PathFragment relativeExtensionPath = extensionLabel.toPathFragment();
+    RepositoryName repository = extensionLabel.getPackageIdentifier().getRepository();
+    if (repository.isMain()) {
+      return fileSystem.getPath(
+          options.getProjectRoot().resolve(relativeExtensionPath.toString()).toString());
+    }
+    // Skylark repositories have an "@" prefix, but Buck roots do not, so ignore it
+    String repositoryName = repository.getName().substring(1);
+    @Nullable Path repositoryPath = options.getCellRoots().get(repositoryName);
+    if (repositoryPath == null) {
+      throw BuildFileParseException.createForUnknownParseError(
+          skylarkImport.getImportString() + " references an unknown repository " + repositoryName);
+    }
+    return fileSystem.getPath(repositoryPath.resolve(relativeExtensionPath.toString()).toString());
   }
 
   /**
