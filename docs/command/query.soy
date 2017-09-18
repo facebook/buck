@@ -713,7 +713,21 @@ buck query testsof(deps(set('//foo:bar' '//foo:baz')))
   <p>
   Outputs the digraph representing the query results in <a href=
   "https://en.wikipedia.org/wiki/DOT_(graph_description_language)#Directed_graphs">
-  dot format</a>. Example usage:
+  dot format</a>.
+  The nodes will be colored according to their type.
+  See <a href="http://www.graphviz.org/doc/info/colors.html">graphviz.org</a> for color definitions.
+<p><pre class="prettyprint lang-py">
+{literal}
+android_aar          : springgreen2
+android_library      : springgreen3
+android_resource     : springgreen1
+android_prebuilt_aar : olivedrab3
+java_library         : indianred1
+prebuilt_jar         : mediumpurple1
+{/literal}
+</pre></p>
+
+  Example usage:
   </p>
 
 <p><pre class="prettyprint lang-py">
