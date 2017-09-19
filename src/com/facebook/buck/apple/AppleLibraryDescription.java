@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
+import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
@@ -58,9 +59,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -69,6 +73,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -86,7 +91,8 @@ public class AppleLibraryDescription
         ImplicitDepsInferringDescription<
             AppleLibraryDescription.AbstractAppleLibraryDescriptionArg>,
         ImplicitFlavorsInferringDescription,
-        MetadataProvidingDescription<AppleLibraryDescriptionArg> {
+        MetadataProvidingDescription<AppleLibraryDescriptionArg>,
+        CxxLibraryDescriptionDelegate {
 
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS =
@@ -165,6 +171,7 @@ public class AppleLibraryDescription
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -174,7 +181,8 @@ public class AppleLibraryDescription
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig,
-      SwiftBuckConfig swiftBuckConfig) {
+      SwiftBuckConfig swiftBuckConfig,
+      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain) {
     this.delegate = delegate;
     this.swiftDelegate =
         appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
@@ -184,6 +192,7 @@ public class AppleLibraryDescription
     this.provisioningProfileStore = provisioningProfileStore;
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.swiftPlatformFlavorDomain = swiftPlatformFlavorDomain;
   }
 
   @Override
@@ -530,6 +539,8 @@ public class AppleLibraryDescription
     if (existingRule.isPresent()) {
       return existingRule.get();
     } else {
+      Optional<CxxLibraryDescriptionDelegate> cxxDelegate =
+          swiftDelegate.isPresent() ? Optional.empty() : Optional.of(this);
       BuildRule rule =
           delegate.createBuildRule(
               unstrippedTarget,
@@ -543,7 +554,7 @@ public class AppleLibraryDescription
               blacklist,
               extraCxxDeps,
               transitiveCxxDeps,
-              Optional.empty());
+              cxxDelegate);
       return resolver.addToIndex(rule);
     }
   }
@@ -738,6 +749,66 @@ public class AppleLibraryDescription
     @Value.Default
     default boolean isModular() {
       return false;
+    }
+  }
+
+  // CxxLibraryDescriptionDelegate
+
+  private static boolean targetContainsSwift(BuildTarget target, BuildRuleResolver resolver) {
+    BuildTarget metadataTarget = target.withFlavors(MetadataType.APPLE_SWIFT_METADATA.getFlavor());
+    Optional<AppleLibrarySwiftMetadata> metadata =
+        resolver.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class);
+    return metadata.map(m -> !m.getSwiftSources().isEmpty()).orElse(false);
+  }
+
+  public static Optional<CxxPreprocessorInput> queryMetadataCxxSwiftPreprocessorInput(
+      BuildRuleResolver resolver, BuildTarget baseTarget, CxxPlatform platform) {
+    if (!targetContainsSwift(baseTarget, resolver)) {
+      return Optional.empty();
+    }
+
+    return resolver.requireMetadata(
+        baseTarget.withAppendedFlavors(
+            MetadataType.APPLE_SWIFT_PREPROCESSOR_INPUT.getFlavor(), platform.getFlavor()),
+        CxxPreprocessorInput.class);
+  }
+
+  @Override
+  public Optional<CxxPreprocessorInput> getPreprocessorInput(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
+    if (!targetContainsSwift(target, resolver)) {
+      return Optional.empty();
+    }
+
+    return queryMetadataCxxSwiftPreprocessorInput(resolver, target, platform);
+  }
+
+  @Override
+  public Optional<ImmutableList<SourcePath>> getObjectFilePaths(
+      BuildTarget target, BuildRuleResolver resolver) {
+    if (!targetContainsSwift(target, resolver)) {
+      return Optional.empty();
+    }
+
+    BuildTarget targetWithoutType = target.withoutFlavors(LIBRARY_TYPE.getFlavors());
+    BuildTarget swiftTarget = targetWithoutType.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
+    SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftTarget);
+    return Optional.of(ImmutableList.of(compile.getObjectPath()));
+  }
+
+  @Override
+  public void populateLinkerArguments(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      Linker.LinkableDepType type,
+      ImmutableList.Builder<Arg> argsBuilder) {
+    if (!targetContainsSwift(target, resolver)) {
+      return;
+    }
+
+    Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(target);
+    if (swiftPlatform.isPresent()) {
+      SwiftRuntimeNativeLinkable.populateLinkerArguments(argsBuilder, swiftPlatform.get(), type);
     }
   }
 }

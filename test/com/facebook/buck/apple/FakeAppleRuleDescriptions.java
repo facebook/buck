@@ -231,7 +231,8 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
           DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
-          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG));
+          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
+          DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
 
   /** A fake apple_binary description with an iOS platform for use in tests. */
   public static final AppleBinaryDescription BINARY_DESCRIPTION =
