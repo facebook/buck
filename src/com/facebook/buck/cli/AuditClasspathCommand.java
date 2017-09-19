@@ -182,7 +182,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                 ActionGraphCache.getFreshActionGraph(
                     params.getBuckEventBus(),
                     targetGraph,
-                    params.getBuckConfig().isActionGraphParallelizationEnabled()))
+                    params.getBuckConfig().getActionGraphParallelizationMode()))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -223,7 +223,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                 ActionGraphCache.getFreshActionGraph(
                     params.getBuckEventBus(),
                     targetGraph,
-                    params.getBuckConfig().isActionGraphParallelizationEnabled()))
+                    params.getBuckConfig().getActionGraphParallelizationMode()))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

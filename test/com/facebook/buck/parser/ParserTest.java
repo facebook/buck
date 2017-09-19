@@ -31,6 +31,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.ConfigBuilder;
@@ -2206,7 +2207,8 @@ public class ParserTest {
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
-            ActionGraphCache.getFreshActionGraph(eventBus, targetGraph, false))
+            ActionGraphCache.getFreshActionGraph(
+                eventBus, targetGraph, ActionGraphParallelizationMode.DISABLED))
         .getResolver();
   }
 

@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
+import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
@@ -206,7 +207,7 @@ public class DistBuildSlaveExecutor {
                 /* skipActionGraphCache */ false,
                 Preconditions.checkNotNull(targetGraph),
                 args.getCacheKeySeed(),
-                false);
+                ActionGraphParallelizationMode.DISABLED);
     tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }

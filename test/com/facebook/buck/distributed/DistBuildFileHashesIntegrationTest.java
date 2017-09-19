@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -206,7 +207,12 @@ public class DistBuildFileHashesIntegrationTest {
     ActionGraphCache cache = new ActionGraphCache();
     ActionGraphAndResolver actionGraphAndResolver =
         cache.getActionGraph(
-            BuckEventBusForTests.newInstance(), true, false, targetGraph, KEY_SEED, false);
+            BuckEventBusForTests.newInstance(),
+            true,
+            false,
+            targetGraph,
+            KEY_SEED,
+            ActionGraphParallelizationMode.DISABLED);
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);

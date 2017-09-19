@@ -37,6 +37,7 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.apple.xcode.XCScheme;
+import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -932,7 +933,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ActionGraphCache.getFreshActionGraph(
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
-                false)
+                ActionGraphParallelizationMode.DISABLED)
             .getResolver();
   }
 }

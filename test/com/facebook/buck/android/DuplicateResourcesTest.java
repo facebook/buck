@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescription;
@@ -250,7 +251,7 @@ public class DuplicateResourcesTest {
                 new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1))),
             new DefaultTargetNodeToBuildRuleTransformer(),
             targetGraph,
-            false);
+            ActionGraphParallelizationMode.DISABLED);
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(

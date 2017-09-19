@@ -16,9 +16,11 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
@@ -27,6 +29,7 @@ import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -69,7 +72,7 @@ public class ActionGraphCache {
         buckConfig.isSkipActionGraphCache(),
         targetGraph,
         buckConfig.getKeySeed(),
-        buckConfig.isActionGraphParallelizationEnabled());
+        buckConfig.getActionGraphParallelizationMode());
   }
 
   /**
@@ -90,7 +93,7 @@ public class ActionGraphCache {
       final boolean skipActionGraphCache,
       final TargetGraph targetGraph,
       int keySeed,
-      boolean shouldParallelize) {
+      ActionGraphParallelizationMode parallelizationMode) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndResolver out;
@@ -102,7 +105,7 @@ public class ActionGraphCache {
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
           compareActionGraphs(
-              eventBus, lastActionGraph.getSecond(), targetGraph, fieldLoader, shouldParallelize);
+              eventBus, lastActionGraph.getSecond(), targetGraph, fieldLoader, parallelizationMode);
         }
         out = lastActionGraph.getSecond();
       } else {
@@ -125,7 +128,7 @@ public class ActionGraphCache {
                     eventBus,
                     new DefaultTargetNodeToBuildRuleTransformer(),
                     targetGraph,
-                    shouldParallelize));
+                    parallelizationMode));
         out = freshActionGraph.getSecond();
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment. skipActionGraphCache? %s", skipActionGraphCache);
@@ -145,13 +148,15 @@ public class ActionGraphCache {
    *
    * @param eventBus the {@link BuckEventBus} to post the events of the processing.
    * @param targetGraph the target graph that the action graph will be based on.
-   * @param shouldParallelize
+   * @param parallelizationMode
    * @return a {@link ActionGraphAndResolver}
    */
   public static ActionGraphAndResolver getFreshActionGraph(
-      final BuckEventBus eventBus, final TargetGraph targetGraph, boolean shouldParallelize) {
+      final BuckEventBus eventBus,
+      final TargetGraph targetGraph,
+      ActionGraphParallelizationMode parallelizationMode) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
-    return getFreshActionGraph(eventBus, transformer, targetGraph, shouldParallelize);
+    return getFreshActionGraph(eventBus, transformer, targetGraph, parallelizationMode);
   }
 
   /**
@@ -162,19 +167,19 @@ public class ActionGraphCache {
    * @param transformer Custom {@link TargetNodeToBuildRuleTransformer} that the transformation will
    *     be based on.
    * @param targetGraph The target graph that the action graph will be based on.
-   * @param shouldParallelize
+   * @param parallelizationMode
    * @return It returns a {@link ActionGraphAndResolver}
    */
   public static ActionGraphAndResolver getFreshActionGraph(
       final BuckEventBus eventBus,
       final TargetNodeToBuildRuleTransformer transformer,
       final TargetGraph targetGraph,
-      boolean shouldParallelize) {
+      ActionGraphParallelizationMode parallelizationMode) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
     ActionGraphAndResolver actionGraph =
-        createActionGraph(eventBus, transformer, targetGraph, shouldParallelize);
+        createActionGraph(eventBus, transformer, targetGraph, parallelizationMode);
 
     eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
     return actionGraph;
@@ -184,12 +189,25 @@ public class ActionGraphCache {
       final BuckEventBus eventBus,
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      boolean shouldParallelize) {
-    if (shouldParallelize) {
-      return createActionGraphInParallel(eventBus, transformer, targetGraph);
-    } else {
-      return createActionGraphSerially(eventBus, transformer, targetGraph);
+      ActionGraphParallelizationMode parallelizationMode) {
+    if (parallelizationMode == ActionGraphParallelizationMode.EXPERIMENT) {
+      parallelizationMode =
+          RandomizedTrial.getGroupStable(
+              "action_graph_parallelization", ActionGraphParallelizationMode.class);
     }
+    eventBus.post(
+        new ExperimentEvent(
+            "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
+    switch (parallelizationMode) {
+      case ENABLED:
+        return createActionGraphInParallel(eventBus, transformer, targetGraph);
+      case DISABLED:
+        return createActionGraphSerially(eventBus, transformer, targetGraph);
+      case EXPERIMENT:
+        throw new AssertionError(
+            "EXPERIMENT value should have been resolved to ENABLED or DISABLED.");
+    }
+    throw new AssertionError("Unexpected parallelization mode value: " + parallelizationMode);
   }
 
   private static ActionGraphAndResolver createActionGraphInParallel(
@@ -297,7 +315,7 @@ public class ActionGraphCache {
       final ActionGraphAndResolver lastActionGraphAndResolver,
       final TargetGraph targetGraph,
       final RuleKeyFieldLoader fieldLoader,
-      boolean shouldParallelize) {
+      ActionGraphParallelizationMode parallelizationMode) {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a
@@ -310,7 +328,7 @@ public class ActionGraphCache {
                   eventBus,
                   new DefaultTargetNodeToBuildRuleTransformer(),
                   targetGraph,
-                  shouldParallelize));
+                  parallelizationMode));
 
       Map<BuildRule, RuleKey> lastActionGraphRuleKeys =
           getRuleKeysFromBuildRules(
