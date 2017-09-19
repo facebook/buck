@@ -21,10 +21,14 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
+import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -127,6 +131,7 @@ public class AppleLibraryDescription
 
   enum MetadataType implements FlavorConvertible {
     APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
+    APPLE_SWIFT_OBJC_CXX_HEADERS(InternalFlavor.of("swift-objc-cxx-headers")),
     ;
 
     private final Flavor flavor;
@@ -601,12 +606,25 @@ public class AppleLibraryDescription
         METADATA_TYPE.getFlavorAndValue(buildTarget);
 
     if (metaType.isPresent()) {
+      BuildTarget baseTarget = buildTarget.withoutFlavors(metaType.get().getKey());
       switch (metaType.get().getValue()) {
         case APPLE_SWIFT_METADATA:
           {
             AppleLibrarySwiftMetadata metadata =
                 AppleLibrarySwiftMetadata.from(args.getSrcs(), pathResolver);
             return Optional.of(metadata).map(metadataClass::cast);
+          }
+
+        case APPLE_SWIFT_OBJC_CXX_HEADERS:
+          {
+            BuildTarget swiftHeadersTarget =
+                baseTarget.withAppendedFlavors(Type.SWIFT_OBJC_GENERATED_HEADER.getFlavor());
+            HeaderSymlinkTreeWithHeaderMap headersRule =
+                (HeaderSymlinkTreeWithHeaderMap) resolver.requireRule(swiftHeadersTarget);
+
+            CxxHeaders headers =
+                CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
+            return Optional.of(headers).map(metadataClass::cast);
           }
       }
     }
