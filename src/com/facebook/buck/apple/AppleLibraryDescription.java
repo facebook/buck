@@ -22,6 +22,7 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
+import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -57,6 +58,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -132,6 +134,7 @@ public class AppleLibraryDescription
   enum MetadataType implements FlavorConvertible {
     APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
     APPLE_SWIFT_OBJC_CXX_HEADERS(InternalFlavor.of("swift-objc-cxx-headers")),
+    APPLE_SWIFT_MODULE_CXX_HEADERS(InternalFlavor.of("swift-module-cxx-headers")),
     ;
 
     private final Flavor flavor;
@@ -624,6 +627,17 @@ public class AppleLibraryDescription
 
             CxxHeaders headers =
                 CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
+            return Optional.of(headers).map(metadataClass::cast);
+          }
+
+        case APPLE_SWIFT_MODULE_CXX_HEADERS:
+          {
+            BuildTarget swiftCompileTarget =
+                baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
+            SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftCompileTarget);
+
+            CxxHeaders headers =
+                CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
             return Optional.of(headers).map(metadataClass::cast);
           }
       }
