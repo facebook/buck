@@ -52,7 +52,8 @@ public class InputPathTypeCoercerTest {
   }
 
   @Before
-  public void setUpCellRoots() {}
+  public void setUpCellRoots() {
+  }
 
   @Rule
   public ExpectedException exception = ExpectedException.none();
