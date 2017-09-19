@@ -58,7 +58,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
-class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private static final String INCLUDE_FLAG = "-I";
 

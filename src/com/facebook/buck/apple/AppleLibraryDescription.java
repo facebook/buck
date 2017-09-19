@@ -110,6 +110,7 @@ public class AppleLibraryDescription
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
     SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
+    SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_FLAVOR),
     ;
 
     private final Flavor flavor;
@@ -222,6 +223,9 @@ public class AppleLibraryDescription
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
           targetGraph, buildTarget, projectFilesystem, params, resolver, args);
+    } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
+      return AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
+          buildTarget, projectFilesystem, resolver);
     } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_COMPILE)) {
       CxxPlatform cxxPlatform =
           delegate
