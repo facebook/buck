@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -287,13 +286,6 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), objectPath)));
   }
 
-  /** @return {@link SourcePath} relative to the project filesystem given a {@link Path}. */
-  private SourcePath buildSourcePathForPath(Path path) {
-    ProjectFilesystem fs = getProjectFilesystem();
-    Path relativePath = fs.getRootPath().relativize(path.toAbsolutePath());
-    return new PathSourcePath(fs, relativePath);
-  }
-
   /** @return The name of the Swift module. */
   public String getModuleName() {
     return moduleName;
@@ -312,7 +304,7 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   /** @return {@link SourcePath} of the Objective-C Generated Interface Header. */
   public SourcePath getObjCGeneratedHeaderPath() {
-    return buildSourcePathForPath(headerPath);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), headerPath);
   }
 
   /**
@@ -320,6 +312,6 @@ class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
    *     (object files, Swift module metadata, etc).
    */
   public SourcePath getOutputPath() {
-    return buildSourcePathForPath(outputPath);
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
   }
 }
