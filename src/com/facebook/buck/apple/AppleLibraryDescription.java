@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -135,6 +136,7 @@ public class AppleLibraryDescription
     APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
     APPLE_SWIFT_OBJC_CXX_HEADERS(InternalFlavor.of("swift-objc-cxx-headers")),
     APPLE_SWIFT_MODULE_CXX_HEADERS(InternalFlavor.of("swift-module-cxx-headers")),
+    APPLE_SWIFT_PREPROCESSOR_INPUT(InternalFlavor.of("swift-preprocessor-input")),
     ;
 
     private final Flavor flavor;
@@ -639,6 +641,28 @@ public class AppleLibraryDescription
             CxxHeaders headers =
                 CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
             return Optional.of(headers).map(metadataClass::cast);
+          }
+
+        case APPLE_SWIFT_PREPROCESSOR_INPUT:
+          {
+            BuildTarget moduleHeadersTarget =
+                baseTarget.withAppendedFlavors(
+                    MetadataType.APPLE_SWIFT_MODULE_CXX_HEADERS.getFlavor());
+            Optional<CxxHeaders> moduleHeaders =
+                resolver.requireMetadata(moduleHeadersTarget, CxxHeaders.class);
+
+            BuildTarget objcHeadersTarget =
+                baseTarget.withAppendedFlavors(
+                    MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
+            Optional<CxxHeaders> objcHeaders =
+                resolver.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+
+            CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+            moduleHeaders.ifPresent(s -> builder.addIncludes(s));
+            objcHeaders.ifPresent(s -> builder.addIncludes(s));
+
+            CxxPreprocessorInput input = builder.build();
+            return Optional.of(input).map(metadataClass::cast);
           }
       }
     }
