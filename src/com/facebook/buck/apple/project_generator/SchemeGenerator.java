@@ -313,6 +313,7 @@ class SchemeGenerator {
 
   public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
     Element testActionElem = doc.createElement("TestAction");
+    // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
     Element testablesElem = doc.createElement("Testables");
@@ -328,6 +329,7 @@ class SchemeGenerator {
     }
 
     if (testAction.getEnvironmentVariables().isPresent()) {
+      // disable the default override that makes Test use Launch's environment variables
       testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
@@ -380,6 +382,7 @@ class SchemeGenerator {
 
   public static Element serializeProfileAction(Document doc, XCScheme.ProfileAction profileAction) {
     Element profileActionElem = doc.createElement("ProfileAction");
+    // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
     Element productRunnableElem = doc.createElement("BuildableProductRunnable");
@@ -389,6 +392,7 @@ class SchemeGenerator {
     productRunnableElem.appendChild(refElem);
 
     if (profileAction.getEnvironmentVariables().isPresent()) {
+      // disable the default override that makes Profile use Launch's environment variables
       profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
