@@ -20,7 +20,7 @@ from timing import monotonic_time_nanos
 from tracing import Tracing
 from subprocutils import check_output, which, CalledProcessError
 
-BUCKD_CLIENT_TIMEOUT_MILLIS = 60000
+BUCKD_CLIENT_TIMEOUT_MILLIS = 120000
 GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
