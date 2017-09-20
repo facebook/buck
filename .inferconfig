@@ -9,6 +9,5 @@
     "src/com/facebook/buck/testrunner",
     "src-gen"
   ],
-  "skip-duplicated-types": false,
-  "keep-going": false
+  "skip-duplicated-types": false
 }
