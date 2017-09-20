@@ -110,15 +110,29 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public <T extends BuildRule> T addToIndex(T buildRule) {
-    Task<BuildRule> future =
-        buildRuleIndex.computeIfAbsent(
-            buildRule.getBuildTarget(), key -> Task.completed(buildRule));
-    if (future.isDone()) {
-      BuildRule oldValue = Futures.getUnchecked(future);
-      Preconditions.checkState(
-          oldValue == buildRule,
-          "A build rule for this target has already been created: " + oldValue.getBuildTarget());
-    }
+    buildRuleIndex.compute(
+        buildRule.getBuildTarget(),
+        (key, existing) -> {
+          if (existing != null) {
+            if (existing.isDone()) {
+              BuildRule oldValue = Futures.getUnchecked(existing);
+              Preconditions.checkState(
+                  oldValue == buildRule,
+                  "A build rule for this target has already been created: "
+                      + oldValue.getBuildTarget());
+            } else {
+              // If a future already exist and is incomplete, complete it. This supports cases where
+              // the construction of a rule is delegated to another rule, which actually constructs
+              // the first rule. (Ex: flavors of AndroidBinary)
+              // Ex: requireRule(foo)     -> addToIndex(foo#bar) -> return foo
+              //     requireRule(foo#bar) -> requireRule(foo)    -> return getRule(foo#bar)
+              existing.complete(buildRule);
+            }
+            return existing;
+          } else {
+            return Task.completed(buildRule);
+          }
+        });
     return buildRule;
   }
 
@@ -189,6 +203,12 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
     @Override
     public final boolean isBeingWorkedOnByCurrentThread() {
       return Thread.currentThread() == workThread;
+    }
+
+    @Override
+    public void complete(V value) {
+      super.complete(value);
+      workThread = null;
     }
 
     static <V> Task<V> completed(V value) {
