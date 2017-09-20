@@ -269,7 +269,7 @@ public class BuildInfoRecorder {
   /**
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
-  public void performUploadToArtifactCache(
+  public ListenableFuture<Void> performUploadToArtifactCache(
       final ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
       final BuckEventBus eventBus) {
@@ -277,7 +277,7 @@ public class BuildInfoRecorder {
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
     if (!artifactCache.getCacheReadMode().isWritable()) {
-      return;
+      return Futures.immediateFuture(null);
     }
 
     ArtifactCompressionEvent.Started started =
@@ -300,7 +300,7 @@ public class BuildInfoRecorder {
               "Failed to create zip for %s containing:\n%s",
               buildTarget, Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
       e.printStackTrace();
-      return;
+      return Futures.immediateFuture(null);
     } finally {
       eventBus.post(ArtifactCompressionEvent.finished(started));
     }
@@ -337,6 +337,8 @@ public class BuildInfoRecorder {
             }
           }
         });
+
+    return storeFuture;
   }
 
   /** @param pathToArtifact Relative path to the project root. */

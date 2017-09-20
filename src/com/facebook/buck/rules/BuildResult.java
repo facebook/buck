@@ -17,6 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import javax.annotation.Nullable;
 
 /**
@@ -30,6 +32,9 @@ public class BuildResult {
   private final BuildRuleStatus status;
   private final CacheResult cacheResult;
 
+  // Signals that the cache upload for this rule (if there were one) has completed.
+  private final ListenableFuture<Void> uploadCompleteFuture;
+
   @Nullable private final BuildRuleSuccessType success;
   @Nullable private final Throwable failure;
 
@@ -37,26 +42,50 @@ public class BuildResult {
       BuildRule rule,
       BuildRuleStatus status,
       CacheResult cacheResult,
+      ListenableFuture<Void> uploadCompleteFuture,
       @Nullable BuildRuleSuccessType success,
       @Nullable Throwable failure) {
     this.rule = rule;
     this.status = status;
     this.cacheResult = cacheResult;
+    this.uploadCompleteFuture = uploadCompleteFuture;
     this.success = success;
     this.failure = failure;
   }
 
   public static BuildResult success(
       BuildRule rule, BuildRuleSuccessType success, CacheResult cacheResult) {
-    return new BuildResult(rule, BuildRuleStatus.SUCCESS, cacheResult, success, null);
+    return new BuildResult(
+        rule, BuildRuleStatus.SUCCESS, cacheResult, Futures.immediateFuture(null), success, null);
+  }
+
+  public static BuildResult success(
+      BuildRule rule,
+      BuildRuleSuccessType success,
+      CacheResult cacheResult,
+      ListenableFuture<Void> uploadCompleteFuture) {
+    return new BuildResult(
+        rule, BuildRuleStatus.SUCCESS, cacheResult, uploadCompleteFuture, success, null);
   }
 
   public static BuildResult failure(BuildRule rule, Throwable failure) {
-    return new BuildResult(rule, BuildRuleStatus.FAIL, CacheResult.miss(), null, failure);
+    return new BuildResult(
+        rule,
+        BuildRuleStatus.FAIL,
+        CacheResult.miss(),
+        Futures.immediateFuture(null),
+        null,
+        failure);
   }
 
   public static BuildResult canceled(BuildRule rule, Throwable failure) {
-    return new BuildResult(rule, BuildRuleStatus.CANCELED, CacheResult.miss(), null, failure);
+    return new BuildResult(
+        rule,
+        BuildRuleStatus.CANCELED,
+        CacheResult.miss(),
+        Futures.immediateFuture(null),
+        null,
+        failure);
   }
 
   public BuildRule getRule() {
@@ -69,6 +98,10 @@ public class BuildResult {
 
   CacheResult getCacheResult() {
     return cacheResult;
+  }
+
+  public ListenableFuture<Void> getUploadCompleteFuture() {
+    return uploadCompleteFuture;
   }
 
   @Nullable
