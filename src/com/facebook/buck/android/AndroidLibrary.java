@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
@@ -70,7 +69,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
       AndroidLibraryDescription.CoreArg args,
-      AndroidLibraryCompilerFactory compilerFactory) {
+      ConfiguredCompilerFactory compilerFactory) {
     return new Builder(
         targetGraph,
         buildTarget,
@@ -123,10 +122,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public static class Builder extends DefaultJavaLibraryBuilder {
     private final AndroidLibraryDescription.CoreArg args;
-    private final AndroidLibraryCompilerFactory compilerFactory;
+    private final ConfiguredCompilerFactory androidCompiler;
 
-    private AndroidLibraryDescription.JvmLanguage language =
-        AndroidLibraryDescription.JvmLanguage.JAVA;
     private Optional<SourcePath> androidManifest = Optional.empty();
 
     protected Builder(
@@ -139,7 +136,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         JavaBuckConfig javaBuckConfig,
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
-        AndroidLibraryCompilerFactory compilerFactory) {
+        ConfiguredCompilerFactory compilerFactory) {
       super(
           targetGraph,
           buildTarget,
@@ -149,7 +146,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           cellRoots,
           javaBuckConfig);
       this.args = args;
-      this.compilerFactory = compilerFactory;
+      androidCompiler = compilerFactory;
+      setConfiguredCompilerFactory(compilerFactory);
       setJavacOptions(javacOptions);
       setArgs(args);
       // Set only if this is not Scala/Kotlin
@@ -162,7 +160,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
       super.setArgs(args);
       AndroidLibraryDescription.CoreArg androidArgs = (AndroidLibraryDescription.CoreArg) args;
-      language = androidArgs.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA);
 
       if (androidArgs.getProvidedDepsQuery().isPresent()) {
         Query providedDepsQuery = androidArgs.getProvidedDepsQuery().get();
@@ -195,7 +192,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Nullable private ConfiguredCompilerFactory androidCompiler;
       @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
       @Override
@@ -232,7 +228,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             Optional.empty(), // ManifestFile for androidLibrary is something else
             postprocessClassesCommands,
             getAbiClasspath(),
-            getAndroidCompiler().trackClassUsage(Preconditions.checkNotNull(getJavacOptions())),
+            androidCompiler.trackClassUsage(Preconditions.checkNotNull(getJavacOptions())),
             getFinalCompileTimeClasspathSourcePaths(),
             classesToRemoveFromJar,
             getRequiredForSourceAbi());
@@ -296,20 +292,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             .concat(RichStream.from(getDummyRDotJava()))
             .concat(RichStream.fromSupplierOfIterable(buildQueriedDepsSupplier()))
             .toImmutableSortedSet(Ordering.natural());
-      }
-
-      @Override
-      protected ConfiguredCompiler buildConfiguredCompiler() {
-        return getAndroidCompiler()
-            .configure(args, Preconditions.checkNotNull(getJavacOptions()), buildRuleResolver);
-      }
-
-      protected ConfiguredCompilerFactory getAndroidCompiler() {
-        if (androidCompiler == null) {
-          androidCompiler = compilerFactory.getCompiler(language);
-        }
-
-        return androidCompiler;
       }
     }
   }
