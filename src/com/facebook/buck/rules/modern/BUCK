@@ -1,7 +1,28 @@
+TYPES = [
+    "InputPath.java",
+    "LimitedSourcePath.java",
+    "OutputPath.java"
+]
+java_library(
+    name = "types",
+    srcs = TYPES,
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/rules:source_path",
+        "//third-party/java/guava:guava",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/rules/coercer:coercer",
+    ],
+)
+
 java_library(
     name = "modern",
     srcs = glob(["**/*.java"]),
     visibility = ["PUBLIC"],
+    exported_deps = [
+        ":types",
+    ],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
