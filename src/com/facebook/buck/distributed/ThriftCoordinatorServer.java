@@ -47,6 +47,7 @@ public class ThriftCoordinatorServer implements Closeable {
 
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
+  private static final long SHUTDOWN_PRE_WAIT_MILLIS = 100;
   private static final long MAX_TEAR_DOWN_MILLIS = TimeUnit.SECONDS.toMillis(2);
   private static final long MAX_DIST_BUILD_DURATION_MILLIS = TimeUnit.HOURS.toMillis(2);
 
@@ -97,6 +98,16 @@ public class ThriftCoordinatorServer implements Closeable {
 
   public ThriftCoordinatorServer stop() throws IOException {
     synchronized (lock) {
+      try {
+        // Give the Thrift server time to complete any remaining items
+        // (i.e. returning a response to the final minion, telling it to shut down).
+        // TODO(alisdair, ruibm): minion should be able to handle coordinator failure.
+        Thread.sleep(SHUTDOWN_PRE_WAIT_MILLIS);
+      } catch (InterruptedException e) {
+        LOG.error(e);
+        Thread.currentThread().interrupt(); // Reset interrupted state
+      }
+
       Preconditions.checkNotNull(server, "Server has already been stopped.").stop();
       server = null;
       try {
