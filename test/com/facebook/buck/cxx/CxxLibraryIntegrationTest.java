@@ -81,7 +81,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_cxx_library", tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:main#iphonesimulator-i386").assertSuccess();
+    workspace.runBuckBuild("//:main#iphonesimulator-x86_64").assertSuccess();
   }
 
   @Test
@@ -92,7 +92,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_cxx_library", tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:lib#iphonesimulator-i386,static").assertSuccess();
+    workspace.runBuckBuild("//:lib#iphonesimulator-x86_64,static").assertSuccess();
   }
 
   @Test

@@ -1,9 +1,9 @@
-Xcode version: Xcode 8.3 Build version 8E1000a
+Xcode version: Xcode 9.0 Build version 9A235
 xctool commit: d86432ec74062e5b560dc7e3d41803b0f16cda13
-fbxctest commit: ebb0306e6764ecea328750c761d8cb5104f49208
+fbxctest commit: 3e9110f27f2bd2be5c13270a84038791b6cb368d
 
 1. Download and build xctool from https://github.com/facebook/xctool.
 2. You will need to move the lib folder to the directory of fbxctest.
 3. Download and build fbxctest from https://github.com/facebook/FBSimulatorControl.
 4. Move the contents of the build output directory to this directory.
-5. Delete all symlinks and headers inside the frameworks.
+5. Delete all headers, modules and related symlinks inside the frameworks.
