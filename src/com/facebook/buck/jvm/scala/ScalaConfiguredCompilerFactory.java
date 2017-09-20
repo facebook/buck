@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Optionals;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import javax.annotation.Nullable;
 
@@ -65,13 +66,13 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public ConfiguredCompiler configure(
-      JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      @Nullable JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 
     return new ScalacToJarStepFactory(
         getScalac(resolver),
         resolver.getRule(scalaBuckConfig.getScalaLibraryTarget()),
         scalaBuckConfig.getCompilerFlags(),
-        arg.getExtraArguments(),
+        Preconditions.checkNotNull(arg.getExtraArguments()),
         resolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
         getJavac(resolver, arg),
         javacOptions,
@@ -89,7 +90,7 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
   }
 
-  private Javac getJavac(BuildRuleResolver resolver, JvmLibraryArg arg) {
+  private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
     return JavacFactory.create(new SourcePathRuleFinder(resolver), javaBuckConfig, arg);
   }
 }

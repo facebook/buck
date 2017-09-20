@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -117,7 +118,7 @@ public class KotlinLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
-    KotlinLibraryBuilder defaultKotlinLibraryBuilder =
+    DefaultJavaLibraryBuilder defaultKotlinLibraryBuilder =
         new KotlinLibraryBuilder(
                 targetGraph,
                 buildTarget,

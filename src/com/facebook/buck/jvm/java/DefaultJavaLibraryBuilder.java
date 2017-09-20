@@ -75,6 +75,7 @@ public class DefaultJavaLibraryBuilder {
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions initialJavacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
+  @Nullable private ConfiguredCompilerFactory configuredCompilerFactory = null;
   @Nullable private ConfiguredCompiler configuredCompiler;
 
   protected DefaultJavaLibraryBuilder(
@@ -232,6 +233,12 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setClassesToRemoveFromJar(
       RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     this.classesToRemoveFromJar = classesToRemoveFromJar;
+    return this;
+  }
+
+  public DefaultJavaLibraryBuilder setConfiguredCompilerFactory(
+      ConfiguredCompilerFactory configuredCompilerFactory) {
+    this.configuredCompilerFactory = configuredCompilerFactory;
     return this;
   }
 
@@ -567,6 +574,10 @@ public class DefaultJavaLibraryBuilder {
     }
 
     protected ConfiguredCompiler buildConfiguredCompiler() {
+      if (configuredCompilerFactory != null) {
+        return configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
+      }
+
       return new JavacToJarStepFactory(
           getJavac(), getJavacOptions(), extraClasspathFromContextFunction);
     }
