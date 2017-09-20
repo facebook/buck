@@ -16,11 +16,16 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.collect.ImmutableSet;
+import java.util.stream.Stream;
 
-/** Rule that can provide all binary dependencies. */
-public interface ProvidesLinkedBinaryDeps extends BuildRule {
-  ImmutableSet<BuildRule> getCompileDeps();
-
-  ImmutableSet<BuildRule> getStaticLibraryDeps();
+/**
+ * Returns all archives and object files, or other instances of HasAppleDebugSymbolDeps.
+ *
+ * <p>On Apple platforms, debug symbols are not linked into the main binary at link time. Instead,
+ * the linked binary points to all the object and archives where debug information can be found.
+ * This information can be collected (via the {@link com.facebook.buck.apple.AppleDsym} step) into a
+ * file, or used by debuggers directly.
+ */
+public interface HasAppleDebugSymbolDeps extends BuildRule {
+  Stream<BuildRule> getAppleDebugSymbolDeps();
 }

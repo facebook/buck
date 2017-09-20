@@ -26,7 +26,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -467,10 +467,9 @@ public class AppleDescriptions {
   static AppleDebuggableBinary createAppleDebuggableBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       BuildRuleResolver resolver,
       BuildRule strippedBinaryRule,
-      ProvidesLinkedBinaryDeps unstrippedBinaryRule,
+      HasAppleDebugSymbolDeps unstrippedBinaryRule,
       AppleDebugFormat debugFormat,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
@@ -487,7 +486,6 @@ public class AppleDescriptions {
             requireAppleDsym(
                 buildTarget,
                 projectFilesystem,
-                params,
                 resolver,
                 unstrippedBinaryRule,
                 cxxPlatformFlavorDomain,
@@ -505,9 +503,8 @@ public class AppleDescriptions {
   private static AppleDsym requireAppleDsym(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       BuildRuleResolver resolver,
-      ProvidesLinkedBinaryDeps unstrippedBinaryRule,
+      HasAppleDebugSymbolDeps unstrippedBinaryRule,
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       Flavor defaultCxxFlavor,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
@@ -528,25 +525,18 @@ public class AppleDescriptions {
                       unstrippedBinaryRule.getBuildTarget(),
                       MultiarchFileInfos.create(
                           appleCxxPlatforms, unstrippedBinaryRule.getBuildTarget()));
-
-              AppleDsym appleDsym =
-                  new AppleDsym(
-                      dsymBuildTarget,
-                      projectFilesystem,
-                      params
-                          .withDeclaredDeps(
-                              ImmutableSortedSet.<BuildRule>naturalOrder()
-                                  .add(unstrippedBinaryRule)
-                                  .addAll(unstrippedBinaryRule.getCompileDeps())
-                                  .addAll(unstrippedBinaryRule.getStaticLibraryDeps())
-                                  .build())
-                          .withoutExtraDeps(),
-                      appleCxxPlatform.getDsymutil(),
-                      appleCxxPlatform.getLldb(),
-                      unstrippedBinaryRule.getSourcePathToOutput(),
-                      AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem));
-              resolver.addToIndex(appleDsym);
-              return appleDsym;
+              return new AppleDsym(
+                  dsymBuildTarget,
+                  projectFilesystem,
+                  new SourcePathRuleFinder(resolver),
+                  appleCxxPlatform.getDsymutil(),
+                  appleCxxPlatform.getLldb(),
+                  unstrippedBinaryRule.getSourcePathToOutput(),
+                  unstrippedBinaryRule
+                      .getAppleDebugSymbolDeps()
+                      .map(BuildRule::getSourcePathToOutput)
+                      .collect(MoreCollectors.toImmutableSortedSet()),
+                  AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem));
             });
   }
 
@@ -699,7 +689,7 @@ public class AppleDescriptions {
 
     BuildRule targetDebuggableBinaryRule;
     Optional<AppleDsym> appleDsym;
-    if (unstrippedBinaryRule instanceof ProvidesLinkedBinaryDeps) {
+    if (unstrippedBinaryRule instanceof HasAppleDebugSymbolDeps) {
       BuildTarget binaryBuildTarget =
           getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)
               .getBuildTarget()
@@ -708,10 +698,9 @@ public class AppleDescriptions {
           createAppleDebuggableBinary(
               binaryBuildTarget,
               projectFilesystem,
-              params,
               resolver,
               getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
-              (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
+              (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
               debugFormat,
               cxxPlatformFlavorDomain,
               defaultCxxFlavor,

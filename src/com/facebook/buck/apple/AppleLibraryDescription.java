@@ -31,8 +31,8 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -409,10 +409,9 @@ public class AppleLibraryDescription
     return AppleDescriptions.createAppleDebuggableBinary(
         buildTarget,
         projectFilesystem,
-        params,
         resolver,
         strippedBinaryRule,
-        (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
+        (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),

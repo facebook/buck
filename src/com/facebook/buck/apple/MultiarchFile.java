@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -38,16 +38,17 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** Puts together multiple thin library/binaries into a multi-arch file. */
 public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements ProvidesLinkedBinaryDeps {
+    implements HasAppleDebugSymbolDeps {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Tool lipo;
@@ -142,24 +143,9 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-    for (BuildRule dep : getBuildDeps()) {
-      if (dep instanceof ProvidesLinkedBinaryDeps) {
-        builder.addAll(((ProvidesLinkedBinaryDeps) dep).getStaticLibraryDeps());
-      }
-    }
-    return builder.build();
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getCompileDeps() {
-    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-    for (BuildRule dep : getBuildDeps()) {
-      if (dep instanceof ProvidesLinkedBinaryDeps) {
-        builder.addAll(((ProvidesLinkedBinaryDeps) dep).getCompileDeps());
-      }
-    }
-    return builder.build();
+  public Stream<BuildRule> getAppleDebugSymbolDeps() {
+    return RichStream.from(getBuildDeps())
+        .filter(HasAppleDebugSymbolDeps.class)
+        .flatMap(HasAppleDebugSymbolDeps::getAppleDebugSymbolDeps);
   }
 }

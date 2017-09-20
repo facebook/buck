@@ -24,25 +24,31 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.SortedSet;
+import java.util.stream.Stream;
 
 /** Creates dSYM bundle for the given _unstripped_ binary. */
-public class AppleDsym extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class AppleDsym extends AbstractBuildRule
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
   public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-dsym");
@@ -54,22 +60,33 @@ public class AppleDsym extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final SourcePath unstrippedBinarySourcePath;
 
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalSymbolDeps;
+
   @AddToRuleKey(stringify = true)
   private final Path dsymOutputPath;
+
+  private ImmutableSortedSet<BuildRule> buildDeps;
 
   public AppleDsym(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder sourcePathRuleFinder,
       Tool dsymutil,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
+      ImmutableSortedSet<SourcePath> additionalSymbolDeps,
       Path dsymOutputPath) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
+    this.additionalSymbolDeps = additionalSymbolDeps;
     this.dsymOutputPath = dsymOutputPath;
+    this.buildDeps =
+        Stream.concat(
+                Stream.of(this.unstrippedBinarySourcePath), this.additionalSymbolDeps.stream())
+            .flatMap(sourcePathRuleFinder.FILTER_BUILD_RULE_INPUTS)
+            .collect(MoreCollectors.toImmutableSortedSet(Comparator.naturalOrder()));
     checkFlavorCorrectness(buildTarget);
   }
 
@@ -148,5 +165,10 @@ public class AppleDsym extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableList.of(
         new RegisterDebugSymbolsStep(
             unstrippedBinarySourcePath, lldb, context.getSourcePathResolver(), dsymOutputPath));
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 }

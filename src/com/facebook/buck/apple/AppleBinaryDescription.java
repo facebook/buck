@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -235,7 +235,7 @@ public class AppleBinaryDescription
           cellRoots,
           args,
           unstrippedBinaryBuildTarget,
-          (ProvidesLinkedBinaryDeps) unstrippedBinaryRule);
+          (HasAppleDebugSymbolDeps) unstrippedBinaryRule);
     } else {
       return unstrippedBinaryRule;
     }
@@ -250,7 +250,7 @@ public class AppleBinaryDescription
       CellPathResolver cellRoots,
       AppleBinaryDescriptionArg args,
       BuildTarget unstrippedBinaryBuildTarget,
-      ProvidesLinkedBinaryDeps unstrippedBinaryRule) {
+      HasAppleDebugSymbolDeps unstrippedBinaryRule) {
     BuildTarget strippedBinaryBuildTarget =
         unstrippedBinaryBuildTarget.withAppendedFlavors(
             CxxStrip.RULE_FLAVOR,
@@ -269,7 +269,6 @@ public class AppleBinaryDescription
     return AppleDescriptions.createAppleDebuggableBinary(
         unstrippedBinaryBuildTarget,
         projectFilesystem,
-        params,
         resolver,
         strippedBinaryRule,
         unstrippedBinaryRule,

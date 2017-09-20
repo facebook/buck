@@ -22,8 +22,8 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.NativeTestable;
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -72,12 +72,12 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -989,12 +989,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    if (binary.get() instanceof ProvidesLinkedBinaryDeps) {
-      List<BuildRule> linkDeps = new ArrayList<>();
-      linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getCompileDeps());
-      linkDeps.addAll(((ProvidesLinkedBinaryDeps) binary.get()).getStaticLibraryDeps());
-      if (linkDeps.size() > 0) {
-        return Stream.concat(Stream.of(binary.get()), linkDeps.stream())
+    // When "running" an app bundle, ensure debug symbols are available.
+    if (binary.get() instanceof HasAppleDebugSymbolDeps) {
+      List<BuildRule> symbolDeps =
+          ((HasAppleDebugSymbolDeps) binary.get())
+              .getAppleDebugSymbolDeps()
+              .collect(Collectors.toList());
+      if (!symbolDeps.isEmpty()) {
+        return Stream.concat(Stream.of(binary.get()), symbolDeps.stream())
             .map(BuildRule::getBuildTarget);
       }
     }
