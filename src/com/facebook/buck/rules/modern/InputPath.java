@@ -21,6 +21,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public final class InputPath implements Comparable<InputPath> {
   private SourcePath sourcePath;
@@ -64,5 +65,25 @@ public final class InputPath implements Comparable<InputPath> {
     public static SourcePath getSourcePathFrom(InputPath inputPath) {
       return inputPath.getSourcePath();
     }
+  }
+
+  @Override
+  public String toString() {
+    return "InputPath{sourcePath=" + sourcePath + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof InputPath)) {
+      return false;
+    }
+
+    InputPath that = (InputPath) o;
+    return this.getSourcePath().equals(that.getSourcePath());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(sourcePath);
   }
 }
