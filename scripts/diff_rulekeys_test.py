@@ -1,6 +1,7 @@
 import unittest
 import tempfile
 import gzip
+import os
 
 from diff_rulekeys import *
 
@@ -407,6 +408,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         ]
         self.assertEqual(result, expected)
 
+    @unittest.skipUnless(os.name == 'posix', 'This test fails on windows')
     def testParseGzippedFile(self):
         lines = [
             makeRuleKeyLine(
