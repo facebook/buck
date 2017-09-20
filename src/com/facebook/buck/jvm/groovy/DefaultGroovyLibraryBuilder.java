@@ -17,23 +17,15 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.ConfiguredCompiler;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 
 class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
-  private final GroovyBuckConfig groovyBuckConfig;
-  private ImmutableList<String> extraGroovycArguments = ImmutableList.of();
-
   protected DefaultGroovyLibraryBuilder(
       TargetGraph targetGraph,
       BuildTarget buildTarget,
@@ -44,30 +36,7 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
       JavacOptions javacOptions,
       GroovyBuckConfig groovyBuckConfig) {
     super(targetGraph, buildTarget, projectFilesystem, params, buildRuleResolver, cellRoots);
-    this.groovyBuckConfig = groovyBuckConfig;
+    setConfiguredCompilerFactory(new GroovyConfiguredCompilerFactory(groovyBuckConfig));
     setJavacOptions(javacOptions);
-  }
-
-  @Override
-  public DefaultGroovyLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
-    super.setArgs(args);
-    GroovyLibraryDescription.CoreArg groovyArgs = (GroovyLibraryDescription.CoreArg) args;
-    extraGroovycArguments = groovyArgs.getExtraGroovycArguments();
-    return this;
-  }
-
-  @Override
-  protected BuilderHelper newHelper() {
-    return new BuilderHelper();
-  }
-
-  protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-    @Override
-    protected ConfiguredCompiler buildConfiguredCompiler() {
-      return new GroovycToJarStepFactory(
-          Preconditions.checkNotNull(groovyBuckConfig).getGroovyCompiler().get(),
-          Optional.of(extraGroovycArguments),
-          Preconditions.checkNotNull(getJavacOptions()));
-    }
   }
 }

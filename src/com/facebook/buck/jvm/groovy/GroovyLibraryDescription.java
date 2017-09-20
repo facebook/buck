@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -62,7 +63,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
-    DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder =
+    DefaultJavaLibraryBuilder defaultGroovyLibraryBuilder =
         new DefaultGroovyLibraryBuilder(
                 targetGraph,
                 buildTarget,
