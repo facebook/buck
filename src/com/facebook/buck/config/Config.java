@@ -16,9 +16,9 @@
 
 package com.facebook.buck.config;
 
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.model.MacroReplacer;
+import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.MacroReplacer;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;

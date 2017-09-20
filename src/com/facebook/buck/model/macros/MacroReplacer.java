@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.model.macros;
 
 /** Interface to define replacement behavior for @{link MacroFinder}. */
 public interface MacroReplacer {

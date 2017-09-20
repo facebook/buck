@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.model.macros;
 
 @SuppressWarnings("serial")
 public class MacroException extends Exception {

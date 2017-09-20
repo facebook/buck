@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.model.macros;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

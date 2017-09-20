@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.model.MacroMatchResult;
+import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;

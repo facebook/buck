@@ -17,10 +17,10 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.model.MacroMatchResult;
-import com.facebook.buck.model.MacroReplacer;
+import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.MacroMatchResult;
+import com.facebook.buck.model.macros.MacroReplacer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;

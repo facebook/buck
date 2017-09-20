@@ -19,7 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryBuildTarget;

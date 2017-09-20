@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.model;
+package com.facebook.buck.model.macros;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;

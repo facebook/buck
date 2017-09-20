@@ -22,12 +22,6 @@ SIMPLE_TYPES_SRCS = [
     "Pair.java",
 ]
 
-java_immutables_library(
-    name = "macros",
-    srcs = MACRO_SRCS,
-    visibility = ["PUBLIC"],
-)
-
 java_library(
     name = "simple_types",
     srcs = SIMPLE_TYPES_SRCS,

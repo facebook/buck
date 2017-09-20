@@ -75,7 +75,6 @@ java_test(
         "//src/com/facebook/buck/maven:util",
         "//src/com/facebook/buck/message_ipc:message_ipc",
         "//src/com/facebook/buck/model:build_id",
-        "//src/com/facebook/buck/model:macros",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:config",
