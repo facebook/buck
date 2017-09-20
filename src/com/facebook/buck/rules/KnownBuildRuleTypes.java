@@ -41,6 +41,7 @@ import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.SmartDexingStep;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
@@ -265,7 +266,7 @@ public class KnownBuildRuleTypes {
     }
 
     NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
-        NdkCxxPlatformsProvider.create(config, filesystem, androidDirectoryResolver);
+        NdkCxxPlatformsProviderFactory.create(config, filesystem, androidDirectoryResolver);
 
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsProvider.getNdkCxxPlatforms();
