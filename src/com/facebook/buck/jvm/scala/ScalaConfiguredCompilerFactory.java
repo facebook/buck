@@ -38,6 +38,10 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
   private @Nullable Tool scalac;
 
+  public ScalaConfiguredCompilerFactory(ScalaBuckConfig config, JavaBuckConfig javaBuckConfig) {
+    this(config, javaBuckConfig, ExtraClasspathFromContextFunction.EMPTY);
+  }
+
   public ScalaConfiguredCompilerFactory(
       ScalaBuckConfig config,
       JavaBuckConfig javaBuckConfig,

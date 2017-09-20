@@ -23,6 +23,10 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
   private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
 
+  public JavaConfiguredCompilerFactory(JavaBuckConfig javaBuckConfig) {
+    this(javaBuckConfig, ExtraClasspathFromContextFunction.EMPTY);
+  }
+
   public JavaConfiguredCompilerFactory(
       JavaBuckConfig javaBuckConfig,
       ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {

@@ -34,6 +34,11 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final ExtraClasspathFromContextFunction extraClasspathFromContextFunction;
 
   public KotlinConfiguredCompilerFactory(
+      KotlinBuckConfig kotlinBuckConfig, JavaBuckConfig javaBuckConfig) {
+    this(kotlinBuckConfig, javaBuckConfig, ExtraClasspathFromContextFunction.EMPTY);
+  }
+
+  public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
       ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
