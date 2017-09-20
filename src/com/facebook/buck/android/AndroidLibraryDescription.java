@@ -108,8 +108,6 @@ public class AndroidLibraryDescription
                     javacOptions,
                     args,
                     compilerFactory)
-                .setArgs(args)
-                .setJavacOptions(javacOptions)
                 .setTests(args.getTests());
 
     if (hasDummyRDotJavaFlavor) {
