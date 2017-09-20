@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -968,16 +971,6 @@ public class NdkCxxPlatforms {
         .addAll(DEFAULT_COMMON_COMPILER_FLAGS)
         .addAll(config.getExtraNdkCxxFlags())
         .build();
-  }
-
-  /** The CPU architectures to target. */
-  public enum TargetCpuType {
-    ARM,
-    ARMV7,
-    ARM64,
-    X86,
-    X86_64,
-    MIPS,
   }
 
   /** The build toolchain, named (including compiler version) after the target platform/arch. */

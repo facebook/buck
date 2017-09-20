@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;

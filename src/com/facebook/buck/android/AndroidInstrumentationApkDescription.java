@@ -24,6 +24,8 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -62,7 +64,7 @@ public class AndroidInstrumentationApkDescription
   private final JavaBuckConfig javaBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
-  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ListeningExecutorService dxExecutorService;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -71,7 +73,7 @@ public class AndroidInstrumentationApkDescription
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       JavacOptions androidJavacOptions,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ListeningExecutorService dxExecutorService,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig) {

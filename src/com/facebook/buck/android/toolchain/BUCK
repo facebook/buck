@@ -1,11 +1,12 @@
-java_library(
+java_immutables_library(
     name = "toolchain",
     srcs = glob(["*.java"]),
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/rules:build_rule",
         "//third-party/java/guava:guava",
     ],
 )

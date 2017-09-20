@@ -20,9 +20,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
@@ -79,7 +80,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             .setVersion(compilerVersion)
             .setGccVersion(gccVersion)
             .build();
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkPlatforms =
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),

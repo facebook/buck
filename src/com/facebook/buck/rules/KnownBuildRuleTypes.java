@@ -33,14 +33,14 @@ import com.facebook.buck.android.ApkGenruleDescription;
 import com.facebook.buck.android.DefaultAndroidLibraryCompilerFactory;
 import com.facebook.buck.android.DxConfig;
 import com.facebook.buck.android.GenAidlDescription;
-import com.facebook.buck.android.NdkCxxPlatform;
-import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.android.NdkLibraryDescription;
 import com.facebook.buck.android.PrebuiltNativeLibraryDescription;
 import com.facebook.buck.android.ProGuardConfig;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.android.SmartDexingStep;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
@@ -268,7 +268,7 @@ public class KnownBuildRuleTypes {
     NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
         NdkCxxPlatformsProviderFactory.create(config, filesystem, androidDirectoryResolver);
 
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsProvider.getNdkCxxPlatforms();
 
     // Create a map of system platforms.

@@ -16,17 +16,12 @@
 
 package com.facebook.buck.android.toolchain;
 
-import com.google.common.collect.ImmutableMap;
-
-public class NdkCxxPlatformsProvider {
-
-  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms;
-
-  public NdkCxxPlatformsProvider(ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms) {
-    this.ndkCxxPlatforms = ndkCxxPlatforms;
-  }
-
-  public ImmutableMap<TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms() {
-    return ndkCxxPlatforms;
-  }
+/** The CPU architectures to target. */
+public enum TargetCpuType {
+  ARM,
+  ARMV7,
+  ARM64,
+  X86,
+  X86_64,
+  MIPS,
 }

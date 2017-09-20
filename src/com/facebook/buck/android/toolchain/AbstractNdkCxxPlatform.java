@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.Tool;

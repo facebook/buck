@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.toolchain;
 
 /** The C/C++ runtime library to link against. */
 public enum NdkCxxRuntime {

@@ -24,6 +24,9 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
@@ -130,10 +133,10 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setObjdump(new CommandTool.Builder().addArg("objdump").build())
             .build();
 
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms =
-        ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>builder()
-            .put(NdkCxxPlatforms.TargetCpuType.ARMV7, ndkCxxPlatform)
-            .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms =
+        ImmutableMap.<TargetCpuType, NdkCxxPlatform>builder()
+            .put(TargetCpuType.ARMV7, ndkCxxPlatform)
+            .put(TargetCpuType.X86, ndkCxxPlatform)
             .build();
 
     CxxLibraryBuilder cxxLibraryBuilder =
@@ -164,7 +167,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             new FakeProjectFilesystem(),
             originalParams,
             nativePlatforms,
-            ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
+            ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
@@ -189,12 +192,10 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         copyNativeLibraries.getStrippedObjectDescriptions(),
         Matchers.containsInAnyOrder(
             Matchers.allOf(
-                Matchers.hasProperty(
-                    "targetCpuType", Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty("targetCpuType", Matchers.equalTo(TargetCpuType.ARMV7)),
                 Matchers.hasProperty("strippedObjectName", Matchers.equalTo("somelib.so"))),
             Matchers.allOf(
-                Matchers.hasProperty(
-                    "targetCpuType", Matchers.equalTo(NdkCxxPlatforms.TargetCpuType.ARMV7)),
+                Matchers.hasProperty("targetCpuType", Matchers.equalTo(TargetCpuType.ARMV7)),
                 Matchers.hasProperty(
                     "strippedObjectName", Matchers.equalTo("libgnustl_shared.so")))));
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
@@ -315,10 +316,10 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setObjdump(new CommandTool.Builder().addArg("objdump").build())
             .build();
 
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms =
-        ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>builder()
-            .put(NdkCxxPlatforms.TargetCpuType.ARMV7, ndkCxxPlatform)
-            .put(NdkCxxPlatforms.TargetCpuType.X86, ndkCxxPlatform)
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms =
+        ImmutableMap.<TargetCpuType, NdkCxxPlatform>builder()
+            .put(TargetCpuType.ARMV7, ndkCxxPlatform)
+            .put(TargetCpuType.X86, ndkCxxPlatform)
             .build();
 
     CxxLibraryBuilder cxxLibraryBuilder1 =
@@ -361,7 +362,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             new FakeProjectFilesystem(),
             originalParams,
             nativePlatforms,
-            ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
+            ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),

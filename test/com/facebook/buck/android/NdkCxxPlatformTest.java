@@ -24,6 +24,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
@@ -92,9 +95,8 @@ public class NdkCxxPlatformTest {
   }
 
   // Create and return some rule keys from a dummy source for the given platforms.
-  private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructCompileRuleKeys(
-      Operation operation,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
+  private ImmutableMap<TargetCpuType, RuleKey> constructCompileRuleKeys(
+      Operation operation, ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -111,8 +113,8 @@ public class NdkCxxPlatformTest {
             pathResolver,
             ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
-    for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+    ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
+    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.builder()
               .setBaseBuildTarget(target)
@@ -150,9 +152,8 @@ public class NdkCxxPlatformTest {
   }
 
   // Create and return some rule keys from a dummy source for the given platforms.
-  private ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey> constructLinkRuleKeys(
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms)
-      throws NoSuchBuildTargetException {
+  private ImmutableMap<TargetCpuType, RuleKey> constructLinkRuleKeys(
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -168,8 +169,8 @@ public class NdkCxxPlatformTest {
             pathResolver,
             ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    ImmutableMap.Builder<NdkCxxPlatforms.TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
-    for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+    ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
+    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       BuildRule rule =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
@@ -216,7 +217,7 @@ public class NdkCxxPlatformTest {
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
-            NdkCxxPlatforms.TargetCpuType.X86,
+            TargetCpuType.X86,
             NdkCxxPlatformCompiler.builder()
                 .setType(NdkCxxPlatformCompiler.Type.GCC)
                 .setVersion("gcc-version")
@@ -249,7 +250,7 @@ public class NdkCxxPlatformTest {
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
-            NdkCxxPlatforms.TargetCpuType.X86,
+            TargetCpuType.X86,
             NdkCxxPlatformCompiler.builder()
                 .setType(NdkCxxPlatformCompiler.Type.GCC)
                 .setVersion("gcc-version")
@@ -348,7 +349,7 @@ public class NdkCxxPlatformTest {
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
-            NdkCxxPlatforms.TargetCpuType.X86,
+            TargetCpuType.X86,
             NdkCxxPlatformCompiler.builder()
                 .setType(NdkCxxPlatformCompiler.Type.GCC)
                 .setVersion("gcc-version")
@@ -440,12 +441,10 @@ public class NdkCxxPlatformTest {
             new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.GNUSTL),
             new Pair<>(NdkCxxPlatformCompiler.Type.CLANG, NdkCxxRuntime.LIBCXX));
     for (Pair<NdkCxxPlatformCompiler.Type, NdkCxxRuntime> config : configs) {
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          preprocessAndCompileRukeKeys = new HashMap<>();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>> compileRukeKeys =
+      Map<String, ImmutableMap<TargetCpuType, RuleKey>> preprocessAndCompileRukeKeys =
           new HashMap<>();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>> linkRukeKeys =
-          new HashMap<>();
+      Map<String, ImmutableMap<TargetCpuType, RuleKey>> compileRukeKeys = new HashMap<>();
+      Map<String, ImmutableMap<TargetCpuType, RuleKey>> linkRukeKeys = new HashMap<>();
 
       // Iterate building up rule keys for combinations of different platforms and NDK root
       // directories.
@@ -454,7 +453,7 @@ public class NdkCxxPlatformTest {
             ImmutableList.of(Platform.LINUX, Platform.MACOS, Platform.WINDOWS)) {
           Path root = tmp.newFolder(dir);
           MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
-          ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
+          ImmutableMap<TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
                   new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
@@ -507,7 +506,7 @@ public class NdkCxxPlatformTest {
     String dir = "android-ndk-r9c";
     Path root = tmp.newFolder(dir);
     MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
             CxxPlatformUtils.DEFAULT_CONFIG,
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),

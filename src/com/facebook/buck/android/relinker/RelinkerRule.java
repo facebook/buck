@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.android.relinker;
 
-import com.facebook.buck.android.NdkCxxPlatforms;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -66,7 +66,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements OverrideScheduleRule {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
-  @AddToRuleKey private final NdkCxxPlatforms.TargetCpuType cpuType;
+  @AddToRuleKey private final TargetCpuType cpuType;
   @AddToRuleKey private final SourcePath baseLibSourcePath;
   @AddToRuleKey private final Tool objdump;
   @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
@@ -86,7 +86,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> symbolsNeededPaths,
-      NdkCxxPlatforms.TargetCpuType cpuType,
+      TargetCpuType cpuType,
       Tool objdump,
       CxxBuckConfig cxxBuckConfig,
       SourcePath baseLibSourcePath,

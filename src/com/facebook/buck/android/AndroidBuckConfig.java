@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;

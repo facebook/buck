@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;

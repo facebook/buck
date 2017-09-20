@@ -21,6 +21,7 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -152,7 +153,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   private final Optional<List<String>> proguardJvmArgs;
   private final ResourceCompressionMode resourceCompressionMode;
-  private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
+  private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
@@ -186,7 +187,7 @@ public class AndroidBinary extends AbstractBuildRule
       boolean skipProguard,
       Optional<RedexOptions> redexOptions,
       ResourceCompressionMode resourceCompressionMode,
-      Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
+      Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
       Optional<Arg> preprocessJavaClassesBash,
@@ -334,7 +335,7 @@ public class AndroidBinary extends AbstractBuildRule
     return resourceCompressionMode;
   }
 
-  public ImmutableSet<NdkCxxPlatforms.TargetCpuType> getCpuFilters() {
+  public ImmutableSet<TargetCpuType> getCpuFilters() {
     return this.cpuFilters;
   }
 

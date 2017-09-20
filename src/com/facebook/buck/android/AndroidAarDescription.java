@@ -21,6 +21,8 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -79,14 +81,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions javacOptions;
-  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;

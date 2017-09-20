@@ -32,6 +32,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;

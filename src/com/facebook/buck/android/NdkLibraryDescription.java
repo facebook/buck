@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -82,11 +84,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
           ImmutableMap.of("env", new EnvironmentVariableMacroExpander(Platform.detect())));
 
   private final Optional<String> ndkVersion;
-  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms;
 
   public NdkLibraryDescription(
-      Optional<String> ndkVersion,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
+      Optional<String> ndkVersion, ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
     this.ndkVersion = ndkVersion;
     this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
@@ -125,7 +126,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     return escapedArgs.build();
   }
 
-  private String getTargetArchAbi(NdkCxxPlatforms.TargetCpuType cpuType) {
+  private String getTargetArchAbi(TargetCpuType cpuType) {
     switch (cpuType) {
       case ARM:
         return "armeabi";
@@ -162,7 +163,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-    for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
@@ -219,7 +220,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {
-        NdkCxxPlatforms.TargetCpuType targetCpuType = entry.getKey();
+        TargetCpuType targetCpuType = entry.getKey();
         String targetArchAbi = getTargetArchAbi(targetCpuType);
 
         outputLinesBuilder.add(String.format("ifeq ($(TARGET_ARCH_ABI),%s)", targetArchAbi));

@@ -22,6 +22,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -93,7 +94,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final SourcePath keystorePath;
   @AddToRuleKey private final SourcePath keystorePropertiesPath;
   @AddToRuleKey private final Optional<RedexOptions> redexOptions;
-  @AddToRuleKey private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
+  @AddToRuleKey private final ImmutableSet<TargetCpuType> cpuFilters;
   @AddToRuleKey private final EnumSet<AndroidBinary.ExopackageMode> exopackageModes;
   @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
   @AddToRuleKey private final boolean packageAssetLibraries;
@@ -144,7 +145,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
       Optional<String> proguardAgentPath,
-      ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters,
+      ImmutableSet<TargetCpuType> cpuFilters,
       EnumSet<AndroidBinary.ExopackageMode> exopackageModes,
       Optional<Arg> preprocessJavaClassesBash,
       boolean reorderClassesIntraDex,

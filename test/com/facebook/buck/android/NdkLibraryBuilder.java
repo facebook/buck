@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -43,11 +46,11 @@ public class NdkLibraryBuilder
           .setObjdump(new CommandTool.Builder().addArg("objdump").build())
           .build();
 
-  private static final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
-      ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>builder()
-          .put(NdkCxxPlatforms.TargetCpuType.ARM, DEFAULT_NDK_PLATFORM)
-          .put(NdkCxxPlatforms.TargetCpuType.ARMV7, DEFAULT_NDK_PLATFORM)
-          .put(NdkCxxPlatforms.TargetCpuType.X86, DEFAULT_NDK_PLATFORM)
+  private static final ImmutableMap<TargetCpuType, NdkCxxPlatform> NDK_PLATFORMS =
+      ImmutableMap.<TargetCpuType, NdkCxxPlatform>builder()
+          .put(TargetCpuType.ARM, DEFAULT_NDK_PLATFORM)
+          .put(TargetCpuType.ARMV7, DEFAULT_NDK_PLATFORM)
+          .put(TargetCpuType.X86, DEFAULT_NDK_PLATFORM)
           .build();
 
   public NdkLibraryBuilder(BuildTarget target) {

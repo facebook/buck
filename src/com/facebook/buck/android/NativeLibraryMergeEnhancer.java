@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
@@ -117,7 +119,7 @@ class NativeLibraryMergeEnhancer {
       SourcePathRuleFinder ruleFinder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
