@@ -58,7 +58,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       ProjectFilesystem filesystem,
       CxxPlatform platform,
       AppleCxxPlatform applePlatform,
-      SwiftBuckConfig swiftBuckConfig) {
+      SwiftBuckConfig swiftBuckConfig,
+      ImmutableSet<CxxPreprocessorInput> inputs) {
 
     SourcePathRuleFinder rulePathFinder = new SourcePathRuleFinder(resolver);
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
@@ -68,15 +69,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     Preprocessor preprocessor = platform.getCpp().resolve(resolver);
 
-    CxxLibrary lib = (CxxLibrary) resolver.requireRule(target.withFlavors());
-    ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
-        CxxPreprocessables.computeTransitiveCxxToPreprocessorInputMap(platform, lib, false);
-
-    ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
-    builder.addAll(transitiveMap.values());
-    builder.add(lib.getPublicCxxPreprocessorInput(platform));
-
-    ImmutableSet<CxxPreprocessorInput> inputs = builder.build();
     ImmutableSet<BuildRule> inputDeps =
         RichStream.from(inputs)
             .flatMap(input -> RichStream.from(input.getDeps(resolver, rulePathFinder)))
@@ -103,6 +95,19 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         swiftArgs,
         preprocessor,
         preprocessorFlags);
+  }
+
+  public static ImmutableSet<CxxPreprocessorInput> getPreprocessorInputsForAppleLibrary(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
+    CxxLibrary lib = (CxxLibrary) resolver.requireRule(target.withFlavors());
+    ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
+        CxxPreprocessables.computeTransitiveCxxToPreprocessorInputMap(platform, lib, false);
+
+    ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
+    builder.addAll(transitiveMap.values());
+    builder.add(lib.getPublicCxxPreprocessorInput(platform));
+
+    return builder.build();
   }
 
   public static BuildRule createObjCGeneratedHeaderBuildRule(

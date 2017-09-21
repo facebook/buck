@@ -229,6 +229,60 @@ public class AppleLibraryDescription
         || swiftDelegate.map(swift -> swift.hasFlavors(flavors)).orElse(false);
   }
 
+  public Optional<BuildRule> createSwiftBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      BuildRuleResolver resolver,
+      CellPathResolver cellRoots,
+      CxxLibraryDescription.CommonArg args) {
+    Optional<Map.Entry<Flavor, Type>> maybeType = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+    return maybeType.flatMap(
+        type -> {
+          if (type.getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
+            CxxPlatform cxxPlatform =
+                delegate
+                    .getCxxPlatforms()
+                    .getValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new);
+
+            return Optional.of(
+                AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
+                    buildTarget, projectFilesystem, resolver, cxxPlatform));
+          } else if (type.getValue().equals(Type.SWIFT_COMPILE)) {
+            CxxPlatform cxxPlatform =
+                delegate
+                    .getCxxPlatforms()
+                    .getValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new);
+
+            // TODO(mgd): Must handle 'default' platform
+            AppleCxxPlatform applePlatform =
+                appleCxxPlatformFlavorDomain
+                    .getValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new);
+
+            SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+            return Optional.of(
+                AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
+                    buildTarget,
+                    cellRoots,
+                    resolver,
+                    ruleFinder,
+                    params,
+                    args,
+                    projectFilesystem,
+                    cxxPlatform,
+                    applePlatform,
+                    swiftBuckConfig,
+                    AppleLibraryDescriptionSwiftEnhancer.getPreprocessorInputsForAppleLibrary(
+                        buildTarget, resolver, cxxPlatform)));
+          }
+
+          return Optional.empty();
+        });
+  }
+
   @Override
   public BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -242,54 +296,27 @@ public class AppleLibraryDescription
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
           targetGraph, buildTarget, projectFilesystem, params, resolver, args);
-    } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
-      CxxPlatform cxxPlatform =
-          delegate
-              .getCxxPlatforms()
-              .getValue(buildTarget)
-              .orElseThrow(IllegalArgumentException::new);
-      return AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
-          buildTarget, projectFilesystem, resolver, cxxPlatform);
-    } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_COMPILE)) {
-      CxxPlatform cxxPlatform =
-          delegate
-              .getCxxPlatforms()
-              .getValue(buildTarget)
-              .orElseThrow(IllegalArgumentException::new);
-
-      // TODO(mgd): Must handle 'default' platform
-      AppleCxxPlatform applePlatform =
-          appleCxxPlatformFlavorDomain
-              .getValue(buildTarget)
-              .orElseThrow(IllegalArgumentException::new);
-
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      return AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
-          buildTarget,
-          cellRoots,
-          resolver,
-          ruleFinder,
-          params,
-          args,
-          projectFilesystem,
-          cxxPlatform,
-          applePlatform,
-          swiftBuckConfig);
-    } else {
-      return createLibraryBuildRule(
-          targetGraph,
-          buildTarget,
-          projectFilesystem,
-          params,
-          resolver,
-          cellRoots,
-          args,
-          args.getLinkStyle(),
-          Optional.empty(),
-          ImmutableSet.of(),
-          ImmutableSortedSet.of(),
-          CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule());
     }
+
+    Optional<BuildRule> swiftRule =
+        createSwiftBuildRule(buildTarget, projectFilesystem, params, resolver, cellRoots, args);
+    if (swiftRule.isPresent()) {
+      return swiftRule.get();
+    }
+
+    return createLibraryBuildRule(
+        targetGraph,
+        buildTarget,
+        projectFilesystem,
+        params,
+        resolver,
+        cellRoots,
+        args,
+        args.getLinkStyle(),
+        Optional.empty(),
+        ImmutableSet.of(),
+        ImmutableSortedSet.of(),
+        CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule());
   }
 
   private <A extends AbstractAppleLibraryDescriptionArg> BuildRule createFrameworkBundleBuildRule(
