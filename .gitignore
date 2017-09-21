@@ -17,7 +17,6 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 /.buckd
 /.buckjavaargs.local
 /.bucklogging.local.properties
-.buckversion
 .fakebuckversion
 /.nobuckcheck
 
