@@ -388,6 +388,7 @@ public class KnownBuildRuleTypes {
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(
             cxxLibraryDescription,
+            swiftLibraryDescription,
             platformFlavorsToAppleCxxPlatforms,
             defaultCxxPlatform.getFlavor(),
             codeSignIdentityStore,
