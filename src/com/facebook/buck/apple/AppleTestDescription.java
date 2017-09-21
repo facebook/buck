@@ -162,14 +162,12 @@ public class AppleTestDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleTestDescriptionArg args) {
-    if (!appleConfig.shouldUseSwiftDelegate()) {
-      Optional<BuildRule> buildRule =
-          appleLibraryDescription.createSwiftBuildRule(
-              buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.of(this));
+    Optional<BuildRule> buildRule =
+        appleLibraryDescription.createSwiftBuildRule(
+            buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.of(this));
 
-      if (buildRule.isPresent()) {
-        return buildRule.get();
-      }
+    if (buildRule.isPresent()) {
+      return buildRule.get();
     }
 
     AppleDebugFormat debugFormat =
@@ -246,7 +244,6 @@ public class AppleTestDescription
             .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     BuildRule library =
         createTestLibraryRule(
-            targetGraph,
             projectFilesystem,
             params,
             resolver,
@@ -382,7 +379,6 @@ public class AppleTestDescription
   }
 
   private BuildRule createTestLibraryRule(
-      TargetGraph targetGraph,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -403,7 +399,6 @@ public class AppleTestDescription
     } else {
       library =
           appleLibraryDescription.createLibraryBuildRule(
-              targetGraph,
               libraryTarget,
               projectFilesystem,
               params,
