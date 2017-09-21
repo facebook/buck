@@ -266,7 +266,7 @@ public class CxxLibraryDescription
     builder.addAll(cxxObjects.values());
 
     Optional<ImmutableList<SourcePath>> pluginObjectPaths =
-        delegate.flatMap(p -> p.getObjectFilePaths(buildTarget, ruleResolver));
+        delegate.flatMap(p -> p.getObjectFilePaths(buildTarget, ruleResolver, cxxPlatform));
     pluginObjectPaths.ifPresent(paths -> builder.addAll(paths));
 
     return builder.build();

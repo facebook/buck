@@ -47,7 +47,7 @@ public interface CxxLibraryDescriptionDelegate {
    * rule deps are correctly set up.
    */
   Optional<ImmutableList<SourcePath>> getObjectFilePaths(
-      BuildTarget target, BuildRuleResolver resolver);
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
 
   /**
    * Provides the ability for the plugin to provide additional {@link NativeLinkable}s that will be

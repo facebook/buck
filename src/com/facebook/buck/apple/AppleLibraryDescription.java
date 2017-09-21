@@ -243,8 +243,13 @@ public class AppleLibraryDescription
       return createFrameworkBundleBuildRule(
           targetGraph, buildTarget, projectFilesystem, params, resolver, args);
     } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
+      CxxPlatform cxxPlatform =
+          delegate
+              .getCxxPlatforms()
+              .getValue(buildTarget)
+              .orElseThrow(IllegalArgumentException::new);
       return AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
-          buildTarget, projectFilesystem, resolver);
+          buildTarget, projectFilesystem, resolver, cxxPlatform);
     } else if (type.isPresent() && type.get().getValue().equals(Type.SWIFT_COMPILE)) {
       CxxPlatform cxxPlatform =
           delegate
@@ -784,13 +789,13 @@ public class AppleLibraryDescription
 
   @Override
   public Optional<ImmutableList<SourcePath>> getObjectFilePaths(
-      BuildTarget target, BuildRuleResolver resolver) {
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
     if (!targetContainsSwift(target, resolver)) {
       return Optional.empty();
     }
 
-    BuildTarget targetWithoutType = target.withoutFlavors(LIBRARY_TYPE.getFlavors());
-    BuildTarget swiftTarget = targetWithoutType.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
+    BuildTarget swiftTarget =
+        AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForSwiftCompile(target, cxxPlatform);
     SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftTarget);
     return Optional.of(ImmutableList.of(compile.getObjectPath()));
   }

@@ -106,8 +106,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
   }
 
   public static BuildRule createObjCGeneratedHeaderBuildRule(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleResolver resolver) {
-    BuildTarget swiftCompileTarget = createBuildTargetForSwiftCode(buildTarget);
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform) {
+    BuildTarget swiftCompileTarget = createBuildTargetForSwiftCompile(buildTarget, cxxPlatform);
     SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftCompileTarget);
 
     Path objCImportPath =
@@ -125,9 +128,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     return headerMapRule;
   }
 
-  public static BuildTarget createBuildTargetForSwiftCode(BuildTarget target) {
-    return target
-        .withoutFlavors(AppleLibraryDescription.LIBRARY_TYPE.getFlavors())
-        .withAppendedFlavors(AppleLibraryDescription.Type.SWIFT_COMPILE.getFlavor());
+  public static BuildTarget createBuildTargetForSwiftCompile(
+      BuildTarget target, CxxPlatform cxxPlatform) {
+    // `target` is not necessarily flavored with just `apple_library` flavors, that's because
+    // Swift compile rules can be required by other rules (e.g., `apple_test`, `apple_binary` etc).
+    return target.withFlavors(
+        AppleLibraryDescription.Type.SWIFT_COMPILE.getFlavor(), cxxPlatform.getFlavor());
   }
 }
