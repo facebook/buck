@@ -782,7 +782,9 @@ public class CxxLibraryDescription
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
-      CxxPlatform cxxPlatform = platform.orElse(cxxPlatforms.getValue(defaultCxxFlavor));
+      CxxPlatform cxxPlatform =
+          platform.orElse(
+              cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
       // TODO(T21900763): We should be using `requireObjects` instead but those would not
@@ -807,7 +809,9 @@ public class CxxLibraryDescription
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          platform.isPresent() ? buildTarget : buildTarget.withAppendedFlavors(defaultCxxFlavor),
+          platform.isPresent()
+              ? buildTarget
+              : buildTarget.withAppendedFlavors(args.getDefaultPlatform().orElse(defaultCxxFlavor)),
           projectFilesystem,
           resolver);
     } else if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
