@@ -45,8 +45,8 @@ public class PrebuiltCxxLibraryBuilder
     this(target, CxxTestUtils.createDefaultPlatforms());
   }
 
-  public PrebuiltCxxLibraryBuilder setIncludeDirs(ImmutableList<String> includeDirs) {
-    getArgForPopulating().setIncludeDirs(includeDirs);
+  public PrebuiltCxxLibraryBuilder setHeaderDirs(ImmutableList<SourcePath> headerDirs) {
+    getArgForPopulating().setHeaderDirs(headerDirs);
     return this;
   }
 

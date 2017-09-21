@@ -15,22 +15,11 @@ cxx_library(
 
 platform = read_config('cxx', 'platform')
 
-genrule(
-  name = 'gen_prebuilt_cxx_library',
-  out = 'gen_prebuilt_cxx_library',
-  bash = ' && '.join([
-    'mkdir -p $OUT',
-    'cp $(location :cxx_library#shared,{}) $OUT/'.format(platform),
-    'cp $(location :cxx_library#static,{}) $OUT/'.format(platform),
-    '(cd $OUT; for f in *; do mv "${f}" "${f/libcxx_library/libprebuilt_cxx_library}"; done)',
-  ]),
-)
-
 prebuilt_cxx_library(
   name = 'prebuilt_cxx_library',
   supports_shared_library_interface = True,
-  lib_dir = '$(location :gen_prebuilt_cxx_library)',
-  include_dirs = [],
+  static_lib = ':cxx_library#static,{}'.format(platform),
+  shared_lib = ':cxx_library#shared,{}'.format(platform),
   exported_deps = [
     ':dep',
   ],
