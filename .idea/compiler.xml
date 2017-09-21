@@ -23,6 +23,7 @@
       <entry name="?*.st" />
       <entry name="?*.stg" />
       <entry name="?*.jar" />
+      <entry name="?*.in" />
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
