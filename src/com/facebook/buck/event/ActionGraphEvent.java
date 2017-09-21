@@ -98,6 +98,14 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
       return new MissWithTargetGraphHashMatch();
     }
 
+    public static MissWithWatchmanPathEvent missWithWatchmanPathEvent() {
+      return new MissWithWatchmanPathEvent();
+    }
+
+    public static MissWithWatchmanOverflowEvent missWithWatchmanOverflowEvent() {
+      return new MissWithWatchmanOverflowEvent();
+    }
+
     public static class Hit extends Cache {
       public Hit() {
         super("ActionGraphCacheHit");
@@ -116,6 +124,18 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
     public static class MissWithTargetGraphHashMatch extends Cache {
       public MissWithTargetGraphHashMatch() {
         super("ActionGraphCacheMissWithTargetGraphHashMatch");
+      }
+    }
+
+    public static class MissWithWatchmanPathEvent extends Cache {
+      public MissWithWatchmanPathEvent() {
+        super("ActionGraphCacheMissWithWatchmanPathEvent");
+      }
+    }
+
+    public static class MissWithWatchmanOverflowEvent extends Cache {
+      public MissWithWatchmanOverflowEvent() {
+        super("ActionGraphCacheMissWithWatchmanOverflowEvent");
       }
     }
 

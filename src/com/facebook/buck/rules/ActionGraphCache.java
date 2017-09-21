@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
@@ -62,6 +63,10 @@ public class ActionGraphCache {
   @Nullable private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
 
   @Nullable private HashCode lastTargetGraphHash;
+
+  private final AtomicReference<WatchmanPathEvent> watchmanPathEvent = new AtomicReference<>();
+  private final AtomicReference<WatchmanOverflowEvent> watchmanOverflowEvent =
+      new AtomicReference<>();
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndResolver getActionGraph(
@@ -100,7 +105,12 @@ public class ActionGraphCache {
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
-      if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
+      WatchmanPathEvent watchmanPathEvent = this.watchmanPathEvent.get();
+      WatchmanOverflowEvent watchmanOverflowEvent = this.watchmanOverflowEvent.get();
+      if (lastActionGraph != null
+          && watchmanPathEvent == null
+          && watchmanOverflowEvent == null
+          && lastActionGraph.getFirst().equals(targetGraph)) {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
@@ -114,11 +124,20 @@ public class ActionGraphCache {
         HashCode targetGraphHash = getTargetGraphHash(targetGraph);
         if (lastActionGraph == null) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
-        } else if (Objects.equals(lastTargetGraphHash, targetGraphHash)) {
-          LOG.info("ActionGraph cache miss. TargetGraphs mismatched but hashes are the same.");
-          eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphHashMatch());
         } else {
-          LOG.info("ActionGraph cache miss. TargetGraphs mismatched.");
+          if (Objects.equals(lastTargetGraphHash, targetGraphHash)) {
+            LOG.info("ActionGraph cache miss. TargetGraphs mismatched but hashes are the same.");
+            eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphHashMatch());
+          }
+          if (watchmanPathEvent != null) {
+            LOG.info("ActionGraphCache invalidation due to Watchman event %s.", watchmanPathEvent);
+            eventBus.post(ActionGraphEvent.Cache.missWithWatchmanPathEvent());
+          }
+          if (watchmanOverflowEvent != null) {
+            LOG.info(
+                "ActionGraphCache invalidation due to Watchman event %s.", watchmanOverflowEvent);
+            eventBus.post(ActionGraphEvent.Cache.missWithWatchmanOverflowEvent());
+          }
         }
         lastTargetGraphHash = targetGraphHash;
         Pair<TargetGraph, ActionGraphAndResolver> freshActionGraph =
@@ -133,6 +152,8 @@ public class ActionGraphCache {
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment. skipActionGraphCache? %s", skipActionGraphCache);
           lastActionGraph = freshActionGraph;
+          this.watchmanPathEvent.set(null);
+          this.watchmanOverflowEvent.set(null);
         }
       }
       finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
@@ -367,21 +388,14 @@ public class ActionGraphCache {
   @Subscribe
   public void invalidateBasedOn(WatchmanPathEvent event) {
     // We invalidate in every case except a modify event.
-    if (event.getKind() == WatchmanPathEvent.Kind.MODIFY) {
-      return;
+    if (event.getKind() != WatchmanPathEvent.Kind.MODIFY) {
+      watchmanPathEvent.set(event);
     }
-    if (!isCacheEmpty()) {
-      LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
-    }
-    invalidateCache();
   }
 
   @Subscribe
   public void invalidateBasedOn(WatchmanOverflowEvent event) {
-    if (!isCacheEmpty()) {
-      LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
-    }
-    invalidateCache();
+    watchmanOverflowEvent.set(event);
   }
 
   private void invalidateCache() {
