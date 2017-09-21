@@ -125,6 +125,7 @@ java_test(
         "//src/com/facebook/buck/worker:worker_job_params",
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
+        "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/cli:FakeBuckConfig",
         "//test/com/facebook/buck/config:testutil",
         "//test/com/facebook/buck/event:testutil",

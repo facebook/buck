@@ -31,6 +31,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.cli.ActionGraphParallelizationMode;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -1782,6 +1784,7 @@ public class ParserTest {
   public void defaultFlavorsInRuleArgsAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     Path buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent());
@@ -1822,6 +1825,7 @@ public class ParserTest {
   public void defaultFlavorsInConfigAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     Path buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent());
