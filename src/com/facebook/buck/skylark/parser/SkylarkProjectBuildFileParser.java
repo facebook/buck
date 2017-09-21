@@ -48,7 +48,6 @@ import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Mutability;
@@ -152,17 +151,17 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       throw BuildFileParseException.createForUnknownParseError(
           "Cannot parse build file " + buildFile);
     }
-    ImmutableList.Builder<Map<String, Object>> rawRuleBuilder = ImmutableList.builder();
+    ParseContext parseContext = new ParseContext();
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       Environment env =
           createBuildFileEvaluationEnvironment(
-              buildFile, buildFilePath, buildFileAst, eventHandler, mutability, rawRuleBuilder);
+              buildFile, buildFilePath, buildFileAst, eventHandler, mutability, parseContext);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate build file " + buildFile);
       }
-      return rawRuleBuilder.build();
+      return parseContext.getRecordedRules();
     }
   }
 
@@ -176,10 +175,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       BuildFileAST buildFileAst,
       PrintingEventHandler eventHandler,
       Mutability mutability,
-      ImmutableList.Builder<Map<String, Object>> rawRuleBuilder)
+      ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     Environment.Frame buckGlobals = getBuckGlobals();
-    ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions(rawRuleBuilder);
+    ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions(parseContext);
     ImmutableMap<String, Environment.Extension> importMap =
         buildImportMap(buildFileAst.getImports(), buckGlobals, buckRuleFunctions, eventHandler);
     Environment env =
@@ -292,11 +291,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   /**
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
-  private ImmutableList<BuiltinFunction> getBuckRuleFunctions(
-      ImmutableList.Builder<Map<String, Object>> builder) {
+  private ImmutableList<BuiltinFunction> getBuckRuleFunctions(ParseContext parseContext) {
     ImmutableList.Builder<BuiltinFunction> ruleFunctionsBuilder = ImmutableList.builder();
     for (Description<?> description : options.getDescriptions()) {
-      ruleFunctionsBuilder.add(newRuleDefinition(description, builder));
+      ruleFunctionsBuilder.add(newRuleDefinition(description, parseContext));
     }
     return ruleFunctionsBuilder.build();
   }
@@ -308,19 +306,17 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * capture passed attribute values in a map and adds them to the {@code ruleRegistry}.
    *
    * @param ruleClass The name of the rule to to define.
-   * @param ruleRegistry The registry of invoked rules with corresponding values.
+   * @param parseContext The parse context tracking useful information like recorded rules.
    * @return Skylark function to handle the Buck rule.
    */
-  private BuiltinFunction newRuleDefinition(
-      Description<?> ruleClass, ImmutableList.Builder<Map<String, Object>> ruleRegistry) {
+  private BuiltinFunction newRuleDefinition(Description<?> ruleClass, ParseContext parseContext) {
     String name = Description.getBuildRuleType(ruleClass).getName();
     return new BuiltinFunction(
         name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
 
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(
-          Map<String, Object> kwargs, FuncallExpression ast, Environment env)
-          throws EvalException, InterruptedException {
+          Map<String, Object> kwargs, FuncallExpression ast, Environment env) {
         ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
                 .put("buck.base_path", env.lookup(PACKAGE_NAME_GLOBAL))
@@ -330,7 +326,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                 typeCoercerFactory, ruleClass.getConstructorArgType());
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo);
-        ruleRegistry.add(builder.build());
+        parseContext.recordRule(builder.build());
         return Runtime.NONE;
       }
     };
@@ -466,6 +462,32 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       }
       NativeModule other = (NativeModule) obj;
       return this == other || this.buckRuleFunctionRegistry.equals(other.buckRuleFunctionRegistry);
+    }
+  }
+
+  /**
+   * Tracks parse context.
+   *
+   * <p>This class provides API to record information retrieved while parsing a build file like
+   * parsed rules.
+   */
+  private static class ParseContext {
+    private final ImmutableList.Builder<Map<String, Object>> rawRuleBuilder;
+
+    private ParseContext() {
+      rawRuleBuilder = ImmutableList.builder();
+    }
+
+    private void recordRule(Map<String, Object> rawRule) {
+      rawRuleBuilder.add(rawRule);
+    }
+
+    /**
+     * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as
+     *     a map with attributes as keys and parameters as values.
+     */
+    ImmutableList<Map<String, Object>> getRecordedRules() {
+      return rawRuleBuilder.build();
     }
   }
 }
