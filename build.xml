@@ -49,6 +49,7 @@
 
   <property name="buck.pythonpath" value="${typing.dir}:${pathlib.dir}:${pywatchman.dir}:${nailgun.dir}:${testutil.integration.dir}" />
 
+  <property name="immutables-builder-standalone.jar" value="${third-party.dir}/java/immutables/builder-2.4.6.jar" />
   <property name="immutables-value-standalone.jar" value="${third-party.dir}/java/immutables/value-2.4.6.jar" />
 
   <property name="manual.gensrc.dir" value="${basedir}/src-gen" />
@@ -118,6 +119,7 @@
     <include name="guice/guice-multibindings-3.0.jar" />
     <include name="gson/gson-2.2.4.jar" />
     <include name="icu4j/icu4j-54.1.1.jar" />
+    <include name="immutables/builder-2.4.6.jar" />
     <include name="immutables/value-2.4.6.jar" />
     <include name="infer-annotations/infer-annotations-4.1.jar" />
     <include name="nuprocess/nuprocess-1.1.0.jar" />
@@ -181,6 +183,13 @@
   <path id="classpath-compile-manual-gen-src">
     <fileset refid="third-party.jars" />
   </path>
+
+  <path id="processorpath">
+    <pathelement location="${immutables-value-standalone.jar}"/>
+    <pathelement location="${immutables-builder-standalone.jar}"/>
+  </path>
+
+  <pathconvert refid="processorpath" property="processorpath" />
 
   <path id="junit">
     <pathelement location="${third-party.dir}/java/junit/junit-4.12.jar" />
@@ -403,7 +412,7 @@
           <pathelement location="${eclipse.dir}/ecj-4.6.2.jar" />
         </compilerclasspath>
         <compilerarg value="-processorpath" />
-        <compilerarg value="${immutables-value-standalone.jar}" />
+        <compilerarg value="${processorpath}" />
         <compilerarg value="-s" />
         <compilerarg value="@{gensrcdir}" />
         <ecj-params />

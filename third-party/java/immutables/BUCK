@@ -10,14 +10,31 @@ java_annotation_processor(
     ],
 )
 
-prebuilt_jar(
+java_library(
     name = "immutables",
+    exported_deps = [
+        ":builder",
+        ":value",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "value",
     binary_jar = "value-2.4.6.jar",
     source_jar = "value-2.4.6-sources.jar",
     licenses = [
         "COPYING",
     ],
-    visibility = [
-        "PUBLIC",
+)
+
+prebuilt_jar(
+    name = "builder",
+    binary_jar = "builder-2.4.6.jar",
+    source_jar = "builder-2.4.6-sources.jar",
+    licenses = [
+        "COPYING",
     ],
 )
