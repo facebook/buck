@@ -231,8 +231,16 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
+
+    ImmutableList<NativeLinkable> delegateLinkables =
+        delegate
+            .flatMap(
+                d -> d.getNativeLinkableExportedDeps(getBuildTarget(), ruleResolver, cxxPlatform))
+            .orElse(ImmutableList.of());
+
     return RichStream.from(exportedDeps.get(ruleResolver, cxxPlatform))
         .filter(NativeLinkable.class)
+        .concat(RichStream.from(delegateLinkables))
         .toImmutableList();
   }
 
@@ -309,13 +317,6 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
             SourcePathArg.of(Preconditions.checkNotNull(rule.getSourcePathToOutput())));
       }
     }
-
-    // We want to construct a flavored build target that includes a platform because it would allow
-    // the plugin to extract a more specific platform (not necessarily a CxxPlatform,
-    // e.g., ApplePlatform).
-    BuildTarget targeWithPlatform = getBuildTarget().withFlavors(cxxPlatform.getFlavor());
-    delegate.ifPresent(
-        p -> p.populateLinkerArguments(targeWithPlatform, ruleResolver, type, linkerArgsBuilder));
 
     final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 

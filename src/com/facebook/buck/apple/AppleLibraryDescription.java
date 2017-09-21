@@ -37,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -59,7 +60,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -796,19 +796,19 @@ public class AppleLibraryDescription
   }
 
   @Override
-  public void populateLinkerArguments(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      Linker.LinkableDepType type,
-      ImmutableList.Builder<Arg> argsBuilder) {
+  public Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform) {
     if (!targetContainsSwift(target, resolver)) {
-      return;
+      return Optional.empty();
     }
 
-    Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(target);
+    BuildTarget targetWithPlatform = target.withAppendedFlavors(platform.getFlavor());
+    Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(targetWithPlatform);
     if (swiftPlatform.isPresent()) {
-      SwiftRuntimeNativeLinkable.populateLinkerArguments(argsBuilder, swiftPlatform.get(), type);
+      return Optional.of(ImmutableList.of(new SwiftRuntimeNativeLinkable(swiftPlatform.get())));
     }
+
+    return Optional.empty();
   }
 
   @Override

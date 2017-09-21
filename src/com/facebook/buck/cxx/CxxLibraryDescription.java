@@ -467,6 +467,17 @@ public class CxxLibraryDescription
     extraLdFlagsBuilder.addAll(linkerFlags);
     ImmutableList<StringWithMacros> extraLdFlags = extraLdFlagsBuilder.build();
 
+    ImmutableList<NativeLinkable> delegateNativeLinkables =
+        delegate
+            .flatMap(d -> d.getNativeLinkableExportedDeps(sharedTarget, ruleResolver, cxxPlatform))
+            .orElse(ImmutableList.of());
+
+    ImmutableList<NativeLinkable> allNativeLinkables =
+        RichStream.from(deps)
+            .filter(NativeLinkable.class)
+            .concat(RichStream.from(delegateNativeLinkables))
+            .toImmutableList();
+
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -480,7 +491,7 @@ public class CxxLibraryDescription
         sharedLibraryPath,
         linkableDepType,
         args.getThinLto(),
-        RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+        allNativeLinkables,
         cxxRuntimeType,
         bundleLoader,
         blacklist,

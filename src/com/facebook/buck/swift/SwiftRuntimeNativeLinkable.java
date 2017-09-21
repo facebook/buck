@@ -48,7 +48,7 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
               SWIFT_RUNTIME));
   private final SwiftPlatform swiftPlatform;
 
-  SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
+  public SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
     this.swiftPlatform = swiftPlatform;
   }
 

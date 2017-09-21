@@ -18,10 +18,10 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -49,12 +49,12 @@ public interface CxxLibraryDescriptionDelegate {
   Optional<ImmutableList<SourcePath>> getObjectFilePaths(
       BuildTarget target, BuildRuleResolver resolver);
 
-  /** Provides the ability for the plugin to provide additional arguments to the linker. */
-  void populateLinkerArguments(
-      BuildTarget target,
-      BuildRuleResolver resolver,
-      Linker.LinkableDepType type,
-      ImmutableList.Builder<Arg> argsBuilder);
+  /**
+   * Provides the ability for the plugin to provide additional {@link NativeLinkable}s that will be
+   * exported.
+   */
+  Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
 
   /**
    * Specifies whether a library artifact (e.g., libName.a) should be produced. For example,
