@@ -114,7 +114,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     thrown.expect(BuildFileParseException.class);
 
-    parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    parser.getAll(buildFile, new AtomicLong());
   }
 
   @Test
@@ -132,7 +132,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     thrown.expect(BuildFileParseException.class);
 
-    parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    parser.getAll(buildFile, new AtomicLong());
   }
 
   @Test
@@ -360,7 +360,7 @@ public class SkylarkProjectBuildFileParserTest {
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+        parser.getAll(buildFile, new AtomicLong());
     assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
     return allRulesAndMetaRules.get(0);
   }
