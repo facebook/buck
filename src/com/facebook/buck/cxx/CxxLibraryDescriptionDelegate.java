@@ -55,4 +55,17 @@ public interface CxxLibraryDescriptionDelegate {
       BuildRuleResolver resolver,
       Linker.LinkableDepType type,
       ImmutableList.Builder<Arg> argsBuilder);
+
+  /**
+   * Specifies whether a library artifact (e.g., libName.a) should be produced. For example,
+   * header-only libs will not normally produce a library. Since {@link CxxLibraryDescription} is
+   * not aware of other sources, it uses this method as an additional signal to determine whether it
+   * should produce a final artifact, even it doesn't have to if looking at just its own sources.
+   */
+  boolean getShouldProduceLibraryArtifact(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole);
 }

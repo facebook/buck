@@ -248,7 +248,22 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
 
-    if (!headerOnly.apply(cxxPlatform) && propagateLinkables) {
+    final boolean delegateWantsArtifact =
+        delegate
+            .map(
+                d ->
+                    d.getShouldProduceLibraryArtifact(
+                        getBuildTarget(), ruleResolver, cxxPlatform, type, forceLinkWhole))
+            .orElse(false);
+    final boolean headersOnly = headerOnly.apply(cxxPlatform);
+    final boolean shouldProduceArtifact =
+        (!headersOnly || delegateWantsArtifact) && propagateLinkables;
+
+    Preconditions.checkState(
+        shouldProduceArtifact || !delegateWantsArtifact,
+        "Delegate wants artifact but will not produce one");
+
+    if (shouldProduceArtifact) {
       boolean isStatic;
       switch (linkage) {
         case STATIC:

@@ -810,4 +810,14 @@ public class AppleLibraryDescription
       SwiftRuntimeNativeLinkable.populateLinkerArguments(argsBuilder, swiftPlatform.get(), type);
     }
   }
+
+  @Override
+  public boolean getShouldProduceLibraryArtifact(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole) {
+    return targetContainsSwift(target, resolver);
+  }
 }
