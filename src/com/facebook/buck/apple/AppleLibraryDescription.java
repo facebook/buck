@@ -235,7 +235,8 @@ public class AppleLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
-      CxxLibraryDescription.CommonArg args) {
+      CxxLibraryDescription.CommonArg args,
+      Optional<AppleLibrarySwiftDelegate> swiftDelegate) {
     Optional<Map.Entry<Flavor, Type>> maybeType = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     return maybeType.flatMap(
         type -> {
@@ -262,6 +263,18 @@ public class AppleLibraryDescription
                     .getValue(buildTarget)
                     .orElseThrow(IllegalArgumentException::new);
 
+            ImmutableSet<CxxPreprocessorInput> preprocessorInputs =
+                swiftDelegate
+                    .map(
+                        d ->
+                            d.getPreprocessorInputForSwift(
+                                buildTarget, resolver, cxxPlatform, args))
+                    .orElseGet(
+                        () ->
+                            AppleLibraryDescriptionSwiftEnhancer
+                                .getPreprocessorInputsForAppleLibrary(
+                                    buildTarget, resolver, cxxPlatform));
+
             SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
@@ -275,8 +288,7 @@ public class AppleLibraryDescription
                     cxxPlatform,
                     applePlatform,
                     swiftBuckConfig,
-                    AppleLibraryDescriptionSwiftEnhancer.getPreprocessorInputsForAppleLibrary(
-                        buildTarget, resolver, cxxPlatform)));
+                    preprocessorInputs));
           }
 
           return Optional.empty();
@@ -299,7 +311,8 @@ public class AppleLibraryDescription
     }
 
     Optional<BuildRule> swiftRule =
-        createSwiftBuildRule(buildTarget, projectFilesystem, params, resolver, cellRoots, args);
+        createSwiftBuildRule(
+            buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.empty());
     if (swiftRule.isPresent()) {
       return swiftRule.get();
     }
