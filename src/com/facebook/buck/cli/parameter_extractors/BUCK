@@ -8,6 +8,7 @@ java_library(
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/config:config",
         "//third-party/java/jsr:jsr305",
     ],
 )

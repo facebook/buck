@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config;
+package com.facebook.buck.util.config;
 
 import com.google.common.base.Joiner;
 import java.io.IOException;

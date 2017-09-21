@@ -17,8 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
@@ -35,6 +33,8 @@ import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;

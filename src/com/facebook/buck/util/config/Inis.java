@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config;
+package com.facebook.buck.util.config;
 
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;

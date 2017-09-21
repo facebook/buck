@@ -18,13 +18,13 @@ package com.facebook.buck.util.cache;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableList;

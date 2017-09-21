@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.config;
+package com.facebook.buck.util.config;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.is;

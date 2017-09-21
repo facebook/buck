@@ -49,6 +49,7 @@ java_immutables_library(
     deps = [
         ":CacheRateStatsKeeper",
         "//src-gen:thrift",
+        "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:config",

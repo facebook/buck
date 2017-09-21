@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.config.Config;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;

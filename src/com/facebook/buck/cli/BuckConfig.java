@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static java.lang.Integer.parseInt;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.config.ConfigViewCache;
 import com.facebook.buck.io.MorePaths;
@@ -47,6 +46,7 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
+import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;

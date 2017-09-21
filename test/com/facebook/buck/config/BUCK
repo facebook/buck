@@ -1,39 +1,10 @@
-java_library(
-    name = "testutil",
-    srcs = glob(
-        ["*.java"],
-        excludes = [
-            "*Benchmark.java",
-            "*Test.java",
-        ],
-    ),
-    visibility = ["//test/..."],
-    deps = [
-        "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/model:simple_types",
-        "//src/com/facebook/buck/rules:relative_cell_name",
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//third-party/java/guava:guava",
-        "//third-party/java/immutables:immutables",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 standard_java_test(
     name = "config",
     deps = [
         "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/rules:relative_cell_name",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//test/com/facebook/buck/config:testutil",
+        "//src/com/facebook/buck/util/config:config",
         "//third-party/java/guava:guava",
-        "//third-party/java/hamcrest:java-hamcrest",
-        "//third-party/java/immutables:immutables",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
 )

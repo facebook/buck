@@ -16,7 +16,6 @@
 
 package com.facebook.buck.doctor;
 
-import com.facebook.buck.config.Configs;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.SourceControlInfo;
@@ -27,6 +26,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;

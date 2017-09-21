@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.config;
+package com.facebook.buck.util.config;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +30,8 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractRawConfig {
+@SuppressWarnings("PMD.BuckStyleImmutableMustBePackagePrivate")
+public abstract class AbstractRawConfig {
   public abstract ImmutableMap<String, ImmutableMap<String, String>> getValues();
 
   /**

@@ -454,6 +454,7 @@ java_library(
         "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/immutables:immutables",

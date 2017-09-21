@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.eden.EdenClientPool;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
@@ -27,6 +26,7 @@ import com.facebook.buck.util.autosparse.AbstractAutoSparseFactory;
 import com.facebook.buck.util.autosparse.AutoSparseConfig;
 import com.facebook.buck.util.autosparse.AutoSparseProjectFilesystemDelegate;
 import com.facebook.buck.util.autosparse.AutoSparseState;
+import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;

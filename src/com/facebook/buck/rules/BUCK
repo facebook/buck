@@ -57,7 +57,7 @@ java_library(
     deps = [
         ":cell_path_resolver_impls",
         ":interfaces",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/util/config:config",
         "//third-party/java/guava:guava",
     ],
 )
@@ -143,6 +143,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/versions:versions",
         "//src/com/facebook/buck/zip/rules:rules",
@@ -493,13 +494,15 @@ java_library(
         "CellPathResolverView.java",
         "DefaultCellPathResolver.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/config:config",
+    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
         ":interfaces",
         ":relative_cell_name",
-        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",

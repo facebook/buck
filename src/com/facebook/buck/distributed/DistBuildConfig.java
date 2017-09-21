@@ -17,12 +17,12 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.SlbBuckConfig;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.config.RawConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

@@ -19,6 +19,7 @@ package com.facebook.buck.config;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.RelativeCellName;
+import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;

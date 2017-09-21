@@ -17,10 +17,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.parameter_extractors.CommandRunnerParameters;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 
 class CommandRunnerParametersImplementation implements CommandRunnerParameters {

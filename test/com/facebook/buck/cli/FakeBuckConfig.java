@@ -16,12 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.ConfigBuilder;
-import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.ConfigBuilder;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;

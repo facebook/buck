@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli.parameter_extractors;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
+import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 
 /**

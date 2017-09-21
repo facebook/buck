@@ -17,12 +17,12 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
