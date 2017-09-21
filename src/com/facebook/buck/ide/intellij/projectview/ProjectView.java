@@ -278,6 +278,7 @@ public class ProjectView {
           .add("/res/", capture("anim", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("xml", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("menu", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("mipmap", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("animator"), "/")
           .build();
 
