@@ -19,8 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -71,6 +74,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -79,7 +83,8 @@ public class AppleTestDescription
     implements Description<AppleTestDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<AppleTestDescription.AbstractAppleTestDescriptionArg>,
-        MetadataProvidingDescription<AppleTestDescriptionArg> {
+        MetadataProvidingDescription<AppleTestDescriptionArg>,
+        AppleLibrarySwiftDelegate {
 
   /** Flavors for the additional generated build rules. */
   static final Flavor LIBRARY_FLAVOR = InternalFlavor.of("apple-test-library");
@@ -157,6 +162,16 @@ public class AppleTestDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleTestDescriptionArg args) {
+    if (!appleConfig.shouldUseSwiftDelegate()) {
+      Optional<BuildRule> buildRule =
+          appleLibraryDescription.createSwiftBuildRule(
+              buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.of(this));
+
+      if (buildRule.isPresent()) {
+        return buildRule.get();
+      }
+    }
+
     AppleDebugFormat debugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
@@ -526,5 +541,28 @@ public class AppleTestDescription
     default Optional<String> getProductName() {
       return Optional.empty();
     }
+  }
+
+  // AppleLibrarySwiftDelegate
+
+  @Override
+  public ImmutableSet<CxxPreprocessorInput> getPreprocessorInputForSwift(
+      BuildTarget buildTarget,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
+      CxxLibraryDescription.CommonArg args) {
+
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
+    Optional<CxxPreprocessorInput> publicInput =
+        CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
+            ruleResolver, buildTarget, cxxPlatform, HeaderVisibility.PUBLIC);
+    Collection<CxxPreprocessorInput> depsInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+
+    ImmutableSet.Builder<CxxPreprocessorInput> inputsBuilder = ImmutableSet.builder();
+    inputsBuilder.addAll(depsInputs);
+    publicInput.ifPresent(i -> inputsBuilder.add(i));
+
+    return inputsBuilder.build();
   }
 }
