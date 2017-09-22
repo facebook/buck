@@ -133,6 +133,7 @@ public class BuckQueryEnvironmentTest {
             createQueryBuildTarget("//example", "five"),
             createQueryBuildTarget("//example", "six"),
             createQueryBuildTarget("//example", "application-test-lib"),
+            createQueryBuildTarget("//example", "test-lib-lib"),
             createQueryBuildTarget("//example", "one-tests"),
             createQueryBuildTarget("//example", "four-tests"),
             createQueryBuildTarget("//example", "four-application-tests"),
