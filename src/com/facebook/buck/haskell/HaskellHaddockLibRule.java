@@ -285,7 +285,6 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))
           .addAll(getTypeFlags())
-          .add("--no-tmp-comp-dir")
           .add("--no-warnings")
           .addAll(
               MoreIterables.zipAndConcat(
