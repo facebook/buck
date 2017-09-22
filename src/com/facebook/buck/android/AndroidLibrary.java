@@ -211,9 +211,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   projectFilesystem,
                   ImmutableSortedSet.copyOf(
                       Iterables.concat(
-                          initialParams.getBuildDeps(),
-                          queriedDepsSupplier.get(),
-                          fullJarExportedDepsSupplier.get())),
+                          Iterables.concat(
+                              initialParams.getDeclaredDeps().get(),
+                              queriedDepsSupplier.get(),
+                              fullJarProvidedDeps,
+                              fullJarExportedDepsSupplier.get()),
+                          getConfiguredCompiler().getDeclaredDeps(ruleFinder))),
                   getJavac(),
                   getJavacOptions(),
                   DependencyMode.FIRST_ORDER,
