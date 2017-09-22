@@ -207,6 +207,8 @@ public final class Main {
   /**
    * Force JNA to be initialized early to avoid deadlock race condition.
    *
+   * <p>
+   *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
   public static final int JNA_POINTER_SIZE = Pointer.SIZE;
@@ -786,7 +788,10 @@ public final class Main {
                     executionEnvironment,
                     webServer,
                     locale,
-                    filesystem.getBuckPaths().getLogDir().resolve("test.log"));
+                    filesystem.getBuckPaths().getLogDir().resolve("test.log"),
+                    buckConfig.isLogBuildIdToConsoleEnabled()
+                        ? Optional.of(buildId)
+                        : Optional.empty());
             AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
             DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
             BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
@@ -1513,7 +1518,8 @@ public final class Main {
       ExecutionEnvironment executionEnvironment,
       Optional<WebServer> webServer,
       Locale locale,
-      Path testLogPath) {
+      Path testLogPath,
+      Optional<BuildId> buildId) {
     if (isSuperConsoleEnabled(console)) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
@@ -1525,7 +1531,8 @@ public final class Main {
               webServer,
               locale,
               testLogPath,
-              TimeZone.getDefault());
+              TimeZone.getDefault(),
+              buildId);
       superConsole.startRenderScheduler(
           SUPER_CONSOLE_REFRESH_RATE.toMillis(), TimeUnit.MILLISECONDS);
       return superConsole;
@@ -1538,7 +1545,8 @@ public final class Main {
         config.getNumberOfSlowRulesToShow(),
         locale,
         testLogPath,
-        executionEnvironment);
+        executionEnvironment,
+        buildId);
   }
 
   private boolean isSuperConsoleEnabled(Console console) {

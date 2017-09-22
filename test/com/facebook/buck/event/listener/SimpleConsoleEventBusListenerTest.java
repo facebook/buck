@@ -376,7 +376,8 @@ public class SimpleConsoleEventBusListenerTest {
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()), System.getProperties()));
+                ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+            Optional.empty());
 
     eventBus.register(listener);
   }

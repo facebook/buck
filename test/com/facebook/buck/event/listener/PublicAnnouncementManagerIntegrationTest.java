@@ -141,7 +141,8 @@ public class PublicAnnouncementManagerIntegrationTest {
               Optional.empty(),
               Locale.US,
               logPath,
-              TimeZone.getTimeZone("UTC"));
+              TimeZone.getTimeZone("UTC"),
+              Optional.empty());
       eventBus.register(listener);
 
       PublicAnnouncementManager manager =

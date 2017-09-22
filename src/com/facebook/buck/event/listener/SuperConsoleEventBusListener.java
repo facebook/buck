@@ -31,6 +31,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.TestRunEvent;
@@ -162,6 +163,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   /** Maximum width of the terminal. */
   private final int outputMaxColumns;
 
+  private final Optional<String> buildIdLine;
+
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
       Console console,
@@ -171,7 +174,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       Optional<WebServer> webServer,
       Locale locale,
       Path testLogPath,
-      TimeZone timeZone) {
+      TimeZone timeZone,
+      Optional<BuildId> buildId) {
     this(
         config,
         console,
@@ -185,7 +189,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         500L,
         500L,
         1000L,
-        true);
+        true,
+        buildId);
   }
 
   @VisibleForTesting
@@ -202,7 +207,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long minimumDurationMillisecondsToShowParse,
       long minimumDurationMillisecondsToShowActionGraph,
       long minimumDurationMillisecondsToShowWatchman,
-      boolean hideEmptyDownload) {
+      boolean hideEmptyDownload,
+      Optional<BuildId> buildId) {
     super(console, clock, locale, executionEnvironment, false, config.getNumberOfSlowRulesToShow());
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
@@ -258,6 +264,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
     }
     this.outputMaxColumns = outputMaxColumns;
+    this.buildIdLine =
+        buildId.isPresent()
+            ? Optional.of(SimpleConsoleEventBusListener.getBuildLogLine(buildId.get()))
+            : Optional.empty();
   }
 
   /** Schedules a runnable that updates the console output at a fixed interval. */
@@ -364,6 +374,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @VisibleForTesting
   public ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
+
+    if (buildIdLine.isPresent()) {
+      lines.add(buildIdLine.get());
+    }
 
     logEventPair(
         "Processing filesystem changes",

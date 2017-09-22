@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -63,7 +64,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       int numberOfSlowRulesToShow,
       Locale locale,
       Path testLogPath,
-      ExecutionEnvironment executionEnvironment) {
+      ExecutionEnvironment executionEnvironment,
+      Optional<BuildId> buildId) {
     super(console, clock, locale, executionEnvironment, true, numberOfSlowRulesToShow);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
@@ -76,6 +78,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             summaryVerbosity,
             locale,
             Optional.of(testLogPath));
+
+    if (buildId.isPresent()) {
+      printLines(ImmutableList.<String>builder().add(getBuildLogLine(buildId.get())));
+    }
+  }
+
+  public static String getBuildLogLine(BuildId buildId) {
+    return "Build UUID: " + buildId.toString();
   }
 
   @Override
@@ -184,8 +194,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
-    if (console.getVerbosity().isSilent()
-        && !event.getLevel().equals(Level.SEVERE)) {
+    if (console.getVerbosity().isSilent() && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();

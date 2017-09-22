@@ -1090,4 +1090,8 @@ public class BuckConfig implements ConfigPathGetter {
   public Config getConfig() {
     return config;
   }
+
+  public boolean isLogBuildIdToConsoleEnabled() {
+    return getBooleanValue("log", "log_build_id_to_console_enabled", false);
+  }
 }

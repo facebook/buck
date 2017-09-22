@@ -176,7 +176,8 @@ public class CacheCommandTest extends EasyMockSupport {
             0L,
             0L,
             1000L,
-            false);
+            false,
+            Optional.empty());
     eventBus.register(listener);
     return listener;
   }
