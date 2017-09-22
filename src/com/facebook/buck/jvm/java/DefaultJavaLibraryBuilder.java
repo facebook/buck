@@ -27,10 +27,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -38,6 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -130,6 +133,20 @@ public class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
     this.args = args;
+
+    ImmutableSortedSet<BuildTarget> providedDeps = args.getProvidedDeps();
+    if (args instanceof HasProvidedDepsQuery) {
+      HasProvidedDepsQuery hasProvidedDepsQuery = (HasProvidedDepsQuery) args;
+      if (hasProvidedDepsQuery.getProvidedDepsQuery().isPresent()) {
+        Query providedDepsQuery = hasProvidedDepsQuery.getProvidedDepsQuery().get();
+        Preconditions.checkNotNull(providedDepsQuery.getResolvedQuery());
+        providedDeps =
+            RichStream.from(args.getProvidedDeps())
+                .concat(providedDepsQuery.getResolvedQuery().stream())
+                .toImmutableSortedSet(Ordering.natural());
+      }
+    }
+
     return setSrcs(args.getSrcs())
         .setResources(args.getResources())
         .setResourcesRoot(args.getResourcesRoot())
@@ -137,7 +154,7 @@ public class DefaultJavaLibraryBuilder {
         .setProguardConfig(args.getProguardConfig())
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
         .setExportedDeps(args.getExportedDeps())
-        .setProvidedDeps(args.getProvidedDeps())
+        .setProvidedDeps(providedDeps)
         .setTests(args.getTests())
         .setManifestFile(args.getManifestFile())
         .setMavenCoords(args.getMavenCoords())

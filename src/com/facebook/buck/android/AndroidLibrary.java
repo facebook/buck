@@ -34,7 +34,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -154,14 +153,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       super.setArgs(args);
       AndroidLibraryDescription.CoreArg androidArgs = (AndroidLibraryDescription.CoreArg) args;
 
-      if (androidArgs.getProvidedDepsQuery().isPresent()) {
-        Query providedDepsQuery = androidArgs.getProvidedDepsQuery().get();
-        Preconditions.checkNotNull(providedDepsQuery.getResolvedQuery());
-        setProvidedDeps(
-            RichStream.from(args.getProvidedDeps())
-                .concat(providedDepsQuery.getResolvedQuery().stream())
-                .toImmutableSortedSet(Ordering.natural()));
-      }
       return setManifestFile(androidArgs.getManifest());
     }
 
