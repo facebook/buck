@@ -213,8 +213,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   ImmutableSortedSet.copyOf(
                       Iterables.concat(
                           Preconditions.checkNotNull(deps).getDeps(),
-                          Preconditions.checkNotNull(deps).getProvidedDeps(),
-                          getConfiguredCompiler().getDeclaredDeps(ruleFinder))),
+                          Preconditions.checkNotNull(deps).getProvidedDeps())),
                   getJavac(),
                   getJavacOptions(),
                   DependencyMode.FIRST_ORDER,
