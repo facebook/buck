@@ -567,7 +567,9 @@ public class ProjectFilesystemTest {
                 filesystem.getBuckPaths().getBuckOut(),
                 filesystem.getBuckPaths().getTrashDir(),
                 Paths.get(".idea"),
-                Paths.get(System.getProperty(ProjectFilesystem.BUCK_BUCKD_DIR_KEY, ".buckd")),
+                Paths.get(
+                    System.getProperty(
+                        DefaultProjectFilesystemFactory.BUCK_BUCKD_DIR_KEY, ".buckd")),
                 filesystem.getBuckPaths().getCacheDir(),
                 Paths.get(".git"),
                 Paths.get("foo"),

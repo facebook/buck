@@ -85,8 +85,6 @@ public class ProjectFilesystem {
 
   private static final Path EDEN_MAGIC_PATH_ELEMENT = Paths.get(".eden");
 
-  @VisibleForTesting public static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
-
   private final Path projectRoot;
   private final BuckPaths buckPaths;
 
