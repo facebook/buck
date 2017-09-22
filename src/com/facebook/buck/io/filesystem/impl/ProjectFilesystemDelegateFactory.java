@@ -55,7 +55,10 @@ public final class ProjectFilesystemDelegateFactory {
       Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(root, pool.get());
       if (mount.isPresent()) {
         LOG.debug("Created eden mount for %s: %s", root, mount.get());
-        return new EdenProjectFilesystemDelegate(mount.get(), config);
+        return new EdenProjectFilesystemDelegate(
+            mount.get(),
+            new DefaultProjectFilesystemDelegate(mount.get().getProjectRoot()),
+            config);
       } else {
         LOG.error("Failed to find Eden client for %s.", root);
       }
