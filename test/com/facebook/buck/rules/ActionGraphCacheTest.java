@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.Assert.assertEquals;
@@ -339,45 +340,24 @@ public class ActionGraphCacheTest {
   public void actionGraphParallelizationStateIsLogged() throws Exception {
     List<ExperimentEvent> experimentEvents;
 
-    new ActionGraphCache()
-        .getActionGraph(
-            eventBus,
-            NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-            false,
-            targetGraph,
-            keySeed,
-            ActionGraphParallelizationMode.DISABLED);
-    experimentEvents =
-        RichStream.from(trackedEvents.stream())
-            .filter(ExperimentEvent.class)
-            .collect(Collectors.toList());
-    assertThat(
-        experimentEvents,
-        contains(
-            allOf(
-                hasProperty("tag", equalTo("action_graph_parallelization")),
-                hasProperty("variant", equalTo("DISABLED")))));
-    trackedEvents.clear();
-
-    new ActionGraphCache()
-        .getActionGraph(
-            eventBus,
-            NOT_CHECK_GRAPHS, /* skipActionGraphCache */
-            false,
-            targetGraph,
-            keySeed,
-            ActionGraphParallelizationMode.ENABLED);
-    experimentEvents =
-        RichStream.from(trackedEvents.stream())
-            .filter(ExperimentEvent.class)
-            .collect(Collectors.toList());
-    assertThat(
-        experimentEvents,
-        contains(
-            allOf(
-                hasProperty("tag", equalTo("action_graph_parallelization")),
-                hasProperty("variant", equalTo("ENABLED")))));
-    trackedEvents.clear();
+    for (ActionGraphParallelizationMode mode :
+        ImmutableSet.of(
+            ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
+      new ActionGraphCache()
+          .getActionGraph(
+              eventBus,
+              NOT_CHECK_GRAPHS, /* skipActionGraphCache */
+              false,
+              targetGraph,
+              keySeed,
+              mode);
+      experimentEvents =
+          RichStream.from(trackedEvents.stream())
+              .filter(ExperimentEvent.class)
+              .collect(Collectors.toList());
+      assertThat(
+          "No experiment event is logged if not in experiment mode", experimentEvents, empty());
+    }
 
     new ActionGraphCache()
         .getActionGraph(

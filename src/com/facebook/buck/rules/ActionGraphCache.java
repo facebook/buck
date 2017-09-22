@@ -215,10 +215,10 @@ public class ActionGraphCache {
       parallelizationMode =
           RandomizedTrial.getGroupStable(
               "action_graph_parallelization", ActionGraphParallelizationMode.class);
+      eventBus.post(
+          new ExperimentEvent(
+              "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
     }
-    eventBus.post(
-        new ExperimentEvent(
-            "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
     switch (parallelizationMode) {
       case ENABLED:
         return createActionGraphInParallel(eventBus, transformer, targetGraph);
