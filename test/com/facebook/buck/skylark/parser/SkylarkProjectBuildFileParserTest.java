@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -357,11 +358,43 @@ public class SkylarkProjectBuildFileParserTest {
     getSingleRule(buildFile);
   }
 
+  @Test
+  public void parseMetadataIsReturned() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertThat(allRulesAndMetaRules, Matchers.hasSize(4));
+    Map<String, Object> prebuiltJarRule = allRulesAndMetaRules.get(0);
+    assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
+    Map<String, Object> includesMetadataRule = allRulesAndMetaRules.get(1);
+    @SuppressWarnings("unchecked")
+    ImmutableSet<String> includes = (ImmutableSet<String>) includesMetadataRule.get("__includes");
+    assertThat(
+        includes
+            .stream()
+            .map(projectFilesystem::resolve)
+            .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableList()),
+        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+    Map<String, Object> configsMetadataRule = allRulesAndMetaRules.get(2);
+    assertThat(configsMetadataRule.get("__configs"), equalTo(ImmutableMap.of()));
+    Map<String, Object> envsMetadataRule = allRulesAndMetaRules.get(3);
+    assertThat(envsMetadataRule.get("__env"), equalTo(ImmutableMap.of()));
+  }
+
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAll(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    return allRulesAndMetaRules.get(0);
+    ImmutableList<Map<String, Object>> allRules = parser.getAll(buildFile, new AtomicLong());
+    assertThat(allRules, Matchers.hasSize(1));
+    return allRules.get(0);
   }
 }

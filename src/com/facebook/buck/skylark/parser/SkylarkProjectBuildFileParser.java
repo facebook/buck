@@ -29,6 +29,7 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -113,7 +114,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public ImmutableList<Map<String, Object>> getAll(Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
-    return getBuildRules(buildFile);
+    return parseBuildFile(buildFile).rawRules;
   }
 
   @Override
@@ -121,31 +122,49 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Path buildFile, AtomicLong processedBytes)
       throws BuildFileParseException, InterruptedException, IOException {
     // TODO(ttsugrii): add metadata rules
-    return getBuildRules(buildFile);
+    ParseResult parseResult = parseBuildFile(buildFile);
+    // TODO(ttsugrii): find a way to reuse the same constants across Python DSL and Skylark parsers
+    return ImmutableList.<Map<String, Object>>builder()
+        .addAll(parseResult.rawRules)
+        .add(
+            ImmutableMap.of(
+                "__includes",
+                parseResult
+                    .loadedPaths
+                    .stream()
+                    .map(Object::toString)
+                    .collect(MoreCollectors.toImmutableSortedSet())))
+        // TODO(ttsugrii): implement once configuration options are exposed via Skylark API
+        .add(ImmutableMap.of("__configs", ImmutableMap.of()))
+        // TODO(ttsugrii): implement once environment variables are exposed via Skylark API
+        .add(ImmutableMap.of("__env", ImmutableMap.of()))
+        .build();
   }
 
   /**
    * Retrieves build files requested in {@code buildFile}.
    *
    * @param buildFile The build file to parse.
-   * @return The build rules defined in {@code buildFile}.
+   * @return The {@link ParseResult} with build rules defined in {@code buildFile}.
    */
-  private ImmutableList<Map<String, Object>> getBuildRules(Path buildFile)
+  private ParseResult parseBuildFile(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     ImmutableList<Map<String, Object>> rules = ImmutableList.of();
     ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile);
     buckEventBus.post(startEvent);
+    ParseResult parseResult;
     try {
-      rules = parseBuildRules(buildFile);
+      parseResult = parseBuildRules(buildFile);
+      rules = parseResult.rawRules;
     } finally {
       // TODO(ttsugrii): think about reporting processed bytes and profiling support
       buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rules, 0L, Optional.empty()));
     }
-    return rules;
+    return parseResult;
   }
 
   /** @return The parsed build rules defined in {@code buildFile}. */
-  private ImmutableList<Map<String, Object>> parseBuildRules(Path buildFile)
+  private ParseResult parseBuildRules(Path buildFile)
       throws IOException, BuildFileParseException, InterruptedException {
     // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
     // configured for terminals that support it.
@@ -171,7 +190,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<Map<String, Object>> rules = parseContext.getRecordedRules();
       LOG.verbose("Got rules: %s", rules);
       LOG.verbose("Parsed %d rules from %s", rules.size(), buildFile);
-      return rules;
+      return new ParseResult(rules, parseContext.getLoadedpaths());
     }
   }
 
@@ -490,7 +509,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private static class ParseContext {
     private final ImmutableList.Builder<Map<String, Object>> rawRuleBuilder;
-    private final ImmutableSortedSet.Builder<String> loadedPathsBuilder;
+    private final ImmutableSortedSet.Builder<com.google.devtools.build.lib.vfs.Path>
+        loadedPathsBuilder;
 
     private ParseContext() {
       rawRuleBuilder = ImmutableList.builder();
@@ -504,7 +524,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
     /** Records usage of {@code path}. */
     private void recordLoadedPath(com.google.devtools.build.lib.vfs.Path path) {
-      loadedPathsBuilder.add(path.toString());
+      loadedPathsBuilder.add(path);
     }
 
     /**
@@ -513,6 +533,24 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
      */
     ImmutableList<Map<String, Object>> getRecordedRules() {
       return rawRuleBuilder.build();
+    }
+
+    /** @return The set of build files and extensions loaded while parsing requested build file. */
+    ImmutableSortedSet<com.google.devtools.build.lib.vfs.Path> getLoadedpaths() {
+      return loadedPathsBuilder.build();
+    }
+  }
+
+  /** Parse result containing build rules defined in build file and supporting metadata. */
+  private static class ParseResult {
+    private final ImmutableList<Map<String, Object>> rawRules;
+    private final ImmutableSortedSet<com.google.devtools.build.lib.vfs.Path> loadedPaths;
+
+    private ParseResult(
+        ImmutableList<Map<String, Object>> rawRules,
+        ImmutableSortedSet<com.google.devtools.build.lib.vfs.Path> loadedPaths) {
+      this.rawRules = rawRules;
+      this.loadedPaths = loadedPaths;
     }
   }
 }
