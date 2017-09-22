@@ -48,5 +48,9 @@ public interface ConfiguredCompiler extends AddsToRuleKey {
     return getCompiler().getDeps(ruleFinder);
   }
 
+  default Iterable<BuildRule> getBuildDeps(SourcePathRuleFinder ruleFinder) {
+    return Iterables.concat(getDeclaredDeps(ruleFinder), getExtraDeps(ruleFinder));
+  }
+
   Tool getCompiler();
 }

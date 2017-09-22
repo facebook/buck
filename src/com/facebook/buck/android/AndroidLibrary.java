@@ -209,11 +209,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               new AndroidLibraryGraphEnhancer(
                   libraryTarget,
                   projectFilesystem,
-                  initialParams.withExtraDeps(
-                      () ->
-                          ImmutableSortedSet.copyOf(
-                              Iterables.concat(
-                                  queriedDepsSupplier.get(), fullJarExportedDepsSupplier.get()))),
+                  ImmutableSortedSet.copyOf(
+                      Iterables.concat(
+                          initialParams.getBuildDeps(),
+                          queriedDepsSupplier.get(),
+                          fullJarExportedDepsSupplier.get())),
                   getJavac(),
                   getJavacOptions(),
                   DependencyMode.FIRST_ORDER,

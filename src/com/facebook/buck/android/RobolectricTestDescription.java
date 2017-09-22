@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -125,7 +126,9 @@ public class RobolectricTestDescription
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             projectFilesystem,
-            params.withExtraDeps(resolver.getAllRules(args.getExportedDeps())),
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    params.getBuildDeps(), resolver.getAllRules(args.getExportedDeps()))),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,

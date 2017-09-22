@@ -44,7 +44,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -95,7 +94,6 @@ public class DummyRDotJavaTest {
         new DummyRDotJava(
             buildTarget,
             filesystem,
-            TestBuildRuleParams.create(),
             ruleFinder,
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
@@ -193,7 +191,6 @@ public class DummyRDotJavaTest {
         new DummyRDotJava(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(

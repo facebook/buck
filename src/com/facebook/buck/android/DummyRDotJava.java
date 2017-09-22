@@ -26,11 +26,11 @@ import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
@@ -67,13 +67,14 @@ import java.util.zip.ZipFile;
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
  * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
  */
-public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, InitializableFromDisk<Object>, HasJavaAbi {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final Path outputJar;
   private final JarContentsSupplier outputJarContentsSupplier;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
+  private final ImmutableSortedSet<BuildRule> buildDeps;
   @AddToRuleKey JavacToJarStepFactory compileStepFactory;
   @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
@@ -87,7 +88,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public DummyRDotJava(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
@@ -98,7 +98,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this(
         buildTarget,
         projectFilesystem,
-        params,
         ruleFinder,
         androidResourceDeps,
         compileStepFactory,
@@ -112,7 +111,6 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private DummyRDotJava(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
@@ -121,10 +119,15 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        params.copyAppendingExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)));
+    super(buildTarget, projectFilesystem);
+
+    // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
+    // that is used to build it
+    buildDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(ruleFinder.filterBuildRuleInputs(abiInputs))
+            .addAll(compileStepFactory.getBuildDeps(ruleFinder))
+            .build();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
@@ -148,6 +151,11 @@ public class DummyRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return iter.transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
         .append(iter.transform(HasAndroidResourceDeps::getPathToRDotJavaPackageFile))
         .toList();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   @Override
