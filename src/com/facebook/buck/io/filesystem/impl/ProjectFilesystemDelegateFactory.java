@@ -77,7 +77,8 @@ public final class ProjectFilesystemDelegateFactory {
           AbstractAutoSparseFactory.getAutoSparseState(root, buckOut, hgCmdLine, autoSparseConfig);
       if (autoSparseState != null) {
         LOG.debug("Autosparse enabled, using AutoSparseProjectFilesystemDelegate");
-        return new AutoSparseProjectFilesystemDelegate(autoSparseState, root);
+        return new AutoSparseProjectFilesystemDelegate(
+            autoSparseState, new DefaultProjectFilesystemDelegate(root));
       }
     }
 

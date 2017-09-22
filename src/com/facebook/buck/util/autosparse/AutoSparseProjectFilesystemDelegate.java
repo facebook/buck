@@ -17,7 +17,6 @@
 package com.facebook.buck.util.autosparse;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
@@ -33,8 +32,8 @@ import java.nio.file.Path;
  * <em>sparse</em> profile.
  *
  * <p>The source control system state is tracked by in an {@link AutoSparseState} instance. Any
- * files queries about files outside the source control system manifest are forwarded to {@link
- * DefaultProjectFilesystemDelegate}.
+ * files queries about files outside the source control system manifest are forwarded to the
+ * provided {@link ProjectFilesystemDelegate}.
  */
 public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
@@ -46,11 +45,12 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
   /** Delegate to forward requests to for files that are outside of the hg root. */
   private final ProjectFilesystemDelegate delegate;
 
-  public AutoSparseProjectFilesystemDelegate(AutoSparseState autoSparseState, Path projectRoot)
+  public AutoSparseProjectFilesystemDelegate(
+      AutoSparseState autoSparseState, ProjectFilesystemDelegate delegate)
       throws InterruptedException {
     this.autoSparseState = autoSparseState;
     this.scRoot = autoSparseState.getSCRoot();
-    this.delegate = new DefaultProjectFilesystemDelegate(projectRoot);
+    this.delegate = delegate;
   }
 
   @Override
