@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -43,7 +44,7 @@ public class AndroidConsistencyIntegrationTest extends AbiCompilationModeTest {
             new AndroidAppModularityIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test

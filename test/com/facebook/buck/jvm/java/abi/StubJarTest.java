@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JarDumper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
@@ -99,7 +100,7 @@ public class StubJarTest {
   @Before
   public void createTempFilesystem() throws InterruptedException, IOException {
     File out = temp.newFolder();
-    filesystem = new ProjectFilesystem(out.toPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(out.toPath());
   }
 
   @Test

@@ -289,6 +289,7 @@ java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/apple:testutil",
         "//test/com/facebook/buck/cxx:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/testutil:testutil",

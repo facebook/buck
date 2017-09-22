@@ -49,6 +49,7 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -227,7 +228,7 @@ public class CachingBuildEngineTest {
 
     @Before
     public void setUp() throws Exception {
-      filesystem = new ProjectFilesystem(tmp.getRoot());
+      filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
       buildInfoStoreManager = new BuildInfoStoreManager();
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
@@ -46,7 +47,8 @@ public class ExoResourcesRewriterTest {
   @Before
   public void setUp() throws IOException, InterruptedException {
     filesystem =
-        new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
+        TestProjectFilesystems.createProjectFilesystem(
+            TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
   }
 

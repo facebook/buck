@@ -31,6 +31,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -74,7 +75,8 @@ public class OfflineScribeLoggerTest {
 
     final ImmutableList<String> blacklistCategories = ImmutableList.of(blacklistedCategory);
     final int maxScribeOfflineLogsKB = 7;
-    final ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    final ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     final Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
     String[] ids = {"test1", "test2", "test3", "test4"};
 
@@ -168,7 +170,8 @@ public class OfflineScribeLoggerTest {
   public void sendStoredLogs() throws Exception {
     final ImmutableList<String> blacklistCategories = ImmutableList.of();
     final int maxScribeOfflineLogsKB = 2;
-    final ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    final ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     final Path logDir = filesystem.getBuckPaths().getOfflineLogDir();
     final String[] ids = {"test1", "test2", "test3"};
     final String[] uniqueCategories = {"cat1", "cat2"};

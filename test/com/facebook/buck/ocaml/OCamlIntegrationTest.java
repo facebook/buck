@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
@@ -69,7 +70,7 @@ public class OCamlIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ocaml", tmp);
     workspace.setUp();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath());
 

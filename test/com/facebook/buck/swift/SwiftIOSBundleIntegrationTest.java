@@ -28,6 +28,7 @@ import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -54,7 +55,8 @@ public class SwiftIOSBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_swift_application_bundle", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
@@ -83,7 +85,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:parent");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
@@ -112,7 +115,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget parentDynamicTarget =
         BuildTargetFactory.newInstance("//:ios-parent-dynamic")
@@ -153,7 +157,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget parentDynamicTarget =
         BuildTargetFactory.newInstance("//:ios-parent-dynamic")
@@ -202,7 +207,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
@@ -238,7 +244,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_swift", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     workspace.replaceFileContents(
         "BUCK",
@@ -279,7 +286,8 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_on_objc", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:binary#iphonesimulator-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();

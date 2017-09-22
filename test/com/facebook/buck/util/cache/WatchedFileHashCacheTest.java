@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MoreCollectors;
@@ -143,7 +144,7 @@ public class WatchedFileHashCacheTest {
   @Test
   public void directoryHashChangesWhenFileInsideDirectoryChanges()
       throws InterruptedException, IOException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     tmp.newFolder("foo", "bar");
     Path inputFile = tmp.newFile("foo/bar/baz");
@@ -230,7 +231,7 @@ public class WatchedFileHashCacheTest {
 
   @Test
   public void thatWillGetIsCorrect() throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);
     Path buckOutFile = buckOut.resolve("file.txt");

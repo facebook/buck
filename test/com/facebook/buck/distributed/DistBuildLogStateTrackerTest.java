@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -104,7 +105,8 @@ public class DistBuildLogStateTrackerTest {
   @Before
   public void setUp() throws InterruptedException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     logDir = projectDir.getRoot().toPath().resolve(LOG_DIR);
     distBuildLogStateTracker = new DistBuildLogStateTracker(logDir, projectFilesystem);
   }

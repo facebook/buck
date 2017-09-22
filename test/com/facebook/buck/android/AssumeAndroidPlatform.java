@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 import static org.junit.Assume.assumeNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -36,7 +37,8 @@ public class AssumeAndroidPlatform {
 
   private static AndroidDirectoryResolver getAndroidDirectoryResolver()
       throws InterruptedException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     return new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),

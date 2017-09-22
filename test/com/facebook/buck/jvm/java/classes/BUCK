@@ -21,6 +21,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/immutables:immutables",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/jackson:jackson-annotations",

@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.config.Config;
@@ -83,7 +84,7 @@ public class ProjectFilesystemTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -326,7 +327,8 @@ public class ProjectFilesystemTest {
   @Test
   public void testWalkFileTreeWhenProjectRootIsWorkingDir()
       throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     final ImmutableList.Builder<String> fileNames = ImmutableList.builder();
 
     Path pathRelativeToProjectRoot =
@@ -551,7 +553,7 @@ public class ProjectFilesystemTest {
     Config config =
         ConfigBuilder.createFromText("[project]", "ignore = .git, foo, bar/, baz//, a/b/c");
     Path rootPath = tmp.getRoot();
-    ProjectFilesystem filesystem = new ProjectFilesystem(rootPath, config);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(rootPath, config);
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(filesystem.getIgnorePaths())
             .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
@@ -578,7 +580,8 @@ public class ProjectFilesystemTest {
     Config config = ConfigBuilder.createFromText("[cache]", "dir = cache_dir");
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
-        FluentIterable.from(new ProjectFilesystem(rootPath, config).getIgnorePaths())
+        FluentIterable.from(
+                TestProjectFilesystems.createProjectFilesystem(rootPath, config).getIgnorePaths())
             .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
             .transform(PathOrGlobMatcher::getPath)
             .toSet();
@@ -593,7 +596,8 @@ public class ProjectFilesystemTest {
       throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
     Files.createDirectories(tmp.getRoot().resolve("foo/bar"));
     filesystem.touch(Paths.get("foo/bar/cake.txt"));
     filesystem.touch(Paths.get("foo/bar/cake.txt.orig"));

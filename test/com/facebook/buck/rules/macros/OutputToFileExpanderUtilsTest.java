@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -49,7 +50,7 @@ public class OutputToFileExpanderUtilsTest {
   public void shouldTakeOutputFromOtherMacroAndOutputItToAFile() throws Exception {
     File root = tmp.newFolder();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(root.toPath());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root.toPath());
 
     String text = "cheese" + File.pathSeparator + "peas";
 

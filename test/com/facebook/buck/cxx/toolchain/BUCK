@@ -24,6 +24,7 @@ java_library(
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
     ],
 )

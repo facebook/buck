@@ -20,6 +20,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
@@ -119,7 +120,7 @@ public class SrcZipAwareFileBundlerTest {
 
   @Test
   public void shouldBundleFilesIfInputIsADirectory() throws InterruptedException, IOException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
     dest = filesystem.getPath("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src/subDir/subDir2/file1");
@@ -144,7 +145,7 @@ public class SrcZipAwareFileBundlerTest {
 
   @Test
   public void shouldBundleFilesAndKeepHierarchy() throws InterruptedException, IOException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     src = Paths.get("src");
     dest = filesystem.getPath("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src/subDir/file1");
@@ -170,7 +171,7 @@ public class SrcZipAwareFileBundlerTest {
   @Test(expected = HumanReadableException.class)
   public void shouldThrowAnExceptionIfBundlerOverwritesFiles()
       throws InterruptedException, IOException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     dest = filesystem.getRootPath().resolve("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src1/subDir/file1");
@@ -188,7 +189,7 @@ public class SrcZipAwareFileBundlerTest {
   @Test
   public void shouldBundleFilesAndKeepSrcFilesUnderBasePath()
       throws InterruptedException, IOException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     dest = filesystem.getPath("dest");
     subDirectoryFile1 = filesystem.getRootPath().resolve("src1/subDir/file1");

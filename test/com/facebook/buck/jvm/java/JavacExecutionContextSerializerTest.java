@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -59,7 +60,7 @@ public class JavacExecutionContextSerializerTest {
     DefaultJavaPackageFinder javaPackageFinder =
         new DefaultJavaPackageFinder(
             ImmutableSortedSet.of("paths", "from", "root"), ImmutableSet.of("path", "elements"));
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp);
+    ProjectFilesystem projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp);
     NoOpClassUsageFileWriter classUsageFileWriter = NoOpClassUsageFileWriter.instance();
     ImmutableMap<String, String> environment = ImmutableMap.of("k1", "v1", "k2", "v2");
     ImmutableMap<String, String> processExecutorContext =

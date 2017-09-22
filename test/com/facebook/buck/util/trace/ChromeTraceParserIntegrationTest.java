@@ -19,6 +19,7 @@ package com.facebook.buck.util.trace;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -42,7 +43,7 @@ public class ChromeTraceParserIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     parser = new ChromeTraceParser(projectFilesystem);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "chrome_trace_parser", tmp);
     workspace.setUp();

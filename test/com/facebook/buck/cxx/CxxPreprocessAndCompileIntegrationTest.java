@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -137,7 +138,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeSymlinkedWorkingDirectory() throws InterruptedException, IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
-    ProjectFilesystem filesystem = new ProjectFilesystem(folder.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(folder.getRoot().toPath());
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");

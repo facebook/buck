@@ -24,6 +24,7 @@ import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -160,7 +161,8 @@ public class SymlinkTreeTest {
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
+            FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
         new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
@@ -212,7 +214,8 @@ public class SymlinkTreeTest {
 
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
+            FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey ruleKey1 =
         new DefaultRuleKeyFactory(0, hashLoader, pathResolver, ruleFinder).build(genrule);
@@ -308,8 +311,10 @@ public class SymlinkTreeTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     tmp.getRoot().resolve("one").toFile().mkdir();
     tmp.getRoot().resolve("two").toFile().mkdir();
-    ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRoot().resolve("one"));
-    ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRoot().resolve("two"));
+    ProjectFilesystem fsOne =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().resolve("one"));
+    ProjectFilesystem fsTwo =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().resolve("two"));
 
     ImmutableBiMap<SourcePath, Path> expected =
         ImmutableBiMap.of(
@@ -335,9 +340,12 @@ public class SymlinkTreeTest {
     tmp.getRoot().resolve("a-fs").toFile().mkdir();
     tmp.getRoot().resolve("b-fs").toFile().mkdir();
     tmp.getRoot().resolve("c-fs").toFile().mkdir();
-    ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRoot().resolve("a-fs"));
-    ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRoot().resolve("b-fs"));
-    ProjectFilesystem fsThree = new ProjectFilesystem(tmp.getRoot().resolve("c-fs"));
+    ProjectFilesystem fsOne =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().resolve("a-fs"));
+    ProjectFilesystem fsTwo =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().resolve("b-fs"));
+    ProjectFilesystem fsThree =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().resolve("c-fs"));
 
     ImmutableBiMap<SourcePath, Path> expected =
         ImmutableBiMap.<SourcePath, Path>builder()

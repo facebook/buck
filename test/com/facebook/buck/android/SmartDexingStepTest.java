@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -71,7 +72,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash").toPath();
     Files.write("dummy", outputHashFile.toFile(), Charsets.UTF_8);
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
     DxPseudoRule rule =
@@ -260,7 +262,8 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
   @Test(expected = IllegalArgumentException.class)
   public void testCreateDxStepForDxPseudoRuleWithUnrecognizedOutput() throws InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));

@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBinaryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -153,7 +154,8 @@ public class KnownBuildRuleTypesTest {
       javac = temporaryFolder.newExecutableFile();
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
     BuckConfig buckConfig =
@@ -228,7 +230,8 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
       throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     KnownBuildRuleTypes knownBuildRuleTypes1 =
         KnownBuildRuleTypesTestUtil.createInstance(
             FakeBuckConfig.builder().build(),
@@ -253,7 +256,8 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void canSetDefaultPlatformToDefault() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("cxx", ImmutableMap.of("default_platform", "default"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
@@ -265,7 +269,8 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void canOverrideMultipleHostPlatforms() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "cxx#linux-x86_64", ImmutableMap.of("cache_links", "true"),
@@ -281,7 +286,8 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void canOverrideDefaultHostPlatform() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     Flavor flavor = InternalFlavor.of("flavor");
     String flag = "-flag";
     ImmutableMap<String, ImmutableMap<String, String>> sections =
@@ -297,7 +303,8 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void ocamlUsesConfiguredDefaultPlatform() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     Flavor flavor = InternalFlavor.of("flavor");
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
@@ -327,7 +334,8 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void javaDefaultCxxPlatform() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     Flavor flavor = InternalFlavor.of("flavor");
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(

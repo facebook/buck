@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -56,7 +57,7 @@ public class MacroHandlerTest {
 
   @Before
   public void before() throws Exception {
-    filesystem = new ProjectFilesystem(tmp.newFolder().toPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.newFolder().toPath());
     target = BuildTargetFactory.newInstance("//:test");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
     resolver =

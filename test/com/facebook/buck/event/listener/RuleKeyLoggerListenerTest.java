@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
@@ -54,7 +55,8 @@ public class RuleKeyLoggerListenerTest {
   public void setUp() throws InterruptedException, IOException {
     TemporaryFolder tempDirectory = new TemporaryFolder();
     tempDirectory.create();
-    projectFilesystem = new ProjectFilesystem(tempDirectory.getRoot().toPath());
+    projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tempDirectory.getRoot().toPath());
     outputExecutor =
         MostExecutors.newSingleThreadExecutor(new CommandThreadFactory(getClass().getName()));
     info =

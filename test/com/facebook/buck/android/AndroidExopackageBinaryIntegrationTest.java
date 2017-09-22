@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -73,7 +74,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
         .runBuckBuild(
             DEX_EXOPACKAGE_TARGET, NATIVE_EXOPACKAGE_TARGET, DEX_AND_NATIVE_EXOPACKAGE_TARGET)
         .assertSuccess();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test

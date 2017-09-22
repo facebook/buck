@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -53,7 +54,7 @@ public class JsRulesIntegrationTest {
     assumeFalse(Platform.detect() == Platform.WINDOWS);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
     workspace.setUp();
-    projectFilesystem = new ProjectFilesystem(workspace.getDestPath());
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     genPath = projectFilesystem.getBuckPaths().getGenDir();
   }
 

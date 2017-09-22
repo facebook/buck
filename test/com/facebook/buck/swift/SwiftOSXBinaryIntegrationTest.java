@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -109,7 +110,8 @@ public class SwiftOSXBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "modules_import", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:one#macosx-x86_64");
     ProjectWorkspace.ProcessResult runResult =
@@ -141,7 +143,8 @@ public class SwiftOSXBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "modules_import", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = workspace.newBuildTarget("//:second-one#macosx-x86_64");
     ProjectWorkspace.ProcessResult runResult =

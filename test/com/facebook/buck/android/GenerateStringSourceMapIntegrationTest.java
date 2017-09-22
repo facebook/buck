@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -43,7 +44,7 @@ public class GenerateStringSourceMapIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test

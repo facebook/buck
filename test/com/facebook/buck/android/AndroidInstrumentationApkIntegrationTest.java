@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -42,7 +43,8 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
             this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     String target = "//:app_cxx_lib_dep";
     workspace.runBuckCommand("build", target).assertSuccess();

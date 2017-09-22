@@ -31,7 +31,7 @@ import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -322,7 +322,7 @@ public class LuaBinaryIntegrationTest {
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.of(),

@@ -44,6 +44,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -201,7 +202,8 @@ public class ParserTest {
     // Create a temp directory with some build files.
     Path root = tempDir.getRoot().toRealPath();
     filesystem =
-        new ProjectFilesystem(root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
+        TestProjectFilesystems.createProjectFilesystem(
+            root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
     cellRoot = filesystem.getRootPath();
     eventBus = BuckEventBusForTests.newInstance();
 
@@ -1112,7 +1114,7 @@ public class ParserTest {
 
     Path newTempDir = Files.createTempDirectory("junit-temp-path").toRealPath();
     Files.createFile(newTempDir.resolve("bar.py"));
-    ProjectFilesystem newFilesystem = new ProjectFilesystem(newTempDir);
+    ProjectFilesystem newFilesystem = TestProjectFilesystems.createProjectFilesystem(newTempDir);
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(newFilesystem)

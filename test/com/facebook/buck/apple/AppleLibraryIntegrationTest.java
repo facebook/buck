@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -59,7 +60,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
@@ -79,7 +81,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_header_path_prefix", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,default");
@@ -99,7 +102,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_header_path_prefix", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary2:TestLibrary2#static,default");
@@ -120,7 +124,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     workspace.addBuckConfigLocalOption(
         "defaults.apple_library", "platform", "iphonesimulator-x86_64");
     workspace.addBuckConfigLocalOption("defaults.apple_library", "type", "shared");
@@ -147,7 +152,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_platform_and_type", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
     ProjectWorkspace.ProcessResult result =
@@ -169,7 +175,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#watchos-armv7k,static");
@@ -189,7 +196,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -209,7 +217,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -230,7 +239,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -252,7 +262,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary#static,macosx-x86_64");
@@ -272,7 +283,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
@@ -303,7 +315,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -338,7 +351,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -372,7 +386,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -409,7 +424,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand(
@@ -438,7 +454,8 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_shared", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary")
@@ -462,7 +479,8 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_shared", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary")
@@ -499,7 +517,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -542,7 +561,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -576,7 +596,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_with_library_dependencies", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -609,7 +630,8 @@ public class AppleLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_header_symlink_tree", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary")
@@ -636,7 +658,8 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_is_hermetic", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -685,7 +708,8 @@ public class AppleLibraryIntegrationTest {
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     Path binaryOutput =
         workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libreal-none.dylib"));
     assertThat(Files.exists(binaryOutput), is(true));
@@ -735,7 +759,8 @@ public class AppleLibraryIntegrationTest {
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     Path binaryOutput =
         workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libnone-swift.dylib"));
     assertThat(Files.exists(binaryOutput), is(true));

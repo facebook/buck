@@ -22,6 +22,7 @@ import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -81,7 +82,8 @@ public class BuildFileSpecTest {
   public void recursiveIgnorePaths() throws IOException, InterruptedException {
     Path ignoredBuildFile = Paths.get("a", "b", "BUCK");
     Config config = ConfigBuilder.createFromText("[project]", "ignore = a/b");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath(), config);
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.writeContentsToPath("", buildFile);

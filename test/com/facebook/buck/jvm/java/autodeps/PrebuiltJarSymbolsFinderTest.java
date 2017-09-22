@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -129,7 +130,7 @@ public class PrebuiltJarSymbolsFinderTest {
                 new JavaSymbolsRule(
                     BuildTargetFactory.newInstance("//foo:rule"),
                     finder,
-                    new ProjectFilesystem(tmp.getRoot()));
+                    TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
           } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);
           }
@@ -174,7 +175,7 @@ public class PrebuiltJarSymbolsFinderTest {
         new JavaSymbolsRule(
             BuildTargetFactory.newInstance("//foo:rule"),
             createFinderForGeneratedJar("//foo:jar_genrule1"),
-            new ProjectFilesystem(tmp.getRoot()));
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
     RuleKey key1 =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
@@ -184,7 +185,7 @@ public class PrebuiltJarSymbolsFinderTest {
         new JavaSymbolsRule(
             BuildTargetFactory.newInstance("//foo:rule"),
             createFinderForGeneratedJar("//foo:jar_genrule2"),
-            new ProjectFilesystem(tmp.getRoot()));
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
     RuleKey key2 =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
             .build(javaSymbolsRule2);
@@ -209,7 +210,7 @@ public class PrebuiltJarSymbolsFinderTest {
       }
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get(jarFileName));
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }

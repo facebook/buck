@@ -25,6 +25,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
@@ -67,7 +68,8 @@ public class AndroidResourceFilterIntegrationTest {
   @BeforeClass
   public static void findBuildToolsVersion() throws InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     AndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
             filesystem.getRootPath().getFileSystem(),
@@ -86,7 +88,7 @@ public class AndroidResourceFilterIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test

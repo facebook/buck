@@ -23,6 +23,7 @@ import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.Clock;
@@ -62,7 +63,8 @@ public class DefectReporterTest {
 
   @Test
   public void testAttachesPaths() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     DoctorConfig config = DoctorConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter =
@@ -89,7 +91,8 @@ public class DefectReporterTest {
 
   @Test
   public void testAttachesReport() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     DoctorConfig config = DoctorConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter =

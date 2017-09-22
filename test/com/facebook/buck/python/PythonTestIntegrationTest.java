@@ -25,7 +25,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TestConsole;
@@ -211,7 +211,7 @@ public class PythonTestIntegrationTest {
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),

@@ -177,6 +177,7 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/io:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",

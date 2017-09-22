@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -137,8 +138,10 @@ public class DistBuildFileHashesTest {
     public Fixture(TemporaryFolder tempDir)
         throws InterruptedException, IOException, NoSuchBuildTargetException {
       this(
-          new ProjectFilesystem(tempDir.newFolder("first").toPath().toRealPath()),
-          new ProjectFilesystem(tempDir.newFolder("second").toPath().toRealPath()));
+          TestProjectFilesystems.createProjectFilesystem(
+              tempDir.newFolder("first").toPath().toRealPath()),
+          TestProjectFilesystems.createProjectFilesystem(
+              tempDir.newFolder("second").toPath().toRealPath()));
     }
 
     protected BuckConfig createBuckConfig() {
@@ -161,7 +164,7 @@ public class DistBuildFileHashesTest {
         if (Files.isDirectory(path)) {
           cacheList.add(
               DefaultFileHashCache.createDefaultFileHashCache(
-                  new ProjectFilesystem(path), FileHashCacheMode.DEFAULT));
+                  TestProjectFilesystems.createProjectFilesystem(path), FileHashCacheMode.DEFAULT));
         }
       }
       return new StackedFileHashCache(cacheList.build());
@@ -224,7 +227,8 @@ public class DistBuildFileHashesTest {
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
 
     ProjectFilesystem readProjectFilesystem =
-        new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
+        TestProjectFilesystems.createProjectFilesystem(
+            tempDir.newFolder("read_hashes").toPath().toRealPath());
     ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
     EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
     EasyMock.replay(mockCache);
@@ -249,7 +253,8 @@ public class DistBuildFileHashesTest {
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
 
     ProjectFilesystem materializeProjectFilesystem =
-        new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
+        TestProjectFilesystems.createProjectFilesystem(
+            tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
 
     ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
     EasyMock.expect(mockCache.getFilesystem())
@@ -288,7 +293,8 @@ public class DistBuildFileHashesTest {
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
 
     ProjectFilesystem materializeProjectFilesystem =
-        new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
+        TestProjectFilesystems.createProjectFilesystem(
+            tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
 
     ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
     EasyMock.expect(mockCache.getFilesystem())
@@ -322,7 +328,8 @@ public class DistBuildFileHashesTest {
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
 
     ProjectFilesystem readProjectFilesystem =
-        new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
+        TestProjectFilesystems.createProjectFilesystem(
+            tempDir.newFolder("read_hashes").toPath().toRealPath());
     ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
     EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
     EasyMock.replay(mockCache);
@@ -346,7 +353,9 @@ public class DistBuildFileHashesTest {
 
     private ArchiveFilesFixture(Path firstFolder, Path secondFolder)
         throws InterruptedException, IOException, NoSuchBuildTargetException {
-      super(new ProjectFilesystem(firstFolder), new ProjectFilesystem(secondFolder));
+      super(
+          TestProjectFilesystems.createProjectFilesystem(firstFolder),
+          TestProjectFilesystems.createProjectFilesystem(secondFolder));
       this.firstFolder = firstFolder;
       this.secondFolder = secondFolder;
     }
@@ -414,7 +423,8 @@ public class DistBuildFileHashesTest {
       List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
       ProjectFilesystem readProjectFilesystem =
-          new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
+          TestProjectFilesystems.createProjectFilesystem(
+              tempDir.newFolder("read_hashes").toPath().toRealPath());
       ProjectFileHashCache mockCache = EasyMock.createMock(ProjectFileHashCache.class);
       EasyMock.expect(mockCache.getFilesystem()).andReturn(readProjectFilesystem).anyTimes();
       EasyMock.replay(mockCache);

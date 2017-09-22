@@ -31,6 +31,7 @@ import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.ThriftException;
@@ -105,7 +106,8 @@ public class ThriftArtifactCacheTest {
     HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
     HttpService fetchClient = EasyMock.createMock(HttpService.class);
     BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempPaths.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     NetworkCacheArgs networkArgs =
         NetworkCacheArgs.builder()
@@ -225,7 +227,8 @@ public class ThriftArtifactCacheTest {
     HttpService storeClient = EasyMock.createNiceMock(HttpService.class);
     HttpService fetchClient = EasyMock.createMock(HttpService.class);
     BuckEventBus eventBus = EasyMock.createNiceMock(BuckEventBus.class);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempPaths.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     NetworkCacheArgs networkArgs =
         NetworkCacheArgs.builder()

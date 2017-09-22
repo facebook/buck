@@ -29,6 +29,7 @@ import com.facebook.buck.android.toolchain.NdkCxxRuntime;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -96,7 +97,8 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   private Path getNdkRoot() throws InterruptedException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
             projectFilesystem.getRootPath().getFileSystem(),
@@ -158,7 +160,8 @@ public class NdkCxxPlatformIntegrationTest {
             + "  app_platform = android-21\n";
 
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths", tmp);
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     workspace.writeContentsToPath(buckConfig, ".buckconfig");
 
     BuildTarget target =
@@ -182,7 +185,8 @@ public class NdkCxxPlatformIntegrationTest {
 
     // Run another build in a location with a longer PWD, to verify that this doesn't affect output.
     ProjectWorkspace longPwdWorkspace = setupWorkspace("ndk_debug_paths", tmp_long_pwd);
-    ProjectFilesystem longPwdFilesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem longPwdFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     longPwdWorkspace.writeContentsToPath(buckConfig, ".buckconfig");
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     lib =

@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -566,7 +567,8 @@ public class RemoteFileTest {
           };
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toAbsolutePath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toAbsolutePath());
 
     BuildTarget target = BuildTargetFactory.newInstance("//cake:walk");
     BuildRuleParams params = TestBuildRuleParams.create();

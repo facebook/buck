@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -50,7 +51,7 @@ public class JavaTestGetClassNamesIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "java_test_get_class_names", temporaryFolder);
     workspace.setUp();
-    projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     resolver = DefaultSourcePathResolver.from(createMock(SourcePathRuleFinder.class));
   }
 

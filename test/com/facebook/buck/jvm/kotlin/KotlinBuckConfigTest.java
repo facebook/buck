@@ -24,6 +24,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
@@ -151,7 +152,8 @@ public class KotlinBuckConfigTest {
     Path kotlinCompiler = kotlinHome.resolve("bin").resolve("kotlinc");
     MoreFiles.makeExecutable(kotlinCompiler);
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(testDataDirectory.resolve("."));
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(testDataDirectory.resolve("."));
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
@@ -315,7 +317,7 @@ public class KotlinBuckConfigTest {
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setFilesystem(new ProjectFilesystem(testDataDirectory))
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(testDataDirectory))
             .setSections(
                 ImmutableMap.of(
                     "kotlin",

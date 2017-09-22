@@ -23,6 +23,7 @@ import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -99,7 +100,7 @@ public class AndroidBinaryInstallIntegrationTest {
     projectWorkspace.setUp();
     projectWorkspace.addBuckConfigLocalOption(
         "install", "concurrent_install", concurrentInstallType.toString());
-    filesystem = new ProjectFilesystem(tmpFolder.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     currentBuildState = null;
     apkVersionCode = "1";

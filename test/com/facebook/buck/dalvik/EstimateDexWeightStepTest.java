@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.dalvik.EstimateDexWeightStep.DexWeightEstimator;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -62,7 +63,7 @@ public class EstimateDexWeightStepTest {
     tmp.newFile(pathWithPlatformSeparators("dir/com/example/not_a_class.png"));
     tmp.newFile(pathWithPlatformSeparators("dir/com/example/subpackage/Baz.class"));
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     Path pathToJarOrClassesDirectory = Paths.get(name);

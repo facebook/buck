@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -86,7 +86,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.of(0L));
@@ -102,7 +102,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.of(0L));
@@ -134,7 +134,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.empty());
@@ -180,7 +180,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.empty());
@@ -229,7 +229,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.empty());
@@ -334,7 +334,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.empty());
@@ -386,7 +386,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READONLY,
             /* maxCacheSizeBytes */ Optional.of(0L));
@@ -474,7 +474,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(tmpDir.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.of(1024L));
@@ -500,7 +500,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(tmpDir.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.empty());
@@ -533,7 +533,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.of(3L));
@@ -569,7 +569,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.of(3L));
@@ -603,7 +603,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             cacheDir,
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.of(9L));
@@ -697,7 +697,7 @@ public class DirArtifactCacheTest {
     dirArtifactCache =
         new DirArtifactCache(
             "dir",
-            new ProjectFilesystem(cacheDir),
+            TestProjectFilesystems.createProjectFilesystem(cacheDir),
             Paths.get("."),
             CacheReadMode.READWRITE,
             /* maxCacheSizeBytes */ Optional.empty());

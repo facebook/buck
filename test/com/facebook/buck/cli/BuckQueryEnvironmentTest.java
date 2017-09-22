@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -70,7 +70,9 @@ public class BuckQueryEnvironmentTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
     Cell cell =
-        new TestCellBuilder().setFilesystem(new ProjectFilesystem(workspace.getDestPath())).build();
+        new TestCellBuilder()
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()))
+            .build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     Parser parser =

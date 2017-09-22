@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
@@ -74,7 +75,8 @@ public class MorePathsTest {
 
   @Test
   public void testCreateRelativeSymlinkToFilesInRoot() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
     Path pathToDesiredLinkUnderProjectRoot = Paths.get("gamma.txt");
@@ -102,7 +104,8 @@ public class MorePathsTest {
 
   @Test
   public void testCreateRelativeSymlinkToFileInRoot() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFile("biz.txt");
 
     tmp.newFolder("alpha", "beta");
@@ -132,7 +135,8 @@ public class MorePathsTest {
   @Test
   public void testCreateRelativeSymlinkToFilesOfVaryingDepth()
       throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     tmp.newFolder("foo", "bar", "baz");
     tmp.newFile("foo/bar/baz/biz.txt");
 

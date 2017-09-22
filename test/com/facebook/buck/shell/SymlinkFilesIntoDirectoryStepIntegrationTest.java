@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -52,7 +53,8 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
 
     Path outputFolder = tmp.newFolder("output");
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     SymlinkFilesIntoDirectoryStep symlinkStep =
         new SymlinkFilesIntoDirectoryStep(

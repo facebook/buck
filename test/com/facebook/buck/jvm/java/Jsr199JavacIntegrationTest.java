@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -336,6 +337,6 @@ public class Jsr199JavacIntegrationTest {
   }
 
   private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
-    return new ProjectFilesystem(tmp.getRoot());
+    return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +41,7 @@ public class SymCopyStepTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
     context = TestExecutionContext.newInstance();
   }
 

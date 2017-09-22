@@ -142,6 +142,7 @@ java_test(
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/model:testutil",
         "//test/com/facebook/buck/rules:testutil",

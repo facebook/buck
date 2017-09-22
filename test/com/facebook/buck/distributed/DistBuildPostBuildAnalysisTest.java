@@ -22,6 +22,7 @@ import com.facebook.buck.cli.DistBuildCommand;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
@@ -191,7 +192,8 @@ public class DistBuildPostBuildAnalysisTest {
     workspace.setUp();
 
     Config config = Configs.createDefaultConfig(tmpPath.getRoot());
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpPath.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot(), config);
     DistBuildPostBuildAnalysis analysis =
         new DistBuildPostBuildAnalysis(
             buildId,

@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -52,7 +52,7 @@ public class ElfDynamicSectionScrubberStepTest {
         ImmutableSet.of(ElfDynamicSection.DTag.DT_SONAME, ElfDynamicSection.DTag.DT_NEEDED);
     ElfDynamicSectionScrubberStep step =
         ElfDynamicSectionScrubberStep.of(
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             whitelist,
             /* removeScrubbedTags */ false);
@@ -85,7 +85,7 @@ public class ElfDynamicSectionScrubberStepTest {
         ImmutableSet.of(ElfDynamicSection.DTag.DT_SONAME, ElfDynamicSection.DTag.DT_NEEDED);
     ElfDynamicSectionScrubberStep step =
         ElfDynamicSectionScrubberStep.of(
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             whitelist,
             /* removeScrubbedTags */ true);

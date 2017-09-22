@@ -42,6 +42,7 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.InvocationInfo;
@@ -126,7 +127,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testEventsUseNanoTime() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
@@ -158,7 +160,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testMetadataEventsUseNanoTime() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
@@ -186,7 +189,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testDeleteFiles() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     String tracePath = invocationInfo.getLogDirectoryPath().resolve("build.trace").toString();
 
@@ -233,7 +237,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testBuildJson() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     BuildId buildId = new BuildId("ChromeTraceBuildListenerTestBuildId");
     ChromeTraceBuildListener listener =
@@ -570,7 +575,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testOutputFailed() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
     assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
 
     try {
@@ -596,7 +602,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void outputFileUsesCurrentTime() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
@@ -614,7 +621,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void canCompressTraces() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(

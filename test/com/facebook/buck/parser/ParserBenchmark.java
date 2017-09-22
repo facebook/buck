@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -70,7 +71,7 @@ public class ParserBenchmark {
     tempDir.before();
     Path root = tempDir.getRoot();
     Files.createDirectories(root);
-    filesystem = new ProjectFilesystem(root);
+    filesystem = TestProjectFilesystems.createProjectFilesystem(root);
 
     Path fbJavaRoot = root.resolve(root.resolve("java/com/facebook"));
     Files.createDirectories(fbJavaRoot);

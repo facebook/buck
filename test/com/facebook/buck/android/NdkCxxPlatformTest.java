@@ -42,6 +42,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.InternalFlavor;
@@ -213,7 +214,7 @@ public class NdkCxxPlatformTest {
 
   @Test
   public void testNdkFlags() throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
@@ -246,7 +247,7 @@ public class NdkCxxPlatformTest {
 
   @Test
   public void testExtraNdkFlags() throws IOException, InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
@@ -345,7 +346,7 @@ public class NdkCxxPlatformTest {
   @Test
   public void testExtraNdkFlagsLiterally() throws IOException, InterruptedException {
     Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
@@ -432,7 +433,7 @@ public class NdkCxxPlatformTest {
   // to the NDK don't cause changes.
   @Test
   public void checkRootAndPlatformDoNotAffectRuleKeys() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     // Test all major compiler and runtime combinations.
     ImmutableList<Pair<NdkCxxPlatformCompiler.Type, NdkCxxRuntime>> configs =
@@ -502,7 +503,7 @@ public class NdkCxxPlatformTest {
 
   @Test
   public void headerVerificationWhitelistsNdkRoot() throws InterruptedException, IOException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     String dir = "android-ndk-r9c";
     Path root = tmp.newFolder(dir);
     MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -52,7 +52,7 @@ public class ElfSymbolTableScrubberStepTest {
     workspace.setUp();
     ElfSymbolTableScrubberStep step =
         ElfSymbolTableScrubberStep.of(
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             ".dynsym",
             /* versymSection */ Optional.empty(),
@@ -96,7 +96,7 @@ public class ElfSymbolTableScrubberStepTest {
     workspace.setUp();
     ElfSymbolTableScrubberStep step =
         ElfSymbolTableScrubberStep.of(
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             ".dynsym",
             /* versymSection */ Optional.empty(),

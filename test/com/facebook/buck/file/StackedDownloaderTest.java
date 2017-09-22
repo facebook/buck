@@ -27,7 +27,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -111,7 +111,7 @@ public class StackedDownloaderTest {
     Files.createDirectories(projectRoot);
     BuckConfig config =
         FakeBuckConfig.builder()
-            .setFilesystem(new ProjectFilesystem(projectRoot))
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(projectRoot))
             .setSections(
                 "[maven_repositories]",
                 "local = " + m2Root.toString(),

@@ -38,6 +38,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -239,7 +240,8 @@ public class InterCellIntegrationTest {
 
   private ImmutableMap<String, HashCode> findObjectFiles(final ProjectWorkspace workspace)
       throws InterruptedException, IOException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     final Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
 
     final ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();

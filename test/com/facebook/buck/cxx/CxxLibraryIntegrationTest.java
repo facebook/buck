@@ -34,7 +34,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -126,7 +126,7 @@ public class CxxLibraryIntegrationTest {
         Files.isRegularFile(
             workspace.getPath(
                 BuildTargets.getGenPath(
-                    new ProjectFilesystem(workspace.getDestPath()),
+                    TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
                     BuildTargetFactory.newInstance("//subdir:library")
                         .withFlavors(
                             DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR),

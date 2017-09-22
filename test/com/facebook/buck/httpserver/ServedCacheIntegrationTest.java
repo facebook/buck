@@ -35,6 +35,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
@@ -78,7 +79,7 @@ public class ServedCacheIntegrationTest {
   @Before
   public void setUp() throws Exception {
     buckEventBus = BuckEventBusForTests.newInstance();
-    projectFilesystem = new ProjectFilesystem(tmpDir.getRoot());
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot());
     projectFilesystem.writeContentsToPath(A_FILE_DATA, A_FILE_PATH);
 
     dirCache = createArtifactCache(createMockLocalDirCacheConfig());

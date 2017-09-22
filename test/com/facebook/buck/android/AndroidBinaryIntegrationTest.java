@@ -34,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -109,7 +110,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
             new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
@@ -313,7 +314,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   public void testDxFindsReferencedResources() throws InterruptedException, IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     DefaultOnDiskBuildInfo buildInfo =
         new DefaultOnDiskBuildInfo(
             BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),

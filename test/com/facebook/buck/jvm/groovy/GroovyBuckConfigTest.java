@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.config.Config;
@@ -103,7 +104,8 @@ public class GroovyBuckConfigTest {
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig)
       throws InterruptedException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     Config config = new Config(RawConfig.of(rawConfig));
     BuckConfig buckConfig =
         new BuckConfig(

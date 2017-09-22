@@ -38,6 +38,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanWatcher;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
@@ -295,7 +296,8 @@ public class ProjectWorkspace {
     if (projectFilesystemAndConfig == null) {
       Config config = Configs.createDefaultConfig(destPath);
       projectFilesystemAndConfig =
-          new ProjectFilesystemAndConfig(new ProjectFilesystem(destPath, config), config);
+          new ProjectFilesystemAndConfig(
+              TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
     }
     return projectFilesystemAndConfig;
   }

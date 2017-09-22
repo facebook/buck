@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -96,7 +97,8 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
     AndroidResourceDescription description = new AndroidResourceDescription(false);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));
 
     assertThat(

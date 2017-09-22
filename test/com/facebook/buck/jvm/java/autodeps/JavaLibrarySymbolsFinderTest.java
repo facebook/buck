@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -67,7 +68,8 @@ public class JavaLibrarySymbolsFinderTest {
   public void extractSymbolsFromSrcs() throws InterruptedException, IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     ImmutableSortedSet<SourcePath> srcs =
         ImmutableSortedSet.<SourcePath>naturalOrder()
@@ -92,7 +94,8 @@ public class JavaLibrarySymbolsFinderTest {
   public void onlyNonGeneratedSrcsShouldAffectRuleKey() throws InterruptedException, IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
-    final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    final ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     Function<String, SourcePath> convert =
         src -> new PathSourcePath(projectFilesystem, Paths.get(src));

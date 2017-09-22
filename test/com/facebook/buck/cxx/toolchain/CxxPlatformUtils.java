@@ -20,7 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -107,7 +107,7 @@ public class CxxPlatformUtils {
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
-            new ProjectFilesystem(root),
+            TestProjectFilesystems.createProjectFilesystem(root),
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.of(),

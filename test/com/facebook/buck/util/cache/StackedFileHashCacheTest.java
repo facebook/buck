@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MoreCollectors;
@@ -138,10 +139,10 @@ public class StackedFileHashCacheTest {
 
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
 
     // The second project filesystem has the file.
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(tmp2.getRoot());
+    ProjectFilesystem filesystem2 = TestProjectFilesystems.createProjectFilesystem(tmp2.getRoot());
     ProjectFileHashCache innerCache2 =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
     filesystem2.touch(path);
@@ -156,10 +157,10 @@ public class StackedFileHashCacheTest {
   public void usesSecondCache() throws InterruptedException, IOException {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
 
     // The second project filesystem has the file.
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(tmp2.getRoot());
+    ProjectFilesystem filesystem2 = TestProjectFilesystems.createProjectFilesystem(tmp2.getRoot());
     Path path = filesystem2.getPath("world.txt");
     ProjectFileHashCache innerCache2 =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
@@ -178,10 +179,10 @@ public class StackedFileHashCacheTest {
 
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
 
     // The second project filesystem has the file.
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(tmp2.getRoot());
+    ProjectFilesystem filesystem2 = TestProjectFilesystems.createProjectFilesystem(tmp2.getRoot());
     ProjectFileHashCache innerCache2 =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
     writeJarWithHashes(filesystem2, fullPath);
@@ -200,10 +201,10 @@ public class StackedFileHashCacheTest {
   public void usesSecondCacheForArchivePath() throws InterruptedException, IOException {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), fileHashCacheMode);
 
     // The second project filesystem has the file.
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(tmp2.getRoot());
+    ProjectFilesystem filesystem2 = TestProjectFilesystems.createProjectFilesystem(tmp2.getRoot());
     Path path = filesystem2.getPath("world.jar");
     ProjectFileHashCache innerCache2 =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
@@ -246,7 +247,7 @@ public class StackedFileHashCacheTest {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
     Path fullPath = Paths.get("world.jar");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     writeJarWithHashes(filesystem, filesystem.resolve(fullPath));
     ArchiveMemberPath archiveMemberPath =
         ArchiveMemberPath.of(filesystem.resolve(fullPath), Paths.get("Nonexistent.class"));
@@ -262,7 +263,7 @@ public class StackedFileHashCacheTest {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path path = filesystem.getPath("world.jar");
     writeJarWithHashes(filesystem, path);
     ArchiveMemberPath archiveMemberPath =
@@ -279,7 +280,8 @@ public class StackedFileHashCacheTest {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.txt");
     Path path = Paths.get("world.txt");
     Path fullPath = tmp.getRoot().resolve(path);
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
     filesystem.touch(path);
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
@@ -291,7 +293,8 @@ public class StackedFileHashCacheTest {
   @Test
   public void skipsFirstCacheBecauseIgnored() throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.txt");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
     Path path = filesystem.getPath("world.txt");
     filesystem.touch(path);
     ProjectFileHashCache innerCache =
@@ -306,7 +309,8 @@ public class StackedFileHashCacheTest {
       throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.jar");
     Path fullPath = Paths.get("world.jar");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
     writeJarWithHashes(filesystem, filesystem.resolve(fullPath));
     ArchiveMemberPath archiveMemberPath =
         ArchiveMemberPath.of(filesystem.resolve(fullPath), Paths.get("Nonexistent.class"));
@@ -321,7 +325,8 @@ public class StackedFileHashCacheTest {
   public void skipsFirstCacheBecauseIgnoredForArchiveMemberPath()
       throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.jar");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
     Path path = filesystem.getPath("world.jar");
     writeJarWithHashes(filesystem, path);
     ArchiveMemberPath archiveMemberPath =

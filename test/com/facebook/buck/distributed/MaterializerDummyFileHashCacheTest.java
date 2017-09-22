@@ -29,6 +29,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -124,7 +125,8 @@ public class MaterializerDummyFileHashCacheTest {
 
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     Path pathDirA = projectFilesystem.resolve("a");
     Path pathDirAb = projectFilesystem.resolve("a/b");
     Path pathFileAbc = projectFilesystem.resolve("a/b/c");
@@ -225,7 +227,8 @@ public class MaterializerDummyFileHashCacheTest {
 
   @Test
   public void testMaterializeDirectory() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(false, GET, true);
 
@@ -238,7 +241,8 @@ public class MaterializerDummyFileHashCacheTest {
 
   @Test
   public void testMaterializeDuringPreloadingDirectory() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(true, PRELOAD, true);
 
@@ -251,7 +255,8 @@ public class MaterializerDummyFileHashCacheTest {
 
   @Test
   public void testPreloadDirectory() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(false, PRELOAD, true);
 
@@ -261,7 +266,8 @@ public class MaterializerDummyFileHashCacheTest {
 
   @Test
   public void testPreloadThenMaterializeDirectory() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
 
     testMaterializeDirectoryHelper(false, PRELOAD_THEN_GET, true);
 
@@ -285,7 +291,8 @@ public class MaterializerDummyFileHashCacheTest {
       throws InterruptedException, IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     Path realFileAbsPath = projectFilesystem.resolve("realfile");
     Path relativeRealFile = Paths.get("realfile");
 
@@ -384,7 +391,8 @@ public class MaterializerDummyFileHashCacheTest {
 
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     File externalFile = externalDir.newFile("externalfile");
     Path symlinkRoot = projectFilesystem.resolve("linktoexternaldir");
     Path relativeSymlinkRoot = Paths.get("linktoexternaldir");

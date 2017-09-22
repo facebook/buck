@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -137,6 +138,6 @@ public class IosReactNativeLibraryIntegrationTest {
   private void setupWorkspace(String name) throws IOException, InterruptedException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, name, tmpFolder);
     workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 }

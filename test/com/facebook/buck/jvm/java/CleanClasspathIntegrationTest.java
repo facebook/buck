@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -49,7 +50,7 @@ public class CleanClasspathIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "classpath_corruption_regression", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     // Build //:example so that content is written to buck-out/gen/.
     BuildTarget target = BuildTargetFactory.newInstance("//:example");

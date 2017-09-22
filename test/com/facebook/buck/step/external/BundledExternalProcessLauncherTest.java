@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.OutOfProcessJavacConnectionInterface;
 import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.message_ipc.MessageSerializer;
@@ -49,7 +50,8 @@ public class BundledExternalProcessLauncherTest {
     BundledExternalProcessLauncher launcher = new BundledExternalProcessLauncher();
 
     Path tmpPath = Files.createTempDirectory("tmp").toAbsolutePath().normalize();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpPath.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     ProcessExecutorParams params =
@@ -74,7 +76,8 @@ public class BundledExternalProcessLauncherTest {
     BundledExternalProcessLauncher launcher = new BundledExternalProcessLauncher();
 
     Path tmpPath = Files.createTempDirectory("tmp").toAbsolutePath().normalize();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpPath.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     ProcessExecutorParams params =

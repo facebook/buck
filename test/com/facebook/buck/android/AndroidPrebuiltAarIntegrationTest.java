@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -56,7 +56,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
         new ZipInspector(
             workspace.getPath(
                 BuildTargets.getGenPath(
-                    new ProjectFilesystem(workspace.getDestPath()),
+                    TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
                     BuildTargetFactory.newInstance(target),
                     "%s.apk")));
     zipInspector.assertFileExists("AndroidManifest.xml");
@@ -86,7 +86,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
     String rDotTxt =
         workspace.getFileContents(
             BuildTargets.getScratchPath(
-                new ProjectFilesystem(workspace.getDestPath()),
+                TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidPrebuiltAarDescription.AAR_UNZIP_FLAVOR),
                 "__unpack_%s__/R.txt"));

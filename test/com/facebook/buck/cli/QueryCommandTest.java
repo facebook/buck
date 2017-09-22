@@ -23,6 +23,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.rules.Cell;
@@ -67,7 +68,8 @@ public class QueryCommandTest {
     workspace.setUp();
 
     ProjectFilesystem filesystem =
-        new ProjectFilesystem(workspace.getDestPath().toRealPath().normalize());
+        TestProjectFilesystems.createProjectFilesystem(
+            workspace.getDestPath().toRealPath().normalize());
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();

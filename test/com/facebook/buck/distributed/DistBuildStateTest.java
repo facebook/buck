@@ -31,6 +31,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
@@ -300,8 +301,8 @@ public class DistBuildStateTest {
     Path cell2Root = parentFs.resolve("cell2");
     parentFs.mkdirs(cell1Root);
     parentFs.mkdirs(cell2Root);
-    ProjectFilesystem cell1Filesystem = new ProjectFilesystem(cell1Root);
-    ProjectFilesystem cell2Filesystem = new ProjectFilesystem(cell2Root);
+    ProjectFilesystem cell1Filesystem = TestProjectFilesystems.createProjectFilesystem(cell1Root);
+    ProjectFilesystem cell2Filesystem = TestProjectFilesystems.createProjectFilesystem(cell2Root);
 
     Config config =
         new Config(

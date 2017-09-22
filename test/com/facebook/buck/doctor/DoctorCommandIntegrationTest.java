@@ -34,6 +34,7 @@ import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -100,7 +101,7 @@ public class DoctorCommandIntegrationTest {
   public void setUp() throws Exception {
     userInputFixture = new UserInputFixture("0");
 
-    filesystem = new ProjectFilesystem(tempFolder.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tempFolder.getRoot());
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
 

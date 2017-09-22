@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,8 @@ public class SymlinkTreeStepTest {
   @Test
   public void testSymlinkFiles() throws InterruptedException, IOException {
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 

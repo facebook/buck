@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +49,8 @@ public class ClasspathTraversalTest {
         files.stream().map(File::toPath).collect(MoreCollectors.toImmutableList());
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot().toPath());
     traverser.traverse(
         new ClasspathTraversal(paths, filesystem) {
           @Override

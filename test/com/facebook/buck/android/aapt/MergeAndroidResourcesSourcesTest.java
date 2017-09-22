@@ -19,6 +19,7 @@ package com.facebook.buck.android.aapt;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -69,7 +70,7 @@ public class MergeAndroidResourcesSourcesTest {
 
   @Before
   public void setUp() throws Exception {
-    filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     context = TestExecutionContext.newInstance();
 
     tmp.newFolder("res_in_1");

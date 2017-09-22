@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -75,7 +76,8 @@ public class ExopackageDeviceDirectoryListerTest {
       }
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Path contentsPath = Paths.get("contents");
     filesystem.writeContentsToPath(
         ExopackageDeviceDirectoryLister.serializeDirectoryContents(contents), contentsPath);

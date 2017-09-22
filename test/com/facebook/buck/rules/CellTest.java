@@ -24,6 +24,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -83,8 +84,10 @@ public class CellTest {
     Path cell2Root = root.resolve("repo2");
     Files.createDirectories(cell2Root);
 
-    ProjectFilesystem filesystem1 = new ProjectFilesystem(cell1Root.toAbsolutePath());
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(cell2Root.toAbsolutePath());
+    ProjectFilesystem filesystem1 =
+        TestProjectFilesystems.createProjectFilesystem(cell1Root.toAbsolutePath());
+    ProjectFilesystem filesystem2 =
+        TestProjectFilesystems.createProjectFilesystem(cell2Root.toAbsolutePath());
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)
@@ -109,8 +112,10 @@ public class CellTest {
     Path cell2Root = root.resolve("repo2");
     Files.createDirectories(cell2Root);
 
-    ProjectFilesystem filesystem1 = new ProjectFilesystem(cell1Root.toAbsolutePath());
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(cell2Root.toAbsolutePath());
+    ProjectFilesystem filesystem1 =
+        TestProjectFilesystems.createProjectFilesystem(cell1Root.toAbsolutePath());
+    ProjectFilesystem filesystem2 =
+        TestProjectFilesystems.createProjectFilesystem(cell2Root.toAbsolutePath());
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)
@@ -135,9 +140,12 @@ public class CellTest {
     Path cell3Root = root.resolve("repo3");
     Files.createDirectories(cell3Root);
 
-    ProjectFilesystem filesystem1 = new ProjectFilesystem(cell1Root.toAbsolutePath());
-    ProjectFilesystem filesystem2 = new ProjectFilesystem(cell2Root.toAbsolutePath());
-    ProjectFilesystem filesystem3 = new ProjectFilesystem(cell3Root.toAbsolutePath());
+    ProjectFilesystem filesystem1 =
+        TestProjectFilesystems.createProjectFilesystem(cell1Root.toAbsolutePath());
+    ProjectFilesystem filesystem2 =
+        TestProjectFilesystems.createProjectFilesystem(cell2Root.toAbsolutePath());
+    ProjectFilesystem filesystem3 =
+        TestProjectFilesystems.createProjectFilesystem(cell3Root.toAbsolutePath());
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem1)

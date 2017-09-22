@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -84,7 +85,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
@@ -118,7 +119,7 @@ public class JarDirectoryStepTest {
     Path second = createZip(jarDirectory.resolve("b.jar"), "com/example/common/Helper.class");
 
     final Path outputPath = Paths.get("output.jar");
-    ProjectFilesystem filesystem = new ProjectFilesystem(jarDirectory);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(jarDirectory);
     JarDirectoryStep step =
         new JarDirectoryStep(
             filesystem,
@@ -150,7 +151,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(zip.getFileName()))
@@ -185,7 +186,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
@@ -236,7 +237,7 @@ public class JarDirectoryStepTest {
     Path output = tmp.resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(tmp),
+            TestProjectFilesystems.createProjectFilesystem(tmp),
             JarParameters.builder()
                 .setJarPath(output)
                 .setEntriesToJar(ImmutableSortedSet.of(Paths.get("input.jar")))
@@ -265,7 +266,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(zipup))
@@ -352,7 +353,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
@@ -384,7 +385,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
@@ -417,7 +418,7 @@ public class JarDirectoryStepTest {
     Path outputJar = folder.getRoot().resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(folder.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(folder.getRoot()),
             JarParameters.builder()
                 .setJarPath(outputJar)
                 .setEntriesToJar(ImmutableSortedSet.of(zipup))
@@ -560,7 +561,7 @@ public class JarDirectoryStepTest {
     Path output = tmp.resolve("example.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(tmp),
+            TestProjectFilesystems.createProjectFilesystem(tmp),
             JarParameters.builder()
                 .setJarPath(output)
                 .setEntriesToJar(ImmutableSortedSet.of(originalJar))

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Charsets;
@@ -62,7 +63,8 @@ public class AccumulateClassNamesStepTest {
     }
 
     // Create the AccumulateClassNamesStep and execute it.
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
             filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
@@ -99,7 +101,8 @@ public class AccumulateClassNamesStepTest {
     tmp.newFile("dir/com/example/subpackage/Baz.class");
 
     // Create the AccumulateClassNamesStep and execute it.
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     AccumulateClassNamesStep accumulateClassNamesStep =
         new AccumulateClassNamesStep(
             filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));

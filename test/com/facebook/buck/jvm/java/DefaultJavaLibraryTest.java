@@ -32,6 +32,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
@@ -126,7 +127,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     testJavaBuckConfig = getJavaBuckConfigWithCompilationMode();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     StepRunner stepRunner = createNiceMock(StepRunner.class);
     JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
     replay(packageFinder, stepRunner);
@@ -1376,7 +1378,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     public ImmutableList<String> buildAndGetCompileParameters()
         throws InterruptedException, IOException, NoSuchBuildTargetException {
-      ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+      ProjectFilesystem projectFilesystem =
+          TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);
       BuildContext buildContext = createBuildContext(/* bootclasspath */ null);
       List<Step> steps = javaLibrary.getBuildSteps(buildContext, new FakeBuildableContext());

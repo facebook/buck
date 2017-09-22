@@ -16,7 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -28,7 +28,7 @@ public class TestArtifactCaches {
       throws InterruptedException, IOException {
     return new DirArtifactCache(
         "dir",
-        new ProjectFilesystem(filesystemRoot),
+        TestProjectFilesystems.createProjectFilesystem(filesystemRoot),
         cacheDir,
         CacheReadMode.READWRITE,
         Optional.empty());

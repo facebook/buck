@@ -17,6 +17,7 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -40,7 +41,8 @@ public class LogFileHandlerTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "LogFileHandlerTest", temporaryFolder);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     logDir = filesystem.resolve(filesystem.getBuckPaths().getLogDir());
   }
 

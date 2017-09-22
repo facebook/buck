@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.Console;
@@ -55,7 +56,8 @@ public class SymlinkFileStepTest {
 
     SymlinkFileStep step =
         SymlinkFileStep.builder()
-            .setFilesystem(new ProjectFilesystem(tmpDir.getRoot().toPath()))
+            .setFilesystem(
+                TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath()))
             .setExistingFile(Paths.get(source.getName()))
             .setDesiredLink(Paths.get(target.getName()))
             .build();
@@ -94,7 +96,8 @@ public class SymlinkFileStepTest {
         java.nio.file.Files.isSymbolicLink(symlink));
 
     // Create an ExecutionContext to return the ProjectFilesystem.
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
     tmpDir.newFile("dummy");

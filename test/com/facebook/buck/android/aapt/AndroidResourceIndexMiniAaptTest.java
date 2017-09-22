@@ -26,6 +26,7 @@ import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -70,7 +71,7 @@ public class AndroidResourceIndexMiniAaptTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     aapt =
         new MiniAapt(

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
@@ -31,10 +32,6 @@ import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -51,6 +48,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class GenerateCodeCoverageReportStepTest {
 
@@ -69,7 +70,7 @@ public class GenerateCodeCoverageReportStepTest {
 
   @Before
   public void setUp() throws Exception {
-    filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
 
     jarFiles = new LinkedHashSet<>();
     File jarFile = new File(tmp.getRoot(), "foo.jar");

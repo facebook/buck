@@ -33,6 +33,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -70,7 +71,7 @@ public class JavaBuckConfigTest {
 
   @Before
   public void setUpDefaultFilesystem() throws InterruptedException {
-    defaultFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    defaultFilesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
   }
 
   @Test

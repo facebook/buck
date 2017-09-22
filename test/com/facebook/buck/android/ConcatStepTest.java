@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +52,8 @@ public class ConcatStepTest {
       out.close();
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(temp.getRoot().toPath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temp.getRoot().toPath());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     ConcatStep step = new ConcatStep(filesystem, inputsBuilder.build(), dest.toPath());

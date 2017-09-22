@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -110,7 +111,8 @@ public class WorkerProcessTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "worker_process", temporaryPaths);
     workspace.setUp();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     Console console = new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty());
     String script;
     if (Platform.detect() == Platform.WINDOWS) {
