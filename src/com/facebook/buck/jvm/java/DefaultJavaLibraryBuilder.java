@@ -62,7 +62,6 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
   protected ImmutableSortedSet<BuildRule> fullJarExportedDeps = ImmutableSortedSet.of();
   protected ImmutableSortedSet<BuildRule> fullJarProvidedDeps = ImmutableSortedSet.of();
-  protected boolean compileAgainstAbis = false;
   protected Optional<Path> resourcesRoot = Optional.empty();
   protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
   protected Optional<SourcePath> manifestFile = Optional.empty();
@@ -101,7 +100,6 @@ public class DefaultJavaLibraryBuilder {
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
   }
 
   public DefaultJavaLibraryBuilder(
@@ -230,11 +228,6 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setClassesToRemoveFromJar(
       RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     this.classesToRemoveFromJar = classesToRemoveFromJar;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setCompileAgainstAbis(boolean compileAgainstAbis) {
-    this.compileAgainstAbis = compileAgainstAbis;
     return this;
   }
 
@@ -443,7 +436,9 @@ public class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
       ImmutableSortedSet<BuildRule> buildRules =
-          compileAgainstAbis ? getCompileTimeClasspathAbiDeps() : getCompileTimeClasspathFullDeps();
+          configuredCompilerFactory.compileAgainstAbis()
+              ? getCompileTimeClasspathAbiDeps()
+              : getCompileTimeClasspathFullDeps();
 
       return buildRules
           .stream()
@@ -492,7 +487,7 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps = getCompileTimeClasspathAbiDeps();
       ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
       ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
-      if (compileAgainstAbis) {
+      if (configuredCompilerFactory.compileAgainstAbis()) {
         declaredDepsBuilder.addAll(
             getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));
         // We remove provided and exported deps since we'll be adding the ABI rules of these and

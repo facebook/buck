@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -148,10 +147,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       this.args = args;
       setJavacOptions(javacOptions);
       setArgs(args);
-      // Set only if this is not Scala/Kotlin
-      setCompileAgainstAbis(
-          javaBuckConfig.shouldCompileAgainstAbis()
-              && !args.getLanguage().filter(l -> l != JvmLanguage.JAVA).isPresent());
     }
 
     @Override

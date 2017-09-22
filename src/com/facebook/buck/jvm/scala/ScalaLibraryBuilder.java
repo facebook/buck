@@ -38,15 +38,13 @@ final class ScalaLibraryBuilder {
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-            targetGraph,
-            buildTarget,
-            projectFilesystem,
-            params,
-            buildRuleResolver,
-            cellRoots,
-            new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
-            javaBuckConfig)
-        // See https://github.com/facebook/buck/issues/1386
-        .setCompileAgainstAbis(false);
+        targetGraph,
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        cellRoots,
+        new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
+        javaBuckConfig);
   }
 }

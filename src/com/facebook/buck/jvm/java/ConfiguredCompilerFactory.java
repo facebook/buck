@@ -32,6 +32,13 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  public boolean compileAgainstAbis() {
+    // Buck's ABI generation support was built for Java and hasn't been extended for other JVM
+    // languages yet, so this is defaulted false.
+    // See https://github.com/facebook/buck/issues/1386
+    return false;
+  }
+
   public void addTargetDeps(
       @SuppressWarnings("unused") ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       @SuppressWarnings("unused")

@@ -38,14 +38,13 @@ final class KotlinLibraryBuilder {
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-            targetGraph,
-            buildTarget,
-            projectFilesystem,
-            params,
-            buildRuleResolver,
-            cellRoots,
-            new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
-            javaBuckConfig)
-        .setCompileAgainstAbis(false);
+        targetGraph,
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        cellRoots,
+        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
+        javaBuckConfig);
   }
 }
