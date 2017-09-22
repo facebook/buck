@@ -60,11 +60,6 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
-  public boolean trackClassUsage(JavacOptions javacOptions) {
-    return false;
-  }
-
-  @Override
   public ConfiguredCompiler configure(
       @Nullable JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 

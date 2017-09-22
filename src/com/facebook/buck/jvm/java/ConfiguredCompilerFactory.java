@@ -28,8 +28,8 @@ public abstract class ConfiguredCompilerFactory {
   public abstract ConfiguredCompiler configure(
       @Nullable JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver);
 
-  public boolean trackClassUsage(JavacOptions javacOptions) {
-    return javacOptions.trackClassUsage();
+  public boolean trackClassUsage(@SuppressWarnings("unused") JavacOptions javacOptions) {
+    return false;
   }
 
   public void addTargetDeps(

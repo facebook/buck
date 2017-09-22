@@ -36,6 +36,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
+  public boolean trackClassUsage(JavacOptions javacOptions) {
+    return javacOptions.trackClassUsage();
+  }
+
+  @Override
   public ConfiguredCompiler configure(
       @Nullable JvmLibraryArg arg, JavacOptions javacOptions, BuildRuleResolver resolver) {
 

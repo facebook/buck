@@ -50,11 +50,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
-  public boolean trackClassUsage(JavacOptions javacOptions) {
-    return false;
-  }
-
-  @Override
   public ConfiguredCompiler configure(
       @Nullable JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver) {
     return new KotlincToJarStepFactory(
