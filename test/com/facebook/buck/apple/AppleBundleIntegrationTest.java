@@ -711,6 +711,42 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void generatedAppleAssetCatalogsAreIncludedInBundle() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_asset_catalogs_are_included_in_bundle", tmp);
+    workspace.setUp();
+    BuildTarget appTarget = BuildTargetFactory.newInstance("//:CombinedAssetsApp#no-debug");
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:MakeCombinedAssets");
+    BuildTarget assetTarget = appTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
+    workspace.runBuckCommand("build", appTarget.getFullyQualifiedName()).assertSuccess();
+
+    // Check that the genrule was invoked
+    workspace.getBuildLog().assertTargetBuiltLocally(genruleTarget.getFullyQualifiedName());
+
+    // Check the actool output: Merged.bundle/Assets.car
+    assertFileInOutputContainsString(
+        "Image2", workspace, assetTarget, "%s/Merged.bundle/Assets.car");
+
+    // Check the app package: Assets.car
+    assertFileInOutputContainsString(
+        "Image2",
+        workspace,
+        appTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+        "%s/" + appTarget.getShortName() + ".app/Assets.car");
+  }
+
+  private void assertFileInOutputContainsString(
+      String needle, ProjectWorkspace workspace, BuildTarget target, String genPathFormat)
+      throws IOException {
+    Path outputPath = BuildTargets.getGenPath(filesystem, target, genPathFormat);
+    final Path path = workspace.getPath(outputPath);
+    assertTrue(Files.exists(path));
+    final String contents = workspace.getFileContents(outputPath);
+    assertTrue(contents.contains(needle));
+  }
+
+  @Test
   public void appleAssetCatalogsWithMoreThanOneAppIconOrLaunchImageShouldFail() throws IOException {
 
     thrown.expect(HumanReadableException.class);

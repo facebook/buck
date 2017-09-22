@@ -312,6 +312,7 @@ public class AppleDescriptions {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Tool actool,
@@ -380,12 +381,16 @@ public class AppleDescriptions {
         assetCatalogValidation);
 
     BuildTarget assetCatalogBuildTarget = buildTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
-
+    BuildRuleParams assetParams =
+        params
+            .withoutExtraDeps()
+            .withDeclaredDeps(
+                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(assetCatalogDirs)));
     return Optional.of(
         new AppleAssetCatalog(
             assetCatalogBuildTarget,
             projectFilesystem,
-            params.withoutDeclaredDeps().withoutExtraDeps(),
+            assetParams,
             applePlatform.getName(),
             targetSDKVersion,
             actool,
@@ -631,6 +636,7 @@ public class AppleDescriptions {
             projectFilesystem,
             params,
             sourcePathResolver,
+            ruleFinder,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool(),
