@@ -38,32 +38,6 @@ java_library(
     ],
 )
 
-PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS = [
-    "ProjectFilesystemDelegateFactory.java",
-]
-
-java_library(
-    name = "ProjectFilesystemDelegateFactory",
-    srcs = PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":DefaultProjectFilesystemDelegate",
-        ":ProjectFilesystemDelegate",
-        "//src/com/facebook/buck/eden:eden",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util/autosparse:autosparse",
-        "//src/com/facebook/buck/util/autosparse:autosparse_config",
-        "//src/com/facebook/buck/util/config:config",
-        "//src/com/facebook/buck/util/environment:platform",
-        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
-        "//third-party/java/eden:eden-thrift-bindings",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 TRANSPORT_SRCS = [
     "Transport.java",
 ]
@@ -158,7 +132,6 @@ java_immutables_library(
             DEFAULT_FILESYSTEM_DELEGATE_SRCS +
             FINDER_SRCS +
             MORE_PATHS_SRCS +
-            PROJECT_FILESYSTEM_DELEGATE_FACTORY_SRCS +
             PROJECT_FILESYSTEM_DELEGATE_SRCS +
             WATCHMAN_SRCS +
             TRANSPORT_SRCS
@@ -166,7 +139,6 @@ java_immutables_library(
     ),
     exported_deps = [
         ":ProjectFilesystemDelegate",
-        ":ProjectFilesystemDelegateFactory",
         ":more-paths",
     ],
     tests = [
