@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -302,6 +303,7 @@ public class AndroidBinaryGraphEnhancer {
                   paramsForCompileGenCode,
                   ruleResolver,
                   cellRoots,
+                  new JavaConfiguredCompilerFactory(javaBuckConfig),
                   javaBuckConfig)
               // Kind of a hack: override language level to 7 to allow string switch.
               // This can be removed once no one who uses this feature sets the level
@@ -378,6 +380,7 @@ public class AndroidBinaryGraphEnhancer {
                 paramsForCompileUberRDotJava,
                 ruleResolver,
                 cellRoots,
+                new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))

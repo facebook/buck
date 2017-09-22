@@ -124,16 +124,17 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
+      ConfiguredCompilerFactory compilerFactory,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-            targetGraph,
-            buildTarget,
-            projectFilesystem,
-            params,
-            buildRuleResolver,
-            cellRoots,
-            javaBuckConfig)
-        .setConfiguredCompilerFactory(new JavaConfiguredCompilerFactory(javaBuckConfig));
+        targetGraph,
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        cellRoots,
+        compilerFactory,
+        javaBuckConfig);
   }
 
   @Override

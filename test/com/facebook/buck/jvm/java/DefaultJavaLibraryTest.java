@@ -1113,6 +1113,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 buildRuleParams,
                 ruleResolver,
                 TestCellPathResolver.get(projectFilesystem),
+                new JavaConfiguredCompilerFactory(testJavaBuckConfig),
                 testJavaBuckConfig)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
@@ -1422,6 +1423,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   buildRuleParams,
                   ruleResolver,
                   TestCellPathResolver.get(projectFilesystem),
+                  new JavaConfiguredCompilerFactory(testJavaBuckConfig),
                   testJavaBuckConfig)
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))

@@ -55,6 +55,7 @@ public class DefaultJavaLibraryBuilder {
   protected final SourcePathResolver sourcePathResolver;
   protected final CellPathResolver cellRoots;
   protected final SourcePathRuleFinder ruleFinder;
+  protected final ConfiguredCompilerFactory configuredCompilerFactory;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
@@ -75,8 +76,6 @@ public class DefaultJavaLibraryBuilder {
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions initialJavacOptions = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
-  @Nullable private ConfiguredCompilerFactory configuredCompilerFactory = null;
-  @Nullable private ConfiguredCompiler configuredCompiler;
 
   public DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
@@ -85,6 +84,7 @@ public class DefaultJavaLibraryBuilder {
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
+      ConfiguredCompilerFactory configuredCompilerFactory,
       JavaBuckConfig javaBuckConfig) {
     libraryTarget =
         HasJavaAbi.isLibraryTarget(initialBuildTarget)
@@ -97,6 +97,7 @@ public class DefaultJavaLibraryBuilder {
     this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
+    this.configuredCompilerFactory = configuredCompilerFactory;
     this.javaBuckConfig = javaBuckConfig;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
@@ -110,7 +111,8 @@ public class DefaultJavaLibraryBuilder {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots) {
+      CellPathResolver cellRoots,
+      ConfiguredCompilerFactory configuredCompilerFactory) {
     libraryTarget =
         HasJavaAbi.isLibraryTarget(initialBuildTarget)
             ? initialBuildTarget
@@ -122,6 +124,7 @@ public class DefaultJavaLibraryBuilder {
     this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
+    this.configuredCompilerFactory = configuredCompilerFactory;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -236,18 +239,6 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setConfiguredCompilerFactory(
-      ConfiguredCompilerFactory configuredCompilerFactory) {
-    this.configuredCompilerFactory = configuredCompilerFactory;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setConfiguredCompiler(
-      @Nullable ConfiguredCompiler configuredCompiler) {
-    this.configuredCompiler = configuredCompiler;
-    return this;
-  }
-
   public DefaultJavaLibraryBuilder setCompileAgainstAbis(boolean compileAgainstAbis) {
     this.compileAgainstAbis = compileAgainstAbis;
     return this;
@@ -278,6 +269,7 @@ public class DefaultJavaLibraryBuilder {
     @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
     @Nullable private BuildTarget abiJar;
     @Nullable private JavacOptions javacOptions;
+    @Nullable private ConfiguredCompiler configuredCompiler;
 
     protected DefaultJavaLibrary build() {
       return getLibraryRule(false);
@@ -574,12 +566,7 @@ public class DefaultJavaLibraryBuilder {
     }
 
     protected ConfiguredCompiler buildConfiguredCompiler() {
-      if (configuredCompilerFactory != null) {
-        return configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
-      }
-
-      return new JavacToJarStepFactory(
-          getJavac(), getJavacOptions(), extraClasspathFromContextFunction);
+      return configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
     }
 
     protected final JarBuildStepsFactory getJarBuildStepsFactory() {

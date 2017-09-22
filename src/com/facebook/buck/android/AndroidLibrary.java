@@ -144,10 +144,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           params,
           buildRuleResolver,
           cellRoots,
+          compilerFactory,
           javaBuckConfig);
       this.args = args;
       androidCompiler = compilerFactory;
-      setConfiguredCompilerFactory(compilerFactory);
       setJavacOptions(javacOptions);
       setArgs(args);
       // Set only if this is not Scala/Kotlin

@@ -44,10 +44,9 @@ final class ScalaLibraryBuilder {
             params,
             buildRuleResolver,
             cellRoots,
+            new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
             javaBuckConfig)
         // See https://github.com/facebook/buck/issues/1386
-        .setCompileAgainstAbis(false)
-        .setConfiguredCompilerFactory(
-            new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig));
+        .setCompileAgainstAbis(false);
   }
 }

@@ -179,6 +179,7 @@ public class JavaLibraryDescription
                 params,
                 resolver,
                 cellRoots,
+                new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)

@@ -131,6 +131,7 @@ public class JavaTestDescription
                 params,
                 resolver,
                 cellRoots,
+                new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setArgs(args)
             .setJavacOptions(javacOptions)

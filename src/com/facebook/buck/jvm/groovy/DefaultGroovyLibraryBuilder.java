@@ -38,8 +38,13 @@ final class DefaultGroovyLibraryBuilder {
       JavacOptions javacOptions,
       GroovyBuckConfig groovyBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-            targetGraph, buildTarget, projectFilesystem, params, buildRuleResolver, cellRoots)
-        .setConfiguredCompilerFactory(new GroovyConfiguredCompilerFactory(groovyBuckConfig))
+            targetGraph,
+            buildTarget,
+            projectFilesystem,
+            params,
+            buildRuleResolver,
+            cellRoots,
+            new GroovyConfiguredCompilerFactory(groovyBuckConfig))
         .setJavacOptions(javacOptions);
   }
 }

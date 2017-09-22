@@ -44,9 +44,8 @@ final class KotlinLibraryBuilder {
             params,
             buildRuleResolver,
             cellRoots,
+            new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
             javaBuckConfig)
-        .setCompileAgainstAbis(false)
-        .setConfiguredCompilerFactory(
-            new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig));
+        .setCompileAgainstAbis(false);
   }
 }
