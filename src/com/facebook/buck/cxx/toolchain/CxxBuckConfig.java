@@ -290,6 +290,10 @@ public class CxxBuckConfig {
     return SharedLibraryInterfaceParams.Type.DISABLED;
   }
 
+  public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {
+    return delegate.getBooleanValue(cxxSection, "enable_deprecated_prebuilt_cxx_library_api", true);
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractCxxToolProviderParams {

@@ -135,6 +135,36 @@ files and provides various flags to control how they are linked and exported.
 
 {call cxx_common.supports_merged_linking /}
 
+{call buck.arg}
+  {param name: 'lib_name' /}
+  {{param default: '{name}' /}}
+  {param desc}
+    DEPRECATED: Please use newer <code>*_lib</code> parameters.<br>
+    The name of the library.  If your library file was named <code>libmylib.a</code>, this should
+    be <code>mylib</code>.  This defaults to the <code>name</code> of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'lib_dir' /}
+  {param default: 'lib' /}
+  {param desc}
+    DEPRECATED: Please use newer <code>*_lib</code> parameters.<br>
+    The directory the library <code>lib_name</code> can be found.  This can use the
+    <code>$(platform)</code> macro to specify platform-dependent versions of the library.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'include_dirs' /}
+  {param default: 'None' /}
+  {param desc}
+    DEPRECATED: Please use newer <code>header_dirs</code> parameter.<br>
+    A directory that headers can be included from. This can use the <code>$(platform)</code>
+    macro to specify platform-dependent versions of the directory.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
@@ -146,18 +176,43 @@ files and provides various flags to control how they are linked and exported.
 {literal}<pre class="prettyprint lang-py">
 prebuilt_cxx_library(
   name = 'stdutil',
-  exported_headers = glob(['*.h']),
+  header_only = True,
+  header_dirs = [
+    'include',
+  ],
 )
 </pre>{/literal}
 
 <p>
-  A prebuilt library for multiple platforms.  The directory tree for an Android and iOS build is
-  laid out below it.
+  A prebuilt library with static and shared libs.
 </p>
 
 {literal}<pre class="prettyprint lang-py">
 prebuilt_cxx_library(
   name = 'mylib',
+  soname = 'libmylib.so',
+  static_lib = 'libmylib.a',
+  static_pic_lib = 'libmylib_pic.a',
+  shared_lib = 'libmylib.so',
+  exported_headers = [
+    'mylib.h',
+  ],
+)
+</pre>{/literal}
+
+<p>
+  A prebuilt library with multiple builds for multiple platforms.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+prebuilt_cxx_library(
+  name = 'mylib',
+  soname = 'libmylib.so',
+  platform_shared_lib = [
+    ('android-arm', 'android-arm/libmylib.so'),
+    ('android-x86', 'android-x86/libmylib.so'),
+    ('iphonesimulator-x86_64', 'iphonesimulator-x86_64/libmylib.so'),
+  ],
   platform_static_lib = [
     ('android-arm', 'android-arm/libmylib.a'),
     ('android-x86', 'android-x86/libmylib.a'),
@@ -167,22 +222,72 @@ prebuilt_cxx_library(
     'mylib.h',
   ],
 )
+</pre>{/literal}
+
+<p>
+  Porting from deprecated API to the newer API.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+# Porting this rule which uses the deprecated API...
+prebuilt_cxx_library(
+  name = 'mylib',
+  lib_dir = 'lib',
+  lib_name = 'mylib-1.0',
+  include_dirs = [
+    'include',
+  ],
+)
 </pre>
 <pre class="prettyprint lang-sh">
-lib/
-  android-arm/
-    libmylib.a
-  android-armv7/
-    libmylib.a
-  android-x86/
-    libmylib.a
-  iphonesimulator-x86_64/
-    libmylib.a
-  iphoneos-i386/
-    libmylib.a
-  iphoneos-arm64/
-    libmylib.a
+# ... becomes this using the new API.
+prebuilt_cxx_library(
+  name = 'mylib',
+  soname = 'libmylib-1.0.so',
+  static_lib = 'lib/libmylib-1.0.a',
+  shared_lib = 'lib/libmylib-1.0.so',
+  header_dirs = [
+    'include',
+  ],
+)
 </pre>{/literal}
+
+<p>
+  Porting from deprecated API to the newer API when using the <code>$(platform)</code> macro.
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+# Porting this rule which uses the deprecated API...
+prebuilt_cxx_library(
+  name = 'mylib',
+  lib_dir = 'lib/$(platform)',
+  lib_name = 'mylib-1.0',
+  include_dirs = [
+    'include',
+  ],
+)
+</pre>
+<pre class="prettyprint lang-sh">
+# ... becomes this using the new API.
+prebuilt_cxx_library(
+  name = 'mylib',
+  soname = 'libmylib.so',
+  platform_static_lib = [
+    ('android-arm', 'lib/android-arm/libmylib-1.0.a'),
+    ('android-x86', 'lib/android-x86/libmylib-1.0.a'),
+    ('iphonesimulator-x86_64', 'iphonesimulator-x86_64/libmylib.a'),
+  ],
+  platform_shared_lib = [
+    ('android-arm', 'lib/android-arm/libmylib-1.0.so'),
+    ('android-x86', 'lib/android-x86/libmylib-1.0.so'),
+    ('iphonesimulator-x86_64', 'iphonesimulator-x86_64/libmylib.so'),
+  ],
+  header_dirs = [
+    'include',
+  ],
+)
+</pre>{/literal}
+
 {/param}
 
 {/call} // close buck.rule

@@ -127,7 +127,7 @@ public class PrebuiltCxxLibraryDescription
     return PrebuiltCxxLibraryDescriptionArg.class;
   }
 
-  private static PrebuiltCxxLibraryPaths getPaths(
+  private PrebuiltCxxLibraryPaths getPaths(
       BuildTarget target,
       AbstractPrebuiltCxxLibraryDescriptionArg args,
       Optional<String> versionSubDir) {
@@ -135,6 +135,13 @@ public class PrebuiltCxxLibraryDescription
       throw new HumanReadableException("%s: cannot use both old and new APIs", target);
     }
     if (args.isOldApiUsed()) {
+      if (!cxxBuckConfig.isDeprecatedPrebuiltCxxLibraryApiEnabled()) {
+        throw new HumanReadableException(
+            "%s(%s) uses the deprecated API, but `cxx.enable_deprecated_prebuilt_cxx_library_api` "
+                + "isn't set.  Please see the `prebuilt_cxx_library` documentation for details and "
+                + "examples on how to port to the new API.",
+            Description.getBuildRuleType(this).toString(), target);
+      }
       return DeprecatedPrebuiltCxxLibraryPaths.builder()
           .setTarget(target)
           .setVersionSubdir(versionSubDir)
