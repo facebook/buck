@@ -119,7 +119,7 @@ public class KotlinLibraryDescription
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder defaultKotlinLibraryBuilder =
-        new KotlinLibraryBuilder(
+        KotlinLibraryBuilder.newInstance(
                 targetGraph,
                 buildTarget,
                 projectFilesystem,

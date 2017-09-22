@@ -25,8 +25,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 
-public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
-  KotlinLibraryBuilder(
+final class KotlinLibraryBuilder {
+  private KotlinLibraryBuilder() {}
+
+  public static DefaultJavaLibraryBuilder newInstance(
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -35,16 +37,16 @@ public class KotlinLibraryBuilder extends DefaultJavaLibraryBuilder {
       CellPathResolver cellRoots,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    super(
-        targetGraph,
-        buildTarget,
-        projectFilesystem,
-        params,
-        buildRuleResolver,
-        cellRoots,
-        javaBuckConfig);
-    setCompileAgainstAbis(false);
-    setConfiguredCompilerFactory(
-        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig));
+    return new DefaultJavaLibraryBuilder(
+            targetGraph,
+            buildTarget,
+            projectFilesystem,
+            params,
+            buildRuleResolver,
+            cellRoots,
+            javaBuckConfig)
+        .setCompileAgainstAbis(false)
+        .setConfiguredCompilerFactory(
+            new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig));
   }
 }

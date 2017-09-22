@@ -92,7 +92,7 @@ public class GroovyTestDescription
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        new DefaultGroovyLibraryBuilder(
+        DefaultGroovyLibraryBuilder.newInstance(
                 targetGraph,
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,

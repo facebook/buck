@@ -25,8 +25,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 
-class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
-  protected DefaultGroovyLibraryBuilder(
+final class DefaultGroovyLibraryBuilder {
+  private DefaultGroovyLibraryBuilder() {}
+
+  public static DefaultJavaLibraryBuilder newInstance(
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -35,8 +37,9 @@ class DefaultGroovyLibraryBuilder extends DefaultJavaLibraryBuilder {
       CellPathResolver cellRoots,
       JavacOptions javacOptions,
       GroovyBuckConfig groovyBuckConfig) {
-    super(targetGraph, buildTarget, projectFilesystem, params, buildRuleResolver, cellRoots);
-    setConfiguredCompilerFactory(new GroovyConfiguredCompilerFactory(groovyBuckConfig));
-    setJavacOptions(javacOptions);
+    return new DefaultJavaLibraryBuilder(
+            targetGraph, buildTarget, projectFilesystem, params, buildRuleResolver, cellRoots)
+        .setConfiguredCompilerFactory(new GroovyConfiguredCompilerFactory(groovyBuckConfig))
+        .setJavacOptions(javacOptions);
   }
 }

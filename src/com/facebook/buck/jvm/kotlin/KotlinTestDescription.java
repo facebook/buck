@@ -100,7 +100,7 @@ public class KotlinTestDescription
             templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        new KotlinLibraryBuilder(
+        KotlinLibraryBuilder.newInstance(
                 targetGraph,
                 testsLibraryBuildTarget,
                 projectFilesystem,

@@ -78,7 +78,7 @@ public class DefaultJavaLibraryBuilder {
   @Nullable private ConfiguredCompilerFactory configuredCompilerFactory = null;
   @Nullable private ConfiguredCompiler configuredCompiler;
 
-  protected DefaultJavaLibraryBuilder(
+  public DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
       BuildTarget initialBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -104,7 +104,7 @@ public class DefaultJavaLibraryBuilder {
     setCompileAgainstAbis(javaBuckConfig.shouldCompileAgainstAbis());
   }
 
-  protected DefaultJavaLibraryBuilder(
+  public DefaultJavaLibraryBuilder(
       TargetGraph targetGraph,
       BuildTarget initialBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -248,7 +248,7 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
-  protected DefaultJavaLibraryBuilder setCompileAgainstAbis(boolean compileAgainstAbis) {
+  public DefaultJavaLibraryBuilder setCompileAgainstAbis(boolean compileAgainstAbis) {
     this.compileAgainstAbis = compileAgainstAbis;
     return this;
   }

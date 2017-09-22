@@ -25,8 +25,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 
-public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
-  ScalaLibraryBuilder(
+final class ScalaLibraryBuilder {
+  private ScalaLibraryBuilder() {}
+
+  public static DefaultJavaLibraryBuilder newInstance(
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -35,18 +37,17 @@ public class ScalaLibraryBuilder extends DefaultJavaLibraryBuilder {
       CellPathResolver cellRoots,
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    super(
-        targetGraph,
-        buildTarget,
-        projectFilesystem,
-        params,
-        buildRuleResolver,
-        cellRoots,
-        javaBuckConfig);
-
-    // See https://github.com/facebook/buck/issues/1386
-    setCompileAgainstAbis(false);
-    setConfiguredCompilerFactory(
-        new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig));
+    return new DefaultJavaLibraryBuilder(
+            targetGraph,
+            buildTarget,
+            projectFilesystem,
+            params,
+            buildRuleResolver,
+            cellRoots,
+            javaBuckConfig)
+        // See https://github.com/facebook/buck/issues/1386
+        .setCompileAgainstAbis(false)
+        .setConfiguredCompilerFactory(
+            new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig));
   }
 }

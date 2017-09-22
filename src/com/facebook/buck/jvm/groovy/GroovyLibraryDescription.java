@@ -64,7 +64,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         JavacOptionsFactory.create(
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
     DefaultJavaLibraryBuilder defaultGroovyLibraryBuilder =
-        new DefaultGroovyLibraryBuilder(
+        DefaultGroovyLibraryBuilder.newInstance(
                 targetGraph,
                 buildTarget,
                 projectFilesystem,

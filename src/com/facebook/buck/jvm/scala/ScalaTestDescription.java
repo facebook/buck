@@ -117,7 +117,7 @@ public class ScalaTestDescription
             templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(
+        ScalaLibraryBuilder.newInstance(
                 targetGraph,
                 javaLibraryBuildTarget,
                 projectFilesystem,

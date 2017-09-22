@@ -71,7 +71,7 @@ public class ScalaLibraryDescription
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(
+        ScalaLibraryBuilder.newInstance(
                 targetGraph,
                 buildTarget,
                 projectFilesystem,
