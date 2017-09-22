@@ -189,7 +189,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 getJarBuildStepsFactory(),
                 proguardConfig,
                 getFinalFullJarDeclaredDeps(),
-                fullJarExportedDeps,
+                fullJarExportedDepsSupplier.get(),
                 fullJarProvidedDeps,
                 getAbiJar(),
                 mavenCoords,
@@ -211,8 +211,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
         if (graphEnhancer == null) {
           final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = buildQueriedDepsSupplier();
-          final Supplier<ImmutableList<BuildRule>> exportedDepsSupplier =
-              buildExportedDepsSupplier();
           graphEnhancer =
               new AndroidLibraryGraphEnhancer(
                   libraryTarget,
@@ -221,7 +219,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                       () ->
                           ImmutableSortedSet.copyOf(
                               Iterables.concat(
-                                  queriedDepsSupplier.get(), exportedDepsSupplier.get()))),
+                                  queriedDepsSupplier.get(), fullJarExportedDepsSupplier.get()))),
                   getJavac(),
                   getJavacOptions(),
                   DependencyMode.FIRST_ORDER,
@@ -242,14 +240,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                         .map(buildRuleResolver::getRule)
                         .collect(MoreCollectors.toImmutableList()))
             : ImmutableList::of;
-      }
-
-      private Supplier<ImmutableList<BuildRule>> buildExportedDepsSupplier() {
-        return Suppliers.memoize(
-            () ->
-                buildRuleResolver
-                    .getAllRulesStream(args.getExportedDeps())
-                    .collect(MoreCollectors.toImmutableList()));
       }
 
       @Override

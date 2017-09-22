@@ -37,6 +37,8 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -63,7 +65,8 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  protected ImmutableSortedSet<BuildRule> fullJarExportedDeps = ImmutableSortedSet.of();
+  protected Supplier<ImmutableSortedSet<BuildRule>> fullJarExportedDepsSupplier =
+      ImmutableSortedSet::of;
   protected ImmutableSortedSet<BuildRule> fullJarProvidedDeps = ImmutableSortedSet.of();
   protected Optional<Path> resourcesRoot = Optional.empty();
   protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
@@ -201,13 +204,18 @@ public class DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    this.fullJarExportedDeps = buildRuleResolver.getAllRules(exportedDeps);
+    this.fullJarExportedDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                buildRuleResolver
+                    .getAllRulesStream(exportedDeps)
+                    .collect(MoreCollectors.toImmutableSortedSet()));
     return this;
   }
 
   @VisibleForTesting
   public DefaultJavaLibraryBuilder setExportedDepRules(ImmutableSortedSet<BuildRule> exportedDeps) {
-    this.fullJarExportedDeps = exportedDeps;
+    this.fullJarExportedDepsSupplier = () -> exportedDeps;
     return this;
   }
 
@@ -373,7 +381,7 @@ public class DefaultJavaLibraryBuilder {
                 getJarBuildStepsFactory(),
                 proguardConfig,
                 getFinalFullJarDeclaredDeps(),
-                fullJarExportedDeps,
+                fullJarExportedDepsSupplier.get(),
                 fullJarProvidedDeps,
                 getAbiJar(),
                 mavenCoords,
@@ -512,7 +520,7 @@ public class DefaultJavaLibraryBuilder {
         extraDepsBuilder.addAll(
             Sets.difference(
                 initialParams.getExtraDeps().get(),
-                Sets.union(fullJarProvidedDeps, fullJarExportedDeps)));
+                Sets.union(fullJarProvidedDeps, fullJarExportedDepsSupplier.get())));
       } else {
         declaredDepsBuilder.addAll(getFinalFullJarDeclaredDeps());
         extraDepsBuilder
@@ -545,7 +553,9 @@ public class DefaultJavaLibraryBuilder {
       if (compileTimeClasspathUnfilteredFullDeps == null) {
         Iterable<BuildRule> firstOrderDeps =
             Iterables.concat(
-                getFinalFullJarDeclaredDeps(), fullJarExportedDeps, fullJarProvidedDeps);
+                getFinalFullJarDeclaredDeps(),
+                fullJarExportedDepsSupplier.get(),
+                fullJarProvidedDeps);
 
         ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
             BuildRules.getExportedRules(firstOrderDeps);
