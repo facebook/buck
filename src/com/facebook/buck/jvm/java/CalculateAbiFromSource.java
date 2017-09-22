@@ -18,11 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
@@ -37,31 +37,39 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public class CalculateAbiFromSource extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class CalculateAbiFromSource extends AbstractBuildRule
     implements CalculateAbi,
         InitializableFromDisk<Object>,
         SupportsInputBasedRuleKey,
         SupportsPipelining<JavacPipelineState> {
 
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
+  // This will be added to the rule key by virtue of being returned from getBuildDeps.
+  private final ImmutableSortedSet<BuildRule> buildDeps;
   private final JarContentsSupplier outputJarContents;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
   public CalculateAbiFromSource(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       SourcePathRuleFinder ruleFinder,
       JarBuildStepsFactory jarBuildStepsFactory) {
-    super(buildTarget, projectFilesystem, params);
-
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.outputJarContents =
         new JarContentsSupplier(
             DefaultSourcePathResolver.from(ruleFinder), getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   @Override

@@ -426,7 +426,7 @@ public class DefaultJavaLibraryBuilder {
             new CalculateAbiFromSource(
                 abiTarget,
                 projectFilesystem,
-                getFinalParams(),
+                ImmutableSortedSet.copyOf(getFinalParams().getBuildDeps()),
                 ruleFinder,
                 getJarBuildStepsFactory());
         if (addToIndex) {
