@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.io.CopySourceMode;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;

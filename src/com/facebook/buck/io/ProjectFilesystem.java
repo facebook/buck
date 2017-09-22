@@ -83,24 +83,6 @@ public class ProjectFilesystem {
 
   private final boolean windowsSymlinks;
 
-  /** Controls the behavior of how the source should be treated when copying. */
-  public enum CopySourceMode {
-    /** Copy the single source file into the destination path. */
-    FILE,
-
-    /**
-     * Treat the source as a directory and copy each file inside it to the destination path, which
-     * must be a directory.
-     */
-    DIRECTORY_CONTENTS_ONLY,
-
-    /**
-     * Treat the source as a directory. Copy the directory and its contents to the destination path,
-     * which must be a directory.
-     */
-    DIRECTORY_AND_CONTENTS,
-  }
-
   private static final Path EDEN_MAGIC_PATH_ELEMENT = Paths.get(".eden");
 
   @VisibleForTesting public static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";

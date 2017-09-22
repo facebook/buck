@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.CopySourceMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
@@ -145,7 +146,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             }
 
             if (dirDoesNotExistOrIsEmpty) {
-              filesystem.copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
+              filesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
             } else {
               // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
               ImmutableSortedSet.Builder<Path> entriesToJarBuilder =
