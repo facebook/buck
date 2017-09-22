@@ -92,7 +92,7 @@ public class DefaultJavaLibraryBuilder {
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       ConfiguredCompilerFactory configuredCompilerFactory,
-      JavaBuckConfig javaBuckConfig) {
+      @Nullable JavaBuckConfig javaBuckConfig) {
     libraryTarget =
         HasJavaAbi.isLibraryTarget(initialBuildTarget)
             ? initialBuildTarget
@@ -121,24 +121,15 @@ public class DefaultJavaLibraryBuilder {
       BuildRuleResolver buildRuleResolver,
       CellPathResolver cellRoots,
       ConfiguredCompilerFactory configuredCompilerFactory) {
-    libraryTarget =
-        HasJavaAbi.isLibraryTarget(initialBuildTarget)
-            ? initialBuildTarget
-            : HasJavaAbi.getLibraryTarget(initialBuildTarget);
-
-    this.targetGraph = targetGraph;
-    this.initialBuildTarget = initialBuildTarget;
-    this.projectFilesystem = projectFilesystem;
-    this.initialParams = initialParams;
-    this.buildRuleResolver = buildRuleResolver;
-    this.cellRoots = cellRoots;
-    this.configuredCompilerFactory = configuredCompilerFactory;
-    this.fullJarDeclaredDeps =
-        ImmutableSortedSet.copyOf(this.initialParams.getDeclaredDeps().get());
-
-    ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    javaBuckConfig = null;
+    this(
+        targetGraph,
+        initialBuildTarget,
+        projectFilesystem,
+        initialParams,
+        buildRuleResolver,
+        cellRoots,
+        configuredCompilerFactory,
+        null);
   }
 
   public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
