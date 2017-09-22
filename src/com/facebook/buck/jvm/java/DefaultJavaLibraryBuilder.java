@@ -473,7 +473,6 @@ public class DefaultJavaLibraryBuilder {
                       Preconditions.checkNotNull(deps).getProvidedDeps(),
                       Preconditions.checkNotNull(deps).getExportedDeps())));
         } else {
-          depsBuilder.addAll(getFinalFullJarDeclaredDeps());
           depsBuilder
               .addAll(initialParams.getExtraDeps().get())
               .addAll(getCompileTimeClasspathUnfilteredFullDeps());
