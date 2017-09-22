@@ -476,9 +476,7 @@ public class DefaultJavaLibraryBuilder {
           depsBuilder.addAll(getFinalFullJarDeclaredDeps());
           depsBuilder
               .addAll(initialParams.getExtraDeps().get())
-              .addAll(
-                  Sets.difference(
-                      getCompileTimeClasspathUnfilteredFullDeps(), initialParams.getBuildDeps()));
+              .addAll(getCompileTimeClasspathUnfilteredFullDeps());
         }
 
         // The extra deps contain rules that may not come from the deps-related arguments of the
