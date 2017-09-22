@@ -60,6 +60,7 @@ import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
+import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -91,6 +92,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -100,6 +102,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -492,6 +495,136 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     Set<String> processors = ImmutableSet.copyOf(Splitter.on(',').split(params.get(index + 1)));
     if (!processors.contains(processor)) {
       fail(String.format("Annotation processor %s not found in %s.", processor, params));
+    }
+  }
+
+  @Test
+  public void testBuildDeps() throws Exception {
+    BuildTarget sourceDepExportFileTarget = BuildTargetFactory.newInstance("//:source_dep");
+    TargetNode<?, ?> sourceDepExportFileNode =
+        new ExportFileBuilder(sourceDepExportFileTarget).build();
+
+    BuildTarget depExportFileTarget = BuildTargetFactory.newInstance("//:dep_file");
+    TargetNode<?, ?> depExportFileNode = new ExportFileBuilder(depExportFileTarget).build();
+
+    BuildTarget depLibraryExportedDepTarget =
+        BuildTargetFactory.newInstance("//:dep_library_exported_dep");
+    TargetNode<?, ?> depLibraryExportedDepNode =
+        createJavaLibraryBuilder(depLibraryExportedDepTarget)
+            .addSrc(Paths.get("DepExportedDep.java"))
+            .build();
+    BuildTarget depLibraryTarget = BuildTargetFactory.newInstance("//:dep_library");
+    TargetNode<?, ?> depLibraryNode =
+        createJavaLibraryBuilder(depLibraryTarget)
+            .addSrc(Paths.get("Dep.java"))
+            .addExportedDep(depLibraryExportedDepTarget)
+            .build();
+
+    BuildTarget exportedDepLibraryExportedDepTarget =
+        BuildTargetFactory.newInstance("//:exported_dep_library_exported_dep");
+    TargetNode<?, ?> exportedDepLibraryExportedDepNode =
+        createJavaLibraryBuilder(exportedDepLibraryExportedDepTarget)
+            .addSrc(Paths.get("ExportedDepExportedDep.java"))
+            .build();
+    BuildTarget exportedDepLibraryTarget =
+        BuildTargetFactory.newInstance("//:exported_dep_library");
+    TargetNode<?, ?> exportedDepLibraryNode =
+        createJavaLibraryBuilder(exportedDepLibraryTarget)
+            .addSrc(Paths.get("ExportedDep.java"))
+            .addExportedDep(exportedDepLibraryExportedDepTarget)
+            .build();
+
+    BuildTarget providedDepLibraryExportedDepTarget =
+        BuildTargetFactory.newInstance("//:provided_dep_library_exported_dep");
+    TargetNode<?, ?> providedDepLibraryExportedDepNode =
+        createJavaLibraryBuilder(providedDepLibraryExportedDepTarget)
+            .addSrc(Paths.get("ProvidedDepExportedDep.java"))
+            .build();
+    BuildTarget providedDepLibraryTarget =
+        BuildTargetFactory.newInstance("//:provided_dep_library");
+    TargetNode<?, ?> providedDepLibraryNode =
+        createJavaLibraryBuilder(providedDepLibraryTarget)
+            .addSrc(Paths.get("ProvidedDep.java"))
+            .addExportedDep(providedDepLibraryExportedDepTarget)
+            .build();
+
+    BuildTarget resourceDepPrebuiltJarTarget = BuildTargetFactory.newInstance("//:resource_dep");
+    TargetNode<?, ?> resourceDepPrebuiltJarNode =
+        PrebuiltJarBuilder.createBuilder(resourceDepPrebuiltJarTarget)
+            .setBinaryJar(Paths.get("binary.jar"))
+            .build();
+
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
+    TargetNode<?, ?> libraryNode =
+        createJavaLibraryBuilder(libraryTarget)
+            .addSrc(new DefaultBuildTargetSourcePath(sourceDepExportFileTarget))
+            .addDep(depLibraryTarget)
+            .addDep(depExportFileTarget)
+            .addExportedDep(exportedDepLibraryTarget)
+            .addProvidedDep(providedDepLibraryTarget)
+            .addResource(new DefaultBuildTargetSourcePath(resourceDepPrebuiltJarTarget))
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            libraryNode,
+            sourceDepExportFileNode,
+            depExportFileNode,
+            depLibraryNode,
+            depLibraryExportedDepNode,
+            exportedDepLibraryNode,
+            exportedDepLibraryExportedDepNode,
+            providedDepLibraryNode,
+            providedDepLibraryExportedDepNode,
+            resourceDepPrebuiltJarNode);
+    ruleResolver =
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    DefaultJavaLibrary library = (DefaultJavaLibrary) ruleResolver.requireRule(libraryTarget);
+
+    Set<BuildRule> expectedDeclaredDeps = new HashSet<>();
+    if (compileAgainstAbis.equals(TRUE)) {
+      expectedDeclaredDeps.add(getAbiJar(depLibraryTarget));
+    } else {
+      expectedDeclaredDeps.add(ruleResolver.getRule(depLibraryTarget));
+    }
+    expectedDeclaredDeps.add(ruleResolver.getRule(depExportFileTarget));
+
+    Set<BuildRule> expectedExtraDeps = new HashSet<>();
+    if (compileAgainstAbis.equals(FALSE)) {
+      expectedExtraDeps.add(getAbiJar(depLibraryTarget));
+    }
+    addAbiAndMaybeFullJar(depLibraryExportedDepTarget, expectedExtraDeps);
+    addAbiAndMaybeFullJar(providedDepLibraryTarget, expectedExtraDeps);
+    addAbiAndMaybeFullJar(providedDepLibraryExportedDepTarget, expectedExtraDeps);
+    addAbiAndMaybeFullJar(exportedDepLibraryTarget, expectedExtraDeps);
+    addAbiAndMaybeFullJar(exportedDepLibraryExportedDepTarget, expectedExtraDeps);
+    expectedExtraDeps.add(ruleResolver.getRule(sourceDepExportFileTarget));
+    expectedExtraDeps.add(ruleResolver.getRule(resourceDepPrebuiltJarTarget));
+
+    assertThat("Declared deps mismatch!", library.getDeclaredDeps(), equalTo(expectedDeclaredDeps));
+    assertThat(
+        "Extra deps mismatch!", library.deprecatedGetExtraDeps(), equalTo(expectedExtraDeps));
+    assertThat(
+        "Build deps mismatch!",
+        library.getBuildDeps(),
+        equalTo(Sets.union(expectedDeclaredDeps, expectedExtraDeps)));
+  }
+
+  private BuildRule getAbiJar(BuildTarget libraryTarget) {
+    HasJavaAbi libraryJar = (HasJavaAbi) ruleResolver.getRule(libraryTarget);
+
+    return ruleResolver.requireRule(libraryJar.getAbiJar().get());
+  }
+
+  private void addAbiAndMaybeFullJar(BuildTarget target, Set<BuildRule> set) {
+    BuildRule fullJar = ruleResolver.getRule(target);
+    BuildRule abiJar = ruleResolver.requireRule(((HasJavaAbi) fullJar).getAbiJar().get());
+
+    set.add(abiJar);
+    if (compileAgainstAbis.equals(FALSE)) {
+      set.add(fullJar);
     }
   }
 
