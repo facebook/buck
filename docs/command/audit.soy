@@ -92,6 +92,14 @@ cxx.cxx&#9;/usr/bin/g++
   {/call}
 
   {call buck.param}
+    {param name: 'includes <build_file>' /}
+    {param nodash: true /}
+    {param desc}
+        Lists build files and their extensions included in given build file.
+    {/param}
+  {/call}
+
+  {call buck.param}
     {param name: 'tests <targets>' /}
     {param nodash: true /}
     {param desc}
