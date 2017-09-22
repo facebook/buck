@@ -44,7 +44,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   @Override
   public ProjectFilesystem createProjectFilesystem(Path root, Config config)
       throws InterruptedException {
-    return new ProjectFilesystem(
+    return new DefaultProjectFilesystem(
         root.getFileSystem(),
         root,
         extractIgnorePaths(root, config, getConfiguredBuckPaths(root, config)),
@@ -76,7 +76,8 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       builder.add(new PathOrGlobMatcher(root, buckdDirProperty));
     }
 
-    Path cacheDir = ProjectFilesystem.getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
+    Path cacheDir =
+        DefaultProjectFilesystem.getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
     builder.add(new PathOrGlobMatcher(cacheDir));
 
     builder.addAll(

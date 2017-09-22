@@ -7,6 +7,9 @@ java_library(
             "*Test.java",
         ],
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+    ],
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
@@ -21,7 +24,6 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/io:transport",
-        "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",

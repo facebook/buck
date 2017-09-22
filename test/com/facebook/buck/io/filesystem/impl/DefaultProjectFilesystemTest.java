@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem.impl;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -24,9 +24,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.CopySourceMode;
+import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.MorePosixFilePermissions;
+import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.config.Config;
@@ -77,7 +81,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class ProjectFilesystemTest {
+public class DefaultProjectFilesystemTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

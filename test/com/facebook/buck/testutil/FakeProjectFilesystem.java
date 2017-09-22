@@ -20,6 +20,7 @@ import com.facebook.buck.io.CopySourceMode;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
@@ -83,7 +84,7 @@ import java.util.jar.Manifest;
 import javax.annotation.Nullable;
 
 // TODO(natthu): Implement methods that throw UnsupportedOperationException.
-public class FakeProjectFilesystem extends ProjectFilesystem {
+public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
   private static final Random RANDOM = new Random();
   private static final Path DEFAULT_ROOT = Paths.get(".").toAbsolutePath().normalize();
@@ -242,7 +243,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       throw new RuntimeException(e);
     }
 
-    return new ProjectFilesystem(root, new DefaultProjectFilesystemDelegate(root)) {
+    return new DefaultProjectFilesystem(root, new DefaultProjectFilesystemDelegate(root)) {
       @Override
       public Path resolve(Path path) {
         // Avoid resolving paths from different Java FileSystems.

@@ -36,6 +36,7 @@ import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -179,7 +180,7 @@ public class ServedCacheIntegrationTest {
   @Test
   public void testExceptionDuringTheRead() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
-        new ProjectFilesystem(
+        new DefaultProjectFilesystem(
             tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
           private boolean throwingStreamServed = false;
 
@@ -215,7 +216,7 @@ public class ServedCacheIntegrationTest {
   @Test
   public void testExceptionDuringTheReadRetryingFail() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
-        new ProjectFilesystem(
+        new DefaultProjectFilesystem(
             tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
           private int throwingStreamServedCount = 0;
 
@@ -246,7 +247,7 @@ public class ServedCacheIntegrationTest {
   @Test
   public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
-        new ProjectFilesystem(
+        new DefaultProjectFilesystem(
             tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
           private int throwingStreamServedCount = 0;
 
