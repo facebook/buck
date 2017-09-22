@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.filesystem.skylark;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;

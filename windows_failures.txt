@@ -37,7 +37,7 @@
 !com.facebook.buck.thrift.ThriftLibraryIntegrationTest#shouldBeAbleToConstructACxxLibraryFromThrift
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
 !com.facebook.buck.intellij.ideabuck.config.BuckExecutableDetectorTest
-!com.facebook.buck.io.filesystem.SkylarkFilesystemTest
+!com.facebook.buck.io.filesystem.skylark.SkylarkFilesystemTest
 !com.facebook.buck.jvm.java.JavacStepTest
 !com.facebook.buck.cli.QueryCommandIntegrationTest
 !com.facebook.buck.rules.CachingBuildEngineTest
