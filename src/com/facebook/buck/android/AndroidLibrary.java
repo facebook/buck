@@ -35,13 +35,8 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -210,7 +205,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
       protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
         if (graphEnhancer == null) {
-          final Supplier<ImmutableList<BuildRule>> queriedDepsSupplier = buildQueriedDepsSupplier();
           graphEnhancer =
               new AndroidLibraryGraphEnhancer(
                   libraryTarget,
@@ -231,22 +225,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         return graphEnhancer;
       }
 
-      private Supplier<ImmutableList<BuildRule>> buildQueriedDepsSupplier() {
-        return args.getDepsQuery().isPresent()
-            ? Suppliers.memoize(
-                () ->
-                    Preconditions.checkNotNull(args.getDepsQuery().get().getResolvedQuery())
-                        .stream()
-                        .map(buildRuleResolver::getRule)
-                        .collect(MoreCollectors.toImmutableList()))
-            : ImmutableList::of;
-      }
-
       @Override
       protected ImmutableSortedSet<BuildRule> buildFinalFullJarDeclaredDeps() {
         return RichStream.from(super.buildFinalFullJarDeclaredDeps())
             .concat(RichStream.from(getDummyRDotJava()))
-            .concat(RichStream.fromSupplierOfIterable(buildQueriedDepsSupplier()))
             .toImmutableSortedSet(Ordering.natural());
       }
     }

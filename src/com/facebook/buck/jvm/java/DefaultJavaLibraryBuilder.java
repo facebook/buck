@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
+import com.facebook.buck.rules.HasDepsQuery;
 import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -67,6 +68,7 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
   protected Supplier<ImmutableSortedSet<BuildRule>> fullJarExportedDepsSupplier =
       ImmutableSortedSet::of;
+  protected Supplier<ImmutableSortedSet<BuildRule>> queriedDepsSupplier = ImmutableSortedSet::of;
   protected ImmutableSortedSet<BuildRule> fullJarProvidedDeps = ImmutableSortedSet.of();
   protected Optional<Path> resourcesRoot = Optional.empty();
   protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
@@ -147,6 +149,19 @@ public class DefaultJavaLibraryBuilder {
             RichStream.from(args.getProvidedDeps())
                 .concat(providedDepsQuery.getResolvedQuery().stream())
                 .toImmutableSortedSet(Ordering.natural());
+      }
+    }
+
+    if (args instanceof HasDepsQuery) {
+      HasDepsQuery hasDepsQuery = (HasDepsQuery) args;
+      if (hasDepsQuery.getDepsQuery().isPresent()) {
+        queriedDepsSupplier =
+            Suppliers.memoize(
+                () ->
+                    Preconditions.checkNotNull(hasDepsQuery.getDepsQuery().get().getResolvedQuery())
+                        .stream()
+                        .map(buildRuleResolver::getRule)
+                        .collect(MoreCollectors.toImmutableSortedSet()));
       }
     }
 
@@ -456,7 +471,8 @@ public class DefaultJavaLibraryBuilder {
       return ImmutableSortedSet.copyOf(
           Iterables.concat(
               initialParams.getDeclaredDeps().get(),
-              getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
+              getConfiguredCompiler().getDeclaredDeps(ruleFinder),
+              queriedDepsSupplier.get()));
     }
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
