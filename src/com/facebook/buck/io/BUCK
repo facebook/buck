@@ -1,21 +1,3 @@
-DEFAULT_FILESYSTEM_DELEGATE_SRCS = [
-    "DefaultProjectFilesystemDelegate.java",
-]
-
-java_library(
-    name = "DefaultProjectFilesystemDelegate",
-    srcs = DEFAULT_FILESYSTEM_DELEGATE_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":ProjectFilesystemDelegate",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/util/sha1:sha1",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 # This is its own rule that should have limited dependencies
 # because it is meant to have widespread utility.
 MORE_PATHS_SRCS = [
@@ -129,7 +111,6 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
         excludes = (
-            DEFAULT_FILESYSTEM_DELEGATE_SRCS +
             FINDER_SRCS +
             MORE_PATHS_SRCS +
             PROJECT_FILESYSTEM_DELEGATE_SRCS +

@@ -22,8 +22,8 @@ import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;

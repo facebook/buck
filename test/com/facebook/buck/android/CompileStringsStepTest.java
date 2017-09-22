@@ -20,8 +20,8 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.StringResources.Gender;
-import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

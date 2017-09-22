@@ -19,7 +19,6 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.eden.EdenClientPool;
 import com.facebook.buck.eden.EdenMount;
 import com.facebook.buck.eden.EdenProjectFilesystemDelegate;
-import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;

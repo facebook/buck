@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
