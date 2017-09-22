@@ -465,6 +465,7 @@ public class DefaultJavaLibraryBuilder {
       return ImmutableSortedSet.copyOf(
           Iterables.concat(
               initialParams.getDeclaredDeps().get(),
+              fullJarExportedDepsSupplier.get(),
               getConfiguredCompiler().getDeclaredDeps(ruleFinder),
               queriedDepsSupplier.get()));
     }
@@ -563,10 +564,7 @@ public class DefaultJavaLibraryBuilder {
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
       if (compileTimeClasspathUnfilteredFullDeps == null) {
         Iterable<BuildRule> firstOrderDeps =
-            Iterables.concat(
-                getFinalFullJarDeclaredDeps(),
-                fullJarExportedDepsSupplier.get(),
-                fullJarProvidedDeps);
+            Iterables.concat(getFinalFullJarDeclaredDeps(), fullJarProvidedDeps);
 
         ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
             BuildRules.getExportedRules(firstOrderDeps);

@@ -44,6 +44,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -178,6 +179,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       }
     }
 
+    Sets.SetView<BuildRule> missingExports =
+        Sets.difference(fullJarExportedDeps, fullJarDeclaredDeps);
+    // Exports should have been copied over to declared before invoking this constructor
+    Preconditions.checkState(missingExports.isEmpty());
+
     this.proguardConfig = proguardConfig;
     this.fullJarDeclaredDeps = fullJarDeclaredDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
@@ -251,7 +257,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return Sets.union(fullJarDeclaredDeps, fullJarExportedDeps);
+    return fullJarDeclaredDeps;
   }
 
   @Override
@@ -359,9 +365,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // list or define a strict order of precedence among the lists (exported overrides deps
     // overrides exported_provided overrides provided.)
     return AndroidPackageableCollector.getPackageableRules(
-        ImmutableSortedSet.copyOf(
-            Sets.difference(
-                Sets.union(fullJarDeclaredDeps, fullJarExportedDeps), fullJarProvidedDeps)));
+        ImmutableSortedSet.copyOf(Sets.difference(fullJarDeclaredDeps, fullJarProvidedDeps)));
   }
 
   @Override

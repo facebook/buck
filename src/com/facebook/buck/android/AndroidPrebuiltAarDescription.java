@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import java.util.Collections;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -191,7 +192,9 @@ public class AndroidPrebuiltAarDescription
 
     BuildRuleParams androidLibraryParams =
         params
-            .withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar))
+            .withDeclaredDeps(
+                ImmutableSortedSet.copyOf(
+                    Iterables.concat(javaDeps, Collections.singleton(prebuiltJar))))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
     return new AndroidPrebuiltAar(
         buildTarget,
