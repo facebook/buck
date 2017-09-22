@@ -287,7 +287,7 @@ public class DefaultJavaLibraryBuilder {
   protected class BuilderHelper {
     @Nullable private DefaultJavaLibrary libraryRule;
     @Nullable private CalculateAbiFromSource sourceAbiRule;
-    @Nullable private BuildRuleParams finalParams;
+    @Nullable private ImmutableSortedSet<BuildRule> finalBuildDeps;
     @Nullable private ImmutableSortedSet<BuildRule> finalFullJarDeclaredDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
     @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
@@ -380,18 +380,20 @@ public class DefaultJavaLibraryBuilder {
 
     private DefaultJavaLibrary getLibraryRule(boolean addToIndex) {
       if (libraryRule == null) {
-        BuildRuleParams finalParams = getFinalParams();
+        ImmutableSortedSet.Builder<BuildRule> buildDepsBuilder = ImmutableSortedSet.naturalOrder();
+
+        buildDepsBuilder.addAll(getFinalBuildDeps());
         CalculateAbiFromSource sourceAbiRule = null;
         if (willProduceSourceAbi()) {
           sourceAbiRule = getSourceAbiRule(true);
-          finalParams = finalParams.copyAppendingExtraDeps(sourceAbiRule);
+          buildDepsBuilder.add(sourceAbiRule);
         }
 
         libraryRule =
             new DefaultJavaLibrary(
                 initialBuildTarget,
                 projectFilesystem,
-                ImmutableSortedSet.copyOf(finalParams.getBuildDeps()),
+                buildDepsBuilder.build(),
                 sourcePathResolver,
                 getJarBuildStepsFactory(),
                 proguardConfig,
@@ -426,7 +428,7 @@ public class DefaultJavaLibraryBuilder {
             new CalculateAbiFromSource(
                 abiTarget,
                 projectFilesystem,
-                ImmutableSortedSet.copyOf(getFinalParams().getBuildDeps()),
+                getFinalBuildDeps(),
                 ruleFinder,
                 getJarBuildStepsFactory());
         if (addToIndex) {
@@ -449,14 +451,6 @@ public class DefaultJavaLibraryBuilder {
           javaBuckConfig != null
               && javaBuckConfig.getSourceAbiVerificationMode()
                   != JavaBuckConfig.SourceAbiVerificationMode.OFF);
-    }
-
-    protected final BuildRuleParams getFinalParams() {
-      if (finalParams == null) {
-        finalParams = buildFinalParams();
-      }
-
-      return finalParams;
     }
 
     protected final ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
@@ -524,45 +518,46 @@ public class DefaultJavaLibraryBuilder {
       return configuredCompiler;
     }
 
-    protected BuildRuleParams buildFinalParams() {
-      ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps = getCompileTimeClasspathAbiDeps();
-      ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
-      ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
-      if (configuredCompilerFactory.compileAgainstAbis()) {
-        declaredDepsBuilder.addAll(
-            getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));
-        // We remove provided and exported deps since we'll be adding the ABI rules of these and
-        // don't want to end up with both full & ABI rules
-        extraDepsBuilder.addAll(
-            Sets.difference(
-                initialParams.getExtraDeps().get(),
-                Sets.union(fullJarProvidedDeps, fullJarExportedDepsSupplier.get())));
-      } else {
-        declaredDepsBuilder.addAll(getFinalFullJarDeclaredDeps());
-        extraDepsBuilder
-            .addAll(initialParams.getExtraDeps().get())
-            .addAll(
-                Sets.difference(
-                    getCompileTimeClasspathUnfilteredFullDeps(), initialParams.getBuildDeps()));
+    protected final ImmutableSortedSet<BuildRule> getFinalBuildDeps() {
+      if (finalBuildDeps == null) {
+        ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+
+        if (configuredCompilerFactory.compileAgainstAbis()) {
+          depsBuilder.addAll(
+              getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));
+          // We remove provided and exported deps since we'll be adding the ABI rules of these and
+          // don't want to end up with both full & ABI rules
+          depsBuilder.addAll(
+              Sets.difference(
+                  initialParams.getExtraDeps().get(),
+                  Sets.union(fullJarProvidedDeps, fullJarExportedDepsSupplier.get())));
+        } else {
+          depsBuilder.addAll(getFinalFullJarDeclaredDeps());
+          depsBuilder
+              .addAll(initialParams.getExtraDeps().get())
+              .addAll(
+                  Sets.difference(
+                      getCompileTimeClasspathUnfilteredFullDeps(), initialParams.getBuildDeps()));
+        }
+
+        // The extra deps contain rules that may not come from the deps-related arguments of the
+        // target, but are required for building this rule. Some default extra deps may be provided
+        // and exported rules, annotation processor related rules, gen_aidl rules, gen rules, and zip
+        // rules. The compile time classpath deps and deps from the compile step factory are manually
+        // added as these are required for building this rule.
+        // Extra deps remain separate from the declared deps because there are places where the
+        // declared deps are grabbed and are expected to reflect the actual deps argument of the
+        // target. In addition, when compiling against ABIs, extra deps shouldn't be translated to
+        // their ABI rules as their full JARs are required (with exception of classpath rules).
+        depsBuilder
+            .addAll(getCompileTimeClasspathAbiDeps())
+            .addAll(getConfiguredCompiler().getExtraDeps(ruleFinder))
+            .build();
+
+        finalBuildDeps = depsBuilder.build();
       }
-      ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
 
-      // The extra deps contain rules that may not come from the deps-related arguments of the
-      // target, but are required for building this rule. Some default extra deps may be provided
-      // and exported rules, annotation processor related rules, gen_aidl rules, gen rules, and zip
-      // rules. The compile time classpath deps and deps from the compile step factory are manually
-      // added as these are required for building this rule.
-      // Extra deps remain separate from the declared deps because there are places where the
-      // declared deps are grabbed and are expected to reflect the actual deps argument of the
-      // target. In addition, when compiling against ABIs, extra deps shouldn't be translated to
-      // their ABI rules as their full JARs are required (with exception of classpath rules).
-      ImmutableSortedSet<BuildRule> extraDeps =
-          extraDepsBuilder
-              .addAll(Sets.difference(compileTimeClasspathAbiDeps, declaredDeps))
-              .addAll(getConfiguredCompiler().getExtraDeps(ruleFinder))
-              .build();
-
-      return initialParams.withDeclaredDeps(declaredDeps).withExtraDeps(extraDeps);
+      return finalBuildDeps;
     }
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {

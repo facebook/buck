@@ -179,7 +179,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             new AndroidLibrary(
                 libraryTarget,
                 projectFilesystem,
-                ImmutableSortedSet.copyOf(getFinalParams().getBuildDeps()),
+                getFinalBuildDeps(),
                 sourcePathResolver,
                 getJarBuildStepsFactory(),
                 proguardConfig,
