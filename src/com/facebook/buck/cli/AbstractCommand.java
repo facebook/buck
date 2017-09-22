@@ -307,7 +307,8 @@ public abstract class AbstractCommand implements Command {
             params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
         .setRuleKeyDiagnosticsMode(params.getBuckConfig().getRuleKeyDiagnosticsMode())
         .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
-        .setPersistentWorkerPools(params.getPersistentWorkerPools());
+        .setPersistentWorkerPools(params.getPersistentWorkerPools())
+        .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
   }
 
   public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {

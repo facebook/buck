@@ -91,6 +91,7 @@ java_immutables_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",

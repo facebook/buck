@@ -241,7 +241,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
       throw new RuntimeException(e);
     }
 
-    return new ProjectFilesystem(root) {
+    return new ProjectFilesystem(root, new DefaultProjectFilesystemDelegate(root)) {
       @Override
       public Path resolve(Path path) {
         // Avoid resolving paths from different Java FileSystems.
@@ -269,7 +269,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {
     // For testing, we always use a DefaultProjectFilesystemDelegate so that the logic being
     // exercised is always the same, even if a test using FakeProjectFilesystem is used on EdenFS.
-    super(root, new DefaultProjectFilesystemDelegate(root), false);
+    super(root, new DefaultProjectFilesystemDelegate(root));
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in

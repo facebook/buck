@@ -46,7 +46,8 @@ public class UnzipStep implements Step {
             : filesystem.getPathForRelativeExistingPath(zipFile).toAbsolutePath();
     Path out = filesystem.getPathForRelativeExistingPath(destinationDirectory).toAbsolutePath();
 
-    Unzip.extractZipFile(zip, out, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        context.getProjectFilesystemFactory(), zip, out, Unzip.ExistingFileMode.OVERWRITE);
     return StepExecutionResult.SUCCESS;
   }
 

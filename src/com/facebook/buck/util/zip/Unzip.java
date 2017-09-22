@@ -19,6 +19,7 @@ package com.facebook.buck.util.zip;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -245,13 +246,16 @@ public class Unzip {
   }
 
   public static ImmutableList<Path> extractZipFile(
-      Path zipFile, final Path destination, ExistingFileMode existingFileMode)
+      ProjectFilesystemFactory projectFilesystemFactory,
+      Path zipFile,
+      final Path destination,
+      ExistingFileMode existingFileMode)
       throws InterruptedException, IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
     return extractZipFile(
             zipFile,
-            new ProjectFilesystem(destination),
+            projectFilesystemFactory.createProjectFilesystem(destination),
             destination.getFileSystem().getPath(""),
             existingFileMode)
         .stream()

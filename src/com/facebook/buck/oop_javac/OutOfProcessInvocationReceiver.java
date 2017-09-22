@@ -16,6 +16,7 @@
 
 package com.facebook.buck.oop_javac;
 
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JarBackedJavac;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacCompilationMode;
@@ -99,6 +100,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
     try {
       javacExecutionContext =
           JavacExecutionContextSerializer.deserialize(
+              new DefaultProjectFilesystemFactory(),
               serializedJavacExecutionContext,
               OUT_OF_PROCESS_JAVAC_EVENT_SINK,
               printStreamForStdErr,

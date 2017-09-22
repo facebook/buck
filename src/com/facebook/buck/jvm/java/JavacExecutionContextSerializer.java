@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CellPathResolverSerializer;
@@ -79,6 +80,7 @@ public class JavacExecutionContextSerializer {
 
   @SuppressWarnings("unchecked")
   public static JavacExecutionContext deserialize(
+      ProjectFilesystemFactory projectFilesystemFactory,
       Map<String, Object> data,
       JavacEventSink eventSink,
       PrintStream stdErr,
@@ -98,7 +100,7 @@ public class JavacExecutionContextSerializer {
             (Map<String, Object>) Preconditions.checkNotNull(data.get(JAVA_PACKAGE_FINDER)));
 
     ProjectFilesystem projectFilesystem =
-        new ProjectFilesystem(
+        projectFilesystemFactory.createProjectFilesystem(
             Paths.get((String) Preconditions.checkNotNull(data.get(PROJECT_FILE_SYSTEM_ROOT))));
 
     ClassUsageFileWriter classUsageFileWriter =
@@ -133,6 +135,7 @@ public class JavacExecutionContextSerializer {
         cellPathResolver,
         javaPackageFinder,
         projectFilesystem,
+        projectFilesystemFactory,
         classUsageFileWriter,
         (Map<String, String>)
             Preconditions.checkNotNull(

@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
@@ -40,6 +41,7 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
       ServerContentsProvider serverContentProvider,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ListeningExecutorService executor,
+      ProjectFilesystemFactory projectFilesystemFactory,
       Optional<Path> localCacheAbsPath)
       throws InterruptedException, IOException {
     this(
@@ -47,7 +49,7 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
         localCacheAbsPath.map(
             path -> {
               try {
-                return new LocalFsContentsProvider(path);
+                return new LocalFsContentsProvider(projectFilesystemFactory, path);
               } catch (InterruptedException | IOException e) {
                 throw new RuntimeException(e);
               }

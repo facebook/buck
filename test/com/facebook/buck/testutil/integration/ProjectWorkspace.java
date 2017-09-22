@@ -39,6 +39,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanWatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
@@ -725,7 +726,8 @@ public class ProjectWorkspace {
             buckConfig,
             CellConfig.of(),
             new KnownBuildRuleTypesFactory(processExecutor, directoryResolver, sdkEnvironment),
-            sdkEnvironment)
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }
 

@@ -19,6 +19,7 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.Parser;
@@ -109,4 +110,6 @@ public interface AbstractCommandRunnerParams {
   Optional<InvocationInfo> getInvocationInfo();
 
   Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
+
+  ProjectFilesystemFactory getProjectFilesystemFactory();
 }

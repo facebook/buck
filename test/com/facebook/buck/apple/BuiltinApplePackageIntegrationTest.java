@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -173,6 +174,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     Path destination = workspace.getDestPath();
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -203,6 +205,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     Path destination = workspace.getDestPath();
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -225,6 +228,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         workspace.getDestPath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);

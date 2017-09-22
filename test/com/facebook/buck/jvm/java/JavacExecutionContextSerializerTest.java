@@ -20,7 +20,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -83,6 +85,7 @@ public class JavacExecutionContextSerializerTest {
             .setManifestFile(Optional.of(Paths.get("/MANIFEST/FILE.TXT")))
             .build();
 
+    ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     JavacExecutionContext input =
         JavacExecutionContext.of(
             eventSink,
@@ -92,6 +95,7 @@ public class JavacExecutionContextSerializerTest {
             cellPathResolver,
             javaPackageFinder,
             projectFilesystem,
+            projectFilesystemFactory,
             classUsageFileWriter,
             environment,
             processExecutor,
@@ -100,7 +104,7 @@ public class JavacExecutionContextSerializerTest {
     Map<String, Object> data = JavacExecutionContextSerializer.serialize(input);
     JavacExecutionContext output =
         JavacExecutionContextSerializer.deserialize(
-            data, eventSink, stdErr, classLoaderCache, new TestConsole());
+            projectFilesystemFactory, data, eventSink, stdErr, classLoaderCache, new TestConsole());
 
     assertThat(output.getEventSink(), Matchers.equalTo(eventSink));
     assertThat(output.getStdErr(), Matchers.equalTo(stdErr));

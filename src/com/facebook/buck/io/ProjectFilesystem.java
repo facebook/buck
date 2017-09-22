@@ -18,17 +18,12 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.windowsfs.WindowsFS;
-import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -81,7 +76,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** An injectable service for interacting with the filesystem relative to the project root. */
@@ -107,12 +101,9 @@ public class ProjectFilesystem {
     DIRECTORY_AND_CONTENTS,
   }
 
-  // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
-  private static final Pattern GLOB_CHARS = Pattern.compile("[\\*\\?\\{\\[]");
-
   private static final Path EDEN_MAGIC_PATH_ELEMENT = Paths.get(".eden");
 
-  @VisibleForTesting static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
+  @VisibleForTesting public static final String BUCK_BUCKD_DIR_KEY = "buck.buckd_dir";
 
   private final Path projectRoot;
   private final BuckPaths buckPaths;
@@ -128,56 +119,6 @@ public class ProjectFilesystem {
   // Defaults to false, and so paths should be valid.
   @VisibleForTesting protected boolean ignoreValidityOfPaths;
 
-  public ProjectFilesystem(Path root) throws InterruptedException {
-    this(root, new Config());
-  }
-
-  public static ProjectFilesystem createNewOrThrowHumanReadableException(Path path)
-      throws InterruptedException {
-    try {
-      // toRealPath() is necessary to resolve symlinks, allowing us to later
-      // check whether files are inside or outside of the project without issue.
-      return new ProjectFilesystem(path.toRealPath().normalize());
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          String.format(
-              ("Failed to resolve project root [%s]."
-                  + "Check if it exists and has the right permissions."),
-              path.toAbsolutePath()),
-          e);
-    }
-  }
-
-  /**
-   * This constructor is restricted to {@code protected} because it is generally best to let {@link
-   * ProjectFilesystemDelegateFactory#newInstance(Path, Path, String, Config)} create an appropriate
-   * delegate. Currently, the only case in which we need to override this behavior is in unit tests.
-   */
-  protected ProjectFilesystem(
-      Path root, ProjectFilesystemDelegate delegate, boolean windowsSymlinks) {
-    this(
-        root.getFileSystem(),
-        root,
-        ImmutableSet.of(),
-        getDefaultBuckPaths(root),
-        delegate,
-        windowsSymlinks);
-  }
-
-  public ProjectFilesystem(Path root, Config config) throws InterruptedException {
-    this(
-        root.getFileSystem(),
-        root,
-        extractIgnorePaths(root, config, getConfiguredBuckPaths(root, config)),
-        getConfiguredBuckPaths(root, config),
-        ProjectFilesystemDelegateFactory.newInstance(
-            root,
-            getConfiguredBuckPaths(root, config).getBuckOut(),
-            config.getValue("version_control", "hg_cmd").orElse("hg"),
-            config),
-        config.getBooleanValue("project", "windows_symlinks", false));
-  }
-
   /**
    * For testing purposes, subclasses might want to skip some of the verification done by the
    * constructor on its arguments.
@@ -186,7 +127,18 @@ public class ProjectFilesystem {
     return true;
   }
 
-  private ProjectFilesystem(
+  @VisibleForTesting
+  protected ProjectFilesystem(Path root, ProjectFilesystemDelegate projectFilesystemDelegate) {
+    this(
+        root.getFileSystem(),
+        root,
+        ImmutableSet.of(),
+        BuckPaths.createDefaultBuckPaths(root),
+        projectFilesystemDelegate,
+        false);
+  }
+
+  public ProjectFilesystem(
       FileSystem vfs,
       final Path root,
       ImmutableSet<PathOrGlobMatcher> blackListedPaths,
@@ -250,23 +202,7 @@ public class ProjectFilesystem {
     this.windowsSymlinks = windowsSymlinks;
   }
 
-  private static BuckPaths getDefaultBuckPaths(Path rootPath) {
-    return BuckPaths.of(
-        rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
-  }
-
-  private static BuckPaths getConfiguredBuckPaths(Path rootPath, Config config) {
-    BuckPaths buckPaths = getDefaultBuckPaths(rootPath);
-    Optional<String> configuredBuckOut = config.getValue("project", "buck_out");
-    if (configuredBuckOut.isPresent()) {
-      buckPaths =
-          buckPaths.withConfiguredBuckOut(
-              rootPath.getFileSystem().getPath(configuredBuckOut.get()));
-    }
-    return buckPaths;
-  }
-
-  private static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
+  public static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
     String cacheDir = value.orElse(root.resolve(buckPaths.getCacheDir()).toString());
     Path toReturn = root.getFileSystem().getPath(cacheDir);
     toReturn = MorePaths.expandHomeDir(toReturn);
@@ -279,50 +215,6 @@ public class ProjectFilesystem {
       return toReturn;
     }
     return Iterables.getOnlyElement(filtered);
-  }
-
-  private static ImmutableSet<PathOrGlobMatcher> extractIgnorePaths(
-      final Path root, Config config, final BuckPaths buckPaths) {
-    ImmutableSet.Builder<PathOrGlobMatcher> builder = ImmutableSet.builder();
-
-    builder.add(new PathOrGlobMatcher(root, ".idea"));
-
-    final String projectKey = "project";
-    final String ignoreKey = "ignore";
-
-    String buckdDirProperty = System.getProperty(BUCK_BUCKD_DIR_KEY, ".buckd");
-    if (!Strings.isNullOrEmpty(buckdDirProperty)) {
-      builder.add(new PathOrGlobMatcher(root, buckdDirProperty));
-    }
-
-    Path cacheDir = getCacheDir(root, config.getValue("cache", "dir"), buckPaths);
-    builder.add(new PathOrGlobMatcher(cacheDir));
-
-    builder.addAll(
-        FluentIterable.from(config.getListWithoutComments(projectKey, ignoreKey))
-            .transform(
-                new Function<String, PathOrGlobMatcher>() {
-                  @Nullable
-                  @Override
-                  public PathOrGlobMatcher apply(String input) {
-                    // We don't really want to ignore the output directory when doing things like filesystem
-                    // walks, so return null
-                    if (buckPaths.getBuckOut().toString().equals(input)) {
-                      return null; //root.getFileSystem().getPathMatcher("glob:**");
-                    }
-
-                    if (GLOB_CHARS.matcher(input).find()) {
-                      return new PathOrGlobMatcher(
-                          root.getFileSystem().getPathMatcher("glob:" + input), input);
-                    }
-                    return new PathOrGlobMatcher(root, input);
-                  }
-                })
-            // And now remove any null patterns
-            .filter(Objects::nonNull)
-            .toList());
-
-    return builder.build();
   }
 
   public final Path getRootPath() {

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -76,7 +77,8 @@ public class AndroidAarIntegrationTest {
         "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -106,7 +108,8 @@ public class AndroidAarIntegrationTest {
         "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       assertThat(classes.getJarEntry("com/example/HelloWorld.class"), Matchers.notNullValue());
     }
@@ -126,7 +129,8 @@ public class AndroidAarIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(aar, contents, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(), aar, contents, Unzip.ExistingFileMode.OVERWRITE);
     try (JarFile classes = new JarFile(contents.resolve("classes.jar").toFile())) {
       for (JarEntry jarEntry : Collections.list(classes.entries())) {
         String jarEntryName = jarEntry.getName();
@@ -149,7 +153,11 @@ public class AndroidAarIntegrationTest {
     Path aarLocation = workspace.buildAndReturnOutput(target);
 
     Path contents = tmp.getRoot().resolve("aar-contents");
-    Unzip.extractZipFile(aarLocation, contents, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
+        aarLocation,
+        contents,
+        Unzip.ExistingFileMode.OVERWRITE);
 
     URL jarUrl = contents.resolve("classes.jar").toUri().toURL();
     try (URLClassLoader loader = new URLClassLoader(new URL[] {jarUrl})) {

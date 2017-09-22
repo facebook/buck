@@ -25,7 +25,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.config.Config;
@@ -625,10 +627,11 @@ public class ProjectFilesystemTest {
       throws InterruptedException, IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
     Path rootPath = tmp.getRoot();
+    ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
-        new ProjectFilesystem(rootPath, config),
-        equalTo(new ProjectFilesystem(rootPath, config)));
+        projectFilesystemFactory.createProjectFilesystem(rootPath, config),
+        equalTo(projectFilesystemFactory.createProjectFilesystem(rootPath, config)));
   }
 
   @Test
@@ -636,7 +639,9 @@ public class ProjectFilesystemTest {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path root = vfs.getPath("/root");
     Files.createDirectories(root);
-    assertEquals(vfs, new ProjectFilesystem(root).getPath("bar").getFileSystem());
-    assertEquals(vfs.getPath("bar"), new ProjectFilesystem(root).getPath("bar"));
+    ProjectFilesystem projectFilesystem =
+        new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
+    assertEquals(vfs, projectFilesystem.getPath("bar").getFileSystem());
+    assertEquals(vfs.getPath("bar"), projectFilesystem.getPath("bar"));
   }
 }

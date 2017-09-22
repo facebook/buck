@@ -33,6 +33,7 @@ import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.BorrowablePath;
+import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -178,7 +179,8 @@ public class ServedCacheIntegrationTest {
   @Test
   public void testExceptionDuringTheRead() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
-        new ProjectFilesystem(tmpDir.getRoot()) {
+        new ProjectFilesystem(
+            tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
           private boolean throwingStreamServed = false;
 
           @Override
@@ -213,7 +215,8 @@ public class ServedCacheIntegrationTest {
   @Test
   public void testExceptionDuringTheReadRetryingFail() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
-        new ProjectFilesystem(tmpDir.getRoot()) {
+        new ProjectFilesystem(
+            tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
           private int throwingStreamServedCount = 0;
 
           @Override
@@ -243,7 +246,8 @@ public class ServedCacheIntegrationTest {
   @Test
   public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
-        new ProjectFilesystem(tmpDir.getRoot()) {
+        new ProjectFilesystem(
+            tmpDir.getRoot(), new DefaultProjectFilesystemDelegate(tmpDir.getRoot())) {
           private int throwingStreamServedCount = 0;
 
           @Override

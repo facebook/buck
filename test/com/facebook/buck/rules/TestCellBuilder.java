@@ -25,6 +25,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -98,7 +99,13 @@ public class TestCellBuilder {
             : knownBuildRuleTypesFactory;
 
     return CellProvider.createForLocalBuild(
-            filesystem, watchman, config, cellConfig, typesFactory, sdkEnvironment)
+            filesystem,
+            watchman,
+            config,
+            cellConfig,
+            typesFactory,
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }
 

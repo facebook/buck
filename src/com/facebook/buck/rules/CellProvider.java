@@ -19,6 +19,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -89,7 +90,8 @@ public final class CellProvider {
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment) {
+      SdkEnvironment sdkEnvironment,
+      ProjectFilesystemFactory projectFilesystemFactory) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
         new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());
@@ -154,7 +156,7 @@ public final class CellProvider {
                         rootCellCellPathResolver, cellMapping.keySet(), cellPath);
 
                 ProjectFilesystem cellFilesystem =
-                    new ProjectFilesystem(normalizedCellPath, config);
+                    projectFilesystemFactory.createProjectFilesystem(normalizedCellPath, config);
 
                 BuckConfig buckConfig =
                     new BuckConfig(

@@ -259,7 +259,7 @@ public class DistBuildSlaveExecutor {
     // 2. Add the Operating System roots.
     allCachesBuilder.addAll(
         DefaultFileHashCache.createOsRootDirectoriesCaches(
-            rootCell.getBuckConfig().getFileHashCacheMode()));
+            args.getProjectFilesystemFactory(), rootCell.getBuckConfig().getFileHashCacheMode()));
 
     return new StackedFileHashCache(allCachesBuilder.build());
   }
@@ -408,6 +408,7 @@ public class DistBuildSlaveExecutor {
                   .setBuildCellRootPath(args.getRootCell().getRoot())
                   .setProcessExecutor(processExecutor)
                   .setEnvironment(distBuildConfig.getEnvironment())
+                  .setProjectFilesystemFactory(args.getProjectFilesystemFactory())
                   .build();
           Build build =
               new Build(

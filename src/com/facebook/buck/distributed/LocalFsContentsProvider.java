@@ -24,7 +24,7 @@ import com.facebook.buck.artifact_cache.DirArtifactCache;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +42,9 @@ public class LocalFsContentsProvider implements FileContentsProvider {
 
   private final DirArtifactCache dirCache;
 
-  public LocalFsContentsProvider(Path cacheDirAbsPath) throws InterruptedException, IOException {
+  public LocalFsContentsProvider(
+      ProjectFilesystemFactory projectFilesystemFactory, Path cacheDirAbsPath)
+      throws InterruptedException, IOException {
     Preconditions.checkArgument(
         Files.isDirectory(cacheDirAbsPath),
         "The cache directory must exist. cacheDirAbsPath=[%s]",
@@ -50,7 +52,7 @@ public class LocalFsContentsProvider implements FileContentsProvider {
     this.dirCache =
         new DirArtifactCache(
             CACHE_NAME,
-            new ProjectFilesystem(cacheDirAbsPath),
+            projectFilesystemFactory.createProjectFilesystem(cacheDirAbsPath),
             Paths.get(CACHE_NAME),
             CacheReadMode.READWRITE,
             Optional.empty());

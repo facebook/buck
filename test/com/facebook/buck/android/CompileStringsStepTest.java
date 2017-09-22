@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.StringResources.Gender;
+import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -463,7 +464,11 @@ public class CompileStringsStepTest extends EasyMockSupport {
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
     public FakeProjectFileSystem() throws InterruptedException {
-      super(Paths.get(".").toAbsolutePath());
+      this(Paths.get(".").toAbsolutePath());
+    }
+
+    private FakeProjectFileSystem(Path root) throws InterruptedException {
+      super(root, new DefaultProjectFilesystemDelegate(root));
     }
 
     @Override

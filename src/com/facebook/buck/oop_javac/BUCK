@@ -13,6 +13,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event/api:api",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/jvm/java:javac-compilation-mode",
         "//src/com/facebook/buck/jvm/java:javac-sink",
         "//src/com/facebook/buck/jvm/java:support",

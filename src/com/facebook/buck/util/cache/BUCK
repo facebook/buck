@@ -11,6 +11,7 @@ java_immutables_library(
         "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:exceptions",

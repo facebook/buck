@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -167,6 +168,7 @@ public class CleanCommandTest extends EasyMockSupport {
             new KnownBuildRuleTypesFactory(
                 processExecutor, androidDirectoryResolver, sdkEnvironment))
         .setSdkEnvironment(sdkEnvironment)
+        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .build();
   }
 }

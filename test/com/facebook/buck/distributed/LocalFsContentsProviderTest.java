@@ -17,6 +17,7 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,7 +53,8 @@ public class LocalFsContentsProviderTest {
   @Test
   public void testGettingNonExistentFile()
       throws InterruptedException, IOException, ExecutionException, TimeoutException {
-    try (LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir)) {
+    try (LocalFsContentsProvider provider =
+        new LocalFsContentsProvider(new DefaultProjectFilesystemFactory(), cacheRootDir)) {
       Assert.assertFalse(Files.isRegularFile(targetAbsPath));
       provider
           .materializeFileContentsAsync(entry, targetAbsPath)
@@ -64,7 +66,8 @@ public class LocalFsContentsProviderTest {
   @Test
   public void testGettingExistentFile()
       throws InterruptedException, IOException, ExecutionException, TimeoutException {
-    try (LocalFsContentsProvider provider = new LocalFsContentsProvider(cacheRootDir)) {
+    try (LocalFsContentsProvider provider =
+        new LocalFsContentsProvider(new DefaultProjectFilesystemFactory(), cacheRootDir)) {
       Assert.assertFalse(Files.isRegularFile(targetAbsPath));
 
       Files.write(targetAbsPath, FILE_CONTENTS);

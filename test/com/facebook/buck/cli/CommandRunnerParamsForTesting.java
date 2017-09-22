@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
@@ -134,6 +135,7 @@ public class CommandRunnerParamsForTesting {
             new KnownBuildRuleTypesFactory(
                 processExecutor, androidDirectoryResolver, sdkEnvironment))
         .setSdkEnvironment(sdkEnvironment)
+        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .build();
   }
 

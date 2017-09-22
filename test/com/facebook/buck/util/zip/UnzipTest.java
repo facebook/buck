@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
@@ -68,6 +69,7 @@ public class UnzipTest {
     Path extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result =
         Unzip.extractZipFile(
+            new DefaultProjectFilesystemFactory(),
             zipFile.toAbsolutePath(),
             extractFolder.toAbsolutePath(),
             Unzip.ExistingFileMode.OVERWRITE);
@@ -113,6 +115,7 @@ public class UnzipTest {
     Path extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result =
         Unzip.extractZipFile(
+            new DefaultProjectFilesystemFactory(),
             zipFile.toAbsolutePath(),
             extractFolder.toAbsolutePath(),
             Unzip.ExistingFileMode.OVERWRITE);
@@ -141,7 +144,10 @@ public class UnzipTest {
 
     Path extractFolder = tmpFolder.newFolder();
     Unzip.extractZipFile(
-        zipFile.toAbsolutePath(), extractFolder.toAbsolutePath(), Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(),
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE);
     Path link = extractFolder.toAbsolutePath().resolve("link.txt");
     assertTrue(Files.isSymbolicLink(link));
     assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
@@ -174,7 +180,10 @@ public class UnzipTest {
 
     Path extractFolder = tmpFolder.newFolder();
     Unzip.extractZipFile(
-        zipFile.toAbsolutePath(), extractFolder.toAbsolutePath(), Unzip.ExistingFileMode.OVERWRITE);
+        new DefaultProjectFilesystemFactory(),
+        zipFile.toAbsolutePath(),
+        extractFolder.toAbsolutePath(),
+        Unzip.ExistingFileMode.OVERWRITE);
     Path link = extractFolder.toAbsolutePath().resolve("link.txt");
     assertTrue(Files.isSymbolicLink(link));
     assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
@@ -196,6 +205,7 @@ public class UnzipTest {
     Path extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result =
         Unzip.extractZipFile(
+            new DefaultProjectFilesystemFactory(),
             zipFile.toAbsolutePath(),
             extractFolder.toAbsolutePath(),
             Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -220,6 +230,7 @@ public class UnzipTest {
 
     Path extractFolder = tmpFolder.newFolder();
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         zipFile.toAbsolutePath(),
         extractFolder.toAbsolutePath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -227,6 +238,7 @@ public class UnzipTest {
       assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
     }
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         zipFile.toAbsolutePath(),
         extractFolder.toAbsolutePath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -248,6 +260,7 @@ public class UnzipTest {
 
     Path extractFolder = tmpFolder.newFolder();
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         zipFile.toAbsolutePath(),
         extractFolder.toAbsolutePath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);

@@ -17,6 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ObjectMappers;
@@ -116,7 +117,7 @@ public class PexStep extends ShellStep {
     // Convert the map of paths to a map of strings before converting to JSON.
     ImmutableMap<Path, Path> resolvedModules;
     try {
-      resolvedModules = getExpandedSourcePaths(modules);
+      resolvedModules = getExpandedSourcePaths(context.getProjectFilesystemFactory(), modules);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -177,7 +178,8 @@ public class PexStep extends ShellStep {
     return environment;
   }
 
-  private ImmutableMap<Path, Path> getExpandedSourcePaths(ImmutableMap<Path, Path> paths)
+  private ImmutableMap<Path, Path> getExpandedSourcePaths(
+      ProjectFilesystemFactory projectFilesystemFactory, ImmutableMap<Path, Path> paths)
       throws InterruptedException, IOException {
     ImmutableMap.Builder<Path, Path> sources = ImmutableMap.builder();
 
@@ -188,6 +190,7 @@ public class PexStep extends ShellStep {
 
         ImmutableList<Path> zipPaths =
             Unzip.extractZipFile(
+                projectFilesystemFactory,
                 filesystem.resolve(ent.getValue()),
                 destinationDirectory,
                 Unzip.ExistingFileMode.OVERWRITE);

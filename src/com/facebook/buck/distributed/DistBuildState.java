@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
@@ -98,7 +99,8 @@ public class DistBuildState {
       BuildJobState jobState,
       Cell rootCell,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment)
+      SdkEnvironment sdkEnvironment,
+      ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
@@ -120,7 +122,8 @@ public class DistBuildState {
       Files.createDirectories(cellRoot);
 
       Config config = createConfigFromRemoteAndOverride(remoteCell.getConfig(), localBuckConfig);
-      ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
+      ProjectFilesystem projectFilesystem =
+          projectFilesystemFactory.createProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig =
           createBuckConfigFromRawConfigAndEnv(
               config, projectFilesystem, ImmutableMap.copyOf(localBuckConfig.getEnvironment()));

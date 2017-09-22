@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.TestProcessExecutorFactory;
@@ -301,7 +302,10 @@ public class AutoSparseIntegrationTest {
     Files.copy(hgRepoZipPath, hgRepoZipCopyPath, REPLACE_EXISTING);
 
     Unzip.extractZipFile(
-        hgRepoZipCopyPath, repoPath, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        new DefaultProjectFilesystemFactory(),
+        hgRepoZipCopyPath,
+        repoPath,
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return repoPath;
   }

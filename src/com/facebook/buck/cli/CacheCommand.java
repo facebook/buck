@@ -23,6 +23,7 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
@@ -125,7 +126,9 @@ public class CacheCommand extends AbstractCommand {
       // Fetch all artifacts
       List<ListenableFuture<ArtifactRunner>> futures = new ArrayList<>();
       for (RuleKey ruleKey : ruleKeys) {
-        futures.add(executor.submit(new ArtifactRunner(ruleKey, tmpDir, cache)));
+        futures.add(
+            executor.submit(
+                new ArtifactRunner(params.getProjectFilesystemFactory(), ruleKey, tmpDir, cache)));
       }
 
       // Wait for all executions to complete or fail.
@@ -199,6 +202,7 @@ public class CacheCommand extends AbstractCommand {
   }
 
   private boolean extractArtifact(
+      ProjectFilesystemFactory projectFilesystemFactory,
       Path outputPath,
       Path tmpDir,
       RuleKey ruleKey,
@@ -216,6 +220,7 @@ public class CacheCommand extends AbstractCommand {
     try {
       paths =
           Unzip.extractZipFile(
+              projectFilesystemFactory,
               artifact.toAbsolutePath(),
               tmpDir,
               Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -259,6 +264,7 @@ public class CacheCommand extends AbstractCommand {
 
   class ArtifactRunner implements Callable<ArtifactRunner> {
 
+    final ProjectFilesystemFactory projectFilesystemFactory;
     RuleKey ruleKey;
     Path tmpDir;
     Path artifact;
@@ -268,7 +274,12 @@ public class CacheCommand extends AbstractCommand {
     ArtifactCache cache;
     boolean completed;
 
-    public ArtifactRunner(RuleKey ruleKey, Path tmpDir, ArtifactCache cache) {
+    public ArtifactRunner(
+        ProjectFilesystemFactory projectFilesystemFactory,
+        RuleKey ruleKey,
+        Path tmpDir,
+        ArtifactCache cache) {
+      this.projectFilesystemFactory = projectFilesystemFactory;
       this.ruleKey = ruleKey;
       this.tmpDir = tmpDir;
       this.cache = cache;
@@ -303,7 +314,13 @@ public class CacheCommand extends AbstractCommand {
       } else {
         statusString = "Extracting";
         if (extractArtifact(
-            outputPath.get(), tmpDir, ruleKey, artifact, success, this.resultString)) {
+            projectFilesystemFactory,
+            outputPath.get(),
+            tmpDir,
+            ruleKey,
+            artifact,
+            success,
+            this.resultString)) {
           this.completed = true;
           statusString = "SUCCESS";
         } else {

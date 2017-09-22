@@ -1,10 +1,11 @@
 java_library(
-    name = "skylark",
-    srcs = ["SkylarkFilesystem.java"],
+    name = "filesystem",
+    srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/config:config",
         "//third-party/java/bazel:skylark-lang",
         "//third-party/java/guava:guava",
     ],

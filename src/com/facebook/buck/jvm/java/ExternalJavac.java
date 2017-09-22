@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
@@ -203,7 +204,10 @@ public class ExternalJavac implements Javac {
         try {
           expandedSources =
               getExpandedSourcePaths(
-                  context.getProjectFilesystem(), javaSourceFilePaths, workingDirectory);
+                  context.getProjectFilesystem(),
+                  context.getProjectFilesystemFactory(),
+                  javaSourceFilePaths,
+                  workingDirectory);
         } catch (IOException e) {
           throw new HumanReadableException(
               "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
@@ -259,6 +263,7 @@ public class ExternalJavac implements Javac {
 
   private ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
+      ProjectFilesystemFactory projectFilesystemFactory,
       ImmutableSet<Path> javaSourceFilePaths,
       Path workingDirectory)
       throws InterruptedException, IOException {
@@ -273,6 +278,7 @@ public class ExternalJavac implements Javac {
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
         ImmutableList<Path> zipPaths =
             Unzip.extractZipFile(
+                projectFilesystemFactory,
                 projectFilesystem.resolve(path),
                 projectFilesystem.resolve(workingDirectory),
                 Unzip.ExistingFileMode.OVERWRITE);

@@ -17,20 +17,13 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 
-public class TestProjectFilesystems {
+public interface ProjectFilesystemFactory {
+  ProjectFilesystem createProjectFilesystem(Path root, Config config) throws InterruptedException;
 
-  private TestProjectFilesystems() {}
+  ProjectFilesystem createProjectFilesystem(Path root) throws InterruptedException;
 
-  public static ProjectFilesystem createProjectFilesystem(Path root, Config config)
-      throws InterruptedException {
-    return new DefaultProjectFilesystemFactory().createProjectFilesystem(root, config);
-  }
-
-  public static ProjectFilesystem createProjectFilesystem(Path root) throws InterruptedException {
-    return new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
-  }
+  ProjectFilesystem createOrThrow(Path path) throws InterruptedException;
 }

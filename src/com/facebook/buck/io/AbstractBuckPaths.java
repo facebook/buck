@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -23,6 +24,11 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
+
+  public static BuckPaths createDefaultBuckPaths(Path rootPath) {
+    return BuckPaths.of(
+        rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
+  }
 
   /** The relative path to the directory where Buck will generate its files. */
   @Value.Parameter

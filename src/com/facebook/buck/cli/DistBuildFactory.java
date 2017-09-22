@@ -31,6 +31,7 @@ import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.ServerContentsProvider;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
@@ -74,6 +75,7 @@ public abstract class DistBuildFactory {
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService sourceFileMultiFetchScheduler,
       ListeningExecutorService executorService,
+      ProjectFilesystemFactory projectFilesystemFactory,
       Optional<Path> globalCacheDir)
       throws IOException, InterruptedException {
     return new MultiSourceContentsProvider(
@@ -86,6 +88,7 @@ public abstract class DistBuildFactory {
             distBuildConfig.getSourceFileMultiFetchMaxBufferSize()),
         fileMaterializationStatsTracker,
         executorService,
+        projectFilesystemFactory,
         globalCacheDir);
   }
 
@@ -131,6 +134,7 @@ public abstract class DistBuildFactory {
                 .setBuildInfoStoreManager(params.getBuildInfoStoreManager())
                 .setDistBuildService(service)
                 .setDistBuildConfig(distBuildConfig)
+                .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
                 .build());
     return executor;
   }

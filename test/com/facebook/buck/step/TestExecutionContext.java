@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
@@ -62,6 +63,7 @@ public class TestExecutionContext {
         .setExecutors(executors)
         .setProcessExecutor(new FakeProcessExecutor())
         .setCellPathResolver(cellPathResolver)
+        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setBuildCellRootPath(filesystem.getRootPath());
   }
 

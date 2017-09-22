@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JarDumper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
@@ -3842,7 +3843,11 @@ public class StubJarTest {
             temp.newFolder());
 
     Path classDir = temp.newFolder().toPath();
-    Unzip.extractZipFile(fullJarPath, classDir, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
+        fullJarPath,
+        classDir,
+        Unzip.ExistingFileMode.OVERWRITE);
 
     Path stubJarPath = createStubJar(classDir);
     tester

@@ -20,6 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -141,7 +142,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches(
-      FileHashCacheMode fileHashCacheMode) throws InterruptedException {
+      ProjectFilesystemFactory projectFilesystemFactory, FileHashCacheMode fileHashCacheMode)
+      throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     for (Path root : FileSystems.getDefault().getRootDirectories()) {
       if (!root.toFile().exists()) {
@@ -153,8 +155,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         continue;
       }
 
-      ProjectFilesystem projectFilesystem =
-          ProjectFilesystem.createNewOrThrowHumanReadableException(root);
+      ProjectFilesystem projectFilesystem = projectFilesystemFactory.createOrThrow(root);
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.

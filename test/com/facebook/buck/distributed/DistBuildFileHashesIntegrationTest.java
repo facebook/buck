@@ -30,6 +30,7 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
@@ -232,7 +233,9 @@ public class DistBuildFileHashesIntegrationTest {
           DefaultFileHashCache.createDefaultFileHashCache(
               cell.getFilesystem(), FileHashCacheMode.DEFAULT));
     }
-    allCaches.addAll(DefaultFileHashCache.createOsRootDirectoriesCaches(FileHashCacheMode.DEFAULT));
+    allCaches.addAll(
+        DefaultFileHashCache.createOsRootDirectoriesCaches(
+            new DefaultProjectFilesystemFactory(), FileHashCacheMode.DEFAULT));
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
 
     return new DistBuildFileHashes(

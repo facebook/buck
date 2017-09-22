@@ -113,6 +113,7 @@ public class JavacStep implements Step {
               firstOrderContext.getCellPathResolver(),
               firstOrderContext.getJavaPackageFinder(),
               filesystem,
+              context.getProjectFilesystemFactory(),
               usedClassesFileWriter,
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),

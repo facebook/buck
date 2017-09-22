@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildInfoStoreManager;
@@ -85,4 +86,6 @@ abstract class AbstractDistBuildExecutorArgs {
   public abstract DistBuildService getDistBuildService();
 
   public abstract DistBuildConfig getDistBuildConfig();
+
+  public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 }

@@ -115,6 +115,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
     ],
