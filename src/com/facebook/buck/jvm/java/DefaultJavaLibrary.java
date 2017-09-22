@@ -21,7 +21,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
@@ -80,7 +80,7 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary,
         HasClasspathEntries,
         ExportDependencies,
@@ -100,6 +100,9 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   @Nullable private final BuildTarget abiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey private final boolean requiredForSourceAbi;
+
+  // This is automatically added to the rule key by virtue of being returned from getBuildDeps.
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
@@ -145,7 +148,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   protected DefaultJavaLibrary(
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
@@ -156,7 +159,8 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceAbi) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
@@ -202,6 +206,11 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
   @Override

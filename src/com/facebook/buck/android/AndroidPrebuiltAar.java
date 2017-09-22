@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -61,8 +62,10 @@ public class AndroidPrebuiltAar extends AndroidLibrary
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
-        androidLibraryParams.copyAppendingExtraDeps(
-            ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
+        ImmutableSortedSet.copyOf(
+            Iterables.concat(
+                androidLibraryParams.getBuildDeps(),
+                ruleFinder.filterBuildRuleInputs(abiClasspath.get()))),
         resolver,
         new JarBuildStepsFactory(
             projectFilesystem,

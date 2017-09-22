@@ -600,39 +600,20 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     DefaultJavaLibrary library = (DefaultJavaLibrary) ruleResolver.requireRule(libraryTarget);
 
-    Set<BuildRule> expectedDeclaredDeps = new TreeSet<>();
-    if (compileAgainstAbis.equals(TRUE)) {
-      expectedDeclaredDeps.add(getAbiJar(depLibraryTarget));
-      expectedDeclaredDeps.add(getAbiJar(depProvidedDepLibraryTarget));
-    } else {
-      expectedDeclaredDeps.add(ruleResolver.getRule(depLibraryTarget));
-      expectedDeclaredDeps.add(ruleResolver.getRule(depProvidedDepLibraryTarget));
-    }
-    expectedDeclaredDeps.add(ruleResolver.getRule(depExportFileTarget));
+    Set<BuildRule> expectedDeps = new TreeSet<>();
+    addAbiAndMaybeFullJar(depLibraryTarget, expectedDeps);
+    addAbiAndMaybeFullJar(depProvidedDepLibraryTarget, expectedDeps);
+    expectedDeps.add(ruleResolver.getRule(depExportFileTarget));
+    addAbiAndMaybeFullJar(depLibraryExportedDepTarget, expectedDeps);
+    addAbiAndMaybeFullJar(providedDepLibraryTarget, expectedDeps);
+    addAbiAndMaybeFullJar(providedDepLibraryExportedDepTarget, expectedDeps);
+    addAbiAndMaybeFullJar(exportedDepLibraryTarget, expectedDeps);
+    addAbiAndMaybeFullJar(exportedProvidedDepLibraryTarget, expectedDeps);
+    addAbiAndMaybeFullJar(exportedDepLibraryExportedDepTarget, expectedDeps);
+    expectedDeps.add(ruleResolver.getRule(sourceDepExportFileTarget));
+    expectedDeps.add(ruleResolver.getRule(resourceDepPrebuiltJarTarget));
 
-    Set<BuildRule> expectedExtraDeps = new TreeSet<>();
-    if (compileAgainstAbis.equals(FALSE)) {
-      expectedExtraDeps.add(getAbiJar(depLibraryTarget));
-      addAbiAndMaybeFullJar(depProvidedDepLibraryTarget, expectedExtraDeps);
-    }
-    addAbiAndMaybeFullJar(depLibraryExportedDepTarget, expectedExtraDeps);
-    addAbiAndMaybeFullJar(providedDepLibraryTarget, expectedExtraDeps);
-    addAbiAndMaybeFullJar(providedDepLibraryExportedDepTarget, expectedExtraDeps);
-    addAbiAndMaybeFullJar(exportedDepLibraryTarget, expectedExtraDeps);
-    addAbiAndMaybeFullJar(exportedProvidedDepLibraryTarget, expectedExtraDeps);
-    addAbiAndMaybeFullJar(exportedDepLibraryExportedDepTarget, expectedExtraDeps);
-    expectedExtraDeps.add(ruleResolver.getRule(sourceDepExportFileTarget));
-    expectedExtraDeps.add(ruleResolver.getRule(resourceDepPrebuiltJarTarget));
-
-    assertThat("Declared deps mismatch!", library.getDeclaredDeps(), equalTo(expectedDeclaredDeps));
-    assertThat(
-        "Extra deps mismatch!", library.deprecatedGetExtraDeps(), equalTo(expectedExtraDeps));
-    assertThat(
-        "Build deps mismatch!",
-        library.getBuildDeps(),
-        equalTo(
-            ImmutableSortedSet.copyOf(Iterables.concat(expectedDeclaredDeps, expectedExtraDeps))));
-
+    assertThat("Build deps mismatch!", library.getBuildDeps(), equalTo(expectedDeps));
     assertThat(
         library.getExportedDeps(),
         equalTo(
@@ -660,12 +641,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             ImmutableSet.of(
                 ruleResolver.getRule(depLibraryTarget),
                 ruleResolver.getRule(exportedDepLibraryTarget))));
-  }
-
-  private BuildRule getAbiJar(BuildTarget libraryTarget) {
-    HasJavaAbi libraryJar = (HasJavaAbi) ruleResolver.getRule(libraryTarget);
-
-    return ruleResolver.requireRule(libraryJar.getAbiJar().get());
   }
 
   private void addAbiAndMaybeFullJar(BuildTarget target, Set<BuildRule> set) {

@@ -391,7 +391,7 @@ public class DefaultJavaLibraryBuilder {
             new DefaultJavaLibrary(
                 initialBuildTarget,
                 projectFilesystem,
-                finalParams,
+                ImmutableSortedSet.copyOf(finalParams.getBuildDeps()),
                 sourcePathResolver,
                 getJarBuildStepsFactory(),
                 proguardConfig,

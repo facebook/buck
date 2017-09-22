@@ -80,7 +80,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   AndroidLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
@@ -95,7 +95,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     super(
         buildTarget,
         projectFilesystem,
-        params,
+        buildDeps,
         resolver,
         jarBuildStepsFactory,
         proguardConfig,
@@ -179,7 +179,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
             new AndroidLibrary(
                 libraryTarget,
                 projectFilesystem,
-                getFinalParams(),
+                ImmutableSortedSet.copyOf(getFinalParams().getBuildDeps()),
                 sourcePathResolver,
                 getJarBuildStepsFactory(),
                 proguardConfig,

@@ -193,12 +193,10 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_2]",
-            "  (buck.declaredDeps):",
+            "  (buck.deps):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
-            "  (buck.extraDeps):",
-            "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
             "Change details for [//:java_lib_2->jarBuildStepsFactory]",
             "  (abiClasspath):",
