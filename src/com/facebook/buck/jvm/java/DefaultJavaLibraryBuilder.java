@@ -62,7 +62,6 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
   protected ImmutableSortedSet<BuildRule> fullJarExportedDeps = ImmutableSortedSet.of();
   protected ImmutableSortedSet<BuildRule> fullJarProvidedDeps = ImmutableSortedSet.of();
-  protected boolean trackClassUsage = false;
   protected boolean compileAgainstAbis = false;
   protected Optional<Path> resourcesRoot = Optional.empty();
   protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
@@ -199,11 +198,6 @@ public class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setProvidedDeps(ImmutableSortedSet<BuildTarget> providedDeps) {
     this.fullJarProvidedDeps = buildRuleResolver.getAllRules(providedDeps);
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setTrackClassUsage(boolean trackClassUsage) {
-    this.trackClassUsage = trackClassUsage;
     return this;
   }
 
@@ -587,7 +581,7 @@ public class DefaultJavaLibraryBuilder {
           manifestFile,
           postprocessClassesCommands,
           getAbiClasspath(),
-          trackClassUsage,
+          configuredCompilerFactory.trackClassUsage(getJavacOptions()),
           getFinalCompileTimeClasspathSourcePaths(),
           classesToRemoveFromJar,
           getRequiredForSourceAbi());

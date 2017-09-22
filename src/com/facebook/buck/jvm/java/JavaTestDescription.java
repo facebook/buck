@@ -134,8 +134,7 @@ public class JavaTestDescription
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setArgs(args)
-            .setJavacOptions(javacOptions)
-            .setTrackClassUsage(javacOptions.trackClassUsage());
+            .setJavacOptions(javacOptions);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryBuilder.buildAbi();

@@ -1119,7 +1119,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setSrcs(srcsAsPaths)
             .setPostprocessClassesCommands(postprocessClassesCommands)
             .setExportedDepRules(exportedDeps)
-            .setTrackClassUsage(javacOptions.trackClassUsage())
             .build();
 
     ruleResolver.addToIndex(defaultJavaLibrary);
@@ -1432,7 +1431,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setPostprocessClassesCommands(ImmutableList.of())
               .setExportedDeps(ImmutableSortedSet.of())
               .setProvidedDeps(ImmutableSortedSet.of())
-              .setTrackClassUsage(options.trackClassUsage())
               .setResourcesRoot(Optional.empty())
               .setManifestFile(Optional.empty())
               .setMavenCoords(Optional.empty())

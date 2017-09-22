@@ -178,7 +178,6 @@ public class RobolectricTestDescription
                 .setArgs(args)
                 .setJavacOptions(javacOptions)
                 .setExtraClasspathFromContextFunction(AndroidClasspathFromContextFunction.INSTANCE)
-                .setTrackClassUsage(javacOptions.trackClassUsage())
                 .build());
 
     Function<String, Arg> toMacroArgFunction =

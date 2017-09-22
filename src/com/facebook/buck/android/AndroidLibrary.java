@@ -122,7 +122,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public static class Builder extends DefaultJavaLibraryBuilder {
     private final AndroidLibraryDescription.CoreArg args;
-    private final ConfiguredCompilerFactory androidCompiler;
 
     private Optional<SourcePath> androidManifest = Optional.empty();
 
@@ -147,7 +146,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           compilerFactory,
           javaBuckConfig);
       this.args = args;
-      androidCompiler = compilerFactory;
       setJavacOptions(javacOptions);
       setArgs(args);
       // Set only if this is not Scala/Kotlin
@@ -214,24 +212,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 getRequiredForSourceAbi());
 
         return result;
-      }
-
-      @Override
-      protected JarBuildStepsFactory buildJarBuildStepsFactory() {
-        return new JarBuildStepsFactory(
-            projectFilesystem,
-            ruleFinder,
-            getConfiguredCompiler(),
-            srcs,
-            resources,
-            resourcesRoot,
-            Optional.empty(), // ManifestFile for androidLibrary is something else
-            postprocessClassesCommands,
-            getAbiClasspath(),
-            androidCompiler.trackClassUsage(Preconditions.checkNotNull(getJavacOptions())),
-            getFinalCompileTimeClasspathSourcePaths(),
-            classesToRemoveFromJar,
-            getRequiredForSourceAbi());
       }
 
       protected DummyRDotJava buildDummyRDotJava() {
