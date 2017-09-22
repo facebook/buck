@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

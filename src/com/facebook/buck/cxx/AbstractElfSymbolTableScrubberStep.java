@@ -23,7 +23,7 @@ import com.facebook.buck.cxx.toolchain.elf.ElfHeader;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;

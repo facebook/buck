@@ -22,7 +22,7 @@ import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpResponse;

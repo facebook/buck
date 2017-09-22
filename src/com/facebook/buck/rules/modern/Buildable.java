@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.event.EventDispatcher;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 

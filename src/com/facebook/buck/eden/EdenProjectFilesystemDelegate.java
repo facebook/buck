@@ -17,7 +17,7 @@
 package com.facebook.buck.eden;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.sha1.Sha1HashCode;

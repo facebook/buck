@@ -35,6 +35,7 @@ java_immutables_library(
     ],
     exported_deps = [
         ":source_path_interface",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     visibility = ["PUBLIC"],
     deps = [
@@ -107,7 +108,6 @@ java_immutables_library(
         "//src/com/facebook/buck/gwt:gwt",
         "//src/com/facebook/buck/halide:halide",
         "//src/com/facebook/buck/haskell:haskell",
-        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:watchman",
@@ -284,6 +284,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:model",
@@ -322,6 +323,7 @@ java_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/util:exceptions",

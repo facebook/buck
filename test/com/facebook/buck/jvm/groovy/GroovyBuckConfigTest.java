@@ -21,7 +21,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;

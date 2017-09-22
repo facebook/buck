@@ -19,7 +19,7 @@ package com.facebook.buck.util.cache;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;

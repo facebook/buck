@@ -17,7 +17,7 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 import java.io.IOException;

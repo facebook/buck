@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;

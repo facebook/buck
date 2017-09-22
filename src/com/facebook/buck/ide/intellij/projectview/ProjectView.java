@@ -26,7 +26,7 @@ import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

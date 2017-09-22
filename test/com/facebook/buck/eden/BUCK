@@ -4,7 +4,6 @@ standard_java_test(
         "//src/com/facebook/buck/eden:eden",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/model:build_id",

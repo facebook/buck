@@ -20,7 +20,7 @@ import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_INDENTA
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_SECTION_HEADER;
 import static com.facebook.buck.android.WriteAppModuleMetadataStep.MODULE_INDENTATION;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

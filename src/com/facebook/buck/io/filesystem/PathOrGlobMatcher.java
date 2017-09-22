@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem;
 
 import com.google.common.base.Preconditions;
 import java.nio.file.FileSystems;

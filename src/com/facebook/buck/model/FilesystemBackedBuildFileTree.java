@@ -16,8 +16,8 @@
 
 package com.facebook.buck.model;
 
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

@@ -22,7 +22,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.TargetCpuType;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;

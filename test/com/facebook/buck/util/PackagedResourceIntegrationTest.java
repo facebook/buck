@@ -19,7 +19,7 @@ package com.facebook.buck.util;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
 import java.io.IOException;

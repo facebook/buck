@@ -21,7 +21,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.cli.DistBuildCommand;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;

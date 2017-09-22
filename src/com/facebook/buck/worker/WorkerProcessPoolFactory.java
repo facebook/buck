@@ -17,7 +17,7 @@
 package com.facebook.buck.worker;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutorParams;

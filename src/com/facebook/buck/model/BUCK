@@ -45,6 +45,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/util:exceptions",

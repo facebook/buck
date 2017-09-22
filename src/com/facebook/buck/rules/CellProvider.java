@@ -17,8 +17,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.CellConfig;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;

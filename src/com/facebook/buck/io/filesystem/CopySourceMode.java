@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem;
 
 /** Controls the behavior of how the source should be treated when copying. */
 public enum CopySourceMode {

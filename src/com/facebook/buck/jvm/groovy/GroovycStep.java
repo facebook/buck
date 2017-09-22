@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.groovy;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.OptionsConsumer;

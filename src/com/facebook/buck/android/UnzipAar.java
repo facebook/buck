@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.CopySourceMode;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;

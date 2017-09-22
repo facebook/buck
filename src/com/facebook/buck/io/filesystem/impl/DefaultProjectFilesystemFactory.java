@@ -16,9 +16,9 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
-import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;

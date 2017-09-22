@@ -19,7 +19,7 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.VisibilityPatternParser;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

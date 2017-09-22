@@ -17,15 +17,15 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.io.CopySourceMode;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.PathListing;
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;

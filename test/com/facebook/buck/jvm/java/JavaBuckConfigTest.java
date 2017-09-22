@@ -32,7 +32,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.BuckConfigTestUtils;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.DefaultSourcePathResolver;

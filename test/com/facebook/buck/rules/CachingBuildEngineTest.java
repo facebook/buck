@@ -48,7 +48,7 @@ import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;

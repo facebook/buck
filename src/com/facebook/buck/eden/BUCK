@@ -4,6 +4,7 @@ java_library(
     exported_deps = [
         # EdenProjectFilesystemDelegate constructor takes this as a param.
         "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     tests = [
         "//test/com/facebook/buck/eden:eden",
@@ -11,7 +12,6 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/io/unixsocket:unixsocket",
         "//src/com/facebook/buck/log:api",

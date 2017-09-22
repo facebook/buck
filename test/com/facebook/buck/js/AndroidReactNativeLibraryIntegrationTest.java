@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;

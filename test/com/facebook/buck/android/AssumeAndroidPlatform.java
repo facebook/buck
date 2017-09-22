@@ -17,7 +17,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assume.assumeNotNull;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;

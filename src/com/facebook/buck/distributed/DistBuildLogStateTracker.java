@@ -23,7 +23,7 @@ import com.facebook.buck.distributed.thrift.LogStreamType;
 import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.zip.Unzip;

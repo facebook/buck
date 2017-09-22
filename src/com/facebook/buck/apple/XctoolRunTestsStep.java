@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.TeeInputStream;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;

@@ -18,7 +18,7 @@ package com.facebook.buck.io.filesystem.skylark;
 
 import static org.junit.Assert.*;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;

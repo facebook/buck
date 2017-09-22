@@ -19,7 +19,7 @@ package com.facebook.buck.util;
 import static com.facebook.buck.util.zip.Unzip.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;

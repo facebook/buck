@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchmanOverflowEvent;
 import com.facebook.buck.io.WatchmanPathEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;

@@ -17,8 +17,8 @@
 package com.facebook.buck.doctor;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableCollection;

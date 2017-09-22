@@ -16,7 +16,7 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;

@@ -17,7 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;

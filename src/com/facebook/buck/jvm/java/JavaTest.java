@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -667,7 +667,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 ImmutableSet.Builder<Path> builder = ImmutableSet.<Path>builder();
                 if (unbundledResourcesRoot.isPresent()) {
                   builder.add(
-                      buildContext.getSourcePathResolver().getAbsolutePath(unbundledResourcesRoot.get()));
+                      buildContext
+                          .getSourcePathResolver()
+                          .getAbsolutePath(unbundledResourcesRoot.get()));
                 }
                 ImmutableSet<Path> classpathEntries =
                     builder

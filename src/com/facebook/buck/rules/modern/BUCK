@@ -12,6 +12,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/rules:source_path",
         "//third-party/java/guava:guava",
     ],
@@ -27,6 +28,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",

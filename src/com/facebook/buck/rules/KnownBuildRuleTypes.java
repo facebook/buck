@@ -99,7 +99,7 @@ import com.facebook.buck.haskell.HaskellLibraryDescription;
 import com.facebook.buck.haskell.HaskellPlatform;
 import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.JsBundleDescription;

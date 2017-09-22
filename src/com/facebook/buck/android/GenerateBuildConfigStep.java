@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;

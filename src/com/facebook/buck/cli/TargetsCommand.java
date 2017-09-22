@@ -22,7 +22,7 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
-import com.facebook.buck.io.BuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;

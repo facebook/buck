@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;

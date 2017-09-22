@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;

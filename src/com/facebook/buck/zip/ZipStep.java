@@ -20,7 +20,7 @@ import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.THROW
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;

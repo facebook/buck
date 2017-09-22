@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.ParseBuckProfilerReportEvent;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;

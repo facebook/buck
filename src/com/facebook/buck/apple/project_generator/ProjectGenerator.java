@@ -89,7 +89,7 @@ import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MoreProjectFilesystems;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.JsBundleDescription;
 import com.facebook.buck.log.Logger;

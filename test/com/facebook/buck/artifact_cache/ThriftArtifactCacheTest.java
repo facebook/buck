@@ -30,7 +30,7 @@ import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;

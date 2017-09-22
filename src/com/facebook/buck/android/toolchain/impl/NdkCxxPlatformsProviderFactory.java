@@ -24,7 +24,7 @@ import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;

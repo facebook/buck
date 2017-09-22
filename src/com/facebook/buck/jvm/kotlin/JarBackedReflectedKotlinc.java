@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;

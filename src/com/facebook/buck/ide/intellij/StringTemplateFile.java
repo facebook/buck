@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;

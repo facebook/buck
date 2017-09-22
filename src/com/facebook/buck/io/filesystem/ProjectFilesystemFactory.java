@@ -16,7 +16,6 @@
 
 package com.facebook.buck.io.filesystem;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 

@@ -17,7 +17,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;

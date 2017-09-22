@@ -20,7 +20,7 @@ import static com.facebook.buck.android.AndroidBinaryBuildable.SMART_DEX_SECONDA
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

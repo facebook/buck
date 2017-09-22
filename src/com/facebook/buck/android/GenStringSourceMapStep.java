@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;

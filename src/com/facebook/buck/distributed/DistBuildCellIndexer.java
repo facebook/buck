@@ -20,7 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;

@@ -15,7 +15,6 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/hashing:hashing",
-        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:transport",

@@ -29,6 +29,7 @@ java_library(
     deps = [
         ":json",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
@@ -60,6 +61,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/events:events",

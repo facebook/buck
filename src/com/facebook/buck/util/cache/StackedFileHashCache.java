@@ -17,7 +17,7 @@
 package com.facebook.buck.util.cache;
 
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

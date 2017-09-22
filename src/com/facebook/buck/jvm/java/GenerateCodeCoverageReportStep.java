@@ -20,7 +20,7 @@ import static com.facebook.buck.jvm.java.JacocoConstants.JACOCO_EXEC_COVERAGE_FI
 import static java.util.stream.Collectors.joining;
 
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;

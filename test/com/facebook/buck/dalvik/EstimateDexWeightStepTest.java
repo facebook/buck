@@ -20,7 +20,7 @@ import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.dalvik.EstimateDexWeightStep.DexWeightEstimator;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.ExecutionContext;

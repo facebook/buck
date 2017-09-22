@@ -23,7 +23,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
 import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableSet;

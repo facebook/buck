@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;

@@ -17,7 +17,7 @@
 package com.facebook.buck.util.autosparse;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
