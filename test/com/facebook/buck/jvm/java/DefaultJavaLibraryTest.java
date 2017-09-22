@@ -1263,6 +1263,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             ? JavacOptions.builder(DEFAULT_JAVAC_OPTIONS).setSpoolMode(spoolMode.get()).build()
             : DEFAULT_JAVAC_OPTIONS;
 
+    JavaLibraryDeps.Builder depsBuilder = new JavaLibraryDeps.Builder(ruleResolver);
+    exportedDeps
+        .stream()
+        .peek(ruleResolver::addToIndex)
+        .map(BuildRule::getBuildTarget)
+        .forEach(depsBuilder::addExportedDepTargets);
+
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.builder(
                 TargetGraph.EMPTY,
@@ -1276,7 +1283,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
             .setPostprocessClassesCommands(postprocessClassesCommands)
-            .setExportedDepRules(exportedDeps)
+            .setDeps(depsBuilder.build())
             .build();
 
     ruleResolver.addToIndex(defaultJavaLibrary);
@@ -1585,10 +1592,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
               .setResources(ImmutableSortedSet.of())
+              .setDeps(new JavaLibraryDeps.Builder(ruleResolver).build())
               .setProguardConfig(Optional.empty())
               .setPostprocessClassesCommands(ImmutableList.of())
-              .setExportedDeps(ImmutableSortedSet.of())
-              .setProvidedDeps(ImmutableSortedSet.of())
               .setResourcesRoot(Optional.empty())
               .setManifestFile(Optional.empty())
               .setMavenCoords(Optional.empty())

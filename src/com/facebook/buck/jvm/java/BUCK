@@ -351,6 +351,7 @@ java_immutables_library(
         "JavaBinaryDescription.java",
         "JavaConfiguredCompilerFactory.java",
         "JavaLibraryClasspathProvider.java",
+        "JavaLibraryDeps.java",
         "JavaLibraryDescription.java",
         "JavaLibraryRules.java",
         "JavaLibraryWithTests.java",

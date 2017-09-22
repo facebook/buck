@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -184,8 +185,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 getJarBuildStepsFactory(),
                 proguardConfig,
                 getFinalFullJarDeclaredDeps(),
-                fullJarExportedDepsSupplier.get(),
-                fullJarProvidedDeps,
+                Preconditions.checkNotNull(deps).getExportedDeps(),
+                Preconditions.checkNotNull(deps).getProvidedDeps(),
                 getAbiJar(),
                 mavenCoords,
                 androidManifest,
@@ -211,8 +212,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   projectFilesystem,
                   ImmutableSortedSet.copyOf(
                       Iterables.concat(
-                          fullJarDeclaredDeps,
-                          fullJarProvidedDeps,
+                          Preconditions.checkNotNull(deps).getDeps(),
+                          Preconditions.checkNotNull(deps).getProvidedDeps(),
                           getConfiguredCompiler().getDeclaredDeps(ruleFinder))),
                   getJavac(),
                   getJavacOptions(),

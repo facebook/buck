@@ -34,6 +34,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -70,6 +71,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AndroidBinaryGraphEnhancer {
 
@@ -312,6 +314,16 @@ public class AndroidBinaryGraphEnhancer {
               .setSrcs(
                   ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
               .setSourceAbisAllowed(false)
+              .setDeps(
+                  new JavaLibraryDeps.Builder(ruleResolver)
+                      .addAllDepTargets(
+                          paramsForCompileGenCode
+                              .getDeclaredDeps()
+                              .get()
+                              .stream()
+                              .map(BuildRule::getBuildTarget)
+                              .collect(Collectors.toList()))
+                      .build())
               .build();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
@@ -385,6 +397,16 @@ public class AndroidBinaryGraphEnhancer {
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
             .setSourceAbisAllowed(false)
+            .setDeps(
+                new JavaLibraryDeps.Builder(ruleResolver)
+                    .addAllDepTargets(
+                        paramsForCompileUberRDotJava
+                            .getDeclaredDeps()
+                            .get()
+                            .stream()
+                            .map(BuildRule::getBuildTarget)
+                            .collect(Collectors.toList()))
+                    .build())
             .build();
     ruleResolver.addToIndex(compileUberRDotJava);
 

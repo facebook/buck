@@ -27,23 +27,16 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.HasDepsQuery;
-import com.facebook.buck.rules.HasProvidedDepsQuery;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -66,11 +59,6 @@ public class DefaultJavaLibraryBuilder {
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
   protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  protected Supplier<ImmutableSortedSet<BuildRule>> fullJarExportedDepsSupplier =
-      ImmutableSortedSet::of;
-  protected Supplier<ImmutableSortedSet<BuildRule>> queriedDepsSupplier = ImmutableSortedSet::of;
-  protected ImmutableSortedSet<BuildRule> fullJarProvidedDeps = ImmutableSortedSet.of();
-  protected ImmutableSortedSet<BuildRule> fullJarDeclaredDeps = ImmutableSortedSet.of();
   protected Optional<Path> resourcesRoot = Optional.empty();
   protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
   protected Optional<SourcePath> manifestFile = Optional.empty();
@@ -82,6 +70,7 @@ public class DefaultJavaLibraryBuilder {
       ExtraClasspathFromContextFunction.EMPTY;
   protected boolean sourceAbisAllowed = true;
   @Nullable protected JavacOptions initialJavacOptions = null;
+  @Nullable protected JavaLibraryDeps deps = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
 
   public DefaultJavaLibraryBuilder(
@@ -105,8 +94,6 @@ public class DefaultJavaLibraryBuilder {
     this.buildRuleResolver = buildRuleResolver;
     this.cellRoots = cellRoots;
     this.configuredCompilerFactory = configuredCompilerFactory;
-    this.fullJarDeclaredDeps =
-        ImmutableSortedSet.copyOf(this.initialParams.getDeclaredDeps().get());
     this.javaBuckConfig = javaBuckConfig;
 
     ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
@@ -135,44 +122,23 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
     this.args = args;
 
-    ImmutableSortedSet<BuildTarget> providedDeps = args.getProvidedDeps();
-    if (args instanceof HasProvidedDepsQuery) {
-      HasProvidedDepsQuery hasProvidedDepsQuery = (HasProvidedDepsQuery) args;
-      if (hasProvidedDepsQuery.getProvidedDepsQuery().isPresent()) {
-        Query providedDepsQuery = hasProvidedDepsQuery.getProvidedDepsQuery().get();
-        Preconditions.checkNotNull(providedDepsQuery.getResolvedQuery());
-        providedDeps =
-            RichStream.from(args.getProvidedDeps())
-                .concat(providedDepsQuery.getResolvedQuery().stream())
-                .toImmutableSortedSet(Ordering.natural());
-      }
-    }
-
-    ImmutableSortedSet.Builder<BuildTarget> declaredDepsBuilder = ImmutableSortedSet.naturalOrder();
-    declaredDepsBuilder.addAll(args.getDeps());
-    declaredDepsBuilder.addAll(args.getExportedDeps());
-    if (args instanceof HasDepsQuery) {
-      HasDepsQuery hasDepsQuery = (HasDepsQuery) args;
-      if (hasDepsQuery.getDepsQuery().isPresent()) {
-        declaredDepsBuilder.addAll(
-            Preconditions.checkNotNull(hasDepsQuery.getDepsQuery().get().getResolvedQuery()));
-      }
-    }
-
     return setSrcs(args.getSrcs())
         .setResources(args.getResources())
         .setResourcesRoot(args.getResourcesRoot())
         .setUnbundledResourcesRoot(args.getUnbundledResourcesRoot())
         .setProguardConfig(args.getProguardConfig())
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-        .setDeclaredDeps(declaredDepsBuilder.build())
-        .setExportedDeps(args.getExportedDeps())
-        .setProvidedDeps(providedDeps)
+        .setDeps(JavaLibraryDeps.newInstance(args, buildRuleResolver))
         .setTests(args.getTests())
         .setManifestFile(args.getManifestFile())
         .setMavenCoords(args.getMavenCoords())
         .setSourceAbisAllowed(args.getGenerateAbiFromSource().orElse(sourceAbisAllowed))
         .setClassesToRemoveFromJar(new RemoveClassesPatternsMatcher(args.getRemoveClasses()));
+  }
+
+  public DefaultJavaLibraryBuilder setDeps(JavaLibraryDeps deps) {
+    this.deps = deps;
+    return this;
   }
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
@@ -210,32 +176,6 @@ public class DefaultJavaLibraryBuilder {
   public DefaultJavaLibraryBuilder setPostprocessClassesCommands(
       ImmutableList<String> postprocessClassesCommands) {
     this.postprocessClassesCommands = postprocessClassesCommands;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    this.fullJarExportedDepsSupplier =
-        Suppliers.memoize(
-            () ->
-                buildRuleResolver
-                    .getAllRulesStream(exportedDeps)
-                    .collect(MoreCollectors.toImmutableSortedSet()));
-    return this;
-  }
-
-  @VisibleForTesting
-  public DefaultJavaLibraryBuilder setExportedDepRules(ImmutableSortedSet<BuildRule> exportedDeps) {
-    this.fullJarExportedDepsSupplier = () -> exportedDeps;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setDeclaredDeps(ImmutableSortedSet<BuildTarget> declaredDeps) {
-    this.fullJarDeclaredDeps = buildRuleResolver.getAllRules(declaredDeps);
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setProvidedDeps(ImmutableSortedSet<BuildTarget> providedDeps) {
-    this.fullJarProvidedDeps = buildRuleResolver.getAllRules(providedDeps);
     return this;
   }
 
@@ -398,8 +338,8 @@ public class DefaultJavaLibraryBuilder {
                 getJarBuildStepsFactory(),
                 proguardConfig,
                 getFinalFullJarDeclaredDeps(),
-                fullJarExportedDepsSupplier.get(),
-                fullJarProvidedDeps,
+                Preconditions.checkNotNull(deps).getExportedDeps(),
+                Preconditions.checkNotNull(deps).getProvidedDeps(),
                 getAbiJar(),
                 mavenCoords,
                 tests,
@@ -464,7 +404,8 @@ public class DefaultJavaLibraryBuilder {
     protected ImmutableSortedSet<BuildRule> buildFinalFullJarDeclaredDeps() {
       return ImmutableSortedSet.copyOf(
           Iterables.concat(
-              fullJarDeclaredDeps, getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
+              Preconditions.checkNotNull(deps).getDeps(),
+              getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
     }
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
@@ -528,7 +469,9 @@ public class DefaultJavaLibraryBuilder {
           depsBuilder.addAll(
               Sets.difference(
                   initialParams.getExtraDeps().get(),
-                  Sets.union(fullJarProvidedDeps, fullJarExportedDepsSupplier.get())));
+                  Sets.union(
+                      Preconditions.checkNotNull(deps).getProvidedDeps(),
+                      Preconditions.checkNotNull(deps).getExportedDeps())));
         } else {
           depsBuilder.addAll(getFinalFullJarDeclaredDeps());
           depsBuilder
@@ -561,7 +504,7 @@ public class DefaultJavaLibraryBuilder {
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
       if (compileTimeClasspathUnfilteredFullDeps == null) {
         Iterable<BuildRule> firstOrderDeps =
-            Iterables.concat(getFinalFullJarDeclaredDeps(), fullJarProvidedDeps);
+            Iterables.concat(getFinalFullJarDeclaredDeps(), deps.getProvidedDeps());
 
         ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
             BuildRules.getExportedRules(firstOrderDeps);
