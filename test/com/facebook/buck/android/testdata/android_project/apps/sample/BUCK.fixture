@@ -9,6 +9,16 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_exported_and_provided_deps',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  deps = [
+    '//java/com/sample/lib:lib_with_dep_with_exported_and_provided_deps',
+    '//res/com/sample/base:base',
+  ],
+)
+
+android_binary(
   name = 'app_en',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',

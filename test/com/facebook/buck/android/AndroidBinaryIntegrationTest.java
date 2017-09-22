@@ -49,6 +49,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
+import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -294,6 +295,25 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     buildLog.assertTargetBuiltLocally(target);
     buildLog.assertTargetIsAbsent("//java/com/sample/lib:lib");
+  }
+
+  @Test
+  public void testProvidedDependenciesAreExcludedEvenIfSpecifiedInOtherDeps() throws IOException {
+    String target = "//apps/sample:app_with_exported_and_provided_deps";
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    result.assertSuccess();
+
+    DexInspector dexInspector =
+        new DexInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+
+    dexInspector.assertTypeExists("Lcom/facebook/sample/Dep;");
+    dexInspector.assertTypeExists("Lcom/facebook/sample/ExportedDep;");
+    dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/ProvidedDep;");
+    dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/DepProvidedDep;");
+    dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/ExportedProvidedDep;");
   }
 
   @Test

@@ -343,6 +343,12 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
+    // TODO(jkeljo): Subtracting out provided deps is probably not the right behavior (we don't
+    // do it when assembling the contents of a java_binary), but it is long-standing and projects
+    // are depending upon it. The long term direction should be that we add an
+    // `exported_provided_deps` field and either require that a dependency be present in only one
+    // list or define a strict order of precedence among the lists (exported overrides deps
+    // overrides exported_provided overrides provided.)
     return AndroidPackageableCollector.getPackageableRules(
         ImmutableSortedSet.copyOf(
             Sets.difference(

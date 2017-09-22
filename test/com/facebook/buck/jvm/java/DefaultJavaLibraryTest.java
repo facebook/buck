@@ -92,7 +92,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -102,10 +101,10 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -519,6 +518,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(Paths.get("Dep.java"))
             .addExportedDep(depLibraryExportedDepTarget)
             .build();
+    BuildTarget depProvidedDepLibraryTarget =
+        BuildTargetFactory.newInstance("//:dep_provided_dep_library");
+    TargetNode<?, ?> depProvidedDepLibraryNode =
+        createJavaLibraryBuilder(depProvidedDepLibraryTarget)
+            .addSrc(Paths.get("DepProvidedDep.java"))
+            .build();
 
     BuildTarget exportedDepLibraryExportedDepTarget =
         BuildTargetFactory.newInstance("//:exported_dep_library_exported_dep");
@@ -532,6 +537,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         createJavaLibraryBuilder(exportedDepLibraryTarget)
             .addSrc(Paths.get("ExportedDep.java"))
             .addExportedDep(exportedDepLibraryExportedDepTarget)
+            .build();
+    BuildTarget exportedProvidedDepLibraryTarget =
+        BuildTargetFactory.newInstance("//:exported_provided_dep_library");
+    TargetNode<?, ?> exportedProvidedDepLibraryNode =
+        createJavaLibraryBuilder(exportedProvidedDepLibraryTarget)
+            .addSrc(Paths.get("ExportedProvidedDep.java"))
             .build();
 
     BuildTarget providedDepLibraryExportedDepTarget =
@@ -560,8 +571,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(new DefaultBuildTargetSourcePath(sourceDepExportFileTarget))
             .addDep(depLibraryTarget)
             .addDep(depExportFileTarget)
+            .addDep(depProvidedDepLibraryTarget)
             .addExportedDep(exportedDepLibraryTarget)
+            .addExportedDep(exportedProvidedDepLibraryTarget)
             .addProvidedDep(providedDepLibraryTarget)
+            .addProvidedDep(exportedProvidedDepLibraryTarget)
+            .addProvidedDep(depProvidedDepLibraryTarget)
             .addResource(new DefaultBuildTargetSourcePath(resourceDepPrebuiltJarTarget))
             .build();
 
@@ -571,8 +586,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             sourceDepExportFileNode,
             depExportFileNode,
             depLibraryNode,
+            depProvidedDepLibraryNode,
             depLibraryExportedDepNode,
             exportedDepLibraryNode,
+            exportedProvidedDepLibraryNode,
             exportedDepLibraryExportedDepNode,
             providedDepLibraryNode,
             providedDepLibraryExportedDepNode,
@@ -583,22 +600,26 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     DefaultJavaLibrary library = (DefaultJavaLibrary) ruleResolver.requireRule(libraryTarget);
 
-    Set<BuildRule> expectedDeclaredDeps = new HashSet<>();
+    Set<BuildRule> expectedDeclaredDeps = new TreeSet<>();
     if (compileAgainstAbis.equals(TRUE)) {
       expectedDeclaredDeps.add(getAbiJar(depLibraryTarget));
+      expectedDeclaredDeps.add(getAbiJar(depProvidedDepLibraryTarget));
     } else {
       expectedDeclaredDeps.add(ruleResolver.getRule(depLibraryTarget));
+      expectedDeclaredDeps.add(ruleResolver.getRule(depProvidedDepLibraryTarget));
     }
     expectedDeclaredDeps.add(ruleResolver.getRule(depExportFileTarget));
 
-    Set<BuildRule> expectedExtraDeps = new HashSet<>();
+    Set<BuildRule> expectedExtraDeps = new TreeSet<>();
     if (compileAgainstAbis.equals(FALSE)) {
       expectedExtraDeps.add(getAbiJar(depLibraryTarget));
+      addAbiAndMaybeFullJar(depProvidedDepLibraryTarget, expectedExtraDeps);
     }
     addAbiAndMaybeFullJar(depLibraryExportedDepTarget, expectedExtraDeps);
     addAbiAndMaybeFullJar(providedDepLibraryTarget, expectedExtraDeps);
     addAbiAndMaybeFullJar(providedDepLibraryExportedDepTarget, expectedExtraDeps);
     addAbiAndMaybeFullJar(exportedDepLibraryTarget, expectedExtraDeps);
+    addAbiAndMaybeFullJar(exportedProvidedDepLibraryTarget, expectedExtraDeps);
     addAbiAndMaybeFullJar(exportedDepLibraryExportedDepTarget, expectedExtraDeps);
     expectedExtraDeps.add(ruleResolver.getRule(sourceDepExportFileTarget));
     expectedExtraDeps.add(ruleResolver.getRule(resourceDepPrebuiltJarTarget));
@@ -609,7 +630,36 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertThat(
         "Build deps mismatch!",
         library.getBuildDeps(),
-        equalTo(Sets.union(expectedDeclaredDeps, expectedExtraDeps)));
+        equalTo(
+            ImmutableSortedSet.copyOf(Iterables.concat(expectedDeclaredDeps, expectedExtraDeps))));
+
+    assertThat(
+        library.getExportedDeps(),
+        equalTo(
+            ImmutableSortedSet.of(
+                ruleResolver.getRule(exportedDepLibraryTarget),
+                ruleResolver.getRule(exportedProvidedDepLibraryTarget))));
+
+    assertThat(
+        library.getDepsForTransitiveClasspathEntries(),
+        equalTo(
+            ImmutableSet.of(
+                ruleResolver.getRule(depLibraryTarget),
+                ruleResolver.getRule(depProvidedDepLibraryTarget),
+                ruleResolver.getRule(exportedProvidedDepLibraryTarget),
+                ruleResolver.getRule(depExportFileTarget),
+                ruleResolver.getRule(exportedDepLibraryTarget))));
+
+    // In Java packageables, exported_dep overrides dep overrides provided_dep. In android
+    // packageables, they are complementary (i.e. one can export provided deps by simply putting
+    // the dep in both lists). This difference is probably accidental, but it's now depended upon
+    // by at least a couple projects.
+    assertThat(
+        ImmutableSet.copyOf(library.getRequiredPackageables()),
+        equalTo(
+            ImmutableSet.of(
+                ruleResolver.getRule(depLibraryTarget),
+                ruleResolver.getRule(exportedDepLibraryTarget))));
   }
 
   private BuildRule getAbiJar(BuildTarget libraryTarget) {

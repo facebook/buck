@@ -108,6 +108,20 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void javaBinaryWithProvidedDeps() throws IOException {
+    setUpProjectWorkspaceForScenario("java_binary_with_provided_deps");
+    Path binaryJar = workspace.buildAndReturnOutput("//:bin");
+
+    ZipInspector inspector = new ZipInspector(binaryJar);
+    inspector.assertFileExists("com/example/buck/Lib.class");
+    inspector.assertFileExists("com/example/buck/Dep.class");
+    inspector.assertFileExists("com/example/buck/ExportedDep.class");
+    inspector.assertFileExists("com/example/buck/DepProvidedDep.class");
+    inspector.assertFileDoesNotExist("com/example/buck/ProvidedDep.class");
+    inspector.assertFileExists("com/example/buck/ExportedProvidedDep.class");
+  }
+
+  @Test
   public void fatJarWithExitCode() throws IOException {
     setUpProjectWorkspaceForScenario("fat_jar");
 
