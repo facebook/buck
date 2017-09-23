@@ -771,6 +771,81 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryWhereObjcUsesObjcDefinedInSwiftViaBridgingHeader()
+      throws Exception {
+    testDylibSwiftScenario(
+        "apple_library_objc_uses_objc_from_swift_via_bridging_diff_lib", "Bar", "Foo");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereObjcUsesSwiftAcrossDifferentLibraries() throws Exception {
+    testDylibSwiftScenario("apple_library_objc_uses_swift_diff_lib", "Bar", "Foo");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereSwiftUsesObjCAcrossDifferentLibraries() throws Exception {
+    testDylibSwiftScenario("apple_library_swift_uses_objc_diff_lib", "Bar");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereSwiftUsesSwiftAcrossDifferentLibraries() throws Exception {
+    testDylibSwiftScenario("apple_library_swift_uses_swift_diff_lib", "Bar");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereObjCUsesSwiftWithinSameLib() throws Exception {
+    testDylibSwiftScenario("apple_library_objc_uses_swift_same_lib", "Mixed");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereSwiftUsesObjCWithinSameLib() throws Exception {
+    testDylibSwiftScenario("apple_library_swift_uses_objc_same_lib", "Mixed");
+  }
+
+  public void testDylibSwiftScenario(String scenario, String targetName) throws Exception {
+    testDylibSwiftScenario(scenario, targetName, targetName);
+  }
+
+  public void testDylibSwiftScenario(
+      String scenario, String dylibTargetName, String swiftRuntimeDylibTargetName)
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    BuildTarget dylibTarget =
+        workspace
+            .newBuildTarget(String.format("//:%s#macosx-x86_64", dylibTargetName))
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    String dylibPathFormat = "%s/" + String.format("lib%s.dylib", dylibTargetName);
+    Path binaryOutput =
+        workspace.getPath(BuildTargets.getGenPath(filesystem, dylibTarget, dylibPathFormat));
+    assertThat(Files.exists(binaryOutput), is(true));
+
+    BuildTarget swiftRuntimeTarget =
+        workspace
+            .newBuildTarget(String.format("//:%s#macosx-x86_64", swiftRuntimeDylibTargetName))
+            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    String swiftRuntimePathFormat =
+        "%s/" + String.format("lib%s.dylib", swiftRuntimeDylibTargetName);
+    Path swiftRuntimeBinaryOutput =
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, swiftRuntimeTarget, swiftRuntimePathFormat));
+    assertThat(
+        workspace.runCommand("otool", "-L", swiftRuntimeBinaryOutput.toString()).getStdout().get(),
+        containsString("libswiftCore.dylib"));
+  }
+
+  @Test
   public void testBuildAppleLibraryUsingBridingHeaderAndSwiftDotH() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

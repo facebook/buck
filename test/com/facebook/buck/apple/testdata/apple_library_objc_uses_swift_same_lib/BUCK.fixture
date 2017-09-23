@@ -1,0 +1,9 @@
+apple_library(
+    name='Mixed',
+    srcs=['dummy.swift', 'Hello.m'],
+    exported_headers = ['Hello.h'],
+    swift_version = '4',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    ],
+)
