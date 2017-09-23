@@ -127,7 +127,7 @@ class BuckRepo(BuckTool):
         return self._join_buck_dir("build/bootstrapper/bootstrapper.jar")
 
     def _get_java_classpath(self):
-        classpath_file_path = os.path.join(self.buck_dir, "programs", "classpaths")
+        classpath_file_path = os.path.join(self.buck_dir, "build", "classpath", "classpaths")
         classpath_entries = []
         with open(classpath_file_path, 'r') as classpath_file:
             for line in classpath_file.readlines():
