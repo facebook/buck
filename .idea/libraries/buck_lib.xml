@@ -3,7 +3,6 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/android/sdklib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-5.0.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ini4j/ini4j-0.5.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
@@ -28,11 +27,11 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.7.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-5.0.3-src.zip!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-20.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.4.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.4.0-sources.jar!/" />
@@ -46,6 +45,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.20.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
