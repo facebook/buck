@@ -339,6 +339,34 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_library_dependency_with_swift_sources_builds_something", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    // Check binary contains statically linked Swift runtime
+    assertThat(
+        workspace.runCommand("nm", outputPath.toString()).getStdout().get(),
+        containsString("T _swift_retain"));
+  }
+
+  @Test
   public void testAppleBinaryWithLibraryDependencyBuildsSomething() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
