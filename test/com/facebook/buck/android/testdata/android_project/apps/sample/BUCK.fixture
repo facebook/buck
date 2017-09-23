@@ -838,5 +838,6 @@ android_binary(
   deps = [
     '//java/com/sample/lib:lib',
     '//res/com/sample/base:base',
+    '//res/com/sample/with_generated_strings:res',
   ],
 )

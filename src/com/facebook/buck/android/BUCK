@@ -92,6 +92,7 @@ RULES_SRCS = [
     "GenAidl.java",
     "GenAidlDescription.java",
     "GenerateRDotJava.java",
+    "GenerateStringSourceMap.java",
     "HasAndroidResourceDeps.java",
     "IdentityResourcesProvider.java",
     "MergeAndroidResourcesStep.java",

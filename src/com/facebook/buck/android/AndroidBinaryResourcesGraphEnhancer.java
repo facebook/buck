@@ -257,7 +257,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       ruleResolver.addToIndex(generateRDotJava.get());
 
       if (shouldBuildStringSourceMap) {
-        ruleResolver.addToIndex(createGenerateStringSourceMap());
+        ruleResolver.addToIndex(
+            createGenerateStringSourceMap(pathToRDotTxt, filteredResourcesProvider));
       }
     }
 
@@ -334,16 +335,18 @@ class AndroidBinaryResourcesGraphEnhancer {
         bannedDuplicateResourceTypes,
         pathToRDotTxtFile,
         resourceUnionPackage,
-        shouldBuildStringSourceMap,
         resourceDeps,
         resourcesProvider);
   }
 
-  private GenerateStringSourceMap createGenerateStringSourceMap() {
+  private GenerateStringSourceMap createGenerateStringSourceMap(
+      SourcePath pathToRDotTxtFile, FilteredResourcesProvider filteredResourcesProvider) {
     return new GenerateStringSourceMap(
         buildTarget.withAppendedFlavors(GENERATE_STRING_SOURCE_MAP_FLAVOR),
         projectFilesystem,
-        ruleFinder);
+        ruleFinder,
+        pathToRDotTxtFile,
+        filteredResourcesProvider);
   }
 
   private ResourcesFilter createResourcesFilter(
