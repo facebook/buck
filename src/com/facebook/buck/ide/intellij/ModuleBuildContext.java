@@ -57,6 +57,7 @@ public class ModuleBuildContext {
   private Optional<Path> metaInfDirectory;
   private Optional<String> javaLanguageLevel;
   private Optional<Path> compilerOutputPath;
+  private Optional<Path> preferredResFolderPath;
 
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
@@ -70,6 +71,7 @@ public class ModuleBuildContext {
     this.metaInfDirectory = Optional.empty();
     this.javaLanguageLevel = Optional.empty();
     this.compilerOutputPath = Optional.empty();
+    this.preferredResFolderPath = Optional.empty();
   }
 
   public void ensureAndroidFacetBuilder() {
@@ -154,6 +156,14 @@ public class ModuleBuildContext {
 
   public void setCompilerOutputPath(Optional<Path> compilerOutputPath) {
     this.compilerOutputPath = compilerOutputPath;
+  }
+
+  public Optional<Path> getPreferredResFolderPath() {
+    return preferredResFolderPath;
+  }
+
+  public void setPreferredResFolderPath(Optional<Path> preferredResFolderPath) {
+    this.preferredResFolderPath = preferredResFolderPath;
   }
 
   /**

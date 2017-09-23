@@ -1,5 +1,6 @@
 android_resource(
   name = 'android_res2',
+  labels = ['preferred_res_folder'],
   package = 'com.test',
   project_res = 'res',
   visibility = [
