@@ -1110,7 +1110,7 @@ public class StubJarTest {
             "  // signature Ljava/util/List<Ljava/lang/String;>;",
             "  // declaration: java.util.List<java.lang.String>",
             "  Ljava/util/List; list",
-            "  @Lcom/example/buck/Foo$TypeAnnotation;() : FIELD, 0 // invisible",
+            "  @Lcom/example/buck/Foo$TypeAnnotation;() : FIELD, 0; // invisible",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
