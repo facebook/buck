@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="immutables-annotations">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-2.4.6.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/builder-2.4.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-2.5.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/builder-2.5.6.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-2.4.6-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/builder-2.4.6-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/value-2.5.6-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/immutables/builder-2.5.6-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
