@@ -20,7 +20,7 @@ import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage.
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;

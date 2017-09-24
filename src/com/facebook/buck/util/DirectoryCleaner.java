@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.log.Logger;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

@@ -13,16 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
+package com.facebook.buck.io.file;
 
-import java.nio.file.Path;
+public interface FileScrubber {
 
-/** Created by beefon on 06/06/2016. */
-public interface FileAttributesScrubber extends FileScrubber {
-  /**
-   * Override this method to perform the modification of the file attributes (modification date,
-   * creation date, etc.) WARNING: You should not delete, rename or move the file, as the the
-   * behaviour is undefined.
-   */
-  void scrubFileWithPath(Path path);
+  @SuppressWarnings("serial")
+  class ScrubException extends Exception {
+    public ScrubException(String msg) {
+      super(msg);
+    }
+  }
 }

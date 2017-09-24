@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.maven.TestPublisher;

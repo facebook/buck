@@ -14,6 +14,7 @@ java_immutables_library(
         "//src/com/facebook/buck/cxx/toolchain/objectfile:objectfile",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:rules",

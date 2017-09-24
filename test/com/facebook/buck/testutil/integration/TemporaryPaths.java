@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.file.MoreFiles;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;

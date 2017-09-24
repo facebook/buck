@@ -19,6 +19,7 @@ java_library(
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:transport",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
@@ -100,9 +101,9 @@ standard_java_test(
         "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/io:transport",
         "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/json:json",
         "//src/com/facebook/buck/jvm/core:classhash",
         "//src/com/facebook/buck/jvm/core:packagefinder",
@@ -225,10 +226,10 @@ java_library(
     name = "artifact_cache_benchmark_lib",
     srcs = ["SQLiteArtifactCacheBenchmark.java"],
     exported_deps = [
-        "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/rules:rule_key",
         "//src/com/facebook/buck/rules:rules",
         "//test/com/facebook/buck/event:testutil",
@@ -241,6 +242,9 @@ java_library(
     visibility = [
         "//test/com/facebook/buck/benchmarks/...",
     ],
+    deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
 )
 
 java_test(
@@ -248,5 +252,7 @@ java_test(
     srcs = ["SQLiteArtifactCacheBenchmark.java"],
     deps = [
         ":artifact_cache_benchmark_lib",
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/io/file:file",
     ],
 )

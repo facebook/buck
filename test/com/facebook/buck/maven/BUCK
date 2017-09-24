@@ -160,6 +160,7 @@ java_test(
         include_dotfiles = True,
     ),
     deps = [
+        "//src/com/facebook/buck/io/file:file",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
@@ -192,7 +193,6 @@ java_test(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/halide:halide",
         "//src/com/facebook/buck/hashing:hashing",
-        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:transport",

@@ -33,7 +33,7 @@ java_immutables_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/json:rules",
         "//src/com/facebook/buck/json:steps",
         "//src/com/facebook/buck/jvm/java:support",

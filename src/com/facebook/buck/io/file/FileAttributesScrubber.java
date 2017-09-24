@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,14 +13,16 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.io.file;
 
-package com.facebook.buck.io;
+import java.nio.file.Path;
 
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-
-public interface FileContentsScrubber extends FileScrubber {
-
-  /** Override this method to perform the content modification. */
-  void scrubFile(FileChannel file) throws IOException, ScrubException;
+/** Created by beefon on 06/06/2016. */
+public interface FileAttributesScrubber extends FileScrubber {
+  /**
+   * Override this method to perform the modification of the file attributes (modification date,
+   * creation date, etc.) WARNING: You should not delete, rename or move the file, as the the
+   * behaviour is undefined.
+   */
+  void scrubFileWithPath(Path path);
 }

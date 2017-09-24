@@ -18,7 +18,7 @@ package com.facebook.buck.go;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

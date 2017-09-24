@@ -10,7 +10,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/build_type:build_type",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

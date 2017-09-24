@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.parser;
 
 import bazel.shaded.com.google.common.collect.ImmutableCollection;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.project_generator;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;

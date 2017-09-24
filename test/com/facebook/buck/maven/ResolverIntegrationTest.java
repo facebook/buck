@@ -30,7 +30,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;

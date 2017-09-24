@@ -15,6 +15,7 @@ java_immutables_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/ide/intellij/projectview/shared:shared",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/jvm/core:classhash",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:support",

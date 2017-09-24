@@ -16,7 +16,7 @@
 
 package com.facebook.buck.model;
 
-import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
+import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.MoreCollectors;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.zip;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import java.io.IOException;
 import java.io.InputStream;

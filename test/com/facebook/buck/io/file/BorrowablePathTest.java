@@ -13,14 +13,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
 
-public interface FileScrubber {
+package com.facebook.buck.io.file;
 
-  @SuppressWarnings("serial")
-  class ScrubException extends Exception {
-    public ScrubException(String msg) {
-      super(msg);
-    }
+import static org.hamcrest.junit.MatcherAssert.assertThat;
+
+import java.io.File;
+import org.hamcrest.Matchers;
+import org.junit.Test;
+
+public class BorrowablePathTest {
+
+  @Test
+  public void testExplicitBorrow() {
+    BorrowablePath p = BorrowablePath.borrowablePath(new File("/tmp/path").toPath());
+    assertThat(p.canBorrow(), Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testExplicitNotBorrow() {
+    BorrowablePath p = BorrowablePath.notBorrowablePath(new File("/tmp/path").toPath());
+    assertThat(p.canBorrow(), Matchers.equalTo(false));
   }
 }

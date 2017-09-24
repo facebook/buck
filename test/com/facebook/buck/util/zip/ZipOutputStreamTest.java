@@ -33,7 +33,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.testutil.ZipArchive;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;

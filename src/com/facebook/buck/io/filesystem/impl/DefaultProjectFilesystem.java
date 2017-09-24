@@ -17,10 +17,10 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.MorePosixFilePermissions;
-import com.facebook.buck.io.PathListing;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.PathOrGlobMatcher;

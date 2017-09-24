@@ -16,8 +16,8 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.PathListing;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.PathListing;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;

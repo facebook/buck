@@ -14,25 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.file;
 
-import com.google.common.base.Preconditions;
-import java.io.File;
-import java.nio.file.Path;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
-public class MorePathsForTests {
-  /** Utility class: do not instantiate. */
-  private MorePathsForTests() {}
+public interface FileContentsScrubber extends FileScrubber {
 
-  /**
-   * A cross-platform way to get a root-relative Path.
-   *
-   * @param location The path to the file relative to a root.
-   * @return Path object representing location.
-   */
-  public static Path rootRelativePath(String location) {
-    File[] roots = File.listRoots();
-    Preconditions.checkState(roots.length > 0);
-    return roots[0].toPath().resolve(location);
-  }
+  /** Override this method to perform the content modification. */
+  void scrubFile(FileChannel file) throws IOException, ScrubException;
 }

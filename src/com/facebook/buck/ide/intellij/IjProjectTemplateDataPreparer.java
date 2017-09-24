@@ -33,7 +33,7 @@ import com.facebook.buck.ide.intellij.model.folders.IjResourceFolderType;
 import com.facebook.buck.ide.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.ResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;

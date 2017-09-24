@@ -2,6 +2,7 @@ standard_java_test(
     name = "impl",
     deps = [
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",

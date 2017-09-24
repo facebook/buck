@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.file;
 
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;

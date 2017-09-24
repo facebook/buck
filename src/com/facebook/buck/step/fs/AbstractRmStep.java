@@ -17,7 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;

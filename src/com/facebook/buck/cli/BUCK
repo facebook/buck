@@ -19,6 +19,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
@@ -85,6 +86,7 @@ java_immutables_library(
         "//test/com/facebook/buck/...",
     ],
     deps = [
+        "//src/com/facebook/buck/io/file:file",
         "//src-gen:thrift",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/android/aapt:aapt",
@@ -126,7 +128,6 @@ java_immutables_library(
         "//src/com/facebook/buck/httpserver:httpserver",
         # Autdeps is not finding this dep, but it is needed for the bootstrapper
         "//src/com/facebook/buck/ide/intellij:intellij",
-        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:transport",

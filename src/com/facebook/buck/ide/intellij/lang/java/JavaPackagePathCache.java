@@ -16,7 +16,7 @@
 
 package com.facebook.buck.ide.intellij.lang.java;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.HashMap;

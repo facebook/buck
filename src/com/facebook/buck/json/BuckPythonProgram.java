@@ -17,8 +17,8 @@ package com.facebook.buck.json;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.Description;

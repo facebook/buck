@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
+package com.facebook.buck.io.file;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;

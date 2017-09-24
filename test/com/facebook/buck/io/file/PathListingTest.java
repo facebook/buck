@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.file;
 
 import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertEquals;

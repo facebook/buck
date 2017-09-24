@@ -18,6 +18,7 @@ package com.facebook.buck.io;
 
 import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;

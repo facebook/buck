@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.rules.Tool;
 import com.google.common.collect.ImmutableList;
 

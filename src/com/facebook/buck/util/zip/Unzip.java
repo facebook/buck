@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.zip;
 
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.MoreCollectors;
