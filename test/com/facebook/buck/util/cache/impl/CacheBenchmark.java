@@ -14,10 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.util.cache;
+package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
 import com.google.caliper.Param;

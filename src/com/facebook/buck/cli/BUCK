@@ -207,7 +207,7 @@ java_immutables_library(
         "//src/com/facebook/buck/test/external:events",
         "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util/autosparse:autosparse_config",
-        "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",

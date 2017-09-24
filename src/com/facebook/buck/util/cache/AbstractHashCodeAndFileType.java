@@ -77,7 +77,7 @@ abstract class AbstractHashCodeAndFileType {
     return HashCodeAndFileType.builder().setType(Type.FILE).setGetHashCode(hashCode).build();
   }
 
-  enum Type {
+  public enum Type {
     ARCHIVE,
     FILE,
     DIRECTORY

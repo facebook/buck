@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
  * This interface extracts the methods available to a file hash cache, so that the underlying
  * implementation is hidden and can be swapped.
  */
-interface FileHashCacheEngine {
+public interface FileHashCacheEngine {
 
   @FunctionalInterface
   interface ValueLoader<T> {

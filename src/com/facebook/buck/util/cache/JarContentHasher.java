@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 
-interface JarContentHasher {
+public interface JarContentHasher {
 
   Path getJarRelativePath();
 

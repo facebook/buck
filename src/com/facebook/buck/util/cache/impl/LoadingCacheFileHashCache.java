@@ -14,10 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.util.cache;
+package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.util.cache.FileHashCacheEngine;
+import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;

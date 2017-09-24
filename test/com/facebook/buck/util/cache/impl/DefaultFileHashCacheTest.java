@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.cache;
+package com.facebook.buck.util.cache.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -28,6 +28,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.cache.FileHashCacheMode;
+import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;

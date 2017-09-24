@@ -1,22 +1,14 @@
 java_immutables_library(
     name = "cache",
     srcs = glob(["*.java"]),
-    tests = [
-        "//test/com/facebook/buck/util/cache:cache",
+    exported_deps = [
+        "//src/com/facebook/buck/hashing:hashing",
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/sha1:sha1",
-        "//src/com/facebook/buck/util/zip:zip",
     ],
 )

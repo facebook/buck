@@ -14,11 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.util.cache;
+package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
+import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
+import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
