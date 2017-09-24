@@ -14,12 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.config;
 
 import static java.lang.Integer.parseInt;
 
-import com.facebook.buck.config.ConfigView;
-import com.facebook.buck.config.ConfigViewCache;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;

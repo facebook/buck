@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import java.util.Optional;
 

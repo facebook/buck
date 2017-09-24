@@ -16,7 +16,7 @@
 
 package com.facebook.buck.test;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 
 public class TestConfig {
   public static final String TEST_SUMMARY_SECTION_NAME = "test_summary";

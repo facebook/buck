@@ -6,10 +6,9 @@ java_library(
         "//test/com/facebook/buck/jvm/java/...",
     ],
     deps = [
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/jvm/java:config",
-        "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/junit:junit",
     ],

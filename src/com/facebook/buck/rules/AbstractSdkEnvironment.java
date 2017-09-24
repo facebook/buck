@@ -24,7 +24,7 @@ import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;

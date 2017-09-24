@@ -16,8 +16,8 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 
 public class IjTestProjectConfig {

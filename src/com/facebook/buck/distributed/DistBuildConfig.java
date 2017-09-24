@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildMode;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.SlbBuckConfig;

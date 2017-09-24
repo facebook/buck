@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.ConfigPathGetter;
 import java.nio.file.Path;
 import java.util.Optional;
 

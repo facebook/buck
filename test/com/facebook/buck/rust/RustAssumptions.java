@@ -18,7 +18,7 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assume.assumeNoException;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 

@@ -18,7 +18,7 @@ package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import java.io.IOException;
 import org.junit.Rule;

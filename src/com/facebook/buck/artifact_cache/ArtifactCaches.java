@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExperimentEvent;

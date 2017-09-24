@@ -21,6 +21,7 @@ import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuil
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildCellIndexer;

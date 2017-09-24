@@ -94,7 +94,6 @@ java_immutables_library(
         "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -420,7 +419,6 @@ java_immutables_library(
         ":interfaces",
         ":rule_key",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -498,13 +496,13 @@ java_library(
         "DefaultCellPathResolver.java",
     ],
     exported_deps = [
+        ":interfaces",
         "//src/com/facebook/buck/util/config:config",
     ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        ":interfaces",
         ":relative_cell_name",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",

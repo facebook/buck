@@ -6,7 +6,6 @@ java_library(
     name = "config",
     srcs = CONFIG_SRCS,
     exported_deps = [
-        "//src/com/facebook/buck/cli:config",
     ],
     resources = [
         "__test_main__.py",
@@ -14,6 +13,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         ":support",
+        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/io:executable-finder",

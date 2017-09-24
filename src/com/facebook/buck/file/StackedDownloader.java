@@ -16,8 +16,8 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.DownloadConfig;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;

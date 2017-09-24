@@ -2,47 +2,6 @@
 
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-CONFIG_SRCS = [
-    "ActionGraphParallelizationMode.java",
-    "BuckConfig.java",
-    "ConfigPathGetter.java",
-    "DownloadConfig.java",
-    "ProjectTestsMode.java",
-]
-
-java_library(
-    name = "config",
-    srcs = CONFIG_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
-        "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:interfaces",
-        "//src/com/facebook/buck/rules:rule_key",
-        "//src/com/facebook/buck/rules:source_path",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:io",
-        "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/cache:cache",
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//src/com/facebook/buck/util/config:config",
-        "//src/com/facebook/buck/util/environment:platform",
-        "//src/com/facebook/buck/util/network/hostname:hostname",
-        "//third-party/java/guava:guava",
-        "//third-party/java/infer-annotations:infer-annotations",
-    ],
-)
-
 java_library(
     name = "metadata_checker",
     srcs = [
@@ -52,7 +11,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
@@ -65,7 +23,7 @@ java_library(
     ],
 )
 
-CLI_EXCLUDES = CONFIG_SRCS + glob(["parameter_extractors/*.*"])
+CLI_EXCLUDES = glob(["parameter_extractors/*.*"])
 
 java_immutables_library(
     name = "cli",
@@ -107,7 +65,6 @@ java_immutables_library(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:config",
         "//src/com/facebook/buck/charset:charset",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/cli/parameter_extractors:parameter_extractors",
         "//src/com/facebook/buck/command:command",
         "//src/com/facebook/buck/config:config",
@@ -281,7 +238,6 @@ java_binary(
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/charset:charset",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",

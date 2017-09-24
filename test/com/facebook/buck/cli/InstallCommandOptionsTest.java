@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.testutil.integration.TemporaryPaths;

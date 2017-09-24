@@ -18,7 +18,7 @@ package com.facebook.buck.go;
 
 import static org.junit.Assume.assumeNoException;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;

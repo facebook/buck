@@ -18,7 +18,7 @@ package com.facebook.buck.util.autosparse;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;

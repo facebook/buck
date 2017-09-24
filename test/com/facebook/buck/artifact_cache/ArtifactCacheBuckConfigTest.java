@@ -18,7 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuckConfigTestUtils;
+import com.facebook.buck.config.BuckConfigTestUtils;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

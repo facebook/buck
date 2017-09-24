@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,17 +13,27 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cli;
 
-import java.nio.file.Path;
-import java.util.Optional;
+package com.facebook.buck.config;
 
-public interface ConfigPathGetter {
-  /**
-   * @param sectionName
-   * @param key
-   * @return Optional.EMPTY if entry does not exist for [section] and key, otherwise returns an
-   *     Optional containing the corresponding value.
-   */
-  Optional<Path> getPath(String sectionName, String key);
+import com.facebook.buck.randomizedtrial.WithProbability;
+
+public enum ActionGraphParallelizationMode implements WithProbability {
+  ENABLED(0.5),
+  DISABLED(0.5),
+  EXPERIMENT(0.0),
+  ;
+
+  public static ActionGraphParallelizationMode DEFAULT = DISABLED;
+
+  private final double probability;
+
+  ActionGraphParallelizationMode(double probability) {
+    this.probability = probability;
+  }
+
+  @Override
+  public double getProbability() {
+    return probability;
+  }
 }

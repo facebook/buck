@@ -11,7 +11,6 @@ java_library(
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:utils",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -64,7 +63,6 @@ standard_java_test(
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:utils",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",

@@ -14,14 +14,28 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.testdata.buck_py_ignore_paths.b;
+package com.facebook.buck.config;
 
-import org.junit.Test;
+import com.google.common.base.Preconditions;
 
-public class BTest {
+public enum ProjectTestsMode {
 
-  @Test
-  public void doNothingTest() {
-    // Do nothing.
+  // No tests.
+  WITHOUT_TESTS("without_tests"),
+  // With all tests.
+  WITH_TESTS("with_tests"),
+  // Only the main target tests.
+  WITHOUT_DEPENDENCIES_TESTS("without_dependencies_tests"),
+  ;
+
+  private final String value;
+
+  ProjectTestsMode(String value) {
+    this.value = Preconditions.checkNotNull(value);
+  }
+
+  @Override
+  public String toString() {
+    return value;
   }
 }

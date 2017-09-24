@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.google.common.base.Splitter;
 import java.util.Optional;
 

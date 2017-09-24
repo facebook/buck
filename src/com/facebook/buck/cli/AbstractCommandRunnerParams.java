@@ -17,6 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;

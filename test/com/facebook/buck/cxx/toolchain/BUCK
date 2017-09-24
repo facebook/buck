@@ -8,7 +8,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
@@ -23,7 +22,7 @@ java_library(
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
-        "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
     ],
@@ -36,7 +35,6 @@ standard_java_test(
     ],
     deps = [
         ":testutil",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
@@ -51,7 +49,7 @@ standard_java_test(
         "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
-        "//test/com/facebook/buck/cli:FakeBuckConfig",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

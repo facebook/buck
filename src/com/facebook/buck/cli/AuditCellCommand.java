@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.BuckConfig;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

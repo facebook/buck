@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.ide.intellij.IjProjectBuckConfig;
 import com.facebook.buck.ide.intellij.IjProjectCommandHelper;

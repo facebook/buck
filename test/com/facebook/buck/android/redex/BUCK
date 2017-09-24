@@ -9,7 +9,6 @@ standard_java_test(
         "//src/com/facebook/buck/android/redex:redex",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
