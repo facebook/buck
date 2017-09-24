@@ -81,7 +81,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
 
     private ImmutableMap<Path, HashCode> loadJarContentsHashes() {
       try {
-        return new JarContentHasher(filesystem, path)
+        return new DefaultJarContentHasher(filesystem, path)
             .getContentHashes()
             .entrySet()
             .stream()
@@ -99,7 +99,8 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
         case SYMLINK:
           HashCode loadedValue = fileHashLoader.load(path);
           if (isArchive(path)) {
-            return HashCodeAndFileType.ofArchive(loadedValue, filesystem, path);
+            return HashCodeAndFileType.ofArchive(
+                loadedValue, new DefaultJarContentHasher(filesystem, path));
           }
           return HashCodeAndFileType.ofFile(loadedValue);
         case DIRECTORY:

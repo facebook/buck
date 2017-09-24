@@ -176,7 +176,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     if (projectFilesystem.isDirectory(path)) {
       return getDirHashCode(path);
     } else if (path.toString().endsWith(".jar")) {
-      return HashCodeAndFileType.ofArchive(getFileHashCode(path), projectFilesystem, path);
+      return HashCodeAndFileType.ofArchive(
+          getFileHashCode(path), new DefaultJarContentHasher(projectFilesystem, path));
     }
 
     return HashCodeAndFileType.ofFile(getFileHashCode(path));
@@ -285,9 +286,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       value =
           HashCodeAndFileType.ofArchive(
               hashCode,
-              projectFilesystem,
-              projectFilesystem.getPathRelativeToProjectRoot(relativePath).get());
-
+              new DefaultJarContentHasher(
+                  projectFilesystem,
+                  projectFilesystem.getPathRelativeToProjectRoot(relativePath).get()));
     } else {
       value = HashCodeAndFileType.ofFile(hashCode);
     }
