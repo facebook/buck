@@ -302,7 +302,7 @@ public class RobolectricTestRuleTest {
   }
 
   @Test
-  public void runtimeDepsIncludeTransitiveResources() throws Exception {
+  public void runtimeDepsIncludeTransitiveResourcesAndDummyR() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
 
     BuildTarget resGenRuleTarget = BuildTargetFactory.newInstance("//:res-gen");

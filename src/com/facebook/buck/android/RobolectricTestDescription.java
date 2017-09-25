@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -141,6 +142,7 @@ public class RobolectricTestDescription
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(resolver, /* createBuildableIfEmpty */ true);
+    RobolectricTestDescriptionArg testLibraryArgs = args;
 
     if (dummyRDotJava.isPresent()) {
       ImmutableSortedSet<BuildRule> newDeclaredDeps =
@@ -149,6 +151,10 @@ public class RobolectricTestDescription
               .add(dummyRDotJava.get())
               .build();
       params = params.withDeclaredDeps(newDeclaredDeps);
+      testLibraryArgs =
+          testLibraryArgs.withDeps(
+              Iterables.concat(
+                  args.getDeps(), Collections.singletonList(dummyRDotJava.get().getBuildTarget())));
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -178,7 +184,7 @@ public class RobolectricTestDescription
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA)),
                     javaBuckConfig)
-                .setArgs(args)
+                .setArgs(testLibraryArgs)
                 .setJavacOptions(javacOptions)
                 .setExtraClasspathFromContextFunction(AndroidClasspathFromContextFunction.INSTANCE)
                 .build());
