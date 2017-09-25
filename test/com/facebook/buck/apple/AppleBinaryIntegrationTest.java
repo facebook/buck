@@ -348,6 +348,7 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_library_dependency_with_swift_sources_builds_something", tmp);
     workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
