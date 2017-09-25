@@ -25,8 +25,8 @@ import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
@@ -69,7 +69,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 10;
 
   private final StampedeId stampedeId;
-  private final RunId runId;
+  private final BuildSlaveRunId buildSlaveRunId;
   private final Clock clock;
   private final ScheduledFuture<?> scheduledServerUpdates;
   private final ScheduledExecutorService networkScheduler;
@@ -100,7 +100,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
-      RunId runId,
+      BuildSlaveRunId buildSlaveRunId,
       DistBuildMode distBuildMode,
       Clock clock,
       DistBuildSlaveTimingStatsTracker slaveStatsTracker,
@@ -108,7 +108,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       ScheduledExecutorService networkScheduler) {
     this(
         stampedeId,
-        runId,
+        buildSlaveRunId,
         distBuildMode,
         clock,
         slaveStatsTracker,
@@ -119,7 +119,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
 
   public DistBuildSlaveEventBusListener(
       StampedeId stampedeId,
-      RunId runId,
+      BuildSlaveRunId runId,
       DistBuildMode distBuildMode,
       Clock clock,
       DistBuildSlaveTimingStatsTracker slaveStatsTracker,
@@ -127,7 +127,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       ScheduledExecutorService networkScheduler,
       long serverUpdatePeriodMillis) {
     this.stampedeId = stampedeId;
-    this.runId = runId;
+    this.buildSlaveRunId = runId;
     this.clock = clock;
     this.slaveStatsTracker = slaveStatsTracker;
     this.fileMaterializationStatsTracker = fileMaterializationStatsTracker;
@@ -183,7 +183,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private BuildSlaveStatus createBuildSlaveStatus() {
     return new BuildSlaveStatus()
         .setStampedeId(stampedeId)
-        .setRunId(runId)
+        .setBuildSlaveRunId(buildSlaveRunId)
         .setTotalRulesCount(ruleCount)
         .setRulesStartedCount(buildRulesStartedCount.get())
         .setRulesFinishedCount(buildRulesFinishedCount.get())
@@ -225,7 +225,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     }
 
     try {
-      distBuildService.storeBuildSlaveFinishedStats(stampedeId, runId, finishedStats);
+      distBuildService.storeBuildSlaveFinishedStats(stampedeId, buildSlaveRunId, finishedStats);
       sentFinishedStatsToServer = true;
     } catch (IOException e) {
       LOG.error(e, "Could not update slave status to frontend.");
@@ -238,7 +238,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     }
 
     try {
-      distBuildService.updateBuildSlaveStatus(stampedeId, runId, createBuildSlaveStatus());
+      distBuildService.updateBuildSlaveStatus(
+          stampedeId, buildSlaveRunId, createBuildSlaveStatus());
     } catch (IOException e) {
       LOG.error(e, "Could not update slave status to frontend.");
     }
@@ -260,7 +261,8 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
     }
 
     try {
-      distBuildService.uploadBuildSlaveConsoleEvents(stampedeId, runId, consoleEventsCopy);
+      distBuildService.uploadBuildSlaveConsoleEvents(
+          stampedeId, buildSlaveRunId, consoleEventsCopy);
     } catch (IOException e) {
       LOG.error(e, "Could not upload slave console events to frontend.");
     }

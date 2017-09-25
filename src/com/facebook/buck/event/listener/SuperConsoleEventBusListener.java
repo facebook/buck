@@ -18,8 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -156,7 +156,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private boolean hideEmptyDownload;
 
   @GuardedBy("distBuildSlaveTrackerLock")
-  private final Map<RunId, BuildSlaveStatus> distBuildSlaveTracker;
+  private final Map<BuildSlaveRunId, BuildSlaveStatus> distBuildSlaveTracker;
 
   private final Set<String> actionGraphCacheMessage = new HashSet<>();
 
@@ -804,7 +804,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     super.onDistBuildStatusEvent(event);
     synchronized (distBuildSlaveTrackerLock) {
       for (BuildSlaveStatus status : event.getStatus().getSlaveStatuses()) {
-        distBuildSlaveTracker.put(status.runId, status);
+        distBuildSlaveTracker.put(status.buildSlaveRunId, status);
       }
     }
   }

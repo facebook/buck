@@ -19,7 +19,7 @@ package com.facebook.buck.distributed;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_FINISHED;
 
 import com.facebook.buck.artifact_cache.CacheResultType;
-import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleStatus;
@@ -62,7 +62,7 @@ public class DistBuildPostBuildAnalysis {
       BuildId buildId,
       StampedeId stampedeId,
       Path logDirectoryPath,
-      List<RunId> remoteBuildRunIds,
+      List<BuildSlaveRunId> remoteBuildRunIds,
       String distBuildCommandName)
       throws IOException {
     this.buildId = buildId;
@@ -74,7 +74,7 @@ public class DistBuildPostBuildAnalysis {
     // Using LinkedHashMap to ensure we get the same order everytime.
     this.remoteBuildRulesByRunIdAndName = new LinkedHashMap<>();
 
-    for (RunId remoteBuildRunId : remoteBuildRunIds) {
+    for (BuildSlaveRunId remoteBuildRunId : remoteBuildRunIds) {
       Path remoteBuildLogDir =
           DistBuildUtil.getRemoteBuckLogPath(remoteBuildRunId.id, logDirectoryPath);
       try (DirectoryStream<Path> stream = Files.newDirectoryStream(remoteBuildLogDir)) {

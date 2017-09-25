@@ -19,7 +19,7 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_F
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.cli.DistBuildCommand;
-import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -61,16 +61,16 @@ public class DistBuildPostBuildAnalysisTest {
 
   private final BuildId buildId = new BuildId("97eb735b-27c9-4d60-9564-fb0694a53b03");
   private final StampedeId stampedeId = new StampedeId();
-  private final RunId runId1 = new RunId();
-  private final RunId runId2 = new RunId();
+  private final BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
+  private final BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
 
   private ObjectWriter objectWriter;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     stampedeId.setId("stampede5057850940756389804");
-    runId1.setId("stampede-slave1241653611715395998");
-    runId2.setId("stampede-slave8890909885267341364");
+    buildSlaveRunId1.setId("stampede-slave1241653611715395998");
+    buildSlaveRunId2.setId("stampede-slave8890909885267341364");
 
     objectWriter =
         ObjectMappers.legacyCreate()
@@ -199,7 +199,7 @@ public class DistBuildPostBuildAnalysisTest {
             buildId,
             stampedeId,
             filesystem.resolve(tmpPath.getRoot()),
-            ImmutableList.of(runId1, runId2),
+            ImmutableList.of(buildSlaveRunId1, buildSlaveRunId2),
             DistBuildCommand.class.getSimpleName().toLowerCase());
     Assert.assertEquals(
         analysis.dumpResultsToLogFile(analysis.runAnalysis()),

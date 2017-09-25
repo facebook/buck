@@ -27,7 +27,7 @@ import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
-import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
@@ -87,7 +87,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Nullable
   @Option(name = RUN_ID_ARG_NAME, usage = "Stampede RunId for this instance of BuildSlave.")
-  private String runId;
+  private String buildSlaveRunId;
 
   @Nullable private DistBuildSlaveEventBusListener slaveEventListener;
 
@@ -264,7 +264,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   }
 
   private void checkArgs() {
-    if (buildStateFile == null && (!getStampedeIdOptional().isPresent() || runId == null)) {
+    if (buildStateFile == null
+        && (!getStampedeIdOptional().isPresent() || buildSlaveRunId == null)) {
       throw new HumanReadableException(
           String.format(
               "Options '%s' and '%s' are both required when '%s' is not provided.",
@@ -275,10 +276,10 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private void initEventListener(ScheduledExecutorService scheduledExecutorService) {
     if (slaveEventListener == null) {
       checkArgs();
-      RunId runId = new RunId();
+      BuildSlaveRunId runId = new BuildSlaveRunId();
       runId.setId(
           Preconditions.checkNotNull(
-              this.runId, "This should have been already made sure by checkArgs()."));
+              this.buildSlaveRunId, "This should have been already made sure by checkArgs()."));
 
       slaveEventListener =
           new DistBuildSlaveEventBusListener(

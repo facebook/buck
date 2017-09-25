@@ -30,10 +30,10 @@ struct StampedeId {
   1 : optional string id;
 }
 
-# Uniquely identifies the run of a specific remote build server.
-# One StampedeId will have one or more RunId's associated with it.
-# (one RunId per Minion that contributes to the build).
-struct RunId {
+# Uniquely identifies the run of a specific BuildSlave server.
+# One StampedeId will have one or more BuildSlaveRunId's associated with it.
+# (one BuildSlaveRunId per Minion that contributes to the build).
+struct BuildSlaveRunId {
   1 : optional string id;
 }
 
@@ -51,18 +51,6 @@ struct LogLineBatch {
 struct FileInfo {
   1: optional string contentHash;
   2: optional binary content;
-}
-
-struct BuildSlaveInfo {
-  1: optional RunId runId;
-  2: optional string hostname;
-  3: optional string command;
-  4: optional i32 stdOutCurrentBatchNumber;
-  5: optional i32 stdOutCurrentBatchLineCount;
-  6: optional i32 stdErrCurrentBatchNumber;
-  7: optional i32 stdErrCurrentBatchLineCount;
-  8: optional bool logDirZipWritten;
-  9: optional i32 exitCode;
 }
 
 enum BuildStatus {
@@ -84,6 +72,19 @@ enum BuildStatus {
   CREATED = 5,
 }
 
+struct BuildSlaveInfo {
+  1: optional BuildSlaveRunId buildSlaveRunId;
+  2: optional string hostname;
+  3: optional string command;
+  4: optional i32 stdOutCurrentBatchNumber;
+  5: optional i32 stdOutCurrentBatchLineCount;
+  6: optional i32 stdErrCurrentBatchNumber;
+  7: optional i32 stdErrCurrentBatchLineCount;
+  8: optional bool logDirZipWritten;
+  9: optional i32 exitCode;
+  10: optional BuildStatus status = BuildStatus.UNKNOWN;
+}
+
 enum LogStreamType {
   UNKNOWN = 0,
   STDOUT = 1,
@@ -92,12 +93,12 @@ enum LogStreamType {
 
 # Unique identifier for a stream at a slave.
 struct SlaveStream {
-  1: optional RunId runId;
+  1: optional BuildSlaveRunId buildSlaveRunId;
   2: optional LogStreamType streamType;
 }
 
 struct LogDir {
-    1: optional RunId runId;
+    1: optional BuildSlaveRunId buildSlaveRunId;
     2: optional binary data;
     3: optional string errorMessage;
 }
@@ -158,9 +159,11 @@ struct BuildModeInfo {
 
 struct BuildJob {
   1: optional StampedeId stampedeId;
+  # TODO(alisdair): split DebugInfo out from the main BuildJob
   2: optional DebugInfo debug;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
+  # TODO(alisdair): split BuildSlaveInfo out from the main BuildJob
   5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
   6: optional list<PathInfo> dotFiles;
   7: optional BuildModeInfo buildModeInfo;
@@ -185,10 +188,10 @@ struct SequencedBuildSlaveEvent {
 
 # Queries for all events with event number great than or equal to
 # firstEventNumber, for build that took place at the slave identified
-# by stampedeId/runId.
+# by stampedeId/buildSlaveRunId.
 struct BuildSlaveEventsQuery {
   1: optional StampedeId stampedeId;
-  2: optional RunId runId;
+  2: optional BuildSlaveRunId buildSlaveRunId;
   3: optional i32 firstEventNumber;
 }
 
@@ -294,12 +297,13 @@ struct SetBuckDotFilePathsRequest {
 
 struct MultiGetBuildSlaveLogDirRequest {
   1: optional StampedeId stampedeId;
-  2: optional list<RunId> runIds;
+  2: optional list<BuildSlaveRunId> buildSlaveRunIds;
 }
 
-# Returns zipped up log directories in the same order as the runIds
+# Returns zipped up log directories in the same order as the buildSlaveRunIds
 # that were specified in MultiGetBuildSlaveLogDirRequest. If a particular
-# runId is missing, then an error will be thrown and no response returned.
+# buildSlaveRunId is missing, then an error will be thrown and no
+# response returned.
 struct MultiGetBuildSlaveLogDirResponse {
   1: optional list<LogDir> logDirs;
 }
@@ -336,18 +340,18 @@ struct AnnouncementResponse {
 
 struct UpdateBuildSlaveStatusRequest {
   1: optional StampedeId stampedeId;
-  2: optional RunId runId;
+  2: optional BuildSlaveRunId buildSlaveRunId;
   3: optional binary buildSlaveStatus;
 }
 
 struct UpdateBuildSlaveStatusResponse {
 }
 
-# Retrieves binary encoded build slave status for the given runId.
+# Retrieves binary encoded build slave status for the given buildSlaveRunId.
 # Structure of build status can be found in client-side build_slave.thrift.
 struct FetchBuildSlaveStatusRequest {
   1: optional StampedeId stampedeId;
-  2: optional RunId runId;
+  2: optional BuildSlaveRunId buildSlaveRunId;
 }
 
 struct FetchBuildSlaveStatusResponse {
@@ -357,18 +361,18 @@ struct FetchBuildSlaveStatusResponse {
 
 struct StoreBuildSlaveFinishedStatsRequest {
   1: optional StampedeId stampedeId;
-  2: optional RunId runId;
+  2: optional BuildSlaveRunId buildSlaveRunId;
   3: optional binary buildSlaveFinishedStats;
 }
 
 struct StoreBuildSlaveFinishedStatsResponse {
 }
 
-# Retrieves binary encoded build slave stats for the given runId.
+# Retrieves binary encoded build slave stats for the given buildSlaveRunId.
 # Structure of the stats object can be found in client-side build_slave.thrift.
 struct FetchBuildSlaveFinishedStatsRequest {
   1: optional StampedeId stampedeId;
-  2: optional RunId runId;
+  2: optional BuildSlaveRunId buildSlaveRunId;
 }
 
 struct FetchBuildSlaveFinishedStatsResponse {
@@ -380,7 +384,7 @@ struct FetchBuildSlaveFinishedStatsResponse {
 # client that initiated the distributed build.
 struct AppendBuildSlaveEventsRequest {
   1: optional StampedeId stampedeId;
-  2: optional RunId runId;
+  2: optional BuildSlaveRunId buildSlaveRunId;
   3: optional list<binary> events;
 }
 

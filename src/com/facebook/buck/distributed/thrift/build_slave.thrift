@@ -20,7 +20,7 @@ enum BuildSlaveEventType {
 struct BuildSlaveEvent {
     1: optional BuildSlaveEventType eventType = BuildSlaveEventType.UNKNOWN;
     2: optional stampede.StampedeId stampedeId;
-    3: optional stampede.RunId runId;
+    3: optional stampede.BuildSlaveRunId buildSlaveRunId;
 
     10: optional BuildSlaveConsoleEvent consoleEvent;
 }
@@ -28,7 +28,7 @@ struct BuildSlaveEvent {
 enum ConsoleEventSeverity {
     INFO = 0,
     WARNING = 1
-    SEVERE = 2,   
+    SEVERE = 2,
 }
 
 struct BuildSlaveConsoleEvent {
@@ -54,7 +54,7 @@ struct CacheRateStats {
 
 struct BuildSlaveStatus {
     1: optional stampede.StampedeId stampedeId;
-    2: optional stampede.RunId runId;
+    2: optional stampede.BuildSlaveRunId buildSlaveRunId;
 
     10: optional i32 totalRulesCount;
     11: optional i32 rulesStartedCount;
