@@ -317,57 +317,58 @@ public class Build implements Closeable {
     int exitCode;
 
     try {
-      try {
-        BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
+      BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
 
-        SourcePathResolver pathResolver =
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-        BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+      BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
 
-        if (isKeepGoing) {
-          String buildReportText = buildReport.generateForConsole(console);
-          buildReportText =
-              buildReportText.isEmpty()
-                  ? "Failure report is empty."
-                  :
-                  // Remove trailing newline from build report.
-                  buildReportText.substring(0, buildReportText.length() - 1);
-          eventBus.post(ConsoleEvent.info(buildReportText));
-          exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
-          if (exitCode != 0) {
-            eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
-          }
-        } else {
-          exitCode = 0;
+      if (isKeepGoing) {
+        String buildReportText = buildReport.generateForConsole(console);
+        buildReportText =
+            buildReportText.isEmpty()
+                ? "Failure report is empty."
+                :
+                // Remove trailing newline from build report.
+                buildReportText.substring(0, buildReportText.length() - 1);
+        eventBus.post(ConsoleEvent.info(buildReportText));
+        exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
+        if (exitCode != 0) {
+          eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
         }
+      } else {
+        exitCode = 0;
+      }
 
-        if (pathToBuildReport.isPresent()) {
-          // Note that pathToBuildReport is an absolute path that may exist outside of the project
-          // root, so it is not appropriate to use ProjectFilesystem to write the output.
-          String jsonBuildReport = buildReport.generateJsonBuildReport();
-          try {
-            Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
-          } catch (IOException e) {
-            eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
-            exitCode = 1;
-          }
+      if (pathToBuildReport.isPresent()) {
+        // Note that pathToBuildReport is an absolute path that may exist outside of the project
+        // root, so it is not appropriate to use ProjectFilesystem to write the output.
+        String jsonBuildReport = buildReport.generateJsonBuildReport();
+        try {
+          Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+        } catch (IOException e) {
+          eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
+          exitCode = 1;
         }
-      } catch (BuildExecutionException e) {
-        if (pathToBuildReport.isPresent()) {
-          writePartialBuildReport(eventBus, pathToBuildReport.get(), e);
-        }
-        throw rootCauseOfBuildException(e);
-      } catch (ExecutionException | RuntimeException e) {
-        // This is likely a checked exception that was caught while building a build rule.
-        throw rootCauseOfBuildException(e);
       }
     } catch (Exception e) {
-      LOG.debug(e, "Got an exception during the build.");
-      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
+      if (e instanceof BuildExecutionException) {
+        pathToBuildReport.ifPresent(
+            path -> writePartialBuildReport(eventBus, path, (BuildExecutionException) e));
+      }
+      reportExceptionToUser(eventBus, e);
       exitCode = 1;
     }
 
     return exitCode;
+  }
+
+  private void reportExceptionToUser(BuckEventBus eventBus, Exception e) {
+    if (e instanceof ExecutionException || e instanceof RuntimeException) {
+      e = rootCauseOfBuildException(e);
+    }
+    LOG.debug(e, "Got an exception during the build.");
+    eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
   }
 
   /**
@@ -376,8 +377,7 @@ public class Build implements Closeable {
    * @param e The build exception.
    * @return The root cause exception for why the build failed.
    */
-  private Exception rootCauseOfBuildException(Exception e)
-      throws IOException, StepFailedException, InterruptedException {
+  private Exception rootCauseOfBuildException(Exception e) {
     Throwable cause = e.getCause();
     if (cause == null || !(cause instanceof Exception)) {
       return e;
@@ -398,18 +398,16 @@ public class Build implements Closeable {
    * results, but clients are still very much interested in finding out what exactly went wrong.
    * {@link BuildExecutionException} captures partial build execution result, which can still be
    * used to provide the most useful information about build result.
-   *
-   * @throws IOException
    */
   private void writePartialBuildReport(
-      BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) throws IOException {
+      BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) {
     // Note that pathToBuildReport is an absolute path that may exist outside of the project
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildReport buildReport = new BuildReport(e.createBuildExecutionResult(), pathResolver);
-    String jsonBuildReport = buildReport.generateJsonBuildReport();
     try {
+      String jsonBuildReport = buildReport.generateJsonBuildReport();
       Files.write(jsonBuildReport, pathToBuildReport.toFile(), Charsets.UTF_8);
     } catch (IOException writeException) {
       LOG.warn(writeException, "Failed to write the build report to %s", pathToBuildReport);
