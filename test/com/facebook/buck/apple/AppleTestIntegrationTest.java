@@ -662,6 +662,26 @@ public class AppleTestIntegrationTest {
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 
+  @Test
+  public void testSwiftInTestTargetUsedByObjCInTestTarget() throws IOException {
+    testSwiftScenario("apple_test_swift_test_case");
+  }
+
+  private void testSwiftScenario(String scenarionName) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenarionName, tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "test", "--config", "apple.xctool_path=fbxctest/bin/fbxctest", "//:LibTest");
+    result.assertSuccess();
+    assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   LibTest"));
+  }
+
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
     assertTrue(Files.isSymbolicLink(link));
     assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));

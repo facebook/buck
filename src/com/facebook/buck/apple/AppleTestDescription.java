@@ -553,9 +553,10 @@ public class AppleTestDescription
       CxxLibraryDescription.CommonArg args) {
 
     ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
+    BuildTarget baseTarget = buildTarget.withFlavors();
     Optional<CxxPreprocessorInput> publicInput =
         CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
-            ruleResolver, buildTarget, cxxPlatform, HeaderVisibility.PUBLIC);
+            ruleResolver, baseTarget, cxxPlatform, HeaderVisibility.PUBLIC);
     Collection<CxxPreprocessorInput> depsInputs =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
 
