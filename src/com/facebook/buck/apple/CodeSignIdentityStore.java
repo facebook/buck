@@ -17,8 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Supplier;
@@ -33,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** A collection of code sign identities. */
-public class CodeSignIdentityStore implements RuleKeyAppendable {
+public class CodeSignIdentityStore implements AddsToRuleKey {
   private static final Logger LOG = Logger.get(CodeSignIdentityStore.class);
 
   // Parse the fingerprint and name, but don't match invalid certificates (revoked, expired, etc).
@@ -42,7 +42,7 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
   public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
       ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
 
-  private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
+  @AddToRuleKey private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
 
   private CodeSignIdentityStore(Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier) {
     this.identitiesSupplier = identitiesSupplier;
@@ -51,11 +51,6 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
   /** Get all the identities in the store. */
   public ImmutableList<CodeSignIdentity> getIdentities() {
     return identitiesSupplier.get();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("CodeSignIdentityStore", getIdentities());
   }
 
   /**
