@@ -19,14 +19,10 @@ package com.facebook.buck.testutil.integration;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,8 +30,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import javax.tools.ToolProvider;
 import org.ini4j.Ini;
 
 /**
@@ -87,13 +81,13 @@ public class TestDataHelper {
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase, String scenario, TemporaryPaths temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new CacheClearingProjectWorkspace(templateDir, temporaryRoot.getRoot());
+    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot());
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase, String scenario, Path temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new CacheClearingProjectWorkspace(templateDir, temporaryRoot);
+    return new ProjectWorkspace(templateDir, temporaryRoot);
   }
 
   public static void overrideBuckconfig(
@@ -111,51 +105,5 @@ public class TestDataHelper {
     StringWriter writer = new StringWriter();
     ini.store(writer);
     Files.write(projectWorkspace.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));
-  }
-
-  private static class CacheClearingProjectWorkspace extends ProjectWorkspace {
-    public CacheClearingProjectWorkspace(Path templateDir, Path targetFolder) {
-      super(templateDir, targetFolder);
-    }
-
-    @Override
-    public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
-        Path repoRoot,
-        Optional<NGContext> context,
-        ImmutableMap<String, String> environmentOverrides,
-        String... args)
-        throws IOException {
-      ProcessResult result =
-          super.runBuckCommandWithEnvironmentOverridesAndContext(
-              repoRoot, context, environmentOverrides, args);
-
-      // javac has a global cache of zip/jar file content listings. It determines the validity of
-      // a given cache entry based on the modification time of the zip file in question. In normal
-      // usage, this is fine. However, in tests, we often will do a build, change something, and
-      // then rapidly do another build. If this happens quickly, javac can be operating from
-      // incorrect information when reading a jar file, resulting in "bad class file" or
-      // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
-      // the compiler and clearing the cache.
-      try {
-        Class<?> cacheClass =
-            Class.forName(
-                "com.sun.tools.javac.file.ZipFileIndexCache",
-                false,
-                ToolProvider.getSystemToolClassLoader());
-
-        Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
-        Method clearCacheMethod = cacheClass.getMethod("clearCache");
-
-        Object cache = getSharedInstanceMethod.invoke(cacheClass);
-        clearCacheMethod.invoke(cache);
-
-        return result;
-      } catch (ClassNotFoundException
-          | IllegalAccessException
-          | InvocationTargetException
-          | NoSuchMethodException e) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 }
