@@ -90,7 +90,8 @@ public class DefaultStepRunnerTest {
       runner.runStepForBuildTarget(context, new ExplosionStep(), Optional.empty());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
-      assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));
+      assertTrue(
+          e.getMessage(), e.getMessage().startsWith("#yolo\n" + "  When running <explode>."));
     }
   }
 

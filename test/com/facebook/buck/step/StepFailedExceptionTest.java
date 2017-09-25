@@ -51,8 +51,9 @@ public class StepFailedExceptionTest {
             step, verboseContext, executionResult, Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
-    assertEquals(exitCode, exception.getExitCode());
-    assertEquals("//foo:bar failed with exit code 17:\ncp foo bar", exception.getMessage());
+    assertEquals(
+        "Command failed with exit code 17.\n" + "  When running <cp foo bar>.",
+        exception.getMessage());
   }
 
   @Test
@@ -65,8 +66,9 @@ public class StepFailedExceptionTest {
             step, verboseContext, executionResult, Optional.empty());
 
     assertEquals(step, exception.getStep());
-    assertEquals(exitCode, exception.getExitCode());
-    assertEquals("Failed with exit code 17:\ncp foo bar", exception.getMessage());
+    assertEquals(
+        "Command failed with exit code 17.\n" + "  When running <cp foo bar>.",
+        exception.getMessage());
   }
 
   @Test
@@ -80,7 +82,8 @@ public class StepFailedExceptionTest {
             step, silentContext, executionResult, Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
-    assertEquals("//foo:bar failed with exit code 17:\ncp", exception.getMessage());
+    assertEquals(
+        "Command failed with exit code 17.\n" + "  When running <cp>.", exception.getMessage());
   }
 
   @Test
@@ -93,11 +96,9 @@ public class StepFailedExceptionTest {
             step, silentContext, new IOException("Copy failed!"), Optional.of(buildTarget));
 
     assertEquals(step, exception.getStep());
-    assertEquals(1, exception.getExitCode());
     assertTrue(
-        exception
-            .getMessage()
-            .startsWith("//foo:bar failed on step cp with an exception:\nCopy failed!"));
+        exception.getMessage(),
+        exception.getMessage().startsWith("Copy failed!\n" + "  When running <cp>."));
   }
 
   @Test
@@ -109,8 +110,8 @@ public class StepFailedExceptionTest {
             step, silentContext, new IOException("Copy failed!"), Optional.empty());
 
     assertEquals(step, exception.getStep());
-    assertEquals(1, exception.getExitCode());
     assertTrue(
-        exception.getMessage().startsWith("Failed on step cp with an exception:\nCopy failed!"));
+        exception.getMessage(),
+        exception.getMessage().startsWith("Copy failed!\n" + "  When running <cp>."));
   }
 }

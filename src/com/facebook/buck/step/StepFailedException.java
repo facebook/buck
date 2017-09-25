@@ -17,24 +17,26 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
+import com.facebook.buck.util.exceptions.ExceptionWithContext;
+import com.facebook.buck.util.exceptions.WrapsException;
 import java.util.Optional;
 
 @SuppressWarnings("serial")
-public class StepFailedException extends Exception {
-
+public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
   private final Step step;
-  private final int exitCode;
+  private final String description;
 
   /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */
-  @VisibleForTesting
-  public StepFailedException(String message, Step step, int exitCode) {
-    super(message);
+  private StepFailedException(Throwable cause, Step step, String description) {
+    super(cause);
     this.step = step;
-    this.exitCode = exitCode;
+    this.description = description;
+  }
+
+  @Override
+  public String getMessage() {
+    return getCause().getMessage() + "\n  " + getContext().get();
   }
 
   static StepFailedException createForFailingStepWithExitCode(
@@ -42,82 +44,37 @@ public class StepFailedException extends Exception {
       ExecutionContext context,
       StepExecutionResult executionResult,
       Optional<BuildTarget> buildTarget) {
+    // TODO(cjhopman): remove the buildTarget parameter.
+    buildTarget.getClass();
     int exitCode = executionResult.getExitCode();
-    String nameOrDescription =
-        context.getVerbosity().shouldPrintCommand()
-            ? step.getDescription(context)
-            : step.getShortName();
-    String message;
-    if (buildTarget.isPresent()) {
-      message =
-          String.format(
-              "%s failed with exit code %d:\n%s",
-              buildTarget.get().getFullyQualifiedName(), exitCode, nameOrDescription);
-    } else {
-      message = String.format("Failed with exit code %d:\n%s", exitCode, nameOrDescription);
-    }
-    Optional<String> stderr = executionResult.getStderr();
-    if (stderr.isPresent()) {
-      message += "\nstderr: " + stderr.get();
-    }
-    return new StepFailedException(message, step, exitCode);
+    StringBuilder messageBuilder = new StringBuilder();
+    messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
+    executionResult
+        .getStderr()
+        .ifPresent(stderr -> messageBuilder.append("\nstderr: ").append(stderr));
+    return createForFailingStepWithException(
+        step, context, new HumanReadableException(messageBuilder.toString()), Optional.empty());
   }
 
   static StepFailedException createForFailingStepWithException(
       Step step, ExecutionContext context, Throwable throwable, Optional<BuildTarget> buildTarget) {
-    if (throwable instanceof HumanReadableException) {
-      return createForFailingStepWithHumanReadableException(
-          step, context, (HumanReadableException) throwable, buildTarget);
-    }
-
-    CapturingPrintStream printStream = new CapturingPrintStream();
-    throwable.printStackTrace(printStream);
-    String stackTrace = printStream.getContentsAsString(Charsets.UTF_8);
-
-    String message;
-    if (buildTarget.isPresent()) {
-      message =
-          String.format(
-              "%s failed on step %s with an exception:\n%s\n%s",
-              buildTarget.get().getFullyQualifiedName(),
-              step.getShortName(),
-              throwable.getMessage(),
-              stackTrace);
-    } else {
-      message =
-          String.format(
-              "Failed on step %s with an exception:\n%s\n%s",
-              step.getShortName(), throwable.getMessage(), stackTrace);
-    }
-    return new StepFailedException(message, step, 1);
+    // TODO(cjhopman): remove the buildTarget parameter.
+    buildTarget.getClass();
+    return new StepFailedException(throwable, step, descriptionForStep(step, context));
   }
 
-  private static StepFailedException createForFailingStepWithHumanReadableException(
-      Step step,
-      ExecutionContext context,
-      HumanReadableException exception,
-      Optional<BuildTarget> buildTarget) {
-    String description = step.getDescription(context);
-    String message;
-    if (buildTarget.isPresent()) {
-      message =
-          String.format(
-              "%s failed:\n%s\n%s",
-              buildTarget.get().getFullyQualifiedName(),
-              description,
-              exception.getHumanReadableErrorMessage());
-    } else {
-      message =
-          String.format("Failed:\n%s\n%s", description, exception.getHumanReadableErrorMessage());
-    }
-    return new StepFailedException(message, step, 1);
+  private static String descriptionForStep(Step step, ExecutionContext context) {
+    return context.getVerbosity().shouldPrintCommand()
+        ? step.getDescription(context)
+        : step.getShortName();
   }
 
   public Step getStep() {
     return step;
   }
 
-  public int getExitCode() {
-    return exitCode;
+  @Override
+  public Optional<String> getContext() {
+    return Optional.of(String.format("When running <%s>.", description));
   }
 }

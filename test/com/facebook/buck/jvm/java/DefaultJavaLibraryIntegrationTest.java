@@ -976,11 +976,14 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("ap_crashes");
 
     ProcessResult result = workspace.runBuckBuild("//:main");
+    // TODO(cjhopman): These shouldn't be reported as internal errors.
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "//:main failed on step javac with an exception",
-            "java.lang.RuntimeException: Test crash!"));
+            "Buck encountered an internal error",
+            "java.lang.RuntimeException: Test crash!",
+            "    When running <javac>.",
+            "    When building rule //:main."));
   }
 
   /** Asserts that the specified file exists and returns its contents. */

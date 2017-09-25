@@ -139,13 +139,13 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: //:target_name failed on step failing_step with an exception:\n"
-            + " <- failure message -> \n"
+        "Buck encountered an internal error\n"
             + "java.lang.RuntimeException:  <- failure message -> \n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: failure message\n"
             + "<stacktrace>\n"
             + "\n"
+            + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
@@ -172,11 +172,11 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: //:target_name failed on step failing_step with an exception:\n"
-            + "failure message\n"
+        "Buck encountered an internal error\n"
             + "java.lang.RuntimeException: failure message\n"
             + "<stacktrace>\n"
             + "\n"
+            + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
@@ -188,11 +188,8 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: //:target_name failed on step failing_step with an exception:\n"
-            + "failure message\n"
-            + "java.io.IOException: failure message\n"
-            + "<stacktrace>\n"
-            + "\n"
+        "Build failed: java.io.IOException failure message\n"
+            + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
@@ -227,9 +224,8 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: //:target_name failed:\n"
-            + "failing_step\n"
-            + "failure message\n"
+        "Build failed: failure message\n"
+            + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
@@ -251,9 +247,9 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: //:target_name failed with exit code 1:\n"
-            + "step_with_exit_code_1\n"
+        "Build failed: Command failed with exit code 1.\n"
             + "stderr: failure message\n"
+            + "    When running <step_with_exit_code_1>.\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
