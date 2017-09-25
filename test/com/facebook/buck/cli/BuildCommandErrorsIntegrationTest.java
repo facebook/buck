@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.config.BuckConfig;
@@ -114,16 +113,26 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  // TODO(cjhopman): The exception shouldn't be propagated out of the build.
   public void exceptionWithCauseThrown() throws Exception {
-    try {
-      mockDescription.buildRuleFactory =
-          exceptionTargetFactory("failure message", RuntimeException.class, RuntimeException.class);
-      workspace.runBuckBuild(":target_name");
-      fail();
-    } catch (Exception e) {
-      if (DEBUG) e.printStackTrace();
-    }
+    mockDescription.buildRuleFactory =
+        exceptionTargetFactory("failure message", RuntimeException.class, RuntimeException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    result.assertFailure();
+    assertEquals(
+        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + " <- failure message -> \n"
+            + "<stacktrace>\n"
+            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + " <- failure message -> \n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + " <- failure message -> \n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException:  <- failure message -> \n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: failure message\n"
+            + "<stacktrace>\n",
+        getError(getStderr(result)));
   }
 
   @Test
@@ -135,7 +144,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "BUILD FAILED: //:target_name failed on step failing_step with an exception:\n"
+        "Build failed: //:target_name failed on step failing_step with an exception:\n"
             + " <- failure message -> \n"
             + "java.lang.RuntimeException:  <- failure message -> \n"
             + "<stacktrace>\n"
@@ -145,16 +154,24 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  // TODO(cjhopman): The exception shouldn't be propagated out of the build.
   public void runtimeExceptionThrown() throws Exception {
-    try {
-      mockDescription.buildRuleFactory =
-          exceptionTargetFactory("failure message", RuntimeException.class);
-      workspace.runBuckBuild(":target_name");
-      fail();
-    } catch (Exception e) {
-      if (DEBUG) e.printStackTrace();
-    }
+    mockDescription.buildRuleFactory =
+        exceptionTargetFactory("failure message", RuntimeException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    result.assertFailure();
+    assertEquals(
+        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + "failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + "failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + "failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: failure message\n"
+            + "<stacktrace>\n",
+        getError(getStderr(result)));
   }
 
   @Test
@@ -164,7 +181,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "BUILD FAILED: //:target_name failed on step failing_step with an exception:\n"
+        "Build failed: //:target_name failed on step failing_step with an exception:\n"
             + "failure message\n"
             + "java.lang.RuntimeException: failure message\n"
             + "<stacktrace>\n",
@@ -178,7 +195,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "BUILD FAILED: //:target_name failed on step failing_step with an exception:\n"
+        "Build failed: //:target_name failed on step failing_step with an exception:\n"
             + "failure message\n"
             + "java.io.IOException: failure message\n"
             + "<stacktrace>\n",
@@ -186,29 +203,43 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  // TODO(cjhopman): The exception shouldn't be propagated out of the build.
   public void ioExceptionThrown() throws Exception {
-    try {
-      mockDescription.buildRuleFactory =
-          exceptionTargetFactory("failure message", IOException.class);
-      workspace.runBuckBuild(":target_name");
-      fail();
-    } catch (Exception e) {
-      if (DEBUG) e.printStackTrace();
-    }
+    mockDescription.buildRuleFactory = exceptionTargetFactory("failure message", IOException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    result.assertFailure();
+    assertEquals(
+        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + "java.io.IOException: failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + "java.io.IOException: failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+            + "java.io.IOException: failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: java.io.IOException: failure message\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.io.IOException: failure message\n"
+            + "<stacktrace>\n",
+        getError(getStderr(result)));
   }
 
   @Test
-  // TODO(cjhopman): The exception shouldn't be propagated out of the build.
   public void ioExceptionWithRuleInMessageThrown() throws Exception {
-    try {
-      mockDescription.buildRuleFactory =
-          exceptionTargetFactory("failure message //:target_name", IOException.class);
-      workspace.runBuckBuild(":target_name");
-      fail();
-    } catch (Exception e) {
-      if (DEBUG) e.printStackTrace();
-    }
+    mockDescription.buildRuleFactory =
+        exceptionTargetFactory("failure message //:target_name", IOException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    result.assertFailure();
+    assertEquals(
+        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
+            + "<stacktrace>\n"
+            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
+            + "<stacktrace>\n"
+            + "Caused by: java.io.IOException: failure message //:target_name\n"
+            + "<stacktrace>\n",
+        getError(getStderr(result)));
   }
 
   @Test
@@ -218,21 +249,21 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "BUILD FAILED: //:target_name failed:\n" + "failing_step\n" + "failure message",
+        "Build failed: //:target_name failed:\n" + "failing_step\n" + "failure message",
         getError(getStderr(result)));
   }
 
   @Test
-  // TODO(cjhopman): The exception shouldn't be propagated out of the build.
   public void humanReadableExceptionThrown() throws Exception {
-    try {
-      mockDescription.buildRuleFactory =
-          exceptionTargetFactory("failure message", HumanReadableException.class);
-      workspace.runBuckBuild(":target_name");
-      fail();
-    } catch (Exception e) {
-      if (DEBUG) e.printStackTrace();
-    }
+    mockDescription.buildRuleFactory =
+        exceptionTargetFactory("failure message", HumanReadableException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
+    result.assertFailure();
+    // TODO(cjhopman): HumanReadableException thrown shouldn't print stacktrace.
+    assertEquals(
+        "Build failed: com.facebook.buck.util.HumanReadableException: failure message\n"
+            + "<stacktrace>\n",
+        getError(getStderr(result)));
   }
 
   @Test
@@ -241,7 +272,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "BUILD FAILED: //:target_name failed with exit code 1:\n"
+        "Build failed: //:target_name failed with exit code 1:\n"
             + "step_with_exit_code_1\n"
             + "stderr: failure message",
         getError(getStderr(result)));
@@ -267,7 +298,7 @@ public class BuildCommandErrorsIntegrationTest {
     String[] lines = stderr.split("\n");
     int start = 0;
     while (start < lines.length) {
-      if (lines[start].startsWith("BUILD FAILED:")) {
+      if (lines[start].startsWith("Build failed:")) {
         break;
       }
       start++;

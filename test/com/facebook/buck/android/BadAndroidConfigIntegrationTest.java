@@ -16,21 +16,22 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class BadAndroidConfigIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private ProjectWorkspace workspace;
 
@@ -50,9 +51,17 @@ public class BadAndroidConfigIntegrationTest {
         ImmutableMap.of("ANDROID_SDK", "/this/directory/does/not/exist");
     workspace.runBuckCommand(badEnvironment, "build", "//:hello_java").assertSuccess();
 
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage(
-        "Environment variable 'ANDROID_SDK' points to a path that is not a directory:");
-    workspace.runBuckCommand(badEnvironment, "build", "//:hello_android").assertFailure();
+    ProjectWorkspace.ProcessResult processResult =
+        workspace.runBuckCommand(badEnvironment, "build", "//:hello_android");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        allOf(
+            containsString("Build failed:"),
+            containsString(
+                "Environment variable 'ANDROID_SDK' points to a path that is not a directory:"),
+            anyOf(
+                containsString("'/this/directory/does/not/exist'"),
+                containsString("'\\this\\directory\\does\\not\\exist'"))));
   }
 }

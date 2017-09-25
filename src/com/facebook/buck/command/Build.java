@@ -58,8 +58,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -293,11 +295,17 @@ public class Build implements Closeable {
   }
 
   private String getFailureMessage(Throwable thrown) {
-    return "BUILD FAILED: " + thrown.getMessage();
-  }
-
-  private String getFailureMessageWithClassName(Throwable thrown) {
-    return "BUILD FAILED: " + thrown.getClass().getName() + " " + thrown.getMessage();
+    String message;
+    if (thrown instanceof StepFailedException) {
+      message = thrown.getMessage();
+    } else if (thrown instanceof IOException) {
+      message = thrown.getClass().getName() + thrown.getMessage();
+    } else {
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      thrown.printStackTrace(new PrintStream(outputStream));
+      message = new String(outputStream.toByteArray());
+    }
+    return "Build failed: " + message;
   }
 
   public int executeAndPrintFailuresToEventBus(
@@ -354,11 +362,7 @@ public class Build implements Closeable {
         // This is likely a checked exception that was caught while building a build rule.
         throw rootCauseOfBuildException(e);
       }
-    } catch (IOException e) {
-      LOG.debug(e, "Got an exception during the build.");
-      eventBus.post(ConsoleEvent.severe(getFailureMessageWithClassName(e)));
-      exitCode = 1;
-    } catch (StepFailedException e) {
+    } catch (Exception e) {
       LOG.debug(e, "Got an exception during the build.");
       eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
       exitCode = 1;

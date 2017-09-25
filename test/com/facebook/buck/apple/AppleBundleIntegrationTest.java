@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -622,19 +623,19 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        Matchers.matchesPattern(
-            "Variant files have to be in a directory with name ending in '\\.lproj', "
-                + "but '.*/cc/Localizable.strings' is not."));
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_invalid_variant", tmp);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertFailure();
+    ProjectWorkspace.ProcessResult processResult =
+        workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        matchesPattern(
+            "Variant files have to be in a directory with name ending in '\\.lproj', "
+                + "but '.*/cc/Localizable.strings' is not."));
   }
 
   @Test
