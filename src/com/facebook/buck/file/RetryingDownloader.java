@@ -18,7 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.RetryingException;
+import com.facebook.buck.util.exceptions.RetryingException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;

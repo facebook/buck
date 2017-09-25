@@ -15,9 +15,11 @@ EVENT_INTERFACES = [
 java_immutables_library(
     name = "interfaces",
     srcs = EVENT_INTERFACES,
+    exported_deps = [
+        "//src/com/facebook/buck/event/external:external_lib",
+    ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:build_id",
         "//third-party/java/jackson:jackson-annotations",
