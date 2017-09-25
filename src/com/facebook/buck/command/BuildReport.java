@@ -24,6 +24,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.exceptions.BuckExecutionException;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @VisibleForTesting
 public class BuildReport {
@@ -129,6 +132,12 @@ public class BuildReport {
 
     for (BuildResult failureResult : buildExecutionResult.getFailures()) {
       Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());
+      while ((failure instanceof BuckExecutionException
+              || failure instanceof ExecutionException
+              || failure instanceof BuckUncheckedExecutionException)
+          && failure.getCause() != null) {
+        failure = failure.getCause();
+      }
       failures.put(failureResult.getRule().getFullyQualifiedName(), failure.getMessage());
     }
 

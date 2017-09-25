@@ -47,6 +47,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -119,16 +120,13 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + " <- failure message -> \n"
-            + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + " <- failure message -> \n"
-            + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException:  <- failure message -> \n"
+        "Buck encountered an internal error\n"
+            + "java.lang.RuntimeException:  <- failure message -> \n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: failure message\n"
-            + "<stacktrace>\n",
+            + "<stacktrace>\n"
+            + "\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -146,7 +144,9 @@ public class BuildCommandErrorsIntegrationTest {
             + "java.lang.RuntimeException:  <- failure message -> \n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: failure message\n"
-            + "<stacktrace>\n",
+            + "<stacktrace>\n"
+            + "\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -157,14 +157,11 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + "failure message\n"
+        "Buck encountered an internal error\n"
+            + "java.lang.RuntimeException: failure message\n"
             + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + "failure message\n"
-            + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException: failure message\n"
-            + "<stacktrace>\n",
+            + "\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -178,7 +175,9 @@ public class BuildCommandErrorsIntegrationTest {
         "Build failed: //:target_name failed on step failing_step with an exception:\n"
             + "failure message\n"
             + "java.lang.RuntimeException: failure message\n"
-            + "<stacktrace>\n",
+            + "<stacktrace>\n"
+            + "\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -192,7 +191,9 @@ public class BuildCommandErrorsIntegrationTest {
         "Build failed: //:target_name failed on step failing_step with an exception:\n"
             + "failure message\n"
             + "java.io.IOException: failure message\n"
-            + "<stacktrace>\n",
+            + "<stacktrace>\n"
+            + "\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -202,16 +203,8 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + "java.io.IOException: failure message\n"
-            + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + "java.io.IOException: failure message\n"
-            + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException: java.io.IOException: failure message\n"
-            + "<stacktrace>\n"
-            + "Caused by: java.io.IOException: failure message\n"
-            + "<stacktrace>\n",
+        "Build failed: java.io.IOException failure message\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -222,12 +215,8 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
-            + "<stacktrace>\n"
-            + "Caused by: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
-            + "<stacktrace>\n"
-            + "Caused by: java.io.IOException: failure message //:target_name\n"
-            + "<stacktrace>\n",
+        "Build failed: java.io.IOException failure message //:target_name\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -238,7 +227,10 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: //:target_name failed:\n" + "failing_step\n" + "failure message",
+        "Build failed: //:target_name failed:\n"
+            + "failing_step\n"
+            + "failure message\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -248,10 +240,8 @@ public class BuildCommandErrorsIntegrationTest {
         exceptionTargetFactory("failure message", HumanReadableException.class);
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
-    // TODO(cjhopman): HumanReadableException thrown shouldn't print stacktrace.
     assertEquals(
-        "Build failed: com.facebook.buck.util.HumanReadableException: failure message\n"
-            + "<stacktrace>\n",
+        "Build failed: failure message\n" + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -263,7 +253,8 @@ public class BuildCommandErrorsIntegrationTest {
     assertEquals(
         "Build failed: //:target_name failed with exit code 1:\n"
             + "step_with_exit_code_1\n"
-            + "stderr: failure message",
+            + "stderr: failure message\n"
+            + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
 
@@ -287,7 +278,8 @@ public class BuildCommandErrorsIntegrationTest {
     String[] lines = stderr.split("\n");
     int start = 0;
     while (start < lines.length) {
-      if (lines[start].startsWith("Build failed:")) {
+      if (lines[start].startsWith("Build failed")
+          || lines[start].startsWith("Buck encountered an internal")) {
         break;
       }
       start++;
@@ -380,8 +372,7 @@ public class BuildCommandErrorsIntegrationTest {
         BuildContext context, BuildableContext buildableContext) {
       Throwable throwable = getException(exceptionClasses, message);
       if (!inStep) {
-        Throwables.throwIfUnchecked(throwable);
-        throw new RuntimeException(throwable);
+        throw new BuckUncheckedExecutionException(throwable);
       }
       return ImmutableList.of(
           new AbstractExecutionStep("failing_step") {
@@ -391,7 +382,7 @@ public class BuildCommandErrorsIntegrationTest {
               Throwables.throwIfInstanceOf(throwable, IOException.class);
               Throwables.throwIfInstanceOf(throwable, InterruptedException.class);
               Throwables.throwIfUnchecked(throwable);
-              throw new RuntimeException(throwable);
+              throw new BuckUncheckedExecutionException(throwable);
             }
           });
     }

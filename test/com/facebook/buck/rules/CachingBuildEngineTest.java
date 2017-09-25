@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.isA;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
@@ -95,6 +96,8 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.exceptions.ExceptionWithContext;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipConstants;
@@ -149,7 +152,6 @@ import javax.annotation.Nullable;
 import org.easymock.EasyMockSupport;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
-import org.hamcrest.core.StringContains;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -912,10 +914,10 @@ public class CachingBuildEngineTest {
                 .get();
 
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
-        assertThat(result.getFailure(), instanceOf(StepFailedException.class));
-        assertThat(
-            ((StepFailedException) result.getFailure()).getStep().getShortName(),
-            equalTo(description));
+        assertThat(result.getFailure(), instanceOf(BuckUncheckedExecutionException.class));
+        Throwable cause = result.getFailure().getCause();
+        assertThat(cause, instanceOf(StepFailedException.class));
+        assertThat(((StepFailedException) cause).getStep().getShortName(), equalTo(description));
       }
     }
 
@@ -974,11 +976,11 @@ public class CachingBuildEngineTest {
                 .get();
 
         assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
-        assertThat(result.getFailure(), instanceOf(StepFailedException.class));
+        assertThat(result.getFailure(), instanceOf(BuckUncheckedExecutionException.class));
+        Throwable cause = result.getFailure().getCause();
+        assertThat(cause, instanceOf(StepFailedException.class));
         assertThat(failedSteps.get(), equalTo(1));
-        assertThat(
-            ((StepFailedException) result.getFailure()).getStep().getShortName(),
-            equalTo(description));
+        assertThat(((StepFailedException) cause).getStep().getShortName(), equalTo(description));
       }
     }
 
@@ -1119,8 +1121,9 @@ public class CachingBuildEngineTest {
               .getResult()
               .get()
               .getFailure();
+      assertThat(thrown, instanceOf(BuckUncheckedExecutionException.class));
       assertThat(thrown.getCause(), new IsInstanceOf(IllegalArgumentException.class));
-      assertThat(thrown.getMessage(), new StringContains(false, "//:rule"));
+      assertThat(((ExceptionWithContext) thrown).getContext().get(), containsString("//:rule"));
 
       // HumanReadableExceptions shouldn't be changed.
       throwable.set(new HumanReadableException("message"));
@@ -1131,18 +1134,9 @@ public class CachingBuildEngineTest {
               .getResult()
               .get()
               .getFailure();
-      assertEquals(throwable.get(), thrown);
-
-      // Exceptions that contain the rule already shouldn't be changed.
-      throwable.set(new IllegalArgumentException("bad arg in //:rule"));
-      thrown =
-          cachingBuildEngineFactory()
-              .build()
-              .build(buildContext, TestExecutionContext.newInstance(), rule)
-              .getResult()
-              .get()
-              .getFailure();
-      assertEquals(throwable.get(), thrown);
+      assertThat(thrown, instanceOf(BuckUncheckedExecutionException.class));
+      assertEquals(throwable.get(), thrown.getCause());
+      assertThat(((ExceptionWithContext) thrown).getContext().get(), containsString("//:rule"));
     }
 
     @Test

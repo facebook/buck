@@ -43,7 +43,9 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
@@ -293,20 +295,6 @@ public class Build implements Closeable {
         .build();
   }
 
-  private String getFailureMessage(Throwable thrown) {
-    String message;
-    if (thrown instanceof StepFailedException) {
-      message = thrown.getMessage();
-    } else if (thrown instanceof IOException) {
-      message = thrown.getClass().getName() + thrown.getMessage();
-    } else {
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      thrown.printStackTrace(new PrintStream(outputStream));
-      message = new String(outputStream.toByteArray());
-    }
-    return "Build failed: " + message;
-  }
-
   public int executeAndPrintFailuresToEventBus(
       Iterable<BuildTarget> targetsish,
       boolean isKeepGoing,
@@ -364,11 +352,37 @@ public class Build implements Closeable {
   }
 
   private void reportExceptionToUser(BuckEventBus eventBus, Exception e) {
-    if (e instanceof ExecutionException || e instanceof RuntimeException) {
+    if (e instanceof RuntimeException) {
       e = rootCauseOfBuildException(e);
     }
-    LOG.debug(e, "Got an exception during the build.");
-    eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
+    new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.") {
+      @Override
+      protected void logUserVisible(Exception rootCause, List<String> context) {
+        // Convert some causes to HumanReadableException to preserve historic behavior.
+        // TODO(cjhopman): We shouldn't do this. We should update StepFailedException to be like
+        // BuckExecutionException and update places that might throw IOException to create
+        // HumanReadableExceptions if it's due to user error.
+        if (rootCause instanceof IOException) {
+          rootCause =
+              new HumanReadableException(
+                  rootCause.getClass().getName() + " " + rootCause.getMessage());
+        } else if (rootCause instanceof StepFailedException) {
+          rootCause = new HumanReadableException(rootCause.getMessage());
+        }
+        super.logUserVisible(rootCause, context);
+      }
+
+      @Override
+      protected String getMessageForRootCause(Exception rootCause) {
+        if (rootCause instanceof HumanReadableException) {
+          return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
+        } else {
+          ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+          rootCause.printStackTrace(new PrintStream(outputStream));
+          return new String(outputStream.toByteArray());
+        }
+      }
+    }.logException(e);
   }
 
   /**
