@@ -44,7 +44,6 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
@@ -377,24 +376,19 @@ public class Build implements Closeable {
    * @param e The build exception.
    * @return The root cause exception for why the build failed.
    */
-  private RuntimeException rootCauseOfBuildException(Exception e)
+  private Exception rootCauseOfBuildException(Exception e)
       throws IOException, StepFailedException, InterruptedException {
     Throwable cause = e.getCause();
-    if (cause == null) {
-      Throwables.throwIfInstanceOf(e, RuntimeException.class);
-      return new RuntimeException(e);
+    if (cause == null || !(cause instanceof Exception)) {
+      return e;
     }
-    Throwables.throwIfInstanceOf(cause, IOException.class);
-    Throwables.throwIfInstanceOf(cause, StepFailedException.class);
-    Throwables.throwIfInstanceOf(cause, InterruptedException.class);
-    Throwables.throwIfInstanceOf(cause, ClosedByInterruptException.class);
-    Throwables.throwIfInstanceOf(cause, HumanReadableException.class);
-    if (cause instanceof ExceptionWithHumanReadableMessage) {
-      return new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
+    if (cause instanceof IOException
+        || cause instanceof StepFailedException
+        || cause instanceof InterruptedException
+        || cause instanceof ExceptionWithHumanReadableMessage) {
+      return (Exception) cause;
     }
-
-    LOG.debug(e, "Got an exception during the build.");
-    return new RuntimeException(e);
+    return e;
   }
 
   /**

@@ -119,10 +119,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + " <- failure message -> \n"
-            + "<stacktrace>\n"
-            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
             + " <- failure message -> \n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
@@ -160,10 +157,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + "failure message\n"
-            + "<stacktrace>\n"
-            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
             + "failure message\n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
@@ -208,10 +202,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
-            + "java.io.IOException: failure message\n"
-            + "<stacktrace>\n"
-            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
+        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
             + "java.io.IOException: failure message\n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: Building rule [//:target_name] failed. Caused by [RuntimeException]:\n"
@@ -231,9 +222,7 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.lang.RuntimeException: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
-            + "<stacktrace>\n"
-            + "Caused by: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
+        "Build failed: com.facebook.buck.command.Build$BuildExecutionException: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
             + "<stacktrace>\n"
             + "Caused by: java.lang.RuntimeException: java.io.IOException: failure message //:target_name\n"
             + "<stacktrace>\n"
