@@ -667,6 +667,21 @@ public class AppleTestIntegrationTest {
     testSwiftScenario("apple_test_swift_test_case");
   }
 
+  @Test
+  public void testObjCUsesAppleLibraryWithSwiftSources() throws IOException {
+    testSwiftScenario("apple_test_objc_uses_apple_library_with_swift_sources");
+  }
+
+  @Test
+  public void testSwiftUsesAppleLibraryWithSwiftSources() throws IOException {
+    testSwiftScenario("apple_test_swift_uses_apple_library_with_swift_sources");
+  }
+
+  @Test
+  public void testSwiftUsesAppleLibraryWithObjCSources() throws IOException {
+    testSwiftScenario("apple_test_swift_uses_apple_library_with_objc_sources");
+  }
+
   private void testSwiftScenario(String scenarionName) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenarionName, tmp);
