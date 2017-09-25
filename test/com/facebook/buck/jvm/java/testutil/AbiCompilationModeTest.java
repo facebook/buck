@@ -35,10 +35,10 @@ public abstract class AbiCompilationModeTest {
 
   @Parameterized.Parameter public String compileAgainstAbis;
 
-  protected static final String FALSE = "false";
-  protected static final String TRUE = "true";
+  protected static final String FALSE = "Compiling against full jars";
+  protected static final String TRUE = "Compiling against ABI jars";
 
-  @Parameterized.Parameters
+  @Parameterized.Parameters(name = "{0}")
   public static Object[] getParameters() {
     return new Object[] {TRUE, FALSE};
   }
@@ -48,13 +48,17 @@ public abstract class AbiCompilationModeTest {
         FakeBuckConfig.builder()
             .setSections(
                 "[" + JavaBuckConfig.SECTION + "]",
-                JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS + " = " + compileAgainstAbis)
+                JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS
+                    + " = "
+                    + compileAgainstAbis.equals(TRUE))
             .build());
   }
 
   protected void setWorkspaceCompilationMode(ProjectWorkspace projectWorkspace) throws IOException {
     projectWorkspace.addBuckConfigLocalOption(
-        JavaBuckConfig.SECTION, JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS, compileAgainstAbis);
+        JavaBuckConfig.SECTION,
+        JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS,
+        Boolean.toString(compileAgainstAbis.equals(TRUE)));
   }
 
   protected void compileAgainstAbisOnly() {
