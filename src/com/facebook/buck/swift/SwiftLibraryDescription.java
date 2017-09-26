@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.DepsBuilder;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -419,18 +420,24 @@ public class SwiftLibraryDescription implements Description<SwiftLibraryDescript
       BuildTarget buildTarget,
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
       SwiftLibraryDescriptionArg args,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags) {
+
+    DepsBuilder srcsDepsBuilder = new DepsBuilder(ruleFinder);
+    args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
+    BuildRuleParams paramsWithSrcDeps = params.copyAppendingExtraDeps(srcsDepsBuilder.build());
+
     final BuildTarget buildTargetCopy = buildTarget;
     return new SwiftCompile(
         cxxPlatform,
         swiftBuckConfig,
         buildTarget,
         projectFilesystem,
-        params,
+        paramsWithSrcDeps,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
         args.getModuleName().orElse(buildTarget.getShortName()),

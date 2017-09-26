@@ -802,6 +802,11 @@ public class AppleLibraryIntegrationTest {
     testDylibSwiftScenario("apple_library_swift_uses_objc_same_lib", "Mixed");
   }
 
+  @Test
+  public void testBuildAppleLibraryWhereSwiftDefinedUsingExportFile() throws Exception {
+    testDylibSwiftScenario("apple_library_swift_using_export_file", "Mixed");
+  }
+
   public void testDylibSwiftScenario(String scenario, String targetName) throws Exception {
     testDylibSwiftScenario(scenario, targetName, targetName);
   }

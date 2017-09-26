@@ -24,7 +24,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** Builder suitable for generating the dependency list of a build rule. */
-class DepsBuilder {
+public class DepsBuilder {
   private final ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
   private final SourcePathRuleFinder ruleFinder;
 

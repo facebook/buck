@@ -90,6 +90,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         target,
         paramsWithDeps,
         resolver,
+        rulePathFinder,
         cellRoots,
         filesystem,
         swiftArgs,
