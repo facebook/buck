@@ -33,12 +33,13 @@ final class ScalaLibraryBuilder {
       BuildRuleResolver buildRuleResolver,
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    return new DefaultJavaLibraryRules(
-        buildTarget,
-        projectFilesystem,
-        params,
-        buildRuleResolver,
-        new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
-        javaBuckConfig);
+    return new DefaultJavaLibraryRules.Builder(
+            buildTarget,
+            projectFilesystem,
+            params,
+            buildRuleResolver,
+            new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
+            javaBuckConfig)
+        .build();
   }
 }

@@ -127,8 +127,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       BuildRuleResolver buildRuleResolver,
       ConfiguredCompilerFactory compilerFactory,
       JavaBuckConfig javaBuckConfig) {
-    return new DefaultJavaLibraryRules(
-        buildTarget, projectFilesystem, params, buildRuleResolver, compilerFactory, javaBuckConfig);
+    return new DefaultJavaLibraryRules.Builder(
+            buildTarget,
+            projectFilesystem,
+            params,
+            buildRuleResolver,
+            compilerFactory,
+            javaBuckConfig)
+        .build();
   }
 
   @Override

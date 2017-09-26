@@ -39,12 +39,19 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
-public class DefaultJavaLibraryRules {
+@Value.Immutable
+@Value.Style(
+  overshadowImplementation = true,
+  init = "set*",
+  visibility = Value.Style.ImplementationVisibility.PACKAGE
+)
+public abstract class DefaultJavaLibraryRules {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(
         BuildTarget buildTarget,
-        final ProjectFilesystem projectFilesystem,
+        ProjectFilesystem projectFilesystem,
         ImmutableSortedSet<BuildRule> buildDeps,
         SourcePathResolver resolver,
         JarBuildStepsFactory jarBuildStepsFactory,
@@ -58,15 +65,43 @@ public class DefaultJavaLibraryRules {
         boolean requiredForSourceAbi);
   }
 
-  private final BuildTarget libraryTarget;
-  private final BuildTarget initialBuildTarget;
-  private final ProjectFilesystem projectFilesystem;
-  private final BuildRuleParams initialParams;
-  @Nullable private final JavaBuckConfig javaBuckConfig;
-  private final BuildRuleResolver buildRuleResolver;
-  private final SourcePathResolver sourcePathResolver;
-  private final SourcePathRuleFinder ruleFinder;
-  private final ConfiguredCompilerFactory configuredCompilerFactory;
+  @org.immutables.builder.Builder.Parameter
+  abstract BuildTarget getInitialBuildTarget();
+
+  @Value.Lazy
+  BuildTarget getLibraryTarget() {
+    BuildTarget initialBuildTarget = getInitialBuildTarget();
+    return HasJavaAbi.isLibraryTarget(initialBuildTarget)
+        ? initialBuildTarget
+        : HasJavaAbi.getLibraryTarget(initialBuildTarget);
+  }
+
+  @org.immutables.builder.Builder.Parameter
+  abstract ProjectFilesystem getProjectFilesystem();
+
+  @org.immutables.builder.Builder.Parameter
+  abstract BuildRuleParams getInitialParams();
+
+  @org.immutables.builder.Builder.Parameter
+  abstract BuildRuleResolver getBuildRuleResolver();
+
+  @Value.Lazy
+  SourcePathRuleFinder getSourcePathRuleFinder() {
+    return new SourcePathRuleFinder(getBuildRuleResolver());
+  }
+
+  @Value.Lazy
+  SourcePathResolver getSourcePathResolver() {
+    return DefaultSourcePathResolver.from(getSourcePathRuleFinder());
+  }
+
+  @org.immutables.builder.Builder.Parameter
+  abstract ConfiguredCompilerFactory getConfiguredCompilerFactory();
+
+  @org.immutables.builder.Builder.Parameter
+  @Nullable
+  abstract JavaBuckConfig getJavaBuckConfig();
+
   private DefaultJavaLibraryConstructor constructor = DefaultJavaLibrary::new;
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
@@ -94,44 +129,6 @@ public class DefaultJavaLibraryRules {
   @Nullable private JavacOptions javacOptions;
   @Nullable private ConfiguredCompiler configuredCompiler;
 
-  public DefaultJavaLibraryRules(
-      BuildTarget initialBuildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams initialParams,
-      BuildRuleResolver buildRuleResolver,
-      ConfiguredCompilerFactory configuredCompilerFactory,
-      @Nullable JavaBuckConfig javaBuckConfig) {
-    libraryTarget =
-        HasJavaAbi.isLibraryTarget(initialBuildTarget)
-            ? initialBuildTarget
-            : HasJavaAbi.getLibraryTarget(initialBuildTarget);
-
-    this.initialBuildTarget = initialBuildTarget;
-    this.projectFilesystem = projectFilesystem;
-    this.initialParams = initialParams;
-    this.buildRuleResolver = buildRuleResolver;
-    this.configuredCompilerFactory = configuredCompilerFactory;
-    this.javaBuckConfig = javaBuckConfig;
-
-    ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
-  }
-
-  public DefaultJavaLibraryRules(
-      BuildTarget initialBuildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams initialParams,
-      BuildRuleResolver buildRuleResolver,
-      ConfiguredCompilerFactory configuredCompilerFactory) {
-    this(
-        initialBuildTarget,
-        projectFilesystem,
-        initialParams,
-        buildRuleResolver,
-        configuredCompilerFactory,
-        null);
-  }
-
   public DefaultJavaLibraryRules setConstructor(DefaultJavaLibraryConstructor constructor) {
     this.constructor = constructor;
     return this;
@@ -145,7 +142,7 @@ public class DefaultJavaLibraryRules {
         .setResourcesRoot(args.getResourcesRoot())
         .setProguardConfig(args.getProguardConfig())
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-        .setDeps(JavaLibraryDeps.newInstance(args, buildRuleResolver))
+        .setDeps(JavaLibraryDeps.newInstance(args, getBuildRuleResolver()))
         .setTests(args.getTests())
         .setManifestFile(args.getManifestFile())
         .setMavenCoords(args.getMavenCoords())
@@ -175,7 +172,8 @@ public class DefaultJavaLibraryRules {
 
   public DefaultJavaLibraryRules setResources(ImmutableSortedSet<SourcePath> resources) {
     this.resources =
-        ResourceValidator.validateResources(sourcePathResolver, projectFilesystem, resources);
+        ResourceValidator.validateResources(
+            getSourcePathResolver(), getProjectFilesystem(), resources);
     return this;
   }
 
@@ -226,32 +224,33 @@ public class DefaultJavaLibraryRules {
   }
 
   public BuildRule buildAbi() {
-    if (HasJavaAbi.isClassAbiTarget(initialBuildTarget)) {
+    if (HasJavaAbi.isClassAbiTarget(getInitialBuildTarget())) {
       return buildAbiFromClasses();
-    } else if (HasJavaAbi.isSourceAbiTarget(initialBuildTarget)) {
+    } else if (HasJavaAbi.isSourceAbiTarget(getInitialBuildTarget())) {
       CalculateAbiFromSource abiRule = getSourceAbiRule(false);
       getLibraryRule(true);
       return abiRule;
-    } else if (HasJavaAbi.isVerifiedSourceAbiTarget(initialBuildTarget)) {
-      BuildRule classAbi = buildRuleResolver.requireRule(HasJavaAbi.getClassAbiJar(libraryTarget));
+    } else if (HasJavaAbi.isVerifiedSourceAbiTarget(getInitialBuildTarget())) {
+      BuildRule classAbi =
+          getBuildRuleResolver().requireRule(HasJavaAbi.getClassAbiJar(getLibraryTarget()));
       BuildRule sourceAbi =
-          buildRuleResolver.requireRule(HasJavaAbi.getSourceAbiJar(libraryTarget));
+          getBuildRuleResolver().requireRule(HasJavaAbi.getSourceAbiJar(getLibraryTarget()));
 
       return new CompareAbis(
-          initialBuildTarget,
-          projectFilesystem,
-          initialParams
+          getInitialBuildTarget(),
+          getProjectFilesystem(),
+          getInitialParams()
               .withDeclaredDeps(ImmutableSortedSet.of(classAbi, sourceAbi))
               .withoutExtraDeps(),
-          sourcePathResolver,
+          getSourcePathResolver(),
           classAbi.getSourcePathToOutput(),
           sourceAbi.getSourcePathToOutput(),
-          javaBuckConfig.getSourceAbiVerificationMode());
+          getJavaBuckConfig().getSourceAbiVerificationMode());
     }
 
     throw new AssertionError(
         String.format(
-            "%s is not an ABI target but went down the ABI codepath", initialBuildTarget));
+            "%s is not an ABI target but went down the ABI codepath", getInitialBuildTarget()));
   }
 
   @Nullable
@@ -263,13 +262,13 @@ public class DefaultJavaLibraryRules {
     if (abiJar == null) {
       if (shouldBuildAbiFromSource()) {
         JavaBuckConfig.SourceAbiVerificationMode sourceAbiVerificationMode =
-            javaBuckConfig.getSourceAbiVerificationMode();
+            getJavaBuckConfig().getSourceAbiVerificationMode();
         abiJar =
             sourceAbiVerificationMode == JavaBuckConfig.SourceAbiVerificationMode.OFF
-                ? HasJavaAbi.getSourceAbiJar(libraryTarget)
-                : HasJavaAbi.getVerifiedSourceAbiJar(libraryTarget);
+                ? HasJavaAbi.getSourceAbiJar(getLibraryTarget())
+                : HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
       } else {
-        abiJar = HasJavaAbi.getClassAbiJar(libraryTarget);
+        abiJar = HasJavaAbi.getClassAbiJar(getLibraryTarget());
       }
     }
 
@@ -297,7 +296,7 @@ public class DefaultJavaLibraryRules {
   }
 
   private boolean sourceAbisEnabled() {
-    return javaBuckConfig != null && javaBuckConfig.shouldGenerateAbisFromSource();
+    return getJavaBuckConfig() != null && getJavaBuckConfig().shouldGenerateAbisFromSource();
   }
 
   private DefaultJavaLibrary getLibraryRule(boolean addToIndex) {
@@ -313,10 +312,10 @@ public class DefaultJavaLibraryRules {
 
       libraryRule =
           constructor.newInstance(
-              initialBuildTarget,
-              projectFilesystem,
+              getInitialBuildTarget(),
+              getProjectFilesystem(),
               buildDepsBuilder.build(),
-              sourcePathResolver,
+              getSourcePathResolver(),
               getJarBuildStepsFactory(),
               proguardConfig,
               getFinalFullJarDeclaredDeps(),
@@ -332,7 +331,7 @@ public class DefaultJavaLibraryRules {
       }
 
       if (addToIndex) {
-        buildRuleResolver.addToIndex(libraryRule);
+        getBuildRuleResolver().addToIndex(libraryRule);
       }
     }
 
@@ -344,34 +343,34 @@ public class DefaultJavaLibraryRules {
   }
 
   private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex) {
-    BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(libraryTarget);
+    BuildTarget abiTarget = HasJavaAbi.getSourceAbiJar(getLibraryTarget());
     if (sourceAbiRule == null) {
       sourceAbiRule =
           new CalculateAbiFromSource(
               abiTarget,
-              projectFilesystem,
+              getProjectFilesystem(),
               getFinalBuildDeps(),
-              ruleFinder,
+              getSourcePathRuleFinder(),
               getJarBuildStepsFactory());
       if (addToIndex) {
-        buildRuleResolver.addToIndex(sourceAbiRule);
+        getBuildRuleResolver().addToIndex(sourceAbiRule);
       }
     }
     return sourceAbiRule;
   }
 
   private BuildRule buildAbiFromClasses() {
-    BuildTarget abiTarget = HasJavaAbi.getClassAbiJar(libraryTarget);
-    BuildRule libraryRule = buildRuleResolver.requireRule(libraryTarget);
+    BuildTarget abiTarget = HasJavaAbi.getClassAbiJar(getLibraryTarget());
+    BuildRule libraryRule = getBuildRuleResolver().requireRule(getLibraryTarget());
 
     return CalculateAbiFromClasses.of(
         abiTarget,
-        ruleFinder,
-        projectFilesystem,
-        initialParams,
+        getSourcePathRuleFinder(),
+        getProjectFilesystem(),
+        getInitialParams(),
         Preconditions.checkNotNull(libraryRule.getSourcePathToOutput()),
-        javaBuckConfig != null
-            && javaBuckConfig.getSourceAbiVerificationMode()
+        getJavaBuckConfig() != null
+            && getJavaBuckConfig().getSourceAbiVerificationMode()
                 != JavaBuckConfig.SourceAbiVerificationMode.OFF);
   }
 
@@ -381,7 +380,7 @@ public class DefaultJavaLibraryRules {
           ImmutableSortedSet.copyOf(
               Iterables.concat(
                   Preconditions.checkNotNull(deps).getDeps(),
-                  getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
+                  getConfiguredCompiler().getDeclaredDeps(getSourcePathRuleFinder())));
     }
 
     return finalFullJarDeclaredDeps;
@@ -389,7 +388,7 @@ public class DefaultJavaLibraryRules {
 
   private ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
     ImmutableSortedSet<BuildRule> buildRules =
-        configuredCompilerFactory.compileAgainstAbis()
+        getConfiguredCompilerFactory().compileAgainstAbis()
             ? getCompileTimeClasspathAbiDeps()
             : getCompileTimeClasspathFullDeps();
 
@@ -415,7 +414,7 @@ public class DefaultJavaLibraryRules {
   private ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
     if (compileTimeClasspathAbiDeps == null) {
       compileTimeClasspathAbiDeps =
-          JavaLibraryRules.getAbiRules(buildRuleResolver, getCompileTimeClasspathFullDeps());
+          JavaLibraryRules.getAbiRules(getBuildRuleResolver(), getCompileTimeClasspathFullDeps());
     }
 
     return compileTimeClasspathAbiDeps;
@@ -425,7 +424,7 @@ public class DefaultJavaLibraryRules {
     if (abiClasspath == null) {
       abiClasspath =
           new ZipArchiveDependencySupplier(
-              ruleFinder,
+              getSourcePathRuleFinder(),
               getCompileTimeClasspathAbiDeps()
                   .stream()
                   .map(BuildRule::getSourcePathToOutput)
@@ -438,7 +437,7 @@ public class DefaultJavaLibraryRules {
   private ConfiguredCompiler getConfiguredCompiler() {
     if (configuredCompiler == null) {
       configuredCompiler =
-          configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
+          getConfiguredCompilerFactory().configure(args, getJavacOptions(), getBuildRuleResolver());
     }
 
     return configuredCompiler;
@@ -451,20 +450,21 @@ public class DefaultJavaLibraryRules {
       depsBuilder
           // We always need the non-classpath deps, whether directly specified or specified via
           // query
-          .addAll(Sets.difference(initialParams.getBuildDeps(), getCompileTimeClasspathFullDeps()))
+          .addAll(
+              Sets.difference(getInitialParams().getBuildDeps(), getCompileTimeClasspathFullDeps()))
           .addAll(
               Sets.difference(
                   getCompileTimeClasspathUnfilteredFullDeps(), getCompileTimeClasspathFullDeps()))
           // It's up to the compiler to use an ABI jar for these deps if appropriate, so we can
           // add them unconditionally
-          .addAll(getConfiguredCompiler().getBuildDeps(ruleFinder))
+          .addAll(getConfiguredCompiler().getBuildDeps(getSourcePathRuleFinder()))
           // We always need the ABI deps (at least for rulekey computation)
           // TODO(jkeljo): It's actually incorrect to use ABIs for rulekey computation for languages
           // that can't compile against them. Generally the reason they can't compile against ABIs
           // is that the ABI generation for that language isn't fully correct.
           .addAll(getCompileTimeClasspathAbiDeps());
 
-      if (!configuredCompilerFactory.compileAgainstAbis()) {
+      if (!getConfiguredCompilerFactory().compileAgainstAbis()) {
         depsBuilder.addAll(getCompileTimeClasspathFullDeps());
       }
 
@@ -494,8 +494,8 @@ public class DefaultJavaLibraryRules {
     if (jarBuildStepsFactory == null) {
       jarBuildStepsFactory =
           new JarBuildStepsFactory(
-              projectFilesystem,
-              ruleFinder,
+              getProjectFilesystem(),
+              getSourcePathRuleFinder(),
               getConfiguredCompiler(),
               srcs,
               resources,
@@ -503,7 +503,7 @@ public class DefaultJavaLibraryRules {
               manifestFile,
               postprocessClassesCommands,
               getAbiClasspath(),
-              configuredCompilerFactory.trackClassUsage(getJavacOptions()),
+              getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
               getFinalCompileTimeClasspathSourcePaths(),
               classesToRemoveFromJar,
               getRequiredForSourceAbi());
@@ -516,5 +516,27 @@ public class DefaultJavaLibraryRules {
       javacOptions = Preconditions.checkNotNull(initialJavacOptions);
     }
     return javacOptions;
+  }
+
+  public static class Builder extends ImmutableDefaultJavaLibraryRules.Builder {
+    public Builder(
+        BuildTarget initialBuildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams initialParams,
+        BuildRuleResolver buildRuleResolver,
+        ConfiguredCompilerFactory configuredCompilerFactory,
+        @Nullable JavaBuckConfig javaBuckConfig) {
+      super(
+          initialBuildTarget,
+          projectFilesystem,
+          initialParams,
+          buildRuleResolver,
+          configuredCompilerFactory,
+          javaBuckConfig);
+    }
+
+    Builder() {
+      throw new UnsupportedOperationException();
+    }
   }
 }

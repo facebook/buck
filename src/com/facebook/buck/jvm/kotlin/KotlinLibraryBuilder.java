@@ -33,12 +33,13 @@ final class KotlinLibraryBuilder {
       BuildRuleResolver buildRuleResolver,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig) {
-    return new DefaultJavaLibraryRules(
-        buildTarget,
-        projectFilesystem,
-        params,
-        buildRuleResolver,
-        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
-        javaBuckConfig);
+    return new DefaultJavaLibraryRules.Builder(
+            buildTarget,
+            projectFilesystem,
+            params,
+            buildRuleResolver,
+            new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
+            javaBuckConfig)
+        .build();
   }
 }

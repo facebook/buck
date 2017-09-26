@@ -125,13 +125,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ConfiguredCompilerFactory compilerFactory) {
       this.buildRuleResolver = buildRuleResolver;
       delegate =
-          new DefaultJavaLibraryRules(
-              buildTarget,
-              projectFilesystem,
-              params,
-              buildRuleResolver,
-              compilerFactory,
-              javaBuckConfig);
+          new DefaultJavaLibraryRules.Builder(
+                  buildTarget,
+                  projectFilesystem,
+                  params,
+                  buildRuleResolver,
+                  compilerFactory,
+                  javaBuckConfig)
+              .build();
       delegate.setConstructor(
           new DefaultJavaLibraryRules.DefaultJavaLibraryConstructor() {
             @Override
