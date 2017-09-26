@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavaLibraryRules.getAbiRulesWherePossible;
-
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.model.BuildTarget;
@@ -461,36 +459,26 @@ public class DefaultJavaLibraryBuilder {
       if (finalBuildDeps == null) {
         ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
 
-        if (configuredCompilerFactory.compileAgainstAbis()) {
-          depsBuilder.addAll(
-              getAbiRulesWherePossible(buildRuleResolver, getFinalFullJarDeclaredDeps()));
-          // We remove provided and exported deps since we'll be adding the ABI rules of these and
-          // don't want to end up with both full & ABI rules
-          depsBuilder.addAll(
-              Sets.difference(
-                  initialParams.getExtraDeps().get(),
-                  Sets.union(
-                      Preconditions.checkNotNull(deps).getProvidedDeps(),
-                      Preconditions.checkNotNull(deps).getExportedDeps())));
-        } else {
-          depsBuilder
-              .addAll(initialParams.getExtraDeps().get())
-              .addAll(getCompileTimeClasspathUnfilteredFullDeps());
-        }
-
-        // The extra deps contain rules that may not come from the deps-related arguments of the
-        // target, but are required for building this rule. Some default extra deps may be provided
-        // and exported rules, annotation processor related rules, gen_aidl rules, gen rules, and zip
-        // rules. The compile time classpath deps and deps from the compile step factory are manually
-        // added as these are required for building this rule.
-        // Extra deps remain separate from the declared deps because there are places where the
-        // declared deps are grabbed and are expected to reflect the actual deps argument of the
-        // target. In addition, when compiling against ABIs, extra deps shouldn't be translated to
-        // their ABI rules as their full JARs are required (with exception of classpath rules).
         depsBuilder
-            .addAll(getCompileTimeClasspathAbiDeps())
-            .addAll(getConfiguredCompiler().getExtraDeps(ruleFinder))
-            .build();
+            // We always need the non-classpath deps, whether directly specified or specified via
+            // query
+            .addAll(
+                Sets.difference(initialParams.getBuildDeps(), getCompileTimeClasspathFullDeps()))
+            .addAll(
+                Sets.difference(
+                    getCompileTimeClasspathUnfilteredFullDeps(), getCompileTimeClasspathFullDeps()))
+            // It's up to the compiler to use an ABI jar for these deps if appropriate, so we can
+            // add them unconditionally
+            .addAll(getConfiguredCompiler().getBuildDeps(ruleFinder))
+            // We always need the ABI deps (at least for rulekey computation)
+            // TODO(jkeljo): It's actually incorrect to use ABIs for rulekey computation for languages
+            // that can't compile against them. Generally the reason they can't compile against ABIs
+            // is that the ABI generation for that language isn't fully correct.
+            .addAll(getCompileTimeClasspathAbiDeps());
+
+        if (!configuredCompilerFactory.compileAgainstAbis()) {
+          depsBuilder.addAll(getCompileTimeClasspathFullDeps());
+        }
 
         finalBuildDeps = depsBuilder.build();
       }
