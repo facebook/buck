@@ -109,20 +109,37 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
   }
 
   /**
-   * Automatically convert to buck dependency pattern. Note that these examples only work if the
-   * file(s) exist!
+   * Converts raw paste text to a format suitable for insertion in a buck dependency list (e.g.,
+   * {@code deps} or {@code visibility} at the point of the given element. The paste text may span
+   * multiple lines. If every non-blank line can be resolved into a dependency, the expanded text is
+   * returned, but if any non-blank line in unresolvable, the original paste text is returned.
    *
-   * <p>Example 1: "import com.example.activity.MyFirstActivity" ->
-   * "//java/com/example/activity:activity",
+   * <p>This method detects the location in the parse tree from the given element and will
+   * quote-wrap dependencies accordingly.
    *
-   * <p>Example 2: "package com.example.activity;" -> "//java/com/example/activity:activity",
+   * <p>Example resolutions (note that these are the unwrapped results; wrapped results are
+   * double-quoted with a trailing comma):
    *
-   * <p>Example 3: "com.example.activity.MyFirstActivity" -> "//java/com/example/activity:activity",
+   * <p>Java imports: {@code "import com.example.activity.MyFirstActivity" ->
+   * "//java/com/example/activity:activity" }
    *
-   * <p>Example 4: "/Users/tim/tb/java/com/example/activity/BUCK" ->
-   * "//java/com/example/activity:activity",
+   * <p>Java packages: {@code "package com.example.activity;" ->
+   * "//java/com/example/activity:activity" }
    *
-   * <p>Example 5 //apps/myapp:app -> "//apps/myapp:app",
+   * <p>Fully qualified Java classnames: {@code "com.example.activity.MyFirstActivity" ->
+   * "//java/com/example/activity:activity" }
+   *
+   * <p>Unqualified Java classnames: {@code "MyFirstActivity" ->
+   * "//java/com/example/activity:activity" } (when there is a unique match for the classname)
+   *
+   * <p>BUCK paths: {@code "//java/com/example/activity/BUCK" ->
+   * "//java/com/example/activity:activity" }
+   *
+   * <p>BUCK targets: {@code "//java/com/example/activity:activity" ->
+   * "//java/com/example/activity:activity" }
+   *
+   * <p>Multiline pastes: {@code "import com.foo.Foo;\nimport com.bar.Bar;" ->
+   * "//java/com/foo:foo\n//java/com/bar:bar"}
    */
   private String formatPasteText(String text, PsiElement element, Project project) {
     Iterable<String> paths = Splitter.on('\n').trimResults().omitEmptyStrings().split(text);
