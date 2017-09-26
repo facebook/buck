@@ -153,15 +153,7 @@ public abstract class DefaultJavaLibraryRules {
 
   @Nullable private DefaultJavaLibrary libraryRule;
   @Nullable private CalculateAbiFromSource sourceAbiRule;
-  @Nullable private ImmutableSortedSet<BuildRule> finalBuildDeps;
-  @Nullable private ImmutableSortedSet<BuildRule> finalFullJarDeclaredDeps;
-  @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathUnfilteredFullDeps;
-  @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathFullDeps;
-  @Nullable private ImmutableSortedSet<BuildRule> compileTimeClasspathAbiDeps;
-  @Nullable private ZipArchiveDependencySupplier abiClasspath;
-  @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
   @Nullable private BuildTarget abiJar;
-  @Nullable private ConfiguredCompiler configuredCompiler;
 
   public DefaultJavaLibrary buildLibrary() {
     return getLibraryRule(false);
@@ -319,16 +311,12 @@ public abstract class DefaultJavaLibraryRules {
                 != JavaBuckConfig.SourceAbiVerificationMode.OFF);
   }
 
-  private ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
-    if (finalFullJarDeclaredDeps == null) {
-      finalFullJarDeclaredDeps =
-          ImmutableSortedSet.copyOf(
-              Iterables.concat(
-                  Preconditions.checkNotNull(getDeps()).getDeps(),
-                  getConfiguredCompiler().getDeclaredDeps(getSourcePathRuleFinder())));
-    }
-
-    return finalFullJarDeclaredDeps;
+  @Value.Lazy
+  ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
+    return ImmutableSortedSet.copyOf(
+        Iterables.concat(
+            Preconditions.checkNotNull(getDeps()).getDeps(),
+            getConfiguredCompiler().getDeclaredDeps(getSourcePathRuleFinder())));
   }
 
   private ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
@@ -344,119 +332,92 @@ public abstract class DefaultJavaLibraryRules {
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 
-  private ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
-    if (compileTimeClasspathFullDeps == null) {
-      compileTimeClasspathFullDeps =
-          getCompileTimeClasspathUnfilteredFullDeps()
-              .stream()
-              .filter(dep -> dep instanceof HasJavaAbi)
-              .collect(MoreCollectors.toImmutableSortedSet());
-    }
-
-    return compileTimeClasspathFullDeps;
+  @Value.Lazy
+  ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
+    return getCompileTimeClasspathUnfilteredFullDeps()
+        .stream()
+        .filter(dep -> dep instanceof HasJavaAbi)
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
-  private ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
-    if (compileTimeClasspathAbiDeps == null) {
-      compileTimeClasspathAbiDeps =
-          JavaLibraryRules.getAbiRules(getBuildRuleResolver(), getCompileTimeClasspathFullDeps());
-    }
-
-    return compileTimeClasspathAbiDeps;
+  @Value.Lazy
+  ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
+    return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), getCompileTimeClasspathFullDeps());
   }
 
-  private ZipArchiveDependencySupplier getAbiClasspath() {
-    if (abiClasspath == null) {
-      abiClasspath =
-          new ZipArchiveDependencySupplier(
-              getSourcePathRuleFinder(),
-              getCompileTimeClasspathAbiDeps()
-                  .stream()
-                  .map(BuildRule::getSourcePathToOutput)
-                  .collect(MoreCollectors.toImmutableSortedSet()));
-    }
-
-    return abiClasspath;
+  @Value.Lazy
+  ZipArchiveDependencySupplier getAbiClasspath() {
+    return new ZipArchiveDependencySupplier(
+        getSourcePathRuleFinder(),
+        getCompileTimeClasspathAbiDeps()
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(MoreCollectors.toImmutableSortedSet()));
   }
 
-  private ConfiguredCompiler getConfiguredCompiler() {
-    if (configuredCompiler == null) {
-      configuredCompiler =
-          getConfiguredCompilerFactory()
-              .configure(getArgs(), getJavacOptions(), getBuildRuleResolver());
-    }
-
-    return configuredCompiler;
+  @Value.Lazy
+  ConfiguredCompiler getConfiguredCompiler() {
+    return getConfiguredCompilerFactory()
+        .configure(getArgs(), getJavacOptions(), getBuildRuleResolver());
   }
 
-  private ImmutableSortedSet<BuildRule> getFinalBuildDeps() {
-    if (finalBuildDeps == null) {
-      ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+  @Value.Lazy
+  ImmutableSortedSet<BuildRule> getFinalBuildDeps() {
+    ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
 
-      depsBuilder
-          // We always need the non-classpath deps, whether directly specified or specified via
-          // query
-          .addAll(
-              Sets.difference(getInitialParams().getBuildDeps(), getCompileTimeClasspathFullDeps()))
-          .addAll(
-              Sets.difference(
-                  getCompileTimeClasspathUnfilteredFullDeps(), getCompileTimeClasspathFullDeps()))
-          // It's up to the compiler to use an ABI jar for these deps if appropriate, so we can
-          // add them unconditionally
-          .addAll(getConfiguredCompiler().getBuildDeps(getSourcePathRuleFinder()))
-          // We always need the ABI deps (at least for rulekey computation)
-          // TODO(jkeljo): It's actually incorrect to use ABIs for rulekey computation for languages
-          // that can't compile against them. Generally the reason they can't compile against ABIs
-          // is that the ABI generation for that language isn't fully correct.
-          .addAll(getCompileTimeClasspathAbiDeps());
+    depsBuilder
+        // We always need the non-classpath deps, whether directly specified or specified via
+        // query
+        .addAll(
+            Sets.difference(getInitialParams().getBuildDeps(), getCompileTimeClasspathFullDeps()))
+        .addAll(
+            Sets.difference(
+                getCompileTimeClasspathUnfilteredFullDeps(), getCompileTimeClasspathFullDeps()))
+        // It's up to the compiler to use an ABI jar for these deps if appropriate, so we can
+        // add them unconditionally
+        .addAll(getConfiguredCompiler().getBuildDeps(getSourcePathRuleFinder()))
+        // We always need the ABI deps (at least for rulekey computation)
+        // TODO(jkeljo): It's actually incorrect to use ABIs for rulekey computation for languages
+        // that can't compile against them. Generally the reason they can't compile against ABIs
+        // is that the ABI generation for that language isn't fully correct.
+        .addAll(getCompileTimeClasspathAbiDeps());
 
-      if (!getConfiguredCompilerFactory().compileAgainstAbis()) {
-        depsBuilder.addAll(getCompileTimeClasspathFullDeps());
-      }
-
-      finalBuildDeps = depsBuilder.build();
+    if (!getConfiguredCompilerFactory().compileAgainstAbis()) {
+      depsBuilder.addAll(getCompileTimeClasspathFullDeps());
     }
 
-    return finalBuildDeps;
+    return depsBuilder.build();
   }
 
-  private ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
-    if (compileTimeClasspathUnfilteredFullDeps == null) {
-      Iterable<BuildRule> firstOrderDeps =
-          Iterables.concat(
-              getFinalFullJarDeclaredDeps(),
-              Preconditions.checkNotNull(getDeps()).getProvidedDeps());
+  @Value.Lazy
+  ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
+    Iterable<BuildRule> firstOrderDeps =
+        Iterables.concat(
+            getFinalFullJarDeclaredDeps(), Preconditions.checkNotNull(getDeps()).getProvidedDeps());
 
-      ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
-          BuildRules.getExportedRules(firstOrderDeps);
+    ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
+        BuildRules.getExportedRules(firstOrderDeps);
 
-      compileTimeClasspathUnfilteredFullDeps =
-          RichStream.from(Iterables.concat(firstOrderDeps, rulesExportedByDependencies))
-              .collect(MoreCollectors.toImmutableSortedSet());
-    }
-
-    return compileTimeClasspathUnfilteredFullDeps;
+    return RichStream.from(Iterables.concat(firstOrderDeps, rulesExportedByDependencies))
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
-  private JarBuildStepsFactory getJarBuildStepsFactory() {
-    if (jarBuildStepsFactory == null) {
-      jarBuildStepsFactory =
-          new JarBuildStepsFactory(
-              getProjectFilesystem(),
-              getSourcePathRuleFinder(),
-              getConfiguredCompiler(),
-              getSrcs(),
-              getResources(),
-              getResourcesRoot(),
-              getManifestFile(),
-              getPostprocessClassesCommands(),
-              getAbiClasspath(),
-              getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
-              getFinalCompileTimeClasspathSourcePaths(),
-              getClassesToRemoveFromJar(),
-              getRequiredForSourceAbi());
-    }
-    return jarBuildStepsFactory;
+  @Value.Lazy
+  JarBuildStepsFactory getJarBuildStepsFactory() {
+    return new JarBuildStepsFactory(
+        getProjectFilesystem(),
+        getSourcePathRuleFinder(),
+        getConfiguredCompiler(),
+        getSrcs(),
+        getResources(),
+        getResourcesRoot(),
+        getManifestFile(),
+        getPostprocessClassesCommands(),
+        getAbiClasspath(),
+        getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
+        getFinalCompileTimeClasspathSourcePaths(),
+        getClassesToRemoveFromJar(),
+        getRequiredForSourceAbi());
   }
 
   @org.immutables.builder.Builder.AccessibleFields
