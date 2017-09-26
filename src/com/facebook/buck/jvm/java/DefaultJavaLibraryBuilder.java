@@ -422,17 +422,14 @@ public final class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
       if (finalFullJarDeclaredDeps == null) {
-        finalFullJarDeclaredDeps = buildFinalFullJarDeclaredDeps();
+        finalFullJarDeclaredDeps =
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    Preconditions.checkNotNull(deps).getDeps(),
+                    getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
       }
 
       return finalFullJarDeclaredDeps;
-    }
-
-    protected ImmutableSortedSet<BuildRule> buildFinalFullJarDeclaredDeps() {
-      return ImmutableSortedSet.copyOf(
-          Iterables.concat(
-              Preconditions.checkNotNull(deps).getDeps(),
-              getConfiguredCompiler().getDeclaredDeps(ruleFinder)));
     }
 
     protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
@@ -462,7 +459,8 @@ public final class DefaultJavaLibraryBuilder {
 
     protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
       if (compileTimeClasspathAbiDeps == null) {
-        compileTimeClasspathAbiDeps = buildCompileTimeClasspathAbiDeps();
+        compileTimeClasspathAbiDeps =
+            JavaLibraryRules.getAbiRules(buildRuleResolver, getCompileTimeClasspathFullDeps());
       }
 
       return compileTimeClasspathAbiDeps;
@@ -470,7 +468,13 @@ public final class DefaultJavaLibraryBuilder {
 
     protected final ZipArchiveDependencySupplier getAbiClasspath() {
       if (abiClasspath == null) {
-        abiClasspath = buildAbiClasspath();
+        abiClasspath =
+            new ZipArchiveDependencySupplier(
+                ruleFinder,
+                getCompileTimeClasspathAbiDeps()
+                    .stream()
+                    .map(BuildRule::getSourcePathToOutput)
+                    .collect(MoreCollectors.toImmutableSortedSet()));
       }
 
       return abiClasspath;
@@ -478,7 +482,8 @@ public final class DefaultJavaLibraryBuilder {
 
     protected final ConfiguredCompiler getConfiguredCompiler() {
       if (configuredCompiler == null) {
-        configuredCompiler = buildConfiguredCompiler();
+        configuredCompiler =
+            configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
       }
 
       return configuredCompiler;
@@ -531,56 +536,32 @@ public final class DefaultJavaLibraryBuilder {
       return compileTimeClasspathUnfilteredFullDeps;
     }
 
-    protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathAbiDeps() {
-      return JavaLibraryRules.getAbiRules(buildRuleResolver, getCompileTimeClasspathFullDeps());
-    }
-
-    protected ZipArchiveDependencySupplier buildAbiClasspath() {
-      return new ZipArchiveDependencySupplier(
-          ruleFinder,
-          getCompileTimeClasspathAbiDeps()
-              .stream()
-              .map(BuildRule::getSourcePathToOutput)
-              .collect(MoreCollectors.toImmutableSortedSet()));
-    }
-
-    protected ConfiguredCompiler buildConfiguredCompiler() {
-      return configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
-    }
-
     protected final JarBuildStepsFactory getJarBuildStepsFactory() {
       if (jarBuildStepsFactory == null) {
-        jarBuildStepsFactory = buildJarBuildStepsFactory();
+        jarBuildStepsFactory =
+            new JarBuildStepsFactory(
+                projectFilesystem,
+                ruleFinder,
+                getConfiguredCompiler(),
+                srcs,
+                resources,
+                resourcesRoot,
+                manifestFile,
+                postprocessClassesCommands,
+                getAbiClasspath(),
+                configuredCompilerFactory.trackClassUsage(getJavacOptions()),
+                getFinalCompileTimeClasspathSourcePaths(),
+                classesToRemoveFromJar,
+                getRequiredForSourceAbi());
       }
       return jarBuildStepsFactory;
     }
 
-    protected JarBuildStepsFactory buildJarBuildStepsFactory() {
-      return new JarBuildStepsFactory(
-          projectFilesystem,
-          ruleFinder,
-          getConfiguredCompiler(),
-          srcs,
-          resources,
-          resourcesRoot,
-          manifestFile,
-          postprocessClassesCommands,
-          getAbiClasspath(),
-          configuredCompilerFactory.trackClassUsage(getJavacOptions()),
-          getFinalCompileTimeClasspathSourcePaths(),
-          classesToRemoveFromJar,
-          getRequiredForSourceAbi());
-    }
-
     protected final JavacOptions getJavacOptions() {
       if (javacOptions == null) {
-        javacOptions = buildJavacOptions();
+        javacOptions = Preconditions.checkNotNull(initialJavacOptions);
       }
       return javacOptions;
-    }
-
-    protected JavacOptions buildJavacOptions() {
-      return Preconditions.checkNotNull(initialJavacOptions);
     }
   }
 
