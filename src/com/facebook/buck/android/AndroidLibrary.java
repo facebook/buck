@@ -116,6 +116,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public static class Builder extends DefaultJavaLibraryBuilder {
     private final AndroidLibraryDescription.CoreArg args;
+    @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
     private Optional<SourcePath> androidManifest = Optional.empty();
 
@@ -159,11 +160,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     public DummyRDotJava buildDummyRDotJava() {
-      return newHelper().buildDummyRDotJava();
+      return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, true).get();
     }
 
     public Optional<DummyRDotJava> getDummyRDotJava() {
-      return newHelper().getDummyRDotJava();
+      return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, false);
     }
 
     @Override
@@ -171,9 +172,28 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       return new BuilderHelper();
     }
 
-    protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
+    protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
+      if (graphEnhancer == null) {
+        graphEnhancer =
+            new AndroidLibraryGraphEnhancer(
+                libraryTarget,
+                projectFilesystem,
+                ImmutableSortedSet.copyOf(
+                    Iterables.concat(
+                        Preconditions.checkNotNull(deps).getDeps(),
+                        Preconditions.checkNotNull(deps).getProvidedDeps())),
+                getJavac(),
+                initialJavacOptions,
+                DependencyMode.FIRST_ORDER,
+                /* forceFinalResourceIds */ false,
+                args.getResourceUnionPackage(),
+                args.getFinalRName(),
+                false);
+      }
+      return graphEnhancer;
+    }
 
+    protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
       @Override
       protected DefaultJavaLibrary build() {
         AndroidLibrary result =
@@ -194,35 +214,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 getRequiredForSourceAbi());
 
         return result;
-      }
-
-      protected DummyRDotJava buildDummyRDotJava() {
-        return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, true).get();
-      }
-
-      protected Optional<DummyRDotJava> getDummyRDotJava() {
-        return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, false);
-      }
-
-      protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
-        if (graphEnhancer == null) {
-          graphEnhancer =
-              new AndroidLibraryGraphEnhancer(
-                  libraryTarget,
-                  projectFilesystem,
-                  ImmutableSortedSet.copyOf(
-                      Iterables.concat(
-                          Preconditions.checkNotNull(deps).getDeps(),
-                          Preconditions.checkNotNull(deps).getProvidedDeps())),
-                  getJavac(),
-                  getJavacOptions(),
-                  DependencyMode.FIRST_ORDER,
-                  /* forceFinalResourceIds */ false,
-                  args.getResourceUnionPackage(),
-                  args.getFinalRName(),
-                  false);
-        }
-        return graphEnhancer;
       }
 
       @Override
