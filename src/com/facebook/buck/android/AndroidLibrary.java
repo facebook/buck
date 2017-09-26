@@ -173,6 +173,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           });
       setJavacOptions(javacOptions);
       setArgs(args);
+      setTests(args.getTests());
 
       getDummyRDotJava()
           .ifPresent(
