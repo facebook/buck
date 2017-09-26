@@ -24,7 +24,6 @@ import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
-import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -117,8 +116,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     private final AndroidLibraryDescription.CoreArg args;
     @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
 
-    private Optional<SourcePath> androidManifest = Optional.empty();
-
     protected Builder(
         TargetGraph targetGraph,
         BuildTarget buildTarget,
@@ -140,6 +137,40 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
           compilerFactory,
           javaBuckConfig);
       this.args = args;
+      setConstructor(
+          new DefaultJavaLibraryBuilder.DefaultJavaLibraryConstructor() {
+            @Override
+            public DefaultJavaLibrary newInstance(
+                BuildTarget buildTarget,
+                ProjectFilesystem projectFilesystem,
+                ImmutableSortedSet<BuildRule> buildDeps,
+                SourcePathResolver resolver,
+                JarBuildStepsFactory jarBuildStepsFactory,
+                Optional<SourcePath> proguardConfig,
+                SortedSet<BuildRule> fullJarDeclaredDeps,
+                ImmutableSortedSet<BuildRule> fullJarExportedDeps,
+                ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
+                @Nullable BuildTarget abiJar,
+                Optional<String> mavenCoords,
+                ImmutableSortedSet<BuildTarget> tests,
+                boolean requiredForSourceAbi) {
+              return new AndroidLibrary(
+                  buildTarget,
+                  projectFilesystem,
+                  buildDeps,
+                  resolver,
+                  jarBuildStepsFactory,
+                  proguardConfig,
+                  fullJarDeclaredDeps,
+                  fullJarExportedDeps,
+                  fullJarProvidedDeps,
+                  abiJar,
+                  mavenCoords,
+                  args.getManifest(),
+                  tests,
+                  requiredForSourceAbi);
+            }
+          });
       setJavacOptions(javacOptions);
       setArgs(args);
 
@@ -154,31 +185,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               });
     }
 
-    @Override
-    public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
-      super.setArgs(args);
-      AndroidLibraryDescription.CoreArg androidArgs = (AndroidLibraryDescription.CoreArg) args;
-
-      return setManifestFile(androidArgs.getManifest());
-    }
-
-    @Override
-    public DefaultJavaLibraryBuilder setManifestFile(Optional<SourcePath> manifestFile) {
-      androidManifest = manifestFile;
-      return this;
-    }
-
     public DummyRDotJava buildDummyRDotJava() {
       return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, true).get();
     }
 
     public Optional<DummyRDotJava> getDummyRDotJava() {
       return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, false);
-    }
-
-    @Override
-    protected BuilderHelper newHelper() {
-      return new BuilderHelper();
     }
 
     protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
@@ -200,30 +212,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 false);
       }
       return graphEnhancer;
-    }
-
-    protected class BuilderHelper extends DefaultJavaLibraryBuilder.BuilderHelper {
-      @Override
-      protected DefaultJavaLibrary build() {
-        AndroidLibrary result =
-            new AndroidLibrary(
-                libraryTarget,
-                projectFilesystem,
-                getFinalBuildDeps(),
-                sourcePathResolver,
-                getJarBuildStepsFactory(),
-                proguardConfig,
-                getFinalFullJarDeclaredDeps(),
-                Preconditions.checkNotNull(deps).getExportedDeps(),
-                Preconditions.checkNotNull(deps).getProvidedDeps(),
-                getAbiJar(),
-                mavenCoords,
-                androidManifest,
-                tests,
-                getRequiredForSourceAbi());
-
-        return result;
-      }
     }
   }
 }

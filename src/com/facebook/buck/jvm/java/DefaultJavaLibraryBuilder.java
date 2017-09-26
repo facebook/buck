@@ -39,9 +39,27 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class DefaultJavaLibraryBuilder {
+  public interface DefaultJavaLibraryConstructor {
+    DefaultJavaLibrary newInstance(
+        BuildTarget buildTarget,
+        final ProjectFilesystem projectFilesystem,
+        ImmutableSortedSet<BuildRule> buildDeps,
+        SourcePathResolver resolver,
+        JarBuildStepsFactory jarBuildStepsFactory,
+        Optional<SourcePath> proguardConfig,
+        SortedSet<BuildRule> fullJarDeclaredDeps,
+        ImmutableSortedSet<BuildRule> fullJarExportedDeps,
+        ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
+        @Nullable BuildTarget abiJar,
+        Optional<String> mavenCoords,
+        ImmutableSortedSet<BuildTarget> tests,
+        boolean requiredForSourceAbi);
+  }
+
   protected final BuildTarget libraryTarget;
   protected final BuildTarget initialBuildTarget;
   protected final ProjectFilesystem projectFilesystem;
@@ -53,6 +71,7 @@ public class DefaultJavaLibraryBuilder {
   protected final CellPathResolver cellRoots;
   protected final SourcePathRuleFinder ruleFinder;
   protected final ConfiguredCompilerFactory configuredCompilerFactory;
+  protected DefaultJavaLibraryConstructor constructor = DefaultJavaLibrary::new;
   protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   protected Optional<SourcePath> proguardConfig = Optional.empty();
@@ -115,6 +134,11 @@ public class DefaultJavaLibraryBuilder {
         cellRoots,
         configuredCompilerFactory,
         null);
+  }
+
+  public DefaultJavaLibraryBuilder setConstructor(DefaultJavaLibraryConstructor constructor) {
+    this.constructor = constructor;
+    return this;
   }
 
   public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
@@ -328,7 +352,7 @@ public class DefaultJavaLibraryBuilder {
         }
 
         libraryRule =
-            new DefaultJavaLibrary(
+            constructor.newInstance(
                 initialBuildTarget,
                 projectFilesystem,
                 buildDepsBuilder.build(),
