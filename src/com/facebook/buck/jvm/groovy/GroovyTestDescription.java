@@ -93,12 +93,10 @@ public class GroovyTestDescription
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultGroovyLibraryBuilder.newInstance(
-                targetGraph,
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
                 javacOptions,
                 groovyBuckConfig)
             .setArgs(args);

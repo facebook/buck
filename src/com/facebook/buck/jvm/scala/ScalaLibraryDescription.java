@@ -72,12 +72,10 @@ public class ScalaLibraryDescription
 
     DefaultJavaLibraryBuilder scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
-                targetGraph,
                 buildTarget,
                 projectFilesystem,
                 rawParams,
                 resolver,
-                cellRoots,
                 scalaBuckConfig,
                 javaBuckConfig)
             .setJavacOptions(javacOptions)

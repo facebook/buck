@@ -125,12 +125,10 @@ public class JavaTestDescription
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultJavaLibrary.builder(
-                targetGraph,
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setArgs(args)

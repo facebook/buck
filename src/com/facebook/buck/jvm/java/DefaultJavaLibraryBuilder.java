@@ -23,12 +23,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -60,43 +58,35 @@ public final class DefaultJavaLibraryBuilder {
         boolean requiredForSourceAbi);
   }
 
-  protected final BuildTarget libraryTarget;
-  protected final BuildTarget initialBuildTarget;
-  protected final ProjectFilesystem projectFilesystem;
-  protected final BuildRuleParams initialParams;
+  private final BuildTarget libraryTarget;
+  private final BuildTarget initialBuildTarget;
+  private final ProjectFilesystem projectFilesystem;
+  private final BuildRuleParams initialParams;
   @Nullable private final JavaBuckConfig javaBuckConfig;
-  protected final TargetGraph targetGraph;
-  protected final BuildRuleResolver buildRuleResolver;
-  protected final SourcePathResolver sourcePathResolver;
-  protected final CellPathResolver cellRoots;
-  protected final SourcePathRuleFinder ruleFinder;
-  protected final ConfiguredCompilerFactory configuredCompilerFactory;
-  protected DefaultJavaLibraryConstructor constructor = DefaultJavaLibrary::new;
-  protected ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-  protected ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
-  protected Optional<SourcePath> proguardConfig = Optional.empty();
-  protected ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  protected Optional<Path> resourcesRoot = Optional.empty();
-  protected Optional<SourcePath> unbundledResourcesRoot = Optional.empty();
-  protected Optional<SourcePath> manifestFile = Optional.empty();
-  protected Optional<String> mavenCoords = Optional.empty();
-  protected ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-  protected RemoveClassesPatternsMatcher classesToRemoveFromJar =
-      RemoveClassesPatternsMatcher.EMPTY;
-  protected ExtraClasspathFromContextFunction extraClasspathFromContextFunction =
-      ExtraClasspathFromContextFunction.EMPTY;
-  protected boolean sourceAbisAllowed = true;
-  @Nullable protected JavacOptions initialJavacOptions = null;
-  @Nullable protected JavaLibraryDeps deps = null;
+  private final BuildRuleResolver buildRuleResolver;
+  private final SourcePathResolver sourcePathResolver;
+  private final SourcePathRuleFinder ruleFinder;
+  private final ConfiguredCompilerFactory configuredCompilerFactory;
+  private DefaultJavaLibraryConstructor constructor = DefaultJavaLibrary::new;
+  private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
+  private Optional<SourcePath> proguardConfig = Optional.empty();
+  private ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
+  private Optional<Path> resourcesRoot = Optional.empty();
+  private Optional<SourcePath> manifestFile = Optional.empty();
+  private Optional<String> mavenCoords = Optional.empty();
+  private ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+  private RemoveClassesPatternsMatcher classesToRemoveFromJar = RemoveClassesPatternsMatcher.EMPTY;
+  private boolean sourceAbisAllowed = true;
+  @Nullable private JavacOptions initialJavacOptions = null;
+  @Nullable private JavaLibraryDeps deps = null;
   @Nullable private JavaLibraryDescription.CoreArg args = null;
 
   public DefaultJavaLibraryBuilder(
-      TargetGraph targetGraph,
       BuildTarget initialBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       ConfiguredCompilerFactory configuredCompilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig) {
     libraryTarget =
@@ -104,12 +94,10 @@ public final class DefaultJavaLibraryBuilder {
             ? initialBuildTarget
             : HasJavaAbi.getLibraryTarget(initialBuildTarget);
 
-    this.targetGraph = targetGraph;
     this.initialBuildTarget = initialBuildTarget;
     this.projectFilesystem = projectFilesystem;
     this.initialParams = initialParams;
     this.buildRuleResolver = buildRuleResolver;
-    this.cellRoots = cellRoots;
     this.configuredCompilerFactory = configuredCompilerFactory;
     this.javaBuckConfig = javaBuckConfig;
 
@@ -118,20 +106,16 @@ public final class DefaultJavaLibraryBuilder {
   }
 
   public DefaultJavaLibraryBuilder(
-      TargetGraph targetGraph,
       BuildTarget initialBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       ConfiguredCompilerFactory configuredCompilerFactory) {
     this(
-        targetGraph,
         initialBuildTarget,
         projectFilesystem,
         initialParams,
         buildRuleResolver,
-        cellRoots,
         configuredCompilerFactory,
         null);
   }
@@ -147,7 +131,6 @@ public final class DefaultJavaLibraryBuilder {
     return setSrcs(args.getSrcs())
         .setResources(args.getResources())
         .setResourcesRoot(args.getResourcesRoot())
-        .setUnbundledResourcesRoot(args.getUnbundledResourcesRoot())
         .setProguardConfig(args.getProguardConfig())
         .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
         .setDeps(JavaLibraryDeps.newInstance(args, buildRuleResolver))
@@ -165,12 +148,6 @@ public final class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
     this.initialJavacOptions = javacOptions;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setExtraClasspathFromContextFunction(
-      ExtraClasspathFromContextFunction extraClasspathFromContextFunction) {
-    this.extraClasspathFromContextFunction = extraClasspathFromContextFunction;
     return this;
   }
 
@@ -203,12 +180,6 @@ public final class DefaultJavaLibraryBuilder {
 
   public DefaultJavaLibraryBuilder setResourcesRoot(Optional<Path> resourcesRoot) {
     this.resourcesRoot = resourcesRoot;
-    return this;
-  }
-
-  public DefaultJavaLibraryBuilder setUnbundledResourcesRoot(
-      Optional<SourcePath> unbundledResourcesRoot) {
-    this.unbundledResourcesRoot = unbundledResourcesRoot;
     return this;
   }
 
@@ -247,7 +218,7 @@ public final class DefaultJavaLibraryBuilder {
     return newHelper().buildAbi();
   }
 
-  protected BuilderHelper newHelper() {
+  private BuilderHelper newHelper() {
     return new BuilderHelper();
   }
 
@@ -265,11 +236,11 @@ public final class DefaultJavaLibraryBuilder {
     @Nullable private JavacOptions javacOptions;
     @Nullable private ConfiguredCompiler configuredCompiler;
 
-    protected DefaultJavaLibrary build() {
+    private DefaultJavaLibrary build() {
       return getLibraryRule(false);
     }
 
-    protected BuildRule buildAbi() {
+    private BuildRule buildAbi() {
       if (HasJavaAbi.isClassAbiTarget(initialBuildTarget)) {
         return buildAbiFromClasses();
       } else if (HasJavaAbi.isSourceAbiTarget(initialBuildTarget)) {
@@ -300,7 +271,7 @@ public final class DefaultJavaLibraryBuilder {
     }
 
     @Nullable
-    protected BuildTarget getAbiJar() {
+    private BuildTarget getAbiJar() {
       if (!willProduceOutputJar()) {
         return null;
       }
@@ -384,7 +355,7 @@ public final class DefaultJavaLibraryBuilder {
       return libraryRule;
     }
 
-    protected final boolean getRequiredForSourceAbi() {
+    private boolean getRequiredForSourceAbi() {
       return args != null && args.getRequiredForSourceAbi();
     }
 
@@ -420,7 +391,7 @@ public final class DefaultJavaLibraryBuilder {
                   != JavaBuckConfig.SourceAbiVerificationMode.OFF);
     }
 
-    protected final ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
+    private ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
       if (finalFullJarDeclaredDeps == null) {
         finalFullJarDeclaredDeps =
             ImmutableSortedSet.copyOf(
@@ -432,7 +403,7 @@ public final class DefaultJavaLibraryBuilder {
       return finalFullJarDeclaredDeps;
     }
 
-    protected final ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
+    private ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
       ImmutableSortedSet<BuildRule> buildRules =
           configuredCompilerFactory.compileAgainstAbis()
               ? getCompileTimeClasspathAbiDeps()
@@ -445,7 +416,7 @@ public final class DefaultJavaLibraryBuilder {
           .collect(MoreCollectors.toImmutableSortedSet());
     }
 
-    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
+    private ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
       if (compileTimeClasspathFullDeps == null) {
         compileTimeClasspathFullDeps =
             getCompileTimeClasspathUnfilteredFullDeps()
@@ -457,7 +428,7 @@ public final class DefaultJavaLibraryBuilder {
       return compileTimeClasspathFullDeps;
     }
 
-    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
+    private ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
       if (compileTimeClasspathAbiDeps == null) {
         compileTimeClasspathAbiDeps =
             JavaLibraryRules.getAbiRules(buildRuleResolver, getCompileTimeClasspathFullDeps());
@@ -466,7 +437,7 @@ public final class DefaultJavaLibraryBuilder {
       return compileTimeClasspathAbiDeps;
     }
 
-    protected final ZipArchiveDependencySupplier getAbiClasspath() {
+    private ZipArchiveDependencySupplier getAbiClasspath() {
       if (abiClasspath == null) {
         abiClasspath =
             new ZipArchiveDependencySupplier(
@@ -480,7 +451,7 @@ public final class DefaultJavaLibraryBuilder {
       return abiClasspath;
     }
 
-    protected final ConfiguredCompiler getConfiguredCompiler() {
+    private ConfiguredCompiler getConfiguredCompiler() {
       if (configuredCompiler == null) {
         configuredCompiler =
             configuredCompilerFactory.configure(args, getJavacOptions(), buildRuleResolver);
@@ -489,7 +460,7 @@ public final class DefaultJavaLibraryBuilder {
       return configuredCompiler;
     }
 
-    protected final ImmutableSortedSet<BuildRule> getFinalBuildDeps() {
+    private ImmutableSortedSet<BuildRule> getFinalBuildDeps() {
       if (finalBuildDeps == null) {
         ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
 
@@ -520,7 +491,7 @@ public final class DefaultJavaLibraryBuilder {
       return finalBuildDeps;
     }
 
-    protected final ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
+    private ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
       if (compileTimeClasspathUnfilteredFullDeps == null) {
         Iterable<BuildRule> firstOrderDeps =
             Iterables.concat(getFinalFullJarDeclaredDeps(), deps.getProvidedDeps());
@@ -536,7 +507,7 @@ public final class DefaultJavaLibraryBuilder {
       return compileTimeClasspathUnfilteredFullDeps;
     }
 
-    protected final JarBuildStepsFactory getJarBuildStepsFactory() {
+    private JarBuildStepsFactory getJarBuildStepsFactory() {
       if (jarBuildStepsFactory == null) {
         jarBuildStepsFactory =
             new JarBuildStepsFactory(
@@ -557,15 +528,11 @@ public final class DefaultJavaLibraryBuilder {
       return jarBuildStepsFactory;
     }
 
-    protected final JavacOptions getJavacOptions() {
+    private JavacOptions getJavacOptions() {
       if (javacOptions == null) {
         javacOptions = Preconditions.checkNotNull(initialJavacOptions);
       }
       return javacOptions;
     }
-  }
-
-  protected Javac getJavac() {
-    return JavacFactory.create(ruleFinder, Preconditions.checkNotNull(javaBuckConfig), args);
   }
 }

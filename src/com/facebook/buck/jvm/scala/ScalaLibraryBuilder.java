@@ -22,28 +22,22 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.TargetGraph;
 
 final class ScalaLibraryBuilder {
   private ScalaLibraryBuilder() {}
 
   public static DefaultJavaLibraryBuilder newInstance(
-      TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       ScalaBuckConfig scalaBuckConfig,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-        targetGraph,
         buildTarget,
         projectFilesystem,
         params,
         buildRuleResolver,
-        cellRoots,
         new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
         javaBuckConfig);
   }

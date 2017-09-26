@@ -120,14 +120,7 @@ public class KotlinLibraryDescription
 
     DefaultJavaLibraryBuilder defaultKotlinLibraryBuilder =
         KotlinLibraryBuilder.newInstance(
-                targetGraph,
-                buildTarget,
-                projectFilesystem,
-                params,
-                resolver,
-                cellRoots,
-                kotlinBuckConfig,
-                javaBuckConfig)
+                buildTarget, projectFilesystem, params, resolver, kotlinBuckConfig, javaBuckConfig)
             .setJavacOptions(javacOptions)
             .setArgs(args);
 

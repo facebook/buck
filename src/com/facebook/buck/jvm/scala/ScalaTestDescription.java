@@ -118,14 +118,7 @@ public class ScalaTestDescription
 
     DefaultJavaLibraryBuilder scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
-                targetGraph,
-                javaLibraryBuildTarget,
-                projectFilesystem,
-                params,
-                resolver,
-                cellRoots,
-                config,
-                javaBuckConfig)
+                javaLibraryBuildTarget, projectFilesystem, params, resolver, config, javaBuckConfig)
             .setJavacOptions(javacOptions)
             .setArgs(args);
 

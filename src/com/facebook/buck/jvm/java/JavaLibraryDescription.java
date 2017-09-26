@@ -173,12 +173,10 @@ public class JavaLibraryDescription
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         DefaultJavaLibrary.builder(
-                targetGraph,
                 buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setArgs(args)

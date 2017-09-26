@@ -65,14 +65,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
     DefaultJavaLibraryBuilder defaultGroovyLibraryBuilder =
         DefaultGroovyLibraryBuilder.newInstance(
-                targetGraph,
-                buildTarget,
-                projectFilesystem,
-                params,
-                resolver,
-                cellRoots,
-                javacOptions,
-                groovyBuckConfig)
+                buildTarget, projectFilesystem, params, resolver, javacOptions, groovyBuckConfig)
             .setArgs(args);
 
     return HasJavaAbi.isAbiTarget(buildTarget)

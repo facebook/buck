@@ -97,12 +97,10 @@ public class AndroidLibraryDescription
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
     AndroidLibrary.Builder androidLibraryBuilder =
         AndroidLibrary.builder(
-            targetGraph,
             buildTarget,
             projectFilesystem,
             params,
             resolver,
-            cellRoots,
             javaBuckConfig,
             javacOptions,
             args,

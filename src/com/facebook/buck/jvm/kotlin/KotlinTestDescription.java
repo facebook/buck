@@ -101,12 +101,10 @@ public class KotlinTestDescription
 
     DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
         KotlinLibraryBuilder.newInstance(
-                targetGraph,
                 testsLibraryBuildTarget,
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
                 kotlinBuckConfig,
                 javaBuckConfig)
             .setArgs(args)

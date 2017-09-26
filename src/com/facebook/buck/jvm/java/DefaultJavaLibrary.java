@@ -38,7 +38,6 @@ import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SupportsPipelining;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -122,23 +121,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Nullable private CalculateAbiFromSource sourceAbi;
 
   public static DefaultJavaLibraryBuilder builder(
-      TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       ConfiguredCompilerFactory compilerFactory,
       JavaBuckConfig javaBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-        targetGraph,
-        buildTarget,
-        projectFilesystem,
-        params,
-        buildRuleResolver,
-        cellRoots,
-        compilerFactory,
-        javaBuckConfig);
+        buildTarget, projectFilesystem, params, buildRuleResolver, compilerFactory, javaBuckConfig);
   }
 
   @Override

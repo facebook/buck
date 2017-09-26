@@ -175,18 +175,15 @@ public class RobolectricTestDescription
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             DefaultJavaLibrary.builder(
-                    targetGraph,
                     testLibraryBuildTarget,
                     projectFilesystem,
                     params,
                     resolver,
-                    cellRoots,
                     compilerFactory.getCompiler(
                         args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA)),
                     javaBuckConfig)
                 .setArgs(testLibraryArgs)
                 .setJavacOptions(javacOptions)
-                .setExtraClasspathFromContextFunction(AndroidClasspathFromContextFunction.INSTANCE)
                 .build());
 
     Function<String, Arg> toMacroArgFunction =

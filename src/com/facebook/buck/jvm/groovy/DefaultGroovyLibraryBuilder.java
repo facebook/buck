@@ -22,28 +22,22 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.TargetGraph;
 
 final class DefaultGroovyLibraryBuilder {
   private DefaultGroovyLibraryBuilder() {}
 
   public static DefaultJavaLibraryBuilder newInstance(
-      TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       JavacOptions javacOptions,
       GroovyBuckConfig groovyBuckConfig) {
     return new DefaultJavaLibraryBuilder(
-            targetGraph,
             buildTarget,
             projectFilesystem,
             params,
             buildRuleResolver,
-            cellRoots,
             new GroovyConfiguredCompilerFactory(groovyBuckConfig))
         .setJavacOptions(javacOptions);
   }

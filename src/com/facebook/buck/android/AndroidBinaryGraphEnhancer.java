@@ -44,10 +44,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -98,10 +96,8 @@ public class AndroidBinaryGraphEnhancer {
   private final boolean trimResourceIds;
   private final Optional<String> keepResourcePattern;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
-  private final TargetGraph targetGraph;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathRuleFinder ruleFinder;
-  private final CellPathResolver cellRoots;
   private final PackageType packageType;
   private final boolean shouldPreDex;
   private final DexSplitMode dexSplitMode;
@@ -125,9 +121,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams originalParams,
-      TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      CellPathResolver cellRoots,
       AndroidBinary.AaptMode aaptMode,
       ResourceCompressionMode resourceCompressionMode,
       ResourceFilter resourcesFilter,
@@ -173,10 +167,8 @@ public class AndroidBinaryGraphEnhancer {
     this.buildRuleParams = originalParams;
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
-    this.targetGraph = targetGraph;
     this.ruleResolver = ruleResolver;
     this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    this.cellRoots = cellRoots;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;
     this.dexSplitMode = dexSplitMode;
@@ -298,13 +290,11 @@ public class AndroidBinaryGraphEnhancer {
           buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(generateCodeForMergedLibraryMap));
       DefaultJavaLibrary compileMergedNativeLibMapGenCode =
           DefaultJavaLibrary.builder(
-                  targetGraph,
                   originalBuildTarget.withAppendedFlavors(
                       COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
                   projectFilesystem,
                   paramsForCompileGenCode,
                   ruleResolver,
-                  cellRoots,
                   new JavaConfiguredCompilerFactory(javaBuckConfig),
                   javaBuckConfig)
               // Kind of a hack: override language level to 7 to allow string switch.
@@ -386,12 +376,10 @@ public class AndroidBinaryGraphEnhancer {
         buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(trimUberRDotJava));
     JavaLibrary compileUberRDotJava =
         DefaultJavaLibrary.builder(
-                targetGraph,
                 originalBuildTarget.withAppendedFlavors(COMPILE_UBER_R_DOT_JAVA_FLAVOR),
                 projectFilesystem,
                 paramsForCompileUberRDotJava,
                 ruleResolver,
-                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
                 javaBuckConfig)
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))

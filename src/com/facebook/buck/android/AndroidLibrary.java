@@ -32,11 +32,9 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -55,23 +53,19 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
 
   public static Builder builder(
-      TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
       AndroidLibraryDescription.CoreArg args,
       ConfiguredCompilerFactory compilerFactory) {
     return new Builder(
-        targetGraph,
         buildTarget,
         projectFilesystem,
         params,
         buildRuleResolver,
-        cellRoots,
         javaBuckConfig,
         javacOptions,
         args,
@@ -121,12 +115,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     private final AndroidLibraryGraphEnhancer graphEnhancer;
 
     protected Builder(
-        TargetGraph targetGraph,
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         BuildRuleResolver buildRuleResolver,
-        CellPathResolver cellRoots,
         JavaBuckConfig javaBuckConfig,
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
@@ -134,12 +126,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       this.buildRuleResolver = buildRuleResolver;
       delegate =
           new DefaultJavaLibraryBuilder(
-              targetGraph,
               buildTarget,
               projectFilesystem,
               params,
               buildRuleResolver,
-              cellRoots,
               compilerFactory,
               javaBuckConfig);
       delegate.setConstructor(
