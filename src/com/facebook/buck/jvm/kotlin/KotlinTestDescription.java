@@ -114,7 +114,7 @@ public class KotlinTestDescription
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
-    DefaultJavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+    DefaultJavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);

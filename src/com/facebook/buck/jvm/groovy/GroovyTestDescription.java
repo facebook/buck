@@ -105,7 +105,7 @@ public class GroovyTestDescription
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);

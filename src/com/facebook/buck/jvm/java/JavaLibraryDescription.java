@@ -186,7 +186,7 @@ public class JavaLibraryDescription
       return defaultJavaLibraryBuilder.buildAbi();
     }
 
-    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryBuilder.build();
+    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryBuilder.buildLibrary();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;

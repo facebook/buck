@@ -221,7 +221,7 @@ public final class DefaultJavaLibraryBuilder {
     return deps;
   }
 
-  public DefaultJavaLibrary build() {
+  public DefaultJavaLibrary buildLibrary() {
     return getLibraryRule(false);
   }
 

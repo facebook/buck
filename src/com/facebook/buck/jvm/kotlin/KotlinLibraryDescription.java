@@ -130,7 +130,7 @@ public class KotlinLibraryDescription
       return defaultKotlinLibraryBuilder.buildAbi();
     }
 
-    DefaultJavaLibrary defaultKotlinLibrary = defaultKotlinLibraryBuilder.build();
+    DefaultJavaLibrary defaultKotlinLibrary = defaultKotlinLibraryBuilder.buildLibrary();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultKotlinLibrary;

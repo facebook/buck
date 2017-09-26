@@ -83,7 +83,7 @@ public class ScalaLibraryDescription
 
     return HasJavaAbi.isAbiTarget(buildTarget)
         ? scalaLibraryBuilder.buildAbi()
-        : scalaLibraryBuilder.build();
+        : scalaLibraryBuilder.buildLibrary();
   }
 
   @Override

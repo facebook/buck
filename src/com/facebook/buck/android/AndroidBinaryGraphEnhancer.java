@@ -314,7 +314,7 @@ public class AndroidBinaryGraphEnhancer {
                               .map(BuildRule::getBuildTarget)
                               .collect(Collectors.toList()))
                       .build())
-              .build();
+              .buildLibrary();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
     }
@@ -395,7 +395,7 @@ public class AndroidBinaryGraphEnhancer {
                             .map(BuildRule::getBuildTarget)
                             .collect(Collectors.toList()))
                     .build())
-            .build();
+            .buildLibrary();
     ruleResolver.addToIndex(compileUberRDotJava);
 
     // Create rule to dex uber R.java sources.

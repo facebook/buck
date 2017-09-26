@@ -1281,7 +1281,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .setSrcs(srcsAsPaths)
             .setPostprocessClassesCommands(postprocessClassesCommands)
             .setDeps(depsBuilder.build())
-            .build();
+            .buildLibrary();
 
     ruleResolver.addToIndex(defaultJavaLibrary);
     return defaultJavaLibrary;
@@ -1594,7 +1594,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setManifestFile(Optional.empty())
               .setMavenCoords(Optional.empty())
               .setTests(ImmutableSortedSet.of())
-              .build();
+              .buildLibrary();
 
       ruleResolver.addToIndex(javaLibrary);
       return javaLibrary;

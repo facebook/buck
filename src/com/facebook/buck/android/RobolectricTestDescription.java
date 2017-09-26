@@ -184,7 +184,7 @@ public class RobolectricTestDescription
                     javaBuckConfig)
                 .setArgs(testLibraryArgs)
                 .setJavacOptions(javacOptions)
-                .build());
+                .buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);

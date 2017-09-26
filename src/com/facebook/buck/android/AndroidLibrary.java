@@ -201,7 +201,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     }
 
     public AndroidLibrary build() {
-      return (AndroidLibrary) delegate.build();
+      return (AndroidLibrary) delegate.buildLibrary();
     }
 
     public BuildRule buildAbi() {

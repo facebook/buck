@@ -128,7 +128,7 @@ public class ScalaTestDescription
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
-    JavaLibrary testsLibrary = resolver.addToIndex(scalaLibraryBuilder.build());
+    JavaLibrary testsLibrary = resolver.addToIndex(scalaLibraryBuilder.buildLibrary());
 
     return new JavaTest(
         buildTarget,
