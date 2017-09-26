@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -35,12 +36,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -143,6 +142,16 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       this.args = args;
       setJavacOptions(javacOptions);
       setArgs(args);
+
+      getDummyRDotJava()
+          .ifPresent(
+              dummyRDotJava -> {
+                setDeps(
+                    new JavaLibraryDeps.Builder(buildRuleResolver)
+                        .from(JavaLibraryDeps.newInstance(args, buildRuleResolver))
+                        .addDepTargets(dummyRDotJava.getBuildTarget())
+                        .build());
+              });
     }
 
     @Override
@@ -214,13 +223,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 getRequiredForSourceAbi());
 
         return result;
-      }
-
-      @Override
-      protected ImmutableSortedSet<BuildRule> buildFinalFullJarDeclaredDeps() {
-        return RichStream.from(super.buildFinalFullJarDeclaredDeps())
-            .concat(RichStream.from(getDummyRDotJava()))
-            .toImmutableSortedSet(Ordering.natural());
       }
     }
   }
