@@ -120,9 +120,15 @@ public class KotlinLibraryDescription
 
     DefaultJavaLibraryRules defaultKotlinLibraryBuilder =
         KotlinLibraryBuilder.newInstance(
-                buildTarget, projectFilesystem, params, resolver, kotlinBuckConfig, javaBuckConfig)
+                buildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                kotlinBuckConfig,
+                javaBuckConfig,
+                args)
             .setJavacOptions(javacOptions)
-            .setArgs(args);
+            .build();
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.

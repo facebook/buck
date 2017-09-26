@@ -118,9 +118,15 @@ public class ScalaTestDescription
 
     DefaultJavaLibraryRules scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
-                javaLibraryBuildTarget, projectFilesystem, params, resolver, config, javaBuckConfig)
+                javaLibraryBuildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                config,
+                javaBuckConfig,
+                args)
             .setJavacOptions(javacOptions)
-            .setArgs(args);
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return scalaLibraryBuilder.buildAbi();

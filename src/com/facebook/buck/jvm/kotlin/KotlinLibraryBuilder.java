@@ -26,20 +26,21 @@ import com.facebook.buck.rules.BuildRuleResolver;
 final class KotlinLibraryBuilder {
   private KotlinLibraryBuilder() {}
 
-  public static DefaultJavaLibraryRules newInstance(
+  public static DefaultJavaLibraryRules.Builder newInstance(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      KotlinLibraryDescription.CoreArg args) {
     return new DefaultJavaLibraryRules.Builder(
-            buildTarget,
-            projectFilesystem,
-            params,
-            buildRuleResolver,
-            new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
-            javaBuckConfig)
-        .build();
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javaBuckConfig),
+        javaBuckConfig,
+        args);
   }
 }

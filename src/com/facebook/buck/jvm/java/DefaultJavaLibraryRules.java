@@ -102,20 +102,55 @@ public abstract class DefaultJavaLibraryRules {
   @Nullable
   abstract JavaBuckConfig getJavaBuckConfig();
 
-  private DefaultJavaLibraryConstructor constructor = DefaultJavaLibrary::new;
-  private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
-  private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
-  private Optional<SourcePath> proguardConfig = Optional.empty();
-  private ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
-  private Optional<Path> resourcesRoot = Optional.empty();
-  private Optional<SourcePath> manifestFile = Optional.empty();
-  private Optional<String> mavenCoords = Optional.empty();
-  private ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
-  private RemoveClassesPatternsMatcher classesToRemoveFromJar = RemoveClassesPatternsMatcher.EMPTY;
-  private boolean sourceAbisAllowed = true;
-  @Nullable private JavacOptions initialJavacOptions = null;
-  @Nullable private JavaLibraryDeps deps = null;
-  @Nullable private JavaLibraryDescription.CoreArg args = null;
+  @Value.Default
+  DefaultJavaLibraryConstructor getConstructor() {
+    return DefaultJavaLibrary::new;
+  }
+
+  @Value.NaturalOrder
+  abstract ImmutableSortedSet<SourcePath> getSrcs();
+
+  @Value.NaturalOrder
+  abstract ImmutableSortedSet<SourcePath> getResources();
+
+  @Value.Check
+  void validateResources() {
+    ResourceValidator.validateResources(
+        getSourcePathResolver(), getProjectFilesystem(), getResources());
+  }
+
+  abstract Optional<SourcePath> getProguardConfig();
+
+  abstract ImmutableList<String> getPostprocessClassesCommands();
+
+  abstract Optional<Path> getResourcesRoot();
+
+  abstract Optional<SourcePath> getManifestFile();
+
+  abstract Optional<String> getMavenCoords();
+
+  @Value.NaturalOrder
+  abstract ImmutableSortedSet<BuildTarget> getTests();
+
+  @Value.Default
+  RemoveClassesPatternsMatcher getClassesToRemoveFromJar() {
+    return RemoveClassesPatternsMatcher.EMPTY;
+  }
+
+  @Value.Default
+  boolean getSourceAbisAllowed() {
+    return true;
+  }
+
+  abstract JavacOptions getJavacOptions();
+
+  @Nullable
+  abstract JavaLibraryDeps getDeps();
+
+  @org.immutables.builder.Builder.Parameter
+  @Nullable
+  abstract JavaLibraryDescription.CoreArg getArgs();
+
   @Nullable private DefaultJavaLibrary libraryRule;
   @Nullable private CalculateAbiFromSource sourceAbiRule;
   @Nullable private ImmutableSortedSet<BuildRule> finalBuildDeps;
@@ -126,98 +161,7 @@ public abstract class DefaultJavaLibraryRules {
   @Nullable private ZipArchiveDependencySupplier abiClasspath;
   @Nullable private JarBuildStepsFactory jarBuildStepsFactory;
   @Nullable private BuildTarget abiJar;
-  @Nullable private JavacOptions javacOptions;
   @Nullable private ConfiguredCompiler configuredCompiler;
-
-  public DefaultJavaLibraryRules setConstructor(DefaultJavaLibraryConstructor constructor) {
-    this.constructor = constructor;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setArgs(JavaLibraryDescription.CoreArg args) {
-    this.args = args;
-
-    return setSrcs(args.getSrcs())
-        .setResources(args.getResources())
-        .setResourcesRoot(args.getResourcesRoot())
-        .setProguardConfig(args.getProguardConfig())
-        .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-        .setDeps(JavaLibraryDeps.newInstance(args, getBuildRuleResolver()))
-        .setTests(args.getTests())
-        .setManifestFile(args.getManifestFile())
-        .setMavenCoords(args.getMavenCoords())
-        .setSourceAbisAllowed(args.getGenerateAbiFromSource().orElse(sourceAbisAllowed))
-        .setClassesToRemoveFromJar(new RemoveClassesPatternsMatcher(args.getRemoveClasses()));
-  }
-
-  public DefaultJavaLibraryRules setDeps(JavaLibraryDeps deps) {
-    this.deps = deps;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setJavacOptions(JavacOptions javacOptions) {
-    this.initialJavacOptions = javacOptions;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setSourceAbisAllowed(boolean sourceAbisAllowed) {
-    this.sourceAbisAllowed = sourceAbisAllowed;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    this.srcs = srcs;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setResources(ImmutableSortedSet<SourcePath> resources) {
-    this.resources =
-        ResourceValidator.validateResources(
-            getSourcePathResolver(), getProjectFilesystem(), resources);
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setProguardConfig(Optional<SourcePath> proguardConfig) {
-    this.proguardConfig = proguardConfig;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setPostprocessClassesCommands(
-      ImmutableList<String> postprocessClassesCommands) {
-    this.postprocessClassesCommands = postprocessClassesCommands;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setResourcesRoot(Optional<Path> resourcesRoot) {
-    this.resourcesRoot = resourcesRoot;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setManifestFile(Optional<SourcePath> manifestFile) {
-    this.manifestFile = manifestFile;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setMavenCoords(Optional<String> mavenCoords) {
-    this.mavenCoords = mavenCoords;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setTests(ImmutableSortedSet<BuildTarget> tests) {
-    this.tests = tests;
-    return this;
-  }
-
-  public DefaultJavaLibraryRules setClassesToRemoveFromJar(
-      RemoveClassesPatternsMatcher classesToRemoveFromJar) {
-    this.classesToRemoveFromJar = classesToRemoveFromJar;
-    return this;
-  }
-
-  @Nullable
-  public JavaLibraryDeps getDeps() {
-    return deps;
-  }
 
   public DefaultJavaLibrary buildLibrary() {
     return getLibraryRule(false);
@@ -276,7 +220,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean willProduceOutputJar() {
-    return !srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent();
+    return !getSrcs().isEmpty() || !getResources().isEmpty() || getManifestFile().isPresent();
   }
 
   private boolean willProduceSourceAbi() {
@@ -285,10 +229,10 @@ public abstract class DefaultJavaLibraryRules {
 
   private boolean shouldBuildAbiFromSource() {
     return isCompilingJava()
-        && !srcs.isEmpty()
+        && !getSrcs().isEmpty()
         && sourceAbisEnabled()
-        && sourceAbisAllowed
-        && postprocessClassesCommands.isEmpty();
+        && getSourceAbisAllowed()
+        && getPostprocessClassesCommands().isEmpty();
   }
 
   private boolean isCompilingJava() {
@@ -311,20 +255,21 @@ public abstract class DefaultJavaLibraryRules {
       }
 
       libraryRule =
-          constructor.newInstance(
-              getInitialBuildTarget(),
-              getProjectFilesystem(),
-              buildDepsBuilder.build(),
-              getSourcePathResolver(),
-              getJarBuildStepsFactory(),
-              proguardConfig,
-              getFinalFullJarDeclaredDeps(),
-              Preconditions.checkNotNull(deps).getExportedDeps(),
-              Preconditions.checkNotNull(deps).getProvidedDeps(),
-              getAbiJar(),
-              mavenCoords,
-              tests,
-              getRequiredForSourceAbi());
+          getConstructor()
+              .newInstance(
+                  getInitialBuildTarget(),
+                  getProjectFilesystem(),
+                  buildDepsBuilder.build(),
+                  getSourcePathResolver(),
+                  getJarBuildStepsFactory(),
+                  getProguardConfig(),
+                  getFinalFullJarDeclaredDeps(),
+                  Preconditions.checkNotNull(getDeps()).getExportedDeps(),
+                  Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
+                  getAbiJar(),
+                  getMavenCoords(),
+                  getTests(),
+                  getRequiredForSourceAbi());
 
       if (sourceAbiRule != null) {
         libraryRule.setSourceAbi(sourceAbiRule);
@@ -339,7 +284,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean getRequiredForSourceAbi() {
-    return args != null && args.getRequiredForSourceAbi();
+    return getArgs() != null && getArgs().getRequiredForSourceAbi();
   }
 
   private CalculateAbiFromSource getSourceAbiRule(boolean addToIndex) {
@@ -379,7 +324,7 @@ public abstract class DefaultJavaLibraryRules {
       finalFullJarDeclaredDeps =
           ImmutableSortedSet.copyOf(
               Iterables.concat(
-                  Preconditions.checkNotNull(deps).getDeps(),
+                  Preconditions.checkNotNull(getDeps()).getDeps(),
                   getConfiguredCompiler().getDeclaredDeps(getSourcePathRuleFinder())));
     }
 
@@ -437,7 +382,8 @@ public abstract class DefaultJavaLibraryRules {
   private ConfiguredCompiler getConfiguredCompiler() {
     if (configuredCompiler == null) {
       configuredCompiler =
-          getConfiguredCompilerFactory().configure(args, getJavacOptions(), getBuildRuleResolver());
+          getConfiguredCompilerFactory()
+              .configure(getArgs(), getJavacOptions(), getBuildRuleResolver());
     }
 
     return configuredCompiler;
@@ -477,7 +423,9 @@ public abstract class DefaultJavaLibraryRules {
   private ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
     if (compileTimeClasspathUnfilteredFullDeps == null) {
       Iterable<BuildRule> firstOrderDeps =
-          Iterables.concat(getFinalFullJarDeclaredDeps(), deps.getProvidedDeps());
+          Iterables.concat(
+              getFinalFullJarDeclaredDeps(),
+              Preconditions.checkNotNull(getDeps()).getProvidedDeps());
 
       ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
           BuildRules.getExportedRules(firstOrderDeps);
@@ -497,27 +445,21 @@ public abstract class DefaultJavaLibraryRules {
               getProjectFilesystem(),
               getSourcePathRuleFinder(),
               getConfiguredCompiler(),
-              srcs,
-              resources,
-              resourcesRoot,
-              manifestFile,
-              postprocessClassesCommands,
+              getSrcs(),
+              getResources(),
+              getResourcesRoot(),
+              getManifestFile(),
+              getPostprocessClassesCommands(),
               getAbiClasspath(),
               getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
               getFinalCompileTimeClasspathSourcePaths(),
-              classesToRemoveFromJar,
+              getClassesToRemoveFromJar(),
               getRequiredForSourceAbi());
     }
     return jarBuildStepsFactory;
   }
 
-  private JavacOptions getJavacOptions() {
-    if (javacOptions == null) {
-      javacOptions = Preconditions.checkNotNull(initialJavacOptions);
-    }
-    return javacOptions;
-  }
-
+  @org.immutables.builder.Builder.AccessibleFields
   public static class Builder extends ImmutableDefaultJavaLibraryRules.Builder {
     public Builder(
         BuildTarget initialBuildTarget,
@@ -525,18 +467,44 @@ public abstract class DefaultJavaLibraryRules {
         BuildRuleParams initialParams,
         BuildRuleResolver buildRuleResolver,
         ConfiguredCompilerFactory configuredCompilerFactory,
-        @Nullable JavaBuckConfig javaBuckConfig) {
+        @Nullable JavaBuckConfig javaBuckConfig,
+        @Nullable JavaLibraryDescription.CoreArg args) {
       super(
           initialBuildTarget,
           projectFilesystem,
           initialParams,
           buildRuleResolver,
           configuredCompilerFactory,
-          javaBuckConfig);
+          javaBuckConfig,
+          args);
+
+      this.buildRuleResolver = buildRuleResolver;
+
+      if (args != null) {
+        if (args.getGenerateAbiFromSource().isPresent()) {
+          setSourceAbisAllowed(args.getGenerateAbiFromSource().get());
+        }
+
+        setSrcs(args.getSrcs())
+            .setResources(args.getResources())
+            .setResourcesRoot(args.getResourcesRoot())
+            .setProguardConfig(args.getProguardConfig())
+            .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
+            .setDeps(JavaLibraryDeps.newInstance(args, buildRuleResolver))
+            .setTests(args.getTests())
+            .setManifestFile(args.getManifestFile())
+            .setMavenCoords(args.getMavenCoords())
+            .setClassesToRemoveFromJar(new RemoveClassesPatternsMatcher(args.getRemoveClasses()));
+      }
     }
 
     Builder() {
       throw new UnsupportedOperationException();
+    }
+
+    @Nullable
+    public JavaLibraryDeps getDeps() {
+      return super.deps;
     }
   }
 }

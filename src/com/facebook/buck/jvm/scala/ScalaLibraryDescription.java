@@ -77,9 +77,10 @@ public class ScalaLibraryDescription
                 rawParams,
                 resolver,
                 scalaBuckConfig,
-                javaBuckConfig)
+                javaBuckConfig,
+                args)
             .setJavacOptions(javacOptions)
-            .setArgs(args);
+            .build();
 
     return HasJavaAbi.isAbiTarget(buildTarget)
         ? scalaLibraryBuilder.buildAbi()

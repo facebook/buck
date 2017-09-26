@@ -26,20 +26,21 @@ import com.facebook.buck.rules.BuildRuleResolver;
 final class ScalaLibraryBuilder {
   private ScalaLibraryBuilder() {}
 
-  public static DefaultJavaLibraryRules newInstance(
+  public static DefaultJavaLibraryRules.Builder newInstance(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       ScalaBuckConfig scalaBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      ScalaLibraryDescription.CoreArg args) {
     return new DefaultJavaLibraryRules.Builder(
-            buildTarget,
-            projectFilesystem,
-            params,
-            buildRuleResolver,
-            new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
-            javaBuckConfig)
-        .build();
+        buildTarget,
+        projectFilesystem,
+        params,
+        buildRuleResolver,
+        new ScalaConfiguredCompilerFactory(scalaBuckConfig, javaBuckConfig),
+        javaBuckConfig,
+        args);
   }
 }

@@ -32,15 +32,17 @@ final class DefaultGroovyLibraryBuilder {
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       JavacOptions javacOptions,
-      GroovyBuckConfig groovyBuckConfig) {
+      GroovyBuckConfig groovyBuckConfig,
+      GroovyLibraryDescription.CoreArg args) {
     return new DefaultJavaLibraryRules.Builder(
             buildTarget,
             projectFilesystem,
             params,
             buildRuleResolver,
             new GroovyConfiguredCompilerFactory(groovyBuckConfig),
-            null)
-        .build()
-        .setJavacOptions(javacOptions);
+            null,
+            args)
+        .setJavacOptions(javacOptions)
+        .build();
   }
 }

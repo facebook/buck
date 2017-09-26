@@ -124,16 +124,16 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         AndroidLibraryDescription.CoreArg args,
         ConfiguredCompilerFactory compilerFactory) {
       this.buildRuleResolver = buildRuleResolver;
-      delegate =
+      DefaultJavaLibraryRules.Builder delegateBuilder =
           new DefaultJavaLibraryRules.Builder(
-                  buildTarget,
-                  projectFilesystem,
-                  params,
-                  buildRuleResolver,
-                  compilerFactory,
-                  javaBuckConfig)
-              .build();
-      delegate.setConstructor(
+              buildTarget,
+              projectFilesystem,
+              params,
+              buildRuleResolver,
+              compilerFactory,
+              javaBuckConfig,
+              args);
+      delegateBuilder.setConstructor(
           new DefaultJavaLibraryRules.DefaultJavaLibraryConstructor() {
             @Override
             public DefaultJavaLibrary newInstance(
@@ -167,11 +167,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   requiredForSourceAbi);
             }
           });
-      delegate.setJavacOptions(javacOptions);
-      delegate.setArgs(args);
-      delegate.setTests(args.getTests());
+      delegateBuilder.setJavacOptions(javacOptions);
+      delegateBuilder.setTests(args.getTests());
 
-      JavaLibraryDeps deps = Preconditions.checkNotNull(delegate.getDeps());
+      JavaLibraryDeps deps = Preconditions.checkNotNull(delegateBuilder.getDeps());
       BuildTarget libraryTarget =
           HasJavaAbi.isLibraryTarget(buildTarget)
               ? buildTarget
@@ -193,12 +192,14 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       getDummyRDotJava()
           .ifPresent(
               dummyRDotJava -> {
-                delegate.setDeps(
+                delegateBuilder.setDeps(
                     new JavaLibraryDeps.Builder(buildRuleResolver)
                         .from(JavaLibraryDeps.newInstance(args, buildRuleResolver))
                         .addDepTargets(dummyRDotJava.getBuildTarget())
                         .build());
               });
+
+      delegate = delegateBuilder.build();
     }
 
     public AndroidLibrary build() {

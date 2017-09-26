@@ -172,15 +172,16 @@ public class JavaLibraryDescription
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
-        DefaultJavaLibrary.builder(
+        DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
-                javaBuckConfig)
-            .setArgs(args)
-            .setJavacOptions(javacOptions);
+                javaBuckConfig,
+                args)
+            .setJavacOptions(javacOptions)
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();

@@ -93,13 +93,13 @@ public class GroovyTestDescription
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultGroovyLibraryBuilder.newInstance(
-                buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
-                projectFilesystem,
-                params,
-                resolver,
-                javacOptions,
-                groovyBuckConfig)
-            .setArgs(args);
+            buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
+            projectFilesystem,
+            params,
+            resolver,
+            javacOptions,
+            groovyBuckConfig,
+            args);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();

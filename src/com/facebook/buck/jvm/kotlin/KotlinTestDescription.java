@@ -106,9 +106,10 @@ public class KotlinTestDescription
                 params,
                 resolver,
                 kotlinBuckConfig,
-                javaBuckConfig)
-            .setArgs(args)
-            .setJavacOptions(javacOptions);
+                javaBuckConfig,
+                args)
+            .setJavacOptions(javacOptions)
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();

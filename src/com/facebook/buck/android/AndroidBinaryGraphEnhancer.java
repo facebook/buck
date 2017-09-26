@@ -289,14 +289,15 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForCompileGenCode =
           buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(generateCodeForMergedLibraryMap));
       DefaultJavaLibrary compileMergedNativeLibMapGenCode =
-          DefaultJavaLibrary.builder(
+          DefaultJavaLibrary.rulesBuilder(
                   originalBuildTarget.withAppendedFlavors(
                       COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
                   projectFilesystem,
                   paramsForCompileGenCode,
                   ruleResolver,
                   new JavaConfiguredCompilerFactory(javaBuckConfig),
-                  javaBuckConfig)
+                  javaBuckConfig,
+                  null)
               // Kind of a hack: override language level to 7 to allow string switch.
               // This can be removed once no one who uses this feature sets the level
               // to 6 in their .buckconfig.
@@ -314,6 +315,7 @@ public class AndroidBinaryGraphEnhancer {
                               .map(BuildRule::getBuildTarget)
                               .collect(Collectors.toList()))
                       .build())
+              .build()
               .buildLibrary();
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
@@ -375,13 +377,14 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForCompileUberRDotJava =
         buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(trimUberRDotJava));
     JavaLibrary compileUberRDotJava =
-        DefaultJavaLibrary.builder(
+        DefaultJavaLibrary.rulesBuilder(
                 originalBuildTarget.withAppendedFlavors(COMPILE_UBER_R_DOT_JAVA_FLAVOR),
                 projectFilesystem,
                 paramsForCompileUberRDotJava,
                 ruleResolver,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
-                javaBuckConfig)
+                javaBuckConfig,
+                null)
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
             .setSourceAbisAllowed(false)
@@ -395,6 +398,7 @@ public class AndroidBinaryGraphEnhancer {
                             .map(BuildRule::getBuildTarget)
                             .collect(Collectors.toList()))
                     .build())
+            .build()
             .buildLibrary();
     ruleResolver.addToIndex(compileUberRDotJava);
 

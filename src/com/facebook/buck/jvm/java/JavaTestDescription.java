@@ -124,15 +124,16 @@ public class JavaTestDescription
     params = cxxLibraryEnhancement.updatedParams;
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
-        DefaultJavaLibrary.builder(
+        DefaultJavaLibrary.rulesBuilder(
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
                 params,
                 resolver,
                 new JavaConfiguredCompilerFactory(javaBuckConfig),
-                javaBuckConfig)
-            .setArgs(args)
-            .setJavacOptions(javacOptions);
+                javaBuckConfig,
+                args)
+            .setJavacOptions(javacOptions)
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();

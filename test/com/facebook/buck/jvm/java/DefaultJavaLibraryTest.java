@@ -1270,17 +1270,19 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         .forEach(depsBuilder::addExportedDepTargets);
 
     DefaultJavaLibrary defaultJavaLibrary =
-        DefaultJavaLibrary.builder(
+        DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
                 new FakeProjectFilesystem(),
                 buildRuleParams,
                 ruleResolver,
                 new JavaConfiguredCompilerFactory(testJavaBuckConfig),
-                testJavaBuckConfig)
+                testJavaBuckConfig,
+                null)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
             .setPostprocessClassesCommands(postprocessClassesCommands)
             .setDeps(depsBuilder.build())
+            .build()
             .buildLibrary();
 
     ruleResolver.addToIndex(defaultJavaLibrary);
@@ -1577,13 +1579,14 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
 
       DefaultJavaLibrary javaLibrary =
-          DefaultJavaLibrary.builder(
+          DefaultJavaLibrary.rulesBuilder(
                   buildTarget,
                   projectFilesystem,
                   buildRuleParams,
                   ruleResolver,
                   new JavaConfiguredCompilerFactory(testJavaBuckConfig),
-                  testJavaBuckConfig)
+                  testJavaBuckConfig,
+                  null)
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
               .setResources(ImmutableSortedSet.of())
@@ -1594,6 +1597,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setManifestFile(Optional.empty())
               .setMavenCoords(Optional.empty())
               .setTests(ImmutableSortedSet.of())
+              .build()
               .buildLibrary();
 
       ruleResolver.addToIndex(javaLibrary);
