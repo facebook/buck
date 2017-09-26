@@ -21,9 +21,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -33,6 +35,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
@@ -112,9 +115,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     return manifestFile;
   }
 
-  public static class Builder extends DefaultJavaLibraryBuilder {
-    private final AndroidLibraryDescription.CoreArg args;
-    @Nullable private AndroidLibraryGraphEnhancer graphEnhancer;
+  public static class Builder {
+    private final BuildRuleResolver buildRuleResolver;
+    private final DefaultJavaLibraryBuilder delegate;
+    private final AndroidLibraryGraphEnhancer graphEnhancer;
 
     protected Builder(
         TargetGraph targetGraph,
@@ -127,17 +131,18 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         JavacOptions javacOptions,
         AndroidLibraryDescription.CoreArg args,
         ConfiguredCompilerFactory compilerFactory) {
-      super(
-          targetGraph,
-          buildTarget,
-          projectFilesystem,
-          params,
-          buildRuleResolver,
-          cellRoots,
-          compilerFactory,
-          javaBuckConfig);
-      this.args = args;
-      setConstructor(
+      this.buildRuleResolver = buildRuleResolver;
+      delegate =
+          new DefaultJavaLibraryBuilder(
+              targetGraph,
+              buildTarget,
+              projectFilesystem,
+              params,
+              buildRuleResolver,
+              cellRoots,
+              compilerFactory,
+              javaBuckConfig);
+      delegate.setConstructor(
           new DefaultJavaLibraryBuilder.DefaultJavaLibraryConstructor() {
             @Override
             public DefaultJavaLibrary newInstance(
@@ -171,14 +176,33 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   requiredForSourceAbi);
             }
           });
-      setJavacOptions(javacOptions);
-      setArgs(args);
-      setTests(args.getTests());
+      delegate.setJavacOptions(javacOptions);
+      delegate.setArgs(args);
+      delegate.setTests(args.getTests());
+
+      JavaLibraryDeps deps = Preconditions.checkNotNull(delegate.getDeps());
+      BuildTarget libraryTarget =
+          HasJavaAbi.isLibraryTarget(buildTarget)
+              ? buildTarget
+              : HasJavaAbi.getLibraryTarget(buildTarget);
+      graphEnhancer =
+          new AndroidLibraryGraphEnhancer(
+              libraryTarget,
+              projectFilesystem,
+              ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
+              JavacFactory.create(
+                  new SourcePathRuleFinder(buildRuleResolver), javaBuckConfig, args),
+              javacOptions,
+              DependencyMode.FIRST_ORDER,
+              /* forceFinalResourceIds */ false,
+              args.getResourceUnionPackage(),
+              args.getFinalRName(),
+              false);
 
       getDummyRDotJava()
           .ifPresent(
               dummyRDotJava -> {
-                setDeps(
+                delegate.setDeps(
                     new JavaLibraryDeps.Builder(buildRuleResolver)
                         .from(JavaLibraryDeps.newInstance(args, buildRuleResolver))
                         .addDepTargets(dummyRDotJava.getBuildTarget())
@@ -186,33 +210,20 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               });
     }
 
+    public AndroidLibrary build() {
+      return (AndroidLibrary) delegate.build();
+    }
+
+    public BuildRule buildAbi() {
+      return delegate.buildAbi();
+    }
+
     public DummyRDotJava buildDummyRDotJava() {
-      return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, true).get();
+      return graphEnhancer.getBuildableForAndroidResources(buildRuleResolver, true).get();
     }
 
     public Optional<DummyRDotJava> getDummyRDotJava() {
-      return getGraphEnhancer().getBuildableForAndroidResources(buildRuleResolver, false);
-    }
-
-    protected AndroidLibraryGraphEnhancer getGraphEnhancer() {
-      if (graphEnhancer == null) {
-        graphEnhancer =
-            new AndroidLibraryGraphEnhancer(
-                libraryTarget,
-                projectFilesystem,
-                ImmutableSortedSet.copyOf(
-                    Iterables.concat(
-                        Preconditions.checkNotNull(deps).getDeps(),
-                        Preconditions.checkNotNull(deps).getProvidedDeps())),
-                getJavac(),
-                initialJavacOptions,
-                DependencyMode.FIRST_ORDER,
-                /* forceFinalResourceIds */ false,
-                args.getResourceUnionPackage(),
-                args.getFinalRName(),
-                false);
-      }
-      return graphEnhancer;
+      return graphEnhancer.getBuildableForAndroidResources(buildRuleResolver, false);
     }
   }
 }

@@ -42,7 +42,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public class DefaultJavaLibraryBuilder {
+public final class DefaultJavaLibraryBuilder {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(
         BuildTarget buildTarget,
@@ -233,6 +233,11 @@ public class DefaultJavaLibraryBuilder {
     return this;
   }
 
+  @Nullable
+  public JavaLibraryDeps getDeps() {
+    return deps;
+  }
+
   public final DefaultJavaLibrary build() {
     BuilderHelper helper = newHelper();
     return helper.build();
@@ -246,7 +251,7 @@ public class DefaultJavaLibraryBuilder {
     return new BuilderHelper();
   }
 
-  protected class BuilderHelper {
+  private class BuilderHelper {
     @Nullable private DefaultJavaLibrary libraryRule;
     @Nullable private CalculateAbiFromSource sourceAbiRule;
     @Nullable private ImmutableSortedSet<BuildRule> finalBuildDeps;
