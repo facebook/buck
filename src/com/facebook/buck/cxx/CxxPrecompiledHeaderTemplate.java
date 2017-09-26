@@ -195,21 +195,14 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   public DependencyAggregation requireAggregatedDepsRule(
       BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
-    BuildTarget depAggTarget = createAggregatedDepsTarget(cxxPlatform);
-
-    Optional<DependencyAggregation> existingRule =
-        ruleResolver.getRuleOptionalWithType(depAggTarget, DependencyAggregation.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
-    DependencyAggregation depAgg =
-        new DependencyAggregation(
-            depAggTarget,
-            getProjectFilesystem(),
-            getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform));
-    ruleResolver.addToIndex(depAgg);
-    return depAgg;
+    return (DependencyAggregation)
+        ruleResolver.computeIfAbsent(
+            createAggregatedDepsTarget(cxxPlatform),
+            depAggTarget ->
+                new DependencyAggregation(
+                    depAggTarget,
+                    getProjectFilesystem(),
+                    getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform)));
   }
 
   public PreprocessorDelegate buildPreprocessorDelegate(
