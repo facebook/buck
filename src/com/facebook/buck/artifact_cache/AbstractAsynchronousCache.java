@@ -179,7 +179,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       } else {
         if (consecutiveMultiFetchErrorCount.incrementAndGet()
             == MAX_CONSECUTIVE_MULTI_FETCH_ERRORS) {
-          LOG.error("Too many MultiFetch errors, falling back to Fetch only.");
+          LOG.info("Too many MultiFetch errors, falling back to Fetch only.");
           enableMultiFetch = false;
         }
       }
