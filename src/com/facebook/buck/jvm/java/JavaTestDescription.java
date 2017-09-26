@@ -123,7 +123,7 @@ public class JavaTestDescription
             getCxxPlatform(args));
     params = cxxLibraryEnhancement.updatedParams;
 
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultJavaLibrary.builder(
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
@@ -135,10 +135,10 @@ public class JavaTestDescription
             .setJavacOptions(javacOptions);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
-      return defaultJavaLibraryBuilder.buildAbi();
+      return defaultJavaLibraryRules.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.buildLibrary());
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);

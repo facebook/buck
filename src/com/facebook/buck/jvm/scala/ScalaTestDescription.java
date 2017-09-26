@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -116,7 +116,7 @@ public class ScalaTestDescription
         JavacOptionsFactory.create(
             templateJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
-    DefaultJavaLibraryBuilder scalaLibraryBuilder =
+    DefaultJavaLibraryRules scalaLibraryBuilder =
         ScalaLibraryBuilder.newInstance(
                 javaLibraryBuildTarget, projectFilesystem, params, resolver, config, javaBuckConfig)
             .setJavacOptions(javacOptions)

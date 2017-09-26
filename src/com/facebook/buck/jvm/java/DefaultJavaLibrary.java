@@ -120,14 +120,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Nullable private CalculateAbiFromSource sourceAbi;
 
-  public static DefaultJavaLibraryBuilder builder(
+  public static DefaultJavaLibraryRules builder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       ConfiguredCompilerFactory compilerFactory,
       JavaBuckConfig javaBuckConfig) {
-    return new DefaultJavaLibraryBuilder(
+    return new DefaultJavaLibraryRules(
         buildTarget, projectFilesystem, params, buildRuleResolver, compilerFactory, javaBuckConfig);
   }
 

@@ -40,7 +40,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public final class DefaultJavaLibraryBuilder {
+public class DefaultJavaLibraryRules {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(
         BuildTarget buildTarget,
@@ -94,7 +94,7 @@ public final class DefaultJavaLibraryBuilder {
   @Nullable private JavacOptions javacOptions;
   @Nullable private ConfiguredCompiler configuredCompiler;
 
-  public DefaultJavaLibraryBuilder(
+  public DefaultJavaLibraryRules(
       BuildTarget initialBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
@@ -117,7 +117,7 @@ public final class DefaultJavaLibraryBuilder {
     sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 
-  public DefaultJavaLibraryBuilder(
+  public DefaultJavaLibraryRules(
       BuildTarget initialBuildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams initialParams,
@@ -132,12 +132,12 @@ public final class DefaultJavaLibraryBuilder {
         null);
   }
 
-  public DefaultJavaLibraryBuilder setConstructor(DefaultJavaLibraryConstructor constructor) {
+  public DefaultJavaLibraryRules setConstructor(DefaultJavaLibraryConstructor constructor) {
     this.constructor = constructor;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setArgs(JavaLibraryDescription.CoreArg args) {
+  public DefaultJavaLibraryRules setArgs(JavaLibraryDescription.CoreArg args) {
     this.args = args;
 
     return setSrcs(args.getSrcs())
@@ -153,64 +153,64 @@ public final class DefaultJavaLibraryBuilder {
         .setClassesToRemoveFromJar(new RemoveClassesPatternsMatcher(args.getRemoveClasses()));
   }
 
-  public DefaultJavaLibraryBuilder setDeps(JavaLibraryDeps deps) {
+  public DefaultJavaLibraryRules setDeps(JavaLibraryDeps deps) {
     this.deps = deps;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setJavacOptions(JavacOptions javacOptions) {
+  public DefaultJavaLibraryRules setJavacOptions(JavacOptions javacOptions) {
     this.initialJavacOptions = javacOptions;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setSourceAbisAllowed(boolean sourceAbisAllowed) {
+  public DefaultJavaLibraryRules setSourceAbisAllowed(boolean sourceAbisAllowed) {
     this.sourceAbisAllowed = sourceAbisAllowed;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
+  public DefaultJavaLibraryRules setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     this.srcs = srcs;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setResources(ImmutableSortedSet<SourcePath> resources) {
+  public DefaultJavaLibraryRules setResources(ImmutableSortedSet<SourcePath> resources) {
     this.resources =
         ResourceValidator.validateResources(sourcePathResolver, projectFilesystem, resources);
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setProguardConfig(Optional<SourcePath> proguardConfig) {
+  public DefaultJavaLibraryRules setProguardConfig(Optional<SourcePath> proguardConfig) {
     this.proguardConfig = proguardConfig;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setPostprocessClassesCommands(
+  public DefaultJavaLibraryRules setPostprocessClassesCommands(
       ImmutableList<String> postprocessClassesCommands) {
     this.postprocessClassesCommands = postprocessClassesCommands;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setResourcesRoot(Optional<Path> resourcesRoot) {
+  public DefaultJavaLibraryRules setResourcesRoot(Optional<Path> resourcesRoot) {
     this.resourcesRoot = resourcesRoot;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setManifestFile(Optional<SourcePath> manifestFile) {
+  public DefaultJavaLibraryRules setManifestFile(Optional<SourcePath> manifestFile) {
     this.manifestFile = manifestFile;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setMavenCoords(Optional<String> mavenCoords) {
+  public DefaultJavaLibraryRules setMavenCoords(Optional<String> mavenCoords) {
     this.mavenCoords = mavenCoords;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
+  public DefaultJavaLibraryRules setTests(ImmutableSortedSet<BuildTarget> tests) {
     this.tests = tests;
     return this;
   }
 
-  public DefaultJavaLibraryBuilder setClassesToRemoveFromJar(
+  public DefaultJavaLibraryRules setClassesToRemoveFromJar(
       RemoveClassesPatternsMatcher classesToRemoveFromJar) {
     this.classesToRemoveFromJar = classesToRemoveFromJar;
     return this;

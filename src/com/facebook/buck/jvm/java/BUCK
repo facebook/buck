@@ -334,7 +334,7 @@ java_immutables_library(
         "CompareAbis.java",
         "ConfiguredCompilerFactory.java",
         "DefaultJavaLibrary.java",
-        "DefaultJavaLibraryBuilder.java",
+        "DefaultJavaLibraryRules.java",
         "ForkMode.java",
         "JarBuildStepsFactory.java",
         "JarFattener.java",

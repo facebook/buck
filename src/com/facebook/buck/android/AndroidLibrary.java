@@ -20,7 +20,7 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -111,7 +111,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
 
   public static class Builder {
     private final BuildRuleResolver buildRuleResolver;
-    private final DefaultJavaLibraryBuilder delegate;
+    private final DefaultJavaLibraryRules delegate;
     private final AndroidLibraryGraphEnhancer graphEnhancer;
 
     protected Builder(
@@ -125,7 +125,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ConfiguredCompilerFactory compilerFactory) {
       this.buildRuleResolver = buildRuleResolver;
       delegate =
-          new DefaultJavaLibraryBuilder(
+          new DefaultJavaLibraryRules(
               buildTarget,
               projectFilesystem,
               params,
@@ -133,7 +133,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               compilerFactory,
               javaBuckConfig);
       delegate.setConstructor(
-          new DefaultJavaLibraryBuilder.DefaultJavaLibraryConstructor() {
+          new DefaultJavaLibraryRules.DefaultJavaLibraryConstructor() {
             @Override
             public DefaultJavaLibrary newInstance(
                 BuildTarget buildTarget,

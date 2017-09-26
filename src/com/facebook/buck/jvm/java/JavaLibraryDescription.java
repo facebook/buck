@@ -171,7 +171,7 @@ public class JavaLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultJavaLibrary.builder(
                 buildTarget,
                 projectFilesystem,
@@ -183,10 +183,10 @@ public class JavaLibraryDescription
             .setJavacOptions(javacOptions);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
-      return defaultJavaLibraryBuilder.buildAbi();
+      return defaultJavaLibraryRules.buildAbi();
     }
 
-    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryBuilder.buildLibrary();
+    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryRules.buildLibrary();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;

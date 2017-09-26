@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -26,14 +26,14 @@ import com.facebook.buck.rules.BuildRuleResolver;
 final class DefaultGroovyLibraryBuilder {
   private DefaultGroovyLibraryBuilder() {}
 
-  public static DefaultJavaLibraryBuilder newInstance(
+  public static DefaultJavaLibraryRules newInstance(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       JavacOptions javacOptions,
       GroovyBuckConfig groovyBuckConfig) {
-    return new DefaultJavaLibraryBuilder(
+    return new DefaultJavaLibraryRules(
             buildTarget,
             projectFilesystem,
             params,
