@@ -151,8 +151,6 @@ public abstract class DefaultJavaLibraryRules {
   @Nullable
   abstract JavaLibraryDescription.CoreArg getArgs();
 
-  @Nullable private BuildTarget abiJar;
-
   public DefaultJavaLibrary buildLibrary() {
     return getLibraryRule();
   }
@@ -197,26 +195,18 @@ public abstract class DefaultJavaLibraryRules {
                 });
   }
 
+  @Value.Lazy
   @Nullable
-  private BuildTarget getAbiJar() {
-    if (!willProduceOutputJar()) {
-      return null;
+  BuildTarget getAbiJar() {
+    if (willProduceCompareAbis()) {
+      return HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
+    } else if (willProduceSourceAbi()) {
+      return HasJavaAbi.getSourceAbiJar(getLibraryTarget());
+    } else if (willProduceClassAbi()) {
+      return HasJavaAbi.getClassAbiJar(getLibraryTarget());
     }
 
-    if (abiJar == null) {
-      if (shouldBuildAbiFromSource()) {
-        JavaBuckConfig.SourceAbiVerificationMode sourceAbiVerificationMode =
-            getJavaBuckConfig().getSourceAbiVerificationMode();
-        abiJar =
-            sourceAbiVerificationMode == JavaBuckConfig.SourceAbiVerificationMode.OFF
-                ? HasJavaAbi.getSourceAbiJar(getLibraryTarget())
-                : HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget());
-      } else {
-        abiJar = HasJavaAbi.getClassAbiJar(getLibraryTarget());
-      }
-    }
-
-    return abiJar;
+    return null;
   }
 
   private boolean willProduceOutputJar() {
