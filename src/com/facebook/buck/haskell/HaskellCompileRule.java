@@ -362,7 +362,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps
-        .add(prepareOutputDir("object", getObjectDir(), getInterfaceSuffix()))
+        .add(prepareOutputDir("object", getObjectDir(), getObjectSuffix()))
         .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
         .add(new GhcStep(getProjectFilesystem().getRootPath(), buildContext));
