@@ -1,5 +1,5 @@
 import ast
-from typing import List
+from typing import Dict, List
 
 import repository
 import include_def
@@ -91,6 +91,24 @@ class BuildFile:
             include_file = from_path(include.get_include_path(repo))
             transitive_closure.extend(include_file.get_exported_symbols_transitive_closure(repo))
         return self.find_exported_symbols() + transitive_closure
+
+    def get_export_map(self, repo: repository.Repository) -> Dict[str, List[str]]:
+        """
+        Returns a map where keys are include_defs labels and values are lists of exported symbols
+        in corresponding include files. For example, for a build file with
+        include_defs("//DEFS")
+        and DEFS file with
+        foo = 'FOO'
+        this method returns {'//DEFS': ['foo']}
+        :param repo: The repository.
+        """
+        includes = [include for include in self.find_all_include_defs()]
+        export_map = {}
+        for include in includes:
+            include_file = from_path(include.get_include_path(repo))
+            export_map[include.get_label().to_import_string()] = include_file.find_exported_symbols()
+            export_map.update(include_file.get_export_map(repo))
+        return export_map
 
     def _find_used_symbols(self) -> List[ast.Name]:
         """

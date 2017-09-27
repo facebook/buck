@@ -32,3 +32,6 @@ class LabelTest(unittest.TestCase):
             'cell': '/repo/cell',
         }
         self.assertEqual('/repo/cell/pkg/BUCK', l.get_build_file_path(cell_roots, 'BUCK'))
+
+    def test_can_convert_to_import_string(self):
+        self.assertEqual('cell//pkg:name', label.from_string('cell//pkg:name').to_import_string())

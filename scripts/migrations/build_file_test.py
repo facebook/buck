@@ -62,7 +62,8 @@ class Clazz:
                 defs_file.write('bar = "BAR"')
             repo = repository.Repository({'cell': tmp_dir})
             self.assertEqual(['foo', 'bar'],
-                             build_file.from_path(build_file_path).get_exported_symbols_transitive_closure(
+                             build_file.from_path(
+                                 build_file_path).get_exported_symbols_transitive_closure(
                                  repo))
 
     def test_find_function_calls_by_name(self):
@@ -75,3 +76,24 @@ foo('baz')
         self.assertEqual(2, len(foo_calls))
         for call in foo_calls:
             self.assertEqual('foo', call.func.id)
+
+    def test_get_export_map(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            package_dir = os.path.join(tmp_dir, 'pkg')
+            os.mkdir(package_dir)
+            build_file_path = os.path.join(package_dir, 'BUCK')
+            with open(build_file_path, 'w') as buck_file:
+                buck_file.write('include_defs("cell//pkg/DEFS")')
+                buck_file.write(os.linesep)
+                buck_file.write('foo = "FOO"')
+            with open(os.path.join(package_dir, 'DEFS'), 'w') as defs_file:
+                defs_file.write('include_defs("cell//pkg/DEFS2")')
+                defs_file.write(os.linesep)
+                defs_file.write('bar = "BAR"')
+            with open(os.path.join(package_dir, 'DEFS2'), 'w') as defs_file:
+                defs_file.write('baz = "BAZ"')
+            repo = repository.Repository({'cell': tmp_dir})
+            self.assertEqual({
+                'cell//pkg/DEFS': ['bar'],
+                'cell//pkg/DEFS2': ['baz'],
+            }, build_file.from_path(build_file_path).get_export_map(repo))

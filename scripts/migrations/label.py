@@ -14,6 +14,10 @@ class Label(collections.namedtuple('Label', ['cell', 'package', 'name'])):
                             build_file_name: str = 'BUCK') -> str:
         return os.path.join(cell_roots[self.cell], self.package, build_file_name)
 
+    def to_import_string(self):
+        """Convert this label to a string representing include file label."""
+        return self.cell + '//' + self.package + (':' + self.name if self.name is not None else '')
+
 
 __LABEL_PATTERN = re.compile('(?P<cell>\w+)?//(?P<package>[\w/]+)(:(?P<name>\w+))?')
 
