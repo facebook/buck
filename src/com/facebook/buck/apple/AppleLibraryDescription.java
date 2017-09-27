@@ -144,7 +144,7 @@ public class AppleLibraryDescription
 
   enum MetadataType implements FlavorConvertible {
     APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
-    APPLE_SWIFT_OBJC_CXX_HEADERS(InternalFlavor.of("swift-objc-cxx-headers")),
+    APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS(InternalFlavor.of("swift-objc-cxx-headers")),
     APPLE_SWIFT_MODULE_CXX_HEADERS(InternalFlavor.of("swift-module-cxx-headers")),
     APPLE_SWIFT_PREPROCESSOR_INPUT(InternalFlavor.of("swift-preprocessor-input")),
     ;
@@ -697,7 +697,7 @@ public class AppleLibraryDescription
             return Optional.of(metadata).map(metadataClass::cast);
           }
 
-        case APPLE_SWIFT_OBJC_CXX_HEADERS:
+        case APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS:
           {
             BuildTarget swiftHeadersTarget =
                 baseTarget.withAppendedFlavors(
@@ -731,7 +731,7 @@ public class AppleLibraryDescription
 
             BuildTarget objcHeadersTarget =
                 baseTarget.withAppendedFlavors(
-                    MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
+                    MetadataType.APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS.getFlavor());
             Optional<CxxHeaders> objcHeaders =
                 resolver.requireMetadata(objcHeadersTarget, CxxHeaders.class);
 
