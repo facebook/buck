@@ -1482,7 +1482,8 @@ public class ProjectGenerator {
     frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> librarySearchPaths = new HashSet<>();
     librarySearchPaths.add("$BUILT_PRODUCTS_DIR");
-    HashSet<String> ldRunpathSearchPaths = new HashSet<>();
+    HashSet<String> iOSLdRunpathSearchPaths = new HashSet<>();
+    HashSet<String> macOSLdldRunpathSearchPaths = new HashSet<>();
     ImmutableSet<PBXFileReference> swiftDeps =
         collectRecursiveLibraryDependenciesWithSwiftSources(node);
 
@@ -1548,7 +1549,8 @@ public class ProjectGenerator {
                         if (prebuilt.getConstructorArg().getPreferredLinkage()
                             != NativeLinkable.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
-                          ldRunpathSearchPaths.add("@executable_path/Frameworks");
+                          iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
+                          macOSLdldRunpathSearchPaths.add("@executable_path/../Frameworks");
                         }
                       });
             });
@@ -1568,16 +1570,26 @@ public class ProjectGenerator {
     }
 
     if (swiftDeps.size() > 0) {
-      ldRunpathSearchPaths.add("@executable_path/Frameworks");
-      ldRunpathSearchPaths.add("@loader_path/Frameworks");
+      iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
+      iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
+      macOSLdldRunpathSearchPaths.add("@executable_path/../Frameworks");
+      macOSLdldRunpathSearchPaths.add("@loader_path/../Frameworks");
     }
 
     ImmutableMap.Builder<String, String> results =
         ImmutableMap.<String, String>builder()
             .put("FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(frameworkSearchPaths))
             .put("LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(librarySearchPaths));
-    if (!ldRunpathSearchPaths.isEmpty()) {
-      results.put("LD_RUNPATH_SEARCH_PATHS", Joiner.on(' ').join(ldRunpathSearchPaths));
+    if (!iOSLdRunpathSearchPaths.isEmpty()) {
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS[sdk=iphoneos*]", Joiner.on(' ').join(iOSLdRunpathSearchPaths));
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]",
+          Joiner.on(' ').join(iOSLdRunpathSearchPaths));
+    }
+    if (!macOSLdldRunpathSearchPaths.isEmpty()) {
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]", Joiner.on(' ').join(macOSLdldRunpathSearchPaths));
     }
     return results.build();
   }
