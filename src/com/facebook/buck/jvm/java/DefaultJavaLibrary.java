@@ -107,7 +107,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
   // these deps being represented as their full-jar dependency form.
-  private final SortedSet<BuildRule> fullJarDeclaredDeps;
+  private final SortedSet<BuildRule> firstOrderPackageableDeps;
   private final ImmutableSortedSet<BuildRule> fullJarExportedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarProvidedDeps;
 
@@ -150,7 +150,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
-      SortedSet<BuildRule> fullJarDeclaredDeps,
+      SortedSet<BuildRule> firstOrderPackageableDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
@@ -177,12 +177,12 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
 
     Sets.SetView<BuildRule> missingExports =
-        Sets.difference(fullJarExportedDeps, fullJarDeclaredDeps);
+        Sets.difference(fullJarExportedDeps, firstOrderPackageableDeps);
     // Exports should have been copied over to declared before invoking this constructor
     Preconditions.checkState(missingExports.isEmpty());
 
     this.proguardConfig = proguardConfig;
-    this.fullJarDeclaredDeps = fullJarDeclaredDeps;
+    this.firstOrderPackageableDeps = firstOrderPackageableDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
     this.mavenCoords = mavenCoords;
@@ -254,7 +254,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return fullJarDeclaredDeps;
+    return firstOrderPackageableDeps;
   }
 
   @Override
@@ -362,7 +362,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     // list or define a strict order of precedence among the lists (exported overrides deps
     // overrides exported_provided overrides provided.)
     return AndroidPackageableCollector.getPackageableRules(
-        ImmutableSortedSet.copyOf(Sets.difference(fullJarDeclaredDeps, fullJarProvidedDeps)));
+        ImmutableSortedSet.copyOf(Sets.difference(firstOrderPackageableDeps, fullJarProvidedDeps)));
   }
 
   @Override

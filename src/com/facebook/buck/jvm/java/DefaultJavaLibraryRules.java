@@ -56,7 +56,7 @@ public abstract class DefaultJavaLibraryRules {
         SourcePathResolver resolver,
         JarBuildStepsFactory jarBuildStepsFactory,
         Optional<SourcePath> proguardConfig,
-        SortedSet<BuildRule> fullJarDeclaredDeps,
+        SortedSet<BuildRule> firstOrderPackageableDeps,
         ImmutableSortedSet<BuildRule> fullJarExportedDeps,
         ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
         @Nullable BuildTarget abiJar,
@@ -268,7 +268,7 @@ public abstract class DefaultJavaLibraryRules {
                               getSourcePathResolver(),
                               getJarBuildStepsFactory(),
                               getProguardConfig(),
-                              getFinalFullJarDeclaredDeps(),
+                              getFirstOrderPackageableDeps(),
                               Preconditions.checkNotNull(getDeps()).getExportedDeps(),
                               Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
                               getAbiJar(),
@@ -330,7 +330,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  ImmutableSortedSet<BuildRule> getFinalFullJarDeclaredDeps() {
+  ImmutableSortedSet<BuildRule> getFirstOrderPackageableDeps() {
     return ImmutableSortedSet.copyOf(
         Iterables.concat(
             Preconditions.checkNotNull(getDeps()).getDeps(),
@@ -411,7 +411,8 @@ public abstract class DefaultJavaLibraryRules {
   ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
     Iterable<BuildRule> firstOrderDeps =
         Iterables.concat(
-            getFinalFullJarDeclaredDeps(), Preconditions.checkNotNull(getDeps()).getProvidedDeps());
+            getFirstOrderPackageableDeps(),
+            Preconditions.checkNotNull(getDeps()).getProvidedDeps());
 
     ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
         BuildRules.getExportedRules(firstOrderDeps);

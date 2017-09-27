@@ -83,7 +83,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             RemoveClassesPatternsMatcher.EMPTY,
             requiredForSourceAbi),
         Optional.of(proguardConfig),
-        /* declaredDeps */ androidLibraryParams.getDeclaredDeps().get(),
+        /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
             .addAll(exportedDeps)
