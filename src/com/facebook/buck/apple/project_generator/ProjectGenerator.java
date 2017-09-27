@@ -1483,6 +1483,8 @@ public class ProjectGenerator {
     HashSet<String> librarySearchPaths = new HashSet<>();
     librarySearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> ldRunpathSearchPaths = new HashSet<>();
+    ImmutableSet<PBXFileReference> swiftDeps =
+        collectRecursiveLibraryDependenciesWithSwiftSources(node);
 
     Stream.concat(
             // Collect all the nodes that contribute to linking
@@ -1560,11 +1562,14 @@ public class ProjectGenerator {
       // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
       // Xcode does to make sure binaries link successfully if they use Swift directly or
       // transitively.
-      ImmutableSet<PBXFileReference> swiftDeps =
-          collectRecursiveLibraryDependenciesWithSwiftSources(node);
       if (swiftDeps.size() > 0) {
         librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
       }
+    }
+
+    if (swiftDeps.size() > 0) {
+      ldRunpathSearchPaths.add("@executable_path/Frameworks");
+      ldRunpathSearchPaths.add("@loader_path/Frameworks");
     }
 
     ImmutableMap.Builder<String, String> results =
