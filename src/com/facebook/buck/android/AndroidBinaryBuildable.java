@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -417,7 +418,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     ImmutableSet<Path> allAssetDirectories =
         ImmutableSet.<Path>builder()
             .addAll(nativeLibraryAsAssetDirectories.build())
-            .addAll(dexFilesInfo.secondaryDexDirs)
+            .addAll(dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem()))
             .build();
 
     SourcePathResolver resolver = context.getSourcePathResolver();
@@ -781,7 +782,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   /** Encapsulates the information about dexing output that must be passed to ApkBuilder. */
   static class DexFilesInfo {
     final Path primaryDexPath;
-    final ImmutableSet<Path> secondaryDexDirs;
+    final Either<ImmutableSet<Path>, DexSecondaryDexDirView> secondaryDexDirs;
     final Optional<Path> proguardTextFilesPath;
 
     DexFilesInfo(
@@ -789,8 +790,44 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         ImmutableSet<Path> secondaryDexDirs,
         Optional<Path> proguardTextFilesPath) {
       this.primaryDexPath = primaryDexPath;
-      this.secondaryDexDirs = secondaryDexDirs;
+      this.secondaryDexDirs = Either.ofLeft(secondaryDexDirs);
       this.proguardTextFilesPath = proguardTextFilesPath;
+    }
+
+    @SuppressWarnings("unused")
+    DexFilesInfo(
+        Path primaryDexPath,
+        DexSecondaryDexDirView secondaryDexDirs,
+        Optional<Path> proguardTextFilesPath) {
+      this.primaryDexPath = primaryDexPath;
+      this.secondaryDexDirs = Either.ofRight(secondaryDexDirs);
+      this.proguardTextFilesPath = proguardTextFilesPath;
+    }
+
+    public ImmutableSet<Path> getSecondaryDexDirs(ProjectFilesystem filesystem) {
+      return secondaryDexDirs.transform(set -> set, view -> view.getSecondaryDexDirs(filesystem));
+    }
+  }
+
+  static class DexSecondaryDexDirView {
+    final Path rootDirectory;
+    final Path subDirListing;
+
+    DexSecondaryDexDirView(Path rootDirectory, Path subDirListing) {
+      this.rootDirectory = rootDirectory;
+      this.subDirListing = subDirListing;
+    }
+
+    ImmutableSet<Path> getSecondaryDexDirs(ProjectFilesystem filesystem) {
+      try {
+        return filesystem
+            .readLines(subDirListing)
+            .stream()
+            .map(rootDirectory::resolve)
+            .collect(MoreCollectors.toImmutableSet());
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
