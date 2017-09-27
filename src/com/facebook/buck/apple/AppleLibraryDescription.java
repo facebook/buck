@@ -148,6 +148,7 @@ public class AppleLibraryDescription
     APPLE_SWIFT_OBJC_CXX_HEADERS(InternalFlavor.of("swift-private-objc-cxx-headers")),
     APPLE_SWIFT_MODULE_CXX_HEADERS(InternalFlavor.of("swift-module-cxx-headers")),
     APPLE_SWIFT_PREPROCESSOR_INPUT(InternalFlavor.of("swift-preprocessor-input")),
+    APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT(InternalFlavor.of("swift-private-preprocessor-input")),
     ;
 
     private final Flavor flavor;
@@ -750,6 +751,21 @@ public class AppleLibraryDescription
 
             CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
             moduleHeaders.ifPresent(s -> builder.addIncludes(s));
+            objcHeaders.ifPresent(s -> builder.addIncludes(s));
+
+            CxxPreprocessorInput input = builder.build();
+            return Optional.of(input).map(metadataClass::cast);
+          }
+
+        case APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT:
+          {
+            BuildTarget objcHeadersTarget =
+                baseTarget.withAppendedFlavors(
+                    MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
+            Optional<CxxHeaders> objcHeaders =
+                resolver.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+
+            CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
             objcHeaders.ifPresent(s -> builder.addIncludes(s));
 
             CxxPreprocessorInput input = builder.build();
