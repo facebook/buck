@@ -367,7 +367,7 @@ public final class CxxInferEnhancer {
               cxxPlatform,
               args.getCxxDeps().get(ruleResolver, cxxPlatform),
               CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction.fromLibraryRule(),
-              headerSymlinkTree,
+              ImmutableList.of(headerSymlinkTree),
               sandboxTree);
     } else {
       throw new IllegalStateException("Only Binary and Library args supported.");

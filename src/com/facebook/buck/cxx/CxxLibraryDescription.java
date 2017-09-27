@@ -198,7 +198,7 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform,
       ImmutableSet<BuildRule> deps,
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
-      HeaderSymlinkTree headerSymlinkTree,
+      ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       Optional<SymlinkTree> sandboxTree) {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
@@ -214,7 +214,7 @@ public class CxxLibraryDescription
                 f ->
                     CxxDescriptionEnhancer.toStringWithMacrosArgs(
                         target, cellRoots, ruleResolver, cxxPlatform, f))),
-        ImmutableList.of(headerSymlinkTree),
+        headerSymlinkTrees,
         ImmutableSet.of(),
         RichStream.from(
                 transitivePreprocessorInputs.apply(
@@ -261,7 +261,8 @@ public class CxxLibraryDescription
             pic,
             args,
             deps,
-            transitivePreprocessorInputs);
+            transitivePreprocessorInputs,
+            delegate);
 
     builder.addAll(cxxObjects.values());
 
@@ -284,7 +285,8 @@ public class CxxLibraryDescription
       CxxSourceRuleFactory.PicType pic,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
-      TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs) {
+      TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
+      Optional<CxxLibraryDescriptionDelegate> delegate) {
 
     boolean shouldCreatePrivateHeadersSymlinks =
         args.getXcodePrivateHeadersSymlinks()
@@ -305,6 +307,13 @@ public class CxxLibraryDescription
                 args),
             HeaderVisibility.PRIVATE,
             shouldCreatePrivateHeadersSymlinks);
+
+    ImmutableList.Builder<HeaderSymlinkTree> privateHeaderSymlinkTrees = ImmutableList.builder();
+    privateHeaderSymlinkTrees.add(headerSymlinkTree);
+    delegate.ifPresent(
+        d ->
+            d.getPrivateHeaderSymlinkTree(buildTarget, ruleResolver, cxxPlatform)
+                .ifPresent(h -> privateHeaderSymlinkTrees.add(h)));
 
     Optional<SymlinkTree> sandboxTree = Optional.empty();
     if (cxxBuckConfig.sandboxSources()) {
@@ -340,7 +349,7 @@ public class CxxLibraryDescription
                 cxxPlatform,
                 deps,
                 transitivePreprocessorInputs,
-                headerSymlinkTree,
+                privateHeaderSymlinkTrees.build(),
                 sandboxTree),
             compilerFlags,
             args.getPrefixHeader(),
@@ -802,7 +811,8 @@ public class CxxLibraryDescription
               CxxSourceRuleFactory.PicType.PIC,
               args,
               cxxDeps.get(resolver, cxxPlatform),
-              transitiveCxxPreprocessorInputFunction);
+              transitiveCxxPreprocessorInputFunction,
+              delegate);
       return CxxCompilationDatabase.createCompilationDatabase(
           buildTarget, projectFilesystem, objects.keySet());
     } else if (buildTarget

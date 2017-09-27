@@ -673,6 +673,11 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testObjCUsesSwiftSourcesFromTestTarget() throws IOException {
+    testSwiftScenario("apple_test_objc_uses_swift_from_test_target");
+  }
+
+  @Test
   public void testSwiftUsesAppleLibraryWithSwiftSources() throws IOException {
     testSwiftScenario("apple_test_swift_uses_apple_library_with_swift_sources");
   }

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -39,6 +40,13 @@ public interface CxxLibraryDescriptionDelegate {
    */
   Optional<CxxPreprocessorInput> getPreprocessorInput(
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+
+  /**
+   * Defines an additional private {@link HeaderSymlinkTree} that will be used when compiling the
+   * the library.
+   */
+  Optional<HeaderSymlinkTree> getPrivateHeaderSymlinkTree(
+      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform);
 
   /**
    * Defines the paths to object files (i.e., .o files) that will be combined into the final product

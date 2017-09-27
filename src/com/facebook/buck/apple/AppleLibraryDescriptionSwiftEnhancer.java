@@ -41,6 +41,7 @@ import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -146,6 +147,23 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     }
 
     return publicPath;
+  }
+
+  public static BuildTarget createBuildTargetForObjCGeneratedHeaderBuildRule(
+      BuildTarget buildTarget, HeaderVisibility headerVisibility, CxxPlatform cxxPlatform) {
+    AppleLibraryDescription.Type appleLibType = null;
+    switch (headerVisibility) {
+      case PUBLIC:
+        appleLibType = AppleLibraryDescription.Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER;
+        break;
+      case PRIVATE:
+        appleLibType = AppleLibraryDescription.Type.SWIFT_OBJC_GENERATED_HEADER;
+        break;
+    }
+
+    Preconditions.checkNotNull(appleLibType);
+
+    return buildTarget.withFlavors(appleLibType.getFlavor(), cxxPlatform.getFlavor());
   }
 
   public static BuildTarget createBuildTargetForSwiftCompile(

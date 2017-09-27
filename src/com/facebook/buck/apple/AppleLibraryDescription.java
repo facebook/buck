@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -847,6 +848,24 @@ public class AppleLibraryDescription
     }
 
     return queryMetadataCxxSwiftPreprocessorInput(resolver, target, platform);
+  }
+
+  @Override
+  public Optional<HeaderSymlinkTree> getPrivateHeaderSymlinkTree(
+      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform) {
+    if (!targetContainsSwift(buildTarget, ruleResolver)) {
+      return Optional.empty();
+    }
+
+    BuildTarget ruleTarget =
+        AppleLibraryDescriptionSwiftEnhancer.createBuildTargetForObjCGeneratedHeaderBuildRule(
+            buildTarget, HeaderVisibility.PRIVATE, cxxPlatform);
+    BuildRule headerRule = ruleResolver.requireRule(ruleTarget);
+    if (headerRule instanceof HeaderSymlinkTree) {
+      return Optional.of((HeaderSymlinkTree) headerRule);
+    }
+
+    return Optional.empty();
   }
 
   @Override
