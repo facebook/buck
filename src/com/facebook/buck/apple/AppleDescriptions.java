@@ -381,6 +381,11 @@ public class AppleDescriptions {
         assetCatalogValidation);
 
     BuildTarget assetCatalogBuildTarget = buildTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
+    if (buildTarget.getFlavors().contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
+      // If the target is a legacy watch target, we need to provide the watchos platform to
+      // the AppleAssetCatalog for it to generate assets in a format that's for watchos.
+      applePlatform = ApplePlatform.WATCHOS;
+    }
     BuildRuleParams assetParams =
         params
             .withoutExtraDeps()
