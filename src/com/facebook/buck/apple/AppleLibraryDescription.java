@@ -124,7 +124,8 @@ public class AppleLibraryDescription
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
     SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
-    SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_FLAVOR),
+    SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
+        AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     ;
 
     private final Flavor flavor;
@@ -241,7 +242,7 @@ public class AppleLibraryDescription
     Optional<Map.Entry<Flavor, Type>> maybeType = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     return maybeType.flatMap(
         type -> {
-          if (type.getValue().equals(Type.SWIFT_OBJC_GENERATED_HEADER)) {
+          if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
                 delegate
                     .getCxxPlatforms()
@@ -683,7 +684,8 @@ public class AppleLibraryDescription
         case APPLE_SWIFT_OBJC_CXX_HEADERS:
           {
             BuildTarget swiftHeadersTarget =
-                baseTarget.withAppendedFlavors(Type.SWIFT_OBJC_GENERATED_HEADER.getFlavor());
+                baseTarget.withAppendedFlavors(
+                    Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER.getFlavor());
             HeaderSymlinkTreeWithHeaderMap headersRule =
                 (HeaderSymlinkTreeWithHeaderMap) resolver.requireRule(swiftHeadersTarget);
 

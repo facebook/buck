@@ -89,7 +89,7 @@ public class AppleDescriptions {
 
   public static final Flavor FRAMEWORK_FLAVOR = InternalFlavor.of("framework");
   public static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("apple-swift-compile");
-  public static final Flavor SWIFT_OBJC_GENERATED_HEADER_FLAVOR =
+  public static final Flavor SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("apple-swift-objc-generated-header");
 
   public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = InternalFlavor.of("include-frameworks");
