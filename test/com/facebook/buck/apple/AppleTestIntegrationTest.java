@@ -687,6 +687,12 @@ public class AppleTestIntegrationTest {
     testSwiftScenario("apple_test_swift_uses_apple_library_with_objc_sources");
   }
 
+  @Test
+  public void testObjCUsesAppleLibraryWithSwiftSourcesUsingPrivateIncludePrefix()
+      throws IOException {
+    testSwiftScenario("apple_test_objc_uses_apple_library_with_swift_sources_private_path");
+  }
+
   private void testSwiftScenario(String scenarionName) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenarionName, tmp);

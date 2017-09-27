@@ -180,7 +180,17 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public CxxPreprocessorInput getPrivateCxxPreprocessorInput(CxxPlatform cxxPlatform) {
-    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
+    CxxPreprocessorInput privateInput =
+        getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE);
+    Optional<CxxPreprocessorInput> delegateInput =
+        delegate.flatMap(
+            p -> p.getPrivatePreprocessorInput(getBuildTarget(), ruleResolver, cxxPlatform));
+
+    if (delegateInput.isPresent()) {
+      return CxxPreprocessorInput.concat(ImmutableList.of(privateInput, delegateInput.get()));
+    }
+
+    return privateInput;
   }
 
   @Override

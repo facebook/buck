@@ -42,6 +42,14 @@ public interface CxxLibraryDescriptionDelegate {
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
 
   /**
+   * Defines an additional preprocessor input for the private interface exposed by a target. The
+   * returned input will be concatenated with {@link com.facebook.buck.cxx.CxxLibraryDescription}'s
+   * private input.
+   */
+  Optional<CxxPreprocessorInput> getPrivatePreprocessorInput(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+
+  /**
    * Defines an additional private {@link HeaderSymlinkTree} that will be used when compiling the
    * the library.
    */
