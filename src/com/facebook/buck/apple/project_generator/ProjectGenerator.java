@@ -1483,7 +1483,7 @@ public class ProjectGenerator {
     HashSet<String> librarySearchPaths = new HashSet<>();
     librarySearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> iOSLdRunpathSearchPaths = new HashSet<>();
-    HashSet<String> macOSLdldRunpathSearchPaths = new HashSet<>();
+    HashSet<String> macOSLdRunpathSearchPaths = new HashSet<>();
     ImmutableSet<PBXFileReference> swiftDeps =
         collectRecursiveLibraryDependenciesWithSwiftSources(node);
 
@@ -1550,7 +1550,7 @@ public class ProjectGenerator {
                             != NativeLinkable.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
                           iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
-                          macOSLdldRunpathSearchPaths.add("@executable_path/../Frameworks");
+                          macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
                         }
                       });
             });
@@ -1572,8 +1572,8 @@ public class ProjectGenerator {
     if (swiftDeps.size() > 0) {
       iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
       iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
-      macOSLdldRunpathSearchPaths.add("@executable_path/../Frameworks");
-      macOSLdldRunpathSearchPaths.add("@loader_path/../Frameworks");
+      macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
+      macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
     }
 
     ImmutableMap.Builder<String, String> results =
@@ -1587,9 +1587,9 @@ public class ProjectGenerator {
           "LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]",
           Joiner.on(' ').join(iOSLdRunpathSearchPaths));
     }
-    if (!macOSLdldRunpathSearchPaths.isEmpty()) {
+    if (!macOSLdRunpathSearchPaths.isEmpty()) {
       results.put(
-          "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]", Joiner.on(' ').join(macOSLdldRunpathSearchPaths));
+          "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]", Joiner.on(' ').join(macOSLdRunpathSearchPaths));
     }
     return results.build();
   }
