@@ -51,6 +51,7 @@ import com.android.tools.r8.utils.AndroidApiLevel;
 import com.android.tools.r8.utils.DexVersion;
 import com.android.tools.r8.utils.InternalOptions;
 import com.android.tools.r8.utils.LebUtils;
+import com.android.tools.r8.utils.OffOrAuto;
 import com.android.tools.r8.utils.ThrowingConsumer;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenHashMap;
@@ -226,7 +227,7 @@ public class FileWriter {
     if (application.dexItemFactory.isClassConstructor(method.method)) {
       return; // Class constructor is always OK.
     }
-    if (method.accessFlags.isStatic()) {
+    if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) && method.accessFlags.isStatic()) {
       if (!options.canUseDefaultAndStaticInterfaceMethods()) {
         throw new ApiLevelException(
             AndroidApiLevel.N,
@@ -239,7 +240,8 @@ public class FileWriter {
         throw new CompilationError(
             "Interface must not have constructors: " + method.method.toSourceString());
       }
-      if (!method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
+      if (options.interfaceMethodDesugaring.equals(OffOrAuto.Auto) &&
+          !method.accessFlags.isAbstract() && !method.accessFlags.isPrivate() &&
           !options.canUseDefaultAndStaticInterfaceMethods()) {
         throw new ApiLevelException(
             AndroidApiLevel.N,

@@ -27,6 +27,7 @@ import com.android.tools.r8.graph.DexValue.DexValueType;
 import com.android.tools.r8.graph.JarCode.ReparseContext;
 import com.android.tools.r8.utils.InternalOptions;
 import com.android.tools.r8.utils.ProgramResource.Kind;
+import com.android.tools.r8.utils.OffOrAuto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;

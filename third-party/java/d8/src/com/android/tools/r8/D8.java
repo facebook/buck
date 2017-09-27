@@ -69,7 +69,8 @@ public final class D8 {
     AndroidAppOutputSink compatSink = new AndroidAppOutputSink(command.getOutputSink());
     CompilationResult result = runForTesting(command.getInputApp(), compatSink, options);
     assert result != null;
-    D8Output output = new D8Output(compatSink.build(), command.getOutputMode());
+    D8Output output = new D8Output(compatSink.build(), command.getOutputMode(),
+        result.appInfo.dexItemFactory.computeReferencedResources());
     return output;
   }
 
@@ -89,7 +90,8 @@ public final class D8 {
     AndroidAppOutputSink compatSink = new AndroidAppOutputSink(command.getOutputSink());
     CompilationResult result = runForTesting(command.getInputApp(), compatSink, options, executor);
     assert result != null;
-    return new D8Output(compatSink.build(), command.getOutputMode());
+    return new D8Output(compatSink.build(), command.getOutputMode(),
+        result.appInfo.dexItemFactory.computeReferencedResources());
   }
 
   private static void run(String[] args) throws IOException, CompilationException {

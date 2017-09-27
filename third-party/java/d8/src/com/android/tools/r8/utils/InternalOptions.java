@@ -97,7 +97,8 @@ public class InternalOptions {
   // Flag to turn on/off desugaring in D8/R8.
   public boolean enableDesugaring = true;
   // Defines interface method rewriter behavior.
-  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Auto;
+  // Facebook: Disabled by default as it kills incremental builds
+  public OffOrAuto interfaceMethodDesugaring = OffOrAuto.Off;
   // Defines try-with-resources rewriter behavior.
   public OffOrAuto tryWithResourcesDesugaring = OffOrAuto.Auto;
 
