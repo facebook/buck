@@ -21,17 +21,21 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -54,7 +58,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements BinaryBuildRule {
 
   BuildRuleResolver buildRuleResolver;
 
@@ -432,7 +437,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       throw new RuntimeException(ex);
     }
 
-    Path script = dir.resolve(name);
+    Path script = scriptPath();
     steps.add(
         new StringTemplateStep(
             ghciScriptTemplate, getProjectFilesystem(), script, templateArgs.build()));
@@ -441,5 +446,15 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     buildableContext.recordArtifact(dir);
 
     return steps.build();
+  }
+
+  private Path scriptPath() {
+    return getOutputDir().resolve(getBuildTarget().getShortName());
+  }
+
+  @Override
+  public Tool getExecutableCommand() {
+    SourcePath p = new ExplicitBuildTargetSourcePath(getBuildTarget(), scriptPath());
+    return new CommandTool.Builder().addArg(SourcePathArg.of(p)).build();
   }
 }
