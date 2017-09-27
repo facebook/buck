@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -115,12 +116,12 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      HeaderVisibility headerVisibility) {
     BuildTarget swiftCompileTarget = createBuildTargetForSwiftCompile(buildTarget, cxxPlatform);
     SwiftCompile compile = (SwiftCompile) resolver.requireRule(swiftCompileTarget);
 
-    Path objCImportPath =
-        Paths.get(compile.getModuleName(), compile.getObjCGeneratedHeaderFileName());
+    Path objCImportPath = getObjCGeneratedHeaderSourceIncludePath(headerVisibility, compile);
     SourcePath objCGeneratedPath = compile.getObjCGeneratedHeaderPath();
 
     ImmutableMap.Builder<Path, SourcePath> headerLinks = ImmutableMap.builder();
@@ -132,6 +133,19 @@ public class AppleLibraryDescriptionSwiftEnhancer {
             buildTarget, projectFilesystem, outputPath, headerLinks.build());
 
     return headerMapRule;
+  }
+
+  private static Path getObjCGeneratedHeaderSourceIncludePath(
+      HeaderVisibility headerVisibility, SwiftCompile compile) {
+    Path publicPath = Paths.get(compile.getModuleName(), compile.getObjCGeneratedHeaderFileName());
+    switch (headerVisibility) {
+      case PUBLIC:
+        return publicPath;
+      case PRIVATE:
+        return Paths.get(compile.getObjCGeneratedHeaderFileName());
+    }
+
+    return publicPath;
   }
 
   public static BuildTarget createBuildTargetForSwiftCompile(
