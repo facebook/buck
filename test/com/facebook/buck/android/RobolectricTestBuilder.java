@@ -65,6 +65,20 @@ public class RobolectricTestBuilder
         filesystem);
   }
 
+  private RobolectricTestBuilder(
+      BuildTarget target, ProjectFilesystem filesystem, JavaBuckConfig javaBuckConfig) {
+    super(
+        new RobolectricTestDescription(
+            javaBuckConfig,
+            DEFAULT_JAVA_OPTIONS,
+            ANDROID_JAVAC_OPTIONS,
+            /* testRuleTimeoutMs */ Optional.empty(),
+            null,
+            DEFAULT_ANDROID_COMPILER_FACTORY),
+        target,
+        filesystem);
+  }
+
   public static RobolectricTestBuilder createBuilder(BuildTarget target) {
     return new RobolectricTestBuilder(target, DEFAULT_JAVA_CONFIG);
   }
@@ -77,6 +91,11 @@ public class RobolectricTestBuilder
   public static RobolectricTestBuilder createBuilder(
       BuildTarget target, ProjectFilesystem filesystem) {
     return new RobolectricTestBuilder(target, filesystem);
+  }
+
+  public static RobolectricTestBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem filesystem, JavaBuckConfig javaBuckConfig) {
+    return new RobolectricTestBuilder(target, filesystem, javaBuckConfig);
   }
 
   public RobolectricTestBuilder addDep(BuildTarget rule) {

@@ -211,7 +211,10 @@ public class RobolectricTestDescription
         args.getStdErrLogLevel(),
         args.getUnbundledResourcesRoot(),
         args.getRobolectricRuntimeDependency(),
-        args.getRobolectricManifest());
+        args.getRobolectricManifest(),
+        javaBuckConfig
+            .getDelegate()
+            .getBooleanValue("test", "pass_robolectric_directories_in_file", false));
   }
 
   @Override

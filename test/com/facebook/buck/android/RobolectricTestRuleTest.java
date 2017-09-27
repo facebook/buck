@@ -21,7 +21,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -127,13 +129,98 @@ public class RobolectricTestRuleTest {
     RobolectricTest robolectricTest =
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
-    String result = robolectricTest.getRobolectricResourceDirectories(pathResolver, resDeps);
+    String result = robolectricTest.getRobolectricResourceDirectoriesArg(pathResolver, resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
       // Every value should be a PathSourcePath
       assertTrue(
           result + " does not contain " + dep.getRes(),
           result.contains(((PathSourcePath) dep.getRes()).getRelativePath().toString()));
     }
+  }
+
+  @Test
+  public void testRobolectricContainsAllResourceDependenciesInResVmArgAsFile() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+
+    ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder = ImmutableList.builder();
+    for (int i = 0; i < 10; i++) {
+      String path = "java/src/com/facebook/base/" + i + "/res";
+      filesystem.mkdirs(Paths.get(path).resolve("values"));
+      resDepsBuilder.add(new ResourceRule(new FakeSourcePath(path)));
+    }
+    ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
+
+    BuildTarget robolectricBuildTarget =
+        BuildTargetFactory.newInstance(
+            "//java/src/com/facebook/base/robolectricTest:robolectricTest");
+
+    JavaBuckConfig javaBuckConfig =
+        JavaBuckConfig.of(
+            FakeBuckConfig.builder()
+                .setSections("[test]", "pass_robolectric_directories_in_file = true")
+                .build());
+
+    TargetNode<?, ?> robolectricTestNode =
+        RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem, javaBuckConfig)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    RobolectricTest robolectricTest =
+        (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
+
+    Path resDirectoriesPath =
+        RobolectricTest.getResourceDirectoriesPath(filesystem, robolectricBuildTarget);
+    String result = robolectricTest.getRobolectricResourceDirectoriesArg(pathResolver, resDeps);
+    assertEquals("-Dbuck.robolectric_res_directories=@" + resDirectoriesPath, result);
+  }
+
+  @Test
+  public void testRobolectricContainsAllResourceDependenciesInAssetVmArgAsFile() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+
+    ImmutableList.Builder<HasAndroidResourceDeps> resDepsBuilder = ImmutableList.builder();
+    for (int i = 0; i < 10; i++) {
+      String path = "java/src/com/facebook/base/" + i + "/res";
+      filesystem.mkdirs(Paths.get(path).resolve("values"));
+      String assetPath = "java/src/com/facebook/base/" + i + "/assets";
+      resDepsBuilder.add(new ResourceRule(new FakeSourcePath(path), new FakeSourcePath(assetPath)));
+    }
+    ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
+
+    BuildTarget robolectricBuildTarget =
+        BuildTargetFactory.newInstance(
+            "//java/src/com/facebook/base/robolectricTest:robolectricTest");
+
+    JavaBuckConfig javaBuckConfig =
+        JavaBuckConfig.of(
+            FakeBuckConfig.builder()
+                .setSections("[test]", "pass_robolectric_directories_in_file = true")
+                .build());
+
+    TargetNode<?, ?> robolectricTestNode =
+        RobolectricTestBuilder.createBuilder(robolectricBuildTarget, filesystem, javaBuckConfig)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(robolectricTestNode);
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+    RobolectricTest robolectricTest =
+        (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
+
+    Path assetDirectoriesPath =
+        RobolectricTest.getAssetDirectoriesPath(filesystem, robolectricBuildTarget);
+    String result = robolectricTest.getRobolectricAssetsDirectories(pathResolver, resDeps);
+    assertEquals("-Dbuck.robolectric_assets_directories=@" + assetDirectoriesPath, result);
   }
 
   @Test
@@ -178,7 +265,7 @@ public class RobolectricTestRuleTest {
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
     String result =
-        robolectricTest.getRobolectricResourceDirectories(
+        robolectricTest.getRobolectricResourceDirectoriesArg(
             pathResolver,
             ImmutableList.of(
                 new ResourceRule(new PathSourcePath(filesystem, resDep1)),
@@ -211,7 +298,7 @@ public class RobolectricTestRuleTest {
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
     try {
-      robolectricTest.getRobolectricResourceDirectories(
+      robolectricTest.getRobolectricResourceDirectoriesArg(
           pathResolver,
           ImmutableList.of(
               new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there_res")))));
@@ -291,7 +378,7 @@ public class RobolectricTestRuleTest {
         (RobolectricTest) resolver.requireRule(robolectricBuildTarget);
 
     try {
-      robolectricTest.getRobolectricResourceDirectories(
+      robolectricTest.getRobolectricResourceDirectoriesArg(
           pathResolver,
           ImmutableList.of(
               new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there_assets")))));
