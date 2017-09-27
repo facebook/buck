@@ -361,7 +361,7 @@ public class AndroidBinaryTest {
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
-            secondaryDexDirectories,
+            secondaryDexDirectories::add,
             commandsBuilder,
             primaryDexPath,
             Optional.empty(),
@@ -416,7 +416,7 @@ public class AndroidBinaryTest {
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
-            secondaryDexDirectories,
+            secondaryDexDirectories::add,
             commandsBuilder,
             primaryDexPath,
             Optional.of(reorderTool),

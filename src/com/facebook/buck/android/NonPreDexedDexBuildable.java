@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 class NonPreDexedDexBuildable implements AddsToRuleKey {
   @AddToRuleKey private final SourcePath aaptGeneratedProguardConfigFile;
@@ -182,6 +183,19 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   private Path getRootScratchPath() {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "%s/non_predexed_root");
+  }
+
+  private Path getRootGenPath() {
+    return BuildTargets.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/non_predexed_root");
+  }
+
+  private Path getSecondaryDexListing() {
+    return getRootGenPath().resolve("secondary_dex.list");
+  }
+
+  private Path getSecondaryDexRoot() {
+    return getBinPath("dexes");
   }
 
   ProjectFilesystem getProjectFilesystem() {
@@ -376,7 +390,15 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
     addDexingSteps(
         classpathEntriesToDex,
         classNamesToHashesSupplier,
-        secondaryDexDirectoriesBuilder,
+        path -> {
+          Path secondaryDexRoot = getSecondaryDexRoot();
+          Preconditions.checkState(
+              path.startsWith(secondaryDexRoot),
+              "Secondary dex directory %s is not a subdirectory of the secondary dex root %s.",
+              path,
+              secondaryDexRoot);
+          secondaryDexDirectoriesBuilder.add(secondaryDexRoot.relativize(path));
+        },
         steps,
         primaryDexPath,
         dexReorderToolFile,
@@ -384,9 +406,23 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
         additionalDexStoreToJarPathMap,
         buildContext);
 
+    // TODO(cjhopman): This should be written in a step, but it's currently read by
+    // AndroidBinaryBuildable before the step is run. When this is in its own BuildRule, it can be
+    // a step.
+    try {
+      getProjectFilesystem().mkdirs(getSecondaryDexListing().getParent());
+      getProjectFilesystem()
+          .writeLinesToPath(
+              secondaryDexDirectoriesBuilder.build().stream().map(t -> t.toString())::iterator,
+              getSecondaryDexListing());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+
     return new AndroidBinaryBuildable.DexFilesInfo(
         primaryDexPath,
-        secondaryDexDirectoriesBuilder.build(),
+        new AndroidBinaryBuildable.DexSecondaryDexDirView(
+            getSecondaryDexRoot(), getSecondaryDexListing()),
         shouldProguard ? Optional.of(getProguardConfigDir()) : Optional.empty());
   }
 
@@ -493,19 +529,12 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
    * Create dex artifacts for all of the individual directories of compiled .class files (or the
    * obfuscated jar files if proguard is used). If split dex is used, multiple dex artifacts will be
    * produced.
-   *
-   * @param classpathEntriesToDex Full set of classpath entries that must make their way into the
-   *     final APK structure (but not necessarily into the primary dex).
-   * @param secondaryDexDirectories The contract for updating this builder must match that of {@link
-   *     PreDexMerge#getSecondaryDexSourcePaths()}.
-   * @param steps List of steps to add to.
-   * @param primaryDexPath Output path for the primary dex file.
    */
   @VisibleForTesting
   void addDexingSteps(
       Set<Path> classpathEntriesToDex,
       Supplier<ImmutableMap<String, HashCode>> classNamesToHashesSupplier,
-      ImmutableSet.Builder<Path> secondaryDexDirectories,
+      Consumer<Path> secondaryDexDirectoriesConsumer,
       ImmutableList.Builder<Step> steps,
       Path primaryDexPath,
       Optional<SourcePath> dexReorderToolFile,
@@ -516,8 +545,8 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
-    Path secondaryDexParentDir = getBinPath("__secondary_dex__/");
-    Path additionalDexParentDir = getBinPath("__additional_dex__/");
+    Path secondaryDexParentDir = getSecondaryDexRoot().resolve("__secondary_dex__/");
+    Path additionalDexParentDir = getSecondaryDexRoot().resolve("__additional_dex__/");
     Path additionalDexAssetsDir = additionalDexParentDir.resolve("assets");
     final Optional<ImmutableSet<Path>> additionalDexDirs;
 
@@ -540,7 +569,7 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
                   buildContext.getBuildCellRootPath(), getProjectFilesystem(), splitZipDir)));
       Path primaryJarPath = splitZipDir.resolve("primary.jar");
 
-      Path secondaryJarMetaDirParent = splitZipDir.resolve("secondary_meta");
+      Path secondaryJarMetaDirParent = getSecondaryDexRoot().resolve("secondary_meta");
       Path secondaryJarMetaDir =
           secondaryJarMetaDirParent.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
 
@@ -672,13 +701,13 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
       }
 
       if (dexSplitMode.getDexStore() == DexStore.RAW) {
-        secondaryDexDirectories.add(secondaryDexDir.get());
+        secondaryDexDirectoriesConsumer.accept(secondaryDexDir.get());
       } else {
-        secondaryDexDirectories.add(secondaryJarMetaDirParent);
-        secondaryDexDirectories.add(secondaryDexParentDir);
+        secondaryDexDirectoriesConsumer.accept(secondaryJarMetaDirParent);
+        secondaryDexDirectoriesConsumer.accept(secondaryDexParentDir);
       }
       if (additionalDexDirs.isPresent()) {
-        secondaryDexDirectories.add(additionalDexParentDir);
+        secondaryDexDirectoriesConsumer.accept(additionalDexParentDir);
       }
 
       // Adjust smart-dex inputs for the split-zip case.

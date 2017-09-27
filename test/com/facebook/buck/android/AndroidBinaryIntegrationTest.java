@@ -92,7 +92,7 @@ import org.junit.Test;
 
 public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
 
   private ProjectWorkspace workspace;
 
