@@ -186,6 +186,7 @@ public class ProjectGenerator {
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
   private static final String PRODUCT_NAME = "PRODUCT_NAME";
 
   private static final ImmutableSet<Class<? extends Description<?>>>
@@ -1300,6 +1301,18 @@ public class ProjectGenerator {
           appendConfigsBuilder.put("SWIFT_INCLUDE_PATHS", "$BUILT_PRODUCTS_DIR");
         }
 
+        ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
+        if (targetNode.getConstructorArg() instanceof SwiftCommonArg) {
+          targetSpecificSwiftFlags.addAll(
+              convertStringWithMacros(
+                  targetNode,
+                  ((SwiftCommonArg) targetNode.getConstructorArg()).getSwiftCompilerFlags()));
+        }
+
+        Iterable<String> otherSwiftFlags =
+            Iterables.concat(
+                swiftBuckConfig.getFlags("compiler_flags").orElse(DEFAULT_SWIFTFLAGS),
+                targetSpecificSwiftFlags.build());
         Iterable<String> otherCFlags =
             Iterables.concat(
                 cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
@@ -1326,6 +1339,9 @@ public class ProjectGenerator {
                     collectRecursiveExportedLinkerFlags(targetNode)));
 
         appendConfigsBuilder
+            .put(
+                "OTHER_SWIFT_FLAGS",
+                Joiner.on(' ').join(Iterables.transform(otherSwiftFlags, Escaper.BASH_ESCAPER)))
             .put(
                 "OTHER_CFLAGS",
                 Joiner.on(' ').join(Iterables.transform(otherCFlags, Escaper.BASH_ESCAPER)))

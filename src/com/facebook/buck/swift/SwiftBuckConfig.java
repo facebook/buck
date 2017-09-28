@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.config.BuckConfig;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /** A Swift-specific "view" of BuckConfig. */
@@ -34,6 +35,18 @@ public class SwiftBuckConfig {
   public Optional<Iterable<String>> getFlags() {
     Optional<String> value = delegate.getValue(SECTION_NAME, COMPILER_FLAGS_NAME);
     return value.map(input -> Splitter.on(" ").split(input.trim()));
+  }
+
+  public Optional<ImmutableList<String>> getFlags(String field) {
+    Optional<String> value = delegate.getValue(SECTION_NAME, field);
+    if (!value.isPresent()) {
+      return Optional.empty();
+    }
+    ImmutableList.Builder<String> split = ImmutableList.builder();
+    if (!value.get().trim().isEmpty()) {
+      split.addAll(Splitter.on(" ").split(value.get().trim()));
+    }
+    return Optional.of(split.build());
   }
 
   public Optional<String> getVersion() {
