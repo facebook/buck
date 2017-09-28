@@ -224,11 +224,13 @@ public class ProjectCommand extends BuildCommand {
   @Option(
     name = "--view",
     usage =
-        "New command to build a 'project view', which is a directory outside the "
-            + "repo, containing symlinks in to the repo. This directory looks a lot like a standard "
-            + "IntelliJ project with all resources under /res, but what's really important is that it "
-            + "generates a single IntelliJ module, so that editing is much faster than when you use "
-            + "`buck project`."
+        "Option that builds a Project View which is a directory containing symlinks to a single"
+            + " project's code and resources. This directory looks a lot like a standard IntelliJ "
+            + "project with all resources under /res, but what's really important is that it "
+            + "generates a single IntelliJ module, so that editing is much faster than when you "
+            + "use 'plain' `buck project`.\n"
+            + "\n"
+            + "This option specifies the path to the Project View directory."
   )
   @Nullable
   private String projectView = null;
@@ -289,34 +291,24 @@ public class ProjectCommand extends BuildCommand {
                     includeTransitiveDependencies,
                     skipBuild || !build);
 
-            ProjectViewParametersImplementation projectView =
+            ProjectViewParameters projectViewParameters =
                 new ProjectViewParametersImplementation(params);
-            if (projectView.hasViewPath() && !projectView.isValidViewPath()) {
-              projectView
-                  .getStdErr()
-                  .printf(
-                      "\nView directory %s is under the repo directory\n",
-                      projectView.getViewPath());
-              result = 1;
-            } else {
-              IjProjectCommandHelper projectCommandHelper =
-                  new IjProjectCommandHelper(
-                      params.getBuckEventBus(),
-                      executor,
-                      params.getBuckConfig(),
-                      params.getActionGraphCache(),
-                      params.getVersionedTargetGraphCache(),
-                      params.getTypeCoercerFactory(),
-                      params.getCell(),
-                      projectConfig,
-                      getEnableParserProfiling(),
-                      (buildTargets, disableCaching) ->
-                          runBuild(params, buildTargets, disableCaching),
-                      arguments ->
-                          parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
-                      projectView);
-              result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
-            }
+            IjProjectCommandHelper projectCommandHelper =
+                new IjProjectCommandHelper(
+                    params.getBuckEventBus(),
+                    executor,
+                    params.getBuckConfig(),
+                    params.getActionGraphCache(),
+                    params.getVersionedTargetGraphCache(),
+                    params.getTypeCoercerFactory(),
+                    params.getCell(),
+                    projectConfig,
+                    getEnableParserProfiling(),
+                    (buildTargets, disableCaching) ->
+                        runBuild(params, buildTargets, disableCaching),
+                    arguments -> parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
+                    projectViewParameters);
+            result = projectCommandHelper.parseTargetsAndRunProjectGenerator(getArguments());
             break;
           case XCODE:
             XCodeProjectCommandHelper xcodeProjectCommandHelper =
@@ -511,7 +503,7 @@ public class ProjectCommand extends BuildCommand {
 
     @Override
     public boolean hasViewPath() {
-      return projectView != null;
+      return projectView != null && !projectView.trim().isEmpty(); // --view '' is possible
     }
 
     @Override
