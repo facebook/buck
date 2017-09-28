@@ -67,7 +67,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
-      return CalculateAbiFromClasses.of(
+      return CalculateClassAbi.of(
           buildTarget, ruleFinder, projectFilesystem, params, args.getBinaryJar());
     }
 
@@ -85,7 +85,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
             args.getJavadocUrl(),
             args.getMavenCoords(),
             args.getProvided(),
-            args.getRequiredForSourceAbi());
+            args.getRequiredForSourceOnlyAbi());
 
     buildTarget.checkUnflavored();
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
@@ -166,7 +166,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltJarDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceAbiArg {
+      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getBinaryJar();
 
     Optional<SourcePath> getSourceJar();
@@ -184,7 +184,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
     @Override
     @Value.Default
-    default boolean getRequiredForSourceAbi() {
+    default boolean getRequiredForSourceOnlyAbi() {
       // Prebuilt jars are quick to build, and often contain third-party code, which in turn is
       // often a source of annotations and constants. To ease migration to ABI generation from
       // source without deps, we have them present during ABI gen by default.

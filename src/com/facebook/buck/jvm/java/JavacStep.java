@@ -142,7 +142,7 @@ public class JavacStep implements Step {
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
                   javacOptions.getCompilationMode(),
-                  compilerParameters.ruleIsRequiredForSourceAbi())) {
+                  compilerParameters.ruleIsRequiredForSourceOnlyAbi())) {
         if (abiJar != null) {
           declaredDepsBuildResult =
               invocation.buildSourceAbiJar(
@@ -223,7 +223,7 @@ public class JavacStep implements Step {
   public String getShortName() {
     String name;
     if (abiJar != null) {
-      name = "calculate_abi_from_source";
+      name = "source_abi";
     } else if (jarParameters.isPresent()) {
       name = "javac_jar";
     } else {

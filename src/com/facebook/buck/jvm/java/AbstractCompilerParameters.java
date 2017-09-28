@@ -67,7 +67,7 @@ abstract class AbstractCompilerParameters {
   }
 
   @Value.Default
-  public boolean ruleIsRequiredForSourceAbi() {
+  public boolean ruleIsRequiredForSourceOnlyAbi() {
     return false;
   }
 

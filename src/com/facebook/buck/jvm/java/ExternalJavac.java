@@ -182,7 +182,7 @@ public class ExternalJavac implements Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
     return new Invocation() {
       @Override
       public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {

@@ -44,7 +44,7 @@ import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class CalculateAbiFromClassesTest {
+public class CalculateClassAbiTest {
 
   @Test
   public void testIsAbiTargetRecognizesAbiTargets() {
@@ -88,8 +88,8 @@ public class CalculateAbiFromClassesTest {
         "stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
-    CalculateAbiFromClasses calculateAbi =
-        CalculateAbiFromClasses.of(
+    CalculateClassAbi calculateAbi =
+        CalculateClassAbi.of(
             target,
             ruleFinder,
             filesystem,
@@ -154,8 +154,8 @@ public class CalculateAbiFromClassesTest {
         "stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
-    CalculateAbiFromClasses calculateAbi =
-        CalculateAbiFromClasses.of(
+    CalculateClassAbi calculateAbi =
+        CalculateClassAbi.of(
             target,
             ruleFinder,
             filesystem,

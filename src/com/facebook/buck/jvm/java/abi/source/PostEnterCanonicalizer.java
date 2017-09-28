@@ -406,7 +406,7 @@ class PostEnterCanonicalizer {
               } else {
                 javacTrees.printMessage(
                     Diagnostic.Kind.ERROR,
-                    "Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.",
+                    "Could not resolve constant. Either inline the value or add required_for_source_only_abi = True to the build rule that contains it.",
                     leaf,
                     valueTreePath.getCompilationUnit());
               }

@@ -75,7 +75,7 @@ public abstract class Jsr199Javac implements Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
     return new Jsr199JavacInvocation(
         this::createCompiler,
         context,
@@ -85,6 +85,6 @@ public abstract class Jsr199Javac implements Javac {
         javaSourceFilePaths,
         pathToSrcsList,
         compilationMode,
-        requiredForSourceAbi);
+        requiredForSourceOnlyAbi);
   }
 }

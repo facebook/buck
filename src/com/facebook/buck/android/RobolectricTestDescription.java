@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
+import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -112,7 +112,7 @@ public class RobolectricTestDescription
           !buildTarget.getFlavors().contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
       BuildTarget testTarget = HasJavaAbi.getLibraryTarget(buildTarget);
       BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbiFromClasses.of(
+      return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
           projectFilesystem,

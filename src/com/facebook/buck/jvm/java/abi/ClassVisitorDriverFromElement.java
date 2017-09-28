@@ -266,7 +266,7 @@ class ClassVisitorDriverFromElement {
       } catch (CannotInferException e) {
         messager.printMessage(
             Diagnostic.Kind.ERROR,
-            "Could not load the class file for this annotation. Consider adding required_for_source_abi = True to its build rule.",
+            "Could not load the class file for this annotation. Consider adding required_for_source_only_abi = True to its build rule.",
             enclosingElement,
             annotation);
       }

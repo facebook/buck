@@ -42,7 +42,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class CalculateAbiFromSourceIntegrationTest {
+public class CalculateSourceAbiIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
@@ -51,8 +51,7 @@ public class CalculateAbiFromSourceIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "calculate_abi_from_source", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "source_abi", tmp);
     workspace.setUp();
 
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());

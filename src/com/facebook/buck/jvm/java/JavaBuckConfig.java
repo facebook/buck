@@ -92,13 +92,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
     switch (abiGenerationMode) {
       case CLASS:
-      case SOURCE_WITH_DEPS:
+      case SOURCE:
         builder.setCompilationMode(JavacCompilationMode.FULL);
         break;
-      case MIGRATING_TO_SOURCE:
+      case MIGRATING_TO_SOURCE_ONLY:
         builder.setCompilationMode(JavacCompilationMode.FULL_CHECKING_REFERENCES);
         break;
-      case SOURCE:
+      case SOURCE_ONLY:
         builder.setCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
         break;
     }
@@ -128,11 +128,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .build();
   }
 
-  public boolean shouldGenerateAbisFromSource() {
+  public boolean shouldGenerateSourceAbis() {
     AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
 
-    return abiGenerationMode == AbiGenerationMode.SOURCE
-        || abiGenerationMode == AbiGenerationMode.SOURCE_WITH_DEPS;
+    return abiGenerationMode == AbiGenerationMode.SOURCE_ONLY
+        || abiGenerationMode == AbiGenerationMode.SOURCE;
   }
 
   private AbiGenerationMode getAbiGenerationMode() {
@@ -232,7 +232,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
    * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
    */
   public SourceAbiVerificationMode getSourceAbiVerificationMode() {
-    if (!shouldGenerateAbisFromSource()) {
+    if (!shouldGenerateSourceAbis()) {
       return SourceAbiVerificationMode.OFF;
     }
 
@@ -253,16 +253,16 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     /** Generate ABIs by stripping .class files */
     CLASS,
     /** Generate ABIs by parsing .java files with dependency ABIs available */
-    SOURCE_WITH_DEPS,
+    SOURCE,
     /**
      * Output warnings for things that aren't legal when generating ABIs from source without
      * dependency ABIs
      */
-    MIGRATING_TO_SOURCE,
+    MIGRATING_TO_SOURCE_ONLY,
     /**
      * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
      */
-    SOURCE,
+    SOURCE_ONLY,
   }
 
   public enum SourceAbiVerificationMode {

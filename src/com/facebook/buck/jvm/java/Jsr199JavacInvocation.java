@@ -69,7 +69,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final JavacCompilationMode compilationMode;
-  private final boolean requiredForSourceAbi;
+  private final boolean requiredForSourceOnlyAbi;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
@@ -86,7 +86,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
@@ -95,7 +95,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.compilationMode = compilationMode;
-    this.requiredForSourceAbi = requiredForSourceAbi;
+    this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
   }
 
   @Override
@@ -370,7 +370,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
-                new DefaultInterfaceValidatorCallback(fileManager, requiredForSourceAbi),
+                new DefaultInterfaceValidatorCallback(fileManager, requiredForSourceOnlyAbi),
                 compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
                     ? Diagnostic.Kind.ERROR
                     : Diagnostic.Kind.WARNING);

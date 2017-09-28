@@ -916,7 +916,7 @@ public class StubJarTest {
             "  public void cheese(String key) {}",
             "}")
         .addExpectedCompileError(
-            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_abi = True to its build rule.\n"
+            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_only_abi = True to its build rule.\n"
                 + "  @Foo\n"
                 + "  ^")
         .createStubJar();
@@ -1333,7 +1333,7 @@ public class StubJarTest {
             "@Foo(stringValue=Dependency.STRING)",
             "public @interface A {}")
         .addExpectedCompileError(
-            "A.java:2: error: Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.\n"
+            "A.java:2: error: Could not resolve constant. Either inline the value or add required_for_source_only_abi = True to the build rule that contains it.\n"
                 + "@Foo(stringValue=Dependency.STRING)\n"
                 + "                           ^")
         .createStubJar();

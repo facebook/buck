@@ -1509,7 +1509,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       new AnnotationProcessorTarget("//tools/java/src/com/facebook/somejava:library#class-abi") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
-          return CalculateAbiFromClasses.of(
+          return CalculateClassAbi.of(
               target,
               new SourcePathRuleFinder(ruleResolver),
               new FakeProjectFilesystem(),

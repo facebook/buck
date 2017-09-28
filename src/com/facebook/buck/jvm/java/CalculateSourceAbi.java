@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-public class CalculateAbiFromSource extends AbstractBuildRule
+public class CalculateSourceAbi extends AbstractBuildRule
     implements CalculateAbi,
         InitializableFromDisk<Object>,
         SupportsInputBasedRuleKey,
@@ -52,7 +52,7 @@ public class CalculateAbiFromSource extends AbstractBuildRule
   private final JarContentsSupplier outputJarContents;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
 
-  public CalculateAbiFromSource(
+  public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedSet<BuildRule> buildDeps,

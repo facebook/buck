@@ -36,7 +36,7 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
         new BuckJavacTaskProxyImpl(task),
         new InterfaceValidatorCallback() {
           @Override
-          public boolean ruleIsRequiredForSourceAbi() {
+          public boolean ruleIsRequiredForSourceOnlyAbi() {
             return requiredForSourceAbi;
           }
 

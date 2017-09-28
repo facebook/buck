@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSourceAbiArg {
+public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSourceOnlyAbiArg {
   Optional<String> getSource();
 
   Optional<String> getTarget();
@@ -63,7 +63,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   ImmutableList<BuildTarget> getPlugins();
 
-  Optional<Boolean> getGenerateAbiFromSource();
+  Optional<Boolean> getGenerateSourceOnlyAbi();
 
   @Value.Derived
   @Nullable

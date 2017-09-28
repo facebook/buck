@@ -51,7 +51,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
 
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
     if (LOG.isVerboseEnabled()) {
@@ -74,7 +74,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
                 .map(JavacPluginJsr199FieldsSerializer::serialize)
                 .collect(Collectors.toList()),
             compilationMode.toString(),
-            requiredForSourceAbi));
+            requiredForSourceOnlyAbi));
   }
 
   @Override

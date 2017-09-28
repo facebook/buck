@@ -63,7 +63,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         HasClasspathEntries,
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
-        MaybeRequiredForSourceAbi,
+        MaybeRequiredForSourceOnlyAbi,
         SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
@@ -78,7 +78,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Optional<String> javadocUrl;
   @AddToRuleKey private final Optional<String> mavenCoords;
   @AddToRuleKey private final boolean provided;
-  @AddToRuleKey private final boolean requiredForSourceAbi;
+  @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -95,7 +95,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
       final boolean provided,
-      final boolean requiredForSourceAbi) {
+      final boolean requiredForSourceOnlyAbi) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
@@ -103,7 +103,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javadocUrl = javadocUrl;
     this.mavenCoords = mavenCoords;
     this.provided = provided;
-    this.requiredForSourceAbi = requiredForSourceAbi;
+    this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
     transitiveClasspathsSupplier =
         Suppliers.memoize(
@@ -138,8 +138,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean getRequiredForSourceAbi() {
-    return requiredForSourceAbi;
+  public boolean getRequiredForSourceOnlyAbi() {
+    return requiredForSourceOnlyAbi;
   }
 
   public Optional<SourcePath> getSourceJar() {

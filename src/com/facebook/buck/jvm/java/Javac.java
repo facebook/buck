@@ -45,7 +45,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       Path pathToSrcsList,
       Path workingDirectory,
       JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi);
+      boolean requiredForSourceOnlyAbi);
 
   String getDescription(
       ImmutableList<String> options,

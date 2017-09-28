@@ -18,6 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
 
-public interface MaybeRequiredForSourceAbi extends BuildRule {
-  boolean getRequiredForSourceAbi();
+public interface MaybeRequiredForSourceOnlyAbi extends BuildRule {
+  boolean getRequiredForSourceOnlyAbi();
 }

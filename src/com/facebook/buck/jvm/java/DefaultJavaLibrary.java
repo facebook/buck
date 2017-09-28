@@ -86,7 +86,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         ExportDependencies,
         InitializableFromDisk<JavaLibrary.Data>,
         AndroidPackageable,
-        MaybeRequiredForSourceAbi,
+        MaybeRequiredForSourceOnlyAbi,
         SupportsInputBasedRuleKey,
         SupportsDependencyFileRuleKey,
         SupportsPipelining<JavacPipelineState>,
@@ -99,7 +99,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final JarContentsSupplier outputJarContentsSupplier;
   @Nullable private final BuildTarget abiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
-  @AddToRuleKey private final boolean requiredForSourceAbi;
+  @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
 
   // This is automatically added to the rule key by virtue of being returned from getBuildDeps.
   private final ImmutableSortedSet<BuildRule> buildDeps;
@@ -118,7 +118,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
 
-  @Nullable private CalculateAbiFromSource sourceAbi;
+  @Nullable private CalculateSourceAbi sourceAbi;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -156,7 +156,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       @Nullable BuildTarget abiJar,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
@@ -187,7 +187,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.fullJarProvidedDeps = fullJarProvidedDeps;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
-    this.requiredForSourceAbi = requiredForSourceAbi;
+    this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
     this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.abiJar = abiJar;
@@ -217,11 +217,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public boolean getRequiredForSourceAbi() {
-    return requiredForSourceAbi;
+  public boolean getRequiredForSourceOnlyAbi() {
+    return requiredForSourceOnlyAbi;
   }
 
-  public void setSourceAbi(CalculateAbiFromSource sourceAbi) {
+  public void setSourceAbi(CalculateSourceAbi sourceAbi) {
     this.sourceAbi = sourceAbi;
   }
 

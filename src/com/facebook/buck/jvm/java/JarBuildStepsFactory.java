@@ -65,7 +65,7 @@ public class JarBuildStepsFactory
   private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
-  @AddToRuleKey private final boolean ruleRequiredForSourceAbi;
+  @AddToRuleKey private final boolean ruleRequiredForSourceOnlyAbi;
 
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
@@ -80,7 +80,7 @@ public class JarBuildStepsFactory
       boolean trackClassUsage,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
-      boolean ruleRequiredForSourceAbi) {
+      boolean ruleRequiredForSourceOnlyAbi) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     this.configuredCompiler = configuredCompiler;
@@ -93,7 +93,7 @@ public class JarBuildStepsFactory
     this.trackClassUsage = trackClassUsage;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
-    this.ruleRequiredForSourceAbi = ruleRequiredForSourceAbi;
+    this.ruleRequiredForSourceOnlyAbi = ruleRequiredForSourceOnlyAbi;
   }
 
   public boolean producesJar() {
@@ -143,7 +143,7 @@ public class JarBuildStepsFactory
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(false)
             .setShouldGenerateAbiJar(true)
-            .setRuleIsRequiredForSourceAbi(ruleRequiredForSourceAbi)
+            .setRuleIsRequiredForSourceOnlyAbi(ruleRequiredForSourceOnlyAbi)
             .build();
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
@@ -179,7 +179,7 @@ public class JarBuildStepsFactory
             .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(trackClassUsage)
-            .setRuleIsRequiredForSourceAbi(ruleRequiredForSourceAbi)
+            .setRuleIsRequiredForSourceOnlyAbi(ruleRequiredForSourceOnlyAbi)
             .build();
 
     ResourcesParameters resourcesParameters = getResourcesParameters();

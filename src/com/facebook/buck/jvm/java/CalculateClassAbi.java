@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
@@ -56,7 +56,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
   private final JarContentsSupplier abiJarContentsSupplier;
   private BuildOutputInitializer<Object> buildOutputInitializer;
 
-  public CalculateAbiFromClasses(
+  public CalculateClassAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
@@ -71,7 +71,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
-  public static CalculateAbiFromClasses of(
+  public static CalculateClassAbi of(
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
@@ -80,14 +80,14 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
     return of(target, ruleFinder, projectFilesystem, libraryParams, library, false);
   }
 
-  public static CalculateAbiFromClasses of(
+  public static CalculateClassAbi of(
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams libraryParams,
       SourcePath library,
       boolean sourceAbiCompatible) {
-    return new CalculateAbiFromClasses(
+    return new CalculateClassAbi(
         target,
         projectFilesystem,
         libraryParams
@@ -116,7 +116,7 @@ public class CalculateAbiFromClasses extends AbstractBuildRuleWithDeclaredAndExt
             RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
-            new CalculateAbiFromClassesStep(
+            new CalculateClassAbiStep(
                 getProjectFilesystem(),
                 context.getSourcePathResolver().getAbsolutePath(binaryJar),
                 outputPath,

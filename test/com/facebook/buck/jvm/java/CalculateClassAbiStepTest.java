@@ -36,7 +36,7 @@ import java.util.jar.Manifest;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class CalculateAbiFromClassesStepTest {
+public class CalculateClassAbiStepTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
@@ -53,7 +53,7 @@ public class CalculateAbiFromClassesStepTest {
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
-    new CalculateAbiFromClassesStep(filesystem, binJar, abiJar, false).execute(executionContext);
+    new CalculateClassAbiStep(filesystem, binJar, abiJar, false).execute(executionContext);
 
     String seenHash = filesystem.computeSha1(Paths.get("abi.jar")).getHash();
 

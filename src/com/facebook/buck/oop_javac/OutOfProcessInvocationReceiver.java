@@ -92,7 +92,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       @Nullable String workingDirectoryAsString,
       List<Map<String, Object>> pluginFields,
       String javaCompilationModeAsString,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
 
     PrintStream printStreamForStdErr = new PrintStream(new ByteArrayOutputStream());
 
@@ -145,7 +145,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             pathToSrcsList,
             workingDirectory,
             JavacCompilationMode.valueOf(javaCompilationModeAsString),
-            requiredForSourceAbi);
+            requiredForSourceOnlyAbi);
     int invocationId = nextInvocationId.getAndIncrement();
     invocations.put(invocationId, invocation);
 

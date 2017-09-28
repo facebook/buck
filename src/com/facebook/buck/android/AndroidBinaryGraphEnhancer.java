@@ -304,7 +304,7 @@ public class AndroidBinaryGraphEnhancer {
               .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
               .setSrcs(
                   ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
-              .setSourceAbisAllowed(false)
+              .setSourceOnlyAbisAllowed(false)
               .setDeps(
                   new JavaLibraryDeps.Builder(ruleResolver)
                       .addAllDepTargets(
@@ -387,7 +387,7 @@ public class AndroidBinaryGraphEnhancer {
                 null)
             .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
-            .setSourceAbisAllowed(false)
+            .setSourceOnlyAbisAllowed(false)
             .setDeps(
                 new JavaLibraryDeps.Builder(ruleResolver)
                     .addAllDepTargets(

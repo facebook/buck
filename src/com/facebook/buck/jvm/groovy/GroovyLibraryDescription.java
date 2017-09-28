@@ -75,7 +75,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
     // Groovyc may not play nice with this, so turning it off
     @Override
-    default Optional<Boolean> getGenerateAbiFromSource() {
+    default Optional<Boolean> getGenerateSourceOnlyAbi() {
       return Optional.of(false);
     }
 

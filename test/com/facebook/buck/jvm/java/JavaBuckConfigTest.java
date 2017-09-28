@@ -401,17 +401,17 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void testSourceWithDepsABI() throws IOException {
-    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source_with_deps");
+  public void testSourceABI() throws IOException {
+    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(options.getCompilationMode(), Matchers.equalTo(JavacCompilationMode.FULL));
   }
 
   @Test
-  public void testMigratingToSourceABI() throws IOException {
+  public void testMigratingToSourceOnlyABI() throws IOException {
     String content =
-        Joiner.on('\n').join("[java]", "    abi_generation_mode = migrating_to_source");
+        Joiner.on('\n').join("[java]", "    abi_generation_mode = migrating_to_source_only");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
@@ -420,8 +420,8 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void testSourceABINoDeps() throws IOException {
-    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source");
+  public void testSourceOnlyABI() throws IOException {
+    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source_only");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
     JavacOptions options = config.getDefaultJavacOptions();
     assertThat(

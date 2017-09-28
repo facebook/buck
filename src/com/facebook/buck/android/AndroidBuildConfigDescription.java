@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
+import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
@@ -76,7 +76,7 @@ public class AndroidBuildConfigDescription
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
       BuildTarget configTarget = HasJavaAbi.getLibraryTarget(buildTarget);
       BuildRule configRule = resolver.requireRule(configTarget);
-      return CalculateAbiFromClasses.of(
+      return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
           projectFilesystem,

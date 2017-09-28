@@ -87,7 +87,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean requiredForSourceAbi) {
+      boolean requiredForSourceOnlyAbi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -101,7 +101,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         abiJar,
         mavenCoords,
         tests,
-        requiredForSourceAbi);
+        requiredForSourceOnlyAbi);
     this.manifestFile = manifestFile;
   }
 
@@ -149,7 +149,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 @Nullable BuildTarget abiJar,
                 Optional<String> mavenCoords,
                 ImmutableSortedSet<BuildTarget> tests,
-                boolean requiredForSourceAbi) {
+                boolean requiredForSourceOnlyAbi) {
               return new AndroidLibrary(
                   buildTarget,
                   projectFilesystem,
@@ -164,7 +164,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   mavenCoords,
                   args.getManifest(),
                   tests,
-                  requiredForSourceAbi);
+                  requiredForSourceOnlyAbi);
             }
           });
       delegateBuilder.setJavacOptions(javacOptions);

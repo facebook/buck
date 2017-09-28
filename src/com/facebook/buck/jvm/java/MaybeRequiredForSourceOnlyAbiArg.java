@@ -19,9 +19,9 @@ package com.facebook.buck.jvm.java;
 import org.immutables.value.Value;
 
 /** Args for a rule that can be a dependency during source ABI generation. */
-public interface MaybeRequiredForSourceAbiArg {
+public interface MaybeRequiredForSourceOnlyAbiArg {
   @Value.Default
-  default boolean getRequiredForSourceAbi() {
+  default boolean getRequiredForSourceOnlyAbi() {
     return false;
   }
 }

@@ -5,7 +5,7 @@
     source_level = 8
     target_level = 8
     jar_spool_mode = direct_to_jar
-    abi_generation_mode = source_with_deps
+    abi_generation_mode = source
     # There is some nondeterminism with the Immutables processor that causes verification to
     # fail intermittently at the moment. Once we're generating source ABIs as part of compilation
     # (instead of as a separate step), this can become an error again:

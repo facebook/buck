@@ -62,7 +62,7 @@ public abstract class DefaultJavaLibraryRules {
         @Nullable BuildTarget abiJar,
         Optional<String> mavenCoords,
         ImmutableSortedSet<BuildTarget> tests,
-        boolean requiredForSourceAbi);
+        boolean requiredForSourceOnlyAbi);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -138,7 +138,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Default
-  boolean getSourceAbisAllowed() {
+  boolean getSourceOnlyAbisAllowed() {
     return true;
   }
 
@@ -178,8 +178,8 @@ public abstract class DefaultJavaLibraryRules {
             .computeIfAbsent(
                 HasJavaAbi.getVerifiedSourceAbiJar(getLibraryTarget()),
                 target -> {
-                  CalculateAbiFromClasses classAbi = Preconditions.checkNotNull(getClassAbiRule());
-                  CalculateAbiFromSource sourceAbi = Preconditions.checkNotNull(getSourceAbiRule());
+                  CalculateClassAbi classAbi = Preconditions.checkNotNull(getClassAbiRule());
+                  CalculateSourceAbi sourceAbi = Preconditions.checkNotNull(getSourceAbiRule());
 
                   return new CompareAbis(
                       getInitialBuildTarget(),
@@ -214,7 +214,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean willProduceSourceAbi() {
-    return willProduceOutputJar() && shouldBuildAbiFromSource();
+    return willProduceOutputJar() && shouldBuildSourceAbi();
   }
 
   private boolean willProduceClassAbi() {
@@ -228,11 +228,11 @@ public abstract class DefaultJavaLibraryRules {
             != JavaBuckConfig.SourceAbiVerificationMode.OFF;
   }
 
-  private boolean shouldBuildAbiFromSource() {
+  private boolean shouldBuildSourceAbi() {
     return isCompilingJava()
         && !getSrcs().isEmpty()
         && sourceAbisEnabled()
-        && getSourceAbisAllowed()
+        && getSourceOnlyAbisAllowed()
         && getPostprocessClassesCommands().isEmpty();
   }
 
@@ -241,7 +241,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean sourceAbisEnabled() {
-    return getJavaBuckConfig() != null && getJavaBuckConfig().shouldGenerateAbisFromSource();
+    return getJavaBuckConfig() != null && getJavaBuckConfig().shouldGenerateSourceAbis();
   }
 
   private DefaultJavaLibrary getLibraryRule() {
@@ -254,7 +254,7 @@ public abstract class DefaultJavaLibraryRules {
                       ImmutableSortedSet.naturalOrder();
 
                   buildDepsBuilder.addAll(getFinalBuildDeps());
-                  CalculateAbiFromSource sourceAbiRule = getSourceAbiRule();
+                  CalculateSourceAbi sourceAbiRule = getSourceAbiRule();
                   if (sourceAbiRule != null) {
                     buildDepsBuilder.add(sourceAbiRule);
                   }
@@ -274,7 +274,7 @@ public abstract class DefaultJavaLibraryRules {
                               getAbiJar(),
                               getMavenCoords(),
                               getTests(),
-                              getRequiredForSourceAbi());
+                              getRequiredForSourceOnlyAbi());
 
                   if (sourceAbiRule != null) {
                     libraryRule.setSourceAbi(sourceAbiRule);
@@ -284,22 +284,22 @@ public abstract class DefaultJavaLibraryRules {
                 });
   }
 
-  private boolean getRequiredForSourceAbi() {
-    return getArgs() != null && getArgs().getRequiredForSourceAbi();
+  private boolean getRequiredForSourceOnlyAbi() {
+    return getArgs() != null && getArgs().getRequiredForSourceOnlyAbi();
   }
 
   @Nullable
-  private CalculateAbiFromSource getSourceAbiRule() {
+  private CalculateSourceAbi getSourceAbiRule() {
     if (!willProduceSourceAbi()) {
       return null;
     }
 
-    return (CalculateAbiFromSource)
+    return (CalculateSourceAbi)
         getBuildRuleResolver()
             .computeIfAbsent(
                 HasJavaAbi.getSourceAbiJar(getLibraryTarget()),
                 abiTarget ->
-                    new CalculateAbiFromSource(
+                    new CalculateSourceAbi(
                         abiTarget,
                         getProjectFilesystem(),
                         getFinalBuildDeps(),
@@ -308,17 +308,17 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Nullable
-  private CalculateAbiFromClasses getClassAbiRule() {
+  private CalculateClassAbi getClassAbiRule() {
     if (!willProduceClassAbi()) {
       return null;
     }
 
-    return (CalculateAbiFromClasses)
+    return (CalculateClassAbi)
         getBuildRuleResolver()
             .computeIfAbsent(
                 HasJavaAbi.getClassAbiJar(getLibraryTarget()),
                 abiTarget ->
-                    CalculateAbiFromClasses.of(
+                    CalculateClassAbi.of(
                         abiTarget,
                         getSourcePathRuleFinder(),
                         getProjectFilesystem(),
@@ -436,7 +436,7 @@ public abstract class DefaultJavaLibraryRules {
         getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
         getFinalCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
-        getRequiredForSourceAbi());
+        getRequiredForSourceOnlyAbi());
   }
 
   @org.immutables.builder.Builder.AccessibleFields
@@ -461,8 +461,8 @@ public abstract class DefaultJavaLibraryRules {
       this.buildRuleResolver = buildRuleResolver;
 
       if (args != null) {
-        if (args.getGenerateAbiFromSource().isPresent()) {
-          setSourceAbisAllowed(args.getGenerateAbiFromSource().get());
+        if (args.getGenerateSourceOnlyAbi().isPresent()) {
+          setSourceOnlyAbisAllowed(args.getGenerateSourceOnlyAbi().get());
         }
 
         setSrcs(args.getSrcs())

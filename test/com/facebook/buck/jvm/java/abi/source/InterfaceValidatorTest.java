@@ -49,10 +49,10 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"), false);
 
     assertErrors(
-        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_only_abi absent or set to False. Move this annotation to a rule with required_for_source_only_abi = True.\n"
             + "@interface Foo { @interface Inner { } };\n"
             + " ^",
-        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_only_abi absent or set to False. Move this annotation to a rule with required_for_source_only_abi = True.\n"
             + "@interface Foo { @interface Inner { } };\n"
             + "                  ^");
   }

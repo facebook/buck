@@ -147,9 +147,9 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   @Test
-  public void sourceAbiGenerationCanBeDisabledPerTarget() {
+  public void sourceOnlyAbiGenerationCanBeDisabledPerTarget() {
     JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(false).build();
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateSourceOnlyAbi(false).build();
     defaults = defaults.withCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
 
     JavacOptions options = createJavacOptions(arg);
@@ -158,11 +158,11 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   @Test
-  public void sourceAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
+  public void sourceOnlyAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
     assertEquals(defaults.getCompilationMode(), JavacCompilationMode.FULL);
 
     JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setGenerateAbiFromSource(true).build();
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateSourceOnlyAbi(true).build();
 
     JavacOptions options = createJavacOptions(arg);
 

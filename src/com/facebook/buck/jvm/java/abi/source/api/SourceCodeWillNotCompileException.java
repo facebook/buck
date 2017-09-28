@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source.api;
 
 /**
- * Thrown when an ABI cannot be generated from source because the source code will not compile.
- * Correct handling is to simply stop attempting to generate the ABI and allow the compiler to fail.
+ * Thrown when a source ABI cannot be generated because the source code will not compile. Correct
+ * handling is to simply stop attempting to generate the ABI and allow the compiler to fail.
  */
 public class SourceCodeWillNotCompileException extends RuntimeException {}

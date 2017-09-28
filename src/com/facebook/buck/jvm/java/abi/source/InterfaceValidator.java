@@ -79,10 +79,10 @@ class InterfaceValidator {
 
                 @Override
                 public void onAnnotationTypeFound(TypeElement type, TreePath path) {
-                  if (!callback.ruleIsRequiredForSourceAbi()) {
+                  if (!callback.ruleIsRequiredForSourceOnlyAbi()) {
                     trees.printMessage(
                         messageKind,
-                        "Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.",
+                        "Annotation definitions are not allowed in a Buck rule with required_for_source_only_abi absent or set to False. Move this annotation to a rule with required_for_source_only_abi = True.",
                         path.getLeaf(),
                         path.getCompilationUnit());
                   }
