@@ -327,6 +327,7 @@ java_library(
 java_immutables_library(
     name = "rules",
     srcs = [
+        "AbstractDefaultJavaLibraryClasspaths.java",
         "BuiltInJavac.java",
         "CalculateAbi.java",
         "CalculateClassAbi.java",
