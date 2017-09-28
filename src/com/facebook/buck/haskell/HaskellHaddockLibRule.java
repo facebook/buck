@@ -16,6 +16,11 @@
 
 package com.facebook.buck.haskell;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.cxx.toolchain.PathShortener;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
@@ -28,10 +33,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -49,6 +56,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -62,11 +70,16 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   @AddToRuleKey ImmutableList<String> linkerFlags;
 
+  private final PreprocessorFlags ppFlags;
+
   @AddToRuleKey HaskellSources srcs;
+
+  @AddToRuleKey private final Preprocessor preprocessor;
 
   @AddToRuleKey private final ImmutableSet<SourcePath> interfaces;
 
   @AddToRuleKey HaskellPackageInfo packageInfo;
+  private HaskellPlatform platform;
 
   @AddToRuleKey final ImmutableSortedMap<String, HaskellPackage> packages;
   @AddToRuleKey final ImmutableSortedMap<String, HaskellPackage> exposedPackages;
@@ -83,7 +96,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableSet<SourcePath> interfaces,
       final ImmutableSortedMap<String, HaskellPackage> packages,
       final ImmutableSortedMap<String, HaskellPackage> exposedPackages,
-      HaskellPackageInfo packageInfo) {
+      HaskellPackageInfo packageInfo,
+      HaskellPlatform platform,
+      Preprocessor preprocessor,
+      PreprocessorFlags ppFlags) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.srcs = srcs;
     this.haddockTool = haddockTool;
@@ -94,6 +110,9 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     this.packages = packages;
     this.exposedPackages = exposedPackages;
     this.packageInfo = packageInfo;
+    this.platform = platform;
+    this.preprocessor = preprocessor;
+    this.ppFlags = ppFlags;
   }
 
   public static HaskellHaddockLibRule from(
@@ -109,7 +128,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableSet<SourcePath> interfaces,
       ImmutableSortedMap<String, HaskellPackage> packages,
       ImmutableSortedMap<String, HaskellPackage> exposedPackages,
-      HaskellPackageInfo packageInfo) {
+      HaskellPackageInfo packageInfo,
+      HaskellPlatform platform,
+      Preprocessor preprocessor,
+      PreprocessorFlags ppFlags) {
 
     ImmutableList.Builder<BuildRule> pkgDeps = ImmutableList.builder();
 
@@ -128,6 +150,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
                     .addAll(sources.getDeps(ruleFinder))
                     .addAll(ruleFinder.filterBuildRuleInputs(interfaces))
                     .addAll(pkgDeps.build())
+                    .addAll(ppFlags.getDeps(ruleFinder))
                     .build());
     return new HaskellHaddockLibRule(
         buildTarget,
@@ -141,7 +164,16 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         interfaces,
         packages,
         exposedPackages,
-        packageInfo);
+        packageInfo,
+        platform,
+        preprocessor,
+        ppFlags);
+  }
+
+  @Override
+  public void appendToRuleKey(RuleKeyObjectSink sink) {
+    ppFlags.appendToRuleKey(sink);
+    sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
   private Path getInterface() {
@@ -193,6 +225,18 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
     buildableContext.recordArtifact(dir);
     return steps.build();
+  }
+
+  private Iterable<String> getPreprocessorFlags(SourcePathResolver resolver) {
+    CxxToolFlags cxxToolFlags =
+        ppFlags.toToolFlags(
+            resolver,
+            PathShortener.identity(),
+            CxxDescriptionEnhancer.frameworkPathToSearchPath(platform.getCxxPlatform(), resolver),
+            preprocessor,
+            /* pch */ Optional.empty());
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
   }
 
   private class HaddockStep extends ShellStep {
@@ -281,6 +325,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       cmdArgs.addAll(
           MoreIterables.zipAndConcat(Iterables.cycle("-expose-package"), exposeBuilder.build()));
       cmdArgs.addAll(linkerFlags);
+      cmdArgs.addAll(getPreprocessorFlags(resolver));
 
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))

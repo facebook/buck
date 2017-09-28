@@ -19,8 +19,15 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxSourceTypes;
+import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.ExplicitCxxToolFlags;
+import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -50,6 +57,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -67,6 +75,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -455,9 +464,10 @@ public class HaskellLibraryDescription
       SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args) {
+    CxxPlatform cxxPlatform = platform.getCxxPlatform();
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
-    ImmutableSet<BuildRule> deps = allDeps.get(resolver, platform.getCxxPlatform());
+    ImmutableSet<BuildRule> deps = allDeps.get(resolver, cxxPlatform);
 
     // Collect all Haskell deps
     ImmutableSet.Builder<SourcePath> haddockInterfaces = ImmutableSet.builder();
@@ -494,6 +504,19 @@ public class HaskellLibraryDescription
       }
     }.start();
 
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+    ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
+    PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
+    toolFlagsBuilder.setPlatformFlags(
+        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
+    for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
+      ppFlagsBuilder.addAllIncludes(input.getIncludes());
+      ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
+      toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
+    }
+    ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
+
     return resolver.addToIndex(
         HaskellHaddockLibRule.from(
             baseTarget.withAppendedFlavors(Type.HADDOCK.getFlavor(), platform.getFlavor()),
@@ -509,7 +532,11 @@ public class HaskellLibraryDescription
             haddockInterfaces.build(),
             packagesBuilder.build(),
             exposedPackagesBuilder.build(),
-            getPackageInfo(platform, baseTarget)));
+            getPackageInfo(platform, baseTarget),
+            platform,
+            CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
+                .resolve(resolver),
+            ppFlagsBuilder.build()));
   }
 
   private HaskellLinkRule createSharedLibrary(
