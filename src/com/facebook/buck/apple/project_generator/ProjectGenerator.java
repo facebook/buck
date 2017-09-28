@@ -1555,7 +1555,7 @@ public class ProjectGenerator {
                       });
             });
 
-    if (includeFrameworks) {
+    if (includeFrameworks && swiftDeps.size() > 0) {
       // When Xcode compiles static Swift libs, it will include linker commands (LC_LINKER_OPTION)
       // that will be carried over for the final binary to link to the appropriate Swift overlays
       // and libs. This means that the final binary must be able to locate the Swift libs in the
@@ -1564,9 +1564,7 @@ public class ProjectGenerator {
       // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
       // Xcode does to make sure binaries link successfully if they use Swift directly or
       // transitively.
-      if (swiftDeps.size() > 0) {
-        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
-      }
+      librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
     }
 
     if (swiftDeps.size() > 0) {
