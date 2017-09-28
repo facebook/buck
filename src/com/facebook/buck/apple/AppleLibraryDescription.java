@@ -573,7 +573,7 @@ public class AppleLibraryDescription
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         pathResolver, delegateArg, args, buildTarget);
 
-    final BuildRuleParams inputParams = params;
+    final BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.flatMap(
             swift ->
@@ -581,19 +581,18 @@ public class AppleLibraryDescription
                     targetGraph,
                     buildTarget,
                     projectFilesystem,
-                    inputParams,
+                    params,
                     resolver,
                     cellRoots,
                     args));
-    if (swiftCompanionBuildRule.isPresent()) {
-      // when creating a swift target, there is no need to proceed with apple binary rules,
-      // otherwise, add this swift rule as a dependency.
-      if (isSwiftTarget(buildTarget)) {
-        return swiftCompanionBuildRule.get();
-      } else {
-        delegateArg.addExportedDeps(swiftCompanionBuildRule.get().getBuildTarget());
-        params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
-      }
+    if (swiftCompanionBuildRule.isPresent() && isSwiftTarget(buildTarget)) {
+      // when creating a swift target, there is no need to proceed with apple library rules
+      return swiftCompanionBuildRule.get();
+    } else if (swiftCompanionBuildRule.isPresent()) {
+      delegateArg.addExportedDeps(swiftCompanionBuildRule.get().getBuildTarget());
+      newParams = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+    } else {
+      newParams = params;
     }
 
     // remove some flavors from cxx rule that don't affect the rule output
@@ -603,17 +602,15 @@ public class AppleLibraryDescription
       unstrippedTarget = unstrippedTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     }
 
-    Optional<BuildRule> existingRule = resolver.getRuleOptional(unstrippedTarget);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    } else {
-      Optional<CxxLibraryDescriptionDelegate> cxxDelegate =
-          swiftDelegate.isPresent() ? Optional.empty() : Optional.of(this);
-      BuildRule rule =
-          delegate.createBuildRule(
-              unstrippedTarget,
+    return resolver.computeIfAbsent(
+        unstrippedTarget,
+        unstrippedTarget1 -> {
+          Optional<CxxLibraryDescriptionDelegate> cxxDelegate =
+              swiftDelegate.isPresent() ? Optional.empty() : Optional.of(this);
+          return delegate.createBuildRule(
+              unstrippedTarget1,
               projectFilesystem,
-              params,
+              newParams,
               resolver,
               cellRoots,
               delegateArg.build(),
@@ -623,8 +620,7 @@ public class AppleLibraryDescription
               extraCxxDeps,
               transitiveCxxDeps,
               cxxDelegate);
-      return resolver.addToIndex(rule);
-    }
+        });
   }
 
   private boolean shouldWrapIntoDebuggableBinary(BuildTarget buildTarget, BuildRule buildRule) {
