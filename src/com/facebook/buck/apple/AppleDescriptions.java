@@ -387,6 +387,7 @@ public class AppleDescriptions {
       // If the target is a legacy watch target, we need to provide the watchos platform to
       // the AppleAssetCatalog for it to generate assets in a format that's for watchos.
       applePlatform = ApplePlatform.WATCHOS;
+      targetSDKVersion = "1.0";
     }
     BuildRuleParams assetParams =
         params
