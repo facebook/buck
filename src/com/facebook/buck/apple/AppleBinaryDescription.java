@@ -16,8 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
-
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -382,67 +380,69 @@ public class AppleBinaryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleBinaryDescriptionArg args) {
-    Optional<BuildRule> existingThinRule = resolver.getRuleOptional(buildTarget);
-    if (existingThinRule.isPresent()) {
-      return existingThinRule.get();
-    }
 
-    ImmutableSortedSet.Builder<BuildTarget> extraCxxDepsBuilder = ImmutableSortedSet.naturalOrder();
-    final BuildRuleParams inputParams = params;
-    Optional<BuildRule> swiftCompanionBuildRule =
-        swiftDelegate.flatMap(
-            swift ->
-                swift.createCompanionBuildRule(
-                    targetGraph,
-                    buildTarget,
-                    projectFilesystem,
-                    inputParams,
-                    resolver,
-                    cellRoots,
-                    args));
-    if (swiftCompanionBuildRule.isPresent()) {
-      // when creating a swift target, there is no need to proceed with apple binary rules,
-      // otherwise, add this swift rule as a dependency.
-      if (isSwiftTarget(buildTarget)) {
-        return swiftCompanionBuildRule.get();
-      } else {
-        extraCxxDepsBuilder.add(swiftCompanionBuildRule.get().getBuildTarget());
-        params = params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
-      }
-    }
-    ImmutableSortedSet<BuildTarget> extraCxxDeps = extraCxxDepsBuilder.build();
+    return resolver.computeIfAbsent(
+        buildTarget,
+        ignored -> {
+          ImmutableSortedSet<BuildTarget> extraCxxDeps;
+          BuildRuleParams resultParams;
+          Optional<BuildRule> swiftCompanionBuildRule =
+              swiftDelegate.flatMap(
+                  swift ->
+                      swift.createCompanionBuildRule(
+                          targetGraph,
+                          buildTarget,
+                          projectFilesystem,
+                          params,
+                          resolver,
+                          cellRoots,
+                          args));
+          if (swiftCompanionBuildRule.isPresent()
+              && SwiftLibraryDescription.isSwiftTarget(buildTarget)) {
+            // when creating a swift target, there is no need to proceed with apple binary rules,
+            return swiftCompanionBuildRule.get();
+          } else if (swiftCompanionBuildRule.isPresent()) {
+            // otherwise, add this swift rule as a dependency.
+            extraCxxDeps = ImmutableSortedSet.of(swiftCompanionBuildRule.get().getBuildTarget());
+            resultParams =
+                params.copyAppendingExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
+          } else {
+            extraCxxDeps = ImmutableSortedSet.of();
+            resultParams = params;
+          }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+          SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+          SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    Optional<Path> stubBinaryPath = getStubBinaryPath(buildTarget, args);
-    if (shouldUseStubBinary(buildTarget) && stubBinaryPath.isPresent()) {
-      try {
-        return resolver.addToIndex(
-            new WriteFile(
+          Optional<Path> stubBinaryPath = getStubBinaryPath(buildTarget, args);
+          if (shouldUseStubBinary(buildTarget) && stubBinaryPath.isPresent()) {
+            try {
+              return new WriteFile(
+                  buildTarget,
+                  projectFilesystem,
+                  resultParams,
+                  Files.readAllBytes(stubBinaryPath.get()),
+                  BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
+                  true);
+            } catch (IOException e) {
+              throw new HumanReadableException(
+                  "Could not read stub binary " + stubBinaryPath.get());
+            }
+          } else {
+            CxxBinaryDescriptionArg.Builder delegateArg =
+                CxxBinaryDescriptionArg.builder().from(args);
+            AppleDescriptions.populateCxxBinaryDescriptionArg(
+                pathResolver, delegateArg, args, buildTarget);
+            return delegate.createBuildRule(
                 buildTarget,
                 projectFilesystem,
-                params,
-                Files.readAllBytes(stubBinaryPath.get()),
-                BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s"),
-                true));
-      } catch (IOException e) {
-        throw new HumanReadableException("Could not read stub binary " + stubBinaryPath.get());
-      }
-    } else {
-      CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
-      AppleDescriptions.populateCxxBinaryDescriptionArg(
-          pathResolver, delegateArg, args, buildTarget);
-      return resolver.addToIndex(
-          delegate.createBuildRule(
-              buildTarget,
-              projectFilesystem,
-              params.getExtraDeps(),
-              resolver,
-              cellRoots,
-              delegateArg.build(),
-              extraCxxDeps));
-    }
+                resultParams.getExtraDeps(),
+                resolver,
+                cellRoots,
+                delegateArg.build(),
+                extraCxxDeps);
+          }
+        });
   }
 
   private boolean shouldUseStubBinary(BuildTarget buildTarget) {
