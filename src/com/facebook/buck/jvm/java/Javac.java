@@ -44,7 +44,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
-      JavacCompilationMode compilationMode,
+      AbiGenerationMode abiGenerationMode,
       boolean requiredForSourceOnlyAbi);
 
   String getDescription(

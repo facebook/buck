@@ -118,8 +118,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
-  public JavacCompilationMode getCompilationMode() {
-    return JavacCompilationMode.FULL;
+  public AbiGenerationMode getAbiGenerationMode() {
+    return AbiGenerationMode.CLASS;
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
@@ -241,7 +241,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
         .setReflectively("trackClassUsage", trackClassUsage())
-        .setReflectively("compilationMode", getCompilationMode());
+        .setReflectively("abiGenerationMode", getAbiGenerationMode());
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

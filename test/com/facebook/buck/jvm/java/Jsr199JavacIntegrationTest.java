@@ -143,7 +143,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
-                JavacCompilationMode.FULL,
+                AbiGenerationMode.CLASS,
                 false)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -196,7 +196,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
-                JavacCompilationMode.FULL,
+                AbiGenerationMode.CLASS,
                 false)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -298,7 +298,7 @@ public class Jsr199JavacIntegrationTest {
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
-              JavacCompilationMode.FULL,
+              AbiGenerationMode.CLASS,
               false)
           .buildClasses();
       fail("Did not expect compilation to succeed");

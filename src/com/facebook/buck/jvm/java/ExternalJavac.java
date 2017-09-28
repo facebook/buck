@@ -181,7 +181,7 @@ public class ExternalJavac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
-      JavacCompilationMode compilationMode,
+      AbiGenerationMode abiGenerationMode,
       boolean requiredForSourceOnlyAbi) {
     return new Invocation() {
       @Override
@@ -192,7 +192,7 @@ public class ExternalJavac implements Javac {
       @Override
       public int buildClasses() throws InterruptedException {
         Preconditions.checkArgument(
-            compilationMode == JavacCompilationMode.FULL,
+            abiGenerationMode == AbiGenerationMode.CLASS,
             "Cannot compile ABI jars with external javac");
         ImmutableList.Builder<String> command = ImmutableList.builder();
         command.add(

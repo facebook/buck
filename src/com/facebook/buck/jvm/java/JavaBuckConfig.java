@@ -90,20 +90,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     builder.setTrackClassUsage(trackClassUsage());
 
     AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
-    switch (abiGenerationMode) {
-      case CLASS:
-      case SOURCE:
-        builder.setCompilationMode(JavacCompilationMode.FULL);
-        break;
-      case MIGRATING_TO_SOURCE_ONLY:
-        builder.setCompilationMode(JavacCompilationMode.FULL_CHECKING_REFERENCES);
-        break;
-      case SOURCE_ONLY:
-        builder.setCompilationMode(JavacCompilationMode.FULL_ENFORCING_REFERENCES);
-        break;
-    }
-
-    if (abiGenerationMode != AbiGenerationMode.CLASS) {
+    builder.setAbiGenerationMode(abiGenerationMode);
+    if (abiGenerationMode.isSourceAbi()) {
       builder.setSpoolMode(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR);
     } else {
       Optional<AbstractJavacOptions.SpoolMode> spoolMode =
@@ -128,14 +116,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .build();
   }
 
-  public boolean shouldGenerateSourceAbis() {
-    AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
-
-    return abiGenerationMode == AbiGenerationMode.SOURCE_ONLY
-        || abiGenerationMode == AbiGenerationMode.SOURCE;
-  }
-
-  private AbiGenerationMode getAbiGenerationMode() {
+  public AbiGenerationMode getAbiGenerationMode() {
     return delegate
         .getEnum(SECTION, "abi_generation_mode", AbiGenerationMode.class)
         .orElse(AbiGenerationMode.CLASS);
@@ -232,7 +213,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
    * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
    */
   public SourceAbiVerificationMode getSourceAbiVerificationMode() {
-    if (!shouldGenerateSourceAbis()) {
+    if (!getAbiGenerationMode().isSourceAbi()) {
       return SourceAbiVerificationMode.OFF;
     }
 
@@ -247,22 +228,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getDefaultCxxPlatform() {
     return delegate.getValue(SECTION, "default_cxx_platform");
-  }
-
-  public enum AbiGenerationMode {
-    /** Generate ABIs by stripping .class files */
-    CLASS,
-    /** Generate ABIs by parsing .java files with dependency ABIs available */
-    SOURCE,
-    /**
-     * Output warnings for things that aren't legal when generating ABIs from source without
-     * dependency ABIs
-     */
-    MIGRATING_TO_SOURCE_ONLY,
-    /**
-     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
-     */
-    SOURCE_ONLY,
   }
 
   public enum SourceAbiVerificationMode {

@@ -58,7 +58,7 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
-      JavacCompilationMode compilationMode,
+      AbiGenerationMode abiGenerationMode,
       boolean requiredForSourceOnlyAbi) {
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
     if (LOG.isVerboseEnabled()) {
@@ -80,7 +80,7 @@ public class OutOfProcessJdkProvidedInMemoryJavac extends OutOfProcessJsr199Java
                 .stream()
                 .map(JavacPluginJsr199FieldsSerializer::serialize)
                 .collect(Collectors.toList()),
-            compilationMode.toString(),
+            abiGenerationMode.toString(),
             requiredForSourceOnlyAbi));
   }
 }

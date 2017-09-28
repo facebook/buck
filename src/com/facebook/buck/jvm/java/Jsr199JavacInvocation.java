@@ -44,7 +44,6 @@ import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -68,7 +67,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
-  private final JavacCompilationMode compilationMode;
+  private final AbiGenerationMode abiGenerationMode;
   private final boolean requiredForSourceOnlyAbi;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
@@ -85,7 +84,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      JavacCompilationMode compilationMode,
+      AbiGenerationMode abiGenerationMode,
       boolean requiredForSourceOnlyAbi) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
@@ -94,7 +93,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
-    this.compilationMode = compilationMode;
+    this.abiGenerationMode = abiGenerationMode;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
   }
 
@@ -362,18 +361,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
       BuckJavacTaskListener taskListener = null;
-      if (EnumSet.of(
-              JavacCompilationMode.FULL_CHECKING_REFERENCES,
-              JavacCompilationMode.FULL_ENFORCING_REFERENCES)
-          .contains(compilationMode)) {
+      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()) {
         taskListener =
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
                 new DefaultInterfaceValidatorCallback(fileManager, requiredForSourceOnlyAbi),
-                compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
-                    ? Diagnostic.Kind.ERROR
-                    : Diagnostic.Kind.WARNING);
+                abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
       }
 
       TranslatingJavacPhaseTracer tracer =

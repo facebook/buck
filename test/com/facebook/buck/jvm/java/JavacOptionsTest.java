@@ -48,13 +48,6 @@ public class JavacOptionsTest {
   }
 
   @Test
-  public void compilationModeFullByDefault() {
-    JavacOptions options = createStandardBuilder().build();
-
-    assertThat(options.getCompilationMode(), is(JavacCompilationMode.FULL));
-  }
-
-  @Test
   public void productionBuildsCanBeEnabled() {
     JavacOptions options = createStandardBuilder().setProductionBuild(true).build();
 

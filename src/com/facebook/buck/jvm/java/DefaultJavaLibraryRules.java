@@ -241,7 +241,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean sourceAbisEnabled() {
-    return getJavaBuckConfig() != null && getJavaBuckConfig().shouldGenerateSourceAbis();
+    return getJavaBuckConfig() != null && getJavaBuckConfig().getAbiGenerationMode().isSourceAbi();
   }
 
   private DefaultJavaLibrary getLibraryRule() {
