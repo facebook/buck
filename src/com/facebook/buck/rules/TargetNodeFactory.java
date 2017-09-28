@@ -22,6 +22,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.modern.InputPath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -94,7 +95,7 @@ public class TargetNodeFactory {
             .values()) {
       if (info.isDep()
           && info.isInput()
-          && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
+          && info.hasElementTypes(BuildTarget.class, InputPath.class, Path.class, SourcePath.class)
           && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
             extraDepsBuilder, pathsBuilder, info, constructorArg);
@@ -141,7 +142,12 @@ public class TargetNodeFactory {
 
     try {
       info.traverse(
-          object -> {
+          obj -> {
+            Object object = obj;
+            if (object instanceof InputPath) {
+              object = InputPath.Internals.getSourcePathFrom((InputPath) obj);
+            }
+
             if (object instanceof PathSourcePath) {
               pathsBuilder.add(((PathSourcePath) object).getRelativePath());
             } else if (object instanceof BuildTargetSourcePath) {

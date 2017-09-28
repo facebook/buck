@@ -81,6 +81,7 @@ class FieldTypeInfoFactory {
       return rawClass.equals(String.class)
           || rawClass.equals(Boolean.class)
           || rawClass.equals(Byte.class)
+          || Enum.class.isAssignableFrom(rawClass)
           || rawClass.equals(Short.class)
           || rawClass.equals(Integer.class)
           || rawClass.equals(Long.class)

@@ -8,6 +8,7 @@ java_library(
     name = "types",
     srcs = TYPES,
     visibility = [
+        "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules/coercer:coercer",
     ],
     deps = [
