@@ -41,8 +41,13 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
-  public boolean compileAgainstAbis() {
+  public boolean shouldCompileAgainstAbis() {
     return javaBuckConfig.shouldCompileAgainstAbis();
+  }
+
+  @Override
+  public boolean shouldGenerateSourceAbi() {
+    return javaBuckConfig.getAbiGenerationMode().isSourceAbi();
   }
 
   @Override

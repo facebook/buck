@@ -229,18 +229,9 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean shouldBuildSourceAbi() {
-    return isCompilingJava()
+    return getConfiguredCompilerFactory().shouldGenerateSourceAbi()
         && !getSrcs().isEmpty()
-        && sourceAbisEnabled()
         && getPostprocessClassesCommands().isEmpty();
-  }
-
-  private boolean isCompilingJava() {
-    return getConfiguredCompiler() instanceof JavacToJarStepFactory;
-  }
-
-  private boolean sourceAbisEnabled() {
-    return getJavaBuckConfig() != null && getJavaBuckConfig().getAbiGenerationMode().isSourceAbi();
   }
 
   private DefaultJavaLibrary getLibraryRule() {
@@ -338,7 +329,7 @@ public abstract class DefaultJavaLibraryRules {
 
   private ImmutableSortedSet<SourcePath> getFinalCompileTimeClasspathSourcePaths() {
     ImmutableSortedSet<BuildRule> buildRules =
-        getConfiguredCompilerFactory().compileAgainstAbis()
+        getConfiguredCompilerFactory().shouldCompileAgainstAbis()
             ? getCompileTimeClasspathAbiDeps()
             : getCompileTimeClasspathFullDeps();
 
@@ -399,7 +390,7 @@ public abstract class DefaultJavaLibraryRules {
         // is that the ABI generation for that language isn't fully correct.
         .addAll(getCompileTimeClasspathAbiDeps());
 
-    if (!getConfiguredCompilerFactory().compileAgainstAbis()) {
+    if (!getConfiguredCompilerFactory().shouldCompileAgainstAbis()) {
       depsBuilder.addAll(getCompileTimeClasspathFullDeps());
     }
 
