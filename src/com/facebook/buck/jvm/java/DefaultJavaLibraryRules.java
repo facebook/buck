@@ -232,7 +232,6 @@ public abstract class DefaultJavaLibraryRules {
     return isCompilingJava()
         && !getSrcs().isEmpty()
         && sourceAbisEnabled()
-        && getSourceOnlyAbisAllowed()
         && getPostprocessClassesCommands().isEmpty();
   }
 

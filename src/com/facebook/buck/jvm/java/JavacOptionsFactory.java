@@ -49,9 +49,11 @@ public final class JavacOptionsFactory {
 
     if (jvmLibraryArg.getGenerateSourceOnlyAbi().isPresent()
         && !jvmLibraryArg.getGenerateSourceOnlyAbi().get()) {
-      // This parameter can only be used to turn off ABI generation from source where it would
+      // This parameter can only be used to turn off source-only ABI generation where it would
       // otherwise be employed.
-      builder.setAbiGenerationMode(AbiGenerationMode.CLASS);
+      AbiGenerationMode defaultMode = defaultOptions.getAbiGenerationMode();
+      builder.setAbiGenerationMode(
+          defaultMode == AbiGenerationMode.SOURCE_ONLY ? AbiGenerationMode.SOURCE : defaultMode);
     }
 
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());

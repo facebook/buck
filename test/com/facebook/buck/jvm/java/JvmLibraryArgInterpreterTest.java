@@ -159,6 +159,17 @@ public class JvmLibraryArgInterpreterTest {
 
     JavacOptions options = createJavacOptions(arg);
 
+    assertEquals(options.getAbiGenerationMode(), AbiGenerationMode.SOURCE);
+  }
+
+  @Test
+  public void disablingSourceOnlyAbiDoesNotChangeOtherSettings() {
+    JvmLibraryArg arg =
+        ExampleJvmLibraryArg.builder().setName("foo").setGenerateSourceOnlyAbi(false).build();
+    defaults = defaults.withAbiGenerationMode(AbiGenerationMode.CLASS);
+
+    JavacOptions options = createJavacOptions(arg);
+
     assertEquals(options.getAbiGenerationMode(), AbiGenerationMode.CLASS);
   }
 
