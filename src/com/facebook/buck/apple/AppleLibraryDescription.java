@@ -861,15 +861,22 @@ public class AppleLibraryDescription
       BuildRuleResolver resolver,
       BuildTarget baseTarget,
       CxxPlatform platform,
-      boolean publicInput) {
+      HeaderVisibility headerVisibility) {
     if (!targetContainsSwift(baseTarget, resolver)) {
       return Optional.empty();
     }
 
-    MetadataType metadataType =
-        publicInput
-            ? MetadataType.APPLE_SWIFT_PREPROCESSOR_INPUT
-            : MetadataType.APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT;
+    MetadataType metadataType = null;
+    switch (headerVisibility) {
+      case PUBLIC:
+        metadataType = MetadataType.APPLE_SWIFT_PREPROCESSOR_INPUT;
+        break;
+      case PRIVATE:
+        metadataType = MetadataType.APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT;
+        break;
+    }
+
+    Preconditions.checkNotNull(metadataType);
 
     return resolver.requireMetadata(
         baseTarget.withAppendedFlavors(metadataType.getFlavor(), platform.getFlavor()),
@@ -883,7 +890,8 @@ public class AppleLibraryDescription
       return Optional.empty();
     }
 
-    return queryMetadataCxxSwiftPreprocessorInput(resolver, target, platform, true);
+    return queryMetadataCxxSwiftPreprocessorInput(
+        resolver, target, platform, HeaderVisibility.PUBLIC);
   }
 
   @Override
@@ -893,7 +901,8 @@ public class AppleLibraryDescription
       return Optional.empty();
     }
 
-    return queryMetadataCxxSwiftPreprocessorInput(resolver, target, platform, false);
+    return queryMetadataCxxSwiftPreprocessorInput(
+        resolver, target, platform, HeaderVisibility.PRIVATE);
   }
 
   @Override
