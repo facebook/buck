@@ -91,7 +91,14 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
 
   public static BuildTarget removeStripStyleFlavorInTarget(
       BuildTarget buildTarget, Optional<StripStyle> flavoredStripStyle) {
-    buildTarget = buildTarget.withoutFlavors(CxxStrip.RULE_FLAVOR);
+    Preconditions.checkState(
+        !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR),
+        "This function used to strip "
+            + RULE_FLAVOR
+            + ", which masked errors in constructing "
+            + "build targets and caused the returned rule's build target to differ from the "
+            + "requested one. This is now explicitly disallowed to catch existing and future "
+            + "programming errors of this kind.");
     if (flavoredStripStyle.isPresent()) {
       return buildTarget.withoutFlavors(flavoredStripStyle.get().getFlavor());
     }
