@@ -248,6 +248,11 @@ public class AndroidBinaryDescription
                   && !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
                       args.getAndroidSdkProguardConfig().get()));
 
+      // TODO(cjhopman): wtf, why is this different?
+      boolean shouldProguardDifferent =
+          args.getProguardConfig().isPresent()
+              || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(androidSdkProguardConfig);
+
       boolean shouldPreDex =
           !args.getDisablePreDex()
               && !shouldProguard
@@ -358,7 +363,8 @@ public class AndroidBinaryDescription
               javaOptions.getJavaRuntimeLauncher(),
               dxConfig.getDxMaxHeapSize(),
               args.getIsCacheable(),
-              args.getAndroidAppModularityResult());
+              args.getAndroidAppModularityResult(),
+              shouldProguardDifferent);
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(

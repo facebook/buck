@@ -204,7 +204,8 @@ public class AndroidBinary extends AbstractBuildRule
       Tool javaRuntimeLauncher,
       Optional<String> dxMaxHeapSize,
       boolean isCacheable,
-      Optional<SourcePath> appModularityResult) {
+      Optional<SourcePath> appModularityResult,
+      boolean shouldProguard) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -286,7 +287,8 @@ public class AndroidBinary extends AbstractBuildRule
             dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
             resourceCompressionMode.isCompressResources(),
-            this.appModularityResult);
+            this.appModularityResult,
+            shouldProguard);
     params =
         params.withExtraDeps(
             () ->

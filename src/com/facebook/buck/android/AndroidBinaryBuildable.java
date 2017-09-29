@@ -167,7 +167,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Optional<String> dxMaxHeapSize,
       ImmutableList<SourcePath> proguardConfigs,
       boolean isCompressResources,
-      Optional<SourcePath> appModularityResult) {
+      Optional<SourcePath> appModularityResult,
+      boolean shouldProguard) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
 
@@ -247,9 +248,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                             e -> e.getKey(),
                             e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
 
-    this.shouldProguard =
-        proguardConfig.isPresent()
-            || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(sdkProguardConfig);
+    this.shouldProguard = shouldProguard;
     this.predexedPrimaryDexPath =
         enhancementResult.getPreDexMerge().map(PreDexMerge::getSourcePathToPrimaryDex);
     Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths;
@@ -285,7 +284,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                   moduleMappedClasspathEntriesToDex,
                   optimizationPasses,
                   preprocessJavaClassesBash,
-                  shouldProguard,
+                  this.shouldProguard,
                   proguardAgentPath,
                   proguardConfig,
                   proguardConfigs,

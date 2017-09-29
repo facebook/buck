@@ -179,6 +179,10 @@ public class AndroidInstrumentationApkDescription
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
 
+    boolean shouldProguard =
+        apkUnderTest.getProguardConfig().isPresent()
+            || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
+                apkUnderTest.getSdkProguardConfig());
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
@@ -190,7 +194,8 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest,
         rulesToExcludeFromDex,
         enhancementResult,
-        dxExecutorService);
+        dxExecutorService,
+        shouldProguard);
   }
 
   @BuckStyleImmutable

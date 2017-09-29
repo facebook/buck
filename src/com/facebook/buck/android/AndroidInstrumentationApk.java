@@ -55,7 +55,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      ListeningExecutorService dxExecutorService) {
+      ListeningExecutorService dxExecutorService,
+      boolean shouldProguard) {
     super(
         buildTarget,
         projectFilesystem,
@@ -94,7 +95,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getJavaRuntimeLauncher(),
         Optional.empty(),
         true,
-        Optional.empty());
+        Optional.empty(),
+        shouldProguard);
     this.apkUnderTest = apkUnderTest;
   }
 
