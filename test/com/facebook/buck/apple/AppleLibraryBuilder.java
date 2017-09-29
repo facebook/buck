@@ -201,6 +201,11 @@ public class AppleLibraryBuilder
     return this;
   }
 
+  public AppleLibraryBuilder setSwiftCompilerFlags(Iterable<? extends StringWithMacros> flags) {
+    getArgForPopulating().setSwiftCompilerFlags(flags);
+    return this;
+  }
+
   public AppleLibraryBuilder setXcodePrivateHeadersSymlinks(boolean xcodePrivateHeadersSymlinks) {
     getArgForPopulating().setXcodePrivateHeadersSymlinks(Optional.of(xcodePrivateHeadersSymlinks));
     return this;

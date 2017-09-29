@@ -23,7 +23,8 @@ import java.util.Optional;
 /** A Swift-specific "view" of BuckConfig. */
 public class SwiftBuckConfig {
   private static final String SECTION_NAME = "swift";
-  private static final String COMPILER_FLAGS_NAME = "compiler_flags";
+  public static final String COMPILER_FLAGS_NAME = "compiler_flags";
+  public static final String VERSION_NAME = "version";
 
   private final BuckConfig delegate;
 
@@ -31,12 +32,16 @@ public class SwiftBuckConfig {
     this.delegate = delegate;
   }
 
-  public Optional<Iterable<String>> getFlags() {
-    Optional<String> value = delegate.getValue(SECTION_NAME, COMPILER_FLAGS_NAME);
+  private Optional<Iterable<String>> getFlags(String field) {
+    Optional<String> value = delegate.getValue(SECTION_NAME, field);
     return value.map(input -> Splitter.on(" ").split(input.trim()));
   }
 
+  public Optional<Iterable<String>> getCompilerFlags() {
+    return getFlags(COMPILER_FLAGS_NAME);
+  }
+
   public Optional<String> getVersion() {
-    return delegate.getValue(SECTION_NAME, "version");
+    return delegate.getValue(SECTION_NAME, VERSION_NAME);
   }
 }
