@@ -20,6 +20,9 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 .fakebuckversion
 /.nobuckcheck
 
+# Files created during tests
+/test/com/facebook/buck/testutil/integration/testlibs/buck-out/
+
 # Compiled Python
 *.pyc
 *py.class

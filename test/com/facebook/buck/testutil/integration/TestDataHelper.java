@@ -85,9 +85,21 @@ public class TestDataHelper {
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
+      Object testCase, String scenario, TemporaryPaths temporaryRoot, boolean addBuckRepoCell) {
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot(), addBuckRepoCell);
+  }
+
+  public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase, String scenario, Path temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new ProjectWorkspace(templateDir, temporaryRoot);
+  }
+
+  public static ProjectWorkspace createProjectWorkspaceForScenario(
+      Object testCase, String scenario, Path temporaryRoot, boolean addBuckRepoCell) {
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    return new ProjectWorkspace(templateDir, temporaryRoot, addBuckRepoCell);
   }
 
   public static void overrideBuckconfig(

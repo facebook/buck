@@ -62,6 +62,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/swift/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/labels/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testrunner/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/integration/testlibs" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/packaged_resource/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/versioncontrol/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />

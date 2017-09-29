@@ -150,10 +150,14 @@ public class ProjectWorkspace {
         }
       };
 
+  private static final String TEST_CELL_LOCATION =
+      "test/com/facebook/buck/testutil/integration/testlibs";
+
   private boolean isSetUp = false;
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private final Path templatePath;
   private final Path destPath;
+  private final boolean addBuckRepoCell;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
   @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
@@ -169,9 +173,15 @@ public class ProjectWorkspace {
   }
 
   @VisibleForTesting
-  ProjectWorkspace(Path templateDir, final Path targetFolder) {
+  ProjectWorkspace(Path templateDir, Path targetFolder, boolean addBuckRepoCell) {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
+    this.addBuckRepoCell = addBuckRepoCell;
+  }
+
+  @VisibleForTesting
+  ProjectWorkspace(Path templateDir, final Path targetFolder) {
+    this(templateDir, targetFolder, false);
   }
 
   /**
@@ -251,6 +261,11 @@ public class ProjectWorkspace {
     // same time from creating a quadratic number of threads. Tests can disable this using
     // `disableThreadLimitOverride`.
     addBuckConfigLocalOption("build", "threads", "2");
+
+    if (addBuckRepoCell) {
+      addBuckConfigLocalOption(
+          "repositories", "buck", Paths.get(TEST_CELL_LOCATION).toAbsolutePath().toString());
+    }
 
     // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
     // from buck-out while watchman indexes/touches files.
