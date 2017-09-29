@@ -43,6 +43,5 @@ public class SwiftBuckConfigTest {
   public void testAbsentFlags() {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(FakeBuckConfig.builder().build());
     assertThat(swiftBuckConfig.getCompilerFlags(), equalTo(Optional.empty()));
-    assertThat(swiftBuckConfig.getCompilerFlags(), equalTo(Optional.empty()));
   }
 }

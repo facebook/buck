@@ -1302,12 +1302,15 @@ public class ProjectGenerator {
         }
 
         ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
-        if (targetNode.getConstructorArg() instanceof SwiftCommonArg) {
-          targetSpecificSwiftFlags.addAll(
-              convertStringWithMacros(
-                  targetNode,
-                  ((SwiftCommonArg) targetNode.getConstructorArg()).getSwiftCompilerFlags()));
-        }
+        Optional<TargetNode<SwiftCommonArg, ?>> swiftTargetNode =
+            targetNode.castArg(SwiftCommonArg.class);
+        targetSpecificSwiftFlags.addAll(
+            swiftTargetNode
+                .map(
+                    x ->
+                        convertStringWithMacros(
+                            targetNode, x.getConstructorArg().getSwiftCompilerFlags()))
+                .orElse(ImmutableList.of()));
 
         Iterable<String> otherSwiftFlags =
             Iterables.concat(
