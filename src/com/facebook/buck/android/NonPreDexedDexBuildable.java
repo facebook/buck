@@ -43,6 +43,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -69,6 +70,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import org.immutables.value.Value;
 
 class NonPreDexedDexBuildable implements AddsToRuleKey {
   @AddToRuleKey private final SourcePath aaptGeneratedProguardConfigFile;
@@ -109,64 +111,85 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
 
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractNonPredexedDexBuildableArgs {
+    Optional<SourcePath> getProguardJarOverride();
+
+    String getProguardMaxHeapSize();
+
+    Optional<String> getProguardAgentPath();
+
+    Optional<Arg> getPreprocessJavaClassesBash();
+
+    boolean getReorderClassesIntraDex();
+
+    Optional<SourcePath> getDexReorderToolFile();
+
+    Optional<SourcePath> getDexReorderDataDumpFile();
+
+    ListeningExecutorService getDxExecutorService();
+
+    Optional<String> getDxMaxHeapSize();
+
+    ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig();
+
+    Optional<Integer> getOptimizationPasses();
+
+    Optional<List<String>> getProguardJvmArgs();
+
+    boolean getSkipProguard();
+
+    Tool getJavaRuntimeLauncher();
+
+    Optional<SourcePath> getProguardConfigPath();
+
+    boolean getShouldProguard();
+  }
+
   NonPreDexedDexBuildable(
       SourcePath aaptGeneratedProguardConfigFile,
       ImmutableSortedSet<SourcePath> additionalJarsForProguard,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
       Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths,
-      Optional<SourcePath> dexReorderDataDumpFile,
-      Optional<SourcePath> dexReorderToolFile,
       DexSplitMode dexSplitMode,
-      ListeningExecutorService dxExecutorService,
-      Optional<String> dxMaxHeapSize,
-      Tool javaRuntimeLauncher,
       Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
           moduleMappedClasspathEntriesToDex,
-      Optional<Integer> optimizationPasses,
-      Optional<Arg> preprocessJavaClassesBash,
-      boolean shouldProguard,
-      Optional<String> proguardAgentPath,
-      Optional<SourcePath> proguardConfig,
       ImmutableList<SourcePath> proguardConfigs,
-      Optional<SourcePath> proguardJarOverride,
-      Optional<List<String>> proguardJvmArgs,
-      String proguardMaxHeapSize,
-      boolean reorderClassesIntraDex,
       APKModule rootAPKModule,
-      ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
-      boolean skipProguard,
       Optional<Integer> xzCompressionLevel,
+      boolean shouldSplitDex,
+      NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      boolean shouldSplitDex) {
+      BuildTarget buildTarget) {
     this.aaptGeneratedProguardConfigFile = aaptGeneratedProguardConfigFile;
     this.additionalJarsForProguard = additionalJarsForProguard;
     this.apkModuleMap = apkModuleMap;
     this.classpathEntriesToDexSourcePaths = classpathEntriesToDexSourcePaths;
-    this.dexReorderDataDumpFile = dexReorderDataDumpFile;
-    this.dexReorderToolFile = dexReorderToolFile;
+    this.dexReorderDataDumpFile = args.getDexReorderDataDumpFile();
+    this.dexReorderToolFile = args.getDexReorderToolFile();
     this.dexSplitMode = dexSplitMode;
-    this.dxExecutorService = dxExecutorService;
-    this.dxMaxHeapSize = dxMaxHeapSize;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.dxExecutorService = args.getDxExecutorService();
+    this.dxMaxHeapSize = args.getDxMaxHeapSize();
+    this.javaRuntimeLauncher = args.getJavaRuntimeLauncher();
     this.moduleMappedClasspathEntriesToDex = moduleMappedClasspathEntriesToDex;
-    this.optimizationPasses = optimizationPasses;
-    this.shouldProguard = shouldProguard;
-    this.preprocessJavaClassesBash = preprocessJavaClassesBash;
-    this.proguardAgentPath = proguardAgentPath;
-    this.proguardConfig = proguardConfig;
+    this.optimizationPasses = args.getOptimizationPasses();
+    this.shouldProguard = args.getShouldProguard();
+    this.preprocessJavaClassesBash = args.getPreprocessJavaClassesBash();
+    this.proguardConfig = args.getProguardConfigPath();
     this.proguardConfigs = proguardConfigs;
-    this.proguardJarOverride = proguardJarOverride;
-    this.proguardJvmArgs = proguardJvmArgs;
-    this.proguardMaxHeapSize = proguardMaxHeapSize;
-    this.reorderClassesIntraDex = reorderClassesIntraDex;
+    this.proguardJvmArgs = args.getProguardJvmArgs();
+    this.proguardAgentPath = args.getProguardAgentPath();
+    this.proguardJarOverride = args.getProguardJarOverride();
+    this.proguardMaxHeapSize = args.getProguardMaxHeapSize();
+    this.reorderClassesIntraDex = args.getReorderClassesIntraDex();
     this.rootAPKModule = rootAPKModule;
-    this.sdkProguardConfig = sdkProguardConfig;
-    this.skipProguard = skipProguard;
+    this.sdkProguardConfig = args.getSdkProguardConfig();
+    this.skipProguard = args.getSkipProguard();
     this.xzCompressionLevel = xzCompressionLevel;
+    this.shouldSplitDex = shouldSplitDex;
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-    this.shouldSplitDex = shouldSplitDex;
   }
 
   @VisibleForTesting

@@ -209,9 +209,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         convertToMapOfLists(packageableCollection.getNativeLibAssetsDirectories());
     this.apkModules =
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
-    ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap =
-        apkModuleGraph.toOutgoingEdgesMap();
-    APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
 
     this.isPreDexed = enhancementResult.getPreDexMerge().isPresent();
 
@@ -251,54 +248,42 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.shouldProguard = shouldProguard;
     this.predexedPrimaryDexPath =
         enhancementResult.getPreDexMerge().map(PreDexMerge::getSourcePathToPrimaryDex);
-    Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths;
-    Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
-        moduleMappedClasspathEntriesToDex;
     if (isPreDexed) {
       Preconditions.checkState(!preprocessJavaClassesBash.isPresent());
       this.nonPreDexedDexBuildable = Optional.empty();
     } else {
-      classpathEntriesToDexSourcePaths =
-          Optional.of(
-              RichStream.from(enhancementResult.getClasspathEntriesToDex())
-                  .concat(
-                      RichStream.of(
-                          enhancementResult.getCompiledUberRDotJava().getSourcePathToOutput()))
-                  .collect(MoreCollectors.toImmutableSet()));
-      moduleMappedClasspathEntriesToDex =
-          Optional.of(
-              convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
       this.nonPreDexedDexBuildable =
           Optional.of(
-              new NonPreDexedDexBuildable(
-                  aaptGeneratedProguardConfigFile,
-                  additionalJarsForProguard,
-                  apkModuleMap,
-                  classpathEntriesToDexSourcePaths,
-                  dexReorderDataDumpFile,
-                  dexReorderToolFile,
+              createNonPredexedDexBuildable(
                   dexSplitMode,
-                  dxExecutorService,
-                  dxMaxHeapSize,
-                  javaRuntimeLauncher,
-                  moduleMappedClasspathEntriesToDex,
-                  optimizationPasses,
-                  preprocessJavaClassesBash,
-                  this.shouldProguard,
-                  proguardAgentPath,
-                  proguardConfig,
-                  proguardConfigs,
-                  proguardJarOverride,
-                  proguardJvmArgs,
-                  proguardMaxHeapSize,
-                  reorderClassesIntraDex,
-                  rootAPKModule,
-                  sdkProguardConfig,
-                  skipProguard,
+                  additionalJarsForProguard,
                   xzCompressionLevel,
+                  aaptGeneratedProguardConfigFile,
+                  proguardConfigs,
+                  packageableCollection,
+                  enhancementResult.getCompiledUberRDotJava(),
+                  enhancementResult.getClasspathEntriesToDex(),
+                  apkModuleGraph,
+                  NonPredexedDexBuildableArgs.builder()
+                      .setProguardAgentPath(proguardAgentPath)
+                      .setProguardJarOverride(proguardJarOverride)
+                      .setProguardMaxHeapSize(proguardMaxHeapSize)
+                      .setSdkProguardConfig(sdkProguardConfig)
+                      .setPreprocessJavaClassesBash(preprocessJavaClassesBash)
+                      .setReorderClassesIntraDex(reorderClassesIntraDex)
+                      .setDexReorderToolFile(dexReorderToolFile)
+                      .setDexReorderDataDumpFile(dexReorderDataDumpFile)
+                      .setDxExecutorService(dxExecutorService)
+                      .setDxMaxHeapSize(dxMaxHeapSize)
+                      .setOptimizationPasses(optimizationPasses)
+                      .setProguardJvmArgs(proguardJvmArgs)
+                      .setSkipProguard(skipProguard)
+                      .setJavaRuntimeLauncher(javaRuntimeLauncher)
+                      .setProguardConfigPath(proguardConfig)
+                      .setShouldProguard(shouldProguard)
+                      .build(),
                   filesystem,
-                  buildTarget,
-                  dexSplitMode.isShouldSplitDex()));
+                  buildTarget));
     }
     this.appModularityResult = appModularityResult;
     if (appModularityResult.isPresent()) {
@@ -310,8 +295,54 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     }
   }
 
-  private <K extends Comparable<?>, V> ImmutableSortedMap<K, ImmutableList<V>> convertToMapOfLists(
-      ImmutableMultimap<K, V> multimap) {
+  private static NonPreDexedDexBuildable createNonPredexedDexBuildable(
+      DexSplitMode dexSplitMode,
+      ImmutableSortedSet<SourcePath> additionalJarsForProguard,
+      Optional<Integer> xzCompressionLevel,
+      SourcePath aaptGeneratedProguardConfigFile,
+      ImmutableList<SourcePath> proguardConfigs,
+      AndroidPackageableCollection packageableCollection,
+      JavaLibrary compiledUberRDotJava,
+      ImmutableSet<SourcePath> classpathEntriesToDex,
+      APKModuleGraph apkModuleGraph,
+      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget) {
+
+    ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap =
+        apkModuleGraph.toOutgoingEdgesMap();
+    APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
+
+    Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths =
+        Optional.of(
+            RichStream.from(classpathEntriesToDex)
+                .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
+                .collect(MoreCollectors.toImmutableSet()));
+    Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
+        moduleMappedClasspathEntriesToDex =
+            Optional.of(
+                convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
+    NonPreDexedDexBuildable nonPreDexedDexBuildable =
+        new NonPreDexedDexBuildable(
+            aaptGeneratedProguardConfigFile,
+            additionalJarsForProguard,
+            apkModuleMap,
+            classpathEntriesToDexSourcePaths,
+            dexSplitMode,
+            moduleMappedClasspathEntriesToDex,
+            proguardConfigs,
+            rootAPKModule,
+            xzCompressionLevel,
+            dexSplitMode.isShouldSplitDex(),
+            nonPreDexedDexBuildableArgs,
+            projectFilesystem,
+            buildTarget);
+    return nonPreDexedDexBuildable;
+  }
+
+  private static <K extends Comparable<?>, V>
+      ImmutableSortedMap<K, ImmutableList<V>> convertToMapOfLists(
+          ImmutableMultimap<K, V> multimap) {
     return multimap
         .asMap()
         .entrySet()
