@@ -49,6 +49,9 @@ import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.clang.ModuleMap;
+import com.facebook.buck.apple.clang.UmbrellaHeader;
+import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
@@ -1324,7 +1327,7 @@ public class ProjectGenerator {
                 .orElse(ImmutableList.of()));
 
         if (containsSwiftCode && isModularAppleLibrary && publicCxxHeaders.size() > 0) {
-          targetSpecificSwiftFlags.add("-import-underlying-module");
+          targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
         }
 
         Iterable<String> otherSwiftFlags =
@@ -1443,18 +1446,23 @@ public class ProjectGenerator {
       }
     }
 
+    Optional<String> moduleName =
+        isModularAppleLibrary ? Optional.of(getProductName(targetNode)) : Optional.empty();
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
         getSwiftPublicHeaderMapEntriesForTarget(targetNode, isFocusedOnTarget, hasSwiftVersionArg),
+        moduleName,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || isHeaderMapDisabled(),
         !shouldMergeHeaderMaps());
     if (isFocusedOnTarget) {
+      /**/
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
-          ImmutableMap.of(),
+          ImmutableMap.of(), // private interfaces don't have a modulemap
+          Optional.empty(),
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
           arg.getXcodePrivateHeadersSymlinks()
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
@@ -1980,6 +1988,7 @@ public class ProjectGenerator {
   private void createHeaderSymlinkTree(
       Map<Path, SourcePath> contents,
       ImmutableMap<Path, Path> nonSourcePaths,
+      Optional<String> moduleName,
       Path headerSymlinkTreeRoot,
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap)
@@ -2008,7 +2017,7 @@ public class ProjectGenerator {
     Optional<String> currentHashCode = projectFilesystem.readFileIfItExists(hashCodeFilePath);
     String newHashCode =
         getHeaderSymlinkTreeHashCode(
-                resolvedContents, shouldCreateHeadersSymlinks, shouldCreateHeaderMap)
+                resolvedContents, moduleName, shouldCreateHeadersSymlinks, shouldCreateHeaderMap)
             .toString();
     if (Optional.of(newHashCode).equals(currentHashCode)) {
       LOG.debug(
@@ -2056,6 +2065,47 @@ public class ProjectGenerator {
 
         projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
       }
+      if (moduleName.isPresent() && resolvedContents.entrySet().size() > 0) {
+        ImmutableList<String> headerPaths =
+            resolvedContents
+                .keySet()
+                .stream()
+                .map(Path::getFileName)
+                .map(Path::toString)
+                .collect(MoreCollectors.toImmutableList());
+        if (!headerPaths.contains(moduleName.get() + ".h")) {
+          projectFilesystem.writeContentsToPath(
+              new UmbrellaHeader(moduleName.get(), headerPaths).render(),
+              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve(moduleName.get() + ".h"));
+        }
+        boolean containsSwift = !nonSourcePaths.isEmpty();
+        if (containsSwift) {
+          projectFilesystem.writeContentsToPath(
+              new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER).render(),
+              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
+          projectFilesystem.writeContentsToPath(
+              new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER).render(),
+              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
+
+          Path absoluteModuleRoot =
+              projectFilesystem
+                  .getRootPath()
+                  .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
+          VFSOverlay vfsOverlay =
+              new VFSOverlay(
+                  ImmutableSortedMap.of(
+                      absoluteModuleRoot.resolve("module.modulemap"),
+                      absoluteModuleRoot.resolve("objc.modulemap")));
+
+          projectFilesystem.writeContentsToPath(
+              vfsOverlay.render(),
+              getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
+        } else {
+          projectFilesystem.writeContentsToPath(
+              new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.NO_SWIFT).render(),
+              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
+        }
+      }
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
   }
@@ -2070,6 +2120,7 @@ public class ProjectGenerator {
 
   private HashCode getHeaderSymlinkTreeHashCode(
       ImmutableSortedMap<Path, Path> contents,
+      Optional<String> moduleName,
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap) {
     Hasher hasher = Hashing.sha1().newHasher();
@@ -2082,6 +2133,11 @@ public class ProjectGenerator {
     byte[] hmapStateValue = hmapState.getBytes(Charsets.UTF_8);
     hasher.putInt(hmapStateValue.length);
     hasher.putBytes(hmapStateValue);
+    if (moduleName.isPresent()) {
+      byte[] moduleNameValue = moduleName.get().getBytes(Charsets.UTF_8);
+      hasher.putInt(moduleNameValue.length);
+      hasher.putBytes(moduleNameValue);
+    }
     hasher.putInt(0);
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
       byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
@@ -2406,6 +2462,10 @@ public class ProjectGenerator {
       HeaderVisibility headerVisibility) {
     Path treeRoot = getPathToHeaderSymlinkTree(targetNode, headerVisibility);
     return getRelativeToProjectPathForTargetNode(targetNode, treeRoot);
+  }
+
+  private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
+    return headerSymlinkTreeRoot.resolve("objc-module-overlay.yaml");
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
@@ -2737,6 +2797,20 @@ public class ProjectGenerator {
                                 .getExportedPlatformLinkerFlags()
                                 .getPatternsAndValues())
                     .orElse(ImmutableList.of()));
+  }
+
+  private Iterable<String> collectModularTargetSpecificSwiftFlags(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
+    ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
+    targetSpecificSwiftFlags.add("-import-underlying-module");
+    Path vfsOverlay =
+        getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+            getHeaderSymlinkTreeRelativePath(targetNode, HeaderVisibility.PUBLIC));
+    targetSpecificSwiftFlags.add("-Xcc");
+    targetSpecificSwiftFlags.add("-ivfsoverlay");
+    targetSpecificSwiftFlags.add("-Xcc");
+    targetSpecificSwiftFlags.add(vfsOverlay.toString());
+    return targetSpecificSwiftFlags.build();
   }
 
   private ImmutableSet<PBXFileReference> collectRecursiveLibraryDependenciesWithOptions(
