@@ -1311,7 +1311,7 @@ public class ProjectGenerator {
 
         Iterable<String> otherSwiftFlags =
             Iterables.concat(
-                swiftBuckConfig.getFlags("compiler_flags").orElse(DEFAULT_SWIFTFLAGS),
+                swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
                 targetSpecificSwiftFlags.build());
         Iterable<String> otherCFlags =
             Iterables.concat(

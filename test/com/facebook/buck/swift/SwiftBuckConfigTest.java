@@ -35,25 +35,14 @@ public class SwiftBuckConfigTest {
             FakeBuckConfig.builder()
                 .setSections(ImmutableMap.of("swift", ImmutableMap.of("compiler_flags", "-g")))
                 .build());
-    assertThat(swiftBuckConfig.getFlags(), not(equalTo(Optional.empty())));
-    assertThat(swiftBuckConfig.getFlags().get(), contains("-g"));
-  }
-
-  @Test
-  public void testGetFlagsWithArgument() throws Exception {
-    SwiftBuckConfig swiftBuckConfig =
-        new SwiftBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(ImmutableMap.of("swift", ImmutableMap.of("compiler_flags", "-g")))
-                .build());
-    assertThat(swiftBuckConfig.getFlags("compiler_flags"), not(equalTo(Optional.empty())));
-    assertThat(swiftBuckConfig.getFlags("compiler_flags").get(), contains("-g"));
+    assertThat(swiftBuckConfig.getCompilerFlags(), not(equalTo(Optional.empty())));
+    assertThat(swiftBuckConfig.getCompilerFlags().get(), contains("-g"));
   }
 
   @Test
   public void testAbsentFlags() {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(FakeBuckConfig.builder().build());
-    assertThat(swiftBuckConfig.getFlags(), equalTo(Optional.empty()));
-    assertThat(swiftBuckConfig.getFlags("compiler_flags"), equalTo(Optional.empty()));
+    assertThat(swiftBuckConfig.getCompilerFlags(), equalTo(Optional.empty()));
+    assertThat(swiftBuckConfig.getCompilerFlags(), equalTo(Optional.empty()));
   }
 }

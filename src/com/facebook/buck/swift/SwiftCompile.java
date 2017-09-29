@@ -124,7 +124,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.version = version;
     this.compilerFlags =
         new ImmutableList.Builder<Arg>()
-            .addAll(StringArg.from(swiftBuckConfig.getFlags().orElse(ImmutableSet.of())))
+            .addAll(StringArg.from(swiftBuckConfig.getCompilerFlags().orElse(ImmutableSet.of())))
             .addAll(compilerFlags)
             .build();
     this.enableObjcInterop = enableObjcInterop.orElse(true);
