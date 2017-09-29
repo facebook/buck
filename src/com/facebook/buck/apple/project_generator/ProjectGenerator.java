@@ -1501,7 +1501,10 @@ public class ProjectGenerator {
     frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> librarySearchPaths = new HashSet<>();
     librarySearchPaths.add("$BUILT_PRODUCTS_DIR");
-    HashSet<String> ldRunpathSearchPaths = new HashSet<>();
+    HashSet<String> iOSLdRunpathSearchPaths = new HashSet<>();
+    HashSet<String> macOSLdRunpathSearchPaths = new HashSet<>();
+    ImmutableSet<PBXFileReference> swiftDeps =
+        collectRecursiveLibraryDependenciesWithSwiftSources(node);
 
     Stream.concat(
             // Collect all the nodes that contribute to linking
@@ -1565,12 +1568,13 @@ public class ProjectGenerator {
                         if (prebuilt.getConstructorArg().getPreferredLinkage()
                             != NativeLinkable.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
-                          ldRunpathSearchPaths.add("@executable_path/Frameworks");
+                          iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
+                          macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
                         }
                       });
             });
 
-    if (includeFrameworks) {
+    if (includeFrameworks && swiftDeps.size() > 0) {
       // When Xcode compiles static Swift libs, it will include linker commands (LC_LINKER_OPTION)
       // that will be carried over for the final binary to link to the appropriate Swift overlays
       // and libs. This means that the final binary must be able to locate the Swift libs in the
@@ -1579,19 +1583,30 @@ public class ProjectGenerator {
       // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
       // Xcode does to make sure binaries link successfully if they use Swift directly or
       // transitively.
-      ImmutableSet<PBXFileReference> swiftDeps =
-          collectRecursiveLibraryDependenciesWithSwiftSources(node);
-      if (swiftDeps.size() > 0) {
-        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
-      }
+      librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
+    }
+
+    if (swiftDeps.size() > 0) {
+      iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
+      iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
+      macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
+      macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
     }
 
     ImmutableMap.Builder<String, String> results =
         ImmutableMap.<String, String>builder()
             .put("FRAMEWORK_SEARCH_PATHS", Joiner.on(' ').join(frameworkSearchPaths))
             .put("LIBRARY_SEARCH_PATHS", Joiner.on(' ').join(librarySearchPaths));
-    if (!ldRunpathSearchPaths.isEmpty()) {
-      results.put("LD_RUNPATH_SEARCH_PATHS", Joiner.on(' ').join(ldRunpathSearchPaths));
+    if (!iOSLdRunpathSearchPaths.isEmpty()) {
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS[sdk=iphoneos*]", Joiner.on(' ').join(iOSLdRunpathSearchPaths));
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]",
+          Joiner.on(' ').join(iOSLdRunpathSearchPaths));
+    }
+    if (!macOSLdRunpathSearchPaths.isEmpty()) {
+      results.put(
+          "LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]", Joiner.on(' ').join(macOSLdRunpathSearchPaths));
     }
     return results.build();
   }
