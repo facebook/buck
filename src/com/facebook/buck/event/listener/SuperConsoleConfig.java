@@ -69,6 +69,10 @@ public class SuperConsoleConfig {
         .orElse(DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW);
   }
 
+  public boolean shouldShowSlowRulesInConsole() {
+    return delegate.getBooleanValue(SECTION_NAME, "show_slow_rules_in_console", false);
+  }
+
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {
     Optional<Long> optional = delegate.getLong(sectionName, propertyName);
     if (!optional.isPresent()) {

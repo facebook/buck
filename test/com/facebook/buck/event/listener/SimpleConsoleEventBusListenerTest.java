@@ -373,6 +373,7 @@ public class SimpleConsoleEventBusListenerTest {
             TestResultSummaryVerbosity.of(false, false),
             hideSucceededRules,
             /* numberOfSlowRulesToShow */ 0,
+            false,
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(

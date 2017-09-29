@@ -62,11 +62,19 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       TestResultSummaryVerbosity summaryVerbosity,
       boolean hideSucceededRules,
       int numberOfSlowRulesToShow,
+      boolean showSlowRulesInConsole,
       Locale locale,
       Path testLogPath,
       ExecutionEnvironment executionEnvironment,
       Optional<BuildId> buildId) {
-    super(console, clock, locale, executionEnvironment, true, numberOfSlowRulesToShow);
+    super(
+        console,
+        clock,
+        locale,
+        executionEnvironment,
+        true,
+        numberOfSlowRulesToShow,
+        showSlowRulesInConsole);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.hideSucceededRules = hideSucceededRules;

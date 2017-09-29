@@ -1544,6 +1544,7 @@ public final class Main {
         testResultSummaryVerbosity,
         config.getHideSucceededRulesInLogMode(),
         config.getNumberOfSlowRulesToShow(),
+        config.shouldShowSlowRulesInConsole(),
         locale,
         testLogPath,
         executionEnvironment,

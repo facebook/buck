@@ -209,7 +209,14 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       long minimumDurationMillisecondsToShowWatchman,
       boolean hideEmptyDownload,
       Optional<BuildId> buildId) {
-    super(console, clock, locale, executionEnvironment, false, config.getNumberOfSlowRulesToShow());
+    super(
+        console,
+        clock,
+        locale,
+        executionEnvironment,
+        false,
+        config.getNumberOfSlowRulesToShow(),
+        config.shouldShowSlowRulesInConsole());
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;
     this.webServer = webServer;
