@@ -343,13 +343,26 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     buildableContext.recordArtifact(manifestPath);
 
     // Create the .dex files if we aren't doing pre-dexing.
-    DexFilesInfo dexFilesInfo = addFinalDxSteps(buildableContext, context, steps);
+    addFinalDxSteps(buildableContext, context, steps);
+
+    DexFilesInfo dexFilesInfo;
+    if (isPreDexed) {
+      dexFilesInfo =
+          new DexFilesInfo(
+              predexedPrimaryDexPath.get(),
+              AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)
+                  ? ImmutableSortedSet.of()
+                  : predexedSecondaryDirectories.get(),
+              Optional.empty());
+    } else {
+      dexFilesInfo = nonPreDexedDexBuildable.get().getDexFilesInfo();
+    }
 
     if (dexFilesInfo.proguardTextFilesPath.isPresent()) {
       steps.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              dexFilesInfo.proguardTextFilesPath.get(),
+              pathResolver.getRelativePath(dexFilesInfo.proguardTextFilesPath.get()),
               getProguardTextFilesPath(),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
@@ -418,7 +431,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     ImmutableSet<Path> allAssetDirectories =
         ImmutableSet.<Path>builder()
             .addAll(nativeLibraryAsAssetDirectories.build())
-            .addAll(dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem()))
+            .addAll(dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver))
             .build();
 
     SourcePathResolver resolver = context.getSourcePathResolver();
@@ -453,7 +466,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             getProjectFilesystem(),
             pathResolver.getAbsolutePath(resourcesApkPath),
             getSignedApkPath(),
-            dexFilesInfo.primaryDexPath,
+            pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
             allAssetDirectories,
             nativeLibraryDirectoriesBuilder.build(),
             zipFiles.build(),
@@ -700,7 +713,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   /** Adds steps to do the final dexing or dex merging before building the apk. */
-  private DexFilesInfo addFinalDxSteps(
+  private void addFinalDxSteps(
       BuildableContext buildableContext,
       BuildContext buildContext,
       ImmutableList.Builder<Step> steps) {
@@ -740,26 +753,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               proguardMappingFile,
               skipProguard));
     }
-
-    if (isPreDexed) {
-      ImmutableSortedSet<Path> secondaryDexDirs;
-      if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-        secondaryDexDirs = ImmutableSortedSet.of();
-      } else {
-        secondaryDexDirs =
-            predexedSecondaryDirectories
-                .get()
-                .stream()
-                .map(buildContext.getSourcePathResolver()::getRelativePath)
-                .collect(MoreCollectors.toImmutableSortedSet());
-      }
-      return new DexFilesInfo(
-          buildContext.getSourcePathResolver().getRelativePath(predexedPrimaryDexPath.get()),
-          secondaryDexDirs,
-          Optional.empty());
-    }
-
-    return nonPreDexedDexBuildable.get().addDxSteps(buildableContext, buildContext, steps);
+    nonPreDexedDexBuildable.ifPresent(
+        buildable -> buildable.addDxSteps(buildableContext, buildContext, steps));
   }
 
   public ProjectFilesystem getProjectFilesystem() {
@@ -781,14 +776,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   /** Encapsulates the information about dexing output that must be passed to ApkBuilder. */
   static class DexFilesInfo {
-    final Path primaryDexPath;
-    final Either<ImmutableSet<Path>, DexSecondaryDexDirView> secondaryDexDirs;
-    final Optional<Path> proguardTextFilesPath;
+    final SourcePath primaryDexPath;
+    final Either<ImmutableSortedSet<SourcePath>, DexSecondaryDexDirView> secondaryDexDirs;
+    final Optional<SourcePath> proguardTextFilesPath;
 
     DexFilesInfo(
-        Path primaryDexPath,
-        ImmutableSet<Path> secondaryDexDirs,
-        Optional<Path> proguardTextFilesPath) {
+        SourcePath primaryDexPath,
+        ImmutableSortedSet<SourcePath> secondaryDexDirs,
+        Optional<SourcePath> proguardTextFilesPath) {
       this.primaryDexPath = primaryDexPath;
       this.secondaryDexDirs = Either.ofLeft(secondaryDexDirs);
       this.proguardTextFilesPath = proguardTextFilesPath;
@@ -796,34 +791,40 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     @SuppressWarnings("unused")
     DexFilesInfo(
-        Path primaryDexPath,
+        SourcePath primaryDexPath,
         DexSecondaryDexDirView secondaryDexDirs,
-        Optional<Path> proguardTextFilesPath) {
+        Optional<SourcePath> proguardTextFilesPath) {
       this.primaryDexPath = primaryDexPath;
       this.secondaryDexDirs = Either.ofRight(secondaryDexDirs);
       this.proguardTextFilesPath = proguardTextFilesPath;
     }
 
-    public ImmutableSet<Path> getSecondaryDexDirs(ProjectFilesystem filesystem) {
-      return secondaryDexDirs.transform(set -> set, view -> view.getSecondaryDexDirs(filesystem));
+    public ImmutableSet<Path> getSecondaryDexDirs(
+        ProjectFilesystem filesystem, SourcePathResolver resolver) {
+      return secondaryDexDirs.transform(
+          set ->
+              set.stream().map(resolver::getRelativePath).collect(MoreCollectors.toImmutableSet()),
+          view -> view.getSecondaryDexDirs(filesystem, resolver));
     }
   }
 
   static class DexSecondaryDexDirView {
-    final Path rootDirectory;
-    final Path subDirListing;
+    final SourcePath rootDirectory;
+    final SourcePath subDirListing;
 
-    DexSecondaryDexDirView(Path rootDirectory, Path subDirListing) {
+    DexSecondaryDexDirView(SourcePath rootDirectory, SourcePath subDirListing) {
       this.rootDirectory = rootDirectory;
       this.subDirListing = subDirListing;
     }
 
-    ImmutableSet<Path> getSecondaryDexDirs(ProjectFilesystem filesystem) {
+    ImmutableSet<Path> getSecondaryDexDirs(
+        ProjectFilesystem filesystem, SourcePathResolver resolver) {
       try {
+        Path resolvedRootDirectory = resolver.getRelativePath(rootDirectory);
         return filesystem
-            .readLines(subDirListing)
+            .readLines(resolver.getRelativePath(subDirListing))
             .stream()
-            .map(rootDirectory::resolve)
+            .map(resolvedRootDirectory::resolve)
             .collect(MoreCollectors.toImmutableSet());
       } catch (IOException e) {
         throw new RuntimeException(e);

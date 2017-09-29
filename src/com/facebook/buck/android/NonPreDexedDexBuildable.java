@@ -29,6 +29,7 @@ import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -215,7 +216,7 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
         getProjectFilesystem(), getBuildTarget(), "%s/.dex/classes.dex");
   }
 
-  public AndroidBinaryBuildable.DexFilesInfo addDxSteps(
+  public void addDxSteps(
       BuildableContext buildableContext,
       BuildContext buildContext,
       ImmutableList.Builder<Step> steps) {
@@ -418,12 +419,18 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
 
+  AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
     return new AndroidBinaryBuildable.DexFilesInfo(
-        primaryDexPath,
+        genSourcePath(getNonPredexedPrimaryDexPath()),
         new AndroidBinaryBuildable.DexSecondaryDexDirView(
-            getSecondaryDexRoot(), getSecondaryDexListing()),
-        shouldProguard ? Optional.of(getProguardConfigDir()) : Optional.empty());
+            genSourcePath(getSecondaryDexRoot()), genSourcePath(getSecondaryDexListing())),
+        shouldProguard ? Optional.of(genSourcePath(getProguardConfigDir())) : Optional.empty());
+  }
+
+  private SourcePath genSourcePath(Path path) {
+    return new ExplicitBuildTargetSourcePath(getBuildTarget(), path);
   }
 
   Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(
