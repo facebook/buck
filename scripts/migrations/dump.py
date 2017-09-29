@@ -2,9 +2,12 @@
 
 import build_file
 import repository
+import label
 
 import argparse
+import json
 import os
+from typing import List
 
 
 class StoreKeyValuePair(argparse.Action):
@@ -35,8 +38,25 @@ def dump_export_map(args):
     bf = build_file.from_path(args.build_file)
     repo = repository.Repository(args.cell_roots)
     export_map = bf.get_export_map(repo)
-    if args.json:
-        import json
+    if args.print_as_load_functions:
+        def to_load_function(import_label: label, symbols: List[str]):
+            pkg = import_label.package
+            file_name = pkg.split('/')[-1]
+            pkg = pkg[:-len(file_name)]
+            load_fn_cell = '@' + import_label.cell if import_label.cell else ''
+            import_string = load_fn_cell + '//' + pkg + ':' + file_name
+            function_args = map(lambda s: '"%s"' % s, symbols)
+            return 'load("%s", %s)' % (import_string, ','.join(function_args))
+
+        load_functions = []
+        for import_string, exported_symbols in export_map.items():
+            load_functions.append(
+                to_load_function(label.from_string(import_string), exported_symbols))
+        if args.json:
+            print(json.dumps(load_functions))
+        else:
+            print(os.linesep.join(load_functions))
+    elif args.json:
         print(json.dumps(export_map))
     else:
         for import_string, exported_symbols in export_map.items():
@@ -53,6 +73,11 @@ def main():
     exported_symbols_parser.set_defaults(func=dump_exported_symbols)
 
     export_map_parser = subparsers.add_parser('export_map')
+    export_map_parser.add_argument(
+        '--print_as_load_functions',
+        action='store_true',
+        help='Print export map as a series of load functions which import all symbols exported by '
+             'respective imported files.')
     export_map_parser.set_defaults(func=dump_export_map)
 
     parser.add_argument('build_file', metavar='FILE')
