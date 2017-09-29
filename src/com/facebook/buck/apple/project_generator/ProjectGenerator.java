@@ -122,6 +122,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -2893,7 +2894,7 @@ public class ProjectGenerator {
       return projectFilesystem.relativize(output);
     }
 
-    Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
+    Optional<InputPath> src = exportFileNode.get().getConstructorArg().getSrc();
     if (!src.isPresent()) {
       Path output =
           buildTarget
@@ -2903,7 +2904,7 @@ public class ProjectGenerator {
       return projectFilesystem.relativize(output);
     }
 
-    return resolveSourcePath(src.get());
+    return resolveSourcePath(InputPath.Internals.getSourcePathFrom(src.get()));
   }
 
   private boolean isLibraryWithSourcesToCompile(TargetNode<?, ?> input) {

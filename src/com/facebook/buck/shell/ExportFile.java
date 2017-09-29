@@ -16,21 +16,21 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.event.EventDispatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.InputDataRetriever;
+import com.facebook.buck.rules.modern.InputPath;
+import com.facebook.buck.rules.modern.InputPathResolver;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -39,8 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Export a file so that it can be easily referenced by other {@link
@@ -91,70 +89,69 @@ import java.util.stream.Stream;
  * of the file to be saved.
  */
 // TODO(simons): Extend to also allow exporting a rule.
-public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasOutputName, HasRuntimeDeps {
+public class ExportFile extends ModernBuildRule<ExportFile>
+    implements Buildable, HasOutputName, HasRuntimeDeps {
 
-  @AddToRuleKey private final String name;
-  @AddToRuleKey private final ExportFileDescription.Mode mode;
-  @AddToRuleKey private final SourcePath src;
+  private final String name;
+  private final ExportFileDescription.Mode mode;
+  private final InputPath src;
+  private final OutputPath out;
 
   public ExportFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder,
       String name,
       ExportFileDescription.Mode mode,
-      SourcePath src) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+      InputPath src) {
+    super(buildTarget, projectFilesystem, ruleFinder, ExportFile.class);
     this.name = name;
     this.mode = mode;
     this.src = src;
+    this.out = new OutputPath(projectFilesystem.getPath(name));
   }
 
   @VisibleForTesting
-  SourcePath getSource() {
+  InputPath getSource() {
     return src;
   }
 
-  private Path getCopiedPath() {
+  private OutputPath getCopiedPath() {
     Preconditions.checkState(mode == ExportFileDescription.Mode.COPY);
-    return getProjectFilesystem()
-        .getBuckPaths()
-        .getGenDir()
-        .resolve(getBuildTarget().getBasePath())
-        .resolve(name);
+    return out;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver resolver = context.getSourcePathResolver();
+      EventDispatcher eventDispatcher,
+      ProjectFilesystem filesystem,
+      InputPathResolver inputPathResolver,
+      InputDataRetriever inputDataRetriever,
+      OutputPathResolver outputPathResolver,
+      BuildCellRelativePathFactory buildCellPathFactory) {
 
     // This file is copied rather than symlinked so that when it is included in an archive zip and
     // unpacked on another machine, it is an ordinary file in both scenarios.
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     if (mode == ExportFileDescription.Mode.COPY) {
-      Path out = getCopiedPath();
-      builder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
-      builder.add(
-          RmStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      context.getBuildCellRootPath(), getProjectFilesystem(), out))
-              .withRecursive(true));
-      if (resolver.getFilesystem(src).isDirectory(resolver.getRelativePath(src))) {
+
+      builder.add(RmStep.of(buildCellPathFactory.from(getCopiedPath())).withRecursive(true));
+
+      Path path = inputPathResolver.resolvePath(src);
+      Path destination = outputPathResolver.resolvePath(getCopiedPath());
+
+      builder.add(MkdirStep.of(buildCellPathFactory.from(destination.getParent())));
+
+      if (filesystem.isDirectory(path)) {
         builder.add(
             CopyStep.forDirectory(
-                getProjectFilesystem(),
-                resolver.getAbsolutePath(src),
-                out,
+                filesystem,
+                path,
+                destination,
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       } else {
-        builder.add(CopyStep.forFile(getProjectFilesystem(), resolver.getAbsolutePath(src), out));
+        builder.add(CopyStep.forFile(filesystem, path, destination));
       }
-      buildableContext.recordArtifact(out);
     }
 
     return builder.build();
@@ -166,22 +163,12 @@ public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // that our filesystem matches that of the source.  In copy mode, we return the path we've
     // allocated for the copy.
     return mode == ExportFileDescription.Mode.REFERENCE
-        ? src
-        : new ExplicitBuildTargetSourcePath(getBuildTarget(), getCopiedPath());
+        ? src.getLimitedSourcePath()
+        : getSourcePath(getCopiedPath());
   }
 
   @Override
   public String getOutputName() {
     return name;
-  }
-
-  @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    // When using reference mode, we need to make sure that any build rule that builds the source
-    // is built when we are, so accomplish this by exporting it as a runtime dep.
-    Optional<BuildRule> rule = ruleFinder.getRule(src);
-    return mode == ExportFileDescription.Mode.REFERENCE && rule.isPresent()
-        ? Stream.of(rule.get().getBuildTarget())
-        : Stream.empty();
   }
 }

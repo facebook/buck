@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.SourcePath;
+import java.util.Objects;
 
 /**
  * This can be passed around as a SourcePath, but it can only be resolved by InputPathResolver's
@@ -37,5 +38,24 @@ class LimitedSourcePath implements SourcePath {
       result = sourcePath.compareTo(((LimitedSourcePath) other).sourcePath);
     }
     return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (!(o instanceof LimitedSourcePath)) {
+      return false;
+    }
+
+    LimitedSourcePath that = (LimitedSourcePath) o;
+    return Objects.equals(sourcePath, that.sourcePath);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(sourcePath);
   }
 }

@@ -15,8 +15,6 @@
  */
 package com.facebook.buck.shell;
 
-import static com.facebook.buck.testutil.MoreAsserts.assertIterablesEquals;
-import static java.util.Collections.singleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -40,6 +38,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.modern.DefaultInputPathResolver;
+import com.facebook.buck.rules.modern.InputPath;
+import com.facebook.buck.rules.modern.InputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -50,15 +51,15 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class ExportFileTest {
 
@@ -90,17 +91,19 @@ public class ExportFileTest {
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
-        ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/example.html"),
-            "cp "
-                + projectFilesystem.resolve("example.html")
-                + " "
-                + Paths.get("buck-out/gen/example.html")),
+        addModernBuildRulePreamble(target)
+            .add(
+                "rm -f -r " + Paths.get("buck-out/gen/example.html/example.html"),
+                "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+                "cp "
+                    + projectFilesystem.resolve("example.html")
+                    + " "
+                    + Paths.get("buck-out/gen/example.html/example.html"))
+            .build(),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html"),
+        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html/example.html"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -122,17 +125,19 @@ public class ExportFileTest {
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
-        ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/fish"),
-            "cp "
-                + projectFilesystem.resolve("example.html")
-                + " "
-                + Paths.get("buck-out/gen/fish")),
+        addModernBuildRulePreamble(target)
+            .add(
+                "rm -f -r " + Paths.get("buck-out/gen/example.html/fish"),
+                "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+                "cp "
+                    + projectFilesystem.resolve("example.html")
+                    + " "
+                    + Paths.get("buck-out/gen/example.html/fish"))
+            .build(),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html/fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
   }
 
@@ -157,57 +162,81 @@ public class ExportFileTest {
 
     MoreAsserts.assertSteps(
         "The output directory should be created and then the file should be copied there.",
-        ImmutableList.of(
-            "mkdir -p " + Paths.get("buck-out/gen"),
-            "rm -f -r " + Paths.get("buck-out/gen/fish"),
-            "cp " + projectFilesystem.resolve("chips") + " " + Paths.get("buck-out/gen/fish")),
+        addModernBuildRulePreamble(target)
+            .add(
+                "rm -f -r " + Paths.get("buck-out/gen/example.html/fish"),
+                "mkdir -p " + Paths.get("buck-out/gen/example.html"),
+                "cp "
+                    + projectFilesystem.resolve("chips")
+                    + " "
+                    + Paths.get("buck-out/gen/example.html/fish"))
+            .build(),
         steps,
         TestExecutionContext.newInstance());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve("fish"),
+        projectFilesystem.getBuckPaths().getGenDir().resolve("example.html/fish"),
         pathResolver.getRelativePath(exportFile.getSourcePathToOutput()));
+  }
+
+  private ImmutableList.Builder<String> addModernBuildRulePreamble(BuildTarget target) {
+    String suffix = Paths.get(target.getBaseName(), target.getShortName()).normalize().toString();
+    return ImmutableList.<String>builder()
+        .add("rm -f -r " + Paths.get("buck-out/gen/" + suffix))
+        .add("mkdir -p " + Paths.get("buck-out/gen/" + suffix))
+        .add("rm -f -r " + Paths.get("buck-out/bin/" + suffix))
+        .add("mkdir -p " + Paths.get("buck-out/bin/" + suffix));
   }
 
   @Test
   public void shouldSetInputsFromSourcePaths() throws Exception {
     ExportFileBuilder builder =
-        new ExportFileBuilder(target).setSrc(new FakeSourcePath("chips")).setOut("cake");
+        new ExportFileBuilder(target)
+            .setSrc(new FakeSourcePath(projectFilesystem, "chips"))
+            .setOut("cake");
 
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    InputPathResolver pathResolver =
+        new DefaultInputPathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
 
     ExportFile exportFile = builder.build(resolver, projectFilesystem);
 
-    assertIterablesEquals(
-        singleton(Paths.get("chips")),
-        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()));
+    assertEquals(
+        projectFilesystem.resolve("chips"), pathResolver.resolvePath(exportFile.getSource()));
 
     resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    pathResolver =
+        new DefaultInputPathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
 
     FakeBuildRule rule =
         resolver.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
 
     builder.setSrc(new DefaultBuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = builder.build(resolver, projectFilesystem);
+
     assertThat(
-        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()), Matchers.empty());
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))
+            .filterInputsToCompareToOutput(
+                InputPath.Internals.getSourcePathFrom(exportFile.getSource())),
+        Matchers.empty());
 
     resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    pathResolver =
+        new DefaultInputPathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)));
 
     builder.setSrc(null);
     exportFile = builder.build(resolver, projectFilesystem);
-    assertIterablesEquals(
-        singleton(projectFilesystem.getPath("example.html")),
-        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()));
+    assertEquals(
+        projectFilesystem.resolve("example.html"),
+        pathResolver.resolvePath(exportFile.getSource()));
   }
 
   @Test
@@ -287,16 +316,21 @@ public class ExportFileTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     SourcePath src = new FakeSourcePath(projectFilesystem, "source");
     ExportFile exportFile =
         new ExportFileBuilder(target)
             .setMode(ExportFileDescription.Mode.REFERENCE)
             .setSrc(src)
             .build(resolver, projectFilesystem);
+
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver limitedResolver =
+        new DefaultInputPathResolver(DefaultSourcePathResolver.from(ruleFinder))
+            .getLimitedSourcePathResolver();
+
     assertThat(
-        pathResolver.getRelativePath(exportFile.getSourcePathToOutput()),
+        limitedResolver.getRelativePath(exportFile.getSourcePathToOutput()),
         Matchers.equalTo(pathResolver.getRelativePath(src)));
   }
 

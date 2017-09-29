@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.modern.InputPath;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -31,7 +32,11 @@ public class ExportFileBuilder
   }
 
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {
-    getArgForPopulating().setSrc(Optional.ofNullable(path));
+    if (path == null) {
+      getArgForPopulating().setSrc(Optional.empty());
+    } else {
+      getArgForPopulating().setSrc(Optional.of(new InputPath(path)));
+    }
     return this;
   }
 

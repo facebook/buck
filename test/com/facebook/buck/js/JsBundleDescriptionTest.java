@@ -27,13 +27,14 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.util.RichStream;
+import org.junit.Before;
+import org.junit.Test;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.junit.Before;
-import org.junit.Test;
 
 public class JsBundleDescriptionTest {
 
@@ -131,7 +132,9 @@ public class JsBundleDescriptionTest {
         scenario.resolver.getRuleWithType(
             bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
 
-    assertEquals(map.getSourcePathToOutput(), bundle.getSourcePathToSourceMap());
+    assertEquals(
+        map.getSourcePathToOutput(),
+        new InputPath(bundle.getSourcePathToSourceMap()).getLimitedSourcePath());
   }
 
   @Test

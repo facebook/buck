@@ -31,12 +31,14 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.modern.DefaultInputPathResolver;
+import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class ExportFileDescription
     implements Description<ExportFileDescriptionArg>,
@@ -69,12 +71,16 @@ public class ExportFileDescription
       name = buildTarget.getShortNameAndFlavorPostfix();
     }
 
-    SourcePath src;
+    InputPath src;
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver inputPathResolver =
+        new DefaultInputPathResolver(pathResolver).getLimitedSourcePathResolver();
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
-          && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {
+          && !inputPathResolver
+              .getFilesystem(args.getSrc().get().getLimitedSourcePath())
+              .equals(projectFilesystem)) {
         throw new HumanReadableException(
             "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
             buildTarget, args.getSrc().get());
@@ -82,12 +88,14 @@ public class ExportFileDescription
       src = args.getSrc().get();
     } else {
       src =
-          new PathSourcePath(
-              projectFilesystem,
-              buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
+          new InputPath(
+              new PathSourcePath(
+                  projectFilesystem,
+                  buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix())));
     }
 
-    return new ExportFile(buildTarget, projectFilesystem, params, name, mode, src);
+    return new ExportFile(
+        buildTarget, projectFilesystem, new SourcePathRuleFinder(resolver), name, mode, src);
   }
 
   /** If the src field is absent, add the name field to the list of inputs. */
@@ -120,7 +128,7 @@ public class ExportFileDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractExportFileDescriptionArg extends CommonDescriptionArg {
-    Optional<SourcePath> getSrc();
+    Optional<InputPath> getSrc();
 
     Optional<String> getOut();
 

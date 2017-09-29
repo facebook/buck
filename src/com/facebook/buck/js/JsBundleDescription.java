@@ -42,6 +42,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.modern.InputPath;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.WorkerTool;
@@ -53,9 +54,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 import java.util.Collection;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class JsBundleDescription
     implements Description<JsBundleDescriptionArg>,
@@ -105,10 +106,10 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          JsUtil.copyParamsWithDependencies(params),
+          new SourcePathRuleFinder(resolver),
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
-          bundleOutputs.getSourcePathToSourceMap());
+          new InputPath(bundleOutputs.getSourcePathToSourceMap()));
     }
 
     // For Android, we bundle JS output as assets, and images etc. as resources.
