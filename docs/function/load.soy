@@ -36,14 +36,14 @@ macros for creating more complex build rules.
   {param desc}
   The label identifying file containing {call buck.macros/} and constants. It's
   exactly the same as build target syntax but all macro files are assumed to be
-  implicitly exported using <pre>buck.export_file</pre> with its original name, so
-  a macro file <pre>defs</pre> from <pre>package</pre>pre> directory is accessible
-  using <pre>//package:defs</pre>pre> syntax.
+  implicitly exported using <code>buck.export_file</code> with its original name, so
+  a macro file <code>defs</code> from <code>package</code>pre> directory is accessible
+  using <code>//package:defs</code> syntax.
   {/param}
 {/call}
 
 {call buck.arg}
-  {param name: 'symbols...' /}
+  {param name: '**symbols' /}
   {param desc}
   Names of macros and constants to import from <code>path</code>. In {call buck.fn_load/} function
   keyword arguments have special meaning and can be used to change names of imported symbols. For
