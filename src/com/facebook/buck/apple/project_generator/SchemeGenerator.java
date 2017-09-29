@@ -79,6 +79,8 @@ class SchemeGenerator {
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
   private Optional<XCScheme> outputScheme = Optional.empty();
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
+  private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
+      environmentVariables;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -93,6 +95,7 @@ class SchemeGenerator {
       Optional<String> remoteRunnablePath,
       ImmutableMap<SchemeActionType, String> actionConfigNames,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
+      Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables,
       XCScheme.LaunchAction.LaunchStyle launchStyle) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
@@ -107,6 +110,7 @@ class SchemeGenerator {
     this.remoteRunnablePath = remoteRunnablePath;
     this.actionConfigNames = actionConfigNames;
     this.targetToProjectPathMap = targetToProjectPathMap;
+    this.environmentVariables = environmentVariables;
 
     LOG.debug(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -131,7 +135,7 @@ class SchemeGenerator {
       String buildableReferencePath;
       Path projectPath = Preconditions.checkNotNull(targetToProjectPathMap.get(target));
       if (outputPath == null) {
-        //Root directory project
+        // Root directory project
         buildableReferencePath = projectPath.toString();
       } else {
         buildableReferencePath = outputPath.relativize(projectPath).toString();
@@ -165,9 +169,16 @@ class SchemeGenerator {
           buildAction);
     }
 
+    ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
+    if (environmentVariables.isPresent()) {
+      envVariables = environmentVariables.get();
+    }
+
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.TEST)));
+            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.TEST)),
+            Optional.ofNullable(envVariables.get(SchemeActionType.TEST)));
+
     for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
           buildTargetToBuildableReferenceMap.get(target);
@@ -190,12 +201,14 @@ class SchemeGenerator {
                     Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.LAUNCH)),
                     runnablePath,
                     remoteRunnablePath,
-                    launchStyle));
+                    launchStyle,
+                    Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH))));
         profileAction =
             Optional.of(
                 new XCScheme.ProfileAction(
                     primaryBuildableReference,
-                    Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.PROFILE))));
+                    Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.PROFILE)),
+                    Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE))));
       }
     }
     XCScheme.AnalyzeAction analyzeAction =
@@ -252,6 +265,19 @@ class SchemeGenerator {
     return refElem;
   }
 
+  public static Element serializeEnvironmentVariables(
+      Document doc, ImmutableMap<String, String> environmentVariables) {
+    Element rootElement = doc.createElement("EnvironmentVariables");
+    for (String variableKey : environmentVariables.keySet()) {
+      Element variableElement = doc.createElement("EnvironmentVariable");
+      variableElement.setAttribute("key", variableKey);
+      variableElement.setAttribute("value", environmentVariables.get(variableKey));
+      variableElement.setAttribute("isEnabled", "YES");
+      rootElement.appendChild(variableElement);
+    }
+    return rootElement;
+  }
+
   public static Element serializeBuildAction(Document doc, XCScheme.BuildAction buildAction) {
     Element buildActionElem = doc.createElement("BuildAction");
     buildActionElem.setAttribute(
@@ -287,6 +313,7 @@ class SchemeGenerator {
 
   public static Element serializeTestAction(Document doc, XCScheme.TestAction testAction) {
     Element testActionElem = doc.createElement("TestAction");
+    // unless otherwise specified, use the Launch scheme's env variables like the xcode default
     testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
     Element testablesElem = doc.createElement("Testables");
@@ -299,6 +326,14 @@ class SchemeGenerator {
 
       Element refElem = serializeBuildableReference(doc, testable.getBuildableReference());
       testableElem.appendChild(refElem);
+    }
+
+    if (testAction.getEnvironmentVariables().isPresent()) {
+      // disable the default override that makes Test use Launch's environment variables
+      testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
+      testActionElem.appendChild(environmentVariablesElement);
     }
 
     return testActionElem;
@@ -336,17 +371,33 @@ class SchemeGenerator {
     launchActionElem.setAttribute(
         "launchStyle", launchStyle == XCScheme.LaunchAction.LaunchStyle.AUTO ? "0" : "1");
 
+    if (launchAction.getEnvironmentVariables().isPresent()) {
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, launchAction.getEnvironmentVariables().get());
+      launchActionElem.appendChild(environmentVariablesElement);
+    }
+
     return launchActionElem;
   }
 
   public static Element serializeProfileAction(Document doc, XCScheme.ProfileAction profileAction) {
     Element profileActionElem = doc.createElement("ProfileAction");
+    // unless otherwise specified, use the Launch scheme's env variables like the xcode default
+    profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "YES");
 
     Element productRunnableElem = doc.createElement("BuildableProductRunnable");
     profileActionElem.appendChild(productRunnableElem);
 
     Element refElem = serializeBuildableReference(doc, profileAction.getBuildableReference());
     productRunnableElem.appendChild(refElem);
+
+    if (profileAction.getEnvironmentVariables().isPresent()) {
+      // disable the default override that makes Profile use Launch's environment variables
+      profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
+      Element environmentVariablesElement =
+          serializeEnvironmentVariables(doc, profileAction.getEnvironmentVariables().get());
+      profileActionElem.appendChild(environmentVariablesElement);
+    }
 
     return profileActionElem;
   }
