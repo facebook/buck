@@ -333,8 +333,12 @@ public class ProjectView {
   }
 
   private void mangledResourceLink(Matcher match, String input) {
+    if (!input.endsWith(DOT_XML)) {
+      stderr("Ignoring %s, which does not end with .xml!\n", input);
+      return;
+    }
+
     String fileName = basename(input);
-    // It's safe to assume input is a .xml file
     String name = fileName.substring(0, fileName.length() - DOT_XML.length());
 
     String path = match.group(1).replace('/', '_');
