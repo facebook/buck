@@ -1,10 +1,10 @@
 TYPES = [
     "InputPath.java",
-    "LimitedSourcePath.java",
+    "AbstractLimitedSourcePath.java",
     "OutputPath.java",
 ]
 
-java_library(
+java_immutables_library(
     name = "types",
     srcs = TYPES,
     visibility = [
@@ -20,7 +20,10 @@ java_library(
 
 java_library(
     name = "modern",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(
+        ["**/*.java"],
+        excludes = TYPES,
+    ),
     exported_deps = [
         ":types",
     ],

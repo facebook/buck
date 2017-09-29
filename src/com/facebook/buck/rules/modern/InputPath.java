@@ -45,7 +45,7 @@ public final class InputPath implements Comparable<InputPath> {
 
   /** This returns a SourcePath that can only be resolved by a LimitedSourcePathResolver. */
   public SourcePath getLimitedSourcePath() {
-    return new LimitedSourcePath(sourcePath);
+    return LimitedSourcePath.of(sourcePath);
   }
 
   /**

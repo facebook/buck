@@ -61,7 +61,7 @@ public final class DefaultInputPathResolver implements InputPathResolver {
 
   private SourcePath extract(SourcePath path) {
     Preconditions.checkArgument(path instanceof LimitedSourcePath, "Expected LimitedSourcePath");
-    return ((LimitedSourcePath) path).sourcePath;
+    return ((LimitedSourcePath) path).getLimitedSourcePath();
   }
 
   @Override

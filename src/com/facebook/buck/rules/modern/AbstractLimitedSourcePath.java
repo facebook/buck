@@ -17,24 +17,27 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import org.immutables.value.Value;
 
 /**
  * This can be passed around as a SourcePath, but it can only be resolved by InputPathResolver's
  * LimitedSourcePathResolver. This is just meant to be used for interacting with old-style Steps
  * that take in SourcePath and resolvers.
  */
-class LimitedSourcePath implements SourcePath {
-  final SourcePath sourcePath;
+@BuckStyleTuple
+@Value.Immutable(prehash = true)
+abstract class AbstractLimitedSourcePath implements SourcePath {
 
-  public LimitedSourcePath(SourcePath sourcePath) {
-    this.sourcePath = sourcePath;
-  }
+  public abstract SourcePath getLimitedSourcePath();
 
   @Override
   public int compareTo(SourcePath other) {
     int result = compareClasses(other);
     if (result == 0) {
-      result = sourcePath.compareTo(((LimitedSourcePath) other).sourcePath);
+      result =
+          getLimitedSourcePath()
+              .compareTo(((AbstractLimitedSourcePath) other).getLimitedSourcePath());
     }
     return result;
   }
