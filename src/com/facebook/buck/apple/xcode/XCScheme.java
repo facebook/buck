@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -178,18 +179,21 @@ public class XCScheme {
     private final Optional<String> runnablePath;
     private final Optional<String> remoteRunnablePath;
     private final LaunchStyle launchStyle;
+    private final Optional<ImmutableMap<String, String>> environmentVariables;
 
     public LaunchAction(
         BuildableReference buildableReference,
         String buildConfiguration,
         Optional<String> runnablePath,
         Optional<String> remoteRunnablePath,
-        LaunchStyle launchStyle) {
+        LaunchStyle launchStyle,
+        Optional<ImmutableMap<String, String>> environmentVariables) {
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
       this.runnablePath = runnablePath;
       this.remoteRunnablePath = remoteRunnablePath;
       this.launchStyle = launchStyle;
+      this.environmentVariables = environmentVariables;
     }
 
     public BuildableReference getBuildableReference() {
@@ -211,15 +215,24 @@ public class XCScheme {
     public LaunchStyle getLaunchStyle() {
       return launchStyle;
     }
+
+    public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
+      return environmentVariables;
+    }
   }
 
   public static class ProfileAction {
     BuildableReference buildableReference;
     private final String buildConfiguration;
+    private final Optional<ImmutableMap<String, String>> environmentVariables;
 
-    public ProfileAction(BuildableReference buildableReference, String buildConfiguration) {
+    public ProfileAction(
+        BuildableReference buildableReference,
+        String buildConfiguration,
+        Optional<ImmutableMap<String, String>> environmentVariables) {
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
+      this.environmentVariables = environmentVariables;
     }
 
     public BuildableReference getBuildableReference() {
@@ -229,15 +242,22 @@ public class XCScheme {
     public String getBuildConfiguration() {
       return buildConfiguration;
     }
+
+    public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
+      return environmentVariables;
+    }
   }
 
   public static class TestAction {
     List<TestableReference> testables;
     private final String buildConfiguration;
+    private final Optional<ImmutableMap<String, String>> environmentVariables;
 
-    public TestAction(String buildConfiguration) {
+    public TestAction(
+        String buildConfiguration, Optional<ImmutableMap<String, String>> environmentVariables) {
       this.testables = new ArrayList<>();
       this.buildConfiguration = buildConfiguration;
+      this.environmentVariables = environmentVariables;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -250,6 +270,10 @@ public class XCScheme {
 
     public String getBuildConfiguration() {
       return buildConfiguration;
+    }
+
+    public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
+      return environmentVariables;
     }
   }
 

@@ -919,6 +919,7 @@ public class WorkspaceAndProjectGenerator {
               remoteRunnablePath,
               XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
               targetToProjectPathMap,
+              schemeConfigArg.getEnvironmentVariables(),
               schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);

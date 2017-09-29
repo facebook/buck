@@ -97,6 +97,9 @@ public class XcodeWorkspaceConfigDescription
     @Value.NaturalOrder
     ImmutableSortedMap<String, BuildTarget> getExtraSchemes();
 
+    Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
+        getEnvironmentVariables();
+
     Optional<Boolean> getIsRemoteRunnable();
 
     Optional<String> getExplicitRunnablePath();
