@@ -46,6 +46,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -193,7 +194,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     APKModuleGraph apkModuleGraph = enhancementResult.getAPKModuleGraph();
     this.nativeLibAssetsDirectories =
-        convertToMapOfLists(packageableCollection.getNativeLibAssetsDirectories());
+        MoreMaps.convertMultimapToMapOfLists(packageableCollection.getNativeLibAssetsDirectories());
     this.apkModules =
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
 
@@ -259,7 +260,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     if (appModularityResult.isPresent()) {
       this.moduleMappedClasspathEntriesForConsistency =
           Optional.of(
-              convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
+              MoreMaps.convertMultimapToMapOfLists(
+                  packageableCollection.getModuleMappedClasspathEntriesToDex()));
     } else {
       this.moduleMappedClasspathEntriesForConsistency = Optional.empty();
     }
@@ -291,7 +293,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
         moduleMappedClasspathEntriesToDex =
             Optional.of(
-                convertToMapOfLists(packageableCollection.getModuleMappedClasspathEntriesToDex()));
+                MoreMaps.convertMultimapToMapOfLists(
+                    packageableCollection.getModuleMappedClasspathEntriesToDex()));
     NonPreDexedDexBuildable nonPreDexedDexBuildable =
         new NonPreDexedDexBuildable(
             aaptGeneratedProguardConfigFile,
@@ -308,18 +311,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             projectFilesystem,
             buildTarget);
     return nonPreDexedDexBuildable;
-  }
-
-  private static <K extends Comparable<?>, V>
-      ImmutableSortedMap<K, ImmutableList<V>> convertToMapOfLists(
-          ImmutableMultimap<K, V> multimap) {
-    return multimap
-        .asMap()
-        .entrySet()
-        .stream()
-        .collect(
-            MoreCollectors.toImmutableSortedMap(
-                e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")

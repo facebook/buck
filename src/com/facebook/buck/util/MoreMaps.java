@@ -18,7 +18,9 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,5 +68,17 @@ public class MoreMaps {
     Map<K, V> mutableMap = new HashMap<>(first);
     mutableMap.putAll(second);
     return ImmutableSortedMap.copyOf(mutableMap);
+  }
+
+  public static <K extends Comparable<?>, V>
+      ImmutableSortedMap<K, ImmutableList<V>> convertMultimapToMapOfLists(
+          ImmutableMultimap<K, V> multimap) {
+    return multimap
+        .asMap()
+        .entrySet()
+        .stream()
+        .collect(
+            MoreCollectors.toImmutableSortedMap(
+                e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));
   }
 }
