@@ -1608,6 +1608,8 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setCompilerFlags(ImmutableList.of("-fhello"))
             .setPreprocessorFlags(ImmutableList.of("-fworld"))
+            .setSwiftCompilerFlags(
+                StringWithMacrosUtils.fromStrings(ImmutableList.of("-fhello-swift")))
             .build();
 
     ProjectGenerator projectGenerator =
@@ -1622,6 +1624,7 @@ public class ProjectGeneratorTest {
     assertEquals(
         "$(inherited) -Wno-deprecated -Wno-conversion -fhello -fworld",
         settings.get("OTHER_CFLAGS"));
+    assertEquals("$(inherited) -fhello-swift", settings.get("OTHER_SWIFT_FLAGS"));
   }
 
   @Test
