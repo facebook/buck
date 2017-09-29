@@ -70,7 +70,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -209,26 +208,6 @@ public class AndroidBinaryDescription
                 targetGraph, buildTarget, Optional.of(args.getApplicationModuleTargets()));
       }
 
-      ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
-          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
-
-      // If the old boolean version of this argument was specified, make sure the new form
-      // was not specified, and allow the old form to override the default.
-      if (args.getUseAndroidProguardConfigWithOptimizations().isPresent()) {
-        Preconditions.checkArgument(
-            !args.getAndroidSdkProguardConfig().isPresent(),
-            "The deprecated use_android_proguard_config_with_optimizations parameter"
-                + " cannot be used with android_sdk_proguard_config.");
-        LOG.error(
-            "Target %s specified use_android_proguard_config_with_optimizations, "
-                + "which is deprecated. Use android_sdk_proguard_config.",
-            buildTarget);
-        androidSdkProguardConfig =
-            args.getUseAndroidProguardConfigWithOptimizations().orElse(false)
-                ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
-                : ProGuardObfuscateStep.SdkProguardType.NONE;
-      }
-
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
       if (!args.getExopackageModes().isEmpty()) {
         exopackageModes = EnumSet.copyOf(args.getExopackageModes());
@@ -242,14 +221,11 @@ public class AndroidBinaryDescription
       DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
       PackageType packageType = getPackageType(args);
-      boolean shouldProguard =
-          args.getProguardConfig().isPresent()
-              || (args.getAndroidSdkProguardConfig().isPresent()
-                  && !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
-                      args.getAndroidSdkProguardConfig().get()));
 
-      // TODO(cjhopman): wtf, why is this different?
-      boolean shouldProguardDifferent =
+      ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
+          args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
+
+      boolean shouldProguard =
           args.getProguardConfig().isPresent()
               || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(androidSdkProguardConfig);
 
@@ -364,7 +340,7 @@ public class AndroidBinaryDescription
               dxConfig.getDxMaxHeapSize(),
               args.getIsCacheable(),
               args.getAndroidAppModularityResult(),
-              shouldProguardDifferent);
+              shouldProguard);
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(
@@ -548,8 +524,6 @@ public class AndroidBinaryDescription
     Optional<DexStore> getDexCompression();
 
     Optional<ProGuardObfuscateStep.SdkProguardType> getAndroidSdkProguardConfig();
-
-    Optional<Boolean> getUseAndroidProguardConfigWithOptimizations();
 
     Optional<Integer> getOptimizationPasses();
 
