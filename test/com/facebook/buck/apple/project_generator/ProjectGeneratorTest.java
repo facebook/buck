@@ -444,7 +444,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testModularFrameworkHeaderMapInclusionAsDependency() throws IOException {
+  public void testModularLibraryInterfaceMapInclusionAsDependency() throws IOException {
     BuildTarget frameworkBundleTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "framework");
     BuildTarget frameworkLibTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
@@ -489,6 +489,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
             ImmutableSet.of(frameworkLibNode, frameworkBundleNode, appBinaryNode, appBundleNode),
+            ImmutableSet.of(frameworkBundleNode, appBinaryNode, appBundleNode),
             ImmutableSet.of());
 
     projectGenerator.createXcodeProjects();
@@ -497,14 +498,14 @@ public class ProjectGeneratorTest {
     assertNotNull(project);
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(8));
+    assertThat(headerSymlinkTrees, hasSize(6));
 
     assertTrue(headerSymlinkTrees.contains(Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub")));
     assertThatHeaderMapWithoutSymLinksIsEmpty(Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"));
   }
 
   @Test
-  public void testModularFrameworkHeaderMapInclusionInTargetItself() throws IOException {
+  public void testModularLibraryInterfaceInclusionInTargetItself() throws IOException {
     BuildTarget libTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
 
     TargetNode<?, ?> libNode =
@@ -531,7 +532,9 @@ public class ProjectGeneratorTest {
     assertThat(headerSymlinkTrees, hasSize(2));
 
     assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    assertThatHeaderMapWithoutSymLinksIsEmpty(Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
+        ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h"));
   }
 
   @Test
@@ -562,12 +565,14 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGeneratorForCombinedProject(
-            ImmutableSet.of(libNode, frameworkNode), ImmutableSet.of());
+            ImmutableSet.of(libNode, frameworkNode),
+            ImmutableSet.of(frameworkNode),
+            ImmutableSet.of());
 
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget libPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    PBXTarget libPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:framework");
 
     ImmutableMap<String, String> buildSettings =
         getBuildSettings(bundleTarget, libPBXTarget, configName);
@@ -4781,26 +4786,50 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Collection<TargetNode<?, ?>> nodes) {
-    return createProjectGeneratorForCombinedProject(nodes, ImmutableSet.of());
+      Collection<TargetNode<?, ?>> allNodes) {
+    return createProjectGeneratorForCombinedProject(allNodes, allNodes, ImmutableSet.of());
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Collection<TargetNode<?, ?>> nodes,
+      Collection<TargetNode<?, ?>> allNodes,
+      Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGeneratorForCombinedProject(
-        nodes, projectGeneratorOptions, getBuildRuleResolverNodeFunction(targetGraph));
+        allNodes,
+        initialTargetNodes,
+        projectGeneratorOptions,
+        getBuildRuleResolverNodeFunction(targetGraph));
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Collection<TargetNode<?, ?>> nodes,
+      Collection<TargetNode<?, ?>> allNodes,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+    return createProjectGeneratorForCombinedProject(
+        allNodes, allNodes, projectGeneratorOptions, getBuildRuleResolverNodeFunction(targetGraph));
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      Collection<TargetNode<?, ?>> allNodes,
+      ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+    return createProjectGeneratorForCombinedProject(
+        allNodes, allNodes, projectGeneratorOptions, buildRuleResolverForNode);
+  }
+
+  private ProjectGenerator createProjectGeneratorForCombinedProject(
+      Collection<TargetNode<?, ?>> allNodes,
+      Collection<TargetNode<?, ?>> initialTargetNodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets =
-        nodes.stream().map(TargetNode::getBuildTarget).collect(MoreCollectors.toImmutableSet());
+        initialTargetNodes
+            .stream()
+            .map(TargetNode::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet());
 
-    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
+    final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     final ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
     return new ProjectGenerator(
