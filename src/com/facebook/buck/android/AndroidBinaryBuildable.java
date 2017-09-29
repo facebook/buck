@@ -61,7 +61,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
@@ -72,7 +71,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -138,23 +136,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
       DexSplitMode dexSplitMode,
-      ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
-      Optional<Integer> optimizationPasses,
-      Optional<SourcePath> proguardConfig,
-      Optional<SourcePath> proguardJarOverride,
       Optional<RedexOptions> redexOptions,
-      String proguardMaxHeapSize,
-      Optional<List<String>> proguardJvmArgs,
-      Optional<String> proguardAgentPath,
       ImmutableSet<TargetCpuType> cpuFilters,
       EnumSet<AndroidBinary.ExopackageMode> exopackageModes,
       Optional<Arg> preprocessJavaClassesBash,
-      boolean reorderClassesIntraDex,
-      Optional<SourcePath> dexReorderToolFile,
-      Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      ListeningExecutorService dxExecutorService,
       Optional<Integer> xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
@@ -164,11 +151,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePath resourcesApkPath,
       ImmutableList<SourcePath> primaryApkAssetsZips,
       SourcePath aaptGeneratedProguardConfigFile,
-      Optional<String> dxMaxHeapSize,
       ImmutableList<SourcePath> proguardConfigs,
       boolean isCompressResources,
       Optional<SourcePath> appModularityResult,
-      boolean shouldProguard) {
+      boolean shouldProguard,
+      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
 
@@ -264,24 +251,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                   enhancementResult.getCompiledUberRDotJava(),
                   enhancementResult.getClasspathEntriesToDex(),
                   apkModuleGraph,
-                  NonPredexedDexBuildableArgs.builder()
-                      .setProguardAgentPath(proguardAgentPath)
-                      .setProguardJarOverride(proguardJarOverride)
-                      .setProguardMaxHeapSize(proguardMaxHeapSize)
-                      .setSdkProguardConfig(sdkProguardConfig)
-                      .setPreprocessJavaClassesBash(preprocessJavaClassesBash)
-                      .setReorderClassesIntraDex(reorderClassesIntraDex)
-                      .setDexReorderToolFile(dexReorderToolFile)
-                      .setDexReorderDataDumpFile(dexReorderDataDumpFile)
-                      .setDxExecutorService(dxExecutorService)
-                      .setDxMaxHeapSize(dxMaxHeapSize)
-                      .setOptimizationPasses(optimizationPasses)
-                      .setProguardJvmArgs(proguardJvmArgs)
-                      .setSkipProguard(skipProguard)
-                      .setJavaRuntimeLauncher(javaRuntimeLauncher)
-                      .setProguardConfigPath(proguardConfig)
-                      .setShouldProguard(shouldProguard)
-                      .build(),
+                  nonPreDexedDexBuildableArgs,
                   filesystem,
                   buildTarget));
     }

@@ -126,6 +126,30 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
+    boolean shouldProguard =
+        apkUnderTest.getProguardConfig().isPresent()
+            || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
+                apkUnderTest.getSdkProguardConfig());
+    NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
+        NonPredexedDexBuildableArgs.builder()
+            .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
+            .setProguardJarOverride(proGuardConfig.getProguardJarOverride())
+            .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
+            .setSdkProguardConfig(apkUnderTest.getSdkProguardConfig())
+            .setPreprocessJavaClassesBash(Optional.empty())
+            .setReorderClassesIntraDex(false)
+            .setDexReorderToolFile(Optional.empty())
+            .setDexReorderDataDumpFile(Optional.empty())
+            .setDxExecutorService(dxExecutorService)
+            .setDxMaxHeapSize(Optional.empty())
+            .setOptimizationPasses(apkUnderTest.getOptimizationPasses())
+            .setProguardJvmArgs(apkUnderTest.getProguardJvmArgs())
+            .setSkipProguard(apkUnderTest.getSkipProguard())
+            .setJavaRuntimeLauncher(apkUnderTest.getJavaRuntimeLauncher())
+            .setProguardConfigPath(apkUnderTest.getProguardConfig())
+            .setShouldProguard(shouldProguard)
+            .build();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
@@ -179,23 +203,16 @@ public class AndroidInstrumentationApkDescription
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
 
-    boolean shouldProguard =
-        apkUnderTest.getProguardConfig().isPresent()
-            || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
-                apkUnderTest.getSdkProguardConfig());
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
         params,
         ruleFinder,
-        proGuardConfig.getProguardJarOverride(),
-        proGuardConfig.getProguardMaxHeapSize(),
-        proGuardConfig.getProguardAgentPath(),
         apkUnderTest,
         rulesToExcludeFromDex,
         enhancementResult,
-        dxExecutorService,
-        shouldProguard);
+        shouldProguard,
+        nonPreDexedDexBuildableArgs);
   }
 
   @BuckStyleImmutable

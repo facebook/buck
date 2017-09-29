@@ -234,8 +234,46 @@ public class AndroidBinaryDescription
               && !shouldProguard
               && !args.getPreprocessJavaClassesBash().isPresent();
 
-      ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
+      // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
+      // target may be mentioned in that parameter, it may not be present as a build rule.
+      ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
+      for (BuildTarget noDxTarget : args.getNoDx()) {
+        Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
+        if (ruleOptional.isPresent()) {
+          builder.add(ruleOptional.get());
+        } else {
+          LOG.info("%s: no_dx target not a dependency: %s", buildTarget, noDxTarget);
+        }
+      }
 
+      ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
+      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+          RichStream.from(buildRulesToExcludeFromDex)
+              .filter(JavaLibrary.class)
+              .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+
+      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
+          NonPredexedDexBuildableArgs.builder()
+              .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
+              .setProguardJarOverride(proGuardConfig.getProguardJarOverride())
+              .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
+              .setSdkProguardConfig(androidSdkProguardConfig)
+              .setPreprocessJavaClassesBash(
+                  getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots))
+              .setReorderClassesIntraDex(args.isReorderClassesIntraDex())
+              .setDexReorderToolFile(args.getDexReorderToolFile())
+              .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
+              .setDxExecutorService(dxExecutorService)
+              .setDxMaxHeapSize(dxConfig.getDxMaxHeapSize())
+              .setOptimizationPasses(args.getOptimizationPasses())
+              .setProguardJvmArgs(Optional.of(args.getProguardJvmArgs()))
+              .setSkipProguard(args.isSkipProguard())
+              .setJavaRuntimeLauncher(javaOptions.getJavaRuntimeLauncher())
+              .setProguardConfigPath(args.getProguardConfig())
+              .setShouldProguard(shouldProguard)
+              .build();
+
+      ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
@@ -285,34 +323,13 @@ public class AndroidBinaryDescription
               getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots));
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
-      // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
-      // target may be mentioned in that parameter, it may not be present as a build rule.
-      ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-      for (BuildTarget noDxTarget : args.getNoDx()) {
-        Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
-        if (ruleOptional.isPresent()) {
-          builder.add(ruleOptional.get());
-        } else {
-          LOG.info("%s: no_dx target not a dependency: %s", buildTarget, noDxTarget);
-        }
-      }
-
-      ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-          RichStream.from(buildRulesToExcludeFromDex)
-              .filter(JavaLibrary.class)
-              .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
-
       AndroidBinary androidBinary =
           new AndroidBinary(
               buildTarget,
               projectFilesystem,
               params,
               ruleFinder,
-              proGuardConfig.getProguardJarOverride(),
-              proGuardConfig.getProguardMaxHeapSize(),
               Optional.of(args.getProguardJvmArgs()),
-              proGuardConfig.getProguardAgentPath(),
               (Keystore) keystore,
               dexSplitMode,
               args.getNoDx(),
@@ -328,19 +345,15 @@ public class AndroidBinaryDescription
               getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots),
               rulesToExcludeFromDex,
               result,
-              args.isReorderClassesIntraDex(),
-              args.getDexReorderToolFile(),
-              args.getDexReorderDataDumpFile(),
               args.getXzCompressionLevel(),
-              dxExecutorService,
               args.isPackageAssetLibraries(),
               args.isCompressAssetLibraries(),
               args.getManifestEntries(),
               javaOptions.getJavaRuntimeLauncher(),
-              dxConfig.getDxMaxHeapSize(),
               args.getIsCacheable(),
               args.getAndroidAppModularityResult(),
-              shouldProguard);
+              shouldProguard,
+              nonPreDexedDexBuildableArgs);
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(

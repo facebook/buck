@@ -54,7 +54,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -174,10 +173,7 @@ public class AndroidBinary extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      Optional<SourcePath> proguardJarOverride,
-      String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
-      Optional<String> proguardAgentPath,
       Keystore keystore,
       DexSplitMode dexSplitMode,
       Set<BuildTarget> buildTargetsToExcludeFromDex,
@@ -193,19 +189,15 @@ public class AndroidBinary extends AbstractBuildRule
       Optional<Arg> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      boolean reorderClassesIntraDex,
-      Optional<SourcePath> dexReorderToolFile,
-      Optional<SourcePath> dexReorderDataDumpFile,
       Optional<Integer> xzCompressionLevel,
-      ListeningExecutorService dxExecutorService,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
-      Optional<String> dxMaxHeapSize,
       boolean isCacheable,
       Optional<SourcePath> appModularityResult,
-      boolean shouldProguard) {
+      boolean shouldProguard,
+      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -258,23 +250,12 @@ public class AndroidBinary extends AbstractBuildRule
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
             dexSplitMode,
-            sdkProguardConfig,
-            optimizationPasses,
-            proguardConfig,
-            proguardJarOverride,
             redexOptions,
-            proguardMaxHeapSize,
-            proguardJvmArgs,
-            proguardAgentPath,
             this.cpuFilters,
             exopackageModes,
             preprocessJavaClassesBash,
-            reorderClassesIntraDex,
-            dexReorderToolFile,
-            dexReorderDataDumpFile,
             rulesToExcludeFromDex,
             enhancementResult,
-            dxExecutorService,
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
@@ -284,11 +265,11 @@ public class AndroidBinary extends AbstractBuildRule
             enhancementResult.getPrimaryResourcesApkPath(),
             enhancementResult.getPrimaryApkAssetZips(),
             enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile(),
-            dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
             resourceCompressionMode.isCompressResources(),
             this.appModularityResult,
-            shouldProguard);
+            shouldProguard,
+            nonPreDexedDexBuildableArgs);
     params =
         params.withExtraDeps(
             () ->
