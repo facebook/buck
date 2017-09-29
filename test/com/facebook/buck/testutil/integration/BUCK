@@ -314,4 +314,7 @@ python_library(
         "//scripts/...",
         "//test/...",
     ],
+    deps = [
+        "//programs:buck",
+    ],
 )
