@@ -428,4 +428,17 @@ public class CxxLibraryIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:lib_with_location_macro#default,static").assertSuccess();
   }
+
+  @Test
+  public void buildWithUniqueLibraryNames() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "cxx.unique_library_name_enabled=true", "//:foo#default,static")
+        .assertSuccess();
+    Path rootPath = tmp.getRoot();
+    assertTrue(
+        Files.exists(rootPath.resolve("buck-out/gen/foo#default,static/libfoo-Z2_rLdsOWS.a")));
+  }
 }

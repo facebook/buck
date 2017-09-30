@@ -192,7 +192,8 @@ public class HaskellLibraryDescription
                 ? CxxSourceRuleFactory.PicType.PDC
                 : CxxSourceRuleFactory.PicType.PIC,
             platform.getCxxPlatform().getStaticLibraryExtension(),
-            hsProfile ? "_p" : ""),
+            hsProfile ? "_p" : "",
+            cxxBuckConfig.isUniqueLibraryNameEnabled()),
         compileRule.getObjects(),
         // TODO(#20466393): Currently, GHC produces nono-deterministically sized object files.
         // This means that it's possible to get a thin archive fetched from cache originating from

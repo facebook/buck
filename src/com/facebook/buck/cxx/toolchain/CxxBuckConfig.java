@@ -268,6 +268,10 @@ public class CxxBuckConfig {
     return delegate.getToolProvider(cxxSection, name);
   }
 
+  public boolean isUniqueLibraryNameEnabled() {
+    return delegate.getBooleanValue(cxxSection, "unique_library_name_enabled", false);
+  }
+
   /** @return whether to enable shared library interfaces. */
   public SharedLibraryInterfaceParams.Type getSharedLibraryInterfaces() {
 

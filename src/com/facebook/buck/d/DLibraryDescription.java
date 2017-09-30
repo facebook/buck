@@ -97,8 +97,6 @@ public class DLibraryDescription
           buildRuleResolver,
           pathResolver,
           ruleFinder,
-          cxxPlatform,
-          dBuckConfig,
           /* compilerFlags */ ImmutableList.of(),
           args.getSrcs(),
           dIncludes,
@@ -116,8 +114,6 @@ public class DLibraryDescription
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       SourceList sources,
       DIncludes dIncludes,
@@ -148,7 +144,8 @@ public class DLibraryDescription
             buildTarget,
             cxxPlatform.getFlavor(),
             pic,
-            cxxPlatform.getStaticLibraryExtension());
+            cxxPlatform.getStaticLibraryExtension(),
+            cxxBuckConfig.isUniqueLibraryNameEnabled());
 
     return Archive.from(
         staticTarget,

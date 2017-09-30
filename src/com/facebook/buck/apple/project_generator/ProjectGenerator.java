@@ -584,7 +584,7 @@ public class ProjectGenerator {
       throws IOException {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
-    String productName = getProductNameForBuildTarget(buildTarget);
+    String productName = getProductNameForBuildTargetNode(targetNode);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
     Path scriptPath = halideBuckConfig.getXcodeCompileScriptPath();
@@ -950,7 +950,7 @@ public class ProjectGenerator {
     final boolean containsSwiftCode =
         projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
-    String buildTargetName = getProductNameForBuildTarget(buildTarget);
+    String buildTargetName = getProductNameForBuildTargetNode(buildTargetNode);
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(pathRelativizer, this::resolveSourcePath);
@@ -1145,8 +1145,7 @@ public class ProjectGenerator {
         }
       } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
         TargetNode<AppleBundleDescriptionArg, ?> bundleLoader = bundleLoaderNode.get();
-        String bundleLoaderProductName =
-            getProductName(bundleLoader, bundleLoader.getBuildTarget());
+        String bundleLoaderProductName = getProductName(bundleLoader);
         String bundleLoaderBundleName =
             bundleLoaderProductName
                 + "."
@@ -1221,7 +1220,7 @@ public class ProjectGenerator {
 
       if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
         extraSettingsBuilder.put(
-            "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTarget));
+            "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTargetNode));
       }
 
       Optional<SourcePath> prefixHeaderOptional =
@@ -1258,7 +1257,7 @@ public class ProjectGenerator {
             "DERIVED_FILE_DIR", derivedSourceDirRelativeToProjectRoot.toString());
       }
 
-      defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode, buildTarget));
+      defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode));
       bundle.ifPresent(
           bundleNode ->
               defaultSettingsBuilder.put(
@@ -1627,9 +1626,9 @@ public class ProjectGenerator {
     }
   }
 
-  private static String getProductName(TargetNode<?, ?> buildTargetNode, BuildTarget buildTarget) {
+  private String getProductName(TargetNode<?, ?> buildTargetNode) {
     return getProductNameForTargetNode(buildTargetNode)
-        .orElse(getProductNameForBuildTarget(buildTarget));
+        .orElse(getProductNameForBuildTargetNode(buildTargetNode));
   }
 
   private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(
@@ -2309,8 +2308,18 @@ public class ProjectGenerator {
     }
   }
 
-  private static String getProductNameForBuildTarget(BuildTarget buildTarget) {
-    return buildTarget.getShortName();
+  private String getProductNameForBuildTargetNode(TargetNode<?, ?> targetNode) {
+    Optional<TargetNode<CxxLibraryDescription.CommonArg, ?>> library =
+        getLibraryNode(targetGraph, targetNode);
+    boolean isStaticLibrary =
+        library.isPresent()
+            && !AppleLibraryDescription.isNotStaticallyLinkedLibraryNode(library.get());
+    if (isStaticLibrary) {
+      return CxxDescriptionEnhancer.getStaticLibraryBasename(
+          targetNode.getBuildTarget(), "", cxxBuckConfig.isUniqueLibraryNameEnabled());
+    } else {
+      return targetNode.getBuildTarget().getShortName();
+    }
   }
 
   private static Path getDerivedSourcesDirectoryForBuildTarget(
@@ -2330,14 +2339,13 @@ public class ProjectGenerator {
     return derivedSourcesDir;
   }
 
-  private static String getSwiftObjCGeneratedHeaderName(BuildTarget buildTarget) {
-    return getProductNameForBuildTarget(buildTarget) + "-Swift.h";
+  private String getSwiftObjCGeneratedHeaderName(TargetNode<?, ?> node) {
+    return getProductNameForBuildTargetNode(node) + "-Swift.h";
   }
 
-  private static Path getSwiftObjCGeneratedHeaderPath(
-      BuildTarget buildTarget, ProjectFilesystem fs) {
-    Path derivedSourcesDir = getDerivedSourcesDirectoryForBuildTarget(buildTarget, fs);
-    return derivedSourcesDir.resolve(getSwiftObjCGeneratedHeaderName(buildTarget));
+  private Path getSwiftObjCGeneratedHeaderPath(TargetNode<?, ?> node, ProjectFilesystem fs) {
+    Path derivedSourcesDir = getDerivedSourcesDirectoryForBuildTarget(node.getBuildTarget(), fs);
+    return derivedSourcesDir.resolve(getSwiftObjCGeneratedHeaderName(node));
   }
 
   private ImmutableMap<Path, Path> getSwiftPublicHeaderMapEntriesForTarget(
@@ -2363,12 +2371,12 @@ public class ProjectGenerator {
     BuildTarget buildTarget = appleNode.getBuildTarget();
     Path headerPrefix =
         AppleDescriptions.getHeaderPathPrefix(appleNode.getConstructorArg(), buildTarget);
-    Path relativePath = headerPrefix.resolve(getSwiftObjCGeneratedHeaderName(buildTarget));
+    Path relativePath = headerPrefix.resolve(getSwiftObjCGeneratedHeaderName(appleNode));
 
     ImmutableSortedMap.Builder<Path, Path> builder = ImmutableSortedMap.naturalOrder();
     builder.put(
         relativePath,
-        getSwiftObjCGeneratedHeaderPath(buildTarget, projectFilesystem).toAbsolutePath());
+        getSwiftObjCGeneratedHeaderPath(appleNode, projectFilesystem).toAbsolutePath());
 
     return builder.build();
   }
@@ -2750,7 +2758,7 @@ public class ProjectGenerator {
   }
 
   private SourceTreePath getProductsSourceTreePath(TargetNode<?, ?> targetNode) {
-    String productName = getProductNameForBuildTarget(targetNode.getBuildTarget());
+    String productName = getProductNameForBuildTargetNode(targetNode);
     String productOutputName;
 
     if (targetNode.getDescription() instanceof AppleLibraryDescription

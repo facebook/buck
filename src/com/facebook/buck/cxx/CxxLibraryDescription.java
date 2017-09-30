@@ -649,7 +649,8 @@ public class CxxLibraryDescription
             buildTarget,
             cxxPlatform.getFlavor(),
             pic,
-            cxxPlatform.getStaticLibraryExtension());
+            cxxPlatform.getStaticLibraryExtension(),
+            cxxBuckConfig.isUniqueLibraryNameEnabled());
     return Archive.from(
         staticTarget,
         projectFilesystem,

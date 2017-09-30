@@ -238,7 +238,8 @@ public class HalideLibraryDescription
             buildTarget,
             platform.getFlavor(),
             CxxSourceRuleFactory.PicType.PIC,
-            platform.getStaticLibraryExtension()),
+            platform.getStaticLibraryExtension(),
+            cxxBuckConfig.isUniqueLibraryNameEnabled()),
         ImmutableList.of(
             new ExplicitBuildTargetSourcePath(
                 halideCompileBuildTarget,
