@@ -1,5 +1,6 @@
 import ast
 from typing import Dict, List
+import logging
 
 import repository
 import include_def
@@ -142,5 +143,6 @@ def from_content(content: str):
 
 
 def from_path(path: str):
+    logging.debug('Creating build file from ' + path)
     with open(path, 'r') as f:
         return from_content(f.read())

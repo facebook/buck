@@ -7,6 +7,7 @@ import label
 import argparse
 import json
 import os
+import logging
 from typing import List
 
 
@@ -23,11 +24,12 @@ class StoreKeyValuePair(argparse.Action):
 
 
 def dump_exported_symbols(args):
+    """Print all symbols exported using include_defs in a build file."""
+    logging.debug('Dumping exported symbols for ' + args.build_file)
     bf = build_file.from_path(args.build_file)
     repo = repository.Repository(args.cell_roots)
     symbols = bf.get_exported_symbols_transitive_closure(repo)
     if args.json:
-        import json
         print(json.dumps(symbols))
     else:
         print(os.linesep.join(symbols))
@@ -35,6 +37,7 @@ def dump_exported_symbols(args):
 
 def dump_export_map(args):
     """Prints export map that includes all included definitions and symbols they export."""
+    logging.debug('Dumping export map for ' + args.build_file)
     bf = build_file.from_path(args.build_file)
     repo = repository.Repository(args.cell_roots)
     export_map = bf.get_export_map(repo)
@@ -84,7 +87,12 @@ def main():
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--cell_root', action=StoreKeyValuePair, metavar='CELL=PATH',
                         dest='cell_roots')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Enabled verbose diagnostic.')
     args = parser.parse_args()
+    logging_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=logging_level, format=(
+        '%(asctime)s [%(levelname)s][%(filename)s:%(lineno)d] %(message)s'
+    ))
     args.func(args)
 
 
