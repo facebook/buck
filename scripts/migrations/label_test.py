@@ -41,3 +41,9 @@ class LabelTest(unittest.TestCase):
 
     def test_can_convert_to_import_string(self):
         self.assertEqual('cell//pkg:name', label.from_string('cell//pkg:name').to_import_string())
+
+    def test_can_convert_to_import_string_without_cell(self):
+        self.assertEqual('//pkg:name', label.from_string('//pkg:name').to_import_string())
+
+    def test_can_convert_to_import_string_without_name(self):
+        self.assertEqual('cell//pkg', label.from_string('cell//pkg').to_import_string())
