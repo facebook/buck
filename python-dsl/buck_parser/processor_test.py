@@ -834,6 +834,15 @@ class BuckTest(unittest.TestCase):
             os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz')),
             build_file_processor._get_load_path('foo//bar:baz'))
 
+    def test_load_path_with_skylark_style_cell_is_resolved(self):
+        build_file_processor = self.create_build_file_processor(
+            cell_roots={
+                'foo': os.path.abspath(os.path.join(self.project_root, '../cell'))
+            })
+        self.assertEqual(
+            os.path.abspath(os.path.join(self.project_root, '../cell/bar/baz')),
+            build_file_processor._get_load_path('@foo//bar:baz'))
+
     def test_json_encoding_failure(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         fake_stdout = StringIO.StringIO()
