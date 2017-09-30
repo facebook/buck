@@ -19,7 +19,7 @@ class Label(collections.namedtuple('Label', ['cell', 'package', 'name'])):
         return self.cell + '//' + self.package + (':' + self.name if self.name is not None else '')
 
 
-__LABEL_PATTERN = re.compile('(?P<cell>\w+)?//(?P<package>[\w/]+)(:(?P<name>\w+))?')
+__LABEL_PATTERN = re.compile('(?P<cell>\w+)?//(?P<package>[\w./]+)(:(?P<name>\w+))?')
 
 
 def from_string(string: str) -> Label:
