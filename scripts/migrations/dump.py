@@ -41,16 +41,27 @@ def dump_export_map(args):
     bf = build_file.from_path(args.build_file)
     repo = repository.Repository(args.repository, args.cell_roots)
     export_map = bf.get_export_map(repo)
+
+    def to_load_import_string(import_label: label):
+        pkg = import_label.package
+        # include_defs package includes a file name, so we have to split it
+        # into file name
+        file_name = pkg.split('/')[-1]
+        # and it's prefix - which is the new package
+        pkg = '/'.join(pkg.split('/')[:-1])
+        load_fn_cell = args.cell_prefix + import_label.cell if import_label.cell else ''
+        return load_fn_cell + '//' + pkg + ':' + file_name
+
+    if args.use_load_function_import_string_format:
+        new_export_map = {}
+        for import_string, exported_symbols in export_map.items():
+            new_export_map[
+                to_load_import_string(label.from_string(import_string))] = exported_symbols
+        export_map = new_export_map
+
     if args.print_as_load_functions:
         def to_load_function(import_label: label, symbols: List[str]):
-            pkg = import_label.package
-            # include_defs package includes a file name, so we have to split it
-            # into file name
-            file_name = pkg.split('/')[-1]
-            # and it's prefix - which is the new package
-            pkg = '/'.join(pkg.split('/')[:-1])
-            load_fn_cell = args.cell_prefix + import_label.cell if import_label.cell else ''
-            import_string = load_fn_cell + '//' + pkg + ':' + file_name
+            import_string = to_load_import_string(import_label)
             function_args = map(lambda s: '"%s"' % s, symbols)
             return 'load("%s", %s)' % (import_string, ','.join(function_args))
 
@@ -86,6 +97,9 @@ def main():
              'respective imported files.')
     export_map_parser.add_argument('--cell_prefix', default='',
                                    help='The prefix to use for cells in import strings.')
+    export_map_parser.add_argument('--use_load_function_import_string_format', action='store_true',
+                                   help='Use load function import string syntax instead of '
+                                        'include_defs.')
     export_map_parser.set_defaults(func=dump_export_map)
 
     parser.add_argument('build_file', metavar='FILE')

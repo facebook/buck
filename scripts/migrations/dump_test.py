@@ -105,3 +105,15 @@ class DumpTest(unittest.TestCase):
                                 '--cell_prefix', '@', build_file_path)
 
         self.assertEqual('load("@cell//:DEFS", "foo")', output.strip())
+
+    def test_can_dump_export_map_using_load_function_import_string_format_in_json(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            build_file_path = os.path.join(temp_dir, 'BUCK')
+            with open(build_file_path, 'w') as build_file:
+                build_file.write('include_defs("cell//DEFS")')
+            with open(os.path.join(temp_dir, 'DEFS'), 'w') as defs_file:
+                defs_file.write('foo = "FOO"')
+            output = self._dump('--cell_root', 'cell=' + temp_dir, '--json', 'export_map',
+                                '--use_load_function_import_string_format', build_file_path)
+
+        self.assertEqual('{"cell//:DEFS": ["foo"]}', output.strip())
