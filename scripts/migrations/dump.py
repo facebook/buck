@@ -44,8 +44,11 @@ def dump_export_map(args):
     if args.print_as_load_functions:
         def to_load_function(import_label: label, symbols: List[str]):
             pkg = import_label.package
+            # include_defs package includes a file name, so we have to split it
+            # into file name
             file_name = pkg.split('/')[-1]
-            pkg = pkg[:-len(file_name)]
+            # and it's prefix - which is the new package
+            pkg = '/'.join(pkg.split('/')[:-1])
             load_fn_cell = '@' + import_label.cell if import_label.cell else ''
             import_string = load_fn_cell + '//' + pkg + ':' + file_name
             function_args = map(lambda s: '"%s"' % s, symbols)
