@@ -60,7 +60,7 @@ class Clazz:
                 buck_file.write('foo = "FOO"')
             with open(os.path.join(package_dir, 'DEFS'), 'w') as defs_file:
                 defs_file.write('bar = "BAR"')
-            repo = repository.Repository({'cell': tmp_dir})
+            repo = repository.Repository('/repo', {'cell': tmp_dir})
             self.assertEqual(['foo', 'bar'],
                              build_file.from_path(
                                  build_file_path).get_exported_symbols_transitive_closure(
@@ -92,7 +92,7 @@ foo('baz')
                 defs_file.write('bar = "BAR"')
             with open(os.path.join(package_dir, 'DEFS2'), 'w') as defs_file:
                 defs_file.write('baz = "BAZ"')
-            repo = repository.Repository({'cell': tmp_dir})
+            repo = repository.Repository('/repo', {'cell': tmp_dir})
             self.assertEqual({
                 'cell//pkg/DEFS': ['bar'],
                 'cell//pkg/DEFS2': ['baz'],

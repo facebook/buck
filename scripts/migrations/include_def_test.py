@@ -11,7 +11,7 @@ class IncludeDefTest(unittest.TestCase):
         self.assertEqual('//foo/DEFS', include.get_location())
 
     def test_can_get_include_path(self):
-        repo = repository.Repository({'cell': '/repo/cell'})
+        repo = repository.Repository('/repo', {'cell': '/repo/cell'})
         include = self._parse_include_def('include_defs("cell//pkg/DEFS")')
         self.assertEqual('/repo/cell/pkg/DEFS', include.get_include_path(repo))
 
