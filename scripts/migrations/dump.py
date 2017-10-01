@@ -49,7 +49,7 @@ def dump_export_map(args):
             file_name = pkg.split('/')[-1]
             # and it's prefix - which is the new package
             pkg = '/'.join(pkg.split('/')[:-1])
-            load_fn_cell = '@' + import_label.cell if import_label.cell else ''
+            load_fn_cell = args.cell_prefix + import_label.cell if import_label.cell else ''
             import_string = load_fn_cell + '//' + pkg + ':' + file_name
             function_args = map(lambda s: '"%s"' % s, symbols)
             return 'load("%s", %s)' % (import_string, ','.join(function_args))
@@ -84,6 +84,8 @@ def main():
         action='store_true',
         help='Print export map as a series of load functions which import all symbols exported by '
              'respective imported files.')
+    export_map_parser.add_argument('--cell_prefix', default='',
+                                   help='The prefix to use for cells in import strings.')
     export_map_parser.set_defaults(func=dump_export_map)
 
     parser.add_argument('build_file', metavar='FILE')

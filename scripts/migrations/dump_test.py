@@ -64,7 +64,7 @@ class DumpTest(unittest.TestCase):
             output = self._dump('--cell_root', 'cell=' + temp_dir,
                                 'export_map', '--print_as_load_functions', build_file_path)
 
-        self.assertEqual('load("@cell//:DEFS", "foo")', output.strip())
+        self.assertEqual('load("cell//:DEFS", "foo")', output.strip())
 
     def test_can_dump_export_map_as_load_functions_in_json(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -77,7 +77,7 @@ class DumpTest(unittest.TestCase):
                                 'cell=' + temp_dir, 'export_map', '--print_as_load_functions',
                                 build_file_path)
 
-        self.assertEqual('["load(\\"@cell//:DEFS\\", \\"foo\\")"]', output.strip())
+        self.assertEqual('["load(\\"cell//:DEFS\\", \\"foo\\")"]', output.strip())
 
     def test_can_dump_export_map_with_packages_as_load_functions_in_plain_text(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -91,4 +91,17 @@ class DumpTest(unittest.TestCase):
             output = self._dump('--cell_root', 'cell=' + temp_dir,
                                 'export_map', '--print_as_load_functions', build_file_path)
 
-        self.assertEqual('load("@cell//pkg:DEFS", "foo")', output.strip())
+        self.assertEqual('load("cell//pkg:DEFS", "foo")', output.strip())
+
+    def test_can_dump_export_map_as_load_functions_with_cell_prefix_in_plain_text(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            build_file_path = os.path.join(temp_dir, 'BUCK')
+            with open(build_file_path, 'w') as build_file:
+                build_file.write('include_defs("cell//DEFS")')
+            with open(os.path.join(temp_dir, 'DEFS'), 'w') as defs_file:
+                defs_file.write('foo = "FOO"')
+            output = self._dump('--cell_root', 'cell=' + temp_dir,
+                                'export_map', '--print_as_load_functions',
+                                '--cell_prefix', '@', build_file_path)
+
+        self.assertEqual('load("@cell//:DEFS", "foo")', output.strip())
