@@ -35,6 +35,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -116,7 +117,7 @@ public class Aapt2Link extends AbstractBuildRule {
         manifestEntries);
 
     Path linkTreePath =
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "link-tree");
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/link-tree");
 
     // Need to reverse the order of the rules because aapt2 allows later resources
     // to override earlier ones, but aapt gives the earlier ones precedence.
@@ -137,6 +138,11 @@ public class Aapt2Link extends AbstractBuildRule {
       symlinkMap.put(linkPath, flata);
     }
 
+    steps.add(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), linkTreePath))
+            .withRecursive(true));
     steps.add(new SymlinkTreeStep(getProjectFilesystem(), linkTreePath, symlinkMap.build()));
 
     steps.add(
