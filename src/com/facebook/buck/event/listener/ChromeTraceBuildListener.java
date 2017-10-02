@@ -162,10 +162,17 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
     writeChromeTraceMetadataEvent(
         "process_name",
+        ImmutableMap.<String, Object>builder().put("name", invocationInfo.getBuildId()).build());
+    writeChromeTraceMetadataEvent(
+        "process_labels",
         ImmutableMap.<String, Object>builder()
-            .put("user_args", invocationInfo.getUnexpandedCommandArgs())
-            .put("is_daemon", invocationInfo.getIsDaemon())
-            .put("timestamp", invocationInfo.getTimestampMillis())
+            .put(
+                "labels",
+                String.format(
+                    "user_args=%s, is_daemon=%b, timestamp=%d",
+                    invocationInfo.getUnexpandedCommandArgs(),
+                    invocationInfo.getIsDaemon(),
+                    invocationInfo.getTimestampMillis()))
             .build());
   }
 

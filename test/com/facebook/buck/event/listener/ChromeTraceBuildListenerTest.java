@@ -145,9 +145,9 @@ public class ChromeTraceBuildListenerTest {
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertThat(originalResultList, Matchers.hasSize(3));
+    assertThat(originalResultList, Matchers.hasSize(4));
 
-    ChromeTraceEvent testEvent = originalResultList.get(2);
+    ChromeTraceEvent testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo(event.getEventName()));
     assertThat(
         testEvent.getMicroTime(),
@@ -174,9 +174,9 @@ public class ChromeTraceBuildListenerTest {
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertThat(originalResultList, Matchers.hasSize(3));
+    assertThat(originalResultList, Matchers.hasSize(4));
 
-    ChromeTraceEvent testEvent = originalResultList.get(2);
+    ChromeTraceEvent testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo("test"));
     assertThat(
         testEvent.getMicroTime(),
@@ -388,10 +388,18 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "process_name",
         ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.<String, Object>builder().put("name", "BUILD_ID").build());
+
+    assertNextResult(
+        resultListCopy,
+        "process_labels",
+        ChromeTraceEvent.Phase.METADATA,
         ImmutableMap.<String, Object>builder()
-            .put("user_args", ImmutableList.of("@mode/arglist", "--foo", "--bar"))
-            .put("is_daemon", false)
-            .put("timestamp", invocationInfo.getTimestampMillis())
+            .put(
+                "labels",
+                String.format(
+                    "user_args=[@mode/arglist, --foo, --bar], is_daemon=false, timestamp=%d",
+                    invocationInfo.getTimestampMillis()))
             .build());
 
     assertNextResult(
