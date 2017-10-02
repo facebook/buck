@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -48,6 +50,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.environment.Platform;
@@ -83,12 +86,13 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
       new MacroHandler(
           ImmutableMap.of("env", new EnvironmentVariableMacroExpander(Platform.detect())));
 
-  private final Optional<String> ndkVersion;
+  private final ToolchainProvider toolchainProvider;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms;
 
   public NdkLibraryDescription(
-      Optional<String> ndkVersion, ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
-    this.ndkVersion = ndkVersion;
+      ToolchainProvider toolchainProvider,
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
   }
 
@@ -341,6 +345,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
     } else {
       sources = findSources(projectFilesystem, buildTarget.getBasePath());
     }
+    AndroidToolchain androidToolchain =
+        toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
     return new NdkLibrary(
         buildTarget,
         projectFilesystem,
@@ -351,7 +357,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
         sources,
         args.getFlags(),
         args.getIsAsset(),
-        ndkVersion,
+        androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkVersion),
         MACRO_HANDLER.getExpander(buildTarget, cellRoots, resolver));
   }
 

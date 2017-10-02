@@ -20,6 +20,7 @@ import static com.facebook.buck.io.Watchman.NULL_WATCHMAN;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.FakeBuckConfig;
@@ -28,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
@@ -93,9 +95,13 @@ public class TestCellBuilder {
             ? SdkEnvironment.create(config, executor, androidDirectoryResolver)
             : this.sdkEnvironment;
 
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+
     KnownBuildRuleTypesFactory typesFactory =
         knownBuildRuleTypesFactory == null
-            ? new KnownBuildRuleTypesFactory(executor, androidDirectoryResolver, sdkEnvironment)
+            ? new KnownBuildRuleTypesFactory(
+                executor, androidDirectoryResolver, sdkEnvironment, toolchainProvider)
             : knownBuildRuleTypesFactory;
 
     return CellProvider.createForLocalBuild(

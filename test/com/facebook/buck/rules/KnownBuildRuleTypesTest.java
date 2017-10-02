@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -167,8 +166,7 @@ public class KnownBuildRuleTypesTest {
 
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            buckConfig, filesystem, processExecutor, new FakeAndroidDirectoryResolver());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, processExecutor);
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
 
     SourcePathRuleFinder ruleFinder =
@@ -234,10 +232,7 @@ public class KnownBuildRuleTypesTest {
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     KnownBuildRuleTypes knownBuildRuleTypes1 =
         KnownBuildRuleTypesTestUtil.createInstance(
-            FakeBuckConfig.builder().build(),
-            filesystem,
-            createExecutor(),
-            new FakeAndroidDirectoryResolver());
+            FakeBuckConfig.builder().build(), filesystem, createExecutor());
 
     final Path javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
@@ -248,8 +243,7 @@ public class KnownBuildRuleTypesTest {
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "");
 
     KnownBuildRuleTypes knownBuildRuleTypes2 =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            buckConfig, filesystem, processExecutor, new FakeAndroidDirectoryResolver());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, processExecutor);
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
   }
@@ -263,8 +257,7 @@ public class KnownBuildRuleTypesTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
 
     // This would throw if "default" weren't available as a platform.
-    KnownBuildRuleTypesTestUtil.createInstance(
-        buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
   }
 
   @Test
@@ -280,8 +273,7 @@ public class KnownBuildRuleTypesTest {
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.
-    KnownBuildRuleTypesTestUtil.createInstance(
-        buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
+    KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
   }
 
   @Test
@@ -294,8 +286,7 @@ public class KnownBuildRuleTypesTest {
         ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("cflags", flag));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
     assertThat(
         knownBuildRuleTypes.getCxxPlatforms().getValue(flavor).getCflags(),
         Matchers.contains(flag));
@@ -314,8 +305,7 @@ public class KnownBuildRuleTypesTest {
             ImmutableMap.of());
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
     OcamlLibraryDescription ocamlLibraryDescription =
         (OcamlLibraryDescription)
             knownBuildRuleTypes.getDescription(
@@ -345,8 +335,7 @@ public class KnownBuildRuleTypesTest {
             ImmutableMap.of("default_cxx_platform", flavor.toString()));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     KnownBuildRuleTypes knownBuildRuleTypes =
-        KnownBuildRuleTypesTestUtil.createInstance(
-            buckConfig, filesystem, createExecutor(), new FakeAndroidDirectoryResolver());
+        KnownBuildRuleTypesTestUtil.createInstance(buckConfig, filesystem, createExecutor());
     JavaBinaryDescription javaBinaryDescription =
         (JavaBinaryDescription)
             knownBuildRuleTypes.getDescription(knownBuildRuleTypes.getBuildRuleType("java_binary"));

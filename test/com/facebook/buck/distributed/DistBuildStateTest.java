@@ -69,6 +69,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -110,8 +111,12 @@ public class DistBuildStateTest {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
+
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+
     knownBuildRuleTypesFactory =
-        new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver, sdkEnvironment);
+        new KnownBuildRuleTypesFactory(
+            processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
   }
 
   @Test

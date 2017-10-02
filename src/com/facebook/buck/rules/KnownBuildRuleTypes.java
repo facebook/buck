@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidAppModularityDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
-import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
@@ -158,6 +157,7 @@ import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -233,13 +233,11 @@ public class KnownBuildRuleTypes {
       BuckConfig config,
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
+      ToolchainProvider toolchainProvider,
       AndroidDirectoryResolver androidDirectoryResolver,
       SdkEnvironment sdkEnvironment)
       throws InterruptedException, IOException {
 
-    Platform platform = Platform.detect();
-
-    AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
@@ -258,13 +256,6 @@ public class KnownBuildRuleTypes {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
     // Setup the NDK C/C++ platforms.
-    Optional<String> ndkVersion = androidConfig.getNdkVersion();
-    // If a NDK version isn't specified, we've got to reach into the runtime environment to find
-    // out which one we will end up using.
-    if (!ndkVersion.isPresent()) {
-      ndkVersion = androidDirectoryResolver.getNdkVersion();
-    }
-
     NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
         NdkCxxPlatformsProviderFactory.create(config, filesystem, androidDirectoryResolver);
 
@@ -578,7 +569,7 @@ public class KnownBuildRuleTypes {
     builder.register(
         new LuaBinaryDescription(defaultLuaPlatform, luaPlatforms, cxxBuckConfig, pythonPlatforms));
     builder.register(new LuaLibraryDescription());
-    builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
+    builder.register(new NdkLibraryDescription(toolchainProvider, ndkCxxPlatforms));
     OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(config, defaultCxxPlatform);
     builder.register(new OcamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OcamlLibraryDescription(ocamlBuckConfig));
@@ -648,7 +639,6 @@ public class KnownBuildRuleTypes {
 
     @Nullable private FlavorDomain<CxxPlatform> cxxPlatforms;
     @Nullable private CxxPlatform defaultCxxPlatform;
-    @Nullable private ProcessExecutor processExecutor;
 
     protected Builder() {
       this.descriptions = Maps.newConcurrentMap();

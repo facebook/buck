@@ -19,9 +19,13 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
+import com.facebook.buck.cli.Main;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import java.io.IOException;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -37,13 +41,23 @@ public class NdkLibraryIntegrationTest {
   public void cxxLibraryDep() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
+    Main.KnownBuildRuleTypesFactoryFactory factoryFactory =
+        (processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider) -> {
+          TestToolchainProvider testToolchainProvider = new TestToolchainProvider();
+          testToolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+          return new KnownBuildRuleTypesFactory(
+              processExecutor, androidDirectoryResolver, sdkEnvironment, testToolchainProvider);
+        };
+
     ProjectWorkspace workspace1 =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
+    workspace1.setKnownBuildRuleTypesFactoryFactory(factoryFactory);
     workspace1.setUp();
     workspace1.runBuckBuild("//jni:foo").assertSuccess();
 
     ProjectWorkspace workspace2 =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp2);
+    workspace2.setKnownBuildRuleTypesFactoryFactory(factoryFactory);
     workspace2.setUp();
     workspace2.runBuckBuild("//jni:foo").assertSuccess();
 

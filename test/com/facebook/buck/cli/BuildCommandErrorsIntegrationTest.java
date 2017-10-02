@@ -81,9 +81,12 @@ public class BuildCommandErrorsIntegrationTest {
     workspace.setUp();
     mockDescription = new MockDescription();
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, androidDirectoryResolver, sdkEnvironment) ->
+        (processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider) ->
             new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), new FakeAndroidDirectoryResolver(), sdkEnvironment) {
+                new FakeProcessExecutor(),
+                new FakeAndroidDirectoryResolver(),
+                sdkEnvironment,
+                toolchainProvider) {
               @Override
               public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
                   throws IOException, InterruptedException {

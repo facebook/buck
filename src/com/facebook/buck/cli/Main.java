@@ -99,6 +99,8 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
@@ -327,7 +329,8 @@ public final class Main {
     KnownBuildRuleTypesFactory create(
         ProcessExecutor processExecutor,
         AndroidDirectoryResolver androidDirectoryResolver,
-        SdkEnvironment sdkEnvironment);
+        SdkEnvironment sdkEnvironment,
+        ToolchainProvider toolchainProvider);
   }
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
@@ -607,6 +610,9 @@ public final class Main {
         }
       }
 
+      ToolchainProvider toolchainProvider =
+          new DefaultToolchainProvider(clientEnvironment, buckConfig, filesystem);
+
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
@@ -638,7 +644,7 @@ public final class Main {
 
         KnownBuildRuleTypesFactory factory =
             knownBuildRuleTypesFactoryFactory.create(
-                processExecutor, androidDirectoryResolver, sdkEnvironment);
+                processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(

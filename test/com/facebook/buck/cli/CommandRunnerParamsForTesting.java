@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
@@ -47,6 +48,7 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -98,6 +100,9 @@ public class CommandRunnerParamsForTesting {
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
 
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+
     return CommandRunnerParams.builder()
         .setConsole(console)
         .setBuildInfoStoreManager(new BuildInfoStoreManager())
@@ -135,7 +140,7 @@ public class CommandRunnerParamsForTesting {
         .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesFactory(
             new KnownBuildRuleTypesFactory(
-                processExecutor, androidDirectoryResolver, sdkEnvironment))
+                processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .build();

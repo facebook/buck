@@ -51,6 +51,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -766,12 +767,16 @@ public class ProjectWorkspace {
             new DefaultCellPathResolver(filesystem.getRootPath(), config));
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, processExecutor, directoryResolver);
+
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+
     return CellProvider.createForLocalBuild(
             filesystem,
             Watchman.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(processExecutor, directoryResolver, sdkEnvironment),
+            new KnownBuildRuleTypesFactory(
+                processExecutor, directoryResolver, sdkEnvironment, toolchainProvider),
             sdkEnvironment,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

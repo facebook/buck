@@ -18,9 +18,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -96,19 +98,26 @@ public final class KnownBuildRuleTypesTestUtil {
                 .putAll(getPythonProcessMap(paths))
                 .build());
 
-    return createInstance(config, filesystem, executor, new FakeAndroidDirectoryResolver());
+    return createInstance(config, filesystem, executor);
   }
 
   @VisibleForTesting
   static KnownBuildRuleTypes createInstance(
-      BuckConfig config,
-      ProjectFilesystem filesystem,
-      ProcessExecutor processExecutor,
-      AndroidDirectoryResolver androidDirectoryResolver)
+      BuckConfig config, ProjectFilesystem filesystem, ProcessExecutor processExecutor)
       throws InterruptedException, IOException {
+
+    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     SdkEnvironment sdkEnvironment =
         AbstractSdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+
     return KnownBuildRuleTypes.createInstance(
-        config, filesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
+        config,
+        filesystem,
+        processExecutor,
+        toolchainProvider,
+        androidDirectoryResolver,
+        sdkEnvironment);
   }
 }

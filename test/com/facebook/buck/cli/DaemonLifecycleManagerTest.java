@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
@@ -173,11 +175,14 @@ public class DaemonLifecycleManagerTest {
 
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
 
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
     KnownBuildRuleTypesFactory factory =
         new KnownBuildRuleTypesFactory(
-            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(
@@ -192,7 +197,7 @@ public class DaemonLifecycleManagerTest {
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
     factory =
         new KnownBuildRuleTypesFactory(
-            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
 
     Object daemon2 =
         daemonLifecycleManager.getDaemon(
@@ -208,7 +213,7 @@ public class DaemonLifecycleManagerTest {
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
     factory =
         new KnownBuildRuleTypesFactory(
-            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
 
     Object daemon3 =
         daemonLifecycleManager.getDaemon(
@@ -224,7 +229,7 @@ public class DaemonLifecycleManagerTest {
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidDirectoryResolver);
     factory =
         new KnownBuildRuleTypesFactory(
-            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment);
+            fakeProcessExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
 
     Object daemon4 =
         daemonLifecycleManager.getDaemon(
@@ -274,8 +279,13 @@ public class DaemonLifecycleManagerTest {
             Optional.empty());
     SdkEnvironment sdkEnvironment1 =
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidResolver1);
+
+    TestToolchainProvider toolchainProvider1 = new TestToolchainProvider();
+    toolchainProvider1.addAndroidToolchain(new TestAndroidToolchain());
+
     KnownBuildRuleTypesFactory factory1 =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, androidResolver1, sdkEnvironment1);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor, androidResolver1, sdkEnvironment1, toolchainProvider1);
     FakeAndroidDirectoryResolver androidResolver2 =
         new FakeAndroidDirectoryResolver(
             Optional.of(filesystem.getPath("/path/to/sdkv2")),
@@ -284,8 +294,13 @@ public class DaemonLifecycleManagerTest {
             Optional.empty());
     SdkEnvironment sdkEnvironment2 =
         SdkEnvironment.create(buckConfig, fakeProcessExecutor, androidResolver2);
+
+    TestToolchainProvider toolchainProvider2 = new TestToolchainProvider();
+    toolchainProvider2.addAndroidToolchain(new TestAndroidToolchain());
+
     KnownBuildRuleTypesFactory factory2 =
-        new KnownBuildRuleTypesFactory(fakeProcessExecutor, androidResolver2, sdkEnvironment2);
+        new KnownBuildRuleTypesFactory(
+            fakeProcessExecutor, androidResolver2, sdkEnvironment2, toolchainProvider2);
 
     Object daemon1 =
         daemonLifecycleManager.getDaemon(

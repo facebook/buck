@@ -44,6 +44,7 @@ import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -141,6 +142,8 @@ public class CleanCommandTest extends EasyMockSupport {
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
 
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+
     return CommandRunnerParams.builder()
         .setConsole(new TestConsole())
         .setBuildInfoStoreManager(new BuildInfoStoreManager())
@@ -168,7 +171,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesFactory(
             new KnownBuildRuleTypesFactory(
-                processExecutor, androidDirectoryResolver, sdkEnvironment))
+                processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .build();

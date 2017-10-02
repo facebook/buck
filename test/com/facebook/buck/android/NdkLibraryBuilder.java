@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -26,12 +27,13 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class NdkLibraryBuilder
     extends AbstractNodeBuilder<
@@ -59,7 +61,7 @@ public class NdkLibraryBuilder
 
   public NdkLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
-        new NdkLibraryDescription(Optional.empty(), NDK_PLATFORMS) {
+        new NdkLibraryDescription(createToolchainProvider(), NDK_PLATFORMS) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {
@@ -69,6 +71,12 @@ public class NdkLibraryBuilder
         },
         target,
         filesystem);
+  }
+
+  private static ToolchainProvider createToolchainProvider() {
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+    return toolchainProvider;
   }
 
   public NdkLibraryBuilder addDep(BuildTarget target) {
