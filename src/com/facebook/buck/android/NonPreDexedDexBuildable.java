@@ -111,6 +111,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final boolean skipProguard;
   @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
+  @AddToRuleKey private final String dexTool;
 
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final ListeningExecutorService dxExecutorService;
@@ -168,7 +169,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       boolean shouldSplitDex,
       NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      String dexTool) {
     super(buildTarget, filesystem);
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.aaptGeneratedProguardConfigFile = aaptGeneratedProguardConfigFile;
@@ -203,6 +205,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(MoreCollectors.toImmutableSortedSet()));
+    this.dexTool = dexTool;
   }
 
   @VisibleForTesting
@@ -869,7 +872,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             dxOptions,
             dxExecutorService,
             xzCompressionLevel,
-            dxMaxHeapSize);
+            dxMaxHeapSize,
+            dexTool);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

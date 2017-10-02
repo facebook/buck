@@ -81,6 +81,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   @VisibleForTesting static final String REFERENCED_RESOURCES = "referenced_resources";
 
   @AddToRuleKey private final SourcePath javaLibrarySourcePath;
+  @AddToRuleKey private final String dexTool;
+
   private final AndroidLegacyToolchain androidLegacyToolchain;
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -91,9 +93,20 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
       AndroidLegacyToolchain androidLegacyToolchain,
       BuildRuleParams params,
       JavaLibrary javaLibrary) {
+    this(buildTarget, projectFilesystem, androidLegacyToolchain, params, javaLibrary, DxStep.DX);
+  }
+
+  DexProducedFromJavaLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      AndroidLegacyToolchain androidLegacyToolchain,
+      BuildRuleParams params,
+      JavaLibrary javaLibrary,
+      String dexTool) {
     super(buildTarget, projectFilesystem, params);
     this.androidLegacyToolchain = androidLegacyToolchain;
     this.javaLibrary = javaLibrary;
+    this.dexTool = dexTool;
     this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -145,7 +158,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
                   DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
                   DxStep.Option.RUN_IN_PROCESS,
                   DxStep.Option.NO_OPTIMIZE,
-                  DxStep.Option.FORCE_JUMBO));
+                  DxStep.Option.FORCE_JUMBO),
+              Optional.empty(),
+              dexTool,
+              dexTool.equals(DxStep.D8));
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making

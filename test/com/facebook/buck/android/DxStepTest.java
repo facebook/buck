@@ -77,7 +77,8 @@ public class DxStepTest extends EasyMockSupport {
               TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(Option.NO_OPTIMIZE));
+              EnumSet.of(Option.NO_OPTIMIZE),
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -136,7 +137,8 @@ public class DxStepTest extends EasyMockSupport {
               TestAndroidLegacyToolchainFactory.create(androidPlatformTarget),
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO));
+              EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO),
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -236,7 +238,9 @@ public class DxStepTest extends EasyMockSupport {
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(DxStep.Option.class),
-              Optional.of("2g"));
+              Optional.of("2g"),
+              DxStep.DX,
+              false);
 
       String expected =
           String.format(
