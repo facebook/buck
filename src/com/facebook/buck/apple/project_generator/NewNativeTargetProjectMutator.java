@@ -759,7 +759,6 @@ class NewNativeTargetProjectMutator {
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
-    template.add("bundle_name", bundle.getBundleName());
     template.add("built_bundle_path", sourcePathResolver.getAbsolutePath(jsOutput));
     template.add("built_resources_path", sourcePathResolver.getAbsolutePath(resOutput));
 
@@ -821,11 +820,10 @@ class NewNativeTargetProjectMutator {
         SourcePathResolver sourcePathResolver =
             DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
-        Path jsOutputPath =
-            sourcePathResolver.getAbsolutePath(jsOutput).resolve(bundle.getBundleName());
+        Path jsOutputPath = sourcePathResolver.getAbsolutePath(jsOutput);
         builder.add(
             CopyInXcode.of(
-                CopyInXcode.SourceType.FILE,
+                CopyInXcode.SourceType.FOLDER_CONTENTS,
                 cell.getFilesystem().relativize(jsOutputPath),
                 CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
                 Paths.get("")));

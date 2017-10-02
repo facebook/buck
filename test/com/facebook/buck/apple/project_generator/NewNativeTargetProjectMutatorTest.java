@@ -435,7 +435,7 @@ public class NewNativeTargetProjectMutatorTest {
         String.format(
             "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
                 + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp \"%s/foo/dep/js/dep.js\" \"${BASE_DIR}/\"\n"
+                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
                 + "cp -a \"%s/foo/dep/res/\" \"${BASE_DIR}/\"\n",
             genDir, genDir),
         shellScript);
