@@ -1,8 +1,12 @@
 java_library(
-    name = "headermap",
-    srcs = ["HeaderMap.java"],
+    name = "clang",
+    srcs = glob([
+        "*.java",
+    ], excludes = [
+        "PrintHeaderMap.java"
+    ]),
     tests = [
-        "//test/com/facebook/buck/apple/clang:headermap",
+        "//test/com/facebook/buck/apple/clang:clang",
     ],
     visibility = [
         "PUBLIC",
@@ -20,7 +24,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/apple/clang:headermap",
+        "//src/com/facebook/buck/apple/clang:clang",
         "//third-party/java/jsr:jsr305",
     ],
 )

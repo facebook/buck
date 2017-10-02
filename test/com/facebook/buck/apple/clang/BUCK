@@ -1,8 +1,8 @@
 java_test(
-    name = "headermap",
+    name = "clang",
     srcs = glob(["*.java"]),
     deps = [
-        "//src/com/facebook/buck/apple/clang:headermap",
+        "//src/com/facebook/buck/apple/clang:clang",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
