@@ -120,10 +120,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
-        cxxPlatform,
-        getBuildDeps(),
-        Linker.LinkableDepType.SHARED,
-        NativeLinkable.class::isInstance);
+        cxxPlatform, getBuildDeps(), type, NativeLinkable.class::isInstance);
   }
 
   @Override
