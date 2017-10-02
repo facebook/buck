@@ -14,6 +14,7 @@ java_library(
     deps = [
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+        "//third-party/java/stringtemplate:stringtemplate",
     ],
 )
 
