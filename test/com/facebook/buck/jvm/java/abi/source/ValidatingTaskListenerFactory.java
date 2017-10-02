@@ -24,9 +24,11 @@ import com.sun.source.util.TaskListener;
 import javax.tools.Diagnostic;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
+  private final String ruleName;
   private final boolean requiredForSourceAbi;
 
-  ValidatingTaskListenerFactory(boolean requiredForSourceAbi) {
+  ValidatingTaskListenerFactory(String ruleName, boolean requiredForSourceAbi) {
+    this.ruleName = ruleName;
     this.requiredForSourceAbi = requiredForSourceAbi;
   }
 
@@ -35,6 +37,11 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
     return new ValidatingTaskListener(
         new BuckJavacTaskProxyImpl(task),
         new InterfaceValidatorCallback() {
+          @Override
+          public String getRuleName() {
+            return ruleName;
+          }
+
           @Override
           public boolean ruleIsRequiredForSourceOnlyAbi() {
             return requiredForSourceAbi;

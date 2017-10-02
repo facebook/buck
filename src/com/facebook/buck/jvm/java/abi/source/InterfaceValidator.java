@@ -82,7 +82,12 @@ class InterfaceValidator {
                   if (!callback.ruleIsRequiredForSourceOnlyAbi()) {
                     trees.printMessage(
                         messageKind,
-                        "Annotation definitions are not allowed in a Buck rule with required_for_source_only_abi absent or set to False. Move this annotation to a rule with required_for_source_only_abi = True.",
+                        String.format(
+                            "Annotation definitions must be in rules with required_for_source_only_abi = True.\n"
+                                + "For a quick fix, add required_for_source_only_abi = True to %s.\n"
+                                + "A better fix is to move %s to a new rule that contains only\n"
+                                + "annotations, and mark that rule required_for_source_only_abi.\n",
+                            callback.getRuleName(), type.getSimpleName()),
                         path.getLeaf(),
                         path.getCompilationUnit());
                   }
