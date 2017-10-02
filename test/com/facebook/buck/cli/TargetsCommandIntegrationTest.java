@@ -605,6 +605,10 @@ public class TargetsCommandIntegrationTest {
     String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
 
     assertEquals(expectedRootPath, cellPath.asText());
+
+    JsonNode ruleType = targetNode.get("buck.ruleType");
+    assertNotNull(ruleType);
+    assertEquals("genrule", ruleType.asText());
   }
 
   @Test

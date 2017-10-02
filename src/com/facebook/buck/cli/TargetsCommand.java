@@ -378,10 +378,10 @@ public class TargetsCommand extends AbstractCommand {
                       .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
 
       if (shouldUseJsonFormat()) {
+        ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
+        keysBuilder.addAll(showRulesResult.keySet());
         Iterable<TargetNode<?, ?>> matchingNodes =
-            targetGraphAndBuildTargetsForShowRules
-                .getTargetGraph()
-                .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets());
+            targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
         printJsonForTargets(
             params, executor, matchingNodes, showRulesResult, getOutputAttributes());
       } else {
@@ -746,6 +746,11 @@ public class TargetsCommand extends AbstractCommand {
             showOptions.getTargetHash(),
             sortedTargetRule,
             attributesPatternsMatcher);
+        putIfValuePresentAndMatches(
+            ShowOptionsName.RULE_TYPE.getName(),
+            showOptions.getRuleType(),
+            sortedTargetRule,
+            attributesPatternsMatcher);
       }
       String fullyQualifiedNameAttribute = "fully_qualified_name";
       if (attributesPatternsMatcher.matches(fullyQualifiedNameAttribute)) {
@@ -849,6 +854,15 @@ public class TargetsCommand extends AbstractCommand {
             showTransitiveRuleKeys(rule, ruleKeyFactory.get(), showOptionBuilderMap);
           }
         }
+      }
+    }
+
+    for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
+      BuildTarget target = entry.getKey();
+      ShowOptions.Builder showOptionsBuilder = entry.getValue();
+      if (actionGraph.isPresent()) {
+        BuildRule rule = buildRuleResolver.get().requireRule(target);
+        showOptionsBuilder.setRuleType(rule.getType());
         if (isShowOutput() || isShowFullOutput()) {
           getUserFacingOutputPath(
                   DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver.get())),
@@ -1150,13 +1164,16 @@ public class TargetsCommand extends AbstractCommand {
     public abstract Optional<String> getRuleKey();
 
     public abstract Optional<String> getTargetHash();
+
+    public abstract Optional<String> getRuleType();
   }
 
   private enum ShowOptionsName {
     OUTPUT_PATH("buck.outputPath"),
     GEN_SRC_PATH("buck.generatedSourcePath"),
     TARGET_HASH("buck.targetHash"),
-    RULE_KEY("buck.ruleKey");
+    RULE_KEY("buck.ruleKey"),
+    RULE_TYPE("buck.ruleType");
 
     private String name;
 
