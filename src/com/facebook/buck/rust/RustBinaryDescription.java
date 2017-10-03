@@ -131,11 +131,6 @@ public class RustBinaryDescription
         rustBuckConfig.getLinker().map(ToolProvider::getParseTimeDeps).orElse(ImmutableList.of()));
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   protected enum Type implements FlavorConvertible {
     CHECK(RustDescriptionEnhancer.RFCHECK, Linker.LinkableDepType.STATIC_PIC),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR, Linker.LinkableDepType.SHARED),

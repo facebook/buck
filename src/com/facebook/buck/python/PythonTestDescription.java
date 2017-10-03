@@ -380,11 +380,6 @@ public class PythonTestDescription
     }
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonTestDescriptionArg

@@ -385,11 +385,6 @@ public class CxxBinaryDescription
     }
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse, HasDepsQuery {
     @Value.Default
     default boolean getLinkDepsQueryWhole() {

@@ -409,11 +409,6 @@ public class CxxTestDescription
         .map(metadataClass::cast);
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractCxxTestDescriptionArg

@@ -168,11 +168,6 @@ public class JavaBinaryDescription
     return defaultCxxPlatform;
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractJavaBinaryDescriptionArg

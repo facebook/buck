@@ -358,11 +358,6 @@ public class PythonBinaryDescription
     }
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPythonBinaryDescriptionArg

@@ -23,5 +23,7 @@ import com.google.common.collect.ImmutableSet;
 /** A node which is the root of a version sub-graph. */
 public interface VersionRoot<A> extends Description<A> {
 
-  boolean isVersionRoot(ImmutableSet<Flavor> flavors);
+  default boolean isVersionRoot(@SuppressWarnings("unused") ImmutableSet<Flavor> flavors) {
+    return true;
+  }
 }

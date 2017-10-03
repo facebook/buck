@@ -165,11 +165,6 @@ public class RustTestDescription
     return Optional.of(ImmutableSet.of(cxxPlatforms, RustBinaryDescription.BINARY_TYPE));
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractRustTestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {

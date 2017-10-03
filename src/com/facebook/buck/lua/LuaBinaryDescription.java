@@ -832,11 +832,6 @@ public class LuaBinaryDescription
     extraDepsBuilder.addAll(getNativeStarterDepTargets(luaPlatform));
   }
 
-  @Override
-  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-    return true;
-  }
-
   public enum StarterType {
     PURE,
     NATIVE,
