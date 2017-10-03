@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -57,31 +56,14 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   /**
    * The underlying rule key cache. We use object identity for indexing.
    *
-   * <p>NOTE: We intentionally use `ConcurrentHashMap` over Guava's `LoadingCache` for performance
-   * reasons as the latter was a *lot* slower when invalidating nodes. Some differences are: a)
-   * `LoadingCache` supports using object identity in it's keys by setting `weakKeys()`, whereas
-   * `ConcurrentHashMap` does not. We work around this limitation by wrapping keys using the
-   * `IdentityWrapper` helper class. b) `LoadingCache.get()` offers "at most once" execution
-   * guarantees for the loading function for keys. `ConcurrentHashMap.computeIfAbsent()` does as
-   * well, and we use it here, but it appears to use more coarse-grained locking and so is more
-   * likely to block. As such, we wrap values in `Suppliers` so the computation is a very fast
-   * `Supplier` allocation. c) The loading function called by `LoadingCache.get()` is re-entrant,
-   * whereas `ConcurrentHashMap.computeIfAbsent()` is not. As the `RuleKeyCache.get*()` interfaces
-   * must support re-entrant functions, we rely on wrapping values in memoizing `Suppliers` to
-   * implement this behavior.
+   * <p>All modifications to the Nodes are synchronized by using the compute* functions on
+   * ConcurrentHashMap.
    */
-  private final ConcurrentMap<IdentityWrapper<Object>, Supplier<V>> cache =
-      new ConcurrentHashMap<>();
-
-  /**
-   * A map from cached nodes to their dependents. Used for invalidating the chain of transitive
-   * dependents of a node.
-   */
-  private final ConcurrentMap<IdentityWrapper<Object>, Stream.Builder<Object>> dependentsIndex =
+  private final ConcurrentHashMap<IdentityWrapper<Object>, Node<Object, V>> cache =
       new ConcurrentHashMap<>();
 
   /** A map for rule key inputs to nodes that use them. */
-  private final ConcurrentMap<RuleKeyInput, Stream.Builder<Object>> inputsIndex =
+  private final ConcurrentHashMap<RuleKeyInput, Stream.Builder<Object>> inputsIndex =
       new ConcurrentHashMap<>();
 
   // Stats.
@@ -109,14 +91,14 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
     RuleKeyResult<V> result = create.apply(node);
     for (Object dependency : result.deps) {
-      dependentsIndex.compute(
+      cache.compute(
           new IdentityWrapper<>(dependency),
-          (key, builder) -> {
-            if (builder == null) {
-              builder = Stream.builder();
+          (key, value) -> {
+            if (value == null) {
+              value = new Node<>();
             }
-            builder.add(node);
-            return builder;
+            value.dependents.add(node);
+            return value;
           });
     }
     for (RuleKeyInput input : result.inputs) {
@@ -141,22 +123,31 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
   private <K> V getNode(K node, Function<K, RuleKeyResult<V>> create) {
     lookupCount.increment();
-    return cache
-        .computeIfAbsent(
-            new IdentityWrapper<>(node),
-            key -> Suppliers.memoize(() -> calculateNode(node, create)))
-        .get();
+    Supplier<V> supplier =
+        cache.compute(
+                new IdentityWrapper<>(node),
+                (key, value) -> {
+                  if (value == null) {
+                    value = new Node<>();
+                  }
+                  if (value.value == null) {
+                    value.value = Suppliers.memoize(() -> calculateNode(node, create));
+                  }
+                  return value;
+                })
+            .value;
+    return Preconditions.checkNotNull(supplier).get();
   }
 
   @Nullable
   @Override
   public V get(BuildRule rule) {
     // Maybe put stats here?
-    Supplier<V> supplier = cache.get(new IdentityWrapper<Object>(rule));
-    if (supplier == null) {
-      return null;
+    Node<Object, V> node = cache.get(new IdentityWrapper<Object>(rule));
+    if (node != null && node.value != null) {
+      return Preconditions.checkNotNull(node.value).get();
     }
-    return supplier.get();
+    return null;
   }
 
   @Override
@@ -184,19 +175,14 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   }
 
   /** Recursively invalidate nodes up the dependency tree. */
-  private void invalidateNodes(Stream<?> nodes) {
+  private void invalidateNodes(Stream<Object> nodes) {
     List<Stream<Object>> dependents = new ArrayList<>();
     nodes.forEach(
-        node -> {
-          LOG.verbose("invalidating node %s", node);
-          cache.remove(new IdentityWrapper<>(node));
+        key -> {
+          LOG.verbose("invalidating node %s", key);
+          Node<Object, V> node = cache.remove(new IdentityWrapper<>(key));
+          dependents.add(node.dependents.build());
           evictionCount.increment();
-
-          Stream.Builder<Object> nodeDependents =
-              dependentsIndex.remove(new IdentityWrapper<>(node));
-          if (nodeDependents != null) {
-            dependents.add(nodeDependents.build());
-          }
         });
     if (!dependents.isEmpty()) {
       invalidateNodes(dependents.stream().flatMap(x -> x));
@@ -254,7 +240,6 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   @Override
   public void invalidateAll() {
     cache.clear();
-    dependentsIndex.clear();
     inputsIndex.clear();
   }
 
@@ -276,10 +261,36 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
     cache.forEach(
         (key, value) -> {
           if (key.delegate instanceof BuildRule) {
-            builder.add(new AbstractMap.SimpleEntry<>((BuildRule) key.delegate, value.get()));
+            Supplier<V> supplier = value.value;
+            if (supplier != null) {
+              builder.add(new AbstractMap.SimpleEntry<>((BuildRule) key.delegate, supplier.get()));
+            }
           }
         });
     return builder.build();
+  }
+
+  private static final class Node<T, V> {
+    /**
+     * Accumulator of nodes that depends on this one. Used to invalidate those nodes when this node
+     * is invalidated.
+     */
+    private final Stream.Builder<T> dependents;
+
+    /**
+     * The cached value, stored in a memoized supplier. A memoized supplier is used to allow the
+     * value computation to be serialized separately from the lock in the ConcurrentHashMap that the
+     * nodes are stored in.
+     *
+     * <p>This value is nullable because the instance can be created in response to recording a
+     * dependent.
+     */
+    @Nullable private volatile Supplier<V> value;
+
+    public Node() {
+      this.dependents = Stream.builder();
+      this.value = null;
+    }
   }
 
   /**
