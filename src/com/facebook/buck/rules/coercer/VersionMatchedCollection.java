@@ -88,6 +88,25 @@ public class VersionMatchedCollection<T> {
         .toString();
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof VersionMatchedCollection)) {
+      return false;
+    }
+
+    VersionMatchedCollection<?> that = (VersionMatchedCollection<?>) o;
+
+    return values.equals(that.values);
+  }
+
+  @Override
+  public int hashCode() {
+    return values.hashCode();
+  }
+
   public static <T> Builder<T> builder() {
     return new Builder<>();
   }
