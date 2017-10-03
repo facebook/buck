@@ -17,6 +17,7 @@
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/clang/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/simulator/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/xcode/testdata" />

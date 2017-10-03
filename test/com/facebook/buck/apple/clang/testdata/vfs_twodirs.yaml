@@ -1,0 +1,21 @@
+{
+  "version" : 0,
+  "case-sensitive" : false,
+  "roots" : [ {
+    "type" : "directory",
+    "name" : "/virtual/path-priv",
+    "contents" : [ {
+      "type" : "file",
+      "name" : "umbrella.h",
+      "external-contents" : "/real/path/umbrella/umbrella.h"
+    } ]
+  }, {
+    "type" : "directory",
+    "name" : "/virtual/path",
+    "contents" : [ {
+      "type" : "file",
+      "name" : "module.modulemap",
+      "external-contents" : "/real/path/overlayed.modulemap"
+    } ]
+  } ]
+}
