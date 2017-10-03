@@ -22,6 +22,7 @@ public enum ActionGraphParallelizationMode implements WithProbability {
   ENABLED(0.5),
   DISABLED(0.5),
   EXPERIMENT(0.0),
+  EXPERIMENT_UNSTABLE(0.0),
   ;
 
   public static ActionGraphParallelizationMode DEFAULT = DISABLED;

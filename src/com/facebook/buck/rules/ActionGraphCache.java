@@ -211,22 +211,42 @@ public class ActionGraphCache {
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
       ActionGraphParallelizationMode parallelizationMode) {
-    if (parallelizationMode == ActionGraphParallelizationMode.EXPERIMENT) {
-      parallelizationMode =
-          RandomizedTrial.getGroupStable(
-              "action_graph_parallelization", ActionGraphParallelizationMode.class);
-      eventBus.post(
-          new ExperimentEvent(
-              "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
+    switch (parallelizationMode) {
+      case EXPERIMENT:
+        parallelizationMode =
+            RandomizedTrial.getGroupStable(
+                "action_graph_parallelization", ActionGraphParallelizationMode.class);
+        eventBus.post(
+            new ExperimentEvent(
+                "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
+        break;
+      case EXPERIMENT_UNSTABLE:
+        parallelizationMode =
+            RandomizedTrial.getGroup(
+                "action_graph_parallelization",
+                eventBus.getBuildId(),
+                ActionGraphParallelizationMode.class);
+        eventBus.post(
+            new ExperimentEvent(
+                "action_graph_parallelization_unstable",
+                parallelizationMode.toString(),
+                "",
+                null,
+                null));
+        break;
+      case ENABLED:
+      case DISABLED:
+        break;
     }
     switch (parallelizationMode) {
       case ENABLED:
         return createActionGraphInParallel(eventBus, transformer, targetGraph);
       case DISABLED:
         return createActionGraphSerially(eventBus, transformer, targetGraph);
+      case EXPERIMENT_UNSTABLE:
       case EXPERIMENT:
         throw new AssertionError(
-            "EXPERIMENT value should have been resolved to ENABLED or DISABLED.");
+            "EXPERIMENT* values should have been resolved to ENABLED or DISABLED.");
     }
     throw new AssertionError("Unexpected parallelization mode value: " + parallelizationMode);
   }

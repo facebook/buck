@@ -359,6 +359,7 @@ public class ActionGraphCacheTest {
           "No experiment event is logged if not in experiment mode", experimentEvents, empty());
     }
 
+    trackedEvents.clear();
     new ActionGraphCache()
         .getActionGraph(
             eventBus,
@@ -377,6 +378,27 @@ public class ActionGraphCacheTest {
         contains(
             allOf(
                 hasProperty("tag", equalTo("action_graph_parallelization")),
+                hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
+
+    trackedEvents.clear();
+    new ActionGraphCache()
+        .getActionGraph(
+            eventBus,
+            NOT_CHECK_GRAPHS, /* skipActionGraphCache */
+            false,
+            targetGraph,
+            keySeed,
+            ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE);
+    experimentEvents =
+        RichStream.from(trackedEvents.stream())
+            .filter(ExperimentEvent.class)
+            .collect(Collectors.toList());
+    assertThat(
+        "EXPERIMENT mode should log either enabled or disabled.",
+        experimentEvents,
+        contains(
+            allOf(
+                hasProperty("tag", equalTo("action_graph_parallelization_unstable")),
                 hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
   }
 
