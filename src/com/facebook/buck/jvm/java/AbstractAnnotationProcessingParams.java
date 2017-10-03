@@ -18,9 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
@@ -46,7 +46,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
+abstract class AbstractAnnotationProcessingParams implements AddsToRuleKey {
   public static final AnnotationProcessingParams EMPTY =
       AnnotationProcessingParams.builder()
           .setOwnerTarget(null)
@@ -57,6 +57,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
           .build();
 
   @Nullable
+  @AddToRuleKey
   protected abstract BuildTarget getOwnerTarget();
 
   @Nullable
@@ -70,6 +71,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
   protected abstract ImmutableSortedSet<String> getLegacyAnnotationProcessorNames();
 
   @Value.Lazy
+  @AddToRuleKey
   protected ImmutableList<JavacPluginProperties> getLegacyProcessors() {
     JavacPluginProperties.Builder legacySafeProcessorsBuilder =
         JavacPluginProperties.builder()
@@ -108,6 +110,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
     return resultBuilder.build();
   }
 
+  @AddToRuleKey
   protected abstract ImmutableList<ResolvedJavacPluginProperties> getModernProcessors();
 
   @Value.Check
@@ -138,6 +141,7 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
   }
 
   @Value.NaturalOrder
+  @AddToRuleKey
   public abstract ImmutableSortedSet<String> getParameters();
 
   public ImmutableSortedSet<SourcePath> getInputs() {
@@ -148,18 +152,8 @@ abstract class AbstractAnnotationProcessingParams implements RuleKeyAppendable {
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    if (!isEmpty()) {
-      sink.setReflectively("owner", getOwnerTarget())
-          .setReflectively("legacyProcessors", getLegacyProcessors())
-          .setReflectively("processors", getModernProcessors())
-          .setReflectively("parameters", getParameters())
-          .setReflectively("processOnly", getProcessOnly());
-    }
-  }
-
   @Value.Default
+  @AddToRuleKey
   protected boolean getProcessOnly() {
     return false;
   }

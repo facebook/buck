@@ -17,8 +17,9 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
@@ -30,9 +31,9 @@ import javax.annotation.Nullable;
  * Provides either an {@link ExternalJavac} or {@link JarBackedJavac}, depending on its parameters.
  * This is here to support {@link JvmLibraryArg#getCompiler}.
  */
-public class ExternalOrJarBackedJavacProvider implements JavacProvider {
-  private final SourcePath compiler;
-  @Nullable private final String compilerClassName;
+public class ExternalOrJarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
+  @AddToRuleKey private final SourcePath compiler;
+  @AddToRuleKey @Nullable private final String compilerClassName;
   @Nullable private Javac javac;
   private Javac.Location javacLocation;
 
@@ -41,12 +42,6 @@ public class ExternalOrJarBackedJavacProvider implements JavacProvider {
     this.compiler = compiler;
     this.compilerClassName = compilerClassName;
     this.javacLocation = javacLocation;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("compiler", compiler)
-        .setReflectively("compilerClassName", compilerClassName);
   }
 
   @Override

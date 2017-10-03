@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
@@ -29,8 +29,7 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
-
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
   private final JavaFileParser javaFileParser;
 
@@ -60,10 +59,5 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
                 })
             .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     return SymbolExtractor.extractSymbols(javaFileParser, absolutePaths);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("srcs", srcs);
   }
 }

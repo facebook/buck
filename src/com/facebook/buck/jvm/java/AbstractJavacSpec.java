@@ -17,8 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractJavacSpec implements RuleKeyAppendable {
+abstract class AbstractJavacSpec implements AddsToRuleKey {
   public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
       "com.sun.tools.javac.api.JavacTool";
 
@@ -41,6 +41,7 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
   protected abstract Optional<String> getCompilerClassName();
 
   @Value.Lazy
+  @AddToRuleKey
   public JavacProvider getJavacProvider() {
     if (getCompiler().isPresent() && getCompiler().get().isRight()) {
       return new ExternalOrJarBackedJavacProvider(
@@ -89,10 +90,5 @@ abstract class AbstractJavacSpec implements RuleKeyAppendable {
   @Value.Default
   public Javac.Location getJavacLocation() {
     return Javac.Location.IN_PROCESS;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    getJavacProvider().appendToRuleKey(sink);
   }
 }

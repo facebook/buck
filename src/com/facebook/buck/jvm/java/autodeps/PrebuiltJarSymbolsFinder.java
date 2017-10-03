@@ -17,13 +17,14 @@
 package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.ZipFileTraversal;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -32,19 +33,22 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
   private static final String CLASS_SUFFIX = ".class";
 
-  private final SourcePath binaryJar;
+  @AddToRuleKey private final Optional<PathSourcePath> binaryJar;
 
   PrebuiltJarSymbolsFinder(SourcePath binaryJar) {
-    this.binaryJar = binaryJar;
+    this.binaryJar =
+        binaryJar instanceof PathSourcePath
+            ? Optional.of((PathSourcePath) binaryJar)
+            : Optional.empty();
   }
 
   @Override
   public Symbols extractSymbols() throws IOException {
-    if (!(binaryJar instanceof PathSourcePath)) {
+    if (!binaryJar.isPresent()) {
       return Symbols.EMPTY;
     }
 
-    PathSourcePath sourcePath = (PathSourcePath) binaryJar;
+    PathSourcePath sourcePath = binaryJar.get();
     ProjectFilesystem filesystem = sourcePath.getFilesystem();
     Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
 
@@ -63,13 +67,5 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
       }
     }.traverse();
     return new Symbols(providedSymbols);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    if (binaryJar instanceof PathSourcePath) {
-      PathSourcePath sourcePath = (PathSourcePath) binaryJar;
-      sink.setReflectively("binaryJar", sourcePath);
-    }
   }
 }
