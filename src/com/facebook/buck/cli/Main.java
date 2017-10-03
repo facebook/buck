@@ -1085,6 +1085,7 @@ public final class Main {
                         .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
                         .setBuildInfoStoreManager(storeManager)
                         .setProjectFilesystemFactory(projectFilesystemFactory)
+                        .setToolchainProvider(factory.getToolchainProvider())
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));

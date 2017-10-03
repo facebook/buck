@@ -16,10 +16,12 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -51,7 +53,8 @@ public class StackedDownloader implements Downloader {
     this.delegates = delegates;
   }
 
-  public static Downloader createFromConfig(BuckConfig config, Optional<Path> androidSdkRoot) {
+  public static Downloader createFromConfig(
+      BuckConfig config, ToolchainProvider toolchainProvider) {
     ImmutableList.Builder<Downloader> downloaders = ImmutableList.builder();
 
     DownloadConfig downloadConfig = new DownloadConfig(config);
@@ -103,15 +106,18 @@ public class StackedDownloader implements Downloader {
       }
     }
 
-    if (androidSdkRoot.isPresent()) {
-      Path androidMavenRepo = androidSdkRoot.get().resolve("extras/android/m2repository");
+    if (toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
+      AndroidToolchain androidToolchain =
+          toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+      Path androidSdkRootPath = androidToolchain.getAndroidSdk().getSdkRootPath();
+      Path androidMavenRepo = androidSdkRootPath.resolve("extras/android/m2repository");
       try {
         downloaders.add(new OnDiskMavenDownloader(androidMavenRepo));
       } catch (FileNotFoundException e) {
         LOG.warn("Android Maven repo %s doesn't exist", androidMavenRepo.toString());
       }
 
-      Path googleMavenRepo = androidSdkRoot.get().resolve("extras/google/m2repository");
+      Path googleMavenRepo = androidSdkRootPath.resolve("extras/google/m2repository");
       try {
         downloaders.add(new OnDiskMavenDownloader(googleMavenRepo));
       } catch (FileNotFoundException e) {

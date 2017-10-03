@@ -16,6 +16,19 @@
 
 package com.facebook.buck.android.toolchain.impl;
 
+import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.AndroidSdk;
+import java.nio.file.Path;
 
-public class DefaultAndroidSdk implements AndroidSdk {}
+public class DefaultAndroidSdk implements AndroidSdk {
+  private final AndroidDirectoryResolver androidDirectoryResolver;
+
+  public DefaultAndroidSdk(AndroidDirectoryResolver androidDirectoryResolver) {
+    this.androidDirectoryResolver = androidDirectoryResolver;
+  }
+
+  @Override
+  public Path getSdkRootPath() {
+    return androidDirectoryResolver.getSdkOrThrow();
+  }
+}

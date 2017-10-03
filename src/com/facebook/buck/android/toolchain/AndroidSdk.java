@@ -16,5 +16,9 @@
 
 package com.facebook.buck.android.toolchain;
 
+import java.nio.file.Path;
+
 /** Part of Android toolchain that provides access to Android SDK */
-public interface AndroidSdk {}
+public interface AndroidSdk {
+  Path getSdkRootPath();
+}

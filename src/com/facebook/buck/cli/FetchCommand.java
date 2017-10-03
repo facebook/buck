@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.Downloader;
@@ -44,8 +43,6 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 
 public class FetchCommand extends BuildCommand {
 
@@ -166,16 +163,8 @@ public class FetchCommand extends BuildCommand {
   }
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
-    DefaultAndroidDirectoryResolver resolver =
-        new DefaultAndroidDirectoryResolver(
-            params.getCell().getRoot().getFileSystem(),
-            params.getEnvironment(),
-            Optional.empty(),
-            Optional.empty());
-
-    Optional<Path> sdkDir = resolver.getSdkOrAbsent();
-
-    Downloader downloader = StackedDownloader.createFromConfig(params.getBuckConfig(), sdkDir);
+    Downloader downloader =
+        StackedDownloader.createFromConfig(params.getBuckConfig(), params.getToolchainProvider());
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(ImmutableSet.of(description));
   }

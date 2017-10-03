@@ -50,4 +50,8 @@ public class KnownBuildRuleTypesFactory {
     return KnownBuildRuleTypes.createInstance(
         config, filesystem, executor, toolchainProvider, directoryResolver, sdkEnvironment);
   }
+
+  public ToolchainProvider getToolchainProvider() {
+    return toolchainProvider;
+  }
 }

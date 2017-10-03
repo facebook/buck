@@ -11,5 +11,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//test/com/facebook/buck/android:utils",
     ],
 )

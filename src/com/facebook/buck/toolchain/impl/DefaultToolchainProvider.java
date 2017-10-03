@@ -23,10 +23,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.toolchain.BaseToolchainProvider;
 import com.facebook.buck.toolchain.Toolchain;
 import com.facebook.buck.toolchain.ToolchainFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class DefaultToolchainProvider extends BaseToolchainProvider {
 
@@ -47,7 +49,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
   private final ProjectFilesystem projectFilesystem;
   private final ImmutableMap<String, Class<? extends ToolchainFactory<?>>> toolchainFactories;
 
-  private final Map<String, Toolchain> toolchains = new HashMap<>();
+  private final Map<String, Optional<? extends Toolchain>> toolchains = new HashMap<>();
 
   public DefaultToolchainProvider(
       ImmutableMap<String, String> environment,
@@ -68,22 +70,37 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   @Override
   public synchronized Toolchain getByName(String toolchainName) {
-    if (toolchains.containsKey(toolchainName)) {
-      return toolchains.get(toolchainName);
+    Optional<? extends Toolchain> toolchain = getOrCreate(toolchainName);
+    if (toolchain.isPresent()) {
+      return toolchain.get();
+    } else {
+      throw new HumanReadableException("Unknown toolchain: " + toolchainName);
     }
+  }
 
-    if (!toolchainFactories.containsKey(toolchainName)) {
-      throw new IllegalStateException("Unknown toolchain: " + toolchainName);
+  @Override
+  public boolean isToolchainPresent(String toolchainName) {
+    return toolchainFactories.containsKey(toolchainName) && getOrCreate(toolchainName).isPresent();
+  }
+
+  private Optional<? extends Toolchain> getOrCreate(String toolchainName) {
+    Optional<? extends Toolchain> toolchain;
+    if (!toolchains.containsKey(toolchainName)) {
+      if (!toolchainFactories.containsKey(toolchainName)) {
+        throw new IllegalStateException("Unknown toolchain: " + toolchainName);
+      }
+      Class<? extends ToolchainFactory<?>> toolchainFactoryClass =
+          toolchainFactories.get(toolchainName);
+      toolchain = createToolchain(toolchainFactoryClass);
+      toolchains.put(toolchainName, toolchain);
+    } else {
+      toolchain = toolchains.get(toolchainName);
     }
-    Class<? extends ToolchainFactory<?>> toolchainFactoryClass =
-        toolchainFactories.get(toolchainName);
-    Toolchain toolchain = createToolchain(toolchainFactoryClass);
-    toolchains.put(toolchainName, toolchain);
-
     return toolchain;
   }
 
-  private Toolchain createToolchain(Class<? extends ToolchainFactory<?>> toolchainFactoryClass) {
+  private Optional<? extends Toolchain> createToolchain(
+      Class<? extends ToolchainFactory<?>> toolchainFactoryClass) {
     ToolchainFactory<?> toolchainFactory;
     try {
       toolchainFactory = toolchainFactoryClass.newInstance();

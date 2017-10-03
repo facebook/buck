@@ -34,6 +34,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -113,4 +114,6 @@ public interface AbstractCommandRunnerParams {
   Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
 
   ProjectFilesystemFactory getProjectFilesystemFactory();
+
+  ToolchainProvider getToolchainProvider();
 }

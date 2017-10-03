@@ -318,8 +318,7 @@ public class KnownBuildRuleTypes {
     Downloader downloader;
     DownloadConfig downloadConfig = new DownloadConfig(config);
     if (downloadConfig.isDownloadAtRuntimeOk()) {
-      downloader =
-          StackedDownloader.createFromConfig(config, androidDirectoryResolver.getSdkOrAbsent());
+      downloader = StackedDownloader.createFromConfig(config, toolchainProvider);
     } else {
       // Or just set one that blows up
       downloader = new ExplodingDownloader();

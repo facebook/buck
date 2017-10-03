@@ -19,8 +19,6 @@ package com.facebook.buck.android.toolchain.impl;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.android.toolchain.AndroidNdk;
-import com.facebook.buck.android.toolchain.AndroidSdk;
 import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -31,15 +29,7 @@ import java.util.Optional;
 
 public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidToolchain> {
   @Override
-  public AndroidToolchain createToolchain(
-      ImmutableMap<String, String> environment,
-      BuckConfig buckConfig,
-      ProjectFilesystem filesystem) {
-    return new DefaultAndroidToolchain(
-        createAndroidSdk(), createAndroidNdk(environment, buckConfig, filesystem));
-  }
-
-  private static Optional<AndroidNdk> createAndroidNdk(
+  public Optional<AndroidToolchain> createToolchain(
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem filesystem) {
@@ -52,10 +42,14 @@ public class DefaultAndroidToolchainFactory implements ToolchainFactory<AndroidT
             androidBuckConfig.getBuildToolsVersion(),
             androidBuckConfig.getNdkVersion());
 
-    return Optional.of(new DefaultAndroidNdk(androidBuckConfig, androidDirectoryResolver));
-  }
+    if (androidDirectoryResolver.getSdkOrAbsent().isPresent()) {
+      return Optional.of(
+          new DefaultAndroidToolchain(
+              new DefaultAndroidSdk(androidDirectoryResolver),
+              Optional.of(new DefaultAndroidNdk(androidBuckConfig, androidDirectoryResolver))));
 
-  private static AndroidSdk createAndroidSdk() {
-    return new DefaultAndroidSdk();
+    } else {
+      return Optional.empty();
+    }
   }
 }

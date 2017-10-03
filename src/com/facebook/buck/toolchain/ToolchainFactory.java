@@ -19,9 +19,10 @@ package com.facebook.buck.toolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 public interface ToolchainFactory<T extends Toolchain> {
-  T createToolchain(
+  Optional<T> createToolchain(
       ImmutableMap<String, String> environment,
       BuckConfig buckConfig,
       ProjectFilesystem filesystem);

@@ -143,6 +143,7 @@ public class CommandRunnerParamsForTesting {
                 processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+        .setToolchainProvider(toolchainProvider)
         .build();
   }
 

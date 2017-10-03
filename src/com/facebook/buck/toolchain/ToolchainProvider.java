@@ -21,4 +21,6 @@ public interface ToolchainProvider {
   Toolchain getByName(String toolchainName);
 
   <T extends Toolchain> T getByName(String toolchainName, Class<T> toolchainClass);
+
+  boolean isToolchainPresent(String toolchainName);
 }

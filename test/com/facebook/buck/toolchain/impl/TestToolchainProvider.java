@@ -30,6 +30,11 @@ public class TestToolchainProvider extends BaseToolchainProvider {
     return toolchains.get(toolchainName);
   }
 
+  @Override
+  public boolean isToolchainPresent(String toolchainName) {
+    return toolchains.containsKey(toolchainName);
+  }
+
   public void addToolchain(String name, Toolchain toolchain) {
     toolchains.put(name, toolchain);
   }
