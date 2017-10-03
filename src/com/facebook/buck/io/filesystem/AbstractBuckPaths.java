@@ -111,4 +111,9 @@ abstract class AbstractBuckPaths {
   public Path getRemoteSandboxDir() {
     return getBuckOut().resolve("remote_sandbox");
   }
+
+  @Value.Derived
+  public Path getLastOutputDir() {
+    return getConfiguredBuckOut().resolve("last");
+  }
 }
