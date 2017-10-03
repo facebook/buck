@@ -20,8 +20,8 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -394,11 +394,15 @@ public class FilterResourcesSteps {
   }
 
   /** Helper class for interpreting the resource_filter argument to android_binary(). */
-  public static class ResourceFilter implements RuleKeyAppendable {
+  public static class ResourceFilter implements AddsToRuleKey {
 
     static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.of());
 
+    // TODO(cjhopman): This shouldn't be stringified
+    @AddToRuleKey(stringify = true)
     private final Set<String> filter;
+
+    // TODO(cjhopman): Should these be added to the ruleKey?
     private final Set<ResourceFilters.Density> densities;
     private final boolean downscale;
 
@@ -433,11 +437,6 @@ public class FilterResourcesSteps {
 
     public String getDescription() {
       return filter.toString();
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("filter", getDescription());
     }
 
     @VisibleForTesting

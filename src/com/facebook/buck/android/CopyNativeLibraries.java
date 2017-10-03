@@ -27,12 +27,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -398,20 +397,16 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
   @Value.Immutable
   @BuckStyleImmutable
-  abstract static class AbstractStrippedObjectDescription implements RuleKeyAppendable {
+  abstract static class AbstractStrippedObjectDescription implements AddsToRuleKey {
+    @AddToRuleKey
     public abstract SourcePath getSourcePath();
 
+    @AddToRuleKey
     public abstract String getStrippedObjectName();
 
+    @AddToRuleKey
     public abstract TargetCpuType getTargetCpuType();
 
     public abstract APKModule getApkModule();
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("sourcePath", getSourcePath())
-          .setReflectively("strippedObjectName", getStrippedObjectName())
-          .setReflectively("targetCpuType", getTargetCpuType());
-    }
   }
 }

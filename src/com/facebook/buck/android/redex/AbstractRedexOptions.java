@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android.redex;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -28,17 +28,13 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractRedexOptions implements RuleKeyAppendable {
+abstract class AbstractRedexOptions implements AddsToRuleKey {
+  @AddToRuleKey
   public abstract Tool getRedex();
 
+  @AddToRuleKey
   public abstract Optional<SourcePath> getRedexConfig();
 
+  @AddToRuleKey
   public abstract ImmutableList<Arg> getRedexExtraArgs();
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("redex", getRedex());
-    sink.setReflectively("redexConfig", getRedexConfig());
-    sink.setReflectively("redexExtraArgs", getRedexExtraArgs());
-  }
 }
