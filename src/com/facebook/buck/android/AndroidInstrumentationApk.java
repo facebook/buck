@@ -50,8 +50,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      boolean shouldProguard,
-      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs) {
+      boolean shouldProguard) {
     super(
         buildTarget,
         projectFilesystem,
@@ -71,11 +70,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         EnumSet.noneOf(ExopackageMode.class),
-        // preprocessJavaClassBash is not supported in instrumentation
-        Optional.empty(),
         rulesToExcludeFromDex,
         enhancementResult,
-        // reordering is not supported in instrumentation. TODO(dtarjan): add support
         Optional.empty(),
         false,
         false,
@@ -83,8 +79,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getJavaRuntimeLauncher(),
         true,
         Optional.empty(),
-        shouldProguard,
-        nonPreDexedDexBuildableArgs);
+        shouldProguard);
     this.apkUnderTest = apkUnderTest;
   }
 

@@ -120,8 +120,9 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary
-        .getBuildableForTests()
-        .getNonPredexedBuildableForTests()
+        .getEnhancementResult()
+        .getDexMergeRule()
+        .getRight()
         .addProguardCommands(
             packageableCollection
                 .getClasspathEntriesToDex()
@@ -141,15 +142,9 @@ public class AndroidBinaryTest {
             androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
 
     Path proguardOutputDir =
-        androidBinary
-            .getBuildableForTests()
-            .getNonPredexedBuildableForTests()
-            .getProguardConfigDir();
+        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardConfigDir();
     Path proguardInputsDir =
-        androidBinary
-            .getBuildableForTests()
-            .getNonPredexedBuildableForTests()
-            .getProguardInputsDir();
+        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardInputsDir();
     ImmutableSet<Path> expectedRecordedArtifacts =
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
@@ -356,8 +351,9 @@ public class AndroidBinaryTest {
             .getScratchDir()
             .resolve(".dex/classes.dex");
     splitDexRule
-        .getBuildableForTests()
-        .getNonPredexedBuildableForTests()
+        .getEnhancementResult()
+        .getDexMergeRule()
+        .getRight()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
@@ -411,8 +407,9 @@ public class AndroidBinaryTest {
             .getScratchDir()
             .resolve(".dex/classes.dex");
     splitDexRule
-        .getBuildableForTests()
-        .getNonPredexedBuildableForTests()
+        .getEnhancementResult()
+        .getDexMergeRule()
+        .getRight()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),

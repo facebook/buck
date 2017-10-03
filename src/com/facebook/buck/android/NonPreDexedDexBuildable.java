@@ -25,13 +25,16 @@ import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
+import com.facebook.buck.rules.BuildableSupport;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -69,10 +72,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-class NonPreDexedDexBuildable implements AddsToRuleKey {
+class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath aaptGeneratedProguardConfigFile;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguard;
 
@@ -106,10 +112,9 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
 
-  // Only these three fields should not be added to the rulekey.
+  // Only these two fields should not be added to the rulekey.
   private final ListeningExecutorService dxExecutorService;
-  private final ProjectFilesystem filesystem;
-  private final BuildTarget buildTarget;
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
   @Value.Immutable
   @BuckStyleImmutable
@@ -148,6 +153,7 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   }
 
   NonPreDexedDexBuildable(
+      SourcePathRuleFinder ruleFinder,
       SourcePath aaptGeneratedProguardConfigFile,
       ImmutableSortedSet<SourcePath> additionalJarsForProguard,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
@@ -162,6 +168,7 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
       NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget) {
+    super(buildTarget, filesystem);
     this.aaptGeneratedProguardConfigFile = aaptGeneratedProguardConfigFile;
     this.additionalJarsForProguard = additionalJarsForProguard;
     this.apkModuleMap = apkModuleMap;
@@ -188,20 +195,35 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
     this.skipProguard = args.getSkipProguard();
     this.xzCompressionLevel = xzCompressionLevel;
     this.shouldSplitDex = shouldSplitDex;
-    this.filesystem = filesystem;
-    this.buildTarget = buildTarget;
+
+    this.buildDepsSupplier =
+        Suppliers.memoize(
+            () ->
+                BuildableSupport.deriveDeps(this, ruleFinder)
+                    .collect(MoreCollectors.toImmutableSortedSet()));
   }
 
   @VisibleForTesting
   Path getProguardConfigDir() {
     Preconditions.checkState(shouldProguard);
-    return getRootScratchPath().resolve("proguard");
+    return getRootGenPath().resolve("proguard");
   }
 
   @VisibleForTesting
   Path getProguardInputsDir() {
     Preconditions.checkState(shouldProguard);
-    return getRootScratchPath().resolve("proguard_inputs");
+    return getRootGenPath().resolve("proguard_inputs");
+  }
+
+  ImmutableList<SourcePath> getAdditionalRedexInputs() {
+    // TODO(cjhopman): This is awkward. Redex should be computing this in a better way.
+    // Redex access the constructed proguard command line and then goes and opens a bunch of the
+    // files listed there.
+    return ImmutableList.<SourcePath>builder()
+        .addAll(classpathEntriesToDexSourcePaths.orElse(ImmutableSet.of()))
+        .addAll(RichStream.from(proguardConfig).collect(Collectors.toList()))
+        .addAll(proguardConfigs)
+        .build();
   }
 
   private Path getRootScratchPath() {
@@ -219,15 +241,18 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   }
 
   private Path getSecondaryDexRoot() {
-    return getBinPath("dexes");
+    return getRootGenPath().resolve("dexes");
   }
 
-  ProjectFilesystem getProjectFilesystem() {
-    return filesystem;
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
-  BuildTarget getBuildTarget() {
-    return buildTarget;
+  @Nullable
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return null;
   }
 
   Path getBinPath(String name) {
@@ -235,14 +260,13 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   }
 
   private Path getNonPredexedPrimaryDexPath() {
-    return BuildTargets.getScratchPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/.dex/classes.dex");
+    return getRootGenPath().resolve(".dex/classes.dex");
   }
 
-  public void addDxSteps(
-      BuildableContext buildableContext,
-      BuildContext buildContext,
-      ImmutableList.Builder<Step> steps) {
+  @Override
+  public ImmutableList<? extends Step> getBuildSteps(
+      BuildContext buildContext, BuildableContext buildableContext) {
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ImmutableSet<Path> classpathEntriesToDex =
         classpathEntriesToDexSourcePaths
             .get()
@@ -252,6 +276,18 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
                     getProjectFilesystem()
                         .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input)))
             .collect(MoreCollectors.toImmutableSet());
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), getRootGenPath())));
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getSecondaryDexRoot())));
 
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         moduleMappedClasspathEntriesToDex
@@ -430,18 +466,23 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
         additionalDexStoreToJarPathMap,
         buildContext);
 
-    // TODO(cjhopman): This should be written in a step, but it's currently read by
-    // AndroidBinaryBuildable before the step is run. When this is in its own BuildRule, it can be
-    // a step.
-    try {
-      getProjectFilesystem().mkdirs(getSecondaryDexListing().getParent());
-      getProjectFilesystem()
-          .writeLinesToPath(
-              secondaryDexDirectoriesBuilder.build().stream().map(t -> t.toString())::iterator,
-              getSecondaryDexListing());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    steps.add(
+        new AbstractExecutionStep("writing_secondary_dex_listing") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context)
+              throws IOException, InterruptedException {
+            getProjectFilesystem().mkdirs(getSecondaryDexListing().getParent());
+            getProjectFilesystem()
+                .writeLinesToPath(
+                    secondaryDexDirectoriesBuilder.build().stream().map(t -> t.toString())
+                        ::iterator,
+                    getSecondaryDexListing());
+            return StepExecutionResult.SUCCESS;
+          }
+        });
+    buildableContext.recordArtifact(getRootGenPath());
+    buildableContext.recordArtifact(getSecondaryDexRoot());
+    return steps.build();
   }
 
   AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
@@ -453,6 +494,13 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   }
 
   private SourcePath genSourcePath(Path path) {
+    // We only record the root gen path, so we should only be creating SourcePaths within that.
+    Preconditions.checkState(
+        path.startsWith(getRootGenPath()) || path.startsWith(getSecondaryDexRoot()),
+        "%s should start with %s or %s",
+        path,
+        getRootGenPath(),
+        getSecondaryDexRoot());
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), path);
   }
 

@@ -135,6 +135,11 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
+  public AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
+    return new AndroidBinaryBuildable.DexFilesInfo(
+        getSourcePathToPrimaryDex(), getSecondaryDexSourcePaths(), Optional.empty());
+  }
+
   /** Wrapper class for all the paths we need when merging for a split-dex APK. */
   private final class SplitDexPaths {
     private final Path metadataDir;

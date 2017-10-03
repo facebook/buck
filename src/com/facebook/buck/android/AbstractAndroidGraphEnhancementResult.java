@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +38,7 @@ interface AbstractAndroidGraphEnhancementResult {
 
   Optional<PackageStringAssets> getPackageStringAssets();
 
-  Optional<PreDexMerge> getPreDexMerge();
+  Either<PreDexMerge, NonPreDexedDexBuildable> getDexMergeRule();
 
   ImmutableList<SourcePath> getProguardConfigs();
 
@@ -67,4 +68,21 @@ interface AbstractAndroidGraphEnhancementResult {
   SourcePath getSourcePathToAaptGeneratedProguardConfigFile();
 
   APKModuleGraph getAPKModuleGraph();
+
+  @Value.Derived
+  default Optional<PreDexMerge> getPreDexMerge() {
+    return getDexMergeRule().transform(left -> Optional.of(left), right -> Optional.empty());
+  }
+
+  @Value.Derived
+  default AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
+    return getDexMergeRule()
+        .transform(PreDexMerge::getDexFilesInfo, NonPreDexedDexBuildable::getDexFilesInfo);
+  }
+
+  @Value.Derived
+  default ImmutableList<SourcePath> getAdditionalRedexInputs() {
+    return getDexMergeRule()
+        .transform(left -> ImmutableList.of(), right -> right.getAdditionalRedexInputs());
+  }
 }

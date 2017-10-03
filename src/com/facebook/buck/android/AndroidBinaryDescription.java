@@ -266,7 +266,7 @@ public class AndroidBinaryDescription
               .setDxExecutorService(dxExecutorService)
               .setDxMaxHeapSize(dxConfig.getDxMaxHeapSize())
               .setOptimizationPasses(args.getOptimizationPasses())
-              .setProguardJvmArgs(Optional.of(args.getProguardJvmArgs()))
+              .setProguardJvmArgs(args.getProguardJvmArgs())
               .setSkipProguard(args.isSkipProguard())
               .setJavaRuntimeLauncher(javaOptions.getJavaRuntimeLauncher())
               .setProguardConfigPath(args.getProguardConfig())
@@ -275,6 +275,7 @@ public class AndroidBinaryDescription
 
       ResourceFilter resourceFilter = new ResourceFilter(args.getResourceFilter());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
       AndroidBinaryGraphEnhancer graphEnhancer =
           new AndroidBinaryGraphEnhancer(
               buildTarget,
@@ -320,7 +321,9 @@ public class AndroidBinaryDescription
               cxxBuckConfig,
               apkModuleGraph,
               dxConfig,
-              getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots));
+              getPostFilterResourcesArgs(args, buildTarget, resolver, cellRoots),
+              nonPreDexedDexBuildableArgs,
+              rulesToExcludeFromDex);
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
       AndroidBinary androidBinary =
@@ -342,7 +345,6 @@ public class AndroidBinaryDescription
               args.getCpuFilters(),
               resourceFilter,
               exopackageModes,
-              getPreprocessJavaClassesBash(args, buildTarget, resolver, cellRoots),
               rulesToExcludeFromDex,
               result,
               args.getXzCompressionLevel(),
@@ -352,8 +354,7 @@ public class AndroidBinaryDescription
               javaOptions.getJavaRuntimeLauncher(),
               args.getIsCacheable(),
               args.getAndroidAppModularityResult(),
-              shouldProguard,
-              nonPreDexedDexBuildableArgs);
+              shouldProguard);
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(

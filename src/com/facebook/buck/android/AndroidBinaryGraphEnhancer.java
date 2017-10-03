@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -50,6 +51,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -88,6 +91,8 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("generate_proguard_config_from_native_libs");
   public static final Flavor UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR =
       InternalFlavor.of("unstripped_native_libraries");
+  static final Flavor NON_PREDEXED_DEX_BUILDABLE_FLAVOR =
+      InternalFlavor.of("class_file_to_dex_processing");
 
   private final BuildTarget originalBuildTarget;
   private final SortedSet<BuildRule> originalDeps;
@@ -116,6 +121,8 @@ public class AndroidBinaryGraphEnhancer {
   private final ListeningExecutorService dxExecutorService;
   private final DxConfig dxConfig;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
+  private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
+  private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
 
   AndroidBinaryGraphEnhancer(
       BuildTarget originalBuildTarget,
@@ -161,7 +168,9 @@ public class AndroidBinaryGraphEnhancer {
       CxxBuckConfig cxxBuckConfig,
       APKModuleGraph apkModuleGraph,
       DxConfig dxConfig,
-      Optional<Arg> postFilterResourcesCmd) {
+      Optional<Arg> postFilterResourcesCmd,
+      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
+      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex) {
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
     this.buildRuleParams = originalParams;
@@ -223,6 +232,8 @@ public class AndroidBinaryGraphEnhancer {
             noAutoVersionResources);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
+    this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
+    this.rulesToExcludeFromDex = rulesToExcludeFromDex;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -413,9 +424,34 @@ public class AndroidBinaryGraphEnhancer {
             compileUberRDotJava);
     ruleResolver.addToIndex(dexUberRDotJava);
 
-    Optional<PreDexMerge> preDexMerge = Optional.empty();
+    ImmutableSet<SourcePath> classpathEntriesToDex =
+        ImmutableSet.<SourcePath>builder()
+            .addAll(packageableCollection.getClasspathEntriesToDex())
+            .addAll(
+                additionalJavaLibraries
+                    .stream()
+                    .map(BuildRule::getSourcePathToOutput)
+                    .collect(MoreCollectors.toImmutableList()))
+            .build();
+    SourcePath aaptGeneratedProguardConfigFile =
+        resourcesEnhancementResult.getAaptGeneratedProguardConfigFile();
+    ImmutableList<SourcePath> proguardConfigs = proguardConfigsBuilder.build();
+
+    Either<PreDexMerge, NonPreDexedDexBuildable> dexMergeRule;
     if (shouldPreDex) {
-      preDexMerge = Optional.of(createPreDexMergeRule(preDexedLibraries, dexUberRDotJava));
+      dexMergeRule = Either.ofLeft(createPreDexMergeRule(preDexedLibraries, dexUberRDotJava));
+    } else {
+      dexMergeRule =
+          Either.ofRight(
+              createNonPredexedDexBuildable(
+                  dexSplitMode,
+                  rulesToExcludeFromDex,
+                  xzCompressionLevel,
+                  aaptGeneratedProguardConfigFile,
+                  proguardConfigs,
+                  packageableCollection,
+                  classpathEntriesToDex,
+                  compileUberRDotJava));
     }
 
     return AndroidGraphEnhancementResult.builder()
@@ -424,22 +460,13 @@ public class AndroidBinaryGraphEnhancer {
         .setPrimaryApkAssetZips(resourcesEnhancementResult.getPrimaryApkAssetZips())
         .setExoResources(resourcesEnhancementResult.getExoResources())
         .setAndroidManifestPath(resourcesEnhancementResult.getAndroidManifestXml())
-        .setSourcePathToAaptGeneratedProguardConfigFile(
-            resourcesEnhancementResult.getAaptGeneratedProguardConfigFile())
-        .setProguardConfigs(proguardConfigsBuilder.build())
+        .setSourcePathToAaptGeneratedProguardConfigFile(aaptGeneratedProguardConfigFile)
+        .setProguardConfigs(proguardConfigs)
         .setCompiledUberRDotJava(compileUberRDotJava)
         .setCopyNativeLibraries(copyNativeLibraries)
         .setPackageStringAssets(resourcesEnhancementResult.getPackageStringAssets())
-        .setPreDexMerge(preDexMerge)
-        .setClasspathEntriesToDex(
-            ImmutableSet.<SourcePath>builder()
-                .addAll(packageableCollection.getClasspathEntriesToDex())
-                .addAll(
-                    additionalJavaLibraries
-                        .stream()
-                        .map(BuildRule::getSourcePathToOutput)
-                        .collect(MoreCollectors.toImmutableList()))
-                .build())
+        .setDexMergeRule(dexMergeRule)
+        .setClasspathEntriesToDex(classpathEntriesToDex)
         .setAPKModuleGraph(apkModuleGraph)
         .build();
   }
@@ -605,6 +632,55 @@ public class AndroidBinaryGraphEnhancer {
           apkModuleGraph.findModuleForTarget(buildTarget), (DexProducedFromJavaLibrary) preDexRule);
     }
     return preDexDeps.build();
+  }
+
+  private NonPreDexedDexBuildable createNonPredexedDexBuildable(
+      DexSplitMode dexSplitMode,
+      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      Optional<Integer> xzCompressionLevel,
+      SourcePath aaptGeneratedProguardConfigFile,
+      ImmutableList<SourcePath> proguardConfigs,
+      AndroidPackageableCollection packageableCollection,
+      ImmutableSet<SourcePath> classpathEntriesToDex,
+      JavaLibrary compiledUberRDotJava) {
+    ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap =
+        apkModuleGraph.toOutgoingEdgesMap();
+    APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
+
+    ImmutableSortedSet<SourcePath> additionalJarsForProguard =
+        rulesToExcludeFromDex
+            .stream()
+            .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
+            .collect(MoreCollectors.toImmutableSortedSet());
+
+    Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths =
+        Optional.of(
+            RichStream.from(classpathEntriesToDex)
+                .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
+                .collect(MoreCollectors.toImmutableSet()));
+    Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
+        moduleMappedClasspathEntriesToDex =
+            Optional.of(
+                MoreMaps.convertMultimapToMapOfLists(
+                    packageableCollection.getModuleMappedClasspathEntriesToDex()));
+    NonPreDexedDexBuildable nonPreDexedDexBuildable =
+        new NonPreDexedDexBuildable(
+            ruleFinder,
+            aaptGeneratedProguardConfigFile,
+            additionalJarsForProguard,
+            apkModuleMap,
+            classpathEntriesToDexSourcePaths,
+            dexSplitMode,
+            moduleMappedClasspathEntriesToDex,
+            proguardConfigs,
+            rootAPKModule,
+            xzCompressionLevel,
+            dexSplitMode.isShouldSplitDex(),
+            nonPreDexedDexBuildableArgs,
+            projectFilesystem,
+            originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR));
+    ruleResolver.addToIndex(nonPreDexedDexBuildable);
+    return nonPreDexedDexBuildable;
   }
 
   private ImmutableSortedSet<BuildRule> getDexMergeDeps(

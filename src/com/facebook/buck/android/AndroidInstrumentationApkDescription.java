@@ -151,6 +151,7 @@ public class AndroidInstrumentationApkDescription
             .build();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             buildTarget,
@@ -199,7 +200,9 @@ public class AndroidInstrumentationApkDescription
             cxxBuckConfig,
             new APKModuleGraph(targetGraph, buildTarget, Optional.empty()),
             dxConfig,
-            /* postFilterResourcesCommands */ Optional.empty());
+            /* postFilterResourcesCommands */ Optional.empty(),
+            nonPreDexedDexBuildableArgs,
+            rulesToExcludeFromDex);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
 
@@ -211,8 +214,7 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest,
         rulesToExcludeFromDex,
         enhancementResult,
-        shouldProguard,
-        nonPreDexedDexBuildableArgs);
+        shouldProguard);
   }
 
   @BuckStyleImmutable

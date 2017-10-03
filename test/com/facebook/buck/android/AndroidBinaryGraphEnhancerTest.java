@@ -38,6 +38,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
+import com.facebook.buck.jvm.java.FakeJavac;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
@@ -171,7 +172,9 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            Optional.empty());
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -319,7 +322,9 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            Optional.empty());
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of());
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -441,7 +446,9 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            Optional.empty());
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -504,7 +511,9 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            Optional.empty());
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -596,7 +605,9 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            Optional.empty());
+            Optional.empty(),
+            defaultNonPredexedArgs(),
+            ImmutableSortedSet.of());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -604,6 +615,22 @@ public class AndroidBinaryGraphEnhancerTest {
         "ResourcesFilter must depend on rules behind resources source paths",
         resourcesFilter,
         resourcesDep);
+  }
+
+  private NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
+    return NonPredexedDexBuildableArgs.builder()
+        .setSdkProguardConfig(ProGuardObfuscateStep.SdkProguardType.NONE)
+        .setDexReorderDataDumpFile(new FakeSourcePath(""))
+        .setDexReorderToolFile(new FakeSourcePath(""))
+        .setDxExecutorService(MoreExecutors.newDirectExecutorService())
+        .setDxMaxHeapSize("")
+        .setJavaRuntimeLauncher(new FakeJavac())
+        .setOptimizationPasses(0)
+        .setProguardMaxHeapSize("")
+        .setReorderClassesIntraDex(false)
+        .setSkipProguard(true)
+        .setShouldProguard(false)
+        .build();
   }
 
   private <T extends BuildRule> T findRuleOfType(

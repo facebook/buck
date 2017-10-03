@@ -78,8 +78,11 @@ public class AndroidBinaryDescriptionTest {
             targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
 
     BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
-    AndroidBinary androidBinary = (AndroidBinary) ruleResolver.requireRule(target);
-    assertThat(androidBinary.getBuildDeps(), Matchers.hasItem(transitiveDep));
+    ruleResolver.requireRule(target);
+    BuildRule nonPredexedRule =
+        ruleResolver.requireRule(
+            target.withFlavors(AndroidBinaryGraphEnhancer.NON_PREDEXED_DEX_BUILDABLE_FLAVOR));
+    assertThat(nonPredexedRule.getBuildDeps(), Matchers.hasItem(transitiveDep));
   }
 
   @Test

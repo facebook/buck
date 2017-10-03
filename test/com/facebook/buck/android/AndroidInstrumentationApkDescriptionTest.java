@@ -41,14 +41,14 @@ public class AndroidInstrumentationApkDescriptionTest {
   @Test
   public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
     // Build up the original APK rule.
-    TargetNode<?, ?> transitiveDep =
+    TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
             .build();
     TargetNode<?, ?> dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
-            .addDep(transitiveDep.getBuildTarget())
+            .addDep(transitiveDepNode.getBuildTarget())
             .build();
     TargetNode<?, ?> keystore =
         KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
@@ -59,7 +59,7 @@ public class AndroidInstrumentationApkDescriptionTest {
         AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
             .setManifest(new FakeSourcePath("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
-            .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
+            .setNoDx(ImmutableSet.of(transitiveDepNode.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -71,13 +71,15 @@ public class AndroidInstrumentationApkDescriptionTest {
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
-            transitiveDep, dep, keystore, androidBinary, androidInstrumentationApk);
+            transitiveDepNode, dep, keystore, androidBinary, androidInstrumentationApk);
     BuildRuleResolver ruleResolver =
         new SingleThreadedBuildRuleResolver(
             targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule transitiveDepRule = ruleResolver.requireRule(transitiveDep.getBuildTarget());
-    AndroidInstrumentationApk androidInstrumentationApkRule =
-        (AndroidInstrumentationApk) ruleResolver.requireRule(target);
-    assertThat(androidInstrumentationApkRule.getBuildDeps(), Matchers.hasItem(transitiveDepRule));
+    BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
+    ruleResolver.requireRule(target);
+    BuildRule nonPredexedRule =
+        ruleResolver.requireRule(
+            target.withFlavors(AndroidBinaryGraphEnhancer.NON_PREDEXED_DEX_BUILDABLE_FLAVOR));
+    assertThat(nonPredexedRule.getBuildDeps(), Matchers.hasItem(transitiveDep));
   }
 }

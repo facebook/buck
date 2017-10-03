@@ -42,7 +42,6 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -168,6 +167,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
 
+  // TODO(cjhopman): What's the difference between shouldProguard and skipProguard?
   AndroidBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -186,7 +186,6 @@ public class AndroidBinary extends AbstractBuildRule
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
-      Optional<Arg> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       Optional<Integer> xzCompressionLevel,
@@ -196,8 +195,7 @@ public class AndroidBinary extends AbstractBuildRule
       Tool javaRuntimeLauncher,
       boolean isCacheable,
       Optional<SourcePath> appModularityResult,
-      boolean shouldProguard,
-      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs) {
+      boolean shouldProguard) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -249,12 +247,12 @@ public class AndroidBinary extends AbstractBuildRule
             getProjectFilesystem(),
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            dexSplitMode,
             redexOptions,
+            redexOptions
+                .map(options -> enhancementResult.getAdditionalRedexInputs())
+                .orElse(ImmutableList.of()),
             this.cpuFilters,
             exopackageModes,
-            preprocessJavaClassesBash,
-            rulesToExcludeFromDex,
             enhancementResult,
             xzCompressionLevel,
             packageAssetLibraries,
@@ -264,12 +262,9 @@ public class AndroidBinary extends AbstractBuildRule
             enhancementResult.getAndroidManifestPath(),
             enhancementResult.getPrimaryResourcesApkPath(),
             enhancementResult.getPrimaryApkAssetZips(),
-            enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile(),
-            enhancementResult.getProguardConfigs(),
             resourceCompressionMode.isCompressResources(),
             this.appModularityResult,
-            shouldProguard,
-            nonPreDexedDexBuildableArgs);
+            shouldProguard);
     params =
         params.withExtraDeps(
             () ->
@@ -349,11 +344,6 @@ public class AndroidBinary extends AbstractBuildRule
   @VisibleForTesting
   AndroidGraphEnhancementResult getEnhancementResult() {
     return enhancementResult;
-  }
-
-  @VisibleForTesting
-  AndroidBinaryBuildable getBuildableForTests() {
-    return buildable;
   }
 
   /** The APK at this path is the final one that points to an APK that a user should install. */
