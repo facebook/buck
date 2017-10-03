@@ -29,18 +29,16 @@ import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -53,10 +51,6 @@ import javax.annotation.Nullable;
 public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
   private static final Logger LOG = Logger.get(DefaultRuleKeyCache.class);
-
-  // Allocates a new collection for storing reverse deps.
-  private static final Function<Object, Collection<Object>> NEW_COLLECTION =
-      o -> new ConcurrentLinkedQueue<>();
 
   private final Clock clock;
 
@@ -83,11 +77,11 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
    * A map from cached nodes to their dependents. Used for invalidating the chain of transitive
    * dependents of a node.
    */
-  private final ConcurrentMap<IdentityWrapper<Object>, Collection<Object>> dependentsIndex =
+  private final ConcurrentMap<IdentityWrapper<Object>, Stream.Builder<Object>> dependentsIndex =
       new ConcurrentHashMap<>();
 
   /** A map for rule key inputs to nodes that use them. */
-  private final ConcurrentMap<RuleKeyInput, Collection<Object>> inputsIndex =
+  private final ConcurrentMap<RuleKeyInput, Stream.Builder<Object>> inputsIndex =
       new ConcurrentHashMap<>();
 
   // Stats.
@@ -115,10 +109,26 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
 
     RuleKeyResult<V> result = create.apply(node);
     for (Object dependency : result.deps) {
-      dependentsIndex.computeIfAbsent(new IdentityWrapper<>(dependency), NEW_COLLECTION).add(node);
+      dependentsIndex.compute(
+          new IdentityWrapper<>(dependency),
+          (key, builder) -> {
+            if (builder == null) {
+              builder = Stream.builder();
+            }
+            builder.add(node);
+            return builder;
+          });
     }
     for (RuleKeyInput input : result.inputs) {
-      inputsIndex.computeIfAbsent(input, NEW_COLLECTION).add(node);
+      inputsIndex.compute(
+          input,
+          (key, builder) -> {
+            if (builder == null) {
+              builder = Stream.builder();
+            }
+            builder.add(node);
+            return builder;
+          });
     }
 
     // Update stats.
@@ -174,37 +184,38 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
   }
 
   /** Recursively invalidate nodes up the dependency tree. */
-  private void invalidateNodes(Iterable<?> nodes) {
-    for (Object node : nodes) {
-      LOG.verbose("invalidating node %s", node);
-      cache.remove(new IdentityWrapper<>(node));
-      evictionCount.increment();
-    }
-    List<Iterable<Object>> dependents = new ArrayList<>();
-    for (Object node : nodes) {
-      Iterable<Object> nodeDependents = dependentsIndex.remove(new IdentityWrapper<>(node));
-      if (nodeDependents != null) {
-        dependents.add(nodeDependents);
-      }
-    }
+  private void invalidateNodes(Stream<?> nodes) {
+    List<Stream<Object>> dependents = new ArrayList<>();
+    nodes.forEach(
+        node -> {
+          LOG.verbose("invalidating node %s", node);
+          cache.remove(new IdentityWrapper<>(node));
+          evictionCount.increment();
+
+          Stream.Builder<Object> nodeDependents =
+              dependentsIndex.remove(new IdentityWrapper<>(node));
+          if (nodeDependents != null) {
+            dependents.add(nodeDependents.build());
+          }
+        });
     if (!dependents.isEmpty()) {
-      invalidateNodes(Iterables.concat(dependents));
+      invalidateNodes(dependents.stream().flatMap(x -> x));
     }
   }
 
   /** Invalidate the given inputs and all their transitive dependents. */
   @Override
   public void invalidateInputs(Iterable<RuleKeyInput> inputs) {
-    List<Iterable<Object>> nodes = new ArrayList<>();
+    List<Stream<Object>> nodes = new ArrayList<>();
     for (RuleKeyInput input : inputs) {
       LOG.verbose("invalidating input %s", input);
-      Iterable<Object> inputNodes = inputsIndex.remove(input);
+      Stream.Builder<Object> inputNodes = inputsIndex.remove(input);
       if (inputNodes != null) {
-        nodes.add(inputNodes);
+        nodes.add(inputNodes.build());
       }
     }
     if (!nodes.isEmpty()) {
-      invalidateNodes(Iterables.concat(nodes));
+      invalidateNodes(nodes.stream().flatMap(x -> x));
     }
   }
 
