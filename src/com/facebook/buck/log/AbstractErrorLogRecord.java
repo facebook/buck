@@ -79,7 +79,6 @@ abstract class AbstractErrorLogRecord {
   public String getMessage() {
     Optional<String> initialErr = Optional.empty();
     Optional<String> initialErrorMsg = Optional.empty();
-    Optional<String> errorMsg = Optional.empty();
     Throwable throwable = getRecord().getThrown();
     if (throwable != null) {
       initialErr = Optional.ofNullable(getInitialCause(throwable).getClass().getName());
@@ -87,7 +86,15 @@ abstract class AbstractErrorLogRecord {
         initialErrorMsg = Optional.ofNullable(getInitialCause(throwable).getLocalizedMessage());
       }
     }
-    errorMsg = Optional.ofNullable(getRecord().getMessage());
+
+    Optional<String> errorMsg;
+    String message = getRecord().getMessage();
+    Object[] parameters = getRecord().getParameters();
+    if (message != null && parameters != null) {
+      errorMsg = Optional.ofNullable(String.format(message, parameters));
+    } else {
+      errorMsg = Optional.ofNullable(message);
+    }
     StringBuilder sb = new StringBuilder();
     for (Optional<String> field : ImmutableList.of(initialErr, initialErrorMsg, errorMsg)) {
       sb.append(field.orElse(""));
