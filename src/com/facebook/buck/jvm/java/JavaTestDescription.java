@@ -44,6 +44,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -61,7 +62,8 @@ import org.immutables.value.Value;
 
 public class JavaTestDescription
     implements Description<JavaTestDescriptionArg>,
-        ImplicitDepsInferringDescription<JavaTestDescription.AbstractJavaTestDescriptionArg> {
+        ImplicitDepsInferringDescription<JavaTestDescription.AbstractJavaTestDescriptionArg>,
+        VersionRoot<JavaTestDescriptionArg> {
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
