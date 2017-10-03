@@ -69,7 +69,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class BuildCommandErrorsIntegrationTest {
-  private static final boolean DEBUG = false;
+  private static final boolean DEBUG = true;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectWorkspace workspace;
@@ -282,12 +282,70 @@ public class BuildCommandErrorsIntegrationTest {
     assertEquals("", getError(getStderr(result)));
   }
 
+  @Test
+  public void runtimeExceptionThrownKeepGoing() throws Exception {
+    mockDescription.buildRuleFactory =
+        exceptionTargetFactory("failure message", RuntimeException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    result.assertFailure();
+    assertEquals(
+        " ** Summary of failures encountered during the build **\n"
+            + "Rule //:target_name FAILED because failure message\n"
+            + "    When building rule //:target_name.\n"
+            + "Not all rules succeeded.",
+        getError(getStderr(result)));
+  }
+
+  @Test
+  public void runtimeExceptionThrownInStepKeepGoing() throws Exception {
+    mockDescription.buildRuleFactory =
+        stepExceptionTargetFactory("failure message", RuntimeException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    result.assertFailure();
+    assertEquals(
+        " ** Summary of failures encountered during the build **\n"
+            + "Rule //:target_name FAILED because failure message\n"
+            + "    When running <failing_step>.\n"
+            + "    When building rule //:target_name.\n"
+            + "Not all rules succeeded.",
+        getError(getStderr(result)));
+  }
+
+  @Test
+  public void ioExceptionThrownInStepKeepGoing() throws Exception {
+    mockDescription.buildRuleFactory =
+        stepExceptionTargetFactory("failure message", IOException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    result.assertFailure();
+    assertEquals(
+        " ** Summary of failures encountered during the build **\n"
+            + "Rule //:target_name FAILED because failure message\n"
+            + "    When running <failing_step>.\n"
+            + "    When building rule //:target_name.\n"
+            + "Not all rules succeeded.",
+        getError(getStderr(result)));
+  }
+
+  @Test
+  public void ioExceptionThrownKeepGoing() throws Exception {
+    mockDescription.buildRuleFactory = exceptionTargetFactory("failure message", IOException.class);
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
+    result.assertFailure();
+    assertEquals(
+        " ** Summary of failures encountered during the build **\n"
+            + "Rule //:target_name FAILED because failure message\n"
+            + "    When building rule //:target_name.\n"
+            + "Not all rules succeeded.",
+        getError(getStderr(result)));
+  }
+
   private String getError(String stderr) {
     String[] lines = stderr.split("\n");
     int start = 0;
     while (start < lines.length) {
       if (lines[start].startsWith("Build failed")
-          || lines[start].startsWith("Buck encountered an internal")) {
+          || lines[start].startsWith("Buck encountered an internal")
+          || lines[start].startsWith(" ** Summary of failures encountered during the build **")) {
         break;
       }
       start++;

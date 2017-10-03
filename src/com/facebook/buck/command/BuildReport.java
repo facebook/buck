@@ -16,6 +16,7 @@
 
 package com.facebook.buck.command;
 
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleSuccessType;
@@ -23,6 +24,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.exceptions.BuckExecutionException;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -37,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 
 @VisibleForTesting
 public class BuildReport {
+  private static final Logger LOG = Logger.get(BuildReport.class);
 
   private final BuildExecutionResult buildExecutionResult;
   private final SourcePathResolver pathResolver;
@@ -90,10 +93,30 @@ public class BuildReport {
       report.append("\n ** Summary of failures encountered during the build **\n");
       for (BuildResult failureResult : buildExecutionResult.getFailures()) {
         Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());
-        report.append(
-            String.format(
-                "Rule %s FAILED because %s.\n",
-                failureResult.getRule().getFullyQualifiedName(), failure.getMessage()));
+        new ErrorLogger(
+                new ErrorLogger.LogImpl() {
+                  @Override
+                  public void logUserVisible(String message) {
+                    report.append(
+                        String.format(
+                            "Rule %s FAILED because %s.",
+                            failureResult.getRule().getFullyQualifiedName(), message));
+                  }
+
+                  @Override
+                  public void logUserVisibleInternalError(String message) {
+                    logUserVisible(message);
+                  }
+
+                  @Override
+                  public void logVerbose(Throwable e) {
+                    LOG.debug(
+                        e,
+                        "Error encountered while building %s.",
+                        failureResult.getRule().getFullyQualifiedName());
+                  }
+                })
+            .logException(failure);
       }
     }
 

@@ -359,7 +359,7 @@ public class Build implements Closeable {
     }
     new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.") {
       @Override
-      protected String getMessageForRootCause(Exception rootCause) {
+      protected String getMessageForRootCause(Throwable rootCause) {
         if (rootCause instanceof HumanReadableException) {
           return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
         } else {

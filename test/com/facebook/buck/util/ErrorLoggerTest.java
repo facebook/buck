@@ -26,7 +26,7 @@ public class ErrorLoggerTest {
   static class LoggedErrors {
     @Nullable String userVisible = null;
     @Nullable String userVisibleInternal = null;
-    @Nullable Exception verbose = null;
+    @Nullable Throwable verbose = null;
   }
 
   @Test
@@ -76,7 +76,7 @@ public class ErrorLoggerTest {
               }
 
               @Override
-              public void logVerbose(Exception e) {
+              public void logVerbose(Throwable e) {
                 assertNull(result.verbose);
                 result.verbose = e;
               }

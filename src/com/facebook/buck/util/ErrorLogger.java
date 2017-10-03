@@ -37,7 +37,7 @@ public class ErrorLogger {
 
     void logUserVisibleInternalError(String message);
 
-    void logVerbose(Exception e);
+    void logVerbose(Throwable e);
   }
 
   private final LogImpl logger;
@@ -57,7 +57,7 @@ public class ErrorLogger {
           }
 
           @Override
-          public void logVerbose(Exception e) {
+          public void logVerbose(Throwable e) {
             LOG.debug(e, verboseMessage);
           }
         });
@@ -67,7 +67,7 @@ public class ErrorLogger {
     this.logger = logger;
   }
 
-  public void logException(Exception e) {
+  public void logException(Throwable e) {
     logger.logVerbose(e);
 
     // TODO(cjhopman): Think about how to handle multiline context strings.
@@ -80,13 +80,13 @@ public class ErrorLogger {
       if (!(cause instanceof Exception)) {
         break;
       }
-      e = (Exception) cause;
+      e = cause;
     }
 
     logUserVisible(e, context);
   }
 
-  protected void logUserVisible(Exception rootCause, List<String> context) {
+  protected void logUserVisible(Throwable rootCause, List<String> context) {
     StringBuilder messageBuilder = new StringBuilder();
     // TODO(cjhopman): Based on verbosity, get the stacktrace here instead of just the message.
     messageBuilder.append(getMessageForRootCause(rootCause));
@@ -103,7 +103,7 @@ public class ErrorLogger {
     }
   }
 
-  protected String getMessageForRootCause(Exception rootCause) {
+  protected String getMessageForRootCause(Throwable rootCause) {
     if (rootCause instanceof HumanReadableException) {
       return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
     } else {
