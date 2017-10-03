@@ -133,7 +133,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
     setUp(buckConfig);
@@ -185,7 +185,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
     setUp(buckConfig);
@@ -203,7 +203,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
 
     BuildJobState dump =
         DistBuildState.dump(
@@ -329,7 +329,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(cell1Root, config));
+            DefaultCellPathResolver.of(cell1Root, config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(cell1Filesystem).setBuckConfig(buckConfig).build();
     setUp(buckConfig);
@@ -358,7 +358,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(cell1Root, localConfig));
+            DefaultCellPathResolver.of(cell1Root, localConfig));
     DistBuildState distributedBuildState =
         DistBuildState.load(
             localBuckConfig,

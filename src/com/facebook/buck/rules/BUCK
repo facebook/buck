@@ -490,11 +490,11 @@ java_immutables_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "cell_path_resolver_impls",
     srcs = [
+        "AbstractDefaultCellPathResolver.java",
         "CellPathResolverView.java",
-        "DefaultCellPathResolver.java",
     ],
     exported_deps = [
         ":interfaces",

@@ -57,6 +57,6 @@ public class BuckConfigTestUtils {
         architecture,
         platform,
         environment,
-        new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config));
   }
 }

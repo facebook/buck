@@ -111,7 +111,7 @@ public class CxxPlatformUtils {
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.of(),
-            new DefaultCellPathResolver(root, rawConfig));
+            DefaultCellPathResolver.of(root, rawConfig));
     return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 

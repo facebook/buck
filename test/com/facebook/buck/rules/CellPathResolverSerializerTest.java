@@ -27,7 +27,7 @@ public class CellPathResolverSerializerTest {
   @Test
   public void testSerializingDefaultCellPathResolver() throws Exception {
     DefaultCellPathResolver input =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             Paths.get("/root/path"),
             ImmutableMap.of(
                 "key1", Paths.get("/path/1/"),

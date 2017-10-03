@@ -181,7 +181,7 @@ public class DistBuildState {
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), rawConfig));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

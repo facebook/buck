@@ -764,7 +764,7 @@ public class ProjectWorkspace {
             Architecture.detect(),
             Platform.detect(),
             env,
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     SdkEnvironment sdkEnvironment =
         SdkEnvironment.create(buckConfig, processExecutor, directoryResolver);
 

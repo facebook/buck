@@ -20,6 +20,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,36 +33,43 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
-public class DefaultCellPathResolver implements CellPathResolver {
-  private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
+@Value.Immutable
+@BuckStyleTuple
+abstract class AbstractDefaultCellPathResolver implements CellPathResolver {
 
-  public static final String REPOSITORIES_SECTION = "repositories";
+  private static final Logger LOG = Logger.get(AbstractDefaultCellPathResolver.class);
 
-  private final Path root;
-  private final ImmutableMap<String, Path> cellPaths;
-  private final ImmutableMap<Path, String> canonicalNames;
-  private final ImmutableMap<RelativeCellName, Path> pathMapping;
+  static final String REPOSITORIES_SECTION = "repositories";
 
-  public DefaultCellPathResolver(Path root, ImmutableMap<String, Path> cellPaths) {
-    this.root = root;
-    this.cellPaths = cellPaths;
-    this.canonicalNames =
-        cellPaths
-            .entrySet()
-            .stream()
-            .collect(
-                Collectors.collectingAndThen(
-                    Collectors.toMap(
-                        Map.Entry::getValue,
-                        Map.Entry::getKey,
-                        BinaryOperator.minBy(Comparator.<String>naturalOrder())),
-                    ImmutableMap::copyOf));
-    this.pathMapping = bootstrapPathMapping(root, cellPaths);
+  public abstract Path getRoot();
+
+  @Override
+  public abstract ImmutableMap<String, Path> getCellPaths();
+
+  @Value.Lazy
+  public ImmutableMap<Path, String> getCanonicalNames() {
+    return getCellPaths()
+        .entrySet()
+        .stream()
+        .collect(
+            Collectors.collectingAndThen(
+                Collectors.toMap(
+                    Map.Entry::getValue,
+                    Map.Entry::getKey,
+                    BinaryOperator.minBy(Comparator.<String>naturalOrder())),
+                ImmutableMap::copyOf));
   }
 
-  public DefaultCellPathResolver(Path root, Config config) {
-    this(root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
+  @Value.Lazy
+  public ImmutableMap<RelativeCellName, Path> getPathMapping() {
+    return bootstrapPathMapping(getRoot(), getCellPaths());
+  }
+
+  public static DefaultCellPathResolver of(Path root, Config config) {
+    return DefaultCellPathResolver.of(
+        root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
@@ -110,14 +118,6 @@ public class DefaultCellPathResolver implements CellPathResolver {
         root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
 
-  public ImmutableMap<RelativeCellName, Path> getPathMapping() {
-    return pathMapping;
-  }
-
-  public Path getRoot() {
-    return root;
-  }
-
   private static Path getCellPath(
       ImmutableMap<String, Path> cellPaths, Path root, String cellName) {
     Path path = cellPaths.get(cellName);
@@ -129,28 +129,20 @@ public class DefaultCellPathResolver implements CellPathResolver {
   }
 
   private Path getCellPath(String cellName) {
-    return getCellPath(cellPaths, root, cellName);
+    return getCellPath(getCellPaths(), getRoot(), cellName);
   }
 
   @Override
   public Path getCellPath(Optional<String> cellName) {
-    if (!cellName.isPresent()) {
-      return root;
-    }
-    return getCellPath(cellName.get());
-  }
-
-  @Override
-  public ImmutableMap<String, Path> getCellPaths() {
-    return cellPaths;
+    return cellName.map(this::getCellPath).orElse(getRoot());
   }
 
   @Override
   public Optional<String> getCanonicalCellName(Path cellPath) {
-    if (cellPath.equals(root)) {
+    if (cellPath.equals(getRoot())) {
       return Optional.empty();
     } else {
-      String name = canonicalNames.get(cellPath);
+      String name = getCanonicalNames().get(cellPath);
       if (name == null) {
         throw new IllegalArgumentException("Unknown cell path: " + cellPath);
       }

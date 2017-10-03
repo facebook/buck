@@ -108,7 +108,7 @@ public class BuildTargetPatternParserTest {
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver cellNames =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             filesystem.getPath("foo/root"),
             ImmutableMap.of("other", filesystem.getPath("foo/other")));
 
@@ -128,7 +128,7 @@ public class BuildTargetPatternParserTest {
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver rootCellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             filesystem.getPath("root").normalize(),
             ImmutableMap.of(
                 "other", filesystem.getPath("other").normalize(),

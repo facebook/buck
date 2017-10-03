@@ -215,7 +215,7 @@ public class PythonTestIntegrationTest {
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
-            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
+            DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
     return new PythonBuckConfig(buckConfig, new ExecutableFinder());
   }
 }

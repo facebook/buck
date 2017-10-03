@@ -81,7 +81,7 @@ public class OCamlIntegrationTest {
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.copyOf(System.getenv()),
-            new DefaultCellPathResolver(filesystem.getRootPath(), rawConfig));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), rawConfig));
 
     OcamlBuckConfig ocamlBuckConfig =
         new OcamlBuckConfig(

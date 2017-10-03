@@ -114,7 +114,7 @@ public class GroovyBuckConfigTest {
             Architecture.detect(),
             Platform.detect(),
             environment,
-            new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config));
 
     return new GroovyBuckConfig(buckConfig);
   }

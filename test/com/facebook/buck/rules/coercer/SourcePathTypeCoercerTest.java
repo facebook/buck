@@ -104,7 +104,7 @@ public class SourcePathTypeCoercerTest {
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException, IOException {
     Path helloRoot = Paths.get("/opt/src/hello");
     cellRoots =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             projectFilesystem.getRootPath(), ImmutableMap.of("hello", helloRoot));
 
     SourcePath sourcePath =

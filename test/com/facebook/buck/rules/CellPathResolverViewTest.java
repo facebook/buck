@@ -82,7 +82,7 @@ public class CellPathResolverViewTest {
   }
 
   private CellPathResolver getTestDelegate() {
-    return new DefaultCellPathResolver(
+    return DefaultCellPathResolver.of(
         filesystem.getPath("foo/root"),
         ImmutableMap.of(
             "a", filesystem.getPath("foo/a"),

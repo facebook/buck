@@ -326,7 +326,7 @@ public class LuaBinaryIntegrationTest {
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.of(),
-            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
+            DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
     return new LuaBuckConfig(buckConfig, new FakeExecutableFinder(ImmutableList.of()));
   }
 }

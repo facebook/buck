@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 
 public final class TestCellPathResolver {
   public static CellPathResolver get(ProjectFilesystem projectFilesystem) {
-    return new DefaultCellPathResolver(projectFilesystem.getRootPath(), ImmutableMap.of());
+    return DefaultCellPathResolver.of(projectFilesystem.getRootPath(), ImmutableMap.of());
   }
 
   private TestCellPathResolver() {}

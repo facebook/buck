@@ -97,7 +97,7 @@ public class DefaultClassUsageFileWriterTest {
     ProjectFilesystem externalFs = FakeProjectFilesystem.createRealTempFilesystem();
 
     CellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath()));
     Path testJarPath = homeFs.getPathForRelativePath("home.jar");
     Path testTwoJarPath = awayFs.getPathForRelativePath("away.jar");

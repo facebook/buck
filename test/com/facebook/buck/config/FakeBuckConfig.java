@@ -92,7 +92,7 @@ public class FakeBuckConfig {
           architecture,
           platform,
           environment,
-          new DefaultCellPathResolver(filesystem.getRootPath(), config));
+          DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     }
   }
 }

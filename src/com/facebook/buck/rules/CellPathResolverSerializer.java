@@ -78,6 +78,6 @@ public class CellPathResolverSerializer {
       cellPaths.put(entry.getKey(), Paths.get(entry.getValue()));
     }
 
-    return new DefaultCellPathResolver(rootPath, cellPaths.build());
+    return DefaultCellPathResolver.of(rootPath, cellPaths.build());
   }
 }

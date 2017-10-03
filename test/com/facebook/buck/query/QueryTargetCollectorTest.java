@@ -39,7 +39,7 @@ public class QueryTargetCollectorTest {
       new GraphEnhancementQueryEnvironment(
           Optional.empty(),
           Optional.empty(),
-          new DefaultCellPathResolver(ROOT, ImmutableMap.of()),
+          DefaultCellPathResolver.of(ROOT, ImmutableMap.of()),
           BuildTargetPatternParser.forBaseName(baseName),
           ImmutableSet.of());
   private QueryTargetCollector collector;

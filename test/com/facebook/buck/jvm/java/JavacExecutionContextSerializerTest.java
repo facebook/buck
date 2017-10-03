@@ -56,7 +56,7 @@ public class JavacExecutionContextSerializerTest {
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     Verbosity verbosity = Verbosity.COMMANDS_AND_OUTPUT;
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             Paths.get("/some/cell/path/resolver/path"),
             ImmutableMap.of("key1", Paths.get("/path/1")));
     DefaultJavaPackageFinder javaPackageFinder =

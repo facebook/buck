@@ -94,7 +94,7 @@ public final class CellProvider {
       ProjectFilesystemFactory projectFilesystemFactory) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());
+        DefaultCellPathResolver.of(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
     ImmutableMap<RelativeCellName, Path> cellPathMapping =
         rootCellCellPathResolver.getPathMapping();

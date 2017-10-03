@@ -526,7 +526,7 @@ public final class Main {
         projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
 
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(filesystem.getRootPath(), config);
+        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
     BuckConfig buckConfig =
         new BuckConfig(
             config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
