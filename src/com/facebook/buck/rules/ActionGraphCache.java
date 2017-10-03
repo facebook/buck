@@ -124,7 +124,12 @@ public class ActionGraphCache {
         HashCode targetGraphHash = getTargetGraphHash(targetGraph);
         if (lastActionGraph == null) {
           LOG.info("ActionGraph cache miss. Cache was empty.");
+          eventBus.post(ActionGraphEvent.Cache.missWithEmptyCache());
         } else {
+          if (!lastActionGraph.getFirst().equals(targetGraph)) {
+            LOG.info("ActionGraph cache miss. TargetGraphs mismatched.");
+            eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphDifference());
+          }
           if (Objects.equals(lastTargetGraphHash, targetGraphHash)) {
             LOG.info("ActionGraph cache miss. TargetGraphs mismatched but hashes are the same.");
             eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphHashMatch());

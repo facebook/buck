@@ -154,9 +154,10 @@ public class ActionGraphCacheTest {
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
     // Each time you call it for a different TargetGraph so all calls should be misses.
-    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
-    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
+    assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
+    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
+    trackedEvents.clear();
     ActionGraphAndResolver resultRun2 =
         cache.getActionGraph(
             eventBus,
@@ -165,10 +166,11 @@ public class ActionGraphCacheTest {
             targetGraph.getSubgraph(ImmutableSet.of(nodeB)),
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
+    assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
+    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
+    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphDifference.class));
 
-    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
-    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 2);
-
+    trackedEvents.clear();
     ActionGraphAndResolver resultRun3 =
         cache.getActionGraph(
             eventBus,
@@ -177,8 +179,8 @@ public class ActionGraphCacheTest {
             targetGraph,
             keySeed,
             ActionGraphParallelizationMode.DISABLED);
-    assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
-    assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 3);
+    assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
+    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
     // Run1 and Run2 should not match, but Run1 and Run3 should
     Map<BuildRule, RuleKey> resultRun1RuleKeys =

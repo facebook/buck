@@ -94,8 +94,16 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
       return new Miss(cacheWasEmpty);
     }
 
+    public static MissWithEmptyCache missWithEmptyCache() {
+      return new MissWithEmptyCache();
+    }
+
     public static MissWithTargetGraphHashMatch missWithTargetGraphHashMatch() {
       return new MissWithTargetGraphHashMatch();
+    }
+
+    public static MissWithTargetGraphDifference missWithTargetGraphDifference() {
+      return new MissWithTargetGraphDifference();
     }
 
     public static MissWithWatchmanPathEvent missWithWatchmanPathEvent() {
@@ -121,9 +129,21 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
       }
     }
 
+    public static class MissWithEmptyCache extends Cache {
+      public MissWithEmptyCache() {
+        super("ActionGraphCacheMissWithEmptyCache");
+      }
+    }
+
     public static class MissWithTargetGraphHashMatch extends Cache {
       public MissWithTargetGraphHashMatch() {
         super("ActionGraphCacheMissWithTargetGraphHashMatch");
+      }
+    }
+
+    public static class MissWithTargetGraphDifference extends Cache {
+      public MissWithTargetGraphDifference() {
+        super("ActionGraphCacheMissWithTargetGraphDifference");
       }
     }
 
