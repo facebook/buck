@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
@@ -97,11 +96,9 @@ public class CommandRunnerParamsForTesting {
       throws IOException, InterruptedException {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ProcessExecutor processExecutor = new FakeProcessExecutor();
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
-
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+    SdkEnvironment sdkEnvironment =
+        SdkEnvironment.create(config, processExecutor, toolchainProvider);
 
     return CommandRunnerParams.builder()
         .setConsole(console)

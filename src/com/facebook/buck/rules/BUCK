@@ -88,7 +88,6 @@ java_immutables_library(
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:steps",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/apple:platform",

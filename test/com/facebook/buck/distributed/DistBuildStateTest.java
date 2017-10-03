@@ -22,8 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -109,10 +107,8 @@ public class DistBuildStateTest {
 
   private void setUp(BuckConfig buckConfig) {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
-
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
     knownBuildRuleTypesFactory =
         new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider);

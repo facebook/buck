@@ -623,7 +623,7 @@ public final class Main {
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
       SdkEnvironment sdkEnvironment =
-          SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
+          SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
       Clock clock;
       boolean enableThreadCpuTime =

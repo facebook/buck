@@ -16,9 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -106,11 +103,9 @@ public final class KnownBuildRuleTypesTestUtil {
       BuckConfig config, ProjectFilesystem filesystem, ProcessExecutor processExecutor)
       throws InterruptedException, IOException {
 
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    SdkEnvironment sdkEnvironment =
-        AbstractSdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
-    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
+    SdkEnvironment sdkEnvironment =
+        AbstractSdkEnvironment.create(config, processExecutor, toolchainProvider);
 
     return KnownBuildRuleTypes.createInstance(
         config, filesystem, processExecutor, toolchainProvider, sdkEnvironment);

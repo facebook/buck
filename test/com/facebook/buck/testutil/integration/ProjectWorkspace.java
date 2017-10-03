@@ -26,7 +26,6 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
 import com.facebook.buck.config.BuckConfig;
@@ -753,9 +752,6 @@ public class ProjectWorkspace {
 
     TestConsole console = new TestConsole();
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
-    DefaultAndroidDirectoryResolver directoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(), env, Optional.empty(), Optional.empty());
     ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
     BuckConfig buckConfig =
         new BuckConfig(
@@ -765,10 +761,9 @@ public class ProjectWorkspace {
             Platform.detect(),
             env,
             DefaultCellPathResolver.of(filesystem.getRootPath(), config));
-    SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, directoryResolver);
-
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    SdkEnvironment sdkEnvironment =
+        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
     return CellProvider.createForLocalBuild(
             filesystem,

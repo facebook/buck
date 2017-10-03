@@ -16,7 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
+import com.facebook.buck.android.toolchain.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleSdk;
@@ -26,6 +27,7 @@ import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +53,7 @@ abstract class AbstractSdkEnvironment {
   public abstract Optional<String> getNdkVersion();
 
   public static SdkEnvironment create(
-      BuckConfig config, ProcessExecutor executor, AndroidDirectoryResolver directoryResolver) {
+      BuckConfig config, ProcessExecutor executor, ToolchainProvider toolchainProvider) {
     Optional<Path> appleDeveloperDir =
         AppleCxxPlatforms.getAppleDeveloperDirectory(config, executor);
 
@@ -84,11 +86,22 @@ abstract class AbstractSdkEnvironment {
       }
     }
 
+    Optional<Path> androidSdkRoot;
+    Optional<Path> androidNdkRoot;
+    Optional<String> androidNdkVersion;
+    if (toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
+      AndroidToolchain androidToolchain =
+          toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+      androidSdkRoot = Optional.of(androidToolchain.getAndroidSdk().getSdkRootPath());
+      androidNdkRoot = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkRootPath);
+      androidNdkVersion = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkVersion);
+    } else {
+      androidSdkRoot = Optional.empty();
+      androidNdkRoot = Optional.empty();
+      androidNdkVersion = Optional.empty();
+    }
+
     return SdkEnvironment.of(
-        appleSdkPaths,
-        appleToolchains,
-        directoryResolver.getSdkOrAbsent(),
-        directoryResolver.getNdkOrAbsent(),
-        directoryResolver.getNdkVersion());
+        appleSdkPaths, appleToolchains, androidSdkRoot, androidNdkRoot, androidNdkVersion);
   }
 }
