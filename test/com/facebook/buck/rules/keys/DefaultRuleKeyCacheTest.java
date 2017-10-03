@@ -46,9 +46,9 @@ public class DefaultRuleKeyCacheTest {
 
   @Test
   public void testCacheRule() {
-    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
-    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of()));
+    cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));
     assertTrue(cache.isCached(rule));
     cache.get(
         rule,
@@ -59,10 +59,10 @@ public class DefaultRuleKeyCacheTest {
 
   @Test
   public void testInvalidateInputToCachedRule() {
-    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
-    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     assertTrue(cache.isCached(rule));
     cache.invalidateInputs(ImmutableList.of(input));
     assertFalse(cache.isCached(rule));
@@ -70,12 +70,12 @@ public class DefaultRuleKeyCacheTest {
 
   @Test
   public void testInvalidateTransitiveInputToCachedRule() {
-    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule dep = new TestRule();
-    cache.get(dep, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(dep, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     TestRule rule = new TestRule();
-    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(dep), ImmutableList.of()));
+    cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(dep), ImmutableList.of()));
     assertTrue(cache.isCached(rule));
     assertTrue(cache.isCached(dep));
     cache.invalidateInputs(ImmutableList.of(input));
@@ -85,12 +85,12 @@ public class DefaultRuleKeyCacheTest {
 
   @Test
   public void testInvalidateInputToCachedRuleDoesNotInvalidateDependency() {
-    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule dep = new TestRule();
-    cache.get(dep, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of()));
+    cache.get(dep, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));
     TestRule rule = new TestRule();
-    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(dep), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(dep), ImmutableList.of(input)));
     assertTrue(cache.isCached(rule));
     assertTrue(cache.isCached(dep));
     cache.invalidateInputs(ImmutableList.of(input));
@@ -111,10 +111,10 @@ public class DefaultRuleKeyCacheTest {
 
   @Test
   public void testEvictionStats() {
-    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>();
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
-    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
     assertThat(cache.getStats().evictionCount(), Matchers.equalTo(1L));
   }
@@ -122,10 +122,10 @@ public class DefaultRuleKeyCacheTest {
   @Test
   public void testLoadTime() {
     Clock clock = new IncrementingFakeClock();
-    DefaultRuleKeyCache<Void> cache = new DefaultRuleKeyCache<>(clock);
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>(clock);
     TestRule rule = new TestRule();
     RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
-    cache.get(rule, r -> new RuleKeyResult<>(null, ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
     assertThat(cache.getStats().totalLoadTime(), Matchers.equalTo(1L));
   }

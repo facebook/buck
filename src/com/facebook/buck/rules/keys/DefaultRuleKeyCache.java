@@ -22,10 +22,9 @@ import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheStats;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -131,7 +131,7 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
                     value = new Node<>();
                   }
                   if (value.value == null) {
-                    value.value = Suppliers.memoize(() -> calculateNode(node, create));
+                    value.value = MoreSuppliers.memoize(() -> calculateNode(node, create));
                   }
                   return value;
                 })
