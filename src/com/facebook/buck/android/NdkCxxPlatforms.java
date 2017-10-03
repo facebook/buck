@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidToolchain;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.TargetCpuType;
@@ -45,6 +47,7 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.VersionedTool;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.annotations.VisibleForTesting;
@@ -197,10 +200,15 @@ public class NdkCxxPlatforms {
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
-      AndroidDirectoryResolver androidDirectoryResolver,
       Platform platform,
+      ToolchainProvider toolchainProvider,
       Optional<String> ndkVersion) {
-    Optional<Path> ndkRoot = androidDirectoryResolver.getNdkOrAbsent();
+    if (!toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
+      return ImmutableMap.of();
+    }
+    AndroidToolchain androidToolchain =
+        toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+    Optional<Path> ndkRoot = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkRootPath);
     if (!ndkRoot.isPresent()) {
       return ImmutableMap.of();
     }

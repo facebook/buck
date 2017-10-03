@@ -115,8 +115,7 @@ public class DistBuildStateTest {
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
 
     knownBuildRuleTypesFactory =
-        new KnownBuildRuleTypesFactory(
-            processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
+        new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider);
   }
 
   @Test

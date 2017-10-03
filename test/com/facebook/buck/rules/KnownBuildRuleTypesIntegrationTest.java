@@ -21,8 +21,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatforms;
@@ -97,8 +95,6 @@ public class KnownBuildRuleTypesIntegrationTest {
             Optional.empty());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-
     TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
 
@@ -107,11 +103,6 @@ public class KnownBuildRuleTypesIntegrationTest {
         Matchers.containsString(
             "There are two conflicting SDKs providing the same platform \"macosx-i386\":\n"));
     KnownBuildRuleTypes.createInstance(
-        buckConfig,
-        projectFilesystem,
-        processExecutor,
-        toolchainProvider,
-        androidDirectoryResolver,
-        sdkEnvironment);
+        buckConfig, projectFilesystem, processExecutor, toolchainProvider, sdkEnvironment);
   }
 }

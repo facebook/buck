@@ -19,6 +19,7 @@ package com.facebook.buck.android.toolchain.impl;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.toolchain.AndroidNdk;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class DefaultAndroidNdk implements AndroidNdk {
@@ -44,5 +45,10 @@ public class DefaultAndroidNdk implements AndroidNdk {
       throw new IllegalStateException("Cannot detect NDK version");
     }
     return ndkVersion.get();
+  }
+
+  @Override
+  public Path getNdkRootPath() {
+    return androidDirectoryResolver.getNdkOrThrow();
   }
 }

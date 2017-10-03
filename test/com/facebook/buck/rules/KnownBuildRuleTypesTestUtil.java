@@ -113,11 +113,6 @@ public final class KnownBuildRuleTypesTestUtil {
     toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
 
     return KnownBuildRuleTypes.createInstance(
-        config,
-        filesystem,
-        processExecutor,
-        toolchainProvider,
-        androidDirectoryResolver,
-        sdkEnvironment);
+        config, filesystem, processExecutor, toolchainProvider, sdkEnvironment);
   }
 }

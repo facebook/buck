@@ -100,8 +100,7 @@ public class TestCellBuilder {
 
     KnownBuildRuleTypesFactory typesFactory =
         knownBuildRuleTypesFactory == null
-            ? new KnownBuildRuleTypesFactory(
-                executor, androidDirectoryResolver, sdkEnvironment, toolchainProvider)
+            ? new KnownBuildRuleTypesFactory(executor, sdkEnvironment, toolchainProvider)
             : knownBuildRuleTypesFactory;
 
     return CellProvider.createForLocalBuild(

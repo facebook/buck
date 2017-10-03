@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidAarDescription;
 import com.facebook.buck.android.AndroidAppModularityDescription;
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidBuildConfigDescription;
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidInstrumentationApkDescription;
 import com.facebook.buck.android.AndroidInstrumentationTestDescription;
 import com.facebook.buck.android.AndroidLibraryCompilerFactory;
@@ -234,7 +233,6 @@ public class KnownBuildRuleTypes {
       ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       ToolchainProvider toolchainProvider,
-      AndroidDirectoryResolver androidDirectoryResolver,
       SdkEnvironment sdkEnvironment)
       throws InterruptedException, IOException {
 
@@ -257,7 +255,7 @@ public class KnownBuildRuleTypes {
 
     // Setup the NDK C/C++ platforms.
     NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
-        NdkCxxPlatformsProviderFactory.create(config, filesystem, androidDirectoryResolver);
+        NdkCxxPlatformsProviderFactory.create(config, filesystem, toolchainProvider);
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
         ndkCxxPlatformsProvider.getNdkCxxPlatforms();

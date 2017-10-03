@@ -775,8 +775,7 @@ public class ProjectWorkspace {
             Watchman.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(
-                processExecutor, directoryResolver, sdkEnvironment, toolchainProvider),
+            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider),
             sdkEnvironment,
             new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());

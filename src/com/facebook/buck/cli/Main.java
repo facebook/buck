@@ -328,7 +328,6 @@ public final class Main {
   public interface KnownBuildRuleTypesFactoryFactory {
     KnownBuildRuleTypesFactory create(
         ProcessExecutor processExecutor,
-        AndroidDirectoryResolver androidDirectoryResolver,
         SdkEnvironment sdkEnvironment,
         ToolchainProvider toolchainProvider);
   }
@@ -644,7 +643,7 @@ public final class Main {
 
         KnownBuildRuleTypesFactory factory =
             knownBuildRuleTypesFactoryFactory.create(
-                processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider);
+                processExecutor, sdkEnvironment, toolchainProvider);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(

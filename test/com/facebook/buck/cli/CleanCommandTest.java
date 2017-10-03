@@ -170,8 +170,7 @@ public class CleanCommandTest extends EasyMockSupport {
         .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(
-                processExecutor, androidDirectoryResolver, sdkEnvironment, toolchainProvider))
+            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider))
         .setSdkEnvironment(sdkEnvironment)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setToolchainProvider(toolchainProvider)
