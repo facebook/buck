@@ -29,6 +29,8 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
   @AddToRuleKey private final SourcePath javacJarPath;
   @AddToRuleKey private final String compilerClassName;
   @AddToRuleKey private final Javac.Location javacLocation;
+
+  // This is just used to cache the Javac derived from the other fields.
   @Nullable private Javac javac;
 
   public JarBackedJavacProvider(

@@ -52,10 +52,13 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
 
   public abstract ImmutableList<BuildRule> getClasspathDeps();
 
+  @AddToRuleKey
   public abstract boolean getCanReuseClassLoader();
 
+  @AddToRuleKey
   public abstract boolean getDoesNotAffectAbi();
 
+  @AddToRuleKey
   public abstract boolean getSupportsAbiGenerationFromSource();
 
   public boolean isEmpty() {

@@ -34,8 +34,10 @@ import javax.annotation.Nullable;
 public class ExternalOrJarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
   @AddToRuleKey private final SourcePath compiler;
   @AddToRuleKey @Nullable private final String compilerClassName;
+  @AddToRuleKey private Javac.Location javacLocation;
+
+  // This is just used to cache the Javac derived from the other fields.
   @Nullable private Javac javac;
-  private Javac.Location javacLocation;
 
   public ExternalOrJarBackedJavacProvider(
       SourcePath compiler, @Nullable String compilerClassName, Javac.Location javacLocation) {
