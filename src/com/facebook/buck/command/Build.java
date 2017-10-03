@@ -359,20 +359,6 @@ public class Build implements Closeable {
     }
     new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.") {
       @Override
-      protected void logUserVisible(Exception rootCause, List<String> context) {
-        // Convert some causes to HumanReadableException to preserve historic behavior.
-        // TODO(cjhopman): We shouldn't do this. We should update StepFailedException to be like
-        // BuckExecutionException and update places that might throw IOException to create
-        // HumanReadableExceptions if it's due to user error.
-        if (rootCause instanceof IOException) {
-          rootCause =
-              new HumanReadableException(
-                  rootCause.getClass().getName() + " " + rootCause.getMessage());
-        }
-        super.logUserVisible(rootCause, context);
-      }
-
-      @Override
       protected String getMessageForRootCause(Exception rootCause) {
         if (rootCause instanceof HumanReadableException) {
           return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();

@@ -191,7 +191,10 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.io.IOException failure message\n"
+        "Buck encountered an internal error\n"
+            + "java.io.IOException: failure message\n"
+            + "<stacktrace>\n"
+            + "\n"
             + "    When running <failing_step>.\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
@@ -203,7 +206,10 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.io.IOException failure message\n"
+        "Buck encountered an internal error\n"
+            + "java.io.IOException: failure message\n"
+            + "<stacktrace>\n"
+            + "\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
@@ -215,7 +221,10 @@ public class BuildCommandErrorsIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
     assertEquals(
-        "Build failed: java.io.IOException failure message //:target_name\n"
+        "Buck encountered an internal error\n"
+            + "java.io.IOException: failure message //:target_name\n"
+            + "<stacktrace>\n"
+            + "\n"
             + "    When building rule //:target_name.",
         getError(getStderr(result)));
   }
