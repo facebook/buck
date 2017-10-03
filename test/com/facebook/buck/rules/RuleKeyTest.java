@@ -43,12 +43,16 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.immutables.value.Value;
 import org.junit.Test;
 
 public class RuleKeyTest {
@@ -730,6 +734,178 @@ public class RuleKeyTest {
         ruleKeyFactory.build(ruleWithDeclaredDep), ruleKeyFactory.build(ruleWithBothDeps));
     assertNotEquals(ruleKeyFactory.build(ruleWithExtraDep), ruleKeyFactory.build(ruleWithBothDeps));
   }
+
+  @Test
+  public void immutablesCanAddValueMethodsFromInterfaceImmutablesToRuleKeys() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    RuleKey first =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyInterfaceImmutable.of("added-1", "ignored-1"))
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyInterfaceImmutable.of("added-1", "ignored-2"))
+            .build(RuleKey::new);
+
+    RuleKey third =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyInterfaceImmutable.of("added-2", "ignored-2"))
+            .build(RuleKey::new);
+
+    assertEquals(first, second);
+    assertNotEquals(first, third);
+  }
+
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractTestRuleKeyInterfaceImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    String getRuleKeyValue();
+
+    String getNonRuleKeyValue();
+  }
+
+  @Test
+  public void immutablesCanAddNonDefaultImmutableValues() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    RuleKey first =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyImmutableWithDefaults.builder().build())
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively(
+                "value",
+                TestRuleKeyImmutableWithDefaults.builder().setRuleKeyValue("other").build())
+            .build(RuleKey::new);
+
+    assertNotEquals(first, second);
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  abstract static class AbstractTestRuleKeyImmutableWithDefaults implements AddsToRuleKey {
+    @AddToRuleKey
+    @Value.Default
+    String getRuleKeyValue() {
+      return "default";
+    }
+  }
+
+  @Test
+  public void immutablesCanAddValueMethodsFromExtendedInterfaceImmutablesToRuleKeys() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    RuleKey first =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyAbstractImmutable.of("added-1", "ignored-1"))
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyAbstractImmutable.of("added-1", "ignored-2"))
+            .build(RuleKey::new);
+
+    RuleKey third =
+        createBuilder(resolver, ruleFinder)
+            .setReflectively("value", TestRuleKeyAbstractImmutable.of("added-2", "ignored-2"))
+            .build(RuleKey::new);
+
+    assertEquals(first, second);
+    assertNotEquals(first, third);
+  }
+
+  @Value.Immutable
+  @BuckStyleTuple
+  abstract static class AbstractTestRuleKeyAbstractImmutable implements AddsToRuleKey {
+    @AddToRuleKey
+    abstract String getRuleKeyValue();
+
+    abstract String getNonRuleKeyValue();
+  }
+
+  @Test(expected = UncheckedExecutionException.class)
+  public void badUseOfAddValueMethodsToRuleKey() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    createBuilder(resolver, ruleFinder)
+        .setReflectively("value", (BadUseOfAddValueMethodsToRuleKey) () -> "")
+        .build(RuleKey::new);
+  }
+
+  interface BadUseOfAddValueMethodsToRuleKey extends AddsToRuleKey {
+    @AddToRuleKey
+    String whatever();
+  }
+
+  interface EmptyInterface {}
+
+  interface ExtendsBadUseAndOther extends EmptyInterface, BadUseOfAddValueMethodsToRuleKey {}
+
+  abstract class EmptyClass {}
+
+  abstract class ExtendsFurtherBadUseAndOther extends EmptyClass
+      implements EmptyInterface, ExtendsBadUseAndOther {}
+
+  @Test(expected = UncheckedExecutionException.class)
+  public void badUseOfAddValueMethodsToRuleKeyInHierarchy() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    createBuilder(resolver, ruleFinder)
+        .setReflectively("value", new ClassWithBadThingInHierarchy())
+        .build(RuleKey::new);
+  }
+
+  class ClassWithBadThingInHierarchy extends ExtendsFurtherBadUseAndOther {
+    @Override
+    public String whatever() {
+      return null;
+    }
+  }
+
+  @Test(expected = UncheckedExecutionException.class)
+  public void badUseOfAddValueMethodsToRuleKeyInSomeSuperInterface() {
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(
+            new SingleThreadedBuildRuleResolver(
+                TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    createBuilder(resolver, ruleFinder)
+        .setReflectively(
+            "value",
+            new DerivedFromImplementsBadUseOfAddValueMethodsToRuleKey() {
+              @Override
+              public String whatever() {
+                return null;
+              }
+            })
+        .build(RuleKey::new);
+  }
+
+  abstract class ImplementsBadUseOfAddValueMethodsToRuleKey
+      implements BadUseOfAddValueMethodsToRuleKey {}
+
+  abstract class DerivedFromImplementsBadUseOfAddValueMethodsToRuleKey
+      extends ImplementsBadUseOfAddValueMethodsToRuleKey {}
 
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {
     private final String value;

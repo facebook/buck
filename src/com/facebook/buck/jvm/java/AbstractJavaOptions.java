@@ -16,20 +16,15 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractJavaOptions implements RuleKeyAppendable {
-
+abstract class AbstractJavaOptions implements AddsToRuleKey {
+  @AddToRuleKey
   public abstract Tool getJavaRuntimeLauncher();
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("java", getJavaRuntimeLauncher());
-  }
 }

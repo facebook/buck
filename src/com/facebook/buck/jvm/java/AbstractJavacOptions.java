@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
@@ -47,7 +47,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractJavacOptions implements RuleKeyAppendable {
+abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
@@ -56,7 +56,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   public enum SpoolMode {
     /**
      * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory. If {@link com.facebook.buck.jvm.java.JavaLibraryDescription.Arg}
+     * files in memory. If {@link
+     * com.facebook.buck.jvm.java.JavaLibraryDescription.AbstractJavaLibraryDescriptionArg}
      * postprocessClassesCommands are present, the builder will resort to writing .class files to
      * disk by necessity.
      */
@@ -70,6 +71,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
+  @AddToRuleKey
   protected SpoolMode getSpoolMode() {
     return SpoolMode.INTERMEDIATE_TO_DISK;
   }
@@ -85,39 +87,49 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   @Value.Default
+  @AddToRuleKey
   public String getSourceLevel() {
     return TARGETED_JAVA_VERSION;
   }
 
   @VisibleForTesting
   @Value.Default
+  @AddToRuleKey
   public String getTargetLevel() {
     return TARGETED_JAVA_VERSION;
   }
 
   @Value.Default
+  @AddToRuleKey
   public AnnotationProcessingParams getAnnotationProcessingParams() {
     return AnnotationProcessingParams.EMPTY;
   }
 
+  // TODO(cjhopman): Should this be added to the rulekey?
   public abstract Set<String> getSafeAnnotationProcessors();
 
+  @AddToRuleKey
   public abstract List<String> getExtraArguments();
 
+  @AddToRuleKey
   protected abstract Optional<String> getBootclasspath();
 
+  // TODO(cjhopman): Should this be added to the rulekey?
   protected abstract Map<String, String> getSourceToBootclasspath();
 
+  @AddToRuleKey
   protected boolean isDebug() {
     return !isProductionBuild();
   }
 
   @Value.Default
+  @AddToRuleKey
   public boolean trackClassUsage() {
     return false;
   }
 
   @Value.Default
+  @AddToRuleKey
   public AbiGenerationMode getAbiGenerationMode() {
     return AbiGenerationMode.CLASS;
   }
@@ -229,19 +241,6 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
     // Add extra arguments.
     optionsConsumer.addExtras(getExtraArguments());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("sourceLevel", getSourceLevel())
-        .setReflectively("targetLevel", getTargetLevel())
-        .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
-        .setReflectively("debug", isDebug())
-        .setReflectively("bootclasspath", getBootclasspath())
-        .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
-        .setReflectively("spoolMode", getSpoolMode())
-        .setReflectively("trackClassUsage", trackClassUsage())
-        .setReflectively("abiGenerationMode", getAbiGenerationMode());
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

@@ -16,8 +16,13 @@
 
 package com.facebook.buck.rules;
 
+import org.immutables.value.Value;
+
 /**
- * Identifies a class that uses {@link com.facebook.buck.rules.AddToRuleKey} annotations to indicate
- * fields that should be added to rule keys.
+ * Identifies a class that uses {@link AddToRuleKey} annotations to indicate fields that should be
+ * added to rule keys.
+ *
+ * <p>{@link Value.Immutable} annotated classes can use {@link AddToRuleKey} on methods to indicate
+ * that the method's return value should be added to rule keys.
  */
 public interface AddsToRuleKey {}
