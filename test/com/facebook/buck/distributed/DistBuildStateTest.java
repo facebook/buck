@@ -458,7 +458,7 @@ public class DistBuildStateTest {
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(cellOneFilesystem.getRootPath(), "//:foo"),
                 cellOneFilesystem)
-            .addSrc(new DefaultBuildTargetSourcePath(target))
+            .addSrc(DefaultBuildTargetSourcePath.of(target))
             .build(),
         JavaLibraryBuilder.createBuilder(target, cellTwoFilesystem).build());
   }

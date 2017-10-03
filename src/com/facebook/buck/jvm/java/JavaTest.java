@@ -473,7 +473,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (output == null) {
       return null;
     }
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

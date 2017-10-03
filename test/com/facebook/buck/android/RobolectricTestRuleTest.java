@@ -403,8 +403,8 @@ public class RobolectricTestRuleTest {
     BuildTarget res2RuleTarget = BuildTargetFactory.newInstance("//:res2");
     TargetNode<?, ?> res2Node =
         AndroidResourceBuilder.createBuilder(res2RuleTarget)
-            .setRes(new DefaultBuildTargetSourcePath(resGenRuleTarget))
-            .setAssets(new DefaultBuildTargetSourcePath(assetsGenRuleTarget))
+            .setRes(DefaultBuildTargetSourcePath.of(resGenRuleTarget))
+            .setAssets(DefaultBuildTargetSourcePath.of(assetsGenRuleTarget))
             .setRDotJavaPackage("foo.bar")
             .build();
 

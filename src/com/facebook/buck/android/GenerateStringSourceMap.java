@@ -96,7 +96,7 @@ public class GenerateStringSourceMap extends AbstractBuildRule implements HasRun
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), getPathForNativeStringInfoDirectory());
   }
 

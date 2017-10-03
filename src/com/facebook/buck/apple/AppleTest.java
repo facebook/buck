@@ -489,8 +489,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(), testBundle.getSourcePathToOutput());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), testBundle.getSourcePathToOutput());
   }
 
   public boolean isUiTest() {

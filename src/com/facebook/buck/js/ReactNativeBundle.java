@@ -207,7 +207,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public SourcePath getJSBundleDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), jsOutputDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), jsOutputDir);
   }
 
   public Path getResources() {
@@ -276,7 +276,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), exposeSourceMap ? sourceMapOutputPath : jsOutputDir);
   }
 }

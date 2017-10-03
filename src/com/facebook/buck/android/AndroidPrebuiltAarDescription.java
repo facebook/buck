@@ -128,7 +128,7 @@ public class AndroidPrebuiltAarDescription
           ruleFinder,
           projectFilesystem,
           params,
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()));
     }
 
@@ -157,7 +157,7 @@ public class AndroidPrebuiltAarDescription
           projectFilesystem,
           /* params */ buildRuleParams,
           /* resolver */ pathResolver,
-          /* binaryJar */ new ExplicitBuildTargetSourcePath(
+          /* binaryJar */ ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()),
           /* sourceJar */ Optional.empty(),
           /* gwtJar */ Optional.empty(),
@@ -202,9 +202,9 @@ public class AndroidPrebuiltAarDescription
         androidLibraryParams,
         /* resolver */ pathResolver,
         ruleFinder,
-        /* proguardConfig */ new ExplicitBuildTargetSourcePath(
+        /* proguardConfig */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getProguardConfig()),
-        /* nativeLibsDirectory */ new ExplicitBuildTargetSourcePath(
+        /* nativeLibsDirectory */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,

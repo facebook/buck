@@ -351,17 +351,17 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   @Nullable
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsDir);
   }
 
   @Override
   public SourcePath getPathToTextSymbolsFile() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsFile);
   }
 
   @Override
   public SourcePath getPathToRDotJavaPackageFile() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToRDotJavaPackageFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToRDotJavaPackageFile);
   }
 
   @Override

@@ -54,7 +54,7 @@ class DirectHeaderMap extends HeaderSymlinkTree {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), headerMapPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), headerMapPath);
   }
 
   @Override

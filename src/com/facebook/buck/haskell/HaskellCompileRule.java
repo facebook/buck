@@ -377,7 +377,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getInterfaceDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getInterfaceDir());
   }
 
   private String getObjectSuffix() {
@@ -404,7 +404,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
     for (String module : sources.getModuleNames()) {
       objects.add(
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               getBuildTarget(),
               getObjectDir().resolve(module.replace('.', File.separatorChar) + suffix)));
     }
@@ -416,11 +416,11 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   public SourcePath getInterfaces() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getInterfaceDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getInterfaceDir());
   }
 
   public SourcePath getObjectsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getObjectDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getObjectDir());
   }
 
   @VisibleForTesting

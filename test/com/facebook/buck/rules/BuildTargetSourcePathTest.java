@@ -41,7 +41,7 @@ public class BuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
     resolver.addToIndex(rule);
-    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(rule.getBuildTarget());
+    DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
     try {
       pathResolver.getRelativePath(path);
@@ -62,12 +62,12 @@ public class BuildTargetSourcePathTest {
         new FakeBuildRule(target) {
           @Override
           public SourcePath getSourcePathToOutput() {
-            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("cheese"));
+            return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("cheese"));
           }
         };
     resolver.addToIndex(rule);
 
-    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(rule.getBuildTarget());
+    DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
     Path resolved = pathResolver.getRelativePath(path);
 
@@ -77,7 +77,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void shouldReturnTheBuildTarget() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(target);
+    DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(target);
 
     assertEquals(target, path.getTarget());
   }
@@ -93,7 +93,7 @@ public class BuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), path);
+        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
   }
@@ -110,9 +110,9 @@ public class BuildTargetSourcePathTest {
     Path path = Paths.get("blah");
 
     ExplicitBuildTargetSourcePath sourcePath1 =
-        new ExplicitBuildTargetSourcePath(rule1.getBuildTarget(), path);
+        ExplicitBuildTargetSourcePath.of(rule1.getBuildTarget(), path);
     ForwardingBuildTargetSourcePath sourcePath2 =
-        new ForwardingBuildTargetSourcePath(rule2.getBuildTarget(), sourcePath1);
+        ForwardingBuildTargetSourcePath.of(rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(path, pathResolver.getRelativePath(sourcePath1));
     assertEquals(path, pathResolver.getRelativePath(sourcePath2));
@@ -133,9 +133,9 @@ public class BuildTargetSourcePathTest {
     resolver.addToIndex(rule2);
 
     DefaultBuildTargetSourcePath sourcePath1 =
-        new DefaultBuildTargetSourcePath(rule1.getBuildTarget());
+        DefaultBuildTargetSourcePath.of(rule1.getBuildTarget());
     ForwardingBuildTargetSourcePath sourcePath2 =
-        new ForwardingBuildTargetSourcePath(rule2.getBuildTarget(), sourcePath1);
+        ForwardingBuildTargetSourcePath.of(rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(path, pathResolver.getRelativePath(sourcePath1));
     assertEquals(path, pathResolver.getRelativePath(sourcePath2));
@@ -157,9 +157,9 @@ public class BuildTargetSourcePathTest {
 
     PathSourcePath sourcePath0 = new PathSourcePath(new FakeProjectFilesystem(), Paths.get("boom"));
     ForwardingBuildTargetSourcePath sourcePath1 =
-        new ForwardingBuildTargetSourcePath(rule1.getBuildTarget(), sourcePath0);
+        ForwardingBuildTargetSourcePath.of(rule1.getBuildTarget(), sourcePath0);
     ForwardingBuildTargetSourcePath sourcePath2 =
-        new ForwardingBuildTargetSourcePath(rule2.getBuildTarget(), sourcePath1);
+        ForwardingBuildTargetSourcePath.of(rule2.getBuildTarget(), sourcePath1);
 
     assertEquals(
         pathResolver.getRelativePath(sourcePath0), pathResolver.getRelativePath(sourcePath1));
@@ -172,9 +172,9 @@ public class BuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     ExplicitBuildTargetSourcePath path1 =
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something"));
+        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something else"));
+        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something else"));
     assertNotEquals(path1, path2);
     assertNotEquals(path1.hashCode(), path2.hashCode());
   }

@@ -277,13 +277,13 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPackageDb());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb());
   }
 
   public HaskellPackage getPackage() {
     return HaskellPackage.builder()
         .setInfo(packageInfo)
-        .setPackageDb(new ExplicitBuildTargetSourcePath(getBuildTarget(), getPackageDb()))
+        .setPackageDb(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb()))
         .addAllLibraries(libraries)
         .addAllInterfaces(interfaces)
         .addAllObjects(objects)

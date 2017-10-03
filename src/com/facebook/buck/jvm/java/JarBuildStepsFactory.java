@@ -111,7 +111,7 @@ public class JarBuildStepsFactory
   @Nullable
   public SourcePath getSourcePathToOutput(BuildTarget buildTarget) {
     return getOutputJarPath(buildTarget)
-        .map(path -> new ExplicitBuildTargetSourcePath(buildTarget, path))
+        .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
         .orElse(null);
   }
 
@@ -271,7 +271,7 @@ public class JarBuildStepsFactory
       if (rule instanceof HasJavaAbi) {
         if (((HasJavaAbi) rule).getAbiJar().isPresent()) {
           BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
-          pathToSourcePathMapBuilder.put(path, new DefaultBuildTargetSourcePath(buildTarget));
+          pathToSourcePathMapBuilder.put(path, DefaultBuildTargetSourcePath.of(buildTarget));
         }
       } else if (rule instanceof CalculateAbi) {
         pathToSourcePathMapBuilder.put(path, sourcePath);

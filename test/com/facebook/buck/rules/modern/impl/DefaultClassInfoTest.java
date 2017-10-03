@@ -124,11 +124,11 @@ public class DefaultClassInfoTest {
     BuildRule rule3 = new FakeBuildRule(target3, ImmutableSortedSet.of());
 
     BuildTargetSourcePath targetSourcePath1 =
-        new ExplicitBuildTargetSourcePath(target1, Paths.get("path"));
+        ExplicitBuildTargetSourcePath.of(target1, Paths.get("path"));
     BuildTargetSourcePath targetSourcePath2 =
-        new ExplicitBuildTargetSourcePath(target2, Paths.get("path"));
+        ExplicitBuildTargetSourcePath.of(target2, Paths.get("path"));
     BuildTargetSourcePath targetSourcePath3 =
-        new ExplicitBuildTargetSourcePath(target3, Paths.get("path"));
+        ExplicitBuildTargetSourcePath.of(target3, Paths.get("path"));
 
     InputPath targetInputPath1 = new InputPath(targetSourcePath1);
     InputPath targetInputPath2 = new InputPath(targetSourcePath2);

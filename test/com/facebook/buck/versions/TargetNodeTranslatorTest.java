@@ -177,8 +177,8 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateBuildTargetSourcePath(
-            CELL_PATH_RESOLVER, PATTERN, new DefaultBuildTargetSourcePath(a)),
-        Matchers.equalTo(Optional.of(new DefaultBuildTargetSourcePath(b))));
+            CELL_PATH_RESOLVER, PATTERN, DefaultBuildTargetSourcePath.of(a)),
+        Matchers.equalTo(Optional.of(DefaultBuildTargetSourcePath.of(b))));
   }
 
   @Test
@@ -202,11 +202,11 @@ public class TargetNodeTranslatorTest {
         translator.translateSourceWithFlags(
             CELL_PATH_RESOLVER,
             PATTERN,
-            SourceWithFlags.of(new DefaultBuildTargetSourcePath(a), ImmutableList.of("-flag"))),
+            SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))),
         Matchers.equalTo(
             Optional.of(
                 SourceWithFlags.of(
-                    new DefaultBuildTargetSourcePath(b), ImmutableList.of("-flag")))));
+                    DefaultBuildTargetSourcePath.of(b), ImmutableList.of("-flag")))));
   }
 
   @Test

@@ -115,7 +115,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutputDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
   }
 
   @Override

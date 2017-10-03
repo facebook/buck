@@ -101,7 +101,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargets.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "%s/_trimmed_r_dot_java.src.zip"));

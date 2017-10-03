@@ -280,7 +280,7 @@ public class PythonLibraryDescriptionTest {
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(
-                        new DefaultBuildTargetSourcePath(srcBuilder.getTarget()))));
+                        DefaultBuildTargetSourcePath.of(srcBuilder.getTarget()))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
     BuildRuleResolver resolver =

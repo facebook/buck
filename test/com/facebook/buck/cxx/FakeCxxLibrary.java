@@ -95,9 +95,9 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
             CxxSymlinkTreeHeaders.builder()
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                 .putNameToPathMap(
-                    Paths.get("header.h"), new DefaultBuildTargetSourcePath(publicHeaderTarget))
+                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
                 .setBuildTarget(publicHeaderSymlinkTreeTarget)
-                .setRoot(new DefaultBuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
                 .build())
         .build();
   }
@@ -109,9 +109,9 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
             CxxSymlinkTreeHeaders.builder()
                 .setBuildTarget(privateHeaderSymlinkTreeTarget)
                 .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
                 .putNameToPathMap(
-                    Paths.get("header.h"), new DefaultBuildTargetSourcePath(privateHeaderTarget))
+                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
                 .build())
         .build();
   }

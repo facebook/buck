@@ -91,7 +91,7 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         bytecodeOnly ? ocamlContext.getBytecodeOutput() : ocamlContext.getNativeOutput());
   }

@@ -103,7 +103,7 @@ public class HalideLibraryDescriptionTest {
         Matchers.equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(headerName),
-                new ExplicitBuildTargetSourcePath(flavoredLibTarget, headerPath))));
+                ExplicitBuildTargetSourcePath.of(flavoredLibTarget, headerPath))));
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input =

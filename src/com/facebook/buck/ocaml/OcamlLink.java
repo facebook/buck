@@ -167,7 +167,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputRelativePath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputRelativePath);
   }
 
   @Override

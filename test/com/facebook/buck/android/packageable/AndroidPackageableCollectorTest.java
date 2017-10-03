@@ -192,7 +192,7 @@ public class AndroidPackageableCollectorTest {
             + "transitive dependencies",
         pathResolver,
         ImmutableSet.of(
-            new DefaultBuildTargetSourcePath(
+            DefaultBuildTargetSourcePath.of(
                 manifestTarget.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))),
         packageableCollection.getAssetsDirectories());

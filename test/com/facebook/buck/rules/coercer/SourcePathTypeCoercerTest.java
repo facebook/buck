@@ -77,7 +77,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots, projectFilesystem, pathRelativeToProjectRoot, "//:hello");
 
     assertEquals(
-        new DefaultBuildTargetSourcePath(
+        DefaultBuildTargetSourcePath.of(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(), Optional.empty(), "//", "hello"),
@@ -92,7 +92,7 @@ public class SourcePathTypeCoercerTest {
             cellRoots, projectFilesystem, pathRelativeToProjectRoot, ":hello");
 
     assertEquals(
-        new DefaultBuildTargetSourcePath(
+        DefaultBuildTargetSourcePath.of(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(), Optional.empty(), "//", "hello"),
@@ -115,7 +115,7 @@ public class SourcePathTypeCoercerTest {
     // the cell name should be absent (otherwise, we'd look for a cell named `@hello` from the
     // `@hello` cell. Yeah. My head hurts a little too.
     assertEquals(
-        new DefaultBuildTargetSourcePath(
+        DefaultBuildTargetSourcePath.of(
             BuildTarget.of(
                 UnflavoredBuildTarget.of(helloRoot, Optional.of("hello"), "//", "hello"),
                 ImmutableSortedSet.of())),

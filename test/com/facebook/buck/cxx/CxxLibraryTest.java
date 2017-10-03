@@ -101,8 +101,8 @@ public class CxxLibraryTest {
                     .setBuildTarget(publicHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
                     .putNameToPathMap(
-                        Paths.get("header.h"), new DefaultBuildTargetSourcePath(publicHeaderTarget))
-                    .setRoot(new DefaultBuildTargetSourcePath(publicHeaderSymlinkTreeTarget))
+                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget))
+                    .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
                     .build())
             .build();
     assertEquals(
@@ -114,10 +114,9 @@ public class CxxLibraryTest {
                 CxxSymlinkTreeHeaders.builder()
                     .setBuildTarget(privateHeaderSymlinkTreeTarget)
                     .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .setRoot(new DefaultBuildTargetSourcePath(privateHeaderSymlinkTreeTarget))
+                    .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
                     .putNameToPathMap(
-                        Paths.get("header.h"),
-                        new DefaultBuildTargetSourcePath(privateHeaderTarget))
+                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget))
                     .build())
             .build();
     assertEquals(
@@ -170,7 +169,7 @@ public class CxxLibraryTest {
 
     FrameworkPath frameworkPath =
         FrameworkPath.ofSourcePath(
-            new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:baz")));
+            DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:baz")));
 
     // Construct a CxxLibrary object to test.
     CxxLibrary cxxLibrary =

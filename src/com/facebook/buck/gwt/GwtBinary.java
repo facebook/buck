@@ -200,7 +200,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /** @return The {@code .zip} file produced by this rule. */
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputFile);
   }
 
   /**

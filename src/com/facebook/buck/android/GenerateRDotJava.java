@@ -135,8 +135,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToGeneratedRDotJavaSrcFiles() {
-    return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(), getPathToGeneratedRDotJavaSrcFiles());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToGeneratedRDotJavaSrcFiles());
   }
 
   @Nullable

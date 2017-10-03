@@ -116,7 +116,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(), Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
   }
 

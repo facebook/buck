@@ -251,7 +251,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), bundleRoot);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), bundleRoot);
   }
 
   public Path getInfoPlistPath() {

@@ -98,22 +98,22 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
     builder.setBuildTarget(symlinkTree.getBuildTarget());
     builder.setIncludeType(includeType);
     builder.setRoot(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             symlinkTree.getBuildTarget(),
             symlinkTree.getProjectFilesystem().relativize(symlinkTree.getRoot())));
 
     if (includeType == CxxPreprocessables.IncludeType.LOCAL) {
       builder.setIncludeRoot(
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               symlinkTree.getBuildTarget(), symlinkTree.getIncludePath()));
       if (symlinkTree.getHeaderMap().isPresent()) {
         builder.setHeaderMap(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 symlinkTree.getBuildTarget(), symlinkTree.getHeaderMap().get()));
       }
     } else {
       builder.setIncludeRoot(
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               symlinkTree.getBuildTarget(),
               symlinkTree.getProjectFilesystem().relativize(symlinkTree.getRoot())));
     }

@@ -140,7 +140,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
 
   @Override

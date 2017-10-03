@@ -188,7 +188,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     @Override
     public SourcePath getSourcePathToOutput() {
-      return new ExplicitBuildTargetSourcePath(getBuildTarget(), getUndefinedSymbolsPath());
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getUndefinedSymbolsPath());
     }
   }
 }

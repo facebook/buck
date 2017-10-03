@@ -63,7 +63,7 @@ public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps imp
     if (outputFile == null) {
       return null;
     }
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputFile);
   }
 
   public FakeBuildRule setOutputFile(@Nullable String outputFile) {

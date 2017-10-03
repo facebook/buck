@@ -135,7 +135,7 @@ public class JavaLibraryBuilder
   }
 
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {
-    return addSrc(new DefaultBuildTargetSourcePath(target));
+    return addSrc(DefaultBuildTargetSourcePath.of(target));
   }
 
   public JavaLibraryBuilder setProguardConfig(SourcePath proguardConfig) {

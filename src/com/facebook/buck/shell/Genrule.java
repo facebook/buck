@@ -183,7 +183,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutFile);
   }
 
   protected void addEnvironmentVariables(

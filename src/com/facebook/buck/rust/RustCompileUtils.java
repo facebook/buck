@@ -413,7 +413,7 @@ public class RustCompileUtils {
 
       @Override
       public SourcePath getSourcePathToOutput() {
-        return new ForwardingBuildTargetSourcePath(
+        return ForwardingBuildTargetSourcePath.of(
             getBuildTarget(), buildRule.getSourcePathToOutput());
       }
     };

@@ -55,7 +55,7 @@ public class AndroidBuildConfigTest {
   public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             BUILD_TARGET,
             BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")),
         buildConfig.getSourcePathToOutput());

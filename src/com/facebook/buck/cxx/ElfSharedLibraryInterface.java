@@ -175,7 +175,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), getOutputDir().resolve(getSharedAbiLibraryName()));
   }
 }

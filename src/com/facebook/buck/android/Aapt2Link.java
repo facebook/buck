@@ -193,13 +193,13 @@ public class Aapt2Link extends AbstractBuildRule {
 
   public AaptOutputInfo getAaptOutputInfo() {
     return AaptOutputInfo.builder()
-        .setPathToRDotTxt(new ExplicitBuildTargetSourcePath(getBuildTarget(), getRDotTxtPath()))
+        .setPathToRDotTxt(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()))
         .setPrimaryResourcesApkPath(
-            new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath()))
+            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()))
         .setAndroidManifestXml(
-            new ExplicitBuildTargetSourcePath(getBuildTarget(), getFinalManifestPath()))
+            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()))
         .setAaptGeneratedProguardConfigFile(
-            new ExplicitBuildTargetSourcePath(getBuildTarget(), getProguardConfigPath()))
+            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()))
         .build();
   }
 

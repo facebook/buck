@@ -167,7 +167,7 @@ public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // allocated for the copy.
     return mode == ExportFileDescription.Mode.REFERENCE
         ? src
-        : new ExplicitBuildTargetSourcePath(getBuildTarget(), getCopiedPath());
+        : ExplicitBuildTargetSourcePath.of(getBuildTarget(), getCopiedPath());
   }
 
   @Override

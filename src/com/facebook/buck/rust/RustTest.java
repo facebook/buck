@@ -281,7 +281,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(), testExeBuild.getSourcePathToOutput());
   }
 

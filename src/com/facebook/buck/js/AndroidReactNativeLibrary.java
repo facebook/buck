@@ -61,6 +61,6 @@ public class AndroidReactNativeLibrary extends AbstractBuildRuleWithDeclaredAndE
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), bundle.getSourcePathToOutput());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), bundle.getSourcePathToOutput());
   }
 }

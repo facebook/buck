@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,30 +18,24 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ComparisonChain;
-import java.nio.file.Path;
 import java.util.Objects;
+import org.immutables.value.Value;
 
-/**
- * A {@link BuildTargetSourcePath} which resolves to a specific (possibly non-default) output of the
- * {@link BuildRule} referred to by its target.
- */
-public class ExplicitBuildTargetSourcePath extends BuildTargetSourcePath {
+/** A {@link BuildTargetSourcePath} which resolves to the value of another SourcePath. */
+@BuckStyleTuple
+@Value.Immutable(prehash = true)
+public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTargetSourcePath {
 
-  private final Path resolvedPath;
+  @Override
+  public abstract BuildTarget getTarget();
 
-  public ExplicitBuildTargetSourcePath(BuildTarget target, Path path) {
-    super(target);
-    this.resolvedPath = path;
-  }
-
-  public Path getResolvedPath() {
-    return resolvedPath;
-  }
+  protected abstract SourcePath getDelegate();
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTarget(), resolvedPath);
+    return Objects.hash(getTarget(), getDelegate());
   }
 
   @Override
@@ -50,17 +44,18 @@ public class ExplicitBuildTargetSourcePath extends BuildTargetSourcePath {
       return true;
     }
 
-    if (!(other instanceof ExplicitBuildTargetSourcePath)) {
+    //// TODO I don't like this
+    if (!(other instanceof AbstractForwardingBuildTargetSourcePath)) {
       return false;
     }
 
-    ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
-    return getTarget().equals(that.getTarget()) && resolvedPath.equals(that.resolvedPath);
+    AbstractForwardingBuildTargetSourcePath that = (AbstractForwardingBuildTargetSourcePath) other;
+    return getTarget().equals(that.getTarget()) && getDelegate().equals(that.getDelegate());
   }
 
   @Override
   public String toString() {
-    return String.valueOf(new Pair<>(getTarget(), resolvedPath));
+    return String.valueOf(new Pair<>(getTarget(), getDelegate()));
   }
 
   @Override
@@ -74,11 +69,11 @@ public class ExplicitBuildTargetSourcePath extends BuildTargetSourcePath {
       return classComparison;
     }
 
-    ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
+    AbstractForwardingBuildTargetSourcePath that = (AbstractForwardingBuildTargetSourcePath) other;
 
     return ComparisonChain.start()
         .compare(getTarget(), that.getTarget())
-        .compare(resolvedPath, that.resolvedPath)
+        .compare(getDelegate(), that.getDelegate())
         .result();
   }
 }

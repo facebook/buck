@@ -43,7 +43,7 @@ public class ForwardingBuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//package:name");
     Path relativePath = Paths.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
-        new ForwardingBuildTargetSourcePath(
+        ForwardingBuildTargetSourcePath.of(
             target, new PathSourcePath(new FakeProjectFilesystem(), relativePath));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
@@ -56,7 +56,7 @@ public class ForwardingBuildTargetSourcePathTest {
     rule.setOutputFile("foo/bar");
     resolver.addToIndex(rule);
     ForwardingBuildTargetSourcePath sourcePath =
-        new ForwardingBuildTargetSourcePath(target, new DefaultBuildTargetSourcePath(target));
+        ForwardingBuildTargetSourcePath.of(target, DefaultBuildTargetSourcePath.of(target));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(rule.getOutputFile(), pathResolver.getRelativePath(sourcePath));
   }
@@ -68,8 +68,8 @@ public class ForwardingBuildTargetSourcePathTest {
     resolver.addToIndex(rule);
     Path relativePath = Paths.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
-        new ForwardingBuildTargetSourcePath(
-            target, new ExplicitBuildTargetSourcePath(target, relativePath));
+        ForwardingBuildTargetSourcePath.of(
+            target, ExplicitBuildTargetSourcePath.of(target, relativePath));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
   }
@@ -87,10 +87,10 @@ public class ForwardingBuildTargetSourcePathTest {
     Path relativePath = Paths.get("foo/bar");
 
     ForwardingBuildTargetSourcePath sourcePath =
-        new ForwardingBuildTargetSourcePath(
+        ForwardingBuildTargetSourcePath.of(
             target1,
-            new ForwardingBuildTargetSourcePath(
-                target2, new ExplicitBuildTargetSourcePath(target2, relativePath)));
+            ForwardingBuildTargetSourcePath.of(
+                target2, ExplicitBuildTargetSourcePath.of(target2, relativePath)));
     assertEquals(target1, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
   }

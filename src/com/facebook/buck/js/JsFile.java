@@ -56,7 +56,7 @@ public abstract class JsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.json"));
   }

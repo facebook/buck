@@ -729,11 +729,13 @@ public class ProjectGeneratorTest {
                 ImmutableSortedMap.of(
                     "any/name.h", new FakeSourcePath("HeaderGroup1/foo.h"),
                     "different/name.h", new FakeSourcePath("HeaderGroup2/baz.h"),
-                    "one/more/name.h", new DefaultBuildTargetSourcePath(privateGeneratedTarget)))
+                    "one/more/name.h", DefaultBuildTargetSourcePath.of(privateGeneratedTarget)))
             .setExportedHeaders(
                 ImmutableSortedMap.of(
-                    "yet/another/name.h", new FakeSourcePath("HeaderGroup1/bar.h"),
-                    "and/one/more.h", new DefaultBuildTargetSourcePath(publicGeneratedTarget)))
+                    "yet/another/name.h",
+                    new FakeSourcePath("HeaderGroup1/bar.h"),
+                    "and/one/more.h",
+                    DefaultBuildTargetSourcePath.of(publicGeneratedTarget)))
             .build();
 
     ProjectGenerator projectGenerator =
@@ -925,13 +927,15 @@ public class ProjectGeneratorTest {
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(
                 ImmutableSortedMap.of(
-                    "yet/another/name.h", new FakeSourcePath("foo/dir1/bar.h"),
-                    "and/one/more.h", new DefaultBuildTargetSourcePath(publicGeneratedTarget)))
+                    "yet/another/name.h",
+                    new FakeSourcePath("foo/dir1/bar.h"),
+                    "and/one/more.h",
+                    DefaultBuildTargetSourcePath.of(publicGeneratedTarget)))
             .setHeaders(
                 ImmutableSortedMap.of(
                     "any/name.h", new FakeSourcePath("foo/dir1/foo.h"),
                     "different/name.h", new FakeSourcePath("foo/dir2/baz.h"),
-                    "one/more/name.h", new DefaultBuildTargetSourcePath(privateGeneratedTarget)))
+                    "one/more/name.h", DefaultBuildTargetSourcePath.of(privateGeneratedTarget)))
             .setSrcs(ImmutableSortedSet.of())
             .build();
 
@@ -976,13 +980,15 @@ public class ProjectGeneratorTest {
         new CxxLibraryBuilder(buildTarget)
             .setExportedHeaders(
                 ImmutableSortedMap.of(
-                    "yet/another/name.h", new FakeSourcePath("foo/dir1/bar.h"),
-                    "and/one/more.h", new DefaultBuildTargetSourcePath(publicGeneratedTarget)))
+                    "yet/another/name.h",
+                    new FakeSourcePath("foo/dir1/bar.h"),
+                    "and/one/more.h",
+                    DefaultBuildTargetSourcePath.of(publicGeneratedTarget)))
             .setHeaders(
                 ImmutableSortedMap.of(
                     "any/name.h", new FakeSourcePath("foo/dir1/foo.h"),
                     "different/name.h", new FakeSourcePath("foo/dir2/baz.h"),
-                    "one/more/name.h", new DefaultBuildTargetSourcePath(privateGeneratedTarget)))
+                    "one/more/name.h", DefaultBuildTargetSourcePath.of(privateGeneratedTarget)))
             .setSrcs(ImmutableSortedSet.of())
             .setHeaderNamespace("name/space")
             .build();
@@ -1509,7 +1515,7 @@ public class ProjectGeneratorTest {
     TargetNode<?, ?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setPrecompiledHeader(Optional.of(new DefaultBuildTargetSourcePath(pchTarget)))
+            .setPrecompiledHeader(Optional.of(DefaultBuildTargetSourcePath.of(pchTarget)))
             .build();
 
     ProjectGenerator projectGenerator =
@@ -3499,7 +3505,7 @@ public class ProjectGeneratorTest {
   @Test
   public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:rule");
-    SourcePath sourcePath = new DefaultBuildTargetSourcePath(buildTarget);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTarget);
     TargetNode<?, ?> generatingTarget = new ExportFileBuilder(buildTarget).build();
 
     ImmutableSet<TargetNode<?, ?>> nodes =
@@ -3539,7 +3545,7 @@ public class ProjectGeneratorTest {
 
     TargetNode<ExportFileDescriptionArg, ?> source2Ref =
         new ExportFileBuilder(source2RefTarget)
-            .setSrc(new DefaultBuildTargetSourcePath(source2Target))
+            .setSrc(DefaultBuildTargetSourcePath.of(source2Target))
             .build();
 
     TargetNode<ExportFileDescriptionArg, ?> source3 = new ExportFileBuilder(source3Target).build();
@@ -3551,10 +3557,10 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(source1Target)),
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(source2RefTarget)),
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(source3Target))))
-            .setPrefixHeader(Optional.of(new DefaultBuildTargetSourcePath(headerTarget)))
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(source1Target)),
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(source2RefTarget)),
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(source3Target))))
+            .setPrefixHeader(Optional.of(DefaultBuildTargetSourcePath.of(headerTarget)))
             .build();
 
     ProjectGenerator projectGenerator =
@@ -4015,7 +4021,7 @@ public class ProjectGeneratorTest {
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setDirs(ImmutableSet.of())
-            .setFiles(ImmutableSet.of(new DefaultBuildTargetSourcePath(fileTarget)))
+            .setFiles(ImmutableSet.of(DefaultBuildTargetSourcePath.of(fileTarget)))
             .build();
     TargetNode<?, ?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -4046,7 +4052,7 @@ public class ProjectGeneratorTest {
     TargetNode<?, ?> directoryNode = new ExportFileBuilder(directoryTarget).build();
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
-            .setDirs(ImmutableSet.of(new DefaultBuildTargetSourcePath(directoryTarget)))
+            .setDirs(ImmutableSet.of(DefaultBuildTargetSourcePath.of(directoryTarget)))
             .setFiles(ImmutableSet.of())
             .build();
     TargetNode<?, ?> libraryNode =
@@ -4080,7 +4086,7 @@ public class ProjectGeneratorTest {
     TargetNode<?, ?> directoryNode = new ExportFileBuilder(directoryTarget).build();
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
-            .setDirs(ImmutableSet.of(new DefaultBuildTargetSourcePath(directoryTarget)))
+            .setDirs(ImmutableSet.of(DefaultBuildTargetSourcePath.of(directoryTarget)))
             .setFiles(ImmutableSet.of())
             .build();
     TargetNode<?, ?> libraryNode =
@@ -4360,7 +4366,7 @@ public class ProjectGeneratorTest {
             .setBinary(frameworkBinaryTarget)
             .build();
     BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
-    SourcePath sourcePath = new DefaultBuildTargetSourcePath(frameworkTarget);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(frameworkTarget);
     TargetNode<?, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of())

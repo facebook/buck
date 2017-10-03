@@ -148,7 +148,7 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public ImmutableList<SourcePath> getResDirectories() {
     return RichStream.from(getRawResDirectories())
-        .map(p -> (SourcePath) new ExplicitBuildTargetSourcePath(getBuildTarget(), p))
+        .map(p -> (SourcePath) ExplicitBuildTargetSourcePath.of(getBuildTarget(), p))
         .toImmutableList();
   }
 
@@ -296,7 +296,7 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public Optional<SourcePath> getOverrideSymbolsPath() {
     if (postFilterResourcesCmd.isPresent()) {
-      return Optional.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), getRDotJsonPath()));
+      return Optional.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotJsonPath()));
     }
     return Optional.empty();
   }

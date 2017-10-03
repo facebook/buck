@@ -81,7 +81,7 @@ class CxxInferCaptureTransitive extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputDirectory);
   }
 
   @Override

@@ -124,13 +124,13 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(new ExplicitBuildTargetSourcePath(getBuildTarget(), output)))
+        .addArg(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), output)))
         .addInput(main)
         .addInputs(resources)
         .build();

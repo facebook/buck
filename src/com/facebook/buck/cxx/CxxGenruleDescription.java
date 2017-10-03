@@ -539,7 +539,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return input
           .targets
           .stream()
-          .map(DefaultBuildTargetSourcePath::new)
+          .map(DefaultBuildTargetSourcePath::of)
           .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     }
   }

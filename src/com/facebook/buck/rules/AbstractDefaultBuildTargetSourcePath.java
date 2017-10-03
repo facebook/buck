@@ -17,16 +17,19 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import org.immutables.value.Value;
 
 /**
  * A {@link BuildTargetSourcePath} which resolves to the default output of the {@link BuildRule}
  * referred to by its target.
  */
-public class DefaultBuildTargetSourcePath extends BuildTargetSourcePath {
+@BuckStyleTuple
+@Value.Immutable(prehash = true)
+public abstract class AbstractDefaultBuildTargetSourcePath implements BuildTargetSourcePath {
 
-  public DefaultBuildTargetSourcePath(BuildTarget target) {
-    super(target);
-  }
+  @Override
+  public abstract BuildTarget getTarget();
 
   @Override
   public int hashCode() {
@@ -39,11 +42,11 @@ public class DefaultBuildTargetSourcePath extends BuildTargetSourcePath {
       return true;
     }
 
-    if (!(other instanceof DefaultBuildTargetSourcePath)) {
+    if (!(other instanceof AbstractDefaultBuildTargetSourcePath)) {
       return false;
     }
 
-    DefaultBuildTargetSourcePath that = (DefaultBuildTargetSourcePath) other;
+    AbstractDefaultBuildTargetSourcePath that = (AbstractDefaultBuildTargetSourcePath) other;
     return getTarget().equals(that.getTarget());
   }
 
@@ -63,7 +66,7 @@ public class DefaultBuildTargetSourcePath extends BuildTargetSourcePath {
       return classComparison;
     }
 
-    DefaultBuildTargetSourcePath that = (DefaultBuildTargetSourcePath) other;
+    AbstractDefaultBuildTargetSourcePath that = (AbstractDefaultBuildTargetSourcePath) other;
     return getTarget().compareTo(that.getTarget());
   }
 }

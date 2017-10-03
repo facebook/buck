@@ -83,7 +83,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar"));
   }

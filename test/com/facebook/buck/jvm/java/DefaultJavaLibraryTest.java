@@ -567,7 +567,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
     TargetNode<?, ?> libraryNode =
         createJavaLibraryBuilder(libraryTarget)
-            .addSrc(new DefaultBuildTargetSourcePath(sourceDepExportFileTarget))
+            .addSrc(DefaultBuildTargetSourcePath.of(sourceDepExportFileTarget))
             .addDep(depLibraryTarget)
             .addDep(depExportFileTarget)
             .addDep(depProvidedDepLibraryTarget)
@@ -576,7 +576,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addProvidedDep(providedDepLibraryTarget)
             .addProvidedDep(exportedProvidedDepLibraryTarget)
             .addProvidedDep(depProvidedDepLibraryTarget)
-            .addResource(new DefaultBuildTargetSourcePath(resourceDepPrebuiltJarTarget))
+            .addResource(DefaultBuildTargetSourcePath.of(resourceDepPrebuiltJarTarget))
             .build();
 
     TargetGraph targetGraph =
@@ -1390,7 +1390,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     TargetNode<?, ?> ruleNode =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-            .setCompiler(new DefaultBuildTargetSourcePath(javacTarget))
+            .setCompiler(DefaultBuildTargetSourcePath.of(javacTarget))
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);

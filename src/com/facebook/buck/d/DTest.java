@@ -230,7 +230,7 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(), Preconditions.checkNotNull(testBinaryBuildRule.getSourcePathToOutput()));
   }
 

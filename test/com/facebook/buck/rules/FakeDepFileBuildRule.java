@@ -116,6 +116,6 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
     if (outputPath == null) {
       return null;
     }
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
 }

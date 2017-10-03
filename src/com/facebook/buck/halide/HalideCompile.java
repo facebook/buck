@@ -89,7 +89,7 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), pathToOutput(getBuildTarget(), getProjectFilesystem()));
   }
 

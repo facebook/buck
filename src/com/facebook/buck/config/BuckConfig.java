@@ -341,7 +341,7 @@ public class BuckConfig implements ConfigPathGetter {
     }
     try {
       BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
-      return Optional.of(new DefaultBuildTargetSourcePath(target));
+      return Optional.of(DefaultBuildTargetSourcePath.of(target));
     } catch (BuildTargetParseException e) {
       return Optional.of(
           new PathSourcePath(

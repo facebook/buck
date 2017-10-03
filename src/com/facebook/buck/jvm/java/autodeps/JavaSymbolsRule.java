@@ -135,7 +135,7 @@ final class JavaSymbolsRule implements BuildRule, InitializableFromDisk<Symbols>
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
 
   @Override

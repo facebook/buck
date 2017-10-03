@@ -84,7 +84,7 @@ public abstract class PythonBinary extends AbstractBuildRuleWithDeclaredAndExtra
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getBinPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getBinPath());
   }
 
   @VisibleForTesting

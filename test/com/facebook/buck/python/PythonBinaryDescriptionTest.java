@@ -105,7 +105,7 @@ public class PythonBinaryDescriptionTest {
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(
-                        new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()))));
+                        DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()))));
     PythonBinaryBuilder binaryBuilder =
         PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setMainModule("main")

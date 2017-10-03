@@ -56,7 +56,7 @@ public class OcamlCCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), args.output);
   }
 
   @Override

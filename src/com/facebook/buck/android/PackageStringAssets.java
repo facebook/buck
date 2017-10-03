@@ -172,7 +172,7 @@ public class PackageStringAssets extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToStringAssetsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToStringAssetsDir());
   }
 
   private Path getPathToStringAssetsDir() {
@@ -181,6 +181,6 @@ public class PackageStringAssets extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToStringAssetsZip() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToStringAssetsZip());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToStringAssetsZip());
   }
 }

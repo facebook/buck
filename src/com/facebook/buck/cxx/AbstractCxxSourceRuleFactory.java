@@ -807,7 +807,7 @@ abstract class AbstractCxxSourceRuleFactory {
       Path sandboxPath =
           BuildTargets.getGenPath(getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
       ExplicitBuildTargetSourcePath path =
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               sandboxTree.getBuildTarget(), sandboxPath.resolve(sourcePath));
       source = CxxSource.copyOf(source).withPath(path);
     }

@@ -167,11 +167,11 @@ public class CxxBinaryDescriptionTest {
             .setSrcs(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(genSourceTarget))))
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genSourceTarget))))
             .setHeaders(
                 ImmutableSortedSet.of(
                     new FakeSourcePath("test/bar.h"),
-                    new DefaultBuildTargetSourcePath(genHeaderTarget)))
+                    DefaultBuildTargetSourcePath.of(genHeaderTarget)))
             .setDeps(ImmutableSortedSet.of(depTarget));
 
     // Create the target graph.

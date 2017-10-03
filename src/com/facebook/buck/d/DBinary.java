@@ -64,7 +64,7 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

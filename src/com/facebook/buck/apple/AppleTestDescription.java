@@ -367,12 +367,12 @@ public class AppleTestDescription
 
               @Override
               public SourcePath getSourcePathToOutput() {
-                return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
+                return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputDirectory);
               }
             };
           });
       return Optional.of(
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
       return Optional.of(new PathSourcePath(projectFilesystem, appleConfig.getXctoolPath().get()));

@@ -157,7 +157,7 @@ public class AppleDsym extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), dsymOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), dsymOutputPath);
   }
 
   @Override

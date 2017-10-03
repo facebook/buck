@@ -93,9 +93,9 @@ public class RuleKeyBuilderTest {
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_2 =
       ArchiveMemberSourcePath.of(SOURCE_PATH_2, Paths.get("member"));
   private static final DefaultBuildTargetSourcePath TARGET_PATH_1 =
-      new DefaultBuildTargetSourcePath(TARGET_1);
+      DefaultBuildTargetSourcePath.of(TARGET_1);
   private static final DefaultBuildTargetSourcePath TARGET_PATH_2 =
-      new DefaultBuildTargetSourcePath(TARGET_2);
+      DefaultBuildTargetSourcePath.of(TARGET_2);
 
   @Test
   public void testUniqueness() {

@@ -217,7 +217,7 @@ public class PrebuiltJarSymbolsFinderTest {
 
   private PrebuiltJarSymbolsFinder createFinderForGeneratedJar(String target) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
-    SourcePath sourcePath = new DefaultBuildTargetSourcePath(buildTarget);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTarget);
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }
 }

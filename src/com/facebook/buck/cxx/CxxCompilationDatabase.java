@@ -115,7 +115,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJsonFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputJsonFile);
   }
 
   @Override

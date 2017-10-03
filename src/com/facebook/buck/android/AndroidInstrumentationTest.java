@@ -322,7 +322,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToTestOutputDirectory());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToTestOutputDirectory());
   }
 
   @Override

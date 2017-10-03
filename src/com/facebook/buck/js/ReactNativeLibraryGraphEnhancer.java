@@ -118,7 +118,7 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRuleParams paramsForResource = params.withExtraDeps(ImmutableSortedSet.of(bundle));
 
       SourcePath resources =
-          new ExplicitBuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources());
+          ExplicitBuildTargetSourcePath.of(bundle.getBuildTarget(), bundle.getResources());
       BuildRule resource =
           new AndroidResource(
               buildTargetForResource,

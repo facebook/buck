@@ -169,7 +169,7 @@ public class SwiftLibraryIntegrationTest {
     assertThat(
         sourcePathArg.getPath(),
         Matchers.equalTo(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 swiftCompileTarget,
                 pathResolver
                     .getRelativePath(buildRule.getSourcePathToOutput())
@@ -179,7 +179,7 @@ public class SwiftLibraryIntegrationTest {
     assertThat(objArg, Matchers.instanceOf(FileListableLinkerInputArg.class));
     FileListableLinkerInputArg fileListArg = (FileListableLinkerInputArg) objArg;
     ExplicitBuildTargetSourcePath fileListSourcePath =
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             swiftCompileTarget,
             pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));

@@ -234,7 +234,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutputDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
   }
 
   @Override
@@ -454,7 +454,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Tool getExecutableCommand() {
-    SourcePath p = new ExplicitBuildTargetSourcePath(getBuildTarget(), scriptPath());
+    SourcePath p = ExplicitBuildTargetSourcePath.of(getBuildTarget(), scriptPath());
     return new CommandTool.Builder().addArg(SourcePathArg.of(p)).build();
   }
 }

@@ -118,6 +118,6 @@ public class AndroidManifest extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutputFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutputFile);
   }
 }

@@ -320,7 +320,7 @@ public class OcamlRuleBuilder {
               .transform(pathResolver::getAbsolutePath)
               .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
               .transform(ocamlContext::getCOutput)
-              .transform(input -> new ExplicitBuildTargetSourcePath(compileBuildTarget, input))
+              .transform(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))
               .toList(),
           ocamlContext,
           ocamlLibraryBuild,

@@ -148,11 +148,11 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public SourcePath getLibFileSourcePath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibFilePath());
   }
 
   public SourcePath getSymbolsNeededPath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getSymbolsNeededOutPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getSymbolsNeededOutPath());
   }
 
   @Override
@@ -223,7 +223,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibFilePath());
   }
 
   @Override

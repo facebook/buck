@@ -189,21 +189,21 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   public ImmutableSet<SourcePath> getInterfaces() {
-    SourcePath sp = new ExplicitBuildTargetSourcePath(getBuildTarget(), getInterface());
+    SourcePath sp = ExplicitBuildTargetSourcePath.of(getBuildTarget(), getInterface());
     return ImmutableSet.of(sp);
   }
 
   public ImmutableSet<SourcePath> getOutputDirs() {
     return ImmutableSet.of(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             getBuildTarget(), getOutputDir().resolve(Type.HTML.toString())),
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             getBuildTarget(), getOutputDir().resolve(Type.HOOGLE.toString())));
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutputDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
   }
 
   @Override

@@ -122,7 +122,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToNativeLibsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToNativeLibsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToNativeLibsDir());
   }
 
   public Path getPathToNativeLibsAssetsDir() {
@@ -130,7 +130,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToNativeLibsAssetsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToNativeLibsAssetsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToNativeLibsAssetsDir());
   }
 
   /**
@@ -142,7 +142,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToAllLibsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToAllLibsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToAllLibsDir());
   }
 
   public Path getPathToMetadataTxt() {
@@ -150,7 +150,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToMetadataTxt() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToMetadataTxt());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToMetadataTxt());
   }
 
   private Path getBinPath() {

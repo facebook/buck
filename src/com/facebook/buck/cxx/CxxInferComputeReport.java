@@ -105,7 +105,7 @@ class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSte
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), reportOutput);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), reportOutput);
   }
 
   @Override

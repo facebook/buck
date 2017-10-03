@@ -164,7 +164,7 @@ public abstract class TargetNodeTranslator {
     BuildTarget target = val.getTarget();
     Optional<BuildTarget> translatedTarget = translate(cellPathResolver, pattern, target);
     return translatedTarget.isPresent()
-        ? Optional.of(new DefaultBuildTargetSourcePath(translatedTarget.get()))
+        ? Optional.of(DefaultBuildTargetSourcePath.of(translatedTarget.get()))
         : Optional.empty();
   }
 

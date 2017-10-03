@@ -123,7 +123,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), binary.getSourcePathToOutput());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), binary.getSourcePathToOutput());
   }
 
   @Override

@@ -116,15 +116,15 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   public SourcePath getPathToRDotTxt() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), rDotTxtOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), rDotTxtOutputPath);
   }
 
   public SourcePath getPathToPrimaryResources() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), primaryResourcesOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), primaryResourcesOutputPath);
   }
 
   public SourcePath getPathToExoResources() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), exoResourcesOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), exoResourcesOutputPath);
   }
 
   public Path getScratchDirectory() {

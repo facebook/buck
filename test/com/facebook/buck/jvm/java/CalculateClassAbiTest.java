@@ -94,7 +94,7 @@ public class CalculateClassAbiTest {
             ruleFinder,
             filesystem,
             builder.createBuildRuleParams(resolver),
-            new DefaultBuildTargetSourcePath(javaLibraryTarget));
+            DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
     FileHashCache initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
@@ -160,7 +160,7 @@ public class CalculateClassAbiTest {
             ruleFinder,
             filesystem,
             builder.createBuildRuleParams(resolver),
-            new DefaultBuildTargetSourcePath(javaLibraryTarget));
+            DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
     FileHashCache initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);

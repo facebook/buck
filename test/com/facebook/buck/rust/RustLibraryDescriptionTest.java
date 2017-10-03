@@ -38,7 +38,7 @@ public class RustLibraryDescriptionTest {
     RustLibraryBuilder libraryBuilder =
         RustLibraryBuilder.from("//:lib")
             .setSrcs(
-                ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(srcBuilder.getTarget())));
+                ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
     RustBinaryBuilder binaryBuilder =
         RustBinaryBuilder.from("//:bin")
             .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("main.rs")))

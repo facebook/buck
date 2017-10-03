@@ -193,7 +193,7 @@ public class ExportFileTest {
     FakeBuildRule rule =
         resolver.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
 
-    builder.setSrc(new DefaultBuildTargetSourcePath(rule.getBuildTarget()));
+    builder.setSrc(DefaultBuildTargetSourcePath.of(rule.getBuildTarget()));
     exportFile = builder.build(resolver, projectFilesystem);
     assertThat(
         pathResolver.filterInputsToCompareToOutput(exportFile.getSource()), Matchers.empty());

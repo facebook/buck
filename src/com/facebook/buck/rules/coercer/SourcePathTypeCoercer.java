@@ -50,7 +50,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
         && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
       BuildTarget buildTarget =
           buildTargetTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
-      return new DefaultBuildTargetSourcePath(buildTarget);
+      return DefaultBuildTargetSourcePath.of(buildTarget);
     } else {
       Path path = pathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
       if (path.isAbsolute()) {

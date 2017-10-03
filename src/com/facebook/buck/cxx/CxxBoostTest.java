@@ -107,7 +107,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
   }
 

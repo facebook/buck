@@ -93,7 +93,7 @@ public class StripLinkable extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), resultDir.resolve(strippedObjectName));
   }
 }

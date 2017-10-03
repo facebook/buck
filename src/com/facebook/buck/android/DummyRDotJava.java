@@ -362,7 +362,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputJar);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputJar);
   }
 
   @Override

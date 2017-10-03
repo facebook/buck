@@ -49,7 +49,7 @@ public class AndroidManifestDescriptionTest {
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar")) {
           @Override
           public SourcePath getSourcePathToOutput() {
-            return new ExplicitBuildTargetSourcePath(
+            return ExplicitBuildTargetSourcePath.of(
                 getBuildTarget(), Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml"));
           }
         };

@@ -241,7 +241,7 @@ public class HalideLibraryDescription
             platform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled()),
         ImmutableList.of(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 halideCompileBuildTarget,
                 HalideCompile.objectOutputPath(
                     halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))),
@@ -307,7 +307,7 @@ public class HalideLibraryDescription
       Path outputPath =
           HalideCompile.headerOutputPath(compileTarget, projectFilesystem, args.getFunctionName());
       headersBuilder.put(
-          outputPath.getFileName(), new ExplicitBuildTargetSourcePath(compileTarget, outputPath));
+          outputPath.getFileName(), ExplicitBuildTargetSourcePath.of(compileTarget, outputPath));
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           buildTarget,
           projectFilesystem,

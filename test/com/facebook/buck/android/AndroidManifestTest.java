@@ -58,7 +58,7 @@ public class AndroidManifestTest {
     AndroidManifest androidManifest = createSimpleAndroidManifestRule();
 
     assertEquals(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             androidManifest.getBuildTarget(),
             BuildTargets.getGenPath(
                 new FakeProjectFilesystem(), MANIFEST_TARGET, "AndroidManifest__%s__.xml")),

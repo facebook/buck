@@ -74,7 +74,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
     UnflavoredBuildTarget staticBuildTarget = staticLibraryTarget.getUnflavoredBuildTarget();
     inputBuilder.addArgs(
         SourcePathArg.of(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
                     ? OcamlBuildContext.getBytecodeOutputPath(

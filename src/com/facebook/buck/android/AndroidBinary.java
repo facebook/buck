@@ -390,7 +390,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), buildable.getFinalApkPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getFinalApkPath());
   }
 
   public AndroidPackageableCollection getAndroidPackageableCollection() {
@@ -402,7 +402,7 @@ public class AndroidBinary extends AbstractBuildRule
   }
 
   private SourcePath getManifestPath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), buildable.getManifestPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getManifestPath());
   }
 
   private Optional<ExopackageInfo> getExopackageInfo() {
@@ -439,7 +439,7 @@ public class AndroidBinary extends AbstractBuildRule
               ImmutableList.<SourcePath>builder()
                   .addAll(enhancementResult.getExoResources())
                   .add(
-                      new ExplicitBuildTargetSourcePath(
+                      ExplicitBuildTargetSourcePath.of(
                           getBuildTarget(), buildable.getMergedThirdPartyJarsPath()))
                   .build()));
       shouldInstall = true;

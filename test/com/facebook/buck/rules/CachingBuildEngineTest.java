@@ -1485,7 +1485,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -1685,7 +1685,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
       resolver.addToIndex(rule);
@@ -1763,7 +1763,7 @@ public class CachingBuildEngineTest {
 
       @Override
       public SourcePath getSourcePathToOutput() {
-        return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
+        return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("output"));
       }
     }
   }
@@ -1830,7 +1830,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -1924,7 +1924,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2000,7 +2000,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2078,7 +2078,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2171,7 +2171,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2261,7 +2261,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2387,7 +2387,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2493,7 +2493,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2617,7 +2617,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2728,7 +2728,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -2872,7 +2872,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public SourcePath getSourcePathToOutput() {
-              return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
             }
           };
 
@@ -3868,7 +3868,7 @@ public class CachingBuildEngineTest {
       if (pathToOutputFile == null) {
         return null;
       }
-      return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToOutputFile);
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutputFile);
     }
 
     @Override
@@ -4062,7 +4062,7 @@ public class CachingBuildEngineTest {
       if (output == null) {
         return null;
       }
-      return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
     }
   }
 

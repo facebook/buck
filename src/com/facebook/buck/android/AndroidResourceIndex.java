@@ -89,6 +89,6 @@ public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraD
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToOutputDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToOutputDir());
   }
 }

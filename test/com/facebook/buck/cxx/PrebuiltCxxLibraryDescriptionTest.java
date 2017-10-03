@@ -266,7 +266,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setOut("libtest.a");
     PrebuiltCxxLibraryBuilder libraryBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -292,7 +292,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setOut("libtest.a");
     PrebuiltCxxLibraryBuilder libraryBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -341,7 +341,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
     builder.setSoname("test");
-    builder.setStaticLib(new DefaultBuildTargetSourcePath(genTarget));
+    builder.setStaticLib(DefaultBuildTargetSourcePath.of(genTarget));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), builder.build());
@@ -369,10 +369,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
         PatternMatchedCollection.<SourcePath>builder()
             .add(
                 Pattern.compile("platform 1", Pattern.LITERAL),
-                new DefaultBuildTargetSourcePath(platform1Dep))
+                DefaultBuildTargetSourcePath.of(platform1Dep))
             .add(
                 Pattern.compile("platform 2", Pattern.LITERAL),
-                new DefaultBuildTargetSourcePath(platform2Dep))
+                DefaultBuildTargetSourcePath.of(platform2Dep))
             .build());
     assertThat(builder.build().getExtraDeps(), contains(platform1Dep, platform2Dep));
   }
@@ -493,7 +493,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setCmd("something");
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(target)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), builder.build());

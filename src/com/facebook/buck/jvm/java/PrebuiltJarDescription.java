@@ -157,7 +157,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
 
       @Override
       public SourcePath getSourcePathToOutput() {
-        return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+        return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
       }
     }
     return new ExistingOuputs(buildTarget, projectFilesystem, params, input);

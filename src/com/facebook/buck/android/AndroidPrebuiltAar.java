@@ -92,7 +92,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         HasJavaAbi.getClassAbiJar(androidLibraryBuildTarget),
         /* mavenCoords */ Optional.empty(),
         Optional.of(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
         /* tests */ ImmutableSortedSet.of(),
         /* requiredForSourceAbi */ requiredForSourceAbi);
@@ -108,13 +108,13 @@ public class AndroidPrebuiltAar extends AndroidLibrary
 
   @Override
   public SourcePath getPathToTextSymbolsFile() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());
   }
 
   @Override
   public SourcePath getPathToRDotJavaPackageFile() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         unzipAar.getBuildTarget(), unzipAar.getPathToRDotJavaPackageFile());
   }
 

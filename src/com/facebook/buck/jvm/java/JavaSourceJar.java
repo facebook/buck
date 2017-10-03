@@ -126,7 +126,7 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

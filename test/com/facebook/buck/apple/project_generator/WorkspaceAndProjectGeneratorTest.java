@@ -428,7 +428,7 @@ public class WorkspaceAndProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(genruleTarget))))
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genruleTarget))))
             .build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
@@ -474,7 +474,7 @@ public class WorkspaceAndProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(genruleTarget))))
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genruleTarget))))
             .build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =

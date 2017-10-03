@@ -120,7 +120,7 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getResourceApkPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath());
   }
 
   private Path getPathToRDotTxtDir() {
@@ -266,11 +266,11 @@ public class AaptPackageResources extends AbstractBuildRule {
   public AaptOutputInfo getAaptOutputInfo() {
     BuildTarget target = getBuildTarget();
     return AaptOutputInfo.builder()
-        .setPathToRDotTxt(new ExplicitBuildTargetSourcePath(target, getPathToRDotTxtFile()))
-        .setPrimaryResourcesApkPath(new ExplicitBuildTargetSourcePath(target, getResourceApkPath()))
-        .setAndroidManifestXml(new ExplicitBuildTargetSourcePath(target, getAndroidManifestXml()))
+        .setPathToRDotTxt(ExplicitBuildTargetSourcePath.of(target, getPathToRDotTxtFile()))
+        .setPrimaryResourcesApkPath(ExplicitBuildTargetSourcePath.of(target, getResourceApkPath()))
+        .setAndroidManifestXml(ExplicitBuildTargetSourcePath.of(target, getAndroidManifestXml()))
         .setAaptGeneratedProguardConfigFile(
-            new ExplicitBuildTargetSourcePath(target, getPathToGeneratedProguardConfigFile()))
+            ExplicitBuildTargetSourcePath.of(target, getPathToGeneratedProguardConfigFile()))
         .build();
   }
 }

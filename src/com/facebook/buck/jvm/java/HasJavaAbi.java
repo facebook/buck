@@ -116,8 +116,7 @@ public interface HasJavaAbi {
                   .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
                   .map(
                       path ->
-                          new ExplicitBuildTargetSourcePath(
-                              buildTargetSourcePath.getTarget(), path))
+                          ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
                   .collect(MoreCollectors.toImmutableSortedSet());
         } else {
           SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);

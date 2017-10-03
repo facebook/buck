@@ -62,6 +62,6 @@ public class OcamlDebugLauncher extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.getOutput());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), args.getOutput());
   }
 }

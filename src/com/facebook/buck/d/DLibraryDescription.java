@@ -84,7 +84,7 @@ public class DLibraryDescription
         buildTarget.withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
-            .setLinkTree(new DefaultBuildTargetSourcePath(sourceTreeTarget))
+            .setLinkTree(DefaultBuildTargetSourcePath.of(sourceTreeTarget))
             .setSources(args.getSrcs().getPaths())
             .build();
 

@@ -94,9 +94,9 @@ public class IosReactNativeLibraryDescription
       BuildRuleResolver resolver) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     builder.addDirsContainingResourceDirs(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             buildTarget, ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             buildTarget, ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
   }
 }

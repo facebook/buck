@@ -110,6 +110,6 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputFile);
   }
 }

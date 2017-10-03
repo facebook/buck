@@ -116,7 +116,7 @@ abstract class AbstractDeprecatedPrebuiltCxxLibraryPaths implements PrebuiltCxxL
         Path path = filesystem.resolve(subPath);
         path = suffix.map(path::resolve).orElse(path);
         path = filesystem.relativize(path);
-        return new ExplicitBuildTargetSourcePath(dep.get().getBuildTarget(), path);
+        return ExplicitBuildTargetSourcePath.of(dep.get().getBuildTarget(), path);
       }
     }
 

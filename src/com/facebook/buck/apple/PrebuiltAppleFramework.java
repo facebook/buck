@@ -135,7 +135,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), out);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), out);
   }
 
   @Override

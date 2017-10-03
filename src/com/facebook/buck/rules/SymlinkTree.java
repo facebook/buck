@@ -185,7 +185,7 @@ public class SymlinkTree implements BuildRule, HasRuntimeDeps, SupportsInputBase
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), root);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), root);
   }
 
   @Override

@@ -417,7 +417,7 @@ public class AppleBuildRulesTest {
         GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
             .setOut("foo")
             .setCmd("echo hi > $OUT")
-            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .setSrcs(ImmutableList.of(DefaultBuildTargetSourcePath.of(fooLibTarget)))
             .build();
 
     BuildTarget barLibTarget =
@@ -468,7 +468,7 @@ public class AppleBuildRulesTest {
         GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
             .setOut("foo")
             .setCmd("echo hi > $OUT")
-            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .setSrcs(ImmutableList.of(DefaultBuildTargetSourcePath.of(fooLibTarget)))
             .build();
 
     BuildTarget barLibTarget =
@@ -519,7 +519,7 @@ public class AppleBuildRulesTest {
         GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
             .setOut("foo")
             .setCmd("echo hi > $OUT")
-            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .setSrcs(ImmutableList.of(DefaultBuildTargetSourcePath.of(fooLibTarget)))
             .build();
 
     BuildTarget barLibTarget =

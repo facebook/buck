@@ -84,7 +84,7 @@ public class Aapt2Compile extends AbstractBuildRule {
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutputPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputPath());
   }
 
   private Path getOutputPath() {

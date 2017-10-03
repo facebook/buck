@@ -132,7 +132,7 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), resultsDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), resultsDir);
   }
 
   public Path getAbsolutePathToOutput() {

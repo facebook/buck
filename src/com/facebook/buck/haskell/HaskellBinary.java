@@ -52,7 +52,7 @@ public class HaskellBinary extends BinaryWrapperRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   public ImmutableSet<BuildRule> getBinaryDeps() {

@@ -85,7 +85,7 @@ public class BuildableSupportTest {
       @Nullable
       @Override
       public SourcePath getSourcePathToOutput() {
-        return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("whatever"));
+        return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("whatever"));
       }
     };
   }

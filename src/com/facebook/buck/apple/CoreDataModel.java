@@ -126,6 +126,6 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputDir);
   }
 }

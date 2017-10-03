@@ -399,13 +399,13 @@ public class RuleKeyTest {
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("location")))));
 
     // Verify that just changing the path of the build rule changes the rule key.
@@ -414,13 +414,13 @@ public class RuleKeyTest {
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("different")))));
 
     // Verify that just changing the build rule rule key changes the calculated rule key.
@@ -429,13 +429,13 @@ public class RuleKeyTest {
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake2.getBuildTarget(), Paths.get("location")))));
 
     // Verify that just changing the key changes the calculated rule key.
@@ -444,13 +444,13 @@ public class RuleKeyTest {
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("location")))),
         buildResult(
             createBuilder(pathResolver, ruleFinder)
                 .setReflectively(
                     "different-key",
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         fake1.getBuildTarget(), Paths.get("location")))));
   }
 
@@ -466,7 +466,7 @@ public class RuleKeyTest {
     resolver.addToIndex(fakeBuildRule);
 
     ExplicitBuildTargetSourcePath archive1 =
-        new ExplicitBuildTargetSourcePath(fakeBuildRule.getBuildTarget(), Paths.get("location"));
+        ExplicitBuildTargetSourcePath.of(fakeBuildRule.getBuildTarget(), Paths.get("location"));
     PathSourcePath archive2 =
         new PathSourcePath(new FakeProjectFilesystem(), Paths.get("otherLocation"));
 

@@ -162,7 +162,7 @@ public class AppleDebuggableBinary extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(),
         Preconditions.checkNotNull(
             binaryRule.getSourcePathToOutput(), "binary should always have an output path"));

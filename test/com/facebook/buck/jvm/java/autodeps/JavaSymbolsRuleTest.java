@@ -75,7 +75,7 @@ public class JavaSymbolsRuleTest {
                     .map(Paths::get)
                     .map(p -> new PathSourcePath(projectFilesystem, p))
                     .iterator())
-            .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
+            .add(DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:bar")))
             .build();
     JavaFileParser javaFileParser =
         JavaFileParser.createJavaFileParser(

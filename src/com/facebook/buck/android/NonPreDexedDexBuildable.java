@@ -453,7 +453,7 @@ class NonPreDexedDexBuildable implements AddsToRuleKey {
   }
 
   private SourcePath genSourcePath(Path path) {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), path);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), path);
   }
 
   Supplier<ImmutableMap<String, HashCode>> addAccumulateClassNamesStep(

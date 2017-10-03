@@ -151,7 +151,7 @@ public class MergeAssets extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToMergedAssets());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToMergedAssets());
   }
 
   public Path getPathToMergedAssets() {

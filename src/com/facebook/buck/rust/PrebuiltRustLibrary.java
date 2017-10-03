@@ -52,7 +52,7 @@ abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithDeclaredAndExtra
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), getRlib());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), getRlib());
   }
 
   @Override

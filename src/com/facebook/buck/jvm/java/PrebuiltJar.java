@@ -300,7 +300,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), copiedBinaryJar);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), copiedBinaryJar);
   }
 
   @Override

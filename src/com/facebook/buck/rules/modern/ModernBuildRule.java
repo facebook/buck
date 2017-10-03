@@ -192,7 +192,7 @@ public class ModernBuildRule<T extends Buildable>
    */
   protected final SourcePath getSourcePath(OutputPath outputPath) {
     // TODO(cjhopman): enforce that the outputPath is actually from this target somehow.
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         buildTarget, outputPathResolver.resolvePath(outputPath));
   }
 

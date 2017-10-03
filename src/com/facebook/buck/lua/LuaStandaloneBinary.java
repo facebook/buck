@@ -161,7 +161,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

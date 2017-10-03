@@ -316,7 +316,7 @@ public class Omnibus {
       if (spec.getRoots().containsKey(linkableTarget)) {
         argsBuilder.add(
             SourcePathArg.of(
-                new DefaultBuildTargetSourcePath(getRootTarget(target, linkableTarget))));
+                DefaultBuildTargetSourcePath.of(getRootTarget(target, linkableTarget))));
         continue;
       }
 

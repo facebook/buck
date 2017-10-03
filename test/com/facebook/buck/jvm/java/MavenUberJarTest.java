@@ -53,7 +53,7 @@ public class MavenUberJarTest {
     PythonLibraryBuilder pythonLibraryBuilder = PythonLibraryBuilder.createBuilder(pythonTarget);
     JavaLibraryBuilder javaLibraryBuilder =
         JavaLibraryBuilder.createBuilder(javaTarget)
-            .addResource(new DefaultBuildTargetSourcePath(pythonTarget));
+            .addResource(DefaultBuildTargetSourcePath.of(pythonTarget));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), javaLibraryBuilder.build());

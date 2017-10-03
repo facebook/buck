@@ -221,7 +221,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsDir);
   }
 
   Path getPathToClassesJar() {
@@ -229,7 +229,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   SourcePath getResDirectory() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("res"));
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory.resolve("res"));
   }
 
   String getRDotJavaPackage() {
@@ -241,7 +241,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   SourcePath getAssetsDirectory() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("assets"));
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory.resolve("assets"));
   }
 
   Path getAndroidManifest() {

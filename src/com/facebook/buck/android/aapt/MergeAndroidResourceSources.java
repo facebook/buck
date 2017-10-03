@@ -96,6 +96,6 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), destinationDirectory);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), destinationDirectory);
   }
 }

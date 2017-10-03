@@ -70,7 +70,7 @@ public class AndroidInstrumentationApkTest {
           @Override
           public ImmutableSet<SourcePath> getTransitiveClasspaths() {
             return ImmutableSet.of(
-                new DefaultBuildTargetSourcePath(javaLibrary1Target), getSourcePathToOutput());
+                DefaultBuildTargetSourcePath.of(javaLibrary1Target), getSourcePathToOutput());
           }
         };
 
@@ -84,7 +84,7 @@ public class AndroidInstrumentationApkTest {
           @Override
           public ImmutableSet<SourcePath> getTransitiveClasspaths() {
             return ImmutableSet.of(
-                new DefaultBuildTargetSourcePath(javaLibrary3Target), getSourcePathToOutput());
+                DefaultBuildTargetSourcePath.of(javaLibrary3Target), getSourcePathToOutput());
           }
         };
 

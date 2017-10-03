@@ -76,7 +76,7 @@ public class InputPathTypeCoercerTest {
 
     assertEquals(
         new InputPath(
-            new DefaultBuildTargetSourcePath(
+            DefaultBuildTargetSourcePath.of(
                 BuildTarget.of(
                     UnflavoredBuildTarget.of(
                         projectFilesystem.getRootPath(), Optional.empty(), "//", "hello"),

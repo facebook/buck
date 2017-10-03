@@ -88,7 +88,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
               }
               if (sandbox.isPresent()) {
                 ExplicitBuildTargetSourcePath root =
-                    new ExplicitBuildTargetSourcePath(
+                    ExplicitBuildTargetSourcePath.of(
                         sandbox.get().getBuildTarget(),
                         sandbox.get().getProjectFilesystem().relativize(sandbox.get().getRoot()));
                 builder.addSymlinkTree(root, sandbox.get().getLinks());

@@ -103,7 +103,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutputPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputPath());
   }
 
   @Override

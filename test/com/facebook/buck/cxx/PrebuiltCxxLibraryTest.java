@@ -59,7 +59,7 @@ public class PrebuiltCxxLibraryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:x");
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(target)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genSrcBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genSrcBuilder.getTarget()));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
