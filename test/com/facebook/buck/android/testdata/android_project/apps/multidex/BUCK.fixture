@@ -76,6 +76,24 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_proguard',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  use_split_dex = True,
+  proguard_config = 'obfuscate.pro',
+  dex_compression = 'jar',
+  minimize_primary_dex_size = True,
+  primary_dex_patterns = [
+    '/MyApplication^',
+  ],
+  deps = [
+    '//java/com/sample/app:app',
+    '//java/com/sample/lib:lib',
+    '//native/cxx:lib',
+  ],
+)
+
+android_binary(
   name = 'app',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',

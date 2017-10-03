@@ -308,7 +308,8 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   }
 
   private DalvikAwareOutputStreamHelper newZipOutput(Path file) throws IOException {
-    return new DalvikAwareOutputStreamHelper(file, linearAllocLimit, reportDir, dalvikStatsCache);
+    return new DalvikAwareOutputStreamHelper(
+        filesystem.resolve(file), linearAllocLimit, reportDir, dalvikStatsCache);
   }
 
   private class MySecondaryDexHelper extends SecondaryDexHelper<DalvikAwareOutputStreamHelper> {

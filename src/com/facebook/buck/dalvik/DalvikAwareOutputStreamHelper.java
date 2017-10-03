@@ -51,6 +51,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
   DalvikAwareOutputStreamHelper(
       Path outputFile, long linearAllocLimit, Path reportDir, DalvikStatsCache dalvikStatsCache)
       throws IOException {
+    Preconditions.checkState(Files.exists(outputFile.getParent()));
     this.outStream =
         new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputFile)));
     this.linearAllocLimit = linearAllocLimit;
