@@ -102,7 +102,6 @@ public class PrebuiltAppleFrameworkDescription
         buildTarget,
         projectFilesystem,
         params,
-        resolver,
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver)),
         args.getFramework(),
         args.getPreferredLinkage(),
