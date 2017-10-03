@@ -154,7 +154,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     }
 
     @Override
-    protected Builder<RULE_KEY> setReflectively(@Nullable Object val) {
+    protected Builder<RULE_KEY> setReflectively(@Nullable Object val) throws IOException {
       if (val instanceof ArchiveDependencySupplier) {
         Iterable<SourcePath> members =
             ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver)::iterator;

@@ -37,6 +37,7 @@ import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -470,7 +471,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                       rule,
                       buildRuleDurationTracker,
                       ruleKeyFactories.getDefaultRuleKeyFactory())) {
-                return ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+                try {
+                  return ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+                } catch (Exception e) {
+                  throw new BuckUncheckedExecutionException(
+                      e, String.format("When computing rulekey for %s.", rule));
+                }
               }
             },
             serviceByAdjustingDefaultWeightsTo(RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -49,12 +50,18 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
   @Override
   public final AbstractRuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
     try (Scope ignored = scopedHasher.keyScope(key)) {
-      return setReflectively(val);
+      try {
+        return setReflectively(val);
+      } catch (IOException e) {
+        throw new BuckUncheckedExecutionException(
+            e, String.format("When adding %s with value %s", key, val));
+      }
     }
   }
 
   /** Recursively serializes the value. Serialization of the key is handled outside. */
-  protected AbstractRuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val) {
+  protected AbstractRuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val)
+      throws IOException {
     if (val instanceof AddsToRuleKey) {
       return setAddsToRuleKey((AddsToRuleKey) val);
     }
@@ -144,11 +151,7 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
     }
 
     if (val instanceof SourcePath) {
-      try {
-        return setSourcePath((SourcePath) val);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      return setSourcePath((SourcePath) val);
     }
 
     if (val instanceof NonHashableSourcePathContainer) {
