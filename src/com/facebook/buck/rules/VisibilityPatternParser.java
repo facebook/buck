@@ -17,7 +17,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
+import org.immutables.value.Value;
 
 public class VisibilityPatternParser {
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
@@ -27,34 +29,34 @@ public class VisibilityPatternParser {
 
   public VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
-      return PublicVisibilityPattern.INSTANCE;
+      return PublicVisibilityPattern.of();
     } else {
-      return new BuildTargetVisibilityPattern(
+      return BuildTargetVisibilityPattern.of(
           buildTargetPatternParser.parse(cellNames, buildTargetPattern));
     }
   }
 
+  @Value.Immutable
+  @BuckStyleTuple
   @VisibleForTesting
-  static class BuildTargetVisibilityPattern implements VisibilityPattern {
-    private final BuildTargetPattern viewerPattern;
+  abstract static class AbstractBuildTargetVisibilityPattern implements VisibilityPattern {
 
-    public BuildTargetVisibilityPattern(BuildTargetPattern viewerPattern) {
-      this.viewerPattern = viewerPattern;
-    }
+    abstract BuildTargetPattern getViewerPattern();
 
     @Override
     public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {
-      return viewerPattern.matches(viewer.getBuildTarget());
+      return getViewerPattern().matches(viewer.getBuildTarget());
     }
 
     @Override
     public String getRepresentation() {
-      return viewerPattern.getCellFreeRepresentation();
+      return getViewerPattern().getCellFreeRepresentation();
     }
   }
 
-  private static class PublicVisibilityPattern implements VisibilityPattern {
-    public static final PublicVisibilityPattern INSTANCE = new PublicVisibilityPattern();
+  @Value.Immutable
+  @BuckStyleTuple
+  static class AbstractPublicVisibilityPattern implements VisibilityPattern {
 
     @Override
     public boolean checkVisibility(ObeysVisibility viewer, ObeysVisibility viewed) {

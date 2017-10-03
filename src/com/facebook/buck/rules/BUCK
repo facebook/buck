@@ -512,7 +512,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "visibility",
     srcs = [
         "ObeysVisibility.java",
