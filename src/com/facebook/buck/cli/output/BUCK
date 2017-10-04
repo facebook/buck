@@ -1,0 +1,10 @@
+java_library(
+    name = "output",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:process_executor",
+    ],
+)

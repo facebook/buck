@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.project_generator.XCodeProjectCommandHelper;
+import com.facebook.buck.cli.output.PrintStreamPathOutputPresenter;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
 import com.facebook.buck.config.BuckConfig;
@@ -332,6 +333,10 @@ public class ProjectCommand extends BuildCommand {
                     combinedProject,
                     dryRun,
                     getReadOnly(params.getBuckConfig()),
+                    new PrintStreamPathOutputPresenter(
+                        params.getConsole().getStdOut(),
+                        this.getOutputMode(),
+                        params.getCell().getRoot()),
                     arguments -> parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), arguments),
                     arguments -> {
                       try {

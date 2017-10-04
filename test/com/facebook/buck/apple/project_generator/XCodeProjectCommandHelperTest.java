@@ -25,6 +25,7 @@ import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.cli.output.NullPathOutputPresenter;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.model.BuildTarget;
@@ -444,7 +445,8 @@ public class XCodeProjectCommandHelperTest {
             false /* shouldGenerateHeaderSymlinkTreeOnly */),
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
-        false);
+        false,
+        new NullPathOutputPresenter());
     return projectGenerators;
   }
 }

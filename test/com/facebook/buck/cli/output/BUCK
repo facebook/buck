@@ -1,0 +1,8 @@
+java_test(
+    name = "output-test",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/cli/output:output",
+        "//third-party/java/junit:junit",
+    ],
+)

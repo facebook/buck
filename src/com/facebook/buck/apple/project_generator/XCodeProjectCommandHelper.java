@@ -22,6 +22,7 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
+import com.facebook.buck.cli.output.PathOutputPresenter;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -112,6 +113,8 @@ public class XCodeProjectCommandHelper {
   private final boolean combinedProject;
   private final boolean dryRun;
   private final boolean readOnly;
+  private final PathOutputPresenter outputPresenter;
+
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final Function<ImmutableList<String>, Integer> buildRunner;
 
@@ -135,6 +138,7 @@ public class XCodeProjectCommandHelper {
       boolean combinedProject,
       boolean dryRun,
       boolean readOnly,
+      PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       Function<ImmutableList<String>, Integer> buildRunner) {
     this.buckEventBus = buckEventBus;
@@ -156,6 +160,7 @@ public class XCodeProjectCommandHelper {
     this.combinedProject = combinedProject;
     this.dryRun = dryRun;
     this.readOnly = readOnly;
+    this.outputPresenter = outputPresenter;
     this.argsParser = argsParser;
     this.buildRunner = buildRunner;
   }
@@ -314,7 +319,8 @@ public class XCodeProjectCommandHelper {
             options,
             getFocusModules(executor),
             new HashMap<>(),
-            combinedProject);
+            combinedProject,
+            outputPresenter);
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableMultimap<Path, String> cellPathToCellName =
           cell.getCellPathResolver().getCellPaths().asMultimap().inverse();
@@ -363,7 +369,8 @@ public class XCodeProjectCommandHelper {
       ImmutableSet<ProjectGenerator.Option> options,
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
-      boolean combinedProject)
+      boolean combinedProject,
+      PathOutputPresenter presenter)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
@@ -422,13 +429,17 @@ public class XCodeProjectCommandHelper {
               swiftBuckConfig);
       Preconditions.checkNotNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
-      generator.generateWorkspaceAndDependentProjects(projectGenerators, executorService);
+      Path outputPath =
+          generator.generateWorkspaceAndDependentProjects(projectGenerators, executorService);
+
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();
       LOG.debug(
           "Required build targets for workspace %s: %s",
           inputTarget, requiredBuildTargetsForWorkspace);
       requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
+
+      presenter.present(inputTarget.getFullyQualifiedName(), outputPath);
     }
 
     return requiredBuildTargetsBuilder.build();

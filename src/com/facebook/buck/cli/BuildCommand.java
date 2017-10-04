@@ -20,6 +20,7 @@ import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuil
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.cli.output.Mode;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.BuckVersionUtil;
@@ -258,6 +259,16 @@ public class BuildCommand extends AbstractCommand {
 
   public boolean isDebugEnabled() {
     return false;
+  }
+
+  protected Mode getOutputMode() {
+    if (this.showFullOutput) {
+      return Mode.FULL;
+    } else if (this.showOutput) {
+      return Mode.SIMPLE;
+    } else {
+      return Mode.NONE;
+    }
   }
 
   public BuildCommand() {

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
@@ -28,6 +29,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -396,5 +398,39 @@ public class ProjectIntegrationTest {
     result.assertSuccess();
 
     workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectShowsFullOutput() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "target_using_genrule_source", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("project", "--show-full-output", "//lib:lib");
+    workspace.verify();
+
+    assertEquals(
+        "//lib:lib#default,static "
+            + workspace.getDestPath().resolve("lib").resolve("lib.xcworkspace")
+            + System.lineSeparator(),
+        result.getStdout());
+  }
+
+  @Test
+  public void testBuckProjectShowsOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "target_using_genrule_source", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("project", "--show-output", "//lib:lib");
+    workspace.verify();
+
+    assertEquals(
+        "//lib:lib#default,static " + Paths.get("lib", "lib.xcworkspace") + System.lineSeparator(),
+        result.getStdout());
   }
 }
