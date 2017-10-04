@@ -49,8 +49,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidGraphEnhancementResult enhancementResult,
-      boolean shouldProguard) {
+      AndroidGraphEnhancementResult enhancementResult) {
     super(
         buildTarget,
         projectFilesystem,
@@ -78,8 +77,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getManifestEntries(),
         apkUnderTest.getJavaRuntimeLauncher(),
         true,
-        Optional.empty(),
-        shouldProguard);
+        Optional.empty());
     this.apkUnderTest = apkUnderTest;
   }
 

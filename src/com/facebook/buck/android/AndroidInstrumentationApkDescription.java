@@ -213,8 +213,7 @@ public class AndroidInstrumentationApkDescription
         ruleFinder,
         apkUnderTest,
         rulesToExcludeFromDex,
-        enhancementResult,
-        shouldProguard);
+        enhancementResult);
   }
 
   @BuckStyleImmutable

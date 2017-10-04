@@ -48,6 +48,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -81,6 +82,7 @@ public class AndroidBinary extends AbstractBuildRule
         HasInstallableApk,
         HasInstallHelpers {
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
+  private final Optional<BuildRule> moduleVerification;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -161,7 +163,6 @@ public class AndroidBinary extends AbstractBuildRule
   private final boolean skipProguard;
   private final Tool javaRuntimeLauncher;
   private final boolean isCacheable;
-  private final Optional<SourcePath> appModularityResult;
 
   private final BuildRuleParams buildRuleParams;
 
@@ -194,8 +195,7 @@ public class AndroidBinary extends AbstractBuildRule
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
       boolean isCacheable,
-      Optional<SourcePath> appModularityResult,
-      boolean shouldProguard) {
+      Optional<BuildRule> moduleVerification) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -215,7 +215,7 @@ public class AndroidBinary extends AbstractBuildRule
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
-    this.appModularityResult = appModularityResult;
+    this.moduleVerification = moduleVerification;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -257,14 +257,11 @@ public class AndroidBinary extends AbstractBuildRule
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
-            skipProguard,
             javaRuntimeLauncher,
             enhancementResult.getAndroidManifestPath(),
             enhancementResult.getPrimaryResourcesApkPath(),
             enhancementResult.getPrimaryApkAssetZips(),
-            resourceCompressionMode.isCompressResources(),
-            this.appModularityResult,
-            shouldProguard);
+            resourceCompressionMode.isCompressResources());
     params =
         params.withExtraDeps(
             () ->
@@ -479,6 +476,8 @@ public class AndroidBinary extends AbstractBuildRule
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<Stream<BuildTarget>> deps = Stream.builder();
+    deps.add(RichStream.from(moduleVerification).map(BuildRule::getBuildTarget));
+
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
         && enhancementResult.getCopyNativeLibraries().isPresent()) {
       deps.add(

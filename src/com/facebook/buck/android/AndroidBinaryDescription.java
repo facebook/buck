@@ -44,6 +44,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -113,6 +114,9 @@ public class AndroidBinaryDescription
               "location", new LocationMacroExpander()));
 
   private static final Pattern COUNTRY_LOCALE_PATTERN = Pattern.compile("([a-z]{2})-[A-Z]{2}");
+
+  private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
+      InternalFlavor.of("modularity_verification");
 
   private static final ImmutableSet<Flavor> FLAVORS =
       ImmutableSet.of(
@@ -327,6 +331,23 @@ public class AndroidBinaryDescription
               rulesToExcludeFromDex);
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
+      Optional<BuildRule> moduleVerification;
+      if (args.getAndroidAppModularityResult().isPresent()) {
+        moduleVerification =
+            Optional.of(
+                new AndroidAppModularityVerification(
+                    ruleFinder,
+                    buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
+                    projectFilesystem,
+                    args.getAndroidAppModularityResult().get(),
+                    args.isSkipProguard(),
+                    result.getDexFilesInfo().proguardTextFilesPath,
+                    result.getPackageableCollection()));
+        resolver.addToIndex(moduleVerification.get());
+      } else {
+        moduleVerification = Optional.empty();
+      }
+
       AndroidBinary androidBinary =
           new AndroidBinary(
               buildTarget,
@@ -354,8 +375,7 @@ public class AndroidBinaryDescription
               args.getManifestEntries(),
               javaOptions.getJavaRuntimeLauncher(),
               args.getIsCacheable(),
-              args.getAndroidAppModularityResult(),
-              shouldProguard);
+              moduleVerification);
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(

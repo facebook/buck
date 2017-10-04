@@ -53,7 +53,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -65,7 +64,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -131,15 +129,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Post-process resource compression
   @AddToRuleKey private final boolean isCompressResources;
 
-  // These are used for module map consistency check.
-  @AddToRuleKey private final Optional<SourcePath> appModularityResult;
-  @AddToRuleKey private final boolean skipProguard;
-  @AddToRuleKey private final boolean shouldProguard;
-
-  @AddToRuleKey
-  private final Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
-      moduleMappedClasspathEntriesForConsistency;
-
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
@@ -157,14 +146,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Optional<Integer> xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
-      boolean skipProguard,
       Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
       SourcePath resourcesApkPath,
       ImmutableList<SourcePath> primaryApkAssetsZips,
-      boolean isCompressResources,
-      Optional<SourcePath> appModularityResult,
-      boolean shouldProguard) {
+      boolean isCompressResources) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
 
@@ -177,7 +163,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.xzCompressionLevel = xzCompressionLevel;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
-    this.skipProguard = skipProguard;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.androidManifestPath = androidManifestPath;
     this.resourcesApkPath = resourcesApkPath;
@@ -228,16 +213,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                             e -> e.getKey(),
                             e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
 
-    this.shouldProguard = shouldProguard;
-    this.appModularityResult = appModularityResult;
-    if (appModularityResult.isPresent()) {
-      this.moduleMappedClasspathEntriesForConsistency =
-          Optional.of(
-              MoreMaps.convertMultimapToMapOfLists(
-                  packageableCollection.getModuleMappedClasspathEntriesToDex()));
-    } else {
-      this.moduleMappedClasspathEntriesForConsistency = Optional.empty();
-    }
     DexFilesInfo enhancementDexFilesInfo = enhancementResult.getDexFilesInfo();
     if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       this.dexFilesInfo =
@@ -274,10 +249,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         path -> {
           steps.add(createCopyProguardFilesStep(pathResolver, path));
         });
-
-    if (appModularityResult.isPresent()) {
-      steps.add(createAndroidModuleConsistencyStep(context));
-    }
 
     ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
@@ -674,41 +645,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         return StepExecutionResult.SUCCESS;
       }
     };
-  }
-
-  /** Adds steps to do the final dexing or dex merging before building the apk. */
-  private AndroidModuleConsistencyStep createAndroidModuleConsistencyStep(
-      BuildContext buildContext) {
-    Optional<Path> proguardConfigDir =
-        shouldProguard ? Optional.of(getProguardTextFilesPath()) : Optional.empty();
-    Optional<Path> proguardFullConfigFile =
-        proguardConfigDir.map(p -> p.resolve("configuration.txt"));
-    Optional<Path> proguardMappingFile = proguardConfigDir.map(p -> p.resolve("mapping.txt"));
-
-    ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-        moduleMappedClasspathEntriesForConsistency
-            .get()
-            .entrySet()
-            .stream()
-            .flatMap(
-                entry ->
-                    entry
-                        .getValue()
-                        .stream()
-                        .map(
-                            v ->
-                                new AbstractMap.SimpleEntry<>(
-                                    entry.getKey(),
-                                    buildContext.getSourcePathResolver().getAbsolutePath(v))))
-            .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
-
-    return AndroidModuleConsistencyStep.ensureModuleConsistency(
-        buildContext.getSourcePathResolver().getRelativePath(appModularityResult.get()),
-        additionalDexStoreToJarPathMap,
-        filesystem,
-        proguardFullConfigFile,
-        proguardMappingFile,
-        skipProguard);
   }
 
   public ProjectFilesystem getProjectFilesystem() {
