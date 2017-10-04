@@ -69,6 +69,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -139,20 +140,24 @@ class CachingBuildRuleBuilder {
 
   private final BuildRuleScopeManager buildRuleScopeManager;
 
-  // These fields contain data that may be computed during a build.
+  private final RuleKey defaultKey;
 
-  private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
+  private final Supplier<Optional<RuleKey>> inputBasedKey;
 
   /**
-   * This is used to weakly cache the manifest RuleKeyAndInputs. It is not set until after the
-   * rule's deps are built.
+   * This is used to weakly cache the manifest RuleKeyAndInputs. I
    *
    * <p>This is necessary because RuleKeyAndInputs may be very large, and due to the async nature of
    * CachingBuildRuleBuilder, there may be many BuildRules that are in-between two stages that both
    * need the manifest's RuleKeyAndInputs. If we just stored the RuleKeyAndInputs directly, we could
    * use too much memory.
    */
-  @Nullable private Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
+  private final Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
+
+  // These fields contain data that may be computed during a build.
+
+  private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
+  private volatile boolean depsAreAvailable;
 
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
@@ -209,6 +214,18 @@ class CachingBuildRuleBuilder {
     this.artifactCache = buildContext.getArtifactCache();
     this.buildId = buildContext.getBuildId();
     this.buildRuleScopeManager = new BuildRuleScopeManager();
+
+    this.defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
+    this.inputBasedKey = Suppliers.memoize(this::calculateInputBasedRuleKey);
+    this.manifestBasedKeySupplier =
+        MoreSuppliers.weakMemoize(
+            () -> {
+              try (Scope scope = buildRuleScope()) {
+                return calculateManifestKey(eventBus);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
   }
 
   /**
@@ -362,20 +379,18 @@ class CachingBuildRuleBuilder {
         }
       }
 
+      // Doing this here is probably not strictly necessary, however in the case of
+      // pipelined rules built locally we will never do an input-based cache check.
+      // That check would have written the key to metadata, and there are some asserts
+      // during cache upload that try to ensure they are present.
       if (SupportsInputBasedRuleKey.isSupported(rule)
           && success == BuildRuleSuccessType.BUILT_LOCALLY
           && !buildInfoRecorder
               .getBuildMetadataFor(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)
-              .isPresent()) {
-        // Doing this here is probably not strictly necessary, however in the case of
-        // pipelined rules built locally we will never do an input-based cache check.
-        // That check would have written the key to metadata, and there are some asserts
-        // during cache upload that try to ensure they are present.
-        Optional<RuleKey> inputRuleKey = calculateInputBasedRuleKey();
-        if (inputRuleKey.isPresent()) {
-          buildInfoRecorder.addBuildMetadata(
-              BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.get().toString());
-        }
+              .isPresent()
+          && inputBasedKey.get().isPresent()) {
+        buildInfoRecorder.addBuildMetadata(
+            BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputBasedKey.get().get().toString());
       }
 
       // If this rule uses dep files and we built locally, make sure we store the new dep file
@@ -526,12 +541,14 @@ class CachingBuildRuleBuilder {
 
     // If the rule key has changed (and is not already in the cache), we need to push
     // the artifact to cache using the new key.
-    ruleKeys.add(ruleKeyFactories.getDefaultRuleKeyFactory().build(rule));
+    ruleKeys.add(defaultKey);
 
     // If the input-based rule key has changed, we need to push the artifact to cache
     // using the new key.
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      Optional<RuleKey> calculatedRuleKey = calculateInputBasedRuleKey();
+      Preconditions.checkNotNull(
+          inputBasedKey, "input-based key should have been computed already.");
+      Optional<RuleKey> calculatedRuleKey = inputBasedKey.get();
       Optional<RuleKey> onDiskRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
       Optional<RuleKey> metaDataRuleKey =
@@ -678,15 +695,6 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
-    manifestBasedKeySupplier =
-        MoreSuppliers.weakMemoize(
-            () -> {
-              try (Scope scope = buildRuleScope()) {
-                return calculateManifestKey(eventBus);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
     Optional<RuleKey> manifestKey =
         manifestBasedKeySupplier.get().map(RuleKeyAndInputs::getRuleKey);
     if (!manifestKey.isPresent()) {
@@ -726,13 +734,13 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
-    Optional<RuleKey> inputRuleKey;
+    Optional<RuleKey> ruleKey;
     try (Scope scope = buildRuleScope()) {
       // Calculate input-based rule key.
-      inputRuleKey = calculateInputBasedRuleKey();
+      ruleKey = inputBasedKey.get();
     }
-    if (inputRuleKey.isPresent()) {
-      return performInputBasedCacheFetch(inputRuleKey.get());
+    if (ruleKey.isPresent()) {
+      return performInputBasedCacheFetch(ruleKey.get());
     }
     return Futures.immediateFuture(Optional.empty());
   }
@@ -868,8 +876,7 @@ class CachingBuildRuleBuilder {
 
   private Optional<BuildResult> checkMatchingLocalKey() {
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
-    final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-    if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
+    if (defaultKey.equals(cachedRuleKey.orElse(null))) {
       return Optional.of(
           BuildResult.success(
               rule,
@@ -881,11 +888,10 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<CacheResult> performRuleKeyCacheCheck() throws IOException {
-    final RuleKey defaultRuleKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
     long cacheRequestTimestampMillis = System.currentTimeMillis();
     return Futures.transform(
         tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-            defaultRuleKey,
+            defaultKey,
             artifactCache,
             // TODO(simons): This should be a shared between all tests, not one per cell
             rule.getProjectFilesystem()),
@@ -893,7 +899,7 @@ class CachingBuildRuleBuilder {
           RuleKeyCacheResult ruleKeyCacheResult =
               RuleKeyCacheResult.builder()
                   .setBuildTarget(rule.getFullyQualifiedName())
-                  .setRuleKey(defaultRuleKey.toString())
+                  .setRuleKey(defaultKey.toString())
                   .setRuleKeyType(RuleKeyType.DEFAULT)
                   .setCacheResult(cacheResult.getType())
                   .setRequestTimestampMillis(cacheRequestTimestampMillis)
@@ -928,6 +934,7 @@ class CachingBuildRuleBuilder {
                 BuildResult.canceled(rule, Preconditions.checkNotNull(depResult.getFailure()))));
       }
     }
+    depsAreAvailable = true;
     return Futures.immediateFuture(Optional.empty());
   }
 
@@ -984,7 +991,6 @@ class CachingBuildRuleBuilder {
   }
 
   private BuildRuleKeys getBuildRuleKeys() {
-    RuleKey defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
     Optional<RuleKey> inputKey =
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
     Optional<RuleKey> depFileKey =
@@ -1387,6 +1393,7 @@ class CachingBuildRuleBuilder {
 
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus)
       throws IOException {
+    Preconditions.checkState(depsAreAvailable);
     return CachingBuildEngine.calculateManifestKey(
         (SupportsDependencyFileRuleKey) rule, eventBus, ruleKeyFactories);
   }
@@ -1484,6 +1491,7 @@ class CachingBuildRuleBuilder {
   }
 
   private Optional<RuleKey> calculateInputBasedRuleKey() {
+    Preconditions.checkState(depsAreAvailable);
     try (Scope scope =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
       return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
