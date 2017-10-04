@@ -118,7 +118,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   @Override
   public void postWithoutConfiguring(BuckEvent event) {
     Preconditions.checkState(event.isConfigured());
-    eventBus.post(event);
+    dispatch(event);
   }
 
   @VisibleForTesting
