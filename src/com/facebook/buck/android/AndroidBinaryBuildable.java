@@ -87,29 +87,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   static final String SMART_DEX_SECONDARY_DEX_SUBDIR =
       "assets/smart-dex-secondary-program-dex-jars";
 
-  @AddToRuleKey private final SourcePath keystorePath;
-  @AddToRuleKey private final SourcePath keystorePropertiesPath;
-  @AddToRuleKey private final Optional<RedexOptions> redexOptions;
-
-  @SuppressWarnings("unused")
-  @AddToRuleKey
-  private final ImmutableList<SourcePath> additionalRedexInputs;
-
-  @AddToRuleKey private final ImmutableSet<TargetCpuType> cpuFilters;
   @AddToRuleKey private final EnumSet<AndroidBinary.ExopackageMode> exopackageModes;
-  @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
+
+  @AddToRuleKey private final SourcePath androidManifestPath;
+
+  @AddToRuleKey private final DexFilesInfo dexFilesInfo;
+
+  // TODO(cjhopman): Shouldn't cpuFilters just be handled by the CopyNativeLibraries rule?
+  @AddToRuleKey private final ImmutableSet<TargetCpuType> cpuFilters;
   @AddToRuleKey private final boolean packageAssetLibraries;
   @AddToRuleKey private final boolean compressAssetLibraries;
-  @AddToRuleKey private final boolean skipProguard;
-  @AddToRuleKey private final Tool javaRuntimeLauncher;
-  @AddToRuleKey private final SourcePath androidManifestPath;
-  @AddToRuleKey private final SourcePath resourcesApkPath;
-  @AddToRuleKey private final ImmutableList<SourcePath> primaryApkAssetsZips;
-  @AddToRuleKey private final boolean isCompressResources;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
-  @AddToRuleKey private final boolean hasLinkableAssets;
-  @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
-  @AddToRuleKey private final boolean shouldProguard;
   @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
   // TODO(cjhopman): why is this derived differently than nativeLibAssetsDirectories?
   @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs;
@@ -117,13 +104,41 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableList<SourcePath>> nativeLibAssetsDirectories;
 
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
+  @AddToRuleKey private final SourcePath resourcesApkPath;
+  @AddToRuleKey private final ImmutableList<SourcePath> primaryApkAssetsZips;
+
+  @AddToRuleKey private final Optional<RedexOptions> redexOptions;
+
+  @SuppressWarnings("unused")
+  @AddToRuleKey
+  // Redex accesses some files that are indirectly referenced through the proguard command-line.txt.
+  // TODO(cjhopman): Redex shouldn't do that, or this list should be constructed more carefully.
+  private final ImmutableList<SourcePath> additionalRedexInputs;
+
+  @AddToRuleKey private final Optional<Integer> xzCompressionLevel;
+
+  @AddToRuleKey private final SourcePath keystorePath;
+  @AddToRuleKey private final SourcePath keystorePropertiesPath;
+
+  @AddToRuleKey private final boolean hasLinkableAssets;
+
+  @AddToRuleKey private final ImmutableSortedSet<APKModule> apkModules;
+
+  // The java launcher is used for ApkBuilder.
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
+
+  // Post-process resource compression
+  @AddToRuleKey private final boolean isCompressResources;
+
+  // These are used for module map consistency check.
   @AddToRuleKey private final Optional<SourcePath> appModularityResult;
+  @AddToRuleKey private final boolean skipProguard;
+  @AddToRuleKey private final boolean shouldProguard;
 
   @AddToRuleKey
   private final Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
       moduleMappedClasspathEntriesForConsistency;
-
-  @AddToRuleKey private final DexFilesInfo dexFilesInfo;
 
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
@@ -255,14 +270,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             manifestPath));
     buildableContext.recordArtifact(manifestPath);
 
-    if (dexFilesInfo.proguardTextFilesPath.isPresent()) {
-      steps.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              pathResolver.getRelativePath(dexFilesInfo.proguardTextFilesPath.get()),
-              getProguardTextFilesPath(),
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
+    dexFilesInfo.proguardTextFilesPath.ifPresent(
+        path -> {
+          steps.add(createCopyProguardFilesStep(pathResolver, path));
+        });
 
     if (appModularityResult.isPresent()) {
       steps.add(createAndroidModuleConsistencyStep(context));
@@ -339,17 +350,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     Path signedApkPath = getSignedApkPath();
     final Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
     Supplier<KeystoreProperties> keystoreProperties =
-        Suppliers.memoize(
-            () -> {
-              try {
-                return KeystoreProperties.createFromPropertiesFile(
-                    pathToKeystore,
-                    resolver.getAbsolutePath(keystorePropertiesPath),
-                    getProjectFilesystem());
-              } catch (IOException e) {
-                throw new RuntimeException();
-              }
-            });
+        getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
     ImmutableSet<Path> thirdPartyJars =
         pathsToThirdPartyJars
@@ -362,7 +363,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       buildableContext.recordArtifact(getMergedThirdPartyJarsPath());
     }
 
-    ApkBuilderStep apkBuilderCommand =
+    steps.add(
         new ApkBuilderStep(
             getProjectFilesystem(),
             pathResolver.getAbsolutePath(resourcesApkPath),
@@ -374,9 +375,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             thirdPartyJars,
             pathToKeystore,
             keystoreProperties,
-            /* debugMode */ false,
-            javaRuntimeLauncher.getCommandPrefix(resolver));
-    steps.add(apkBuilderCommand);
+            false,
+            javaRuntimeLauncher.getCommandPrefix(pathResolver)));
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
     // the output non-deterministic.  So use an additional scrubbing step to zero these out.
@@ -387,13 +387,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     if (isCompressResources) {
       Path compressedApkPath = getCompressedResourcesApkPath();
       apkToRedexAndAlign = compressedApkPath;
-      RepackZipEntriesStep arscComp =
-          new RepackZipEntriesStep(
-              getProjectFilesystem(),
-              signedApkPath,
-              compressedApkPath,
-              ImmutableSet.of("resources.arsc"));
-      steps.add(arscComp);
+      steps.add(createRepackZipEntriesStep(signedApkPath, compressedApkPath));
     } else {
       apkToRedexAndAlign = signedApkPath;
     }
@@ -403,86 +397,22 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     Path apkToAlign = apkToRedexAndAlign;
 
     if (applyRedex) {
-      Path proguardConfigDir = getProguardTextFilesPath();
       Path redexedApk = getRedexedApkPath();
       apkToAlign = redexedApk;
-      steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), redexedApk.getParent())));
-      ImmutableList<Step> redexSteps =
-          ReDexStep.createSteps(
-              getProjectFilesystem(),
+      steps.addAll(
+          createRedexSteps(
+              context,
+              buildableContext,
               resolver,
-              redexOptions.get(),
-              apkToRedexAndAlign,
-              redexedApk,
               keystoreProperties,
-              proguardConfigDir,
-              buildableContext);
-      steps.addAll(redexSteps);
+              apkToRedexAndAlign,
+              redexedApk));
     }
 
     steps.add(new ZipalignStep(getProjectFilesystem().getRootPath(), apkToAlign, apkPath));
 
     buildableContext.recordArtifact(apkPath);
     return steps.build();
-  }
-
-  private Step createMergedThirdPartyJarsStep(ImmutableSet<Path> thirdPartyJars) {
-    return new AbstractExecutionStep("merging_third_party_jar_resources") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
-        try (ResourcesZipBuilder builder =
-            new ResourcesZipBuilder(
-                getProjectFilesystem().resolve(getMergedThirdPartyJarsPath()))) {
-          for (Path jar : thirdPartyJars) {
-            try (ZipFile base = new ZipFile(jar.toFile())) {
-              for (ZipEntry inputEntry : Collections.list(base.entries())) {
-                if (inputEntry.isDirectory()) {
-                  continue;
-                }
-                String name = inputEntry.getName();
-                String ext = Files.getFileExtension(name);
-                String filename = Paths.get(name).getFileName().toString();
-                // Android's ApkBuilder filters out a lot of files from Java resources. Try to
-                // match its behavior.
-                // See https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
-                if (name.startsWith(".")
-                    || name.endsWith("~")
-                    || name.startsWith("META-INF")
-                    || "aidl".equalsIgnoreCase(ext)
-                    || "rs".equalsIgnoreCase(ext)
-                    || "rsh".equalsIgnoreCase(ext)
-                    || "d".equalsIgnoreCase(ext)
-                    || "java".equalsIgnoreCase(ext)
-                    || "scala".equalsIgnoreCase(ext)
-                    || "class".equalsIgnoreCase(ext)
-                    || "scc".equalsIgnoreCase(ext)
-                    || "swp".equalsIgnoreCase(ext)
-                    || "thumbs.db".equalsIgnoreCase(filename)
-                    || "picasa.ini".equalsIgnoreCase(filename)
-                    || "package.html".equalsIgnoreCase(filename)
-                    || "overview.html".equalsIgnoreCase(filename)) {
-                  continue;
-                }
-                try (InputStream inputStream = base.getInputStream(inputEntry)) {
-                  builder.addEntry(
-                      inputStream,
-                      inputEntry.getSize(),
-                      inputEntry.getCrc(),
-                      name,
-                      Deflater.NO_COMPRESSION,
-                      false);
-                }
-              }
-            }
-          }
-        }
-        return StepExecutionResult.SUCCESS;
-      }
-    };
   }
 
   private void getStepsForNativeAssets(
@@ -543,63 +473,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
 
+      // Step that populates a list of libraries and writes a metadata.txt to decompress.
       steps.add(
-          // Step that populates a list of libraries and writes a metadata.txt to decompress.
-          new AbstractExecutionStep("write_metadata_for_asset_libraries_" + module.getName()) {
-            @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
-              ProjectFilesystem filesystem = getProjectFilesystem();
-              // Walk file tree to find libraries
-              filesystem.walkRelativeFileTree(
-                  libSubdirectory,
-                  new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
-                      if (!file.toString().endsWith(".so")) {
-                        throw new IOException("unexpected file in lib directory");
-                      }
-                      inputAssetLibrariesBuilder.add(file);
-                      return FileVisitResult.CONTINUE;
-                    }
-                  });
-
-              // Write a metadata
-              ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-              Path metadataOutput = libSubdirectory.resolve(metadataFilename);
-              for (Path libPath : inputAssetLibrariesBuilder.build()) {
-                // Should return something like x86/libfoo.so
-                Path relativeLibPath = libSubdirectory.relativize(libPath);
-                long filesize = filesystem.getFileSize(libPath);
-                String desiredOutput = relativeLibPath.toString();
-                String checksum = filesystem.computeSha256(libPath);
-                metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
-              }
-              ImmutableList<String> metadata = metadataLines.build();
-              if (!metadata.isEmpty()) {
-                filesystem.writeLinesToPath(metadata, metadataOutput);
-              }
-              return StepExecutionResult.SUCCESS;
-            }
-          });
+          createAssetLibrariesMetadataStep(
+              libSubdirectory, metadataFilename, module, inputAssetLibrariesBuilder));
     }
     if (compressAssetLibraries || !module.isRootModule()) {
       final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
       steps.add(
-          new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
-            @Override
-            public StepExecutionResult execute(ExecutionContext context)
-                throws IOException, InterruptedException {
-              ProjectFilesystem filesystem = getProjectFilesystem();
-              for (Path libPath : inputAssetLibrariesBuilder.build()) {
-                Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
-                filesystem.move(libPath, tempPath);
-                outputAssetLibrariesBuilder.add(tempPath);
-              }
-              return StepExecutionResult.SUCCESS;
-            }
-          });
+          createRenameAssetLibrariesStep(
+              module, inputAssetLibrariesBuilder, outputAssetLibrariesBuilder));
       // Concat and xz compress.
       Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
       steps.add(new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
@@ -611,6 +494,186 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME),
               compressionLevel));
     }
+  }
+
+  private AbstractExecutionStep createRenameAssetLibrariesStep(
+      APKModule module,
+      ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder,
+      ImmutableList.Builder<Path> outputAssetLibrariesBuilder) {
+    return new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        ProjectFilesystem filesystem = getProjectFilesystem();
+        for (Path libPath : inputAssetLibrariesBuilder.build()) {
+          Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
+          filesystem.move(libPath, tempPath);
+          outputAssetLibrariesBuilder.add(tempPath);
+        }
+        return StepExecutionResult.SUCCESS;
+      }
+    };
+  }
+
+  private AbstractExecutionStep createAssetLibrariesMetadataStep(
+      Path libSubdirectory,
+      String metadataFilename,
+      APKModule module,
+      ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder) {
+    return new AbstractExecutionStep("write_metadata_for_asset_libraries_" + module.getName()) {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        ProjectFilesystem filesystem = getProjectFilesystem();
+        // Walk file tree to find libraries
+        filesystem.walkRelativeFileTree(
+            libSubdirectory,
+            new SimpleFileVisitor<Path>() {
+              @Override
+              public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                  throws IOException {
+                if (!file.toString().endsWith(".so")) {
+                  throw new IOException("unexpected file in lib directory");
+                }
+                inputAssetLibrariesBuilder.add(file);
+                return FileVisitResult.CONTINUE;
+              }
+            });
+
+        // Write a metadata
+        ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+        Path metadataOutput = libSubdirectory.resolve(metadataFilename);
+        for (Path libPath : inputAssetLibrariesBuilder.build()) {
+          // Should return something like x86/libfoo.so
+          Path relativeLibPath = libSubdirectory.relativize(libPath);
+          long filesize = filesystem.getFileSize(libPath);
+          String desiredOutput = relativeLibPath.toString();
+          String checksum = filesystem.computeSha256(libPath);
+          metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
+        }
+        ImmutableList<String> metadata = metadataLines.build();
+        if (!metadata.isEmpty()) {
+          filesystem.writeLinesToPath(metadata, metadataOutput);
+        }
+        return StepExecutionResult.SUCCESS;
+      }
+    };
+  }
+
+  private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
+      SourcePathResolver resolver, Path pathToKeystore) {
+    return Suppliers.memoize(
+        () -> {
+          try {
+            return KeystoreProperties.createFromPropertiesFile(
+                pathToKeystore,
+                resolver.getAbsolutePath(keystorePropertiesPath),
+                getProjectFilesystem());
+          } catch (IOException e) {
+            throw new RuntimeException();
+          }
+        });
+  }
+
+  private RepackZipEntriesStep createRepackZipEntriesStep(
+      Path signedApkPath, Path compressedApkPath) {
+    return new RepackZipEntriesStep(
+        getProjectFilesystem(),
+        signedApkPath,
+        compressedApkPath,
+        ImmutableSet.of("resources.arsc"));
+  }
+
+  private Iterable<Step> createRedexSteps(
+      BuildContext context,
+      BuildableContext buildableContext,
+      SourcePathResolver resolver,
+      Supplier<KeystoreProperties> keystoreProperties,
+      Path apkToRedexAndAlign,
+      Path redexedApk) {
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    Path proguardConfigDir = getProguardTextFilesPath();
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), redexedApk.getParent())));
+    ImmutableList<Step> redexSteps =
+        ReDexStep.createSteps(
+            getProjectFilesystem(),
+            resolver,
+            redexOptions.get(),
+            apkToRedexAndAlign,
+            redexedApk,
+            keystoreProperties,
+            proguardConfigDir,
+            buildableContext);
+    steps.addAll(redexSteps);
+    return steps.build();
+  }
+
+  private CopyStep createCopyProguardFilesStep(
+      SourcePathResolver pathResolver, SourcePath proguardTextFilesPath) {
+    return CopyStep.forDirectory(
+        getProjectFilesystem(),
+        pathResolver.getRelativePath(proguardTextFilesPath),
+        getProguardTextFilesPath(),
+        CopyStep.DirectoryMode.CONTENTS_ONLY);
+  }
+
+  private Step createMergedThirdPartyJarsStep(ImmutableSet<Path> thirdPartyJars) {
+    return new AbstractExecutionStep("merging_third_party_jar_resources") {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        try (ResourcesZipBuilder builder =
+            new ResourcesZipBuilder(
+                getProjectFilesystem().resolve(getMergedThirdPartyJarsPath()))) {
+          for (Path jar : thirdPartyJars) {
+            try (ZipFile base = new ZipFile(jar.toFile())) {
+              for (ZipEntry inputEntry : Collections.list(base.entries())) {
+                if (inputEntry.isDirectory()) {
+                  continue;
+                }
+                String name = inputEntry.getName();
+                String ext = Files.getFileExtension(name);
+                String filename = Paths.get(name).getFileName().toString();
+                // Android's ApkBuilder filters out a lot of files from Java resources. Try to
+                // match its behavior.
+                // See https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
+                if (name.startsWith(".")
+                    || name.endsWith("~")
+                    || name.startsWith("META-INF")
+                    || "aidl".equalsIgnoreCase(ext)
+                    || "rs".equalsIgnoreCase(ext)
+                    || "rsh".equalsIgnoreCase(ext)
+                    || "d".equalsIgnoreCase(ext)
+                    || "java".equalsIgnoreCase(ext)
+                    || "scala".equalsIgnoreCase(ext)
+                    || "class".equalsIgnoreCase(ext)
+                    || "scc".equalsIgnoreCase(ext)
+                    || "swp".equalsIgnoreCase(ext)
+                    || "thumbs.db".equalsIgnoreCase(filename)
+                    || "picasa.ini".equalsIgnoreCase(filename)
+                    || "package.html".equalsIgnoreCase(filename)
+                    || "overview.html".equalsIgnoreCase(filename)) {
+                  continue;
+                }
+                try (InputStream inputStream = base.getInputStream(inputEntry)) {
+                  builder.addEntry(
+                      inputStream,
+                      inputEntry.getSize(),
+                      inputEntry.getCrc(),
+                      name,
+                      Deflater.NO_COMPRESSION,
+                      false);
+                }
+              }
+            }
+          }
+        }
+        return StepExecutionResult.SUCCESS;
+      }
+    };
   }
 
   /** Adds steps to do the final dexing or dex merging before building the apk. */
