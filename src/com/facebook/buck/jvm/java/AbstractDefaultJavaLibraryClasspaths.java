@@ -51,6 +51,11 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
     return false;
   }
 
+  @Value.Default
+  public boolean shouldCreateSourceOnlyAbi() {
+    return false;
+  }
+
   @Value.Lazy
   SourcePathRuleFinder getSourcePathRuleFinder() {
     return new SourcePathRuleFinder(getBuildRuleResolver());
@@ -58,6 +63,16 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getFirstOrderPackageableDeps() {
+    if (shouldCreateSourceOnlyAbi()) {
+      // Nothing is packaged based on a source ABI rule
+      return ImmutableSortedSet.of();
+    }
+
+    return getAllFirstOrderNonProvidedDeps();
+  }
+
+  @Value.Lazy
+  ImmutableSortedSet<BuildRule> getAllFirstOrderNonProvidedDeps() {
     return ImmutableSortedSet.copyOf(
         Iterables.concat(
             Preconditions.checkNotNull(getDeps()).getDeps(),
@@ -66,6 +81,9 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getNonClasspathDeps() {
+    // TODO(jkeljo): When creating source-only ABIs, *some* non-classpath deps can be omitted
+    // (basically anything that's not either source, resources, or a source-only-ABI-compatible
+    // annotation processor).
     return ImmutableSortedSet.copyOf(
         Iterables.concat(
             Sets.difference(getBuildRuleParams().getBuildDeps(), getCompileTimeClasspathFullDeps()),
@@ -97,7 +115,12 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getCompileTimeClasspathAbiDeps() {
-    return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), getCompileTimeClasspathFullDeps());
+    Iterable<BuildRule> classpathFullDeps = getCompileTimeClasspathFullDeps();
+    if (shouldCreateSourceOnlyAbi()) {
+      classpathFullDeps = rulesRequiredForSourceOnlyAbi(classpathFullDeps);
+    }
+
+    return JavaLibraryRules.getAbiRules(getBuildRuleResolver(), classpathFullDeps);
   }
 
   @Value.Lazy
@@ -114,7 +137,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   ImmutableSortedSet<BuildRule> getCompileTimeClasspathUnfilteredFullDeps() {
     Iterable<BuildRule> firstOrderDeps =
         Iterables.concat(
-            getFirstOrderPackageableDeps(),
+            getAllFirstOrderNonProvidedDeps(),
             Preconditions.checkNotNull(getDeps()).getProvidedDeps());
 
     ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
@@ -122,5 +145,19 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
     return RichStream.from(Iterables.concat(firstOrderDeps, rulesExportedByDependencies))
         .collect(MoreCollectors.toImmutableSortedSet());
+  }
+
+  private Iterable<BuildRule> rulesRequiredForSourceOnlyAbi(Iterable<BuildRule> rules) {
+    return RichStream.from(rules)
+        .filter(
+            rule -> {
+              if (rule instanceof MaybeRequiredForSourceOnlyAbi) {
+                MaybeRequiredForSourceOnlyAbi maybeRequired = (MaybeRequiredForSourceOnlyAbi) rule;
+                return maybeRequired.getRequiredForSourceOnlyAbi();
+              }
+
+              return false;
+            })
+        .toOnceIterable();
   }
 }
