@@ -92,19 +92,26 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
     }
 
     try {
-      Field contextField =
-          Preconditions.checkNotNull(task).getClass().getSuperclass().getDeclaredField("context");
+      Class<? extends JavaCompiler.CompilationTask> compilerClass =
+          Preconditions.checkNotNull(task).getClass();
+      Field contextField = compilerClass.getSuperclass().getDeclaredField("context");
       contextField.setAccessible(true);
       Object context = contextField.get(task);
 
-      Class<?> logClass = Class.forName("com.sun.tools.javac.util.Log");
+      ClassLoader compilerClassLoader = compilerClass.getClassLoader();
+      Class<?> logClass = Class.forName("com.sun.tools.javac.util.Log", false, compilerClassLoader);
       log = logClass.getMethod("instance", context.getClass()).invoke(null, context);
       nErrorsField = logClass.getField("nerrors");
 
-      Class<?> diagnosticClass = Class.forName("com.sun.tools.javac.util.JCDiagnostic");
+      Class<?> diagnosticClass =
+          Class.forName("com.sun.tools.javac.util.JCDiagnostic", false, compilerClassLoader);
       @SuppressWarnings("unchecked")
       Class<Enum<?>> diagnosticFlagClass =
-          (Class<Enum<?>>) Class.forName("com.sun.tools.javac.util.JCDiagnostic$DiagnosticFlag");
+          (Class<Enum<?>>)
+              Class.forName(
+                  "com.sun.tools.javac.util.JCDiagnostic$DiagnosticFlag",
+                  false,
+                  compilerClassLoader);
       isFlagSetMethod = diagnosticClass.getMethod("isFlagSet", diagnosticFlagClass);
       for (Enum<?> enumConstant : diagnosticFlagClass.getEnumConstants()) {
         if (enumConstant.name().equals("RECOVERABLE")) {
@@ -115,7 +122,10 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
       Preconditions.checkNotNull(recoverableError);
 
       Class<?> diagnosticSourceUnwrapperClass =
-          Class.forName("com.sun.tools.javac.api.ClientCodeWrapper$DiagnosticSourceUnwrapper");
+          Class.forName(
+              "com.sun.tools.javac.api.ClientCodeWrapper$DiagnosticSourceUnwrapper",
+              false,
+              compilerClassLoader);
       diagnosticField = diagnosticSourceUnwrapperClass.getField("d");
     } catch (ClassNotFoundException
         | IllegalAccessException
