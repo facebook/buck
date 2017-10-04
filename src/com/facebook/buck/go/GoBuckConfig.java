@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
@@ -151,7 +152,7 @@ public class GoBuckConfig {
   }
 
   Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {
-    return delegate.getTool(SECTION, "test_main_gen", resolver);
+    return delegate.getView(ToolConfig.class).getTool(SECTION, "test_main_gen", resolver);
   }
 
   ImmutableList<Path> getAssemblerIncludeDirs() {

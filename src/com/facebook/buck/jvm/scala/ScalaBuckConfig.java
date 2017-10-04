@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +73,8 @@ public class ScalaBuckConfig {
   }
 
   private Tool findScalac(BuildRuleResolver resolver) {
-    Optional<Tool> configScalac = delegate.getTool(SECTION, "compiler", resolver);
+    Optional<Tool> configScalac =
+        delegate.getView(ToolConfig.class).getTool(SECTION, "compiler", resolver);
     if (configScalac.isPresent()) {
       return configScalac.get();
     }

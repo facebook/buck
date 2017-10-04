@@ -66,6 +66,7 @@ import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
@@ -481,7 +482,8 @@ public class AndroidBinaryDescription
       return Optional.empty();
     }
 
-    Optional<Tool> redexBinary = buckConfig.getTool(SECTION, CONFIG_PARAM_REDEX, resolver);
+    Optional<Tool> redexBinary =
+        buckConfig.getView(ToolConfig.class).getTool(SECTION, CONFIG_PARAM_REDEX, resolver);
     if (!redexBinary.isPresent()) {
       throw new HumanReadableException(
           "Requested running ReDex for %s but the path to the tool"

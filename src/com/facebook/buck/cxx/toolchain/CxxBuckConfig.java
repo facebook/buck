@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -133,7 +134,8 @@ public class CxxBuckConfig {
    * Constructs the appropriate Archiver for the specified platform.
    */
   public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
-    Optional<ToolProvider> toolProvider = delegate.getToolProvider(cxxSection, "ar");
+    Optional<ToolProvider> toolProvider =
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, "ar");
     return toolProvider.map(
         archiver -> {
           Optional<Platform> archiverPlatform =
@@ -200,7 +202,8 @@ public class CxxBuckConfig {
   }
 
   public Optional<LinkerProvider> getLinkerProvider(String field, LinkerProvider.Type defaultType) {
-    Optional<ToolProvider> toolProvider = delegate.getToolProvider(cxxSection, field);
+    Optional<ToolProvider> toolProvider =
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, field);
     if (!toolProvider.isPresent()) {
       return Optional.empty();
     }
@@ -265,7 +268,7 @@ public class CxxBuckConfig {
   }
 
   public Optional<ToolProvider> getToolProvider(String name) {
-    return delegate.getToolProvider(cxxSection, name);
+    return delegate.getView(ToolConfig.class).getToolProvider(cxxSection, name);
   }
 
   public boolean isUniqueLibraryNameEnabled() {

@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.ErrorToolProvider;
 import com.facebook.buck.rules.SystemToolProvider;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -43,6 +44,7 @@ public class LuaBuckConfig {
     return LuaPlatform.builder()
         .setLua(
             delegate
+                .getView(ToolConfig.class)
                 .getToolProvider(section, "lua")
                 .orElseGet(
                     () ->
@@ -62,6 +64,7 @@ public class LuaBuckConfig {
                 .orElse(LuaPlatform.PackageStyle.INPLACE))
         .setPackager(
             delegate
+                .getView(ToolConfig.class)
                 .getToolProvider(section, "packager")
                 .orElseGet(
                     () -> ErrorToolProvider.from("no packager set in '%s.packager'", section)))

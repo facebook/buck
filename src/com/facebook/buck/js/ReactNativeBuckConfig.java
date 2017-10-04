@@ -20,6 +20,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.HumanReadableException;
 import java.util.Optional;
 
@@ -40,7 +41,9 @@ public class ReactNativeBuckConfig {
    * @return Tool for the react native javascript packager.
    */
   public Tool getPackager(BuildRuleResolver resolver) {
-    return delegate.getRequiredTool("react-native", "packager_worker", resolver);
+    return delegate
+        .getView(ToolConfig.class)
+        .getRequiredTool("react-native", "packager_worker", resolver);
   }
 
   public SourcePath getPackagerSourcePath() {

@@ -24,17 +24,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
-import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyDiagnosticsMode;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.HumanReadableException;
@@ -323,7 +317,7 @@ public class BuckConfig implements ConfigPathGetter {
   /** @return the parsed BuildTarget in the given section and field. */
   public BuildTarget getRequiredBuildTarget(String section, String field) {
     Optional<BuildTarget> target = getBuildTarget(section, field);
-    return required(section, field, target);
+    return getOrThrow(section, field, target);
   }
 
   public <T extends Enum<T>> Optional<T> getEnum(String section, String field, Class<T> clazz) {
@@ -363,43 +357,6 @@ public class BuckConfig implements ConfigPathGetter {
             path.toString(),
             String.format(
                 "Failed to transform Path %s to Source Path because path was not found.", path)));
-  }
-
-  /**
-   * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference by the
-   *     given section:field, if set.
-   */
-  public Optional<ToolProvider> getToolProvider(String section, String field) {
-    Optional<String> value = getValue(section, field);
-    if (!value.isPresent()) {
-      return Optional.empty();
-    }
-    Optional<BuildTarget> target = getMaybeBuildTarget(section, field);
-    if (target.isPresent()) {
-      return Optional.of(
-          new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
-    } else {
-      return Optional.of(
-          new ConstantToolProvider(
-              new HashedFileTool(
-                  () ->
-                      checkPathExistsAndResolve(
-                          value.get(),
-                          String.format("Overridden %s:%s path not found: ", section, field)))));
-    }
-  }
-
-  public Optional<Tool> getTool(String section, String field, BuildRuleResolver resolver) {
-    Optional<ToolProvider> provider = getToolProvider(section, field);
-    if (!provider.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(provider.get().resolve(resolver));
-  }
-
-  public Tool getRequiredTool(String section, String field, BuildRuleResolver resolver) {
-    Optional<Tool> path = getTool(section, field, resolver);
-    return required(section, field, path);
   }
 
   /**
@@ -664,7 +621,7 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getMap(section, field);
   }
 
-  private <T> T required(String section, String field, Optional<T> value) {
+  public <T> T getOrThrow(String section, String field, Optional<T> value) {
     if (!value.isPresent()) {
       throw new HumanReadableException(
           String.format(".buckconfig: %s:%s must be set", section, field));
@@ -728,7 +685,7 @@ public class BuckConfig implements ConfigPathGetter {
 
   public Path getRequiredPath(String section, String field) {
     Optional<Path> path = getPath(section, field);
-    return required(section, field, path);
+    return getOrThrow(section, field, path);
   }
 
   public String getClientId() {

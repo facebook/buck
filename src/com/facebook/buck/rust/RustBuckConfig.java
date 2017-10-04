@@ -24,6 +24,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,6 +48,7 @@ public class RustBuckConfig {
 
   ToolProvider getRustCompiler() {
     return delegate
+        .getView(ToolConfig.class)
         .getToolProvider(SECTION, "compiler")
         .orElseGet(
             () -> {
@@ -124,7 +126,7 @@ public class RustBuckConfig {
   }
 
   Optional<ToolProvider> getLinker() {
-    return delegate.getToolProvider(SECTION, "linker");
+    return delegate.getView(ToolConfig.class).getToolProvider(SECTION, "linker");
   }
 
   LinkerProvider getLinkerProvider(CxxPlatform cxxPlatform, LinkerProvider.Type defaultType) {
