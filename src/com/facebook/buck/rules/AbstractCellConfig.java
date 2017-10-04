@@ -13,12 +13,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.config;
+package com.facebook.buck.rules;
 
 import static com.facebook.buck.util.MoreCollectors.toImmutableMap;
 import static java.util.stream.Collectors.collectingAndThen;
 
-import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;

@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
@@ -26,6 +25,7 @@ import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.rules.CellConfig;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.rules.RuleKey;

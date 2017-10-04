@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.config.CellConfig.MalformedOverridesException;
+import static com.facebook.buck.rules.CellConfig.MalformedOverridesException;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
 

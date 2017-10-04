@@ -21,7 +21,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;

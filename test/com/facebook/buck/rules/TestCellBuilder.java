@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import static com.facebook.buck.io.Watchman.NULL_WATCHMAN;
 
 import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
