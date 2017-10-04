@@ -220,7 +220,7 @@ class CachingBuildRuleBuilder {
     this.manifestBasedKeySupplier =
         MoreSuppliers.weakMemoize(
             () -> {
-              try (Scope scope = buildRuleScope()) {
+              try (Scope ignored = buildRuleScope()) {
                 return calculateManifestKey(eventBus);
               } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -340,7 +340,7 @@ class CachingBuildRuleBuilder {
       return Futures.immediateFuture(input);
     }
 
-    try (Scope scope = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
+    try (Scope ignored = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
       // We shouldn't see any build fail result at this point.
       BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
 
@@ -624,7 +624,7 @@ class CachingBuildRuleBuilder {
     Optional<BuildRuleSuccessType> successType = Optional.empty();
     boolean shouldUploadToCache = false;
 
-    try (Scope scope = buildRuleScope()) {
+    try (Scope ignored = buildRuleScope()) {
       if (input.getStatus() == BuildRuleStatus.SUCCESS) {
         BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
         successType = Optional.of(success);
@@ -702,7 +702,7 @@ class CachingBuildRuleBuilder {
     }
     buildInfoRecorder.addBuildMetadata(
         BuildInfo.MetadataKey.MANIFEST_KEY, manifestKey.get().toString());
-    try (Scope scope = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
+    try (Scope ignored = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
       return performManifestBasedCacheFetch(manifestKey.get());
     }
   }
@@ -735,7 +735,7 @@ class CachingBuildRuleBuilder {
 
   private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
     Optional<RuleKey> ruleKey;
-    try (Scope scope = buildRuleScope()) {
+    try (Scope ignored = buildRuleScope()) {
       // Calculate input-based rule key.
       ruleKey = inputBasedKey.get();
     }
@@ -753,7 +753,7 @@ class CachingBuildRuleBuilder {
     }
 
     // 1. Check if it's already built.
-    try (Scope scope = buildRuleScope()) {
+    try (Scope ignored = buildRuleScope()) {
       Optional<BuildResult> buildResult = checkMatchingLocalKey();
       if (buildResult.isPresent()) {
         return Futures.immediateFuture(buildResult.get());
@@ -1053,7 +1053,7 @@ class CachingBuildRuleBuilder {
     return Futures.transformAsync(
         fetch(artifactCache, ruleKey, lazyZipPath),
         cacheResult -> {
-          try (Scope scope = buildRuleScope()) {
+          try (Scope ignored = buildRuleScope()) {
             // Verify that the rule key we used to fetch the artifact is one of the rule keys reported in
             // it's metadata.
             if (cacheResult.getType().isSuccess()) {
@@ -1087,7 +1087,7 @@ class CachingBuildRuleBuilder {
     return Futures.transform(
         artifactCache.fetchAsync(ruleKey, outputPath),
         (CacheResult cacheResult) -> {
-          try (Scope scope = buildRuleScope()) {
+          try (Scope ignored = buildRuleScope()) {
             if (cacheResult.getType() != CacheResultType.HIT) {
               return cacheResult;
             }
@@ -1298,7 +1298,7 @@ class CachingBuildRuleBuilder {
             .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
             .collect(MoreCollectors.toImmutableList());
 
-    try (Scope scope =
+    try (Scope ignored =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.DEP_FILE)) {
       return Optional.of(
           ruleKeyFactories
@@ -1492,7 +1492,7 @@ class CachingBuildRuleBuilder {
 
   private Optional<RuleKey> calculateInputBasedRuleKey() {
     Preconditions.checkState(depsAreAvailable);
-    try (Scope scope =
+    try (Scope ignored =
         RuleKeyCalculationEvent.scope(eventBus, RuleKeyCalculationEvent.Type.INPUT)) {
       return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
     } catch (SizeLimiter.SizeLimitException ex) {
@@ -1527,7 +1527,7 @@ class CachingBuildRuleBuilder {
             rule.getProjectFilesystem()),
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
-            try (Scope scope = LeafEvents.scope(eventBus, "handling_cache_result")) {
+            try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
               fillInOriginFromCache(cacheResult);
               fillMissingBuildMetadataFromCache(
                   cacheResult,
@@ -1577,7 +1577,7 @@ class CachingBuildRuleBuilder {
   // Wrap an async function in rule resume/suspend events.
   private <F, T> AsyncFunction<F, T> ruleAsyncFunction(final AsyncFunction<F, T> delegate) {
     return input -> {
-      try (Scope scope = buildRuleScope()) {
+      try (Scope ignored = buildRuleScope()) {
         return delegate.apply(input);
       }
     };
@@ -1597,7 +1597,7 @@ class CachingBuildRuleBuilder {
                     return Optional.of(
                         BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure()));
                   }
-                  try (Scope scope = buildRuleScope()) {
+                  try (Scope ignored = buildRuleScope()) {
                     return function.call();
                   }
                 }));
@@ -1651,7 +1651,7 @@ class CachingBuildRuleBuilder {
               Optional.of(BuildResult.canceled(rule, buildRuleBuilderDelegate.getFirstFailure())));
           return;
         }
-        try (Scope scope = buildRuleScope()) {
+        try (Scope ignored = buildRuleScope()) {
           executeCommandsNowThatDepsAreBuilt();
         }
 
@@ -1685,7 +1685,7 @@ class CachingBuildRuleBuilder {
 
       // Get and run all of the commands.
       List<? extends Step> steps;
-      try (Scope scope = LeafEvents.scope(eventBus, "get_build_steps")) {
+      try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
         if (pipelineState == null) {
           steps = rule.getBuildSteps(buildRuleBuildContext, buildableContext);
         } else {
