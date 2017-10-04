@@ -132,10 +132,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         }
       } catch (RuntimeException e) {
         throw new HumanReadableException(
+            e,
             String.format(
                 "The compiler crashed when run without dependencies. There is probably an error in the source code. Try building %s to reveal it.",
-                invokingRule.getUnflavoredBuildTarget().toString()),
-            e);
+                invokingRule.getUnflavoredBuildTarget().toString()));
       }
       frontendRunAttempted = true;
 
