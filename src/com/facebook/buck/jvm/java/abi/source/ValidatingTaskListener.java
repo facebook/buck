@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
@@ -36,7 +36,7 @@ import javax.tools.Diagnostic;
 public class ValidatingTaskListener implements TaskListener {
   private final BuckJavacTask javacTask;
   private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
-  private final InterfaceValidatorCallback interfaceValidatorCallback;
+  private final SourceOnlyAbiRuleInfo ruleInfo;
   private final Diagnostic.Kind messageKind;
 
   @Nullable private InterfaceValidator validator;
@@ -44,18 +44,16 @@ public class ValidatingTaskListener implements TaskListener {
   private boolean annotationProcessing = false;
 
   public ValidatingTaskListener(
-      BuckJavacTaskProxy task,
-      InterfaceValidatorCallback interfaceValidatorCallback,
-      Diagnostic.Kind messageKind) {
+      BuckJavacTaskProxy task, SourceOnlyAbiRuleInfo ruleInfo, Diagnostic.Kind messageKind) {
     this.javacTask = ((BuckJavacTaskProxyImpl) task).getInner();
-    this.interfaceValidatorCallback = interfaceValidatorCallback;
+    this.ruleInfo = ruleInfo;
     this.messageKind = messageKind;
   }
 
   private InterfaceValidator getValidator() {
     // We can't do this on construction, because the Task might not be fully initialized yet
     if (validator == null) {
-      validator = new InterfaceValidator(messageKind, javacTask, interfaceValidatorCallback);
+      validator = new InterfaceValidator(messageKind, javacTask, ruleInfo);
     }
 
     return Preconditions.checkNotNull(validator);

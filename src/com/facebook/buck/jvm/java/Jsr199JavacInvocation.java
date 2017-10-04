@@ -366,7 +366,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
-                new DefaultInterfaceValidatorCallback(
+                new DefaultSourceOnlyAbiRuleInfo(
                     fileManager, invokingRule, requiredForSourceOnlyAbi),
                 abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
       }

@@ -158,7 +158,7 @@ java_immutables_library(
         "ConstantJavacProvider.java",
         "DefaultClassUsageFileReader.java",
         "DefaultClassUsageFileWriter.java",
-        "DefaultInterfaceValidatorCallback.java",
+        "DefaultSourceOnlyAbiRuleInfo.java",
         "DiagnosticCleaner.java",
         "DiagnosticPrettyPrinter.java",
         "ExternalJavac.java",

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
@@ -29,13 +29,13 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
-class DefaultInterfaceValidatorCallback implements InterfaceValidatorCallback {
+class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   private final JavaFileManager fileManager;
   private final BuildTarget buildTarget;
   private final boolean ruleIsRequiredForSourceOnlyAbi;
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
-  public DefaultInterfaceValidatorCallback(
+  public DefaultSourceOnlyAbiRuleInfo(
       JavaFileManager fileManager,
       BuildTarget buildTarget,
       boolean ruleIsRequiredForSourceOnlyAbi) {

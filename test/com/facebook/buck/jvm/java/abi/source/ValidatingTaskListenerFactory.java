@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
@@ -36,7 +36,7 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
   public TaskListener newTaskListener(BuckJavacTask task) {
     return new ValidatingTaskListener(
         new BuckJavacTaskProxyImpl(task),
-        new InterfaceValidatorCallback() {
+        new SourceOnlyAbiRuleInfo() {
           @Override
           public String getRuleName() {
             return ruleName;
