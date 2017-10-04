@@ -37,9 +37,6 @@ public enum BuildRuleSuccessType {
   /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache}. */
   FETCHED_FROM_CACHE("CACHE", Property.OUTPUTS_HAVE_CHANGED),
 
-  /** Computed {@link RuleKey} matches the one on disk. */
-  MATCHING_RULE_KEY("FOUND"),
-
   /**
    * Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
    * rule key.
@@ -60,24 +57,20 @@ public enum BuildRuleSuccessType {
       Property.SHOULD_UPDATE_METADATA_ON_DISK,
       Property.OUTPUTS_HAVE_CHANGED),
 
+  /** Computed {@link RuleKey} matches the one on disk. */
+  MATCHING_RULE_KEY("FOUND", Property.MATCHING_KEY),
+
   /** Computed input-based {@link RuleKey} matches the one on disk. */
-  MATCHING_INPUT_BASED_RULE_KEY(
-      "FOUND",
-      // TODO(#8364892): We should re-upload to the cache under the main rule key once local
-      // caching performance is better and we don't hurt the incremental workflow as much.
-      Property.SHOULD_UPDATE_METADATA_ON_DISK),
+  // TODO(#8364892): We should re-upload to the cache under the main rule key once local
+  // caching performance is better and we don't hurt the incremental workflow as much.
+  MATCHING_INPUT_BASED_RULE_KEY("FOUND", Property.MATCHING_KEY),
 
   /** Computed dep-file {@link RuleKey} matches the one on disk */
-  MATCHING_DEP_FILE_RULE_KEY("FOUND", Property.SHOULD_UPDATE_METADATA_ON_DISK),
+  MATCHING_DEP_FILE_RULE_KEY("FOUND", Property.MATCHING_KEY),
   ;
 
   private final String shortDescription;
   private final EnumSet<Property> properties;
-
-  BuildRuleSuccessType(String shortDescription) {
-    this.shortDescription = shortDescription;
-    this.properties = EnumSet.noneOf(Property.class);
-  }
 
   BuildRuleSuccessType(String shortDescription, Property... properties) {
     this.shortDescription = shortDescription;
@@ -106,10 +99,15 @@ public enum BuildRuleSuccessType {
     return shortDescription;
   }
 
+  public boolean isMatchingKey() {
+    return properties.contains(Property.MATCHING_KEY);
+  }
+
   private enum Property {
     SHOULD_UPLOAD_RESULTING_ARTIFACT,
     SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
     SHOULD_UPDATE_METADATA_ON_DISK,
     OUTPUTS_HAVE_CHANGED,
+    MATCHING_KEY,
   }
 }

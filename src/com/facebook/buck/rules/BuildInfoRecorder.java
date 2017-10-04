@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -172,6 +173,10 @@ public class BuildInfoRecorder {
       projectFilesystem.writeContentsToPath(
           entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
     }
+    updateBuildMetadata();
+  }
+
+  public void updateBuildMetadata() throws IOException {
     buildInfoStore.updateMetadata(buildTarget, getBuildMetadata());
   }
 
@@ -356,5 +361,12 @@ public class BuildInfoRecorder {
 
   Optional<String> getBuildMetadataFor(String key) {
     return Optional.ofNullable(buildMetadata.get(key));
+  }
+
+  public void assertOnlyHasKeys(String... keys) {
+    Sets.SetView<String> difference =
+        Sets.difference(buildMetadata.keySet(), ImmutableSet.copyOf(keys));
+    Preconditions.checkState(
+        difference.isEmpty(), "Contained extra keys: " + Joiner.on(":").join(difference));
   }
 }
