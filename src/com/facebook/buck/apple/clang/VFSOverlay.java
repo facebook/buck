@@ -24,8 +24,11 @@ import java.util.Collection;
 @JsonSerialize(as = VFSOverlay.class)
 public class VFSOverlay {
 
-  @JsonProperty private final int version = 0;
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  @JsonProperty
+  private final int version = 0;
 
+  @SuppressWarnings("PMD.UnusedPrivateField")
   @JsonProperty("case-sensitive")
   private final boolean case_sensitive = false;
 
@@ -57,7 +60,10 @@ public class VFSOverlay {
   @JsonSerialize(as = Directory.class)
   private class Directory {
 
-    @JsonProperty private final String type = "directory";
+    @SuppressWarnings("PMD.UnusedPrivateField")
+    @JsonProperty
+    private final String type = "directory";
+
     @JsonProperty private final Path name;
 
     private final Collection<Pair<Path, Path>> contents;
@@ -78,7 +84,10 @@ public class VFSOverlay {
 
   @JsonSerialize(as = File.class)
   private class File {
-    @JsonProperty private final String type = "file";
+    @SuppressWarnings("PMD.UnusedPrivateField")
+    @JsonProperty
+    private final String type = "file";
+
     @JsonProperty private final Path name;
 
     @JsonProperty("external-contents")
