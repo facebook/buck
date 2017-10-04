@@ -135,8 +135,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return steps.build();
   }
 
-  public AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
-    return new AndroidBinaryBuildable.DexFilesInfo(
+  public DexFilesInfo getDexFilesInfo() {
+    return new DexFilesInfo(
         getSourcePathToPrimaryDex(), getSecondaryDexSourcePaths(), Optional.empty());
   }
 

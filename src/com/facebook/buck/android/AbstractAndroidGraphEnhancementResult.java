@@ -75,7 +75,7 @@ interface AbstractAndroidGraphEnhancementResult {
   }
 
   @Value.Derived
-  default AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
+  default DexFilesInfo getDexFilesInfo() {
     return getDexMergeRule()
         .transform(PreDexMerge::getDexFilesInfo, NonPreDexedDexBuildable::getDexFilesInfo);
   }

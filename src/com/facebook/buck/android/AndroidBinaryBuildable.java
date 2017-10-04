@@ -26,7 +26,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -615,7 +614,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   /** Adds steps to do the final dexing or dex merging before building the apk. */
   private void addFinalDxSteps(BuildContext buildContext, ImmutableList.Builder<Step> steps) {
-
     Optional<Path> proguardFullConfigFile = Optional.empty();
     Optional<Path> proguardMappingFile = Optional.empty();
     if (shouldProguard) {
@@ -664,67 +662,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   public Path getManifestPath() {
     return BuildTargets.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
-  }
-
-  /** Encapsulates the information about dexing output that must be passed to ApkBuilder. */
-  static class DexFilesInfo implements AddsToRuleKey {
-    @AddToRuleKey final SourcePath primaryDexPath;
-
-    @AddToRuleKey
-    final Either<ImmutableSortedSet<SourcePath>, DexSecondaryDexDirView> secondaryDexDirs;
-
-    @AddToRuleKey final Optional<SourcePath> proguardTextFilesPath;
-
-    DexFilesInfo(
-        SourcePath primaryDexPath,
-        ImmutableSortedSet<SourcePath> secondaryDexDirs,
-        Optional<SourcePath> proguardTextFilesPath) {
-      this.primaryDexPath = primaryDexPath;
-      this.secondaryDexDirs = Either.ofLeft(secondaryDexDirs);
-      this.proguardTextFilesPath = proguardTextFilesPath;
-    }
-
-    @SuppressWarnings("unused")
-    DexFilesInfo(
-        SourcePath primaryDexPath,
-        DexSecondaryDexDirView secondaryDexDirs,
-        Optional<SourcePath> proguardTextFilesPath) {
-      this.primaryDexPath = primaryDexPath;
-      this.secondaryDexDirs = Either.ofRight(secondaryDexDirs);
-      this.proguardTextFilesPath = proguardTextFilesPath;
-    }
-
-    public ImmutableSet<Path> getSecondaryDexDirs(
-        ProjectFilesystem filesystem, SourcePathResolver resolver) {
-      return secondaryDexDirs.transform(
-          set ->
-              set.stream().map(resolver::getRelativePath).collect(MoreCollectors.toImmutableSet()),
-          view -> view.getSecondaryDexDirs(filesystem, resolver));
-    }
-  }
-
-  static class DexSecondaryDexDirView implements AddsToRuleKey {
-    @AddToRuleKey final SourcePath rootDirectory;
-    @AddToRuleKey final SourcePath subDirListing;
-
-    DexSecondaryDexDirView(SourcePath rootDirectory, SourcePath subDirListing) {
-      this.rootDirectory = rootDirectory;
-      this.subDirListing = subDirListing;
-    }
-
-    ImmutableSet<Path> getSecondaryDexDirs(
-        ProjectFilesystem filesystem, SourcePathResolver resolver) {
-      try {
-        Path resolvedRootDirectory = resolver.getRelativePath(rootDirectory);
-        return filesystem
-            .readLines(resolver.getRelativePath(subDirListing))
-            .stream()
-            .map(resolvedRootDirectory::resolve)
-            .collect(MoreCollectors.toImmutableSet());
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 
   /** All native-libs-as-assets are copied to this directory before running apkbuilder. */

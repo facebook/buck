@@ -485,10 +485,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     return steps.build();
   }
 
-  AndroidBinaryBuildable.DexFilesInfo getDexFilesInfo() {
-    return new AndroidBinaryBuildable.DexFilesInfo(
+  DexFilesInfo getDexFilesInfo() {
+    return new DexFilesInfo(
         genSourcePath(getNonPredexedPrimaryDexPath()),
-        new AndroidBinaryBuildable.DexSecondaryDexDirView(
+        new DexFilesInfo.DexSecondaryDexDirView(
             genSourcePath(getSecondaryDexRoot()), genSourcePath(getSecondaryDexListing())),
         shouldProguard ? Optional.of(genSourcePath(getProguardConfigDir())) : Optional.empty());
   }
