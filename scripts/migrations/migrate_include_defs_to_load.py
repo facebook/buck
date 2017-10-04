@@ -24,18 +24,17 @@ def load_cell_roots(repo_dir: str) -> Dict[str, str]:
     return cell_roots
 
 
-def load_export_map(repo: str, cell_roots: Dict[str, str], build_file: str):
+def load_export_map(repo: str, cell_roots: Dict[str, str], build_file: str, verbose: bool = False):
     """Returns a dictionary with import string keys and all symbols they export as values."""
     cell_root_args = []
     for cell, root in cell_roots.items():
         cell_root_args.extend(['--cell_root', cell + '=' + root])
-    return json.loads(subprocess.check_output([
-                                                  os.path.join(MY_DIR, 'dump.py'), '--json',
-                                                  '--repository', repo] + cell_root_args + [
-                                                  'export_map',
-                                                  '--use_load_function_import_string_format',
-                                                  build_file
-                                              ]).decode().strip())
+    dump_script = os.path.join(MY_DIR, 'dump.py')
+    verbosity_flags = ['-v'] if verbose else []
+    export_map_flags = ['export_map', '--use_load_function_import_string_format']
+    dump_command = [dump_script, '--json', '--repository',
+                    repo] + verbosity_flags + cell_root_args + export_map_flags + [build_file]
+    return json.loads(subprocess.check_output(dump_command).decode().strip())
 
 
 class Buildozer:
@@ -104,7 +103,7 @@ def main():
     buildozer = Buildozer(args.buildozer, args.repository)
     package_dir = os.path.dirname(args.build_file)
     package = str(pathlib.Path(package_dir).relative_to(args.repository))
-    load_funcs = load_export_map(args.repository, cell_roots, args.build_file)
+    load_funcs = load_export_map(args.repository, cell_roots, args.build_file, args.verbose)
     logging.debug(load_funcs)
     add_load_funcs(buildozer, load_funcs, package)
     remove_include_defs(buildozer, package)
