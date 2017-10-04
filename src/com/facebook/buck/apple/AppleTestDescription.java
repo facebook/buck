@@ -19,15 +19,18 @@ package com.facebook.buck.apple;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -71,6 +74,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -79,7 +83,8 @@ public class AppleTestDescription
     implements Description<AppleTestDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<AppleTestDescription.AbstractAppleTestDescriptionArg>,
-        MetadataProvidingDescription<AppleTestDescriptionArg> {
+        MetadataProvidingDescription<AppleTestDescriptionArg>,
+        AppleLibrarySwiftDelegate {
 
   /** Flavors for the additional generated build rules. */
   static final Flavor LIBRARY_FLAVOR = InternalFlavor.of("apple-test-library");
@@ -157,6 +162,16 @@ public class AppleTestDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       AppleTestDescriptionArg args) {
+    if (!appleConfig.shouldUseSwiftDelegate()) {
+      Optional<BuildRule> buildRule =
+          appleLibraryDescription.createSwiftBuildRule(
+              buildTarget, projectFilesystem, params, resolver, cellRoots, args, Optional.of(this));
+
+      if (buildRule.isPresent()) {
+        return buildRule.get();
+      }
+    }
+
     AppleDebugFormat debugFormat =
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
@@ -208,8 +223,9 @@ public class AppleTestDescription
       }
     }
 
+    // UI test bundles do not use the test host as their bundle_loader, but instead a stub app
     Optional<TestHostInfo> testHostInfo;
-    if (args.getTestHostApp().isPresent()) {
+    if (args.getTestHostApp().isPresent() && !args.getIsUiTest()) {
       testHostInfo =
           Optional.of(
               createTestHostInfo(
@@ -317,11 +333,14 @@ public class AppleTestDescription
           xctoolZipBuildRule.getBuildTarget().withAppendedFlavors(UNZIP_XCTOOL_FLAVOR);
       final Path outputDirectory =
           BuildTargets.getGenPath(projectFilesystem, unzipXctoolTarget, "%s/unzipped");
-      if (!resolver.getRuleOptional(unzipXctoolTarget).isPresent()) {
-        BuildRuleParams unzipXctoolParams =
-            params.withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule)).withoutExtraDeps();
-        resolver.addToIndex(
-            new AbstractBuildRuleWithDeclaredAndExtraDeps(
+      resolver.computeIfAbsent(
+          unzipXctoolTarget,
+          ignored -> {
+            BuildRuleParams unzipXctoolParams =
+                params
+                    .withDeclaredDeps(ImmutableSortedSet.of(xctoolZipBuildRule))
+                    .withoutExtraDeps();
+            return new AbstractBuildRuleWithDeclaredAndExtraDeps(
                 unzipXctoolTarget, projectFilesystem, unzipXctoolParams) {
               @Override
               public ImmutableList<Step> getBuildSteps(
@@ -348,12 +367,12 @@ public class AppleTestDescription
 
               @Override
               public SourcePath getSourcePathToOutput() {
-                return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputDirectory);
+                return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputDirectory);
               }
-            });
-      }
+            };
+          });
       return Optional.of(
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
       return Optional.of(new PathSourcePath(projectFilesystem, appleConfig.getXctoolPath().get()));
@@ -522,5 +541,29 @@ public class AppleTestDescription
     default Optional<String> getProductName() {
       return Optional.empty();
     }
+  }
+
+  // AppleLibrarySwiftDelegate
+
+  @Override
+  public ImmutableSet<CxxPreprocessorInput> getPreprocessorInputForSwift(
+      BuildTarget buildTarget,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
+      CxxLibraryDescription.CommonArg args) {
+
+    ImmutableSet<BuildRule> deps = args.getCxxDeps().get(ruleResolver, cxxPlatform);
+    BuildTarget baseTarget = buildTarget.withFlavors();
+    Optional<CxxPreprocessorInput> publicInput =
+        CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
+            ruleResolver, baseTarget, cxxPlatform, HeaderVisibility.PUBLIC);
+    Collection<CxxPreprocessorInput> depsInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+
+    ImmutableSet.Builder<CxxPreprocessorInput> inputsBuilder = ImmutableSet.builder();
+    inputsBuilder.addAll(depsInputs);
+    publicInput.ifPresent(i -> inputsBuilder.add(i));
+
+    return inputsBuilder.build();
   }
 }

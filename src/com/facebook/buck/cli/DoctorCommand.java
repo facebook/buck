@@ -29,7 +29,7 @@ import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableSet;

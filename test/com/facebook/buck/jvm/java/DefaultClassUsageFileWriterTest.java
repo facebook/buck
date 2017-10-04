@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.TestCellPathResolver;
@@ -97,7 +97,7 @@ public class DefaultClassUsageFileWriterTest {
     ProjectFilesystem externalFs = FakeProjectFilesystem.createRealTempFilesystem();
 
     CellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath()));
     Path testJarPath = homeFs.getPathForRelativePath("home.jar");
     Path testTwoJarPath = awayFs.getPathForRelativePath("away.jar");

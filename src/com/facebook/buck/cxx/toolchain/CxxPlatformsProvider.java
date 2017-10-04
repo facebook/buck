@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;

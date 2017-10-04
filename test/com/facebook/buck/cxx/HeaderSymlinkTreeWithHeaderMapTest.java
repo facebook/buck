@@ -21,8 +21,9 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -47,9 +48,9 @@ import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -169,7 +170,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
+            FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
         new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
@@ -186,7 +188,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            new ProjectFilesystem(tmpDir.getRoot()), FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
+            FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(0, hashLoader, resolver, ruleFinder);

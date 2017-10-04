@@ -15,14 +15,15 @@
  */
 package com.facebook.buck.rules;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.CellConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.config.RawConfig;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -89,10 +90,11 @@ public final class CellProvider {
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment) {
+      SdkEnvironment sdkEnvironment,
+      ProjectFilesystemFactory projectFilesystemFactory) {
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        new DefaultCellPathResolver(rootFilesystem.getRootPath(), rootConfig.getConfig());
+        DefaultCellPathResolver.of(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
     ImmutableMap<RelativeCellName, Path> cellPathMapping =
         rootCellCellPathResolver.getPathMapping();
@@ -154,7 +156,7 @@ public final class CellProvider {
                         rootCellCellPathResolver, cellMapping.keySet(), cellPath);
 
                 ProjectFilesystem cellFilesystem =
-                    new ProjectFilesystem(normalizedCellPath, config);
+                    projectFilesystemFactory.createProjectFilesystem(normalizedCellPath, config);
 
                 BuckConfig buckConfig =
                     new BuckConfig(

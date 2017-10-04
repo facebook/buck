@@ -74,7 +74,7 @@ abstract class AbstractCxxSandboxInclude extends CxxHeaders {
     CxxSandboxInclude.Builder builder = CxxSandboxInclude.builder();
     builder.setIncludeType(includeType);
     builder.setRoot(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             symlinkTree.getBuildTarget(),
             symlinkTree
                 .getProjectFilesystem()

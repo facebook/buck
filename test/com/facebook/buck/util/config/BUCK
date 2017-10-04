@@ -1,0 +1,26 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = [
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/util/config:config",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+standard_java_test(
+    name = "config",
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/config:config",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
+)

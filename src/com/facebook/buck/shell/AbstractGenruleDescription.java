@@ -16,9 +16,9 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -38,6 +38,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
 import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
 import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
@@ -64,6 +65,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               .put("maven_coords", new MavenCoordinatesMacroExpander())
               .put("query_targets", new QueryTargetsMacroExpander(Optional.empty()))
               .put("query_outputs", new QueryOutputsMacroExpander(Optional.empty()))
+              .put("query_paths", new QueryPathsMacroExpander(Optional.empty()))
               .build());
 
   protected BuildRule createBuildRule(
@@ -107,6 +109,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                 .put("maven_coords", new MavenCoordinatesMacroExpander())
                 .put("query_targets", new QueryTargetsMacroExpander(Optional.of(targetGraph)))
                 .put("query_outputs", new QueryOutputsMacroExpander(Optional.of(targetGraph)))
+                .put("query_paths", new QueryPathsMacroExpander(Optional.of(targetGraph)))
                 .build()));
   }
 

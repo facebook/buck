@@ -19,8 +19,8 @@ package com.facebook.buck.test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuckConfigTestUtils;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.BuckConfigTestUtils;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Joiner;
 import java.io.IOException;

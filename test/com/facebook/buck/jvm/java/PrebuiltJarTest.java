@@ -66,7 +66,7 @@ public class PrebuiltJarTest {
             Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
             /* mavenCoords */ Optional.empty(),
             /* provided */ false,
-            /* requiredForSourceAbi */ false);
+            /* requiredForSourceOnlyAbi */ false);
   }
 
   @Test

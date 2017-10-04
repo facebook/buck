@@ -94,6 +94,11 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   }
 
   @Override
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+    return false;
+  }
+
+  @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of();
   }

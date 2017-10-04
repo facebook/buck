@@ -105,7 +105,7 @@ public class CxxTestTest {
 
           @Override
           public SourcePath getSourcePathToOutput() {
-            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
+            return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("output"));
           }
 
           @Override
@@ -158,7 +158,7 @@ public class CxxTestTest {
 
           @Override
           public SourcePath getSourcePathToOutput() {
-            return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("output"));
+            return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("output"));
           }
 
           @Override

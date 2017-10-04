@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.PathByteSource;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -44,7 +44,9 @@ public class XzStepTest {
   @Test
   public void testXzStepDefaultDestinationFile() throws InterruptedException {
     final Path sourceFile = Paths.get("/path/to/source.file");
-    XzStep step = new XzStep(new ProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
+    XzStep step =
+        new XzStep(
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
     assertEquals(Paths.get(sourceFile + ".xz"), step.getDestinationFile());
   }
 
@@ -56,7 +58,7 @@ public class XzStepTest {
 
     XzStep step =
         new XzStep(
-            new ProjectFilesystem(tmp.getRoot().toPath()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath()),
             sourceFile,
             destinationFile.toPath(),
             /* compressionLevel -- for faster testing */ 1,

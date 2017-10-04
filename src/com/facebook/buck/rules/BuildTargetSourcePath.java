@@ -23,16 +23,8 @@ import com.facebook.buck.model.BuildTarget;
  *
  * <p>The file is not guaranteed to exist until the {@link BuildRule} has been built.
  */
-public abstract class BuildTargetSourcePath implements SourcePath {
-
-  private final BuildTarget target;
-
-  protected BuildTargetSourcePath(BuildTarget target) {
-    this.target = target;
-  }
+public interface BuildTargetSourcePath extends SourcePath {
 
   /** @return the target of the {@link BuildRule} which generates the file. */
-  public BuildTarget getTarget() {
-    return target;
-  }
+  BuildTarget getTarget();
 }

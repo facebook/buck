@@ -35,8 +35,17 @@ public interface FrontendOnlyJavacTaskProxy extends BuckJavacTaskProxy {
       Iterable<String> options,
       Iterable<String> classes,
       Iterable<? extends JavaFileObject> compilationUnits) {
+    ErrorSuppressingDiagnosticListener errorSuppressingDiagnosticListener =
+        new ErrorSuppressingDiagnosticListener(diagnosticListener);
     JavaCompiler.CompilationTask task =
-        compiler.getTask(out, fileManager, diagnosticListener, options, classes, compilationUnits);
+        compiler.getTask(
+            out,
+            fileManager,
+            errorSuppressingDiagnosticListener,
+            options,
+            classes,
+            compilationUnits);
+    errorSuppressingDiagnosticListener.setTask(task);
 
     PluginClassLoader loader = loaderFactory.getPluginClassLoader(task);
     Class<? extends FrontendOnlyJavacTaskProxy> proxyImplClass =

@@ -27,17 +27,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipConstants;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -84,7 +85,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
@@ -118,7 +119,7 @@ public class JarDirectoryStepTest {
     Path second = createZip(jarDirectory.resolve("b.jar"), "com/example/common/Helper.class");
 
     final Path outputPath = Paths.get("output.jar");
-    ProjectFilesystem filesystem = new ProjectFilesystem(jarDirectory);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(jarDirectory);
     JarDirectoryStep step =
         new JarDirectoryStep(
             filesystem,
@@ -150,7 +151,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(zip.getFileName()))
@@ -185,7 +186,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
@@ -236,7 +237,7 @@ public class JarDirectoryStepTest {
     Path output = tmp.resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(tmp),
+            TestProjectFilesystems.createProjectFilesystem(tmp),
             JarParameters.builder()
                 .setJarPath(output)
                 .setEntriesToJar(ImmutableSortedSet.of(Paths.get("input.jar")))
@@ -246,8 +247,8 @@ public class JarDirectoryStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
-    try (Zip zip = new Zip(output, false)) {
-      byte[] rawManifest = zip.readFully("META-INF/MANIFEST.MF");
+    try (ZipArchive zipArchive = new ZipArchive(output, false)) {
+      byte[] rawManifest = zipArchive.readFully("META-INF/MANIFEST.MF");
       manifest = new Manifest(new ByteArrayInputStream(rawManifest));
       String version = manifest.getMainAttributes().getValue(IMPLEMENTATION_VERSION);
 
@@ -265,7 +266,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(zipup))
@@ -352,7 +353,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
@@ -384,7 +385,7 @@ public class JarDirectoryStepTest {
 
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(zipup),
+            TestProjectFilesystems.createProjectFilesystem(zipup),
             JarParameters.builder()
                 .setJarPath(Paths.get("output.jar"))
                 .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
@@ -417,7 +418,7 @@ public class JarDirectoryStepTest {
     Path outputJar = folder.getRoot().resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(folder.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(folder.getRoot()),
             JarParameters.builder()
                 .setJarPath(outputJar)
                 .setEntriesToJar(ImmutableSortedSet.of(zipup))
@@ -560,7 +561,7 @@ public class JarDirectoryStepTest {
     Path output = tmp.resolve("example.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(tmp),
+            TestProjectFilesystems.createProjectFilesystem(tmp),
             JarParameters.builder()
                 .setJarPath(output)
                 .setEntriesToJar(ImmutableSortedSet.of(originalJar))
@@ -580,7 +581,7 @@ public class JarDirectoryStepTest {
   }
 
   private Path createZip(Path zipFile, String... fileNames) throws IOException {
-    try (Zip zip = new Zip(zipFile, true)) {
+    try (ZipArchive zip = new ZipArchive(zipFile, true)) {
       for (String fileName : fileNames) {
         zip.add(fileName, "");
       }
@@ -611,7 +612,7 @@ public class JarDirectoryStepTest {
   }
 
   private Set<String> getFileNames(Path zipFile) throws IOException {
-    try (Zip zip = new Zip(zipFile, false)) {
+    try (ZipArchive zip = new ZipArchive(zipFile, false)) {
       return zip.getFileNames();
     }
   }

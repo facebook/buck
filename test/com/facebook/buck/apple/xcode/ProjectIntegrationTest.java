@@ -382,4 +382,19 @@ public class ProjectIntegrationTest {
     workspace.runBuckCommand("project", "//lib:lib");
     workspace.verify();
   }
+
+  @Test
+  public void testBuckProjectWithUniqueLibraryNames() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_unique_library_names", temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "project", "-c", "cxx.unique_library_name_enabled=true", "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }

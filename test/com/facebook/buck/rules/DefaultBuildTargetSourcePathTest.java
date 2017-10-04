@@ -39,7 +39,7 @@ public class DefaultBuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
     resolver.addToIndex(rule);
-    SourcePath path = new DefaultBuildTargetSourcePath(target);
+    SourcePath path = DefaultBuildTargetSourcePath.of(target);
 
     try {
       pathResolver.getRelativePath(path);
@@ -70,7 +70,7 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void shouldReturnTheBuildTarget() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
-    DefaultBuildTargetSourcePath path = new DefaultBuildTargetSourcePath(target);
+    DefaultBuildTargetSourcePath path = DefaultBuildTargetSourcePath.of(target);
 
     assertEquals(target, path.getTarget());
   }

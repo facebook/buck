@@ -18,6 +18,7 @@ package com.facebook.buck.randomizedtrial;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.model.BuildId;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -55,7 +56,7 @@ public class RandomizedTrialTest {
   @Test
   public void testCreatingWithWrongConfiguration() throws Exception {
     try {
-      RandomizedTrial.getGroup("name", BrokenEnum.class);
+      RandomizedTrial.getGroupStable("name", BrokenEnum.class);
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("misconfigured"));
       return;
@@ -66,7 +67,8 @@ public class RandomizedTrialTest {
   @Test
   public void testPointStaysStable() throws Exception {
     assertThat(
-        RandomizedTrial.getPoint("test"), Matchers.equalTo(RandomizedTrial.getPoint("test")));
+        RandomizedTrial.getPoint("test", "id"),
+        Matchers.equalTo(RandomizedTrial.getPoint("test", "id")));
   }
 
   // The following test has caused some flakiness on Windows, so we disable this for now.
@@ -78,12 +80,25 @@ public class RandomizedTrialTest {
   //  }
 
   @Test
-  public void testReturnsCorrectGroup() throws Exception {
+  public void testGetGroupReturnsCorrectGroup() throws Exception {
+    BuildId buildId = new BuildId("01234");
+    double point = RandomizedTrial.getPoint("name", buildId.toString());
+    MutableEnum.probabilityGroup1 = point;
+    MutableEnum.probabilityGroup2 = 1.0 - point;
+
+    assertThat(
+        RandomizedTrial.getGroup("name", buildId, MutableEnum.class),
+        Matchers.equalTo(MutableEnum.GROUP2));
+  }
+
+  @Test
+  public void testGetGroupStableReturnsCorrectGroup() throws Exception {
     double point = RandomizedTrial.getPoint("name");
     MutableEnum.probabilityGroup1 = point;
     MutableEnum.probabilityGroup2 = 1.0 - point;
 
     assertThat(
-        RandomizedTrial.getGroup("name", MutableEnum.class), Matchers.equalTo(MutableEnum.GROUP2));
+        RandomizedTrial.getGroupStable("name", MutableEnum.class),
+        Matchers.equalTo(MutableEnum.GROUP2));
   }
 }

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
@@ -75,7 +75,7 @@ public class DefaultSourcePathResolver implements SourcePathResolver {
 
   /**
    * @return the {@link Path} for this {@code sourcePath}, resolved using its associated {@link
-   *     com.facebook.buck.io.ProjectFilesystem}.
+   *     ProjectFilesystem}.
    */
   @Override
   public Path getAbsolutePath(SourcePath sourcePath) {
@@ -125,7 +125,7 @@ public class DefaultSourcePathResolver implements SourcePathResolver {
 
   /**
    * @return The {@link Path} the {@code sourcePath} refers to, relative to its owning {@link
-   *     com.facebook.buck.io.ProjectFilesystem}.
+   *     ProjectFilesystem}.
    */
   @Override
   public Path getRelativePath(SourcePath sourcePath) {
@@ -142,7 +142,7 @@ public class DefaultSourcePathResolver implements SourcePathResolver {
 
   /**
    * @return The {@link Path} the {@code sourcePath} refers to, ideally relative to its owning
-   *     {@link com.facebook.buck.io.ProjectFilesystem}. Absolute path may get returned however!
+   *     {@link ProjectFilesystem}. Absolute path may get returned however!
    *     <p>We should make sure that {@link #getPathPrivateImpl} always returns a relative path
    *     after which we should simply call {@link #getRelativePath}. Until then we still need this
    *     nonsense.

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import com.facebook.buck.io.FileContentsScrubber;
+import com.facebook.buck.io.file.FileContentsScrubber;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;

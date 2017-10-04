@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -44,15 +44,14 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
+    implements SupportsInputBasedRuleKey, HasAppleDebugSymbolDeps, OverrideScheduleRule {
 
   @AddToRuleKey private final Linker linker;
 
@@ -184,20 +183,15 @@ public class CxxLink extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    return FluentIterable.from(getBuildDeps()).filter(Archive.class::isInstance).toSet();
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getCompileDeps() {
-    return FluentIterable.from(getBuildDeps())
-        .filter(CxxPreprocessAndCompile.class::isInstance)
-        .toSet();
+  public Stream<BuildRule> getAppleDebugSymbolDeps() {
+    return getBuildDeps()
+        .stream()
+        .filter(x -> x instanceof Archive || x instanceof CxxPreprocessAndCompile);
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

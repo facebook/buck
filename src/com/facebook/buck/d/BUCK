@@ -3,7 +3,7 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
@@ -12,7 +12,7 @@ java_immutables_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/parser:rule_pattern",

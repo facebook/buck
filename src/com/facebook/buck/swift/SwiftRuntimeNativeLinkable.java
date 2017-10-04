@@ -35,7 +35,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
-final class SwiftRuntimeNativeLinkable implements NativeLinkable {
+public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
@@ -48,7 +48,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
               SWIFT_RUNTIME));
   private final SwiftPlatform swiftPlatform;
 
-  SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
+  public SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
     this.swiftPlatform = swiftPlatform;
   }
 

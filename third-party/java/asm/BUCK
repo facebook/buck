@@ -3,11 +3,11 @@
 # to asm-5.0.3-src.zip for our purposes.
 prebuilt_jar(
     name = "asm",
-    binary_jar = "asm-debug-all-5.0.3.jar",
+    binary_jar = "asm-debug-all-6.0_BETA.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-5.0.3-src.zip",
+    source_jar = "asm-debug-all-6.0_BETA-sources.jar",
     visibility = [
         "PUBLIC",
     ],

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -90,7 +90,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   public static WriteStringTemplateRule from(

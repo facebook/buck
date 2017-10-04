@@ -16,7 +16,7 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -64,7 +64,7 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), output);
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

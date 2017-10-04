@@ -25,6 +25,7 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
+import com.facebook.buck.query.InputsFunction;
 import com.facebook.buck.query.KindFunction;
 import com.facebook.buck.query.LabelsFunction;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -36,6 +37,7 @@ import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
@@ -61,6 +63,7 @@ import java.util.stream.Stream;
  *  deps
  *  inputs
  *  except
+ *  inputs
  *  intersect
  *  filter
  *  kind
@@ -136,6 +139,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     TargetNode<?, ?> node = getNode(target);
     return node.getInputs()
         .stream()
+        .map(path -> new PathSourcePath(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(MoreCollectors.toImmutableSet());
   }
@@ -211,7 +215,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
           new DepsFunction.FirstOrderDepsFunction(),
           new KindFunction(),
           new FilterFunction(),
-          new LabelsFunction());
+          new LabelsFunction(),
+          new InputsFunction());
 
   @Override
   public Iterable<QueryFunction> getFunctions() {

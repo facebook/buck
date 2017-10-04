@@ -16,7 +16,7 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
@@ -125,8 +125,7 @@ public class CommandAliasDescription implements Description<CommandAliasDescript
   }
 
   private static CommandTool.Builder toolBuilder(BuildTarget exe) {
-    return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(new DefaultBuildTargetSourcePath(exe)));
+    return new CommandTool.Builder().addArg(SourcePathArg.of(DefaultBuildTargetSourcePath.of(exe)));
   }
 
   private static Optional<Tool> getTool(BuildTarget target, BuildRuleResolver resolver) {

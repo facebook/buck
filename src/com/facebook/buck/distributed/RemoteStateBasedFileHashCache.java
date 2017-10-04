@@ -19,7 +19,7 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;

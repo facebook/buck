@@ -49,8 +49,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.IosReactNativeLibraryBuilder;
 import com.facebook.buck.js.JsTestScenario;
 import com.facebook.buck.js.ReactNativeBuckConfig;
@@ -435,7 +435,7 @@ public class NewNativeTargetProjectMutatorTest {
         String.format(
             "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
                 + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp \"%s/foo/dep/js/dep.js\" \"${BASE_DIR}/\"\n"
+                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
                 + "cp -a \"%s/foo/dep/res/\" \"${BASE_DIR}/\"\n",
             genDir, genDir),
         shellScript);

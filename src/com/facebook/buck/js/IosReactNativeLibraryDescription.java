@@ -18,7 +18,7 @@ package com.facebook.buck.js;
 
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -94,9 +94,9 @@ public class IosReactNativeLibraryDescription
       BuildRuleResolver resolver) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     builder.addDirsContainingResourceDirs(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             buildTarget, ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)),
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             buildTarget, ReactNativeBundle.getPathToResources(buildTarget, filesystem)));
   }
 }

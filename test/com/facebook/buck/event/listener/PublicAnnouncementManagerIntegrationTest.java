@@ -19,8 +19,8 @@ package com.facebook.buck.event.listener;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.Announcement;
 import com.facebook.buck.distributed.thrift.AnnouncementResponse;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
@@ -141,7 +141,8 @@ public class PublicAnnouncementManagerIntegrationTest {
               Optional.empty(),
               Locale.US,
               logPath,
-              TimeZone.getTimeZone("UTC"));
+              TimeZone.getTimeZone("UTC"),
+              Optional.empty());
       eventBus.register(listener);
 
       PublicAnnouncementManager manager =

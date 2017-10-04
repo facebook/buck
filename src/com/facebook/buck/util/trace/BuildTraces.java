@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.trace;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;

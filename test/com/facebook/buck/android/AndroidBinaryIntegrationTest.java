@@ -32,7 +32,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -47,13 +49,14 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
+import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,7 +92,7 @@ import org.junit.Test;
 
 public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
 
   private ProjectWorkspace workspace;
 
@@ -108,7 +111,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
             new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
@@ -295,6 +298,25 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testProvidedDependenciesAreExcludedEvenIfSpecifiedInOtherDeps() throws IOException {
+    String target = "//apps/sample:app_with_exported_and_provided_deps";
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(target);
+    result.assertSuccess();
+
+    DexInspector dexInspector =
+        new DexInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+
+    dexInspector.assertTypeExists("Lcom/facebook/sample/Dep;");
+    dexInspector.assertTypeExists("Lcom/facebook/sample/ExportedDep;");
+    dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/ProvidedDep;");
+    dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/DepProvidedDep;");
+    dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/ExportedProvidedDep;");
+  }
+
+  @Test
   public void testPreprocessorForcesReDex() throws IOException {
     String target = "//java/com/preprocess:disassemble";
     Path outputFile = workspace.buildAndReturnOutput(target);
@@ -312,7 +334,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   public void testDxFindsReferencedResources() throws InterruptedException, IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     DefaultOnDiskBuildInfo buildInfo =
         new DefaultOnDiskBuildInfo(
             BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),
@@ -668,6 +691,25 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
     sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
     assertTrue(sym.all.contains("_Z6unusedi"));
+  }
+
+  @Test
+  public void testNativeRelinkerWhitelist() throws IOException, InterruptedException {
+    SymbolGetter syms = getSymbolGetter();
+    Symbols sym;
+
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
+
+    // The test data has "^_Z12preserved(Bot|Mid)v$" as the only whitelist pattern, so
+    // we don't expect preservedTop to survive.
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_top.so");
+    assertFalse(sym.all.contains("_Z12preservedTopv"));
+
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_mid.so");
+    assertTrue(sym.global.contains("_Z12preservedMidv"));
+
+    sym = syms.getDynamicSymbols(apkPath, "lib/x86/libnative_xdsodce_bot.so");
+    assertTrue(sym.global.contains("_Z12preservedBotv"));
   }
 
   @Test

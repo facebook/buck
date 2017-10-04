@@ -19,9 +19,11 @@ package com.facebook.buck.zip;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
@@ -44,7 +46,7 @@ public class RepackZipEntriesStepTest {
   @Before
   public void buildSampleZipFile() throws InterruptedException, IOException {
     parent = tmp.newFolder("foo");
-    filesystem = new ProjectFilesystem(parent);
+    filesystem = TestProjectFilesystems.createProjectFilesystem(parent);
     zipFile = parent.resolve("example.zip");
 
     // Turns out that the zip filesystem generates slightly different output from the output stream.

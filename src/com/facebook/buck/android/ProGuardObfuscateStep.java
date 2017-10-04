@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.shell.ShellStep;
@@ -27,8 +27,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

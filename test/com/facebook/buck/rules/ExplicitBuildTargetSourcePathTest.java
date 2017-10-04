@@ -37,7 +37,7 @@ public class ExplicitBuildTargetSourcePathTest {
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), path);
+        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
   }
@@ -47,9 +47,9 @@ public class ExplicitBuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     ExplicitBuildTargetSourcePath path1 =
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something"));
+        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =
-        new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), Paths.get("something else"));
+        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something else"));
     assertNotEquals(path1, path2);
     assertNotEquals(path1.hashCode(), path2.hashCode());
   }

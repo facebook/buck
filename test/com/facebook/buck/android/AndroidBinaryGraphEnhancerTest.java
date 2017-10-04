@@ -34,9 +34,9 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -60,7 +60,6 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestBuildRuleParams;
-import com.facebook.buck.rules.TestCellPathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -132,9 +131,7 @@ public class AndroidBinaryGraphEnhancerTest {
             apkTarget,
             filesystem,
             originalParams,
-            targetGraph,
             ruleResolver,
-            TestCellPathResolver.get(filesystem),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
@@ -168,6 +165,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             MoreExecutors.newDirectExecutorService(),
             /* manifestEntries */ ManifestEntries.empty(),
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -281,9 +279,7 @@ public class AndroidBinaryGraphEnhancerTest {
             apkTarget,
             projectFilesystem,
             originalParams,
-            TargetGraph.EMPTY,
             ruleResolver,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
@@ -317,6 +313,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             MoreExecutors.newDirectExecutorService(),
             /* manifestEntries */ ManifestEntries.empty(),
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -404,9 +401,7 @@ public class AndroidBinaryGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            targetGraph,
             ruleResolver,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
@@ -440,6 +435,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             MoreExecutors.newDirectExecutorService(),
             /* manifestEntries */ ManifestEntries.empty(),
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -468,9 +464,7 @@ public class AndroidBinaryGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            TargetGraph.EMPTY,
             ruleResolver,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
@@ -504,6 +498,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             MoreExecutors.newDirectExecutorService(),
             /* manifestEntries */ ManifestEntries.empty(),
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -561,9 +556,7 @@ public class AndroidBinaryGraphEnhancerTest {
             target,
             projectFilesystem,
             originalParams,
-            TargetGraph.EMPTY,
             ruleResolver,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
             AndroidBinary.AaptMode.AAPT1,
             ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
@@ -597,6 +590,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             MoreExecutors.newDirectExecutorService(),
             /* manifestEntries */ ManifestEntries.empty(),
             CxxPlatformUtils.DEFAULT_CONFIG,

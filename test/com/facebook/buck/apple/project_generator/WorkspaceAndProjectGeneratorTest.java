@@ -37,8 +37,9 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.apple.xcode.XCScheme;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.ActionGraphParallelizationMode;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -46,7 +47,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.halide.HalideBuckConfig;
 import com.facebook.buck.halide.HalideLibraryBuilder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -427,7 +428,7 @@ public class WorkspaceAndProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(genruleTarget))))
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genruleTarget))))
             .build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
@@ -473,7 +474,7 @@ public class WorkspaceAndProjectGeneratorTest {
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new DefaultBuildTargetSourcePath(genruleTarget))))
+                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genruleTarget))))
             .build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg, ?> workspaceNode =
@@ -932,7 +933,7 @@ public class WorkspaceAndProjectGeneratorTest {
         ActionGraphCache.getFreshActionGraph(
                 BuckEventBusForTests.newInstance(),
                 targetGraph.getSubgraph(ImmutableSet.of(input)),
-                false)
+                ActionGraphParallelizationMode.DISABLED)
             .getResolver();
   }
 }

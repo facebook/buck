@@ -30,8 +30,8 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
@@ -80,7 +80,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
 
   private static String getSharedLibrarySoname(PrebuiltCxxLibraryDescriptionArg arg) {
-    String libName = arg.getLibName().orElse(TARGET.getShortName());
+    String libName = TARGET.getShortName();
     return arg.getSoname()
         .orElse(String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
   }
@@ -266,7 +266,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setOut("libtest.a");
     PrebuiltCxxLibraryBuilder libraryBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -292,7 +292,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setOut("libtest.a");
     PrebuiltCxxLibraryBuilder libraryBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), libraryBuilder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -336,15 +336,15 @@ public class PrebuiltCxxLibraryDescriptionTest {
   @Test
   public void findDepsFromParamsWithLocation() throws NoSuchBuildTargetException {
     BuildTarget genTarget = BuildTargetFactory.newInstance("//other:gen_lib");
-    GenruleBuilder genruleBuilder = GenruleBuilder.newGenruleBuilder(genTarget).setOut("lib_dir");
+    GenruleBuilder genruleBuilder =
+        GenruleBuilder.newGenruleBuilder(genTarget).setOut("libtest.so");
 
     PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
     builder.setSoname("test");
-    builder.setStaticLib(new DefaultBuildTargetSourcePath(genTarget));
+    builder.setStaticLib(DefaultBuildTargetSourcePath.of(genTarget));
 
     TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            genruleBuilder.setOut("libtest.so").build(), builder.build());
+        TargetGraphFactory.newInstance(genruleBuilder.build(), builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -360,14 +360,6 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   @Test
-  public void findDepsFromParamsWithNone() throws NoSuchBuildTargetException {
-    PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
-    builder.setSoname("test");
-    builder.setSharedLib(new FakeSourcePath("libfoo.so"));
-    assertThat(builder.findImplicitDeps(), empty());
-  }
-
-  @Test
   public void findDepsFromParamsWithPlatform() throws NoSuchBuildTargetException {
     BuildTarget platform1Dep = BuildTargetFactory.newInstance("//platform1:dep");
     BuildTarget platform2Dep = BuildTargetFactory.newInstance("//platform2:dep");
@@ -377,10 +369,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
         PatternMatchedCollection.<SourcePath>builder()
             .add(
                 Pattern.compile("platform 1", Pattern.LITERAL),
-                new DefaultBuildTargetSourcePath(platform1Dep))
+                DefaultBuildTargetSourcePath.of(platform1Dep))
             .add(
                 Pattern.compile("platform 2", Pattern.LITERAL),
-                new DefaultBuildTargetSourcePath(platform2Dep))
+                DefaultBuildTargetSourcePath.of(platform2Dep))
             .build());
     assertThat(builder.build().getExtraDeps(), contains(platform1Dep, platform2Dep));
   }
@@ -501,7 +493,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .setCmd("something");
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(target)
-            .setStaticLib(new DefaultBuildTargetSourcePath(genruleBuilder.getTarget()));
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genruleBuilder.getTarget()));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genruleBuilder.build(), builder.build());
@@ -685,7 +677,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
-            .setIncludeDirs(ImmutableList.of("include"));
+            .setHeaderDirs(ImmutableList.of(new FakeSourcePath("include")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -698,7 +690,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
             CxxHeadersDir.of(
                 CxxPreprocessables.IncludeType.SYSTEM,
                 new PathSourcePath(
-                    filesystem, rule.getBuildTarget().getBasePath().resolve("include")))));
+                    filesystem,
+                    rule.getBuildTarget().getBasePath().getFileSystem().getPath("include")))));
   }
 
   @Test
@@ -706,7 +699,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setIncludeDirs(ImmutableList.of());
+            .setHeaderDirs(ImmutableList.of());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(

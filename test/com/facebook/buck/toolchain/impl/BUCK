@@ -1,0 +1,13 @@
+java_library(
+    name = "testutil",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/toolchain/impl:impl",
+    ],
+)

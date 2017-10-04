@@ -55,7 +55,7 @@ public class TimeoutIntegrationTest {
   @Test
   public void testThatTimeoutsInTestsWorkAsExpected() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder, true);
     workspace.setUp();
 
     // ExceedsAnnotationTimeoutTest should fail.
@@ -100,7 +100,7 @@ public class TimeoutIntegrationTest {
   public void individualTestCanOverrideTheDefaultTestTimeout() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "overridden_timeouts", temporaryFolder);
+            this, "overridden_timeouts", temporaryFolder, true);
     workspace.setUp();
 
     // The .buckconfig in that workspace sets the default timeout to 1000ms.
@@ -112,7 +112,7 @@ public class TimeoutIntegrationTest {
   @Test
   public void testThatTimeoutsDumpsThreadStacks() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "timeouts", temporaryFolder, true);
     workspace.setUp();
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:SleepTest");

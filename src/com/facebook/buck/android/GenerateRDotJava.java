@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -47,7 +47,6 @@ public class GenerateRDotJava extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath pathToRDotTxtFile;
   @AddToRuleKey private final Optional<SourcePath> pathToOverrideSymbolsFile;
   @AddToRuleKey private Optional<String> resourceUnionPackage;
-  @AddToRuleKey private boolean shouldBuildStringSourceMap;
 
   private final ImmutableList<HasAndroidResourceDeps> resourceDeps;
   private FilteredResourcesProvider resourcesProvider;
@@ -62,7 +61,6 @@ public class GenerateRDotJava extends AbstractBuildRule {
       EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes,
       SourcePath pathToRDotTxtFile,
       Optional<String> resourceUnionPackage,
-      boolean shouldBuildStringSourceMap,
       ImmutableSortedSet<BuildRule> resourceDeps,
       FilteredResourcesProvider resourcesProvider) {
     super(buildTarget, projectFilesystem);
@@ -70,7 +68,6 @@ public class GenerateRDotJava extends AbstractBuildRule {
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.pathToRDotTxtFile = pathToRDotTxtFile;
     this.resourceUnionPackage = resourceUnionPackage;
-    this.shouldBuildStringSourceMap = shouldBuildStringSourceMap;
     this.allResourceDeps = resourceDeps;
     this.resourceDeps =
         resourceDeps
@@ -121,30 +118,6 @@ public class GenerateRDotJava extends AbstractBuildRule {
             resourceUnionPackage);
     steps.add(mergeStep);
 
-    if (shouldBuildStringSourceMap) {
-      // Make sure we have an output directory
-      Path outputDirPath = getPathForNativeStringInfoDirectory();
-
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(), getProjectFilesystem(), outputDirPath)));
-
-      // Add the step that parses R.txt and all the strings.xml files, and
-      // produces a JSON with android resource id's and xml paths for each string resource.
-      GenStringSourceMapStep genNativeStringInfo =
-          new GenStringSourceMapStep(
-              getProjectFilesystem(),
-              rDotTxtPath.getParent(),
-              resourcesProvider.getRelativeResDirectories(
-                  getProjectFilesystem(), buildContext.getSourcePathResolver()),
-              outputDirPath);
-      steps.add(genNativeStringInfo);
-
-      // Cache the generated strings.json file, it will be stored inside outputDirPath
-      buildableContext.recordArtifact(outputDirPath);
-    }
-
     // Ensure the generated R.txt and R.java files are also recorded.
     buildableContext.recordArtifact(rDotJavaSrc);
 
@@ -161,14 +134,8 @@ public class GenerateRDotJava extends AbstractBuildRule {
     return BuildTargets.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
   }
 
-  private Path getPathForNativeStringInfoDirectory() {
-    return BuildTargets.getScratchPath(
-        getProjectFilesystem(), getBuildTarget(), "__%s_string_source_map__");
-  }
-
   public SourcePath getSourcePathToGeneratedRDotJavaSrcFiles() {
-    return new ExplicitBuildTargetSourcePath(
-        getBuildTarget(), getPathToGeneratedRDotJavaSrcFiles());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToGeneratedRDotJavaSrcFiles());
   }
 
   @Nullable

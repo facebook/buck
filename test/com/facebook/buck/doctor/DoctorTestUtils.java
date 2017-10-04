@@ -18,13 +18,13 @@ package com.facebook.buck.doctor;
 
 import static com.facebook.buck.doctor.config.DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;

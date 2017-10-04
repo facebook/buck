@@ -54,11 +54,11 @@ public class SourceListTest {
             CELL_PATH_RESOLVER,
             PATTERN,
             SourceList.ofNamedSources(
-                ImmutableSortedMap.of("name", new DefaultBuildTargetSourcePath(target)))),
+                ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
             Optional.of(
                 SourceList.ofNamedSources(
-                    ImmutableSortedMap.of("name", new DefaultBuildTargetSourcePath(newTarget))))));
+                    ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(newTarget))))));
   }
 
   @Test
@@ -68,7 +68,7 @@ public class SourceListTest {
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     SourceList list =
         SourceList.ofNamedSources(
-            ImmutableSortedMap.of("name", new DefaultBuildTargetSourcePath(target)));
+            ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
         Matchers.equalTo(Optional.empty()));
@@ -86,11 +86,11 @@ public class SourceListTest {
             CELL_PATH_RESOLVER,
             PATTERN,
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(target)))),
+                ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)))),
         Matchers.equalTo(
             Optional.of(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(newTarget))))));
+                    ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(newTarget))))));
   }
 
   @Test
@@ -99,8 +99,7 @@ public class SourceListTest {
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     SourceList list =
-        SourceList.ofUnnamedSources(
-            ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(target)));
+        SourceList.ofUnnamedSources(ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
     assertThat(
         translator.translate(CELL_PATH_RESOLVER, PATTERN, list),
         Matchers.equalTo(Optional.empty()));

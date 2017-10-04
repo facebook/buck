@@ -16,15 +16,15 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.jvm.java.MaybeRequiredForSourceAbiArg;
+import com.facebook.buck.jvm.java.MaybeRequiredForSourceOnlyAbiArg;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -49,6 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import java.util.Collections;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -122,12 +123,12 @@ public class AndroidPrebuiltAarDescription
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
     if (HasJavaAbi.isClassAbiTarget(buildTarget)) {
-      return CalculateAbiFromClasses.of(
+      return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
           projectFilesystem,
           params,
-          new ExplicitBuildTargetSourcePath(
+          ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()));
     }
 
@@ -156,14 +157,14 @@ public class AndroidPrebuiltAarDescription
           projectFilesystem,
           /* params */ buildRuleParams,
           /* resolver */ pathResolver,
-          /* binaryJar */ new ExplicitBuildTargetSourcePath(
+          /* binaryJar */ ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()),
           /* sourceJar */ Optional.empty(),
           /* gwtJar */ Optional.empty(),
           /* javadocUrl */ Optional.empty(),
           /* mavenCoords */ Optional.empty(),
           /* provided */ false,
-          /* requiredForSourceAbi */ args.getRequiredForSourceAbi());
+          args.getRequiredForSourceOnlyAbi());
     }
 
     if (flavors.contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
@@ -191,7 +192,9 @@ public class AndroidPrebuiltAarDescription
 
     BuildRuleParams androidLibraryParams =
         params
-            .withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar))
+            .withDeclaredDeps(
+                ImmutableSortedSet.copyOf(
+                    Iterables.concat(javaDeps, Collections.singleton(prebuiltJar))))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
     return new AndroidPrebuiltAar(
         buildTarget,
@@ -199,9 +202,9 @@ public class AndroidPrebuiltAarDescription
         androidLibraryParams,
         /* resolver */ pathResolver,
         ruleFinder,
-        /* proguardConfig */ new ExplicitBuildTargetSourcePath(
+        /* proguardConfig */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getProguardConfig()),
-        /* nativeLibsDirectory */ new ExplicitBuildTargetSourcePath(
+        /* nativeLibsDirectory */ ExplicitBuildTargetSourcePath.of(
             unzipAar.getBuildTarget(), unzipAar.getNativeLibsDirectory()),
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
@@ -211,13 +214,13 @@ public class AndroidPrebuiltAarDescription
             AndroidClasspathFromContextFunction.INSTANCE),
         /* exportedDeps */ javaDeps,
         JavaLibraryRules.getAbiClasspath(buildRuleResolver, androidLibraryParams.getBuildDeps()),
-        args.getRequiredForSourceAbi());
+        args.getRequiredForSourceOnlyAbi());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAndroidPrebuiltAarDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceAbiArg {
+      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getAar();
 
     Optional<SourcePath> getSourceJar();
@@ -226,7 +229,7 @@ public class AndroidPrebuiltAarDescription
 
     @Override
     @Value.Default
-    default boolean getRequiredForSourceAbi() {
+    default boolean getRequiredForSourceOnlyAbi() {
       // Prebuilt jars are quick to build, and often contain third-party code, which in turn is
       // often a source of annotations and constants. To ease migration to ABI generation from
       // source without deps, we have them present during ABI gen by default.

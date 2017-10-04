@@ -248,7 +248,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new PrebuiltCxxLibraryGroupBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setStaticLink(ImmutableList.of("$(lib 0)"))
             .setStaticLibs(
-                ImmutableList.of(new DefaultBuildTargetSourcePath(cxxGenruleBuilder.getTarget())));
+                ImmutableList.of(DefaultBuildTargetSourcePath.of(cxxGenruleBuilder.getTarget())));
 
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(

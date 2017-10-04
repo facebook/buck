@@ -29,7 +29,8 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -62,7 +63,7 @@ public class AppleBinaryIntegrationTest {
   @Before
   public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -335,6 +336,35 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_library_dependency_with_swift_sources_builds_something", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    // Check binary contains statically linked Swift runtime
+    assertThat(
+        workspace.runCommand("nm", outputPath.toString()).getStdout().get(),
+        containsString("T _swift_retain"));
   }
 
   @Test

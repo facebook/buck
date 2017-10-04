@@ -80,7 +80,7 @@ public class JsLibraryDescriptionTest {
     final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
     final JsTestScenario scenario =
-        buildScenario(basePath, new DefaultBuildTargetSourcePath(target));
+        buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
 
     assertEquals(
         "arbitrary/path/base/path.js", findFileRule(scenario.resolver).getVirtualPath().get());
@@ -92,7 +92,7 @@ public class JsLibraryDescriptionTest {
     final BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
     final JsTestScenario scenario =
-        buildScenario(basePath, new DefaultBuildTargetSourcePath(target));
+        buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
 
     assertEquals("arbitrary/path.js", findFileRule(scenario.resolver).getVirtualPath().get());
   }
@@ -105,7 +105,7 @@ public class JsLibraryDescriptionTest {
     final JsTestScenario scenario =
         buildScenario(
             basePath,
-            new Pair<>(new DefaultBuildTargetSourcePath(target), "node_modules/left-pad/index.js"));
+            new Pair<>(DefaultBuildTargetSourcePath.of(target), "node_modules/left-pad/index.js"));
 
     assertEquals(
         "arbitrary/path/node_modules/left-pad/index.js",

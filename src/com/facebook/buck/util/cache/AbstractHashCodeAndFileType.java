@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -58,11 +57,11 @@ abstract class AbstractHashCodeAndFileType {
   }
 
   public static HashCodeAndFileType ofArchive(
-      HashCode hashCode, ProjectFilesystem projectFilesystem, Path archiveRelativePath) {
+      HashCode hashCode, JarContentHasher jarContentHasher) {
     return HashCodeAndFileType.builder()
         .setType(Type.ARCHIVE)
         .setGetHashCode(hashCode)
-        .setJarContentHasher(new JarContentHasher(projectFilesystem, archiveRelativePath))
+        .setJarContentHasher(jarContentHasher)
         .build();
   }
 
@@ -78,7 +77,7 @@ abstract class AbstractHashCodeAndFileType {
     return HashCodeAndFileType.builder().setType(Type.FILE).setGetHashCode(hashCode).build();
   }
 
-  enum Type {
+  public enum Type {
     ARCHIVE,
     FILE,
     DIRECTORY

@@ -20,8 +20,8 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerParameters;
@@ -44,7 +44,6 @@ import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -95,7 +94,6 @@ public class DummyRDotJavaTest {
         new DummyRDotJava(
             buildTarget,
             filesystem,
-            TestBuildRuleParams.create(),
             ruleFinder,
             ImmutableSet.of(
                 (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
@@ -193,7 +191,6 @@ public class DummyRDotJavaTest {
         new DummyRDotJava(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(

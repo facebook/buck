@@ -1,12 +1,18 @@
-standard_java_test(
-    name = "filesystem",
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        excludes = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/filesystem:skylark",
-        "//src/com/facebook/buck/util:util",
-        "//test/com/facebook/buck/testutil:testutil",
-        "//third-party/java/bazel:skylark-lang",
-        "//third-party/java/guava:guava",
-        "//third-party/java/junit:junit",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/util/config:config",
     ],
 )

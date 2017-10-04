@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.step.Step;
@@ -85,7 +85,7 @@ public class BuildableSupportTest {
       @Nullable
       @Override
       public SourcePath getSourcePathToOutput() {
-        return new ExplicitBuildTargetSourcePath(getBuildTarget(), Paths.get("whatever"));
+        return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("whatever"));
       }
     };
   }

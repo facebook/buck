@@ -25,7 +25,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;

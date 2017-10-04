@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -42,8 +42,8 @@ public class JavadocTest {
     Path javadocJar = workspace.buildAndReturnOutput("//:lib#doc");
 
     assertTrue(Files.exists(javadocJar));
-    try (Zip zip = new Zip(javadocJar, false)) {
-      Set<String> allFileNames = zip.getFileNames();
+    try (ZipArchive zipArchive = new ZipArchive(javadocJar, false)) {
+      Set<String> allFileNames = zipArchive.getFileNames();
 
       // Make sure we have an entry for a source file and an index.html
       assertTrue(allFileNames.contains("index.html"));
@@ -60,8 +60,8 @@ public class JavadocTest {
     Path javadocJar = workspace.buildAndReturnOutput("//:empty-lib#doc");
 
     assertTrue(Files.exists(javadocJar));
-    try (Zip zip = new Zip(javadocJar, false)) {
-      Set<String> allFileNames = zip.getFileNames();
+    try (ZipArchive zipArchive = new ZipArchive(javadocJar, false)) {
+      Set<String> allFileNames = zipArchive.getFileNames();
 
       // Make sure we have an entry for a source file and an index.html
       assertTrue(allFileNames.isEmpty());

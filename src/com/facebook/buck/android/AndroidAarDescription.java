@@ -21,8 +21,10 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -43,6 +45,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -78,14 +81,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
   private final CxxBuckConfig cxxBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacOptions javacOptions;
-  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
 
   public AndroidAarDescription(
       AndroidManifestDescription androidManifestDescription,
       CxxBuckConfig cxxBuckConfig,
       JavaBuckConfig javaBuckConfig,
       JavacOptions javacOptions,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms) {
+      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms) {
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
@@ -249,6 +252,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
+            ImmutableList.of(),
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
         packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();

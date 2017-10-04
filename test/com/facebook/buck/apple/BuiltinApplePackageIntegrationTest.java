@@ -22,7 +22,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -35,7 +37,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -58,7 +60,7 @@ public class BuiltinApplePackageIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   private static boolean isDirEmpty(final Path directory) throws IOException {
@@ -172,6 +174,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     Path destination = workspace.getDestPath();
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -202,6 +205,7 @@ public class BuiltinApplePackageIntegrationTest {
 
     Path destination = workspace.getDestPath();
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         destination,
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
@@ -224,6 +228,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
         workspace.getPath(BuildTargets.getGenPath(filesystem, packageTarget, "%s.ipa")),
         workspace.getDestPath(),
         Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);

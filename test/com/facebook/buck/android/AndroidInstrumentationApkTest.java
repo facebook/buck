@@ -20,9 +20,9 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
@@ -70,7 +70,7 @@ public class AndroidInstrumentationApkTest {
           @Override
           public ImmutableSet<SourcePath> getTransitiveClasspaths() {
             return ImmutableSet.of(
-                new DefaultBuildTargetSourcePath(javaLibrary1Target), getSourcePathToOutput());
+                DefaultBuildTargetSourcePath.of(javaLibrary1Target), getSourcePathToOutput());
           }
         };
 
@@ -84,7 +84,7 @@ public class AndroidInstrumentationApkTest {
           @Override
           public ImmutableSet<SourcePath> getTransitiveClasspaths() {
             return ImmutableSet.of(
-                new DefaultBuildTargetSourcePath(javaLibrary3Target), getSourcePathToOutput());
+                DefaultBuildTargetSourcePath.of(javaLibrary3Target), getSourcePathToOutput());
           }
         };
 

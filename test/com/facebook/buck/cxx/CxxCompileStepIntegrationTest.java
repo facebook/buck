@@ -23,14 +23,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -60,7 +61,7 @@ public class CxxCompileStepIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private void assertCompDir(Path compDir, Optional<String> failure) throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -134,7 +135,7 @@ public class CxxCompileStepIntegrationTest {
 
   @Test
   public void createsAnArgfile() throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 

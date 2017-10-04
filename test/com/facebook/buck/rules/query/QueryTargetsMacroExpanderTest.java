@@ -19,11 +19,11 @@ package com.facebook.buck.rules.query;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroMatchResult;
+import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;

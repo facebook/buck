@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 
 public class SingletonArtifactCacheFactory implements ArtifactCacheFactory {
   private final ArtifactCache artifactCache;

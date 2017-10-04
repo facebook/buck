@@ -23,10 +23,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.zip.Unzip;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -262,7 +263,10 @@ public class HgCmdLineInterfaceIntegrationTest {
 
     Path reposPath = destination.resolve(REPOS_DIR);
     Unzip.extractZipFile(
-        hgRepoZipCopyPath, reposPath, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        new DefaultProjectFilesystemFactory(),
+        hgRepoZipCopyPath,
+        reposPath,
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return reposPath;
   }

@@ -45,13 +45,18 @@ public class PrebuiltCxxLibraryBuilder
     this(target, CxxTestUtils.createDefaultPlatforms());
   }
 
-  public PrebuiltCxxLibraryBuilder setIncludeDirs(ImmutableList<String> includeDirs) {
-    getArgForPopulating().setIncludeDirs(includeDirs);
+  public PrebuiltCxxLibraryBuilder setHeaderDirs(ImmutableList<SourcePath> headerDirs) {
+    getArgForPopulating().setHeaderDirs(headerDirs);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setSharedLib(SourcePath lib) {
     getArgForPopulating().setSharedLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPlatformSharedLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformSharedLib(lib);
     return this;
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.Dot;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
@@ -182,7 +183,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                 ActionGraphCache.getFreshActionGraph(
                     params.getBuckEventBus(),
                     targetGraph,
-                    params.getBuckConfig().isActionGraphParallelizationEnabled()))
+                    params.getBuckConfig().getActionGraphParallelizationMode()))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
@@ -223,7 +224,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                 ActionGraphCache.getFreshActionGraph(
                     params.getBuckEventBus(),
                     targetGraph,
-                    params.getBuckConfig().isActionGraphParallelizationEnabled()))
+                    params.getBuckConfig().getActionGraphParallelizationMode()))
             .getResolver();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));

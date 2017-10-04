@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;

@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -320,7 +320,7 @@ public class OcamlRuleBuilder {
               .transform(pathResolver::getAbsolutePath)
               .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
               .transform(ocamlContext::getCOutput)
-              .transform(input -> new ExplicitBuildTargetSourcePath(compileBuildTarget, input))
+              .transform(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))
               .toList(),
           ocamlContext,
           ocamlLibraryBuild,

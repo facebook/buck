@@ -66,6 +66,8 @@ public class AndroidBinaryDescriptionTest {
         AndroidBinaryBuilder.createBuilder(target)
             .setManifest(new FakeSourcePath("manifest.xml"))
             .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
+            // Force no predexing.
+            .setPreprocessJavaClassesBash("cp")
             .setNoDx(ImmutableSet.of(transitiveDepNode.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(depNode.getBuildTarget()))
             .build();

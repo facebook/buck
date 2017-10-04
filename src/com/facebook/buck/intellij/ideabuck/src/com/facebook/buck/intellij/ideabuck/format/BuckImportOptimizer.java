@@ -38,11 +38,6 @@ public class BuckImportOptimizer implements ImportOptimizer {
         .getMessageBus()
         .syncPublisher(IntellijBuckAction.EVENT)
         .consume(this.getClass().toString());
-    return new Runnable() {
-      @Override
-      public void run() {
-        DependenciesOptimizer.optimzeDeps(psiFile);
-      }
-    };
+    return new DependenciesOptimizer.OptimizerInstance(psiFile);
   }
 }

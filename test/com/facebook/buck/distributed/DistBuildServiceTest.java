@@ -31,6 +31,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
@@ -50,7 +51,6 @@ import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveEventsResponse;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
 import com.facebook.buck.distributed.thrift.SetCoordinatorResponse;
@@ -60,7 +60,7 @@ import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsResponse;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusResponse;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -379,8 +379,8 @@ public class DistBuildServiceTest {
 
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId("super");
-    RunId runId = new RunId();
-    runId.setId("duper");
+    BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    buildSlaveRunId.setId("duper");
 
     ImmutableList<BuildSlaveConsoleEvent> consoleEvents =
         ImmutableList.of(
@@ -418,7 +418,7 @@ public class DistBuildServiceTest {
                       .collect(Collectors.toList());
 
               BuildSlaveEventsQuery query =
-                  distBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 2);
+                  distBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 2);
               BuildSlaveEventsRange eventsRange = new BuildSlaveEventsRange();
               eventsRange.setSuccess(true);
               eventsRange.setQuery(query);
@@ -436,9 +436,9 @@ public class DistBuildServiceTest {
         .once();
     EasyMock.replay(frontendService);
 
-    distBuildService.uploadBuildSlaveConsoleEvents(stampedeId, runId, consoleEvents);
+    distBuildService.uploadBuildSlaveConsoleEvents(stampedeId, buildSlaveRunId, consoleEvents);
     BuildSlaveEventsQuery query =
-        distBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 2);
+        distBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 2);
     List<Pair<Integer, BuildSlaveEvent>> events =
         distBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query));
 
@@ -453,7 +453,7 @@ public class DistBuildServiceTest {
       BuildSlaveEvent event = buildSlaveEvents.get(i);
       Assert.assertEquals(event.getEventType(), BuildSlaveEventType.CONSOLE_EVENT);
       Assert.assertEquals(event.getStampedeId(), stampedeId);
-      Assert.assertEquals(event.getRunId(), runId);
+      Assert.assertEquals(event.getBuildSlaveRunId(), buildSlaveRunId);
       Assert.assertEquals(event.getConsoleEvent(), consoleEvents.get(i));
     }
 
@@ -467,8 +467,8 @@ public class DistBuildServiceTest {
         receivedRequest.getAppendBuildSlaveEventsRequest();
     Assert.assertTrue(appendRequest.isSetStampedeId());
     Assert.assertEquals(appendRequest.getStampedeId(), stampedeId);
-    Assert.assertTrue(appendRequest.isSetRunId());
-    Assert.assertEquals(appendRequest.getRunId(), runId);
+    Assert.assertTrue(appendRequest.isSetBuildSlaveRunId());
+    Assert.assertEquals(appendRequest.getBuildSlaveRunId(), buildSlaveRunId);
     Assert.assertTrue(appendRequest.isSetEvents());
     Assert.assertEquals(appendRequest.getEvents().size(), 3);
 
@@ -487,8 +487,8 @@ public class DistBuildServiceTest {
     BuildSlaveEventsQuery receivedQuery = eventsRequest.getRequests().get(0);
     Assert.assertTrue(receivedQuery.isSetStampedeId());
     Assert.assertEquals(receivedQuery.getStampedeId(), stampedeId);
-    Assert.assertTrue(receivedQuery.isSetRunId());
-    Assert.assertEquals(receivedQuery.getRunId(), runId);
+    Assert.assertTrue(receivedQuery.isSetBuildSlaveRunId());
+    Assert.assertEquals(receivedQuery.getBuildSlaveRunId(), buildSlaveRunId);
     Assert.assertTrue(receivedQuery.isSetFirstEventNumber());
     Assert.assertEquals(receivedQuery.getFirstEventNumber(), 2);
   }
@@ -501,12 +501,12 @@ public class DistBuildServiceTest {
 
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId("super");
-    RunId runId = new RunId();
-    runId.setId("duper");
+    BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    buildSlaveRunId.setId("duper");
 
     BuildSlaveStatus slaveStatus = new BuildSlaveStatus();
     slaveStatus.setStampedeId(stampedeId);
-    slaveStatus.setRunId(runId);
+    slaveStatus.setBuildSlaveRunId(buildSlaveRunId);
     slaveStatus.setTotalRulesCount(123);
 
     Capture<FrontendRequest> request1 = EasyMock.newCapture();
@@ -535,9 +535,9 @@ public class DistBuildServiceTest {
         .once();
     EasyMock.replay(frontendService);
 
-    distBuildService.updateBuildSlaveStatus(stampedeId, runId, slaveStatus);
+    distBuildService.updateBuildSlaveStatus(stampedeId, buildSlaveRunId, slaveStatus);
     BuildSlaveStatus receivedStatus =
-        distBuildService.fetchBuildSlaveStatus(stampedeId, runId).get();
+        distBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunId).get();
     Assert.assertEquals(receivedStatus, slaveStatus);
 
     // Verify validity of first request.
@@ -550,8 +550,8 @@ public class DistBuildServiceTest {
         receivedRequest.getUpdateBuildSlaveStatusRequest();
     Assert.assertTrue(updateRequest.isSetStampedeId());
     Assert.assertEquals(updateRequest.getStampedeId(), stampedeId);
-    Assert.assertTrue(updateRequest.isSetRunId());
-    Assert.assertEquals(updateRequest.getRunId(), runId);
+    Assert.assertTrue(updateRequest.isSetBuildSlaveRunId());
+    Assert.assertEquals(updateRequest.getBuildSlaveRunId(), buildSlaveRunId);
     Assert.assertTrue(updateRequest.isSetBuildSlaveStatus());
 
     // Verify validity of second request.
@@ -563,8 +563,8 @@ public class DistBuildServiceTest {
     FetchBuildSlaveStatusRequest statusRequest = receivedRequest.getFetchBuildSlaveStatusRequest();
     Assert.assertTrue(statusRequest.isSetStampedeId());
     Assert.assertEquals(statusRequest.getStampedeId(), stampedeId);
-    Assert.assertTrue(statusRequest.isSetRunId());
-    Assert.assertEquals(statusRequest.getRunId(), runId);
+    Assert.assertTrue(statusRequest.isSetBuildSlaveRunId());
+    Assert.assertEquals(statusRequest.getBuildSlaveRunId(), buildSlaveRunId);
   }
 
   @Test
@@ -575,13 +575,13 @@ public class DistBuildServiceTest {
 
     StampedeId stampedeId = new StampedeId();
     stampedeId.setId("super");
-    RunId runId = new RunId();
+    BuildSlaveRunId runId = new BuildSlaveRunId();
     runId.setId("duper");
 
     BuildSlaveFinishedStats slaveFinishedStats = new BuildSlaveFinishedStats();
     BuildSlaveStatus slaveStatus = new BuildSlaveStatus();
     slaveStatus.setStampedeId(stampedeId);
-    slaveStatus.setRunId(runId);
+    slaveStatus.setBuildSlaveRunId(runId);
     slaveStatus.setTotalRulesCount(123);
     slaveFinishedStats.setBuildSlaveStatus(slaveStatus);
     slaveFinishedStats.setExitCode(42);
@@ -632,8 +632,8 @@ public class DistBuildServiceTest {
         receivedRequest.getStoreBuildSlaveFinishedStatsRequest();
     Assert.assertTrue(storeRequest.isSetStampedeId());
     Assert.assertEquals(storeRequest.getStampedeId(), stampedeId);
-    Assert.assertTrue(storeRequest.isSetRunId());
-    Assert.assertEquals(storeRequest.getRunId(), runId);
+    Assert.assertTrue(storeRequest.isSetBuildSlaveRunId());
+    Assert.assertEquals(storeRequest.getBuildSlaveRunId(), runId);
     Assert.assertTrue(storeRequest.isSetBuildSlaveFinishedStats());
 
     // Verify validity of second request.
@@ -647,8 +647,8 @@ public class DistBuildServiceTest {
         receivedRequest.getFetchBuildSlaveFinishedStatsRequest();
     Assert.assertTrue(statsRequest.isSetStampedeId());
     Assert.assertEquals(statsRequest.getStampedeId(), stampedeId);
-    Assert.assertTrue(statsRequest.isSetRunId());
-    Assert.assertEquals(statsRequest.getRunId(), runId);
+    Assert.assertTrue(statsRequest.isSetBuildSlaveRunId());
+    Assert.assertEquals(statsRequest.getBuildSlaveRunId(), runId);
   }
 
   @Test

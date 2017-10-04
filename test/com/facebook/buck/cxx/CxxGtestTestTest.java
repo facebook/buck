@@ -19,7 +19,8 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -73,7 +74,7 @@ public class CxxGtestTestTest {
             "simple_disabled");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     BuildRuleResolver ruleResolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

@@ -16,11 +16,10 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.config.Config;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
-import com.facebook.buck.io.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
@@ -52,11 +51,9 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private final boolean disableSha1FastPath;
 
-  public EdenProjectFilesystemDelegate(EdenMount mount, Config config) {
-    this(
-        mount,
-        new DefaultProjectFilesystemDelegate(mount.getProjectRoot()),
-        config.getBooleanValue("eden", BUCKCONFIG_DISABLE_SHA1_FAST_PATH, false));
+  public EdenProjectFilesystemDelegate(
+      EdenMount mount, ProjectFilesystemDelegate delegate, Config config) {
+    this(mount, delegate, config.getBooleanValue("eden", BUCKCONFIG_DISABLE_SHA1_FAST_PATH, false));
   }
 
   @VisibleForTesting

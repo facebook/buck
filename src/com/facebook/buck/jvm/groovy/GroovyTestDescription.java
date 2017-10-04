@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -27,7 +27,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -91,23 +91,21 @@ public class GroovyTestDescription
         JavacOptionsFactory.create(
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        new DefaultGroovyLibraryBuilder(
-                targetGraph,
-                buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
-                projectFilesystem,
-                params,
-                resolver,
-                cellRoots,
-                javacOptions,
-                groovyBuckConfig)
-            .setArgs(args);
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
+        DefaultGroovyLibraryBuilder.newInstance(
+            buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
+            projectFilesystem,
+            params,
+            resolver,
+            javacOptions,
+            groovyBuckConfig,
+            args);
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
-      return defaultJavaLibraryBuilder.buildAbi();
+      return defaultJavaLibraryRules.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);

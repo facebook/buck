@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -61,7 +61,7 @@ public final class DefaultInputPathResolver implements InputPathResolver {
 
   private SourcePath extract(SourcePath path) {
     Preconditions.checkArgument(path instanceof LimitedSourcePath, "Expected LimitedSourcePath");
-    return ((LimitedSourcePath) path).sourcePath;
+    return ((LimitedSourcePath) path).getLimitedSourcePath();
   }
 
   @Override

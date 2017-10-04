@@ -17,7 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.LoggingJarBuilderObserver;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
@@ -41,7 +42,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.zip.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -145,7 +146,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             }
 
             if (dirDoesNotExistOrIsEmpty) {
-              filesystem.copy(classesJar, uberClassesJar, ProjectFilesystem.CopySourceMode.FILE);
+              filesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
             } else {
               // Glob all of the contents from classes.jar and the entries in libs/ into a single JAR.
               ImmutableSortedSet.Builder<Path> entriesToJarBuilder =
@@ -220,7 +221,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsDir);
   }
 
   Path getPathToClassesJar() {
@@ -228,7 +229,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   SourcePath getResDirectory() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("res"));
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory.resolve("res"));
   }
 
   String getRDotJavaPackage() {
@@ -240,7 +241,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   SourcePath getAssetsDirectory() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), unpackDirectory.resolve("assets"));
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory.resolve("assets"));
   }
 
   Path getAndroidManifest() {

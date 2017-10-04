@@ -17,22 +17,21 @@
 package com.facebook.buck.android;
 
 import com.android.common.SdkConstants;
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -122,7 +121,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToNativeLibsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToNativeLibsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToNativeLibsDir());
   }
 
   public Path getPathToNativeLibsAssetsDir() {
@@ -130,7 +129,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToNativeLibsAssetsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToNativeLibsAssetsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToNativeLibsAssetsDir());
   }
 
   /**
@@ -142,7 +141,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToAllLibsDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToAllLibsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToAllLibsDir());
   }
 
   public Path getPathToMetadataTxt() {
@@ -150,7 +149,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToMetadataTxt() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToMetadataTxt());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToMetadataTxt());
   }
 
   private Path getBinPath() {
@@ -398,20 +397,16 @@ public class CopyNativeLibraries extends AbstractBuildRule {
 
   @Value.Immutable
   @BuckStyleImmutable
-  abstract static class AbstractStrippedObjectDescription implements RuleKeyAppendable {
+  abstract static class AbstractStrippedObjectDescription implements AddsToRuleKey {
+    @AddToRuleKey
     public abstract SourcePath getSourcePath();
 
+    @AddToRuleKey
     public abstract String getStrippedObjectName();
 
+    @AddToRuleKey
     public abstract TargetCpuType getTargetCpuType();
 
     public abstract APKModule getApkModule();
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("sourcePath", getSourcePath())
-          .setReflectively("strippedObjectName", getStrippedObjectName())
-          .setReflectively("targetCpuType", getTargetCpuType());
-    }
   }
 }

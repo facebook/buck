@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.CalculateAbiFromClasses;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -31,7 +31,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -54,7 +54,9 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import java.util.Collections;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -110,7 +112,7 @@ public class RobolectricTestDescription
           !buildTarget.getFlavors().contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
       BuildTarget testTarget = HasJavaAbi.getLibraryTarget(buildTarget);
       BuildRule testRule = resolver.requireRule(testTarget);
-      return CalculateAbiFromClasses.of(
+      return CalculateClassAbi.of(
           buildTarget,
           ruleFinder,
           projectFilesystem,
@@ -125,7 +127,9 @@ public class RobolectricTestDescription
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             projectFilesystem,
-            params.withExtraDeps(resolver.getAllRules(args.getExportedDeps())),
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    params.getBuildDeps(), resolver.getAllRules(args.getExportedDeps()))),
             JavacFactory.create(ruleFinder, javaBuckConfig, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
@@ -138,6 +142,7 @@ public class RobolectricTestDescription
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(resolver, /* createBuildableIfEmpty */ true);
+    RobolectricTestDescriptionArg testLibraryArgs = args;
 
     if (dummyRDotJava.isPresent()) {
       ImmutableSortedSet<BuildRule> newDeclaredDeps =
@@ -146,6 +151,10 @@ public class RobolectricTestDescription
               .add(dummyRDotJava.get())
               .build();
       params = params.withDeclaredDeps(newDeclaredDeps);
+      testLibraryArgs =
+          testLibraryArgs.withDeps(
+              Iterables.concat(
+                  args.getDeps(), Collections.singletonList(dummyRDotJava.get().getBuildTarget())));
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
@@ -165,24 +174,18 @@ public class RobolectricTestDescription
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
-            DefaultJavaLibrary.builder(
-                    targetGraph,
+            DefaultJavaLibrary.rulesBuilder(
                     testLibraryBuildTarget,
                     projectFilesystem,
                     params,
                     resolver,
-                    cellRoots,
-                    javaBuckConfig)
-                .setArgs(args)
-                .setConfiguredCompiler(
-                    compilerFactory
-                        .getCompiler(
-                            args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA))
-                        .configure(args, Preconditions.checkNotNull(javacOptions), resolver))
+                    compilerFactory.getCompiler(
+                        args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA)),
+                    javaBuckConfig,
+                    testLibraryArgs)
                 .setJavacOptions(javacOptions)
-                .setExtraClasspathFromContextFunction(AndroidClasspathFromContextFunction.INSTANCE)
-                .setTrackClassUsage(javacOptions.trackClassUsage())
-                .build());
+                .build()
+                .buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
@@ -208,7 +211,10 @@ public class RobolectricTestDescription
         args.getStdErrLogLevel(),
         args.getUnbundledResourcesRoot(),
         args.getRobolectricRuntimeDependency(),
-        args.getRobolectricManifest());
+        args.getRobolectricManifest(),
+        javaBuckConfig
+            .getDelegate()
+            .getBooleanValue("test", "pass_robolectric_directories_in_file", false));
   }
 
   @Override

@@ -17,7 +17,7 @@
 package com.facebook.buck.haskell;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -34,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -116,6 +117,11 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               }
 
               @Override
+              protected boolean shouldPrintStderr(Verbosity verbosity) {
+                return !verbosity.isSilent();
+              }
+
+              @Override
               public String getShortName() {
                 return "haskell-link";
               }
@@ -125,7 +131,7 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getOutput());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutput());
   }
 
   @Override

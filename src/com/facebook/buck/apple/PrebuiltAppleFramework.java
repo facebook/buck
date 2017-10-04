@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -34,7 +34,6 @@ import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -68,8 +67,6 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   @AddToRuleKey private final NativeLinkable.Linkage preferredLinkage;
 
-  private final BuildRuleResolver ruleResolver;
-
   @AddToRuleKey private final SourcePath frameworkPath;
   private final String frameworkName;
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
@@ -87,7 +84,6 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePath frameworkPath,
       Linkage preferredLinkage,
@@ -96,7 +92,6 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags) {
     super(buildTarget, projectFilesystem, params);
     this.frameworkPath = frameworkPath;
-    this.ruleResolver = ruleResolver;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.preferredLinkage = preferredLinkage;
     this.frameworks = frameworks;
@@ -140,7 +135,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), out);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), out);
   }
 
   @Override
@@ -162,8 +157,6 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
     if (isPlatformSupported(cxxPlatform)) {
       builder.addAllFrameworks(frameworks);
-
-      ruleResolver.requireRule(this.getBuildTarget());
       builder.addFrameworks(FrameworkPath.ofSourcePath(getSourcePathToOutput()));
     }
     return builder.build();

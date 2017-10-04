@@ -128,10 +128,10 @@ public class DiffRuleKeysScriptIntegrationTest {
             .join(
                 "Change details for "
                     + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
-                "  (sourceLevel):",
+                "  (getSourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
-                "  (targetLevel):",
+                "  (getTargetLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
                 "");
@@ -193,12 +193,10 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_2]",
-            "  (buck.declaredDeps):",
+            "  (buck.deps):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
-            "  (buck.extraDeps):",
-            "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
             "Change details for [//:java_lib_2->jarBuildStepsFactory]",
             "  (abiClasspath):",
@@ -221,23 +219,23 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     assertThat(
         runRuleKeyDiffer(workspace, ""),
-        Matchers.stringContainsInOrder(
+        Matchers.containsString(
             // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
             // rather than the change in the srcs property of that class is a bug in the differ.
-            "Change details for [//:java_lib_all]",
-            "  (jarBuildStepsFactory):",
-            "    -[ruleKey(sha1=13dfb2658947338dcbe681db5be9e5250b097efe)]",
-            "    +[ruleKey(sha1=cabad27e43d8139538f731d59792c9f067918c5c)]",
-            "Change details for [//:java_lib_2->jarBuildStepsFactory]",
-            "  (srcs):",
-            "    -[<missing>]",
-            "    -[container(LIST,len=1)]",
-            "    +[container(LIST,len=2)]",
-            "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
-            "Change details for [//:java_lib_1->jarBuildStepsFactory]",
-            "  (srcs):",
-            "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]",
-            "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"));
+            "Change details for [//:java_lib_all]\n"
+                + "  (jarBuildStepsFactory):\n"
+                + "    -[ruleKey(sha1=81137bf11dcfe668ee7ab18c0c9534b140cf543c)]\n"
+                + "    +[ruleKey(sha1=0585c2fc84b9ef2d759f244640aa8ca6c3bb1213)]\n"
+                + "Change details for [//:java_lib_2->jarBuildStepsFactory]\n"
+                + "  (srcs):\n"
+                + "    -[<missing>]\n"
+                + "    -[container(LIST,len=1)]\n"
+                + "    +[container(LIST,len=2)]\n"
+                + "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n"
+                + "Change details for [//:java_lib_1->jarBuildStepsFactory]\n"
+                + "  (srcs):\n"
+                + "    -[path(JavaLib1.java:e3506ff7c11f638458d08120d54f186dc79ddada)]\n"
+                + "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]"));
   }
 
   private void writeBuckConfig(ProjectWorkspace projectWorkspace, String javaVersion)

@@ -31,15 +31,20 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.config.ConfigBuilder;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
+import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.config.ActionGraphParallelizationMode;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.WatchmanOverflowEvent;
+import com.facebook.buck.io.WatchmanPathEvent;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -66,8 +71,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.WatchmanOverflowEvent;
-import com.facebook.buck.util.WatchmanPathEvent;
+import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -198,7 +202,8 @@ public class ParserTest {
     // Create a temp directory with some build files.
     Path root = tempDir.getRoot().toRealPath();
     filesystem =
-        new ProjectFilesystem(root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
+        TestProjectFilesystems.createProjectFilesystem(
+            root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
     cellRoot = filesystem.getRootPath();
     eventBus = BuckEventBusForTests.newInstance();
 
@@ -1109,7 +1114,7 @@ public class ParserTest {
 
     Path newTempDir = Files.createTempDirectory("junit-temp-path").toRealPath();
     Files.createFile(newTempDir.resolve("bar.py"));
-    ProjectFilesystem newFilesystem = new ProjectFilesystem(newTempDir);
+    ProjectFilesystem newFilesystem = TestProjectFilesystems.createProjectFilesystem(newTempDir);
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(newFilesystem)
@@ -1781,6 +1786,7 @@ public class ParserTest {
   public void defaultFlavorsInRuleArgsAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     Path buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent());
@@ -1821,6 +1827,7 @@ public class ParserTest {
   public void defaultFlavorsInConfigAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
     assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     Path buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent());
@@ -2206,7 +2213,8 @@ public class ParserTest {
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {
     return Preconditions.checkNotNull(
-            ActionGraphCache.getFreshActionGraph(eventBus, targetGraph, false))
+            ActionGraphCache.getFreshActionGraph(
+                eventBus, targetGraph, ActionGraphParallelizationMode.DISABLED))
         .getResolver();
   }
 

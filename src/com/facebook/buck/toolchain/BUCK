@@ -1,0 +1,12 @@
+java_library(
+    name = "toolchain",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)

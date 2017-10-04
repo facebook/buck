@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -49,6 +49,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Path outputPath;
   private final JarContentsSupplier outputPathContentsSupplier;
+  private final BuildOutputInitializer<Object> buildOutputInitializer;
 
   public CompareAbis(
       BuildTarget buildTarget,
@@ -68,6 +69,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .resolve(String.format("%s-abi.jar", getBuildTarget().getShortName()));
 
     outputPathContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
+    buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
   }
 
   @Override
@@ -90,7 +92,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
 
   @Override
@@ -101,7 +103,7 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
-    return new BuildOutputInitializer<>(getBuildTarget(), this);
+    return buildOutputInitializer;
   }
 
   @Override

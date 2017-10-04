@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.parser;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;

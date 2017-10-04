@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.aapt;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.xml.DocumentLocation;
 import java.io.IOException;
 import java.nio.file.Path;

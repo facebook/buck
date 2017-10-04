@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -113,6 +113,7 @@ public class JavacStep implements Step {
               firstOrderContext.getCellPathResolver(),
               firstOrderContext.getJavaPackageFinder(),
               filesystem,
+              context.getProjectFilesystemFactory(),
               usedClassesFileWriter,
               firstOrderContext.getEnvironment(),
               firstOrderContext.getProcessExecutor(),
@@ -140,8 +141,8 @@ public class JavacStep implements Step {
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
-                  javacOptions.getCompilationMode(),
-                  compilerParameters.ruleIsRequiredForSourceAbi())) {
+                  javacOptions.getAbiGenerationMode(),
+                  compilerParameters.ruleIsRequiredForSourceOnlyAbi())) {
         if (abiJar != null) {
           declaredDepsBuildResult =
               invocation.buildSourceAbiJar(
@@ -222,7 +223,7 @@ public class JavacStep implements Step {
   public String getShortName() {
     String name;
     if (abiJar != null) {
-      name = "calculate_abi_from_source";
+      name = "source_abi";
     } else if (jarParameters.isPresent()) {
       name = "javac_jar";
     } else {

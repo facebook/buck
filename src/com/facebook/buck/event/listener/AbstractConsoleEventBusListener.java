@@ -107,6 +107,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final Locale locale;
   private final boolean showTextInAllCaps;
   private final int numberOfSlowRulesToShow;
+  private final boolean showSlowRulesInConsole;
   private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
 
   protected ConcurrentHashMap<EventKey, EventPair> autoSparseState;
@@ -175,13 +176,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Locale locale,
       ExecutionEnvironment executionEnvironment,
       boolean showTextInAllCaps,
-      int numberOfSlowRulesToShow) {
+      int numberOfSlowRulesToShow,
+      boolean showSlowRulesInConsole) {
     this.console = console;
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
     this.showTextInAllCaps = showTextInAllCaps;
     this.numberOfSlowRulesToShow = numberOfSlowRulesToShow;
+    this.showSlowRulesInConsole = showSlowRulesInConsole;
     this.timeSpentMillisecondsInRules = new HashMap<>();
 
     this.projectBuildFileParseStarted = null;
@@ -930,23 +933,29 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
           }
         };
 
-    lines.add(String.format(""));
+    ImmutableList.Builder<String> slowRulesLogsBuilder = ImmutableList.builder();
+    slowRulesLogsBuilder.add(String.format(""));
     synchronized (timeSpentMillisecondsInRules) {
       if (timeSpentMillisecondsInRules.size() == 0) {
-        lines.add(String.format("Top slow rules: Buck didn't spend time in rules."));
+        slowRulesLogsBuilder.add(String.format("Top slow rules: Buck didn't spend time in rules."));
       } else {
-        lines.add(String.format("Top slow rules"));
+        slowRulesLogsBuilder.add(String.format("Top slow rules"));
         Stream<UnflavoredBuildTarget> keys =
             timeSpentMillisecondsInRules.keySet().stream().sorted(comparator);
         keys.limit(numberOfSlowRulesToShow)
             .forEachOrdered(
                 target -> {
-                  lines.add(
+                  slowRulesLogsBuilder.add(
                       String.format(
                           "    %s: %s",
                           target, formatElapsedTime(timeSpentMillisecondsInRules.get(target))));
                 });
       }
+    }
+    ImmutableList<String> slowRulesLogs = slowRulesLogsBuilder.build();
+    LOG.info(String.join("\n", slowRulesLogs));
+    if (showSlowRulesInConsole) {
+      lines.addAll(slowRulesLogs);
     }
   }
 

@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -30,7 +30,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -172,7 +172,7 @@ public class PackageStringAssets extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToStringAssetsDir());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToStringAssetsDir());
   }
 
   private Path getPathToStringAssetsDir() {
@@ -181,6 +181,6 @@ public class PackageStringAssets extends AbstractBuildRule {
   }
 
   public SourcePath getSourcePathToStringAssetsZip() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPathToStringAssetsZip());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToStringAssetsZip());
   }
 }

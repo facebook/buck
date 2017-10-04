@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;

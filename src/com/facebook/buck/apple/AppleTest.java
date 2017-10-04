@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
@@ -46,6 +46,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -488,11 +489,15 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
-        getBuildTarget(), testBundle.getSourcePathToOutput());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), testBundle.getSourcePathToOutput());
   }
 
   public boolean isUiTest() {
     return isUiTest;
+  }
+
+  @VisibleForTesting
+  public boolean hasTestHost() {
+    return testHostApp.isPresent();
   }
 }

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -194,7 +194,7 @@ public class FieldTypeInfosTest {
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
-    BuildTargetSourcePath sourcePath = new ExplicitBuildTargetSourcePath(target, Paths.get("path"));
+    BuildTargetSourcePath sourcePath = ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
 
     InputPath value = new InputPath(sourcePath);
     EasyMock.expect(inputRuleResolver.resolve(value)).andReturn(Optional.of(rule));
@@ -215,7 +215,7 @@ public class FieldTypeInfosTest {
 
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
-    BuildTargetSourcePath sourcePath = new ExplicitBuildTargetSourcePath(target, Paths.get("path"));
+    BuildTargetSourcePath sourcePath = ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
 
     InputPath inputPath = new InputPath(sourcePath);
     Optional<InputPath> value = Optional.of(inputPath);
@@ -252,7 +252,7 @@ public class FieldTypeInfosTest {
     BuildTarget target = BuildTarget.of(Paths.get("some"), "//some", "name");
     BuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
     BuildTargetSourcePath targetSourcePath =
-        new ExplicitBuildTargetSourcePath(target, Paths.get("path"));
+        ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
     InputPath targetInputPath = new InputPath(targetSourcePath);
 
     PathSourcePath pathSourcePath = new PathSourcePath(filesystem, Paths.get("path"));

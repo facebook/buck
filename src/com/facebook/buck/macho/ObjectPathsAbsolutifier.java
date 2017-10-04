@@ -18,7 +18,7 @@ package com.facebook.buck.macho;
 import com.facebook.buck.bsd.UnixArchive;
 import com.facebook.buck.bsd.UnixArchiveEntry;
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Preconditions;

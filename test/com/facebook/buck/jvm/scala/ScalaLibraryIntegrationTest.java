@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeNoException;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;

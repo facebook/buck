@@ -22,12 +22,12 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.model.MacroMatchResult;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.MacroMatchResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -297,6 +297,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
         // Otherwise, header only libs use any linkage.
         return Linkage.ANY;
+      }
+
+      @Override
+      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+        return getPreferredLinkage(cxxPlatform) != Linkage.SHARED;
       }
 
       @Override

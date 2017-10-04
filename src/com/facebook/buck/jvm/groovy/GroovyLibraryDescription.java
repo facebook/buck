@@ -16,7 +16,8 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -62,27 +63,19 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
-    DefaultGroovyLibraryBuilder defaultGroovyLibraryBuilder =
-        new DefaultGroovyLibraryBuilder(
-                targetGraph,
-                buildTarget,
-                projectFilesystem,
-                params,
-                resolver,
-                cellRoots,
-                javacOptions,
-                groovyBuckConfig)
-            .setArgs(args);
+    DefaultJavaLibraryRules defaultGroovyLibraryBuilder =
+        DefaultGroovyLibraryBuilder.newInstance(
+            buildTarget, projectFilesystem, params, resolver, javacOptions, groovyBuckConfig, args);
 
     return HasJavaAbi.isAbiTarget(buildTarget)
         ? defaultGroovyLibraryBuilder.buildAbi()
-        : defaultGroovyLibraryBuilder.build();
+        : defaultGroovyLibraryBuilder.buildLibrary();
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
     // Groovyc may not play nice with this, so turning it off
     @Override
-    default Optional<Boolean> getGenerateAbiFromSource() {
+    default Optional<Boolean> getGenerateSourceOnlyAbi() {
       return Optional.of(false);
     }
 

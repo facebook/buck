@@ -16,15 +16,14 @@
 
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
@@ -35,6 +34,8 @@ import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
@@ -98,7 +99,8 @@ public class DistBuildState {
       BuildJobState jobState,
       Cell rootCell,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      SdkEnvironment sdkEnvironment)
+      SdkEnvironment sdkEnvironment,
+      ProjectFilesystemFactory projectFilesystemFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
@@ -120,7 +122,8 @@ public class DistBuildState {
       Files.createDirectories(cellRoot);
 
       Config config = createConfigFromRemoteAndOverride(remoteCell.getConfig(), localBuckConfig);
-      ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
+      ProjectFilesystem projectFilesystem =
+          projectFilesystemFactory.createProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig =
           createBuckConfigFromRawConfigAndEnv(
               config, projectFilesystem, ImmutableMap.copyOf(localBuckConfig.getEnvironment()));
@@ -178,7 +181,7 @@ public class DistBuildState {
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
+        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), rawConfig));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

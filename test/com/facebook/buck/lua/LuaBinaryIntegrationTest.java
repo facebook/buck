@@ -22,10 +22,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -33,7 +31,7 @@ import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -50,6 +48,8 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -322,11 +322,11 @@ public class LuaBinaryIntegrationTest {
     BuckConfig buckConfig =
         new BuckConfig(
             rawConfig,
-            new ProjectFilesystem(tmp.getRoot()),
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             Architecture.detect(),
             Platform.detect(),
             ImmutableMap.of(),
-            new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
+            DefaultCellPathResolver.of(tmp.getRoot(), rawConfig));
     return new LuaBuckConfig(buckConfig, new FakeExecutableFinder(ImmutableList.of()));
   }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.zip.DeterministicZipBuilder;
+import com.facebook.buck.util.zip.DeterministicZipBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;

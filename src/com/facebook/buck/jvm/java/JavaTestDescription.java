@@ -20,9 +20,11 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -68,24 +70,31 @@ public class JavaTestDescription
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
-  private final CxxPlatform cxxPlatform;
+  private final CxxPlatform defaultCxxPlatform;
+  private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
   public JavaTestDescription(
       JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
-      JavacOptions templateOptions,
+      JavacOptions templateJavacOptions,
       Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
-    this.templateJavacOptions = templateOptions;
+    this.templateJavacOptions = templateJavacOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-    this.cxxPlatform = cxxPlatform;
+    this.defaultCxxPlatform = defaultCxxPlatform;
+    this.cxxPlatforms = cxxPlatforms;
   }
 
   @Override
   public Class<JavaTestDescriptionArg> getConstructorArgType() {
     return JavaTestDescriptionArg.class;
+  }
+
+  private CxxPlatform getCxxPlatform(AbstractJavaTestDescriptionArg args) {
+    return args.getDefaultCxxPlatform().map(cxxPlatforms::getValue).orElse(defaultCxxPlatform);
   }
 
   @Override
@@ -111,27 +120,26 @@ public class JavaTestDescription
             args.getCxxLibraryWhitelist(),
             resolver,
             ruleFinder,
-            cxxPlatform);
+            getCxxPlatform(args));
     params = cxxLibraryEnhancement.updatedParams;
 
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        DefaultJavaLibrary.builder(
-                targetGraph,
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
+        DefaultJavaLibrary.rulesBuilder(
                 buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
-                javaBuckConfig)
-            .setArgs(args)
+                new JavaConfiguredCompilerFactory(javaBuckConfig),
+                javaBuckConfig,
+                args)
             .setJavacOptions(javacOptions)
-            .setTrackClassUsage(javacOptions.trackClassUsage());
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
-      return defaultJavaLibraryBuilder.buildAbi();
+      return defaultJavaLibraryRules.buildAbi();
     }
 
-    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryBuilder.build());
+    JavaLibrary testsLibrary = resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     Function<String, Arg> toMacroArgFunction =
         MacroArg.toMacroArgFunction(MACRO_HANDLER, buildTarget, cellRoots, resolver);
@@ -166,7 +174,7 @@ public class JavaTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
-      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+      extraDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
     }
     for (String envValue : constructorArg.getEnv().values()) {
       try {
@@ -179,8 +187,8 @@ public class JavaTestDescription
   }
 
   @VisibleForTesting
-  public CxxPlatform getCxxPlatform() {
-    return cxxPlatform;
+  public CxxPlatform getDefaultCxxPlatform() {
+    return defaultCxxPlatform;
   }
 
   public interface CoreArg extends HasContacts, HasTestTimeout, JavaLibraryDescription.CoreArg {
@@ -209,6 +217,8 @@ public class JavaTestDescription
     Optional<Long> getTestCaseTimeoutMs();
 
     ImmutableMap<String, String> getEnv();
+
+    Optional<Flavor> getDefaultCxxPlatform();
   }
 
   @BuckStyleImmutable

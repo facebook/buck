@@ -82,6 +82,25 @@ public class PatternMatchedCollection<T>
             .toImmutableList());
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof PatternMatchedCollection)) {
+      return false;
+    }
+
+    PatternMatchedCollection<?> that = (PatternMatchedCollection<?>) o;
+
+    return values.equals(that.values);
+  }
+
+  @Override
+  public int hashCode() {
+    return values.hashCode();
+  }
+
   public static <T> Builder<T> builder() {
     return new Builder<>();
   }

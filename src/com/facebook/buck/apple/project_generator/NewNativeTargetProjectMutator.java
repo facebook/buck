@@ -45,7 +45,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.CoreReactNativeLibraryArg;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.JsBundle;
@@ -57,6 +57,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -743,7 +744,8 @@ class NewNativeTargetProjectMutator {
                   Resources.getResource(NewNativeTargetProjectMutator.class, JS_BUNDLE_TEMPLATE),
                   Charsets.UTF_8));
     } catch (IOException e) {
-      throw new RuntimeException("There was an error loading 'js-bundle.st' template", e);
+      throw new RuntimeException(
+          String.format("There was an error loading '%s' template", JS_BUNDLE_TEMPLATE), e);
     }
 
     BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
@@ -757,7 +759,6 @@ class NewNativeTargetProjectMutator {
     SourcePathResolver sourcePathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
-    template.add("bundle_name", bundle.getBundleName());
     template.add("built_bundle_path", sourcePathResolver.getAbsolutePath(jsOutput));
     template.add("built_resources_path", sourcePathResolver.getAbsolutePath(resOutput));
 
@@ -776,7 +777,9 @@ class NewNativeTargetProjectMutator {
                       NewNativeTargetProjectMutator.class, REACT_NATIVE_PACKAGE_TEMPLATE),
                   Charsets.UTF_8));
     } catch (IOException e) {
-      throw new RuntimeException("There was an error loading 'rn_package.st' template", e);
+      throw new RuntimeException(
+          String.format("There was an error loading '%s' template", REACT_NATIVE_PACKAGE_TEMPLATE),
+          e);
     }
 
     CoreReactNativeLibraryArg args = (CoreReactNativeLibraryArg) targetNode.getConstructorArg();
@@ -797,5 +800,91 @@ class NewNativeTargetProjectMutator {
     template.add("built_source_map_path", filesystem.resolve(sourceMap));
 
     return template.render();
+  }
+
+  private void collectJsBundleFiles(
+      ImmutableList.Builder<CopyInXcode> builder,
+      ImmutableList<TargetNode<?, ?>> scriptPhases,
+      Cell cell,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+    for (TargetNode<?, ?> targetNode : scriptPhases) {
+      if (targetNode.getDescription() instanceof JsBundleDescription) {
+        BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
+        BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
+
+        Preconditions.checkState(rule instanceof JsBundle);
+        JsBundle bundle = (JsBundle) rule;
+
+        SourcePath jsOutput = bundle.getSourcePathToOutput();
+        SourcePath resOutput = bundle.getSourcePathToResources();
+        SourcePathResolver sourcePathResolver =
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+
+        Path jsOutputPath = sourcePathResolver.getAbsolutePath(jsOutput);
+        builder.add(
+            CopyInXcode.of(
+                CopyInXcode.SourceType.FOLDER_CONTENTS,
+                cell.getFilesystem().relativize(jsOutputPath),
+                CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
+                Paths.get("")));
+        Path resOutputPath = sourcePathResolver.getAbsolutePath(resOutput);
+        builder.add(
+            CopyInXcode.of(
+                CopyInXcode.SourceType.FOLDER_CONTENTS,
+                cell.getFilesystem().relativize(resOutputPath),
+                CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
+                Paths.get("")));
+      }
+    }
+  }
+
+  private void collectReactNativeFiles(
+      ImmutableList.Builder<CopyInXcode> builder,
+      ImmutableList<TargetNode<?, ?>> scriptPhases,
+      Cell cell) {
+    for (TargetNode<?, ?> targetNode : scriptPhases) {
+      if (targetNode.getDescription() instanceof IosReactNativeLibraryDescription) {
+
+        CoreReactNativeLibraryArg args = (CoreReactNativeLibraryArg) targetNode.getConstructorArg();
+
+        ProjectFilesystem filesystem = targetNode.getFilesystem();
+        BuildTarget buildTarget = targetNode.getBuildTarget();
+
+        Path jsOutput =
+            ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem)
+                .resolve(args.getBundleName());
+        builder.add(
+            CopyInXcode.of(
+                CopyInXcode.SourceType.FILE,
+                cell.getFilesystem().relativize(filesystem.resolve(jsOutput)),
+                CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
+                Paths.get("")));
+
+        Path resourceOutput = ReactNativeBundle.getPathToResources(buildTarget, filesystem);
+        builder.add(
+            CopyInXcode.of(
+                CopyInXcode.SourceType.FOLDER_CONTENTS,
+                cell.getFilesystem().relativize(filesystem.resolve(resourceOutput)),
+                CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
+                Paths.get("")));
+
+        Path sourceMap = ReactNativeBundle.getPathToSourceMap(buildTarget, filesystem);
+        builder.add(
+            CopyInXcode.of(
+                CopyInXcode.SourceType.FILE,
+                cell.getFilesystem().relativize(filesystem.resolve(sourceMap)),
+                CopyInXcode.DestinationBase.TEMPDIR,
+                Paths.get("rn_source_map", args.getBundleName() + ".map")));
+      }
+    }
+  }
+
+  public void collectFilesToCopyInXcode(
+      ImmutableList.Builder<CopyInXcode> builder,
+      ImmutableList<TargetNode<?, ?>> scriptPhases,
+      Cell cell,
+      Function<? super TargetNode<?, ?>, BuildRuleResolver> buildRuleResolverForNode) {
+    collectJsBundleFiles(builder, scriptPhases, cell, buildRuleResolverForNode);
+    collectReactNativeFiles(builder, scriptPhases, cell);
   }
 }

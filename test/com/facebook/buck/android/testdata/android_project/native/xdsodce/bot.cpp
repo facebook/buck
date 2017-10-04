@@ -1,5 +1,8 @@
 #include "bot.h"
 
+int preservedBot() {
+  return 0;
+}
 int unused(int) {
   return 0;
 }

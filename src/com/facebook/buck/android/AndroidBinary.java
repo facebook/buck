@@ -18,9 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
@@ -33,7 +35,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableSupport;
-import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.HasDeclaredAndExtraDeps;
 import com.facebook.buck.rules.HasInstallHelpers;
@@ -53,7 +54,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -152,7 +152,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   private final Optional<List<String>> proguardJvmArgs;
   private final ResourceCompressionMode resourceCompressionMode;
-  private final ImmutableSet<NdkCxxPlatforms.TargetCpuType> cpuFilters;
+  private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
@@ -173,10 +173,7 @@ public class AndroidBinary extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      Optional<SourcePath> proguardJarOverride,
-      String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
-      Optional<String> proguardAgentPath,
       Keystore keystore,
       DexSplitMode dexSplitMode,
       Set<BuildTarget> buildTargetsToExcludeFromDex,
@@ -186,24 +183,21 @@ public class AndroidBinary extends AbstractBuildRule
       boolean skipProguard,
       Optional<RedexOptions> redexOptions,
       ResourceCompressionMode resourceCompressionMode,
-      Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
+      Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
       Optional<Arg> preprocessJavaClassesBash,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      boolean reorderClassesIntraDex,
-      Optional<SourcePath> dexReorderToolFile,
-      Optional<SourcePath> dexReorderDataDumpFile,
       Optional<Integer> xzCompressionLevel,
-      ListeningExecutorService dxExecutorService,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
-      Optional<String> dxMaxHeapSize,
       boolean isCacheable,
-      Optional<SourcePath> appModularityResult) {
+      Optional<SourcePath> appModularityResult,
+      boolean shouldProguard,
+      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -256,23 +250,12 @@ public class AndroidBinary extends AbstractBuildRule
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
             dexSplitMode,
-            sdkProguardConfig,
-            optimizationPasses,
-            proguardConfig,
-            proguardJarOverride,
             redexOptions,
-            proguardMaxHeapSize,
-            proguardJvmArgs,
-            proguardAgentPath,
             this.cpuFilters,
             exopackageModes,
             preprocessJavaClassesBash,
-            reorderClassesIntraDex,
-            dexReorderToolFile,
-            dexReorderDataDumpFile,
             rulesToExcludeFromDex,
             enhancementResult,
-            dxExecutorService,
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
@@ -282,10 +265,11 @@ public class AndroidBinary extends AbstractBuildRule
             enhancementResult.getPrimaryResourcesApkPath(),
             enhancementResult.getPrimaryApkAssetZips(),
             enhancementResult.getSourcePathToAaptGeneratedProguardConfigFile(),
-            dxMaxHeapSize,
             enhancementResult.getProguardConfigs(),
             resourceCompressionMode.isCompressResources(),
-            this.appModularityResult);
+            this.appModularityResult,
+            shouldProguard,
+            nonPreDexedDexBuildableArgs);
     params =
         params.withExtraDeps(
             () ->
@@ -334,7 +318,7 @@ public class AndroidBinary extends AbstractBuildRule
     return resourceCompressionMode;
   }
 
-  public ImmutableSet<NdkCxxPlatforms.TargetCpuType> getCpuFilters() {
+  public ImmutableSet<TargetCpuType> getCpuFilters() {
     return this.cpuFilters;
   }
 
@@ -406,7 +390,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), buildable.getFinalApkPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getFinalApkPath());
   }
 
   public AndroidPackageableCollection getAndroidPackageableCollection() {
@@ -418,7 +402,7 @@ public class AndroidBinary extends AbstractBuildRule
   }
 
   private SourcePath getManifestPath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), buildable.getManifestPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getManifestPath());
   }
 
   private Optional<ExopackageInfo> getExopackageInfo() {
@@ -455,7 +439,7 @@ public class AndroidBinary extends AbstractBuildRule
               ImmutableList.<SourcePath>builder()
                   .addAll(enhancementResult.getExoResources())
                   .add(
-                      new ExplicitBuildTargetSourcePath(
+                      ExplicitBuildTargetSourcePath.of(
                           getBuildTarget(), buildable.getMergedThirdPartyJarsPath()))
                   .build()));
       shouldInstall = true;

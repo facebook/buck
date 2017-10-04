@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -94,11 +94,12 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
   }
 
   /**
-   * Pick a linkage, any linkage. Just pick your favorite. This will be overridden by config anyway.
+   * Linkage doesn't matter for PCHs, but use care not to change it from the rest of the builds'
+   * rules' preferred linkage.
    */
   @Override
   public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.SHARED;
+    return Linkage.ANY;
   }
 
   /** Doesn't really apply to us. No shared libraries to add here. */
@@ -119,10 +120,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
-        cxxPlatform,
-        getBuildDeps(),
-        Linker.LinkableDepType.SHARED,
-        NativeLinkable.class::isInstance);
+        cxxPlatform, getBuildDeps(), type, NativeLinkable.class::isInstance);
   }
 
   @Override
@@ -194,21 +192,14 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   public DependencyAggregation requireAggregatedDepsRule(
       BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder, CxxPlatform cxxPlatform) {
-    BuildTarget depAggTarget = createAggregatedDepsTarget(cxxPlatform);
-
-    Optional<DependencyAggregation> existingRule =
-        ruleResolver.getRuleOptionalWithType(depAggTarget, DependencyAggregation.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-
-    DependencyAggregation depAgg =
-        new DependencyAggregation(
-            depAggTarget,
-            getProjectFilesystem(),
-            getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform));
-    ruleResolver.addToIndex(depAgg);
-    return depAgg;
+    return (DependencyAggregation)
+        ruleResolver.computeIfAbsent(
+            createAggregatedDepsTarget(cxxPlatform),
+            depAggTarget ->
+                new DependencyAggregation(
+                    depAggTarget,
+                    getProjectFilesystem(),
+                    getPreprocessDeps(ruleResolver, ruleFinder, cxxPlatform)));
   }
 
   public PreprocessorDelegate buildPreprocessorDelegate(

@@ -74,8 +74,8 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
-      JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi) {
+      AbiGenerationMode abiGenerationMode,
+      boolean requiredForSourceOnlyAbi) {
     return new Jsr199JavacInvocation(
         this::createCompiler,
         context,
@@ -84,7 +84,7 @@ public abstract class Jsr199Javac implements Javac {
         pluginFields,
         javaSourceFilePaths,
         pathToSrcsList,
-        compilationMode,
-        requiredForSourceAbi);
+        abiGenerationMode,
+        requiredForSourceOnlyAbi);
   }
 }

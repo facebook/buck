@@ -16,7 +16,7 @@
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;

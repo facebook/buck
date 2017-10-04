@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
@@ -268,6 +268,10 @@ public class CxxBuckConfig {
     return delegate.getToolProvider(cxxSection, name);
   }
 
+  public boolean isUniqueLibraryNameEnabled() {
+    return delegate.getBooleanValue(cxxSection, "unique_library_name_enabled", false);
+  }
+
   /** @return whether to enable shared library interfaces. */
   public SharedLibraryInterfaceParams.Type getSharedLibraryInterfaces() {
 
@@ -288,6 +292,10 @@ public class CxxBuckConfig {
 
     // Default.
     return SharedLibraryInterfaceParams.Type.DISABLED;
+  }
+
+  public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {
+    return delegate.getBooleanValue(cxxSection, "enable_deprecated_prebuilt_cxx_library_api", true);
   }
 
   @Value.Immutable

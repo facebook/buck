@@ -104,11 +104,11 @@ public class BuildRuleResolverTest {
     BuildRuleResolver buildRuleResolver = buildRuleResolverFactory.create(TargetGraph.EMPTY);
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    JavaLibraryBuilder.createBuilder(target).build(buildRuleResolver);
+    buildRuleResolver.addToIndex(new FakeBuildRule(target));
 
     // A BuildRuleResolver should allow only one entry for a BuildTarget.
     try {
-      JavaLibraryBuilder.createBuilder(target).build(buildRuleResolver);
+      buildRuleResolver.addToIndex(new FakeBuildRule(target));
       fail("Should throw IllegalStateException.");
     } catch (IllegalStateException e) {
       assertEquals(
@@ -135,7 +135,7 @@ public class BuildRuleResolverTest {
     TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver = buildRuleResolverFactory.create(targetGraph);
-    BuildRule existing = builder.build(resolver);
+    BuildRule existing = resolver.requireRule(target);
 
     assertThat(resolver.getRuleOptional(target).isPresent(), is(true));
 
@@ -160,7 +160,7 @@ public class BuildRuleResolverTest {
     TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver = buildRuleResolverFactory.create(targetGraph);
-    builder.build(resolver);
+    resolver.requireRule(target);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("not of expected type"));
     resolver.getRuleWithType(BuildTargetFactory.newInstance("//foo:bar"), JavaBinary.class);

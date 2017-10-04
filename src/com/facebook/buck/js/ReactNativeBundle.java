@@ -17,7 +17,7 @@
 package com.facebook.buck.js;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -207,7 +207,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public SourcePath getJSBundleDir() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), jsOutputDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), jsOutputDir);
   }
 
   public Path getResources() {
@@ -276,7 +276,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), exposeSourceMap ? sourceMapOutputPath : jsOutputDir);
   }
 }

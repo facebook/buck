@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.message_ipc.Connection;
 import com.facebook.buck.message_ipc.MessageSerializer;
 import com.facebook.buck.message_ipc.MessageTransport;

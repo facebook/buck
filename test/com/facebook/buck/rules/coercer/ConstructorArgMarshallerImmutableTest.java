@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -165,7 +165,7 @@ public class ConstructorArgMarshallerImmutableTest {
     assertEquals(
         new PathSourcePath(projectFilesystem, Paths.get("example/path/cheese.txt")),
         built.getFilePath());
-    assertEquals(new DefaultBuildTargetSourcePath(target), built.getTargetPath());
+    assertEquals(DefaultBuildTargetSourcePath.of(target), built.getTargetPath());
   }
 
   @Test
@@ -461,7 +461,7 @@ public class ConstructorArgMarshallerImmutableTest {
     assertEquals(Optional.of(88L), built.getOptionalLong());
     assertTrue(built.isNeeded());
     assertEquals(Optional.empty(), built.isNotNeeded());
-    DefaultBuildTargetSourcePath expected = new DefaultBuildTargetSourcePath(target);
+    DefaultBuildTargetSourcePath expected = DefaultBuildTargetSourcePath.of(target);
     assertEquals(expected, built.getASrcPath());
     assertEquals(Paths.get("example/path/NotFile.java"), built.getNotAPath().get());
   }

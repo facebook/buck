@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -49,7 +49,7 @@ public class AndroidManifestDescriptionTest {
         new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar")) {
           @Override
           public SourcePath getSourcePathToOutput() {
-            return new ExplicitBuildTargetSourcePath(
+            return ExplicitBuildTargetSourcePath.of(
                 getBuildTarget(), Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml"));
           }
         };

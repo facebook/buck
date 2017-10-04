@@ -130,7 +130,7 @@ public class JavacSpecTest {
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJar prebuiltJar =
         PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(ruleResolver);
-    SourcePath sourcePath = new DefaultBuildTargetSourcePath(target);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder.setCompiler(either);
@@ -145,7 +145,7 @@ public class JavacSpecTest {
     BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
     PrebuiltJar prebuiltJar =
         PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(ruleResolver);
-    SourcePath sourcePath = new DefaultBuildTargetSourcePath(target);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder

@@ -72,11 +72,11 @@ function installAndLaunch() {
   adb shell am start -n buck.exotest/exotest.LogActivity
   adb shell am start -n buck.exotest.meta/.ExoMetaLogActivity
   SECONDARY_DEX_INSTALLED=$(cat buck-out/log/build.trace | \
-    jq -r '[ .[] | select(.name == "install_secondary_dex") | select(.ph == "B") ] | length')
+    jq -r '[ .[] | select(.target_name == "install_secondary_dex") | select(.ph == "B") ] | length')
   NATIVE_LIBS_INSTALLED=$(cat buck-out/log/build.trace | \
-    jq -r '[ .[] | select(.name == "install_native_library") | select(.ph == "B") ] | length')
+    jq -r '[ .[] | select(.target_name == "install_native_library") | select(.ph == "B") ] | length')
   RESOURCE_APKS_INSTALLED=$(cat buck-out/log/build.trace | \
-    jq -r '[ .[] | select(.name == "install_resources") | select(.ph == "B") ] | length')
+    jq -r '[ .[] | select(.target_name == "install_resources") | select(.ph == "B") ] | length')
   sleep 1
   adb logcat -d '*:S' EXOPACKAGE_TEST:V EXOPACKAGE_TEST_META:V > out.txt
   cp out.txt out$((++OUT_COUNT)).txt

@@ -18,7 +18,7 @@ package com.facebook.buck.ocaml;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;

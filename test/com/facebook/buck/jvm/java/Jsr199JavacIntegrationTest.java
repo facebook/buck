@@ -20,7 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -125,6 +126,7 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getCellPathResolver(),
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
+            executionContext.getProjectFilesystemFactory(),
             NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
@@ -141,7 +143,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
-                JavacCompilationMode.FULL,
+                AbiGenerationMode.CLASS,
                 false)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -177,6 +179,7 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getCellPathResolver(),
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
+            executionContext.getProjectFilesystemFactory(),
             NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
@@ -193,7 +196,7 @@ public class Jsr199JavacIntegrationTest {
                 SOURCE_PATHS,
                 pathToSrcsList,
                 Paths.get("working"),
-                JavacCompilationMode.FULL,
+                AbiGenerationMode.CLASS,
                 false)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
@@ -276,6 +279,7 @@ public class Jsr199JavacIntegrationTest {
             executionContext.getCellPathResolver(),
             executionContext.getJavaPackageFinder(),
             createProjectFilesystem(),
+            executionContext.getProjectFilesystemFactory(),
             NoOpClassUsageFileWriter.instance(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
@@ -294,7 +298,7 @@ public class Jsr199JavacIntegrationTest {
               SOURCE_PATHS,
               pathToSrcsList,
               Paths.get("working"),
-              JavacCompilationMode.FULL,
+              AbiGenerationMode.CLASS,
               false)
           .buildClasses();
       fail("Did not expect compilation to succeed");
@@ -336,6 +340,6 @@ public class Jsr199JavacIntegrationTest {
   }
 
   private ProjectFilesystem createProjectFilesystem() throws InterruptedException {
-    return new ProjectFilesystem(tmp.getRoot());
+    return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 }

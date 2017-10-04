@@ -31,8 +31,9 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
-import com.facebook.buck.io.PathListing;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.WatchmanOverflowEvent;
+import com.facebook.buck.io.file.PathListing;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -55,7 +56,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.WatchmanOverflowEvent;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
@@ -162,10 +162,17 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private void addProcessMetadataEvent(InvocationInfo invocationInfo) {
     writeChromeTraceMetadataEvent(
         "process_name",
+        ImmutableMap.<String, Object>builder().put("name", invocationInfo.getBuildId()).build());
+    writeChromeTraceMetadataEvent(
+        "process_labels",
         ImmutableMap.<String, Object>builder()
-            .put("user_args", invocationInfo.getUnexpandedCommandArgs())
-            .put("is_daemon", invocationInfo.getIsDaemon())
-            .put("timestamp", invocationInfo.getTimestampMillis())
+            .put(
+                "labels",
+                String.format(
+                    "user_args=%s, is_daemon=%b, timestamp=%d",
+                    invocationInfo.getUnexpandedCommandArgs(),
+                    invocationInfo.getIsDaemon(),
+                    invocationInfo.getTimestampMillis()))
             .build());
   }
 

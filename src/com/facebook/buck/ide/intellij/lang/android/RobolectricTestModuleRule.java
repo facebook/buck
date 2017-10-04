@@ -22,7 +22,7 @@ import com.facebook.buck.ide.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjModuleType;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 

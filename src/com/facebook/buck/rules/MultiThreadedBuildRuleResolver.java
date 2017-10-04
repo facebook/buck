@@ -29,6 +29,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -50,7 +51,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
   @Nullable private final BuckEventBus eventBus;
 
   private final BuildRuleResolverMetadataCache metadataCache;
-  private final ConcurrentHashMap<BuildTarget, WorkThreadTrackingFuture<BuildRule>> buildRuleIndex;
+  private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
 
   public MultiThreadedBuildRuleResolver(
       ForkJoinPool forkJoinPool,
@@ -93,8 +94,7 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
     Preconditions.checkState(
         isInForkJoinPool(), "Should only be called while executing in the pool");
 
-    WorkThreadTrackingFuture<BuildRule> future =
-        buildRuleIndex.computeIfAbsent(target, wrap(mappingFunction));
+    Task<BuildRule> future = buildRuleIndex.computeIfAbsent(target, wrap(mappingFunction));
     return future.isBeingWorkedOnByCurrentThread()
         ? mappingFunction.apply(target)
         : Futures.getUnchecked(future);
@@ -110,15 +110,29 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public <T extends BuildRule> T addToIndex(T buildRule) {
-    WorkThreadTrackingFuture<BuildRule> future =
-        buildRuleIndex.computeIfAbsent(
-            buildRule.getBuildTarget(), key -> WorkThreadTrackingFuture.completedFuture(buildRule));
-    if (future.isDone()) {
-      BuildRule oldValue = Futures.getUnchecked(future);
-      Preconditions.checkState(
-          oldValue == buildRule,
-          "A build rule for this target has already been created: " + oldValue.getBuildTarget());
-    }
+    buildRuleIndex.compute(
+        buildRule.getBuildTarget(),
+        (key, existing) -> {
+          if (existing != null) {
+            if (existing.isDone()) {
+              BuildRule oldValue = Futures.getUnchecked(existing);
+              Preconditions.checkState(
+                  oldValue == buildRule,
+                  "A build rule for this target has already been created: "
+                      + oldValue.getBuildTarget());
+            } else {
+              // If a future already exist and is incomplete, complete it. This supports cases where
+              // the construction of a rule is delegated to another rule, which actually constructs
+              // the first rule. (Ex: flavors of AndroidBinary)
+              // Ex: requireRule(foo)     -> addToIndex(foo#bar) -> return foo
+              //     requireRule(foo#bar) -> requireRule(foo)    -> return getRule(foo#bar)
+              existing.complete(buildRule);
+            }
+            return existing;
+          } else {
+            return Task.completed(buildRule);
+          }
+        });
     return buildRule;
   }
 
@@ -133,6 +147,11 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
     return eventBus;
   }
 
+  @Override
+  public <T> Stream<T> maybeParallelize(Stream<T> stream) {
+    return stream.parallel();
+  }
+
   private boolean isInForkJoinPool() {
     Thread current = Thread.currentThread();
     return current instanceof ForkJoinWorkerThread
@@ -143,20 +162,65 @@ public class MultiThreadedBuildRuleResolver implements BuildRuleResolver {
    * Convert a function returning a value to a function that returns a forked, work-thread-tracked
    * ForkJoinTask that runs the function.
    */
-  private <K, V> Function<K, WorkThreadTrackingFuture<V>> wrap(Function<K, V> function) {
+  private <K, V> Function<K, Task<V>> wrap(Function<K, V> function) {
     return arg ->
-        WorkThreadTrackingFuture.create(
-            workThreadTracker -> {
-              RecursiveTask<V> task =
-                  new RecursiveTask<V>() {
-                    @Override
-                    protected V compute() {
-                      try (Scope ignored = workThreadTracker.start()) {
-                        return function.apply(arg);
-                      }
-                    }
-                  };
-              return isInForkJoinPool() ? task.fork() : forkJoinPool.submit(task);
+        forkOrSubmit(
+            new Task<V>() {
+              @Override
+              protected V doCompute() {
+                return function.apply(arg);
+              }
             });
+  }
+
+  private <T> Task<T> forkOrSubmit(Task<T> task) {
+    if (isInForkJoinPool()) {
+      task.fork();
+    } else {
+      forkJoinPool.submit(task);
+    }
+    return task;
+  }
+
+  private abstract static class Task<V> extends RecursiveTask<V>
+      implements WorkThreadTrackingFuture<V> {
+    @Nullable private Thread workThread;
+
+    protected abstract V doCompute() throws Exception;
+
+    @Override
+    protected final V compute() {
+      try (Scope ignored = () -> workThread = null) {
+        workThread = Thread.currentThread();
+        return doCompute();
+      } catch (RuntimeException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public final boolean isBeingWorkedOnByCurrentThread() {
+      return Thread.currentThread() == workThread;
+    }
+
+    @Override
+    public void complete(V value) {
+      super.complete(value);
+      workThread = null;
+    }
+
+    static <V> Task<V> completed(V value) {
+      Task<V> task =
+          new Task<V>() {
+            @Override
+            protected V doCompute() throws Exception {
+              throw new AssertionError("This task should be directly completed.");
+            }
+          };
+      task.complete(value);
+      return task;
+    }
   }
 }

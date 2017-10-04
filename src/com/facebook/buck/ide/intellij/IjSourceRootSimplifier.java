@@ -26,7 +26,7 @@ import com.facebook.buck.ide.intellij.model.folders.JavaTestResourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.SelfMergingOnlyFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;

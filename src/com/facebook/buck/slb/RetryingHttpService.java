@@ -19,7 +19,7 @@ import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.RetryingException;
+import com.facebook.buck.util.exceptions.RetryingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

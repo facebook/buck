@@ -20,7 +20,7 @@ import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -351,17 +351,17 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   @Nullable
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsDir);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsDir);
   }
 
   @Override
   public SourcePath getPathToTextSymbolsFile() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsFile);
   }
 
   @Override
   public SourcePath getPathToRDotJavaPackageFile() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), pathToRDotJavaPackageFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToRDotJavaPackageFile);
   }
 
   @Override

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.SettableFakeClock;
+import com.facebook.buck.util.zip.Zip;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -388,13 +389,13 @@ public class FakeProjectFilesystemTest {
     filesystem.writeBytesToPath(contents, dir.resolve("file"));
 
     Path output = tmp.newFile("output.zip");
-    filesystem.createZip(ImmutableList.of(file, dir, dir.resolve("file")), output);
+    Zip.create(filesystem, ImmutableList.of(file, dir, dir.resolve("file")), output);
 
-    try (Zip zip = new Zip(output, /* forWriting */ false)) {
-      assertEquals(ImmutableSet.of("", "dir/"), zip.getDirNames());
-      assertEquals(ImmutableSet.of("file", "dir/file"), zip.getFileNames());
-      assertArrayEquals(contents, zip.readFully("file"));
-      assertArrayEquals(contents, zip.readFully("dir/file"));
+    try (ZipArchive zipArchive = new ZipArchive(output, /* forWriting */ false)) {
+      assertEquals(ImmutableSet.of("", "dir/"), zipArchive.getDirNames());
+      assertEquals(ImmutableSet.of("file", "dir/file"), zipArchive.getFileNames());
+      assertArrayEquals(contents, zipArchive.readFully("file"));
+      assertArrayEquals(contents, zipArchive.readFully("dir/file"));
     }
   }
 

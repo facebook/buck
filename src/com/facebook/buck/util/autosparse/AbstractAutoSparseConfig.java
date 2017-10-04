@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.autosparse;
 
-import com.facebook.buck.config.Config;
+import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;

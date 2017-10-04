@@ -23,7 +23,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
@@ -150,6 +150,16 @@ public class AndroidBinaryBuilder
 
   public AndroidBinaryBuilder setPostFilterResourcesCmd(Optional<String> command) {
     getArgForPopulating().setPostFilterResourcesCmd(command);
+    return this;
+  }
+
+  public AndroidBinaryBuilder setPreprocessJavaClassesBash(String command) {
+    getArgForPopulating().setPreprocessJavaClassesBash(command);
+    return this;
+  }
+
+  public AndroidBinaryBuilder setProguardConfig(SourcePath path) {
+    getArgForPopulating().setProguardConfig(path);
     return this;
   }
 }

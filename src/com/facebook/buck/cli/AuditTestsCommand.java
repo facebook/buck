@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.util.MoreExceptions;

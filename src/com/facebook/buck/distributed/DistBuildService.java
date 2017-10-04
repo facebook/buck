@@ -31,6 +31,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.CASContainsRequest;
@@ -54,7 +55,6 @@ import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsReques
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
 import com.facebook.buck.distributed.thrift.PathInfo;
 import com.facebook.buck.distributed.thrift.RuleKeyLogEntry;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
@@ -65,7 +65,7 @@ import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
 import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.slb.ThriftProtocol;
@@ -121,12 +121,12 @@ public class DistBuildService implements Closeable {
   }
 
   public MultiGetBuildSlaveLogDirResponse fetchBuildSlaveLogDir(
-      final StampedeId stampedeId, final List<RunId> runIds) throws IOException {
+      final StampedeId stampedeId, final List<BuildSlaveRunId> runIds) throws IOException {
 
     MultiGetBuildSlaveLogDirRequest getBuildSlaveLogDirRequest =
         new MultiGetBuildSlaveLogDirRequest();
     getBuildSlaveLogDirRequest.setStampedeId(stampedeId);
-    getBuildSlaveLogDirRequest.setRunIds(runIds);
+    getBuildSlaveLogDirRequest.setBuildSlaveRunIds(runIds);
 
     FrontendRequest request = new FrontendRequest();
     request.setType(FrontendRequestType.GET_BUILD_SLAVE_LOG_DIR);
@@ -528,15 +528,16 @@ public class DistBuildService implements Closeable {
   }
 
   public void uploadBuildSlaveConsoleEvents(
-      StampedeId stampedeId, RunId runId, List<BuildSlaveConsoleEvent> events) throws IOException {
+      StampedeId stampedeId, BuildSlaveRunId runId, List<BuildSlaveConsoleEvent> events)
+      throws IOException {
     AppendBuildSlaveEventsRequest request = new AppendBuildSlaveEventsRequest();
     request.setStampedeId(stampedeId);
-    request.setRunId(runId);
+    request.setBuildSlaveRunId(runId);
     for (BuildSlaveConsoleEvent slaveEvent : events) {
       BuildSlaveEvent buildSlaveEvent = new BuildSlaveEvent();
       buildSlaveEvent.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
       buildSlaveEvent.setStampedeId(stampedeId);
-      buildSlaveEvent.setRunId(runId);
+      buildSlaveEvent.setBuildSlaveRunId(runId);
       buildSlaveEvent.setConsoleEvent(slaveEvent);
       request.addToEvents(
           ThriftUtil.serializeToByteBuffer(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, buildSlaveEvent));
@@ -548,11 +549,11 @@ public class DistBuildService implements Closeable {
     makeRequestChecked(frontendRequest);
   }
 
-  public void updateBuildSlaveStatus(StampedeId stampedeId, RunId runId, BuildSlaveStatus status)
-      throws IOException {
+  public void updateBuildSlaveStatus(
+      StampedeId stampedeId, BuildSlaveRunId runId, BuildSlaveStatus status) throws IOException {
     UpdateBuildSlaveStatusRequest request = new UpdateBuildSlaveStatusRequest();
     request.setStampedeId(stampedeId);
-    request.setRunId(runId);
+    request.setBuildSlaveRunId(runId);
     request.setBuildSlaveStatus(ThriftUtil.serialize(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, status));
 
     FrontendRequest frontendRequest = new FrontendRequest();
@@ -562,10 +563,10 @@ public class DistBuildService implements Closeable {
   }
 
   public BuildSlaveEventsQuery createBuildSlaveEventsQuery(
-      StampedeId stampedeId, RunId runId, int firstEventToBeFetched) {
+      StampedeId stampedeId, BuildSlaveRunId runId, int firstEventToBeFetched) {
     BuildSlaveEventsQuery query = new BuildSlaveEventsQuery();
     query.setStampedeId(stampedeId);
-    query.setRunId(runId);
+    query.setBuildSlaveRunId(runId);
     query.setFirstEventNumber(firstEventToBeFetched);
     return query;
   }
@@ -605,11 +606,11 @@ public class DistBuildService implements Closeable {
     return result;
   }
 
-  public Optional<BuildSlaveStatus> fetchBuildSlaveStatus(StampedeId stampedeId, RunId runId)
-      throws IOException {
+  public Optional<BuildSlaveStatus> fetchBuildSlaveStatus(
+      StampedeId stampedeId, BuildSlaveRunId runId) throws IOException {
     FetchBuildSlaveStatusRequest request = new FetchBuildSlaveStatusRequest();
     request.setStampedeId(stampedeId);
-    request.setRunId(runId);
+    request.setBuildSlaveRunId(runId);
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_BUILD_SLAVE_STATUS);
     frontendRequest.setFetchBuildSlaveStatusRequest(request);
@@ -629,10 +630,11 @@ public class DistBuildService implements Closeable {
   }
 
   public void storeBuildSlaveFinishedStats(
-      StampedeId stampedeId, RunId runId, BuildSlaveFinishedStats status) throws IOException {
+      StampedeId stampedeId, BuildSlaveRunId runId, BuildSlaveFinishedStats status)
+      throws IOException {
     StoreBuildSlaveFinishedStatsRequest request = new StoreBuildSlaveFinishedStatsRequest();
     request.setStampedeId(stampedeId);
-    request.setRunId(runId);
+    request.setBuildSlaveRunId(runId);
     request.setBuildSlaveFinishedStats(
         ThriftUtil.serialize(PROTOCOL_FOR_CLIENT_ONLY_STRUCTS, status));
 
@@ -643,10 +645,10 @@ public class DistBuildService implements Closeable {
   }
 
   public Optional<BuildSlaveFinishedStats> fetchBuildSlaveFinishedStats(
-      StampedeId stampedeId, RunId runId) throws IOException {
+      StampedeId stampedeId, BuildSlaveRunId runId) throws IOException {
     FetchBuildSlaveFinishedStatsRequest request = new FetchBuildSlaveFinishedStatsRequest();
     request.setStampedeId(stampedeId);
-    request.setRunId(runId);
+    request.setBuildSlaveRunId(runId);
     FrontendRequest frontendRequest = new FrontendRequest();
     frontendRequest.setType(FrontendRequestType.FETCH_BUILD_SLAVE_FINISHED_STATS);
     frontendRequest.setFetchBuildSlaveFinishedStatsRequest(request);

@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -53,7 +53,7 @@ public class MavenUberJarTest {
     PythonLibraryBuilder pythonLibraryBuilder = PythonLibraryBuilder.createBuilder(pythonTarget);
     JavaLibraryBuilder javaLibraryBuilder =
         JavaLibraryBuilder.createBuilder(javaTarget)
-            .addResource(new DefaultBuildTargetSourcePath(pythonTarget));
+            .addResource(DefaultBuildTargetSourcePath.of(pythonTarget));
 
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(pythonLibraryBuilder.build(), javaLibraryBuilder.build());

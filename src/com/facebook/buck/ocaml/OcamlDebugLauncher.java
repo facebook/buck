@@ -17,7 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -62,6 +62,6 @@ public class OcamlDebugLauncher extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), args.getOutput());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), args.getOutput());
   }
 }

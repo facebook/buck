@@ -16,7 +16,8 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -69,22 +70,21 @@ public class ScalaLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
-    ScalaLibraryBuilder scalaLibraryBuilder =
-        new ScalaLibraryBuilder(
-                targetGraph,
+    DefaultJavaLibraryRules scalaLibraryBuilder =
+        ScalaLibraryBuilder.newInstance(
                 buildTarget,
                 projectFilesystem,
                 rawParams,
                 resolver,
-                cellRoots,
                 scalaBuckConfig,
-                javaBuckConfig)
+                javaBuckConfig,
+                args)
             .setJavacOptions(javacOptions)
-            .setArgs(args);
+            .build();
 
     return HasJavaAbi.isAbiTarget(buildTarget)
         ? scalaLibraryBuilder.buildAbi()
-        : scalaLibraryBuilder.build();
+        : scalaLibraryBuilder.buildLibrary();
   }
 
   @Override

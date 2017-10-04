@@ -9,12 +9,11 @@ java_library(
     deps = [],
 )
 
+# TODO(cjhopman): Move HumanReadableException to exceptions/
 EXCEPTION_SRCS = [
     "ExceptionWithHumanReadableMessage.java",
     "HumanReadableException.java",
-    "WatchmanWatcherException.java",
-    "RetryingException.java",
-]
+] + glob(["exceptions/*.java"])
 
 java_library(
     name = "exceptions",
@@ -23,7 +22,9 @@ java_library(
         "//test/com/facebook/buck/util:util",
     ],
     visibility = ["PUBLIC"],
-    deps = ["//third-party/java/jsr:jsr305"],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 IO_SRCS = [
@@ -55,6 +56,8 @@ java_immutables_library(
         ":process_executor",
         ":util",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/nuprocess:nuprocess",
@@ -104,47 +107,6 @@ java_immutables_library(
     ],
 )
 
-WATCHMAN_WATCHER_SRCS = [
-    "WatchmanEvent.java",
-    "WatchmanWatcher.java",
-]
-
-java_immutables_library(
-    name = "watchman",
-    srcs = WATCHMAN_WATCHER_SRCS,
-    visibility = ["PUBLIC"],
-    deps = [
-        ":exceptions",
-        ":process_executor",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
-        "//src/com/facebook/buck/io:watchman",
-        "//src/com/facebook/buck/log:api",
-    ],
-)
-
-OBJECT_MAPPER_SRCS = [
-    "ObjectMappers.java",
-]
-
-java_library(
-    name = "object_mapper",
-    srcs = OBJECT_MAPPER_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":exceptions",
-        "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/jackson:jackson-datatype-guava",
-        "//third-party/java/jackson:jackson-datatype-jdk8",
-    ],
-)
-
 PACKAGED_RESOURCE_SRCS = [
     "PackagedResource.java",
 ]
@@ -156,9 +118,9 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/io:BuckPaths",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/zip:unzip",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
     ],
 )
@@ -167,10 +129,12 @@ java_immutables_library(
     name = "util",
     srcs = glob(
         excludes = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
-                   WATCHMAN_WATCHER_SRCS + OBJECT_MAPPER_SRCS +
                    PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
         includes = ["*.java"],
     ),
+    exported_deps = [
+        "//third-party/java/guava:guava",
+    ],
     tests = [
         "//test/com/facebook/buck/util:util",
     ],
@@ -179,10 +143,13 @@ java_immutables_library(
     ],
     deps = [
         ":exceptions",
-        ":object_mapper",
+        "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jackson:jackson-datatype-guava",
+        "//third-party/java/jackson:jackson-datatype-jdk8",
     ],
 )

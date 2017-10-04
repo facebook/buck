@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.xcode.XCScheme;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -96,6 +96,9 @@ public class XcodeWorkspaceConfigDescription
 
     @Value.NaturalOrder
     ImmutableSortedMap<String, BuildTarget> getExtraSchemes();
+
+    Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
+        getEnvironmentVariables();
 
     Optional<Boolean> getIsRemoteRunnable();
 

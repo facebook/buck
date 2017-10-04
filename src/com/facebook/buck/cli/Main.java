@@ -28,9 +28,7 @@ import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
@@ -60,12 +58,16 @@ import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
-import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticEventListener;
+import com.facebook.buck.io.WatchmanWatcher;
+import com.facebook.buck.io.WatchmanWatcherException;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.log.ConsoleHandlerState;
@@ -97,6 +99,8 @@ import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.NanosAdjustedClock;
+import com.facebook.buck.toolchain.ToolchainProvider;
+import com.facebook.buck.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.AsyncCloseable;
@@ -115,12 +119,13 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.WatchmanWatcher;
-import com.facebook.buck.util.WatchmanWatcherException;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
@@ -204,6 +209,8 @@ public final class Main {
 
   /**
    * Force JNA to be initialized early to avoid deadlock race condition.
+   *
+   * <p>
    *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
@@ -321,8 +328,8 @@ public final class Main {
   public interface KnownBuildRuleTypesFactoryFactory {
     KnownBuildRuleTypesFactory create(
         ProcessExecutor processExecutor,
-        AndroidDirectoryResolver androidDirectoryResolver,
-        SdkEnvironment sdkEnvironment);
+        SdkEnvironment sdkEnvironment,
+        ToolchainProvider toolchainProvider);
   }
 
   private final KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
@@ -513,9 +520,13 @@ public final class Main {
           command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
     }
     Config config = Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
-    ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
+
+    ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
+    ProjectFilesystem filesystem =
+        projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
+
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(filesystem.getRootPath(), config);
+        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
     BuckConfig buckConfig =
         new BuckConfig(
             config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
@@ -598,6 +609,9 @@ public final class Main {
         }
       }
 
+      ToolchainProvider toolchainProvider =
+          new DefaultToolchainProvider(clientEnvironment, buckConfig, filesystem);
+
       AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, platform);
       AndroidDirectoryResolver androidDirectoryResolver =
           new DefaultAndroidDirectoryResolver(
@@ -609,7 +623,7 @@ public final class Main {
       ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
       SdkEnvironment sdkEnvironment =
-          SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
+          SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
 
       Clock clock;
       boolean enableThreadCpuTime =
@@ -629,7 +643,7 @@ public final class Main {
 
         KnownBuildRuleTypesFactory factory =
             knownBuildRuleTypesFactoryFactory.create(
-                processExecutor, androidDirectoryResolver, sdkEnvironment);
+                processExecutor, sdkEnvironment, toolchainProvider);
 
         Cell rootCell =
             CellProvider.createForLocalBuild(
@@ -638,7 +652,8 @@ public final class Main {
                     buckConfig,
                     command.getConfigOverrides(),
                     factory,
-                    sdkEnvironment)
+                    sdkEnvironment,
+                    projectFilesystemFactory)
                 .getCellByPath(filesystem.getRootPath());
 
         Optional<Daemon> daemon =
@@ -670,8 +685,7 @@ public final class Main {
         // ImmutableSet<PathOrGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
         // uses the defaults.
         ProjectFilesystem rootCellProjectFilesystem =
-            ProjectFilesystem.createNewOrThrowHumanReadableException(
-                rootCell.getFilesystem().getRootPath());
+            projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());
         if (daemon.isPresent()) {
           allCaches.addAll(getFileHashCachesFromDaemon(daemon.get()));
         } else {
@@ -708,7 +722,7 @@ public final class Main {
                 rootCellProjectFilesystem, rootCell.getBuckConfig().getFileHashCacheMode()));
         allCaches.addAll(
             DefaultFileHashCache.createOsRootDirectoriesCaches(
-                rootCell.getBuckConfig().getFileHashCacheMode()));
+                projectFilesystemFactory, rootCell.getBuckConfig().getFileHashCacheMode()));
 
         StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
@@ -780,7 +794,10 @@ public final class Main {
                     executionEnvironment,
                     webServer,
                     locale,
-                    filesystem.getBuckPaths().getLogDir().resolve("test.log"));
+                    filesystem.getBuckPaths().getLogDir().resolve("test.log"),
+                    buckConfig.isLogBuildIdToConsoleEnabled()
+                        ? Optional.of(buildId)
+                        : Optional.empty());
             AsyncCloseable asyncCloseable = new AsyncCloseable(diskIoExecutorService);
             DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
             BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
@@ -1066,6 +1083,8 @@ public final class Main {
                         .setInvocationInfo(Optional.of(invocationInfo))
                         .setDefaultRuleKeyFactoryCacheRecycler(defaultRuleKeyFactoryCacheRecycler)
                         .setBuildInfoStoreManager(storeManager)
+                        .setProjectFilesystemFactory(projectFilesystemFactory)
+                        .setToolchainProvider(factory.getToolchainProvider())
                         .build());
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, INTERRUPTED_EXIT_CODE));
@@ -1506,7 +1525,8 @@ public final class Main {
       ExecutionEnvironment executionEnvironment,
       Optional<WebServer> webServer,
       Locale locale,
-      Path testLogPath) {
+      Path testLogPath,
+      Optional<BuildId> buildId) {
     if (isSuperConsoleEnabled(console)) {
       SuperConsoleEventBusListener superConsole =
           new SuperConsoleEventBusListener(
@@ -1518,7 +1538,8 @@ public final class Main {
               webServer,
               locale,
               testLogPath,
-              TimeZone.getDefault());
+              TimeZone.getDefault(),
+              buildId);
       superConsole.startRenderScheduler(
           SUPER_CONSOLE_REFRESH_RATE.toMillis(), TimeUnit.MILLISECONDS);
       return superConsole;
@@ -1529,9 +1550,11 @@ public final class Main {
         testResultSummaryVerbosity,
         config.getHideSucceededRulesInLogMode(),
         config.getNumberOfSlowRulesToShow(),
+        config.shouldShowSlowRulesInConsole(),
         locale,
         testLogPath,
-        executionEnvironment);
+        executionEnvironment,
+        buildId);
   }
 
   private boolean isSuperConsoleEnabled(Console console) {

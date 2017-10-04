@@ -27,7 +27,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.FakeCxxLibrary;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -169,7 +169,7 @@ public class SwiftLibraryIntegrationTest {
     assertThat(
         sourcePathArg.getPath(),
         Matchers.equalTo(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 swiftCompileTarget,
                 pathResolver
                     .getRelativePath(buildRule.getSourcePathToOutput())
@@ -179,7 +179,7 @@ public class SwiftLibraryIntegrationTest {
     assertThat(objArg, Matchers.instanceOf(FileListableLinkerInputArg.class));
     FileListableLinkerInputArg fileListArg = (FileListableLinkerInputArg) objArg;
     ExplicitBuildTargetSourcePath fileListSourcePath =
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             swiftCompileTarget,
             pathResolver.getRelativePath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));

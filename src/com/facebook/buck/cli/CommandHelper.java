@@ -16,16 +16,19 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class CommandHelper {
@@ -35,7 +38,7 @@ public abstract class CommandHelper {
       throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
-            targetsAndResults, input -> Preconditions.checkNotNull(input.toString()));
+            targetsAndResults, input -> stringify(Preconditions.checkNotNull(input)));
     ObjectMappers.WRITER.writeValue(
         params.getConsole().getStdOut(), targetsAndResultsNames.asMap());
   }
@@ -43,21 +46,25 @@ public abstract class CommandHelper {
   public static void printJSON(CommandRunnerParams params, Set<QueryTarget> targets)
       throws IOException {
     Set<String> targetsNames =
-        ImmutableSet.copyOf(
-            Collections2.transform(targets, input -> Preconditions.checkNotNull(input.toString())));
+        targets
+            .stream()
+            .peek(Objects::requireNonNull)
+            .map(CommandHelper::stringify)
+            .collect(MoreCollectors.toImmutableSet());
+
     ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetsNames);
   }
 
   public static void printToConsole(
       CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndDependencies) {
     for (QueryTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
-      params.getConsole().getStdOut().println(target);
+      params.getConsole().getStdOut().println(stringify(target));
     }
   }
 
   public static void printToConsole(CommandRunnerParams params, Set<QueryTarget> targets) {
     for (QueryTarget target : targets) {
-      params.getConsole().getStdOut().println(target);
+      params.getConsole().getStdOut().println(stringify(target));
     }
   }
 
@@ -65,5 +72,18 @@ public abstract class CommandHelper {
     stream.println("Description: ");
     stream.println("  " + command.getShortDescription());
     stream.println();
+  }
+
+  private static String stringify(QueryTarget target) {
+    if (target instanceof QueryFileTarget) {
+      QueryFileTarget fileTarget = (QueryFileTarget) target;
+      SourcePath path = fileTarget.getPath();
+      if (path instanceof PathSourcePath) {
+        PathSourcePath psp = (PathSourcePath) path;
+        return psp.getRelativePath().toString();
+      }
+    }
+
+    return target.toString();
   }
 }

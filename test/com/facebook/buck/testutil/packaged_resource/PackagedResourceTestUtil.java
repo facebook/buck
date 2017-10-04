@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil.packaged_resource;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.PackagedResource;
 
 public class PackagedResourceTestUtil {

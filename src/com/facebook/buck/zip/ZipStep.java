@@ -16,16 +16,20 @@
 
 package com.facebook.buck.zip;
 
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;

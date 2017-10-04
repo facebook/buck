@@ -17,12 +17,16 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
@@ -43,6 +47,7 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -85,5 +90,44 @@ public class AppleTestDescriptionTest {
         Matchers.hasItem(
             String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath(pathResolver))));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
+  }
+
+  @Test
+  public void uiTestHasNoTestHost() throws Exception {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+
+    BuildTarget testHostBinTarget = BuildTargetFactory.newInstance("//:testhostbin#macosx-x86_64");
+    BuildTarget testHostBundleTarget =
+        BuildTargetFactory.newInstance("//:testhostbundle#macosx-x86_64");
+    BuildTarget testTarget = BuildTargetFactory.newInstance("//:test#macosx-x86_64");
+
+    AppleBinaryBuilder testHostBinaryBuilder =
+        AppleBinaryBuilder.createBuilder(testHostBinTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+
+    AppleBundleBuilder testHostBundleBuilder =
+        AppleBundleBuilder.createBuilder(testHostBundleTarget)
+            .setBinary(testHostBinTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(new FakeSourcePath(("Info.plist")));
+
+    AppleTestBuilder testBuilder =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setInfoPlist(new FakeSourcePath(("Info.plist")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+            .isUiTest(true)
+            .setTestHostApp(Optional.of(testHostBundleTarget));
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            testBuilder.build(), testHostBundleBuilder.build(), testHostBinaryBuilder.build());
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver.requireRule(testHostBundleTarget);
+    AppleTest test = testBuilder.build(resolver, targetGraph);
+
+    assertTrue(test.isUiTest());
+    assertFalse(test.hasTestHost());
   }
 }

@@ -16,7 +16,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -91,7 +91,14 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
 
   public static BuildTarget removeStripStyleFlavorInTarget(
       BuildTarget buildTarget, Optional<StripStyle> flavoredStripStyle) {
-    buildTarget = buildTarget.withoutFlavors(CxxStrip.RULE_FLAVOR);
+    Preconditions.checkState(
+        !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR),
+        "This function used to strip "
+            + RULE_FLAVOR
+            + ", which masked errors in constructing "
+            + "build targets and caused the returned rule's build target to differ from the "
+            + "requested one. This is now explicitly disallowed to catch existing and future "
+            + "programming errors of this kind.");
     if (flavoredStripStyle.isPresent()) {
       return buildTarget.withoutFlavors(flavoredStripStyle.get().getFlavor());
     }
@@ -136,6 +143,6 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), output);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 }

@@ -20,14 +20,16 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.NdkCxxPlatforms;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
@@ -56,7 +58,8 @@ import org.junit.runners.Parameterized;
 public class CxxSharedLibraryInterfaceIntegrationTest {
 
   private static Optional<ImmutableList<Flavor>> getNdkPlatforms() throws InterruptedException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     DefaultAndroidDirectoryResolver resolver =
         new DefaultAndroidDirectoryResolver(
             filesystem.getRootPath().getFileSystem(),
@@ -79,7 +82,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             .setVersion(compilerVersion)
             .setGccVersion(gccVersion)
             .build();
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkPlatforms =
+    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),

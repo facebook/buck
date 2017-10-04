@@ -16,7 +16,7 @@
 
 package com.facebook.buck.js;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
@@ -98,7 +98,7 @@ public class JsUtil {
 
   static SourcePath relativeToOutputRoot(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, String subpath) {
-    return new ExplicitBuildTargetSourcePath(
+    return ExplicitBuildTargetSourcePath.of(
         buildTarget,
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(subpath));
   }

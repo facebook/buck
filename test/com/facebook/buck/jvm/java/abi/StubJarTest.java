@@ -22,7 +22,9 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JarDumper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
@@ -30,9 +32,9 @@ import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.facebook.buck.zip.DeterministicManifest;
-import com.facebook.buck.zip.JarBuilder;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.zip.DeterministicManifest;
+import com.facebook.buck.util.zip.JarBuilder;
+import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -99,7 +101,7 @@ public class StubJarTest {
   @Before
   public void createTempFilesystem() throws InterruptedException, IOException {
     File out = temp.newFolder();
-    filesystem = new ProjectFilesystem(out.toPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(out.toPath());
   }
 
   @Test
@@ -506,6 +508,118 @@ public class StubJarTest {
   }
 
   @Test
+  public void failsWhenInterfaceWillNotLoad() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    tester
+        .setSourceFile(
+            "Dep2.java", "package com.example.buck.dependency;", "public interface Dep2 { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck.dependency;",
+            "public class Dep implements Dep2 {",
+            "  public interface Inner { }",
+            "}")
+        .compileFullJar()
+        // We add Dep to the classpath even for no-deps mode, but its interface Dep2 will be absent.
+        // That will cause Dep to fail to load, resulting in Inner not even getting added to the
+        // interfaces list by the compiler.
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.dependency.Dep;",
+            "public abstract class A implements Dep.Inner, Runnable { }")
+        .addExpectedCompileError(
+            "A.java:3: error: cannot access com.example.buck.dependency.Dep2\n"
+                + "public abstract class A implements Dep.Inner, Runnable { }\n"
+                + "                ^\n"
+                + "  class file for com.example.buck.dependency.Dep2 not found")
+        .createStubJar();
+  }
+
+  @Test
+  public void failsWhenClassWillNotLoad() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+
+    tester
+        .setSourceFile(
+            "Dep2.java", "package com.example.buck.dependency;", "public interface Dep2 { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck.dependency;",
+            "public class Dep implements Dep2 {",
+            "  public static class Inner { }",
+            "}")
+        .compileFullJar()
+        // We add Dep to the classpath even for no-deps mode, but its interface Dep2 will be absent.
+        // That will cause Dep to fail to load, resulting in Inner not even getting added to the
+        // interfaces list by the compiler.
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.dependency.Dep;",
+            "public class A extends Dep.Inner { }")
+        .addExpectedCompileError(
+            "A.java:3: error: cannot access com.example.buck.dependency.Dep2\n"
+                + "public class A extends Dep.Inner { }\n"
+                + "       ^\n"
+                + "  class file for com.example.buck.dependency.Dep2 not found")
+        .createStubJar();
+  }
+
+  @Test
+  public void shouldPreserveAnnotationsEvenWhenSuperclassWillNotLoad() throws IOException {
+    tester
+        .setSourceFile(
+            "Dep2.java", "package com.example.buck.dependency;", "public interface Dep2 { }")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "Dep.java",
+            "package com.example.buck.dependency;",
+            "public class Dep implements Dep2 {",
+            "  public static class Inner { }",
+            "  public @interface Anno { }",
+            "}")
+        .compileFullJar()
+        // We add Dep to the classpath even for no-deps mode, but its interface Dep2 will be absent.
+        // That will cause Dep to fail to load, resulting in Inner not even getting added to the
+        // interfaces list by the compiler.
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import com.example.buck.dependency.Dep;",
+            "@Dep.Anno",
+            "public class A { }")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lcom/example/buck/dependency/Dep$Anno;() // invisible",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/dependency/Dep$Anno com/example/buck/dependency/Dep Anno",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void shouldIgnorePrivateMethods() throws IOException {
     tester
         .setSourceFile(
@@ -802,7 +916,7 @@ public class StubJarTest {
             "  public void cheese(String key) {}",
             "}")
         .addExpectedCompileError(
-            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_abi = True to its build rule.\n"
+            "A.java:3: error: Could not load the class file for this annotation. Consider adding required_for_source_only_abi = True to its build rule.\n"
                 + "  @Foo\n"
                 + "  ^")
         .createStubJar();
@@ -996,7 +1110,7 @@ public class StubJarTest {
             "  // signature Ljava/util/List<Ljava/lang/String;>;",
             "  // declaration: java.util.List<java.lang.String>",
             "  Ljava/util/List; list",
-            "  @Lcom/example/buck/Foo$TypeAnnotation;() : FIELD, 0 // invisible",
+            "  @Lcom/example/buck/Foo$TypeAnnotation;() : FIELD, 0; // invisible",
             "",
             "  // access flags 0x1",
             "  public <init>()V",
@@ -1219,7 +1333,7 @@ public class StubJarTest {
             "@Foo(stringValue=Dependency.STRING)",
             "public @interface A {}")
         .addExpectedCompileError(
-            "A.java:2: error: Could not resolve constant. Either inline the value or add required_for_source_abi = True to the build rule that contains it.\n"
+            "A.java:2: error: Could not resolve constant. Either inline the value or add required_for_source_only_abi = True to the build rule that contains it.\n"
                 + "@Foo(stringValue=Dependency.STRING)\n"
                 + "                           ^")
         .createStubJar();
@@ -2410,7 +2524,6 @@ public class StubJarTest {
 
   @Test
   public void stubsImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
-    notYetImplementedForSource();
     tester
         .setSourceFile(
             "Imported.java",
@@ -2447,6 +2560,129 @@ public class StubJarTest {
             "  public <init>()V",
             "}")
         .createAndCheckStubJar();
+  }
+
+  @Test
+  public void stubsStaticImportedReferencesToInnerClassesOfOtherTypes() throws IOException {
+    tester
+        .setSourceFile(
+            "Imported.java",
+            "package com.example.buck.imported;",
+            "public class Imported {",
+            "  public static class Inner {",
+            "    public static class Innerer { }",
+            "  }",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import static com.example.buck.imported.Imported.Inner.Innerer;",
+            "public class A {",
+            "  public Innerer field;",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 52.0 (52)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/imported/Imported$Inner com/example/buck/imported/Imported Inner",
+            "  // access flags 0x8",
+            "  static INNERCLASS com/example/buck/imported/Imported$Inner$Innerer com/example/buck/imported/Imported$Inner Innerer",
+            "",
+            "  // access flags 0x1",
+            "  public Lcom/example/buck/imported/Imported$Inner$Innerer; field",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void detectsStaticImportedReferencesToMissingInnerClassesOfOtherTypes()
+      throws IOException {
+    tester
+        .setSourceFile(
+            "ImportedBase.java",
+            "package com.example.buck.imported;",
+            "public class ImportedBase {",
+            "  public static class Inner {",
+            "    public static class Innerer { }",
+            "  }",
+            "}")
+        .compileFullJar()
+        .addFullJarToClasspath()
+        .setSourceFile(
+            "Imported.java",
+            "package com.example.buck.imported;",
+            "public class Imported extends ImportedBase { }")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import static com.example.buck.imported.Imported.Inner;",
+            "public class A {",
+            "  public Inner field;",
+            "}");
+
+    if (testingMode == MODE_SOURCE_BASED_MISSING_DEPS) {
+      tester
+          .addExpectedCompileError(
+              "A.java:2: error: cannot access com.example.buck.imported.ImportedBase\n"
+                  + "import static com.example.buck.imported.Imported.Inner;\n"
+                  + "^\n"
+                  + "  class file for com.example.buck.imported.ImportedBase not found")
+          .createStubJar();
+    } else {
+      tester
+          .addExpectedStub(
+              "com/example/buck/A",
+              "// class version 52.0 (52)",
+              "// access flags 0x21",
+              "public class com/example/buck/A {",
+              "",
+              "  // access flags 0x8",
+              "  static INNERCLASS com/example/buck/imported/ImportedBase$Inner com/example/buck/imported/ImportedBase Inner",
+              "",
+              "  // access flags 0x1",
+              "  public Lcom/example/buck/imported/ImportedBase$Inner; field",
+              "",
+              "  // access flags 0x1",
+              "  public <init>()V",
+              "}")
+          .createAndCheckStubJar();
+    }
+  }
+
+  @Test
+  public void failsOnObviouslyNonExistentStaticImports() throws IOException {
+    if (testingMode != MODE_SOURCE_BASED_MISSING_DEPS) {
+      return;
+    }
+    tester
+        .setSourceFile(
+            "Imported.java", "package com.example.buck.imported;", "public class Imported { }")
+        .compileFullJar()
+        .addFullJarToClasspathAlways()
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "import static com.example.buck.imported.Imported.Inner;",
+            "public class A {",
+            "  public Inner field;",
+            "}")
+        .addExpectedCompileError(
+            "A.java:2: error: cannot find symbol\n"
+                + "import static com.example.buck.imported.Imported.Inner;\n"
+                + "^\n"
+                + "  symbol:   static Inner\n"
+                + "  location: class")
+        .createStubJar();
   }
 
   @Test
@@ -3458,7 +3694,17 @@ public class StubJarTest {
             "public class PrivateTest {",
             "  private PrivateTest() { }",
             "}")
-        .createStubJar()
+        .addExpectedStub(
+            "com/example/buck/PrivateTest",
+            "// class version 52.0 (52)\n"
+                + "// access flags 0x21\n"
+                + "public class com/example/buck/PrivateTest {\n"
+                + "\n"
+                + "\n"
+                + "  // access flags 0x2\n"
+                + "  private <init>()V\n"
+                + "}")
+        .createAndCheckStubJar()
         .addStubJarToClasspath()
         .setSourceFile(
             "A.java",
@@ -3597,7 +3843,11 @@ public class StubJarTest {
             temp.newFolder());
 
     Path classDir = temp.newFolder().toPath();
-    Unzip.extractZipFile(fullJarPath, classDir, Unzip.ExistingFileMode.OVERWRITE);
+    Unzip.extractZipFile(
+        new DefaultProjectFilesystemFactory(),
+        fullJarPath,
+        classDir,
+        Unzip.ExistingFileMode.OVERWRITE);
 
     Path stubJarPath = createStubJar(classDir);
     tester
@@ -4287,7 +4537,10 @@ public class StubJarTest {
 
     public Tester addFullJarToClasspathAlways() throws IOException {
       universalClasspath =
-          ImmutableSortedSet.<Path>naturalOrder().addAll(classpath).add(fullJarPath).build();
+          ImmutableSortedSet.<Path>naturalOrder()
+              .addAll(universalClasspath)
+              .add(fullJarPath)
+              .build();
       resetActuals();
       return this;
     }

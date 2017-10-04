@@ -9,6 +9,6 @@ java_binary(
     main_class = "com.google.caliper.runner.CaliperMain",
     deps = [
         "//test/com/facebook/buck/parser:parser_benchmark_lib",
-        "//test/com/facebook/buck/util/cache:cache_benchmark_lib",
+        "//test/com/facebook/buck/util/cache/impl:cache_benchmark_lib",
     ],
 )

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.randomizedtrial.WithProbability;
 import com.facebook.buck.slb.SlbBuckConfig;

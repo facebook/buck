@@ -20,9 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -230,7 +231,7 @@ public class MultiArtifactCacheTest {
   @Test
   public void testCacheStoreWithBorrowablePathConsumingCache()
       throws InterruptedException, IOException, ExecutionException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path fetchFile = filesystem.resolve("fetch_file");
 
     SimpleArtifactCache fakeDirCache = new SimpleArtifactCache(filesystem);

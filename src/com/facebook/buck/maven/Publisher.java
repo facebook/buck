@@ -16,7 +16,7 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.UnflavoredBuildTarget;
@@ -83,8 +83,7 @@ public class Publisher {
   }
 
   /**
-   * @param localRepoPath Typically obtained as {@link
-   *     com.facebook.buck.io.ProjectFilesystem#getRootPath}
+   * @param localRepoPath Typically obtained as {@link ProjectFilesystem#getRootPath}
    * @param remoteRepoUrl Canonically {@link #MAVEN_CENTRAL_URL}
    * @param dryRun if true, a dummy {@link DeployResult} will be returned, with the fully
    *     constructed {@link DeployRequest}. No actual publishing will happen

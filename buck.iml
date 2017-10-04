@@ -9,6 +9,7 @@
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables" isTestSource="false" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/build-ij/immutables-test" isTestSource="true" generated="true" />
       <sourceFolder url="file://$MODULE_DIR$/src-gen" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
@@ -61,12 +62,14 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/swift/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/test/labels/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testrunner/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/integration/testlibs" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/testutil/packaged_resource/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/versioncontrol/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="asm" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="module" module-name="aosp" />

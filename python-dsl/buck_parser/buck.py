@@ -713,15 +713,22 @@ class BuildFileProcessor(object):
     def _get_load_path(self, label):
         # type: (str) -> str
         """Resolve the given load function label to a full path."""
-        match = re.match(r'^([A-Za-z0-9_]*)//(.*):(.*)$', label)
+        match = re.match(r'^(@?[A-Za-z0-9_]+)?//(.*):(.*)$', label)
         if match is None:
             raise ValueError(
                 'load label {} should be in the form of '
                 '//path:file or cellname//path:file'.format(label))
-        cell_name = match.group(1)
+        cell_name = match.group(1) or ''
         relative_path = match.group(2)
         file_name = match.group(3)
         if len(cell_name) > 0:
+            if not cell_name.startswith('@'):
+                self._emit_warning('load label {} uses a deprecated style cell references. Instead'
+                                   ' of {} it should be {}.'.format(label, cell_name,
+                                                                    '@' + cell_name),
+                                   'load function')
+            else:
+                cell_name = cell_name[1:]
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(

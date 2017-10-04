@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.MoreCollectors;

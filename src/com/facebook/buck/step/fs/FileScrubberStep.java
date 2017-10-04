@@ -16,10 +16,10 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.FileAttributesScrubber;
-import com.facebook.buck.io.FileContentsScrubber;
-import com.facebook.buck.io.FileScrubber;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.FileAttributesScrubber;
+import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.io.file.FileScrubber;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;

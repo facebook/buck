@@ -23,10 +23,13 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
@@ -44,10 +47,11 @@ import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
@@ -92,8 +96,9 @@ public class CommandRunnerParamsForTesting {
       throws IOException, InterruptedException {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ProcessExecutor processExecutor = new FakeProcessExecutor();
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(config, processExecutor, androidDirectoryResolver);
+        SdkEnvironment.create(config, processExecutor, toolchainProvider);
 
     return CommandRunnerParams.builder()
         .setConsole(console)
@@ -131,9 +136,10 @@ public class CommandRunnerParamsForTesting {
         .setInvocationInfo(Optional.empty())
         .setActionGraphCache(new ActionGraphCache())
         .setKnownBuildRuleTypesFactory(
-            new KnownBuildRuleTypesFactory(
-                processExecutor, androidDirectoryResolver, sdkEnvironment))
+            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider))
         .setSdkEnvironment(sdkEnvironment)
+        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+        .setToolchainProvider(toolchainProvider)
         .build();
   }
 

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple.project_generator;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.MoreProjectFilesystems;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;

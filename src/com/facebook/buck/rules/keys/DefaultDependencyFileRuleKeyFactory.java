@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -154,7 +154,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     }
 
     @Override
-    protected Builder<RULE_KEY> setReflectively(@Nullable Object val) {
+    protected Builder<RULE_KEY> setReflectively(@Nullable Object val) throws IOException {
       if (val instanceof ArchiveDependencySupplier) {
         Iterable<SourcePath> members =
             ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver)::iterator;

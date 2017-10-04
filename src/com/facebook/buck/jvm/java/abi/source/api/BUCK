@@ -7,5 +7,6 @@ java_library(
     deps = [
         # Don't add deps that aren't already in the plugin; this is a super-light library
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
+        "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
     ],
 )

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -45,10 +45,10 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -193,7 +193,7 @@ public class ExportFileTest {
     FakeBuildRule rule =
         resolver.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
 
-    builder.setSrc(new DefaultBuildTargetSourcePath(rule.getBuildTarget()));
+    builder.setSrc(DefaultBuildTargetSourcePath.of(rule.getBuildTarget()));
     exportFile = builder.build(resolver, projectFilesystem);
     assertThat(
         pathResolver.filterInputsToCompareToOutput(exportFile.getSource()), Matchers.empty());

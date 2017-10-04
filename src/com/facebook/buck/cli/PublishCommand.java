@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavaLibrary.MAVEN_JAR;
 import static com.facebook.buck.jvm.java.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;

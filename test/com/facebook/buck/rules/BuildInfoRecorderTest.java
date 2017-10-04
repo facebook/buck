@@ -29,22 +29,22 @@ import com.facebook.buck.artifact_cache.CacheReadMode;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.MorePathsForTests;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.MorePathsForTests;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -177,7 +177,7 @@ public class BuildInfoRecorderTest {
                 info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
 
             // Verify zip contents
-            try (Zip zip = new Zip(output.getPath(), /* forWriting */ false)) {
+            try (ZipArchive zip = new ZipArchive(output.getPath(), /* forWriting */ false)) {
               assertEquals(
                   ImmutableSet.of(
                       "",

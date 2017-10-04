@@ -21,6 +21,7 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.CellPathResolver;
@@ -93,6 +94,9 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract ProcessExecutor getProcessExecutor();
+
+  @Value.Parameter
+  abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   /**
    * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to

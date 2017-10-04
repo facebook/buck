@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.BinaryBuildRule;
@@ -38,7 +38,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
 
@@ -46,7 +45,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule,
         NativeTestable,
         HasRuntimeDeps,
-        ProvidesLinkedBinaryDeps,
+        HasAppleDebugSymbolDeps,
         SupportsInputBasedRuleKey {
 
   private final BuildRuleResolver ruleResolver;
@@ -117,7 +116,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(), Preconditions.checkNotNull(linkRule.getSourcePathToOutput()));
   }
 
@@ -144,20 +143,11 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    if (linkRule instanceof ProvidesLinkedBinaryDeps) {
-      return ((ProvidesLinkedBinaryDeps) linkRule).getStaticLibraryDeps();
+  public Stream<BuildRule> getAppleDebugSymbolDeps() {
+    if (linkRule instanceof HasAppleDebugSymbolDeps) {
+      return ((HasAppleDebugSymbolDeps) linkRule).getAppleDebugSymbolDeps();
     } else {
-      return ImmutableSet.of();
-    }
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getCompileDeps() {
-    if (linkRule instanceof ProvidesLinkedBinaryDeps) {
-      return ((ProvidesLinkedBinaryDeps) linkRule).getCompileDeps();
-    } else {
-      return ImmutableSet.of();
+      return Stream.empty();
     }
   }
 

@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -257,7 +257,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       ruleResolver.addToIndex(generateRDotJava.get());
 
       if (shouldBuildStringSourceMap) {
-        ruleResolver.addToIndex(createGenerateStringSourceMap());
+        ruleResolver.addToIndex(
+            createGenerateStringSourceMap(pathToRDotTxt, filteredResourcesProvider));
       }
     }
 
@@ -334,16 +335,18 @@ class AndroidBinaryResourcesGraphEnhancer {
         bannedDuplicateResourceTypes,
         pathToRDotTxtFile,
         resourceUnionPackage,
-        shouldBuildStringSourceMap,
         resourceDeps,
         resourcesProvider);
   }
 
-  private GenerateStringSourceMap createGenerateStringSourceMap() {
+  private GenerateStringSourceMap createGenerateStringSourceMap(
+      SourcePath pathToRDotTxtFile, FilteredResourcesProvider filteredResourcesProvider) {
     return new GenerateStringSourceMap(
         buildTarget.withAppendedFlavors(GENERATE_STRING_SOURCE_MAP_FLAVOR),
         projectFilesystem,
-        ruleFinder);
+        ruleFinder,
+        pathToRDotTxtFile,
+        filteredResourcesProvider);
   }
 
   private ResourcesFilter createResourcesFilter(

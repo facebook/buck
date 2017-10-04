@@ -17,7 +17,7 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -74,7 +74,7 @@ class OcamlStaticLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implement
     UnflavoredBuildTarget staticBuildTarget = staticLibraryTarget.getUnflavoredBuildTarget();
     inputBuilder.addArgs(
         SourcePathArg.of(
-            new ExplicitBuildTargetSourcePath(
+            ExplicitBuildTargetSourcePath.of(
                 ocamlLibraryBuild.getBuildTarget(),
                 isBytecode
                     ? OcamlBuildContext.getBytecodeOutputPath(

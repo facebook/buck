@@ -17,12 +17,12 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
@@ -43,6 +43,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -58,8 +59,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -292,14 +295,6 @@ public class Build implements Closeable {
         .build();
   }
 
-  private String getFailureMessage(Throwable thrown) {
-    return "BUILD FAILED: " + thrown.getMessage();
-  }
-
-  private String getFailureMessageWithClassName(Throwable thrown) {
-    return "BUILD FAILED: " + thrown.getClass().getName() + " " + thrown.getMessage();
-  }
-
   public int executeAndPrintFailuresToEventBus(
       Iterable<BuildTarget> targetsish,
       boolean isKeepGoing,
@@ -310,61 +305,70 @@ public class Build implements Closeable {
     int exitCode;
 
     try {
-      try {
-        BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
+      BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
 
-        SourcePathResolver pathResolver =
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
-        BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+      BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
 
-        if (isKeepGoing) {
-          String buildReportText = buildReport.generateForConsole(console);
-          buildReportText =
-              buildReportText.isEmpty()
-                  ? "Failure report is empty."
-                  :
-                  // Remove trailing newline from build report.
-                  buildReportText.substring(0, buildReportText.length() - 1);
-          eventBus.post(ConsoleEvent.info(buildReportText));
-          exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
-          if (exitCode != 0) {
-            eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
-          }
-        } else {
-          exitCode = 0;
+      if (isKeepGoing) {
+        String buildReportText = buildReport.generateForConsole(console);
+        buildReportText =
+            buildReportText.isEmpty()
+                ? "Failure report is empty."
+                :
+                // Remove trailing newline from build report.
+                buildReportText.substring(0, buildReportText.length() - 1);
+        eventBus.post(ConsoleEvent.info(buildReportText));
+        exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
+        if (exitCode != 0) {
+          eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
         }
-
-        if (pathToBuildReport.isPresent()) {
-          // Note that pathToBuildReport is an absolute path that may exist outside of the project
-          // root, so it is not appropriate to use ProjectFilesystem to write the output.
-          String jsonBuildReport = buildReport.generateJsonBuildReport();
-          try {
-            Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
-          } catch (IOException e) {
-            eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
-            exitCode = 1;
-          }
-        }
-      } catch (BuildExecutionException e) {
-        if (pathToBuildReport.isPresent()) {
-          writePartialBuildReport(eventBus, pathToBuildReport.get(), e);
-        }
-        throw rootCauseOfBuildException(e);
-      } catch (ExecutionException | RuntimeException e) {
-        // This is likely a checked exception that was caught while building a build rule.
-        throw rootCauseOfBuildException(e);
+      } else {
+        exitCode = 0;
       }
-    } catch (IOException e) {
-      LOG.debug(e, "Got an exception during the build.");
-      eventBus.post(ConsoleEvent.severe(getFailureMessageWithClassName(e)));
-      exitCode = 1;
-    } catch (StepFailedException e) {
-      LOG.debug(e, "Got an exception during the build.");
-      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
+
+      if (pathToBuildReport.isPresent()) {
+        // Note that pathToBuildReport is an absolute path that may exist outside of the project
+        // root, so it is not appropriate to use ProjectFilesystem to write the output.
+        String jsonBuildReport = buildReport.generateJsonBuildReport();
+        // TODO(cjhopman): The build report should use an ErrorLogger to extract good error
+        // messages.
+        try {
+          Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+        } catch (IOException e) {
+          eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
+          exitCode = 1;
+        }
+      }
+    } catch (Exception e) {
+      if (e instanceof BuildExecutionException) {
+        pathToBuildReport.ifPresent(
+            path -> writePartialBuildReport(eventBus, path, (BuildExecutionException) e));
+      }
+      reportExceptionToUser(eventBus, e);
       exitCode = 1;
     }
 
     return exitCode;
+  }
+
+  private void reportExceptionToUser(BuckEventBus eventBus, Exception e) {
+    if (e instanceof RuntimeException) {
+      e = rootCauseOfBuildException(e);
+    }
+    new ErrorLogger(eventBus, "Build failed: ", "Got an exception during the build.") {
+      @Override
+      protected String getMessageForRootCause(Throwable rootCause) {
+        if (rootCause instanceof HumanReadableException) {
+          return ((HumanReadableException) rootCause).getHumanReadableErrorMessage();
+        } else {
+          ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+          rootCause.printStackTrace(new PrintStream(outputStream));
+          return new String(outputStream.toByteArray());
+        }
+      }
+    }.logException(e);
   }
 
   /**
@@ -373,24 +377,18 @@ public class Build implements Closeable {
    * @param e The build exception.
    * @return The root cause exception for why the build failed.
    */
-  private RuntimeException rootCauseOfBuildException(Exception e)
-      throws IOException, StepFailedException, InterruptedException {
+  private Exception rootCauseOfBuildException(Exception e) {
     Throwable cause = e.getCause();
-    if (cause == null) {
-      Throwables.throwIfInstanceOf(e, RuntimeException.class);
-      return new RuntimeException(e);
+    if (cause == null || !(cause instanceof Exception)) {
+      return e;
     }
-    Throwables.throwIfInstanceOf(cause, IOException.class);
-    Throwables.throwIfInstanceOf(cause, StepFailedException.class);
-    Throwables.throwIfInstanceOf(cause, InterruptedException.class);
-    Throwables.throwIfInstanceOf(cause, ClosedByInterruptException.class);
-    Throwables.throwIfInstanceOf(cause, HumanReadableException.class);
-    if (cause instanceof ExceptionWithHumanReadableMessage) {
-      return new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
+    if (cause instanceof IOException
+        || cause instanceof StepFailedException
+        || cause instanceof InterruptedException
+        || cause instanceof ExceptionWithHumanReadableMessage) {
+      return (Exception) cause;
     }
-
-    LOG.debug(e, "Got an exception during the build.");
-    return new RuntimeException(e);
+    return e;
   }
 
   /**
@@ -400,18 +398,16 @@ public class Build implements Closeable {
    * results, but clients are still very much interested in finding out what exactly went wrong.
    * {@link BuildExecutionException} captures partial build execution result, which can still be
    * used to provide the most useful information about build result.
-   *
-   * @throws IOException
    */
   private void writePartialBuildReport(
-      BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) throws IOException {
+      BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) {
     // Note that pathToBuildReport is an absolute path that may exist outside of the project
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildReport buildReport = new BuildReport(e.createBuildExecutionResult(), pathResolver);
-    String jsonBuildReport = buildReport.generateJsonBuildReport();
     try {
+      String jsonBuildReport = buildReport.generateJsonBuildReport();
       Files.write(jsonBuildReport, pathToBuildReport.toFile(), Charsets.UTF_8);
     } catch (IOException writeException) {
       LOG.warn(writeException, "Failed to write the build report to %s", pathToBuildReport);

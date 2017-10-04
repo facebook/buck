@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.cxx.CxxGenrule;
 import com.facebook.buck.cxx.CxxGenruleBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -280,7 +280,7 @@ public class PythonLibraryDescriptionTest {
             .setSrcs(
                 SourceList.ofUnnamedSources(
                     ImmutableSortedSet.of(
-                        new DefaultBuildTargetSourcePath(srcBuilder.getTarget()))));
+                        DefaultBuildTargetSourcePath.of(srcBuilder.getTarget()))));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), libraryBuilder.build());
     BuildRuleResolver resolver =

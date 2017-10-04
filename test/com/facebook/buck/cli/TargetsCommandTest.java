@@ -29,9 +29,11 @@ import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -110,7 +112,9 @@ public class TargetsCommandTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_command", tmp);
     workspace.setUp();
 
-    filesystem = new ProjectFilesystem(workspace.getDestPath().toRealPath().normalize());
+    filesystem =
+        TestProjectFilesystems.createProjectFilesystem(
+            workspace.getDestPath().toRealPath().normalize());
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     ArtifactCache artifactCache = new NoopArtifactCache();

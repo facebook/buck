@@ -30,7 +30,7 @@ import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -44,7 +44,6 @@ import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -68,8 +67,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
-  private final JavacCompilationMode compilationMode;
-  private final boolean requiredForSourceAbi;
+  private final AbiGenerationMode abiGenerationMode;
+  private final boolean requiredForSourceOnlyAbi;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
@@ -85,8 +84,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      JavacCompilationMode compilationMode,
-      boolean requiredForSourceAbi) {
+      AbiGenerationMode abiGenerationMode,
+      boolean requiredForSourceOnlyAbi) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
@@ -94,8 +93,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.pluginFields = pluginFields;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
-    this.compilationMode = compilationMode;
-    this.requiredForSourceAbi = requiredForSourceAbi;
+    this.abiGenerationMode = abiGenerationMode;
+    this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
   }
 
   @Override
@@ -124,10 +123,18 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             }
           });
 
-      javacTask.parse();
-      // JavacTask.call would stop between these phases if there were an error, so we do too.
-      if (buildSuccessful()) {
-        javacTask.enter();
+      try {
+        javacTask.parse();
+        // JavacTask.call would stop between these phases if there were an error, so we do too.
+        if (buildSuccessful()) {
+          javacTask.enter();
+        }
+      } catch (RuntimeException e) {
+        throw new HumanReadableException(
+            String.format(
+                "The compiler crashed when run without dependencies. There is probably an error in the source code. Try building %s to reveal it.",
+                invokingRule.getUnflavoredBuildTarget().toString()),
+            e);
       }
       frontendRunAttempted = true;
 
@@ -354,18 +361,14 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
       BuckJavacTaskListener taskListener = null;
-      if (EnumSet.of(
-              JavacCompilationMode.FULL_CHECKING_REFERENCES,
-              JavacCompilationMode.FULL_ENFORCING_REFERENCES)
-          .contains(compilationMode)) {
+      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()) {
         taskListener =
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
-                new DefaultInterfaceValidatorCallback(fileManager, requiredForSourceAbi),
-                compilationMode == JavacCompilationMode.FULL_ENFORCING_REFERENCES
-                    ? Diagnostic.Kind.ERROR
-                    : Diagnostic.Kind.WARNING);
+                new DefaultInterfaceValidatorCallback(
+                    fileManager, invokingRule, requiredForSourceOnlyAbi),
+                abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
       }
 
       TranslatingJavacPhaseTracer tracer =

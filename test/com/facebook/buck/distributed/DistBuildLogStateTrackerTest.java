@@ -20,14 +20,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.LogLineBatch;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogStreamType;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -48,11 +49,13 @@ public class DistBuildLogStateTrackerTest {
 
   private static final String LOG_DIR = "logs";
 
-  private static final String RUN_ONE_BUCK_OUT_DIR = "dist-build-slave-runIdOne/buck-out-log";
-  private static final String RUN_TWO_BUCK_OUT_DIR = "dist-build-slave-runIdTwo/buck-out-log";
+  private static final String RUN_ONE_BUCK_OUT_DIR =
+      "dist-build-slave-buildSlaveRunIdOne/buck-out-log";
+  private static final String RUN_TWO_BUCK_OUT_DIR =
+      "dist-build-slave-buildSlaveRunIdTwo/buck-out-log";
 
-  private static final String RUN_ONE_ID = "runIdOne";
-  private static final String RUN_TWO_ID = "runIdTwo";
+  private static final String RUN_ONE_ID = "buildSlaveRunIdOne";
+  private static final String RUN_TWO_ID = "buildSlaveRunIdTwo";
 
   /*
    **********************************
@@ -88,9 +91,12 @@ public class DistBuildLogStateTrackerTest {
    **********************************
    */
 
-  private static final String RUN_ONE_STD_ERR_LOG = "dist-build-slave-runIdOne/STDERR.log";
-  private static final String RUN_ONE_STD_OUT_LOG = "dist-build-slave-runIdOne/STDOUT.log";
-  private static final String RUN_TWO_STD_OUT_LOG = "dist-build-slave-runIdTwo/STDOUT.log";
+  private static final String RUN_ONE_STD_ERR_LOG =
+      "dist-build-slave-buildSlaveRunIdOne/STDERR.log";
+  private static final String RUN_ONE_STD_OUT_LOG =
+      "dist-build-slave-buildSlaveRunIdOne/STDOUT.log";
+  private static final String RUN_TWO_STD_OUT_LOG =
+      "dist-build-slave-buildSlaveRunIdTwo/STDOUT.log";
 
   private Path logDir;
   private DistBuildLogStateTracker distBuildLogStateTracker;
@@ -104,7 +110,8 @@ public class DistBuildLogStateTrackerTest {
   @Before
   public void setUp() throws InterruptedException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     logDir = projectDir.getRoot().toPath().resolve(LOG_DIR);
     distBuildLogStateTracker = new DistBuildLogStateTracker(logDir, projectFilesystem);
   }
@@ -112,18 +119,18 @@ public class DistBuildLogStateTrackerTest {
   @Test
   public void testStreamsLogsForRuns() throws IOException {
     BuildSlaveInfo runOneSlaveInfo = new BuildSlaveInfo();
-    RunId runOneId = new RunId();
+    BuildSlaveRunId runOneId = new BuildSlaveRunId();
     runOneId.setId(RUN_ONE_ID);
-    runOneSlaveInfo.setRunId(runOneId);
+    runOneSlaveInfo.setBuildSlaveRunId(runOneId);
     runOneSlaveInfo.setStdOutCurrentBatchNumber(0);
     runOneSlaveInfo.setStdOutCurrentBatchLineCount(0);
     runOneSlaveInfo.setStdErrCurrentBatchNumber(1);
     runOneSlaveInfo.setStdErrCurrentBatchLineCount(1);
 
     BuildSlaveInfo runTwoSlaveInfo = new BuildSlaveInfo();
-    RunId runTwoId = new RunId();
+    BuildSlaveRunId runTwoId = new BuildSlaveRunId();
     runTwoId.setId(RUN_TWO_ID);
-    runTwoSlaveInfo.setRunId(runTwoId);
+    runTwoSlaveInfo.setBuildSlaveRunId(runTwoId);
     runTwoSlaveInfo.setStdOutCurrentBatchNumber(2);
     runTwoSlaveInfo.setStdOutCurrentBatchLineCount(2);
     runTwoSlaveInfo.setStdErrCurrentBatchNumber(0);
@@ -142,7 +149,7 @@ public class DistBuildLogStateTrackerTest {
             .stream()
             .anyMatch(
                 r ->
-                    r.slaveStream.runId.equals(runOneId)
+                    r.slaveStream.buildSlaveRunId.equals(runOneId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDERR)
                         && r.batchNumber == 1));
     // Request runTwo/stdOut from batch 1
@@ -151,22 +158,22 @@ public class DistBuildLogStateTrackerTest {
             .stream()
             .anyMatch(
                 r ->
-                    r.slaveStream.runId.equals(runTwoId)
+                    r.slaveStream.buildSlaveRunId.equals(runTwoId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
                         && r.batchNumber == 1));
 
     // Process new logs
 
     SlaveStream runOneStdErrStream = new SlaveStream();
-    runOneStdErrStream.setRunId(runOneId);
+    runOneStdErrStream.setBuildSlaveRunId(runOneId);
     runOneStdErrStream.setStreamType(LogStreamType.STDERR);
 
     SlaveStream runOneStdOutStream = new SlaveStream();
-    runOneStdOutStream.setRunId(runOneId);
+    runOneStdOutStream.setBuildSlaveRunId(runOneId);
     runOneStdOutStream.setStreamType(LogStreamType.STDOUT);
 
     SlaveStream runTwoStdOutStream = new SlaveStream();
-    runTwoStdOutStream.setRunId(runTwoId);
+    runTwoStdOutStream.setBuildSlaveRunId(runTwoId);
     runTwoStdOutStream.setStreamType(LogStreamType.STDOUT);
 
     StreamLogs runOneStdErrLogs = new StreamLogs();
@@ -219,7 +226,7 @@ public class DistBuildLogStateTrackerTest {
             .stream()
             .anyMatch(
                 r ->
-                    r.slaveStream.runId.equals(runTwoId)
+                    r.slaveStream.buildSlaveRunId.equals(runTwoId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
                         && r.batchNumber == 2));
 
@@ -273,7 +280,7 @@ public class DistBuildLogStateTrackerTest {
             .stream()
             .anyMatch(
                 r ->
-                    r.slaveStream.runId.equals(runOneId)
+                    r.slaveStream.buildSlaveRunId.equals(runOneId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDERR)
                         && r.batchNumber == 1));
     // Request runOne/stdOut from batch 1
@@ -282,7 +289,7 @@ public class DistBuildLogStateTrackerTest {
             .stream()
             .anyMatch(
                 r ->
-                    r.slaveStream.runId.equals(runOneId)
+                    r.slaveStream.buildSlaveRunId.equals(runOneId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
                         && r.batchNumber == 1));
     // Request runTwo/stdOut from batch 2
@@ -291,7 +298,7 @@ public class DistBuildLogStateTrackerTest {
             .stream()
             .anyMatch(
                 r ->
-                    r.slaveStream.runId.equals(runTwoId)
+                    r.slaveStream.buildSlaveRunId.equals(runTwoId)
                         && r.slaveStream.streamType.equals(LogStreamType.STDOUT)
                         && r.batchNumber == 2));
 
@@ -387,29 +394,29 @@ public class DistBuildLogStateTrackerTest {
   @Test
   public void testMaterializesBuckOutDirForRuns() throws IOException {
     BuildSlaveInfo runOneSlaveInfo = new BuildSlaveInfo();
-    RunId runOneId = new RunId();
+    BuildSlaveRunId runOneId = new BuildSlaveRunId();
     runOneId.setId(RUN_ONE_ID);
-    runOneSlaveInfo.setRunId(runOneId);
+    runOneSlaveInfo.setBuildSlaveRunId(runOneId);
     runOneSlaveInfo.setLogDirZipWritten(true);
 
     BuildSlaveInfo runTwoSlaveInfo = new BuildSlaveInfo();
-    RunId runTwoId = new RunId();
+    BuildSlaveRunId runTwoId = new BuildSlaveRunId();
     runTwoId.setId(RUN_TWO_ID);
-    runTwoSlaveInfo.setRunId(runTwoId);
+    runTwoSlaveInfo.setBuildSlaveRunId(runTwoId);
     runTwoSlaveInfo.setLogDirZipWritten(true);
 
     List<BuildSlaveInfo> slaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
-    List<RunId> runIdsToMaterialize =
+    List<BuildSlaveRunId> buildSlaveRunIdsToMaterialize =
         distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(slaveInfos);
-    assertThat(runIdsToMaterialize.size(), Matchers.equalTo(2));
-    assertThat(runIdsToMaterialize, Matchers.contains(runOneId, runTwoId));
+    assertThat(buildSlaveRunIdsToMaterialize.size(), Matchers.equalTo(2));
+    assertThat(buildSlaveRunIdsToMaterialize, Matchers.contains(runOneId, runTwoId));
 
     LogDir logDirOne = new LogDir();
-    logDirOne.setRunId(runOneId);
+    logDirOne.setBuildSlaveRunId(runOneId);
     logDirOne.setData(readTestData(RUN_ONE_BUCK_OUT_ZIP));
 
     LogDir logDirTwo = new LogDir();
-    logDirTwo.setRunId(runTwoId);
+    logDirTwo.setBuildSlaveRunId(runTwoId);
     logDirTwo.setData(readTestData(RUN_TWO_BUCK_OUT_ZIP));
 
     List<LogDir> logDirs = ImmutableList.of(logDirOne, logDirTwo);

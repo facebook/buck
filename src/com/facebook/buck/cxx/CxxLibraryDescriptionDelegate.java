@@ -17,11 +17,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -41,18 +42,46 @@ public interface CxxLibraryDescriptionDelegate {
       BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
 
   /**
+   * Defines an additional preprocessor input for the private interface exposed by a target. The
+   * returned input will be concatenated with {@link com.facebook.buck.cxx.CxxLibraryDescription}'s
+   * private input.
+   */
+  Optional<CxxPreprocessorInput> getPrivatePreprocessorInput(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+
+  /**
+   * Defines an additional private {@link HeaderSymlinkTree} that will be used when compiling the
+   * the library.
+   */
+  Optional<HeaderSymlinkTree> getPrivateHeaderSymlinkTree(
+      BuildTarget buildTarget, BuildRuleResolver ruleResolver, CxxPlatform cxxPlatform);
+
+  /**
    * Defines the paths to object files (i.e., .o files) that will be combined into the final product
    * of {@link com.facebook.buck.cxx.CxxLibraryDescription}. If the paths depend on build rules, you
    * must use {@link com.facebook.buck.rules.ExplicitBuildTargetSourcePath} to make sure the build
    * rule deps are correctly set up.
    */
   Optional<ImmutableList<SourcePath>> getObjectFilePaths(
-      BuildTarget target, BuildRuleResolver resolver);
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
 
-  /** Provides the ability for the plugin to provide additional arguments to the linker. */
-  void populateLinkerArguments(
+  /**
+   * Provides the ability for the plugin to provide additional {@link NativeLinkable}s that will be
+   * exported.
+   */
+  Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
+      BuildTarget target, BuildRuleResolver resolver, CxxPlatform platform);
+
+  /**
+   * Specifies whether a library artifact (e.g., libName.a) should be produced. For example,
+   * header-only libs will not normally produce a library. Since {@link CxxLibraryDescription} is
+   * not aware of other sources, it uses this method as an additional signal to determine whether it
+   * should produce a final artifact, even it doesn't have to if looking at just its own sources.
+   */
+  boolean getShouldProduceLibraryArtifact(
       BuildTarget target,
       BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
-      ImmutableList.Builder<Arg> argsBuilder);
+      boolean forceLinkWhole);
 }

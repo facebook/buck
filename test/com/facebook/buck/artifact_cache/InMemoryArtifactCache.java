@@ -16,8 +16,8 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

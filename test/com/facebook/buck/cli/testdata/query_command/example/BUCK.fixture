@@ -87,4 +87,11 @@ apple_test(
 
 apple_library(
   name = 'application-test-lib',
+  labels = [ 'e2e_lib' ],
+  deps = [ ':test-lib-lib' ],
+)
+
+apple_library(
+  name = 'test-lib-lib',
+  labels = [ 'e2e_lib' ],
 )

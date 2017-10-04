@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
@@ -417,7 +417,7 @@ public class AppleBuildRulesTest {
         GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
             .setOut("foo")
             .setCmd("echo hi > $OUT")
-            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .setSrcs(ImmutableList.of(DefaultBuildTargetSourcePath.of(fooLibTarget)))
             .build();
 
     BuildTarget barLibTarget =
@@ -468,7 +468,7 @@ public class AppleBuildRulesTest {
         GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
             .setOut("foo")
             .setCmd("echo hi > $OUT")
-            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .setSrcs(ImmutableList.of(DefaultBuildTargetSourcePath.of(fooLibTarget)))
             .build();
 
     BuildTarget barLibTarget =
@@ -519,7 +519,7 @@ public class AppleBuildRulesTest {
         GenruleBuilder.newGenruleBuilder(fooGenruleTarget)
             .setOut("foo")
             .setCmd("echo hi > $OUT")
-            .setSrcs(ImmutableList.of(new DefaultBuildTargetSourcePath(fooLibTarget)))
+            .setSrcs(ImmutableList.of(DefaultBuildTargetSourcePath.of(fooLibTarget)))
             .build();
 
     BuildTarget barLibTarget =

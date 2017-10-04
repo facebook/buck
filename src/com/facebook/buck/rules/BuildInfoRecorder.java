@@ -21,9 +21,9 @@ import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -31,6 +31,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
+import com.facebook.buck.util.zip.Zip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -268,7 +269,7 @@ public class BuildInfoRecorder {
   /**
    * Creates a zip file of the metadata and recorded artifacts and stores it in the artifact cache.
    */
-  public void performUploadToArtifactCache(
+  public ListenableFuture<Void> performUploadToArtifactCache(
       final ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
       final BuckEventBus eventBus) {
@@ -276,7 +277,7 @@ public class BuildInfoRecorder {
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
     if (!artifactCache.getCacheReadMode().isWritable()) {
-      return;
+      return Futures.immediateFuture(null);
     }
 
     ArtifactCompressionEvent.Started started =
@@ -292,14 +293,14 @@ public class BuildInfoRecorder {
           Files.createTempFile(
               "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip");
       buildMetadata = getBuildMetadata();
-      projectFilesystem.createZip(pathsToIncludeInZip, zip);
+      Zip.create(projectFilesystem, pathsToIncludeInZip, zip);
     } catch (IOException e) {
       eventBus.post(
           ConsoleEvent.info(
               "Failed to create zip for %s containing:\n%s",
               buildTarget, Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
       e.printStackTrace();
-      return;
+      return Futures.immediateFuture(null);
     } finally {
       eventBus.post(ArtifactCompressionEvent.finished(started));
     }
@@ -336,6 +337,8 @@ public class BuildInfoRecorder {
             }
           }
         });
+
+    return storeFuture;
   }
 
   /** @param pathToArtifact Relative path to the project root. */

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
@@ -37,22 +37,28 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
+abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
   @Value.NaturalOrder
+  @AddToRuleKey
   public abstract ImmutableSortedSet<String> getProcessorNames();
 
   @Value.NaturalOrder
-  public abstract ImmutableSortedSet<SourcePath> getClasspathEntries();
+  @AddToRuleKey
+  public abstract ImmutableSortedSet<SourcePath> getInputs();
 
   @Value.NaturalOrder
-  public abstract ImmutableSortedSet<SourcePath> getInputs();
+  // classpathEntries is not necessary because it is derived from inputs
+  public abstract ImmutableSortedSet<SourcePath> getClasspathEntries();
 
   public abstract ImmutableList<BuildRule> getClasspathDeps();
 
+  @AddToRuleKey
   public abstract boolean getCanReuseClassLoader();
 
+  @AddToRuleKey
   public abstract boolean getDoesNotAffectAbi();
 
+  @AddToRuleKey
   public abstract boolean getSupportsAbiGenerationFromSource();
 
   public boolean isEmpty() {
@@ -62,12 +68,6 @@ abstract class AbstractJavacPluginProperties implements RuleKeyAppendable {
   public ResolvedJavacPluginProperties resolve(
       ProjectFilesystem filesystem, SourcePathResolver resolver) {
     return new ResolvedJavacPluginProperties(this, filesystem, resolver);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // classpathEntries is not necessary because it is derived from inputs, which is below
-    sink.setReflectively("processors", getProcessorNames()).setReflectively("inputs", getInputs());
   }
 
   abstract static class Builder {

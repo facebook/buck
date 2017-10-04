@@ -26,6 +26,10 @@ android_library(
 
 android_library(
   name = 'lib_depending_on_main_lib',
+  srcs = [
+    'Depending.kt',
+  ],
+  language = 'KOTLIN',
   deps = [
     ':lib',
   ],

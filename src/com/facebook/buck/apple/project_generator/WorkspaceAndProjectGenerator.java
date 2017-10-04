@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
@@ -96,7 +97,10 @@ public class WorkspaceAndProjectGenerator {
 
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
-  private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+  private final ImmutableSortedSet.Builder<Path> xcconfigPathsBuilder =
+      ImmutableSortedSet.naturalOrder();
+  private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
+      ImmutableList.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -166,6 +170,10 @@ public class WorkspaceAndProjectGenerator {
 
   private ImmutableSet<Path> getXcconfigPaths() {
     return xcconfigPathsBuilder.build();
+  }
+
+  private ImmutableList<CopyInXcode> getFilesToCopyInXcode() {
+    return filesToCopyInXcodeBuilder.build();
   }
 
   public Path generateWorkspaceAndDependentProjects(
@@ -274,7 +282,12 @@ public class WorkspaceAndProjectGenerator {
             .collect(MoreCollectors.toImmutableList());
     ImmutableMap<String, Object> data =
         ImmutableMap.of(
-            "required-targets", requiredTargetsStrings, "xcconfig-paths", getXcconfigPaths());
+            "required-targets",
+            requiredTargetsStrings,
+            "xcconfig-paths",
+            getXcconfigPaths(),
+            "copy-in-xcode",
+            getFilesToCopyInXcode());
     String jsonString = ObjectMappers.WRITER.writeValueAsString(data);
     rootCell
         .getFilesystem()
@@ -368,6 +381,7 @@ public class WorkspaceAndProjectGenerator {
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
                           result.getXcconfigPaths(),
+                          result.getFilesToCopyInXcode(),
                           result.getBuildTargetToGeneratedTargetMap());
                   return result;
                 }));
@@ -397,7 +411,14 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder,
       GenerationResult result) {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
-    xcconfigPathsBuilder.addAll(result.getXcconfigPaths());
+    ImmutableSortedSet<Path> relativeXcconfigPaths =
+        result
+            .getXcconfigPaths()
+            .stream()
+            .map((Path p) -> rootCell.getFilesystem().relativize(p))
+            .collect(MoreCollectors.toImmutableSortedSet());
+    xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
+    filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
     buildTargetToPbxTargetMapBuilder.putAll(result.getBuildTargetToGeneratedTargetMap());
     for (PBXTarget target : result.getBuildTargetToGeneratedTargetMap().values()) {
       targetToProjectPathMapBuilder.put(target, result.getProjectPath());
@@ -469,6 +490,7 @@ public class WorkspaceAndProjectGenerator {
         generator.isProjectGenerated(),
         requiredBuildTargets,
         generator.getXcconfigPaths(),
+        generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap);
   }
 
@@ -511,6 +533,7 @@ public class WorkspaceAndProjectGenerator {
             generator.isProjectGenerated(),
             generator.getRequiredBuildTargets(),
             generator.getXcconfigPaths(),
+            generator.getFilesToCopyInXcode(),
             generator.getBuildTargetToGeneratedTargetMap());
     workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(
@@ -896,6 +919,7 @@ public class WorkspaceAndProjectGenerator {
               remoteRunnablePath,
               XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
               targetToProjectPathMap,
+              schemeConfigArg.getEnvironmentVariables(),
               schemeConfigArg.getLaunchStyle().orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);

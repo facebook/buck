@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -72,9 +72,9 @@ public class InstallTriggerIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "install_trigger", tmpFolder);
     workspace.setKnownBuildRuleTypesFactoryFactory(
-        (processExecutor, androidDirectoryResolver, sdkEnvironment) ->
+        (processExecutor, sdkEnvironment, toolchainProvider) ->
             new KnownBuildRuleTypesFactory(
-                new FakeProcessExecutor(), new FakeAndroidDirectoryResolver(), sdkEnvironment) {
+                new FakeProcessExecutor(), sdkEnvironment, toolchainProvider) {
               @Override
               public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
                   throws IOException, InterruptedException {

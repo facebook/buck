@@ -30,13 +30,13 @@ import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.CacheRateStats;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -838,15 +838,15 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine, actionGraphLine, "Distributed build... 0.9 sec status: building, step 2"));
 
-    RunId runId1 = new RunId();
-    runId1.setId("slave1");
+    BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
+    buildSlaveRunId1.setId("slave1");
     BuildSlaveStatus slave1 = new BuildSlaveStatus();
-    slave1.setRunId(runId1);
+    slave1.setBuildSlaveRunId(buildSlaveRunId1);
 
-    RunId runId2 = new RunId();
-    runId2.setId("slave2");
+    BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
+    buildSlaveRunId2.setId("slave2");
     BuildSlaveStatus slave2 = new BuildSlaveStatus();
-    slave2.setRunId(runId2);
+    slave2.setBuildSlaveRunId(buildSlaveRunId2);
 
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
@@ -1646,7 +1646,8 @@ public class SuperConsoleEventBusListenerTest {
             0L,
             0L,
             1000L,
-            false);
+            false,
+            Optional.empty());
     eventBus.register(listener);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -2521,7 +2522,8 @@ public class SuperConsoleEventBusListenerTest {
             0L,
             0L,
             1000L,
-            false);
+            false,
+            Optional.empty());
     eventBus.register(listener);
     return listener;
   }

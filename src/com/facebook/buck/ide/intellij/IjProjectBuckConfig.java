@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.filesystem.SkylarkFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.json.HybridProjectBuildFileParser;
 import com.facebook.buck.json.PythonDslProjectBuildFileParser;
 import com.facebook.buck.model.BuildTarget;

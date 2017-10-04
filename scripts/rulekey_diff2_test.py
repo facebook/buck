@@ -256,21 +256,21 @@ class TestRuleKeyDiff2(unittest.TestCase):
                 'container(LIST,len=2)',
                 'string("//fake:ruleB")',
                 'string("//fake:ruleC")',
-                'key(.key_type)',
+                'key(.rule_key_type)',
                 'string("default")',
-                'key(.name)',
+                'key(.target_name)',
                 'string("//fake:ruleA")',
             ],
             'rulekey2': [
-                'key(.key_type)',
+                'key(.rule_key_type)',
                 'string("input")',
-                'key(.name)',
+                'key(.target_name)',
                 'string("//fake:ruleA")',
             ],
             'rulekey3': [
-                'key(.key_type)',
+                'key(.rule_key_type)',
                 'string("default")',
-                'key(.name)',
+                'key(.target_name)',
                 'string("//fake:ruleB")',
             ],
         }
@@ -284,17 +284,23 @@ class TestRuleKeyDiff2(unittest.TestCase):
             sorted(find_keys(keys, [(r'fake:ruleA', None)])),
             ['rulekey1', 'rulekey2'])
         self.assertEquals(
-            sorted(find_keys(keys, [(r'fake:ruleA', '.name'), (r'default', '.key_type')])),
+            sorted(find_keys(
+                keys,
+                [(r'fake:ruleA', '.target_name'), (r'default', '.rule_key_type')])),
             ['rulekey1'])
         self.assertEquals(
             sorted(find_keys(keys, [(r'fake:ruleB', None)])),
             ['rulekey1', 'rulekey3'])
         self.assertEquals(
-            sorted(find_keys(keys, [(r'fake:ruleB', '.name')])),
+            sorted(find_keys(keys, [(r'fake:ruleB', '.target_name')])),
             ['rulekey3'])
 
     def test_extract_target(self):
-        tokens = ['key(.key_type)', 'string("default")', 'key(.name)', 'string("//fake:ruleB")']
+        tokens = [
+            'key(.rule_key_type)',
+            'string("default")',
+            'key(.target_name)',
+            'string("//fake:ruleB")']
         self.assertEquals(extract_target(reconstruct_rulekey(tokens)), '//fake:ruleB')
 
     def test_build_targets_to_rulekeys_index(self):

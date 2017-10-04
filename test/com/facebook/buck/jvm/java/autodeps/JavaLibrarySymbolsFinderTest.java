@@ -23,7 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -40,10 +41,10 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -67,7 +68,8 @@ public class JavaLibrarySymbolsFinderTest {
   public void extractSymbolsFromSrcs() throws InterruptedException, IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     ImmutableSortedSet<SourcePath> srcs =
         ImmutableSortedSet.<SourcePath>naturalOrder()
@@ -76,7 +78,7 @@ public class JavaLibrarySymbolsFinderTest {
                     .map(Paths::get)
                     .map(p -> new PathSourcePath(projectFilesystem, p))
                     .iterator())
-            .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
+            .add(DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:bar")))
             .build();
 
     JavaLibrarySymbolsFinder finder =
@@ -92,14 +94,15 @@ public class JavaLibrarySymbolsFinderTest {
   public void onlyNonGeneratedSrcsShouldAffectRuleKey() throws InterruptedException, IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
-    final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    final ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     Function<String, SourcePath> convert =
         src -> new PathSourcePath(projectFilesystem, Paths.get(src));
     SourcePath example1 = convert.apply("Example1.java");
     SourcePath example2 = convert.apply("Example2.java");
     final BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");
-    SourcePath generated = new DefaultBuildTargetSourcePath(fakeBuildTarget);
+    SourcePath generated = DefaultBuildTargetSourcePath.of(fakeBuildTarget);
 
     JavaLibrarySymbolsFinder example1Finder =
         new JavaLibrarySymbolsFinder(ImmutableSortedSet.of(example1), javaFileParser);

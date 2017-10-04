@@ -29,7 +29,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -41,7 +41,8 @@ import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.InvocationInfo;
@@ -126,7 +127,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testEventsUseNanoTime() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
@@ -143,9 +145,9 @@ public class ChromeTraceBuildListenerTest {
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertThat(originalResultList, Matchers.hasSize(3));
+    assertThat(originalResultList, Matchers.hasSize(4));
 
-    ChromeTraceEvent testEvent = originalResultList.get(2);
+    ChromeTraceEvent testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo(event.getEventName()));
     assertThat(
         testEvent.getMicroTime(),
@@ -158,7 +160,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testMetadataEventsUseNanoTime() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
@@ -171,9 +174,9 @@ public class ChromeTraceBuildListenerTest {
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertThat(originalResultList, Matchers.hasSize(3));
+    assertThat(originalResultList, Matchers.hasSize(4));
 
-    ChromeTraceEvent testEvent = originalResultList.get(2);
+    ChromeTraceEvent testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo("test"));
     assertThat(
         testEvent.getMicroTime(),
@@ -186,7 +189,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testDeleteFiles() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     String tracePath = invocationInfo.getLogDirectoryPath().resolve("build.trace").toString();
 
@@ -233,7 +237,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testBuildJson() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     BuildId buildId = new BuildId("ChromeTraceBuildListenerTestBuildId");
     ChromeTraceBuildListener listener =
@@ -383,10 +388,18 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "process_name",
         ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.<String, Object>builder().put("name", "BUILD_ID").build());
+
+    assertNextResult(
+        resultListCopy,
+        "process_labels",
+        ChromeTraceEvent.Phase.METADATA,
         ImmutableMap.<String, Object>builder()
-            .put("user_args", ImmutableList.of("@mode/arglist", "--foo", "--bar"))
-            .put("is_daemon", false)
-            .put("timestamp", invocationInfo.getTimestampMillis())
+            .put(
+                "labels",
+                String.format(
+                    "user_args=[@mode/arglist, --foo, --bar], is_daemon=false, timestamp=%d",
+                    invocationInfo.getTimestampMillis()))
             .build());
 
     assertNextResult(
@@ -570,7 +583,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void testOutputFailed() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
     assumeTrue("Can make the root directory read-only", tmpDir.getRoot().setReadOnly());
 
     try {
@@ -596,7 +610,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void outputFileUsesCurrentTime() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(
@@ -614,7 +629,8 @@ public class ChromeTraceBuildListenerTest {
 
   @Test
   public void canCompressTraces() throws InterruptedException, IOException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ChromeTraceBuildListener listener =
         new ChromeTraceBuildListener(

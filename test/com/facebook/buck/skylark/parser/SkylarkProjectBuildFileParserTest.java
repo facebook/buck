@@ -20,8 +20,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.SkylarkFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -29,9 +29,12 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Type;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -83,10 +86,7 @@ public class SkylarkProjectBuildFileParserTest {
             + ")",
         buildFile);
 
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("guava"));
     assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
     assertThat(
@@ -115,7 +115,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     thrown.expect(BuildFileParseException.class);
 
-    parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    parser.getAll(buildFile, new AtomicLong());
   }
 
   @Test
@@ -133,7 +133,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     thrown.expect(BuildFileParseException.class);
 
-    parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    parser.getAll(buildFile, new AtomicLong());
   }
 
   @Test
@@ -143,10 +143,7 @@ public class SkylarkProjectBuildFileParserTest {
     projectFilesystem.writeContentsToPath(
         "prebuilt_jar(name='guava', binary_jar=PACKAGE_NAME)", buildFile);
 
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("binaryJar"), equalTo("src/test"));
   }
 
@@ -160,12 +157,244 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createFile(directory.resolve("file1"));
     Files.createFile(directory.resolve("file2"));
     Files.createFile(directory.resolve("bad_file"));
-    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
-        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
-    assertThat(allRulesAndMetaRules, Matchers.hasSize(1));
-    Map<String, Object> rule = allRulesAndMetaRules.get(0);
+    Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(
         Type.STRING_LIST.convert(rule.get("licenses"), "license"),
         equalTo(ImmutableList.of("file1", "file2")));
+  }
+
+  @Test
+  public void testImportVariable() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'JAR')\n" + "prebuilt_jar(name='foo', binary_jar=JAR)",
+        buildFile);
+    projectFilesystem.writeContentsToPath("JAR='jar'", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
+  public void testImportFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
+  public void testImportFunctionUsingBuiltInRule() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'guava_jar')\n" + "guava_jar(name='foo')", buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def guava_jar(name):\n  native.prebuilt_jar(name=name, binary_jar='foo.jar')",
+        extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
+  }
+
+  @Test
+  public void canUseBuiltInListFunction() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    projectFilesystem.writeContentsToPath(
+        "prebuilt_jar(name='a', binary_jar='a.jar', licenses=list(('l1', 'l2')))", buildFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(
+        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
+        equalTo(ImmutableList.of("l1", "l2")));
+  }
+
+  @Test
+  public void functionDefinitionsAreNotAllowedInBuildFiles() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    projectFilesystem.writeContentsToPath("def foo():\n  pass", buildFile);
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot parse build file " + buildFile);
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void evaluationErrorIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    projectFilesystem.writeContentsToPath("foo()", buildFile);
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot evaluate build file " + buildFile);
+
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void canUseBuiltInListFunctionInExtension() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'guava_jar')\n" + "guava_jar(name='foo')", buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def guava_jar(name):\n  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=list(('l1', 'l2')))",
+        extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(
+        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
+        equalTo(ImmutableList.of("l1", "l2")));
+  }
+
+  @Test
+  public void testImportFunctionFromExtension() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Path extensionExtensionFile = directory.resolve("extension_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def get_name():\n  return 'jar'", extensionExtensionFile);
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:extension_rules.bzl', 'get_name')", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
+  public void parsingOfExtensionWithSyntacticErrorsFails() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'\nj j", extensionFile);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Cannot parse extension file //src/test:build_rules.bzl");
+    parser.getAll(buildFile, new AtomicLong());
+  }
+
+  @Test
+  public void canImportExtensionFromAnotherCell() throws Exception {
+    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path anotherCell = projectFilesystem.resolve("tp2");
+    Path extensionDirectory = anotherCell.resolve("ext");
+    Files.createDirectories(extensionDirectory);
+    Path extensionFile = extensionDirectory.resolve("build_rules.bzl");
+
+    parser =
+        SkylarkProjectBuildFileParser.using(
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(cell.getRoot())
+                .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
+                .setIgnorePaths(ImmutableSet.of())
+                .setBuildFileName("BUCK")
+                .setDescriptions(cell.getAllDescriptions())
+                .setBuildFileImportWhitelist(ImmutableList.of())
+                .setPythonInterpreter("skylark")
+                .setCellRoots(ImmutableMap.of("tp2", anotherCell))
+                .build(),
+            BuckEventBusForTests.newInstance(),
+            SkylarkFilesystem.using(projectFilesystem),
+            new DefaultTypeCoercerFactory());
+
+    projectFilesystem.writeContentsToPath(
+        "load('@tp2//ext:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("jar"));
+  }
+
+  @Test
+  public void attemptToLoadInvalidCellIsReported() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path anotherCell = projectFilesystem.resolve("tp2");
+    Path extensionDirectory = anotherCell.resolve("ext");
+    Files.createDirectories(extensionDirectory);
+    Path extensionFile = extensionDirectory.resolve("build_rules.bzl");
+
+    projectFilesystem.writeContentsToPath(
+        "load('@invalid_repo//ext:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage(
+        "@invalid_repo//ext:build_rules.bzl references an unknown repository invalid_repo");
+    getSingleRule(buildFile);
+  }
+
+  @Test
+  public void parseMetadataIsReturned() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'get_name')\n"
+            + "prebuilt_jar(name='foo', binary_jar=get_name())",
+        buildFile);
+    projectFilesystem.writeContentsToPath("def get_name():\n  return 'jar'", extensionFile);
+    ImmutableList<Map<String, Object>> allRulesAndMetaRules =
+        parser.getAllRulesAndMetaRules(buildFile, new AtomicLong());
+    assertThat(allRulesAndMetaRules, Matchers.hasSize(4));
+    Map<String, Object> prebuiltJarRule = allRulesAndMetaRules.get(0);
+    assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
+    Map<String, Object> includesMetadataRule = allRulesAndMetaRules.get(1);
+    @SuppressWarnings("unchecked")
+    ImmutableSet<String> includes = (ImmutableSet<String>) includesMetadataRule.get("__includes");
+    assertThat(
+        includes
+            .stream()
+            .map(projectFilesystem::resolve)
+            .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableList()),
+        equalTo(ImmutableList.of("BUCK", "build_rules.bzl")));
+    Map<String, Object> configsMetadataRule = allRulesAndMetaRules.get(2);
+    assertThat(configsMetadataRule.get("__configs"), equalTo(ImmutableMap.of()));
+    Map<String, Object> envsMetadataRule = allRulesAndMetaRules.get(3);
+    assertThat(envsMetadataRule.get("__env"), equalTo(ImmutableMap.of()));
+  }
+
+  private Map<String, Object> getSingleRule(Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    ImmutableList<Map<String, Object>> allRules = parser.getAll(buildFile, new AtomicLong());
+    assertThat(allRules, Matchers.hasSize(1));
+    return allRules.get(0);
   }
 }

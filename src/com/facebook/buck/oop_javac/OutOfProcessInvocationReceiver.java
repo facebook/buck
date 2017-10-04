@@ -16,9 +16,10 @@
 
 package com.facebook.buck.oop_javac;
 
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.jvm.java.AbiGenerationMode;
 import com.facebook.buck.jvm.java.JarBackedJavac;
 import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.jvm.java.JavacCompilationMode;
 import com.facebook.buck.jvm.java.JavacExecutionContext;
 import com.facebook.buck.jvm.java.JavacExecutionContextSerializer;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
@@ -90,8 +91,8 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       String pathToSrcsListAsString,
       @Nullable String workingDirectoryAsString,
       List<Map<String, Object>> pluginFields,
-      String javaCompilationModeAsString,
-      boolean requiredForSourceAbi) {
+      String abiGenerationModeAsString,
+      boolean requiredForSourceOnlyAbi) {
 
     PrintStream printStreamForStdErr = new PrintStream(new ByteArrayOutputStream());
 
@@ -99,6 +100,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
     try {
       javacExecutionContext =
           JavacExecutionContextSerializer.deserialize(
+              new DefaultProjectFilesystemFactory(),
               serializedJavacExecutionContext,
               OUT_OF_PROCESS_JAVAC_EVENT_SINK,
               printStreamForStdErr,
@@ -142,8 +144,8 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             javaSourceFilePaths,
             pathToSrcsList,
             workingDirectory,
-            JavacCompilationMode.valueOf(javaCompilationModeAsString),
-            requiredForSourceAbi);
+            AbiGenerationMode.valueOf(abiGenerationModeAsString),
+            requiredForSourceOnlyAbi);
     int invocationId = nextInvocationId.getAndIncrement();
     invocations.put(invocationId, invocation);
 

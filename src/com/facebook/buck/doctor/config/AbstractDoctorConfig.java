@@ -16,7 +16,7 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

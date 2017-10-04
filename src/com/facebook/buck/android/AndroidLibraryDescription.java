@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -95,29 +95,23 @@ public class AndroidLibraryDescription
     boolean hasDummyRDotJavaFlavor = buildTarget.getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
-    AndroidLibrary.Builder defaultJavaLibraryBuilder =
-        (AndroidLibrary.Builder)
-            AndroidLibrary.builder(
-                    targetGraph,
-                    buildTarget,
-                    projectFilesystem,
-                    params,
-                    resolver,
-                    cellRoots,
-                    javaBuckConfig,
-                    javacOptions,
-                    args,
-                    compilerFactory)
-                .setArgs(args)
-                .setJavacOptions(javacOptions)
-                .setTests(args.getTests());
+    AndroidLibrary.Builder androidLibraryBuilder =
+        AndroidLibrary.builder(
+            buildTarget,
+            projectFilesystem,
+            params,
+            resolver,
+            javaBuckConfig,
+            javacOptions,
+            args,
+            compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA)));
 
     if (hasDummyRDotJavaFlavor) {
-      return defaultJavaLibraryBuilder.buildDummyRDotJava();
+      return androidLibraryBuilder.buildDummyRDotJava();
     } else if (HasJavaAbi.isAbiTarget(buildTarget)) {
-      return defaultJavaLibraryBuilder.buildAbi();
+      return androidLibraryBuilder.buildAbi();
     }
-    return defaultJavaLibraryBuilder.build();
+    return androidLibraryBuilder.build();
   }
 
   @Override

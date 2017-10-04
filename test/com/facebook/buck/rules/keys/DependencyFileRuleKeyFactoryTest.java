@@ -18,7 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -89,10 +89,10 @@ public class DependencyFileRuleKeyFactoryTest {
     BuildTarget unusedTarget = BuildTargetFactory.newInstance("//:unused");
     BuildTarget noncoveredTarget = BuildTargetFactory.newInstance("//:noncovered");
     BuildTarget interestingTarget = BuildTargetFactory.newInstance("//:interesting");
-    SourcePath usedSourcePath = new DefaultBuildTargetSourcePath(usedTarget);
-    SourcePath unusedSourcePath = new DefaultBuildTargetSourcePath(unusedTarget);
-    SourcePath noncoveredSourcePath = new DefaultBuildTargetSourcePath(noncoveredTarget);
-    SourcePath interestingSourcePath = new DefaultBuildTargetSourcePath(interestingTarget);
+    SourcePath usedSourcePath = DefaultBuildTargetSourcePath.of(usedTarget);
+    SourcePath unusedSourcePath = DefaultBuildTargetSourcePath.of(unusedTarget);
+    SourcePath noncoveredSourcePath = DefaultBuildTargetSourcePath.of(noncoveredTarget);
+    SourcePath interestingSourcePath = DefaultBuildTargetSourcePath.of(interestingTarget);
     ruleResolver.addToIndex(new FakeBuildRule(usedTarget).setOutputFile("used"));
     ruleResolver.addToIndex(new FakeBuildRule(unusedTarget).setOutputFile("unused"));
     ruleResolver.addToIndex(new FakeBuildRule(noncoveredTarget).setOutputFile("nc"));

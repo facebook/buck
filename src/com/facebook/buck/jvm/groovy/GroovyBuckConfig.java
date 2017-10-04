@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;

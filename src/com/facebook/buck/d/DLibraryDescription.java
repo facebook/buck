@@ -21,7 +21,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -84,7 +84,7 @@ public class DLibraryDescription
         buildTarget.withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
-            .setLinkTree(new DefaultBuildTargetSourcePath(sourceTreeTarget))
+            .setLinkTree(DefaultBuildTargetSourcePath.of(sourceTreeTarget))
             .setSources(args.getSrcs().getPaths())
             .build();
 
@@ -97,8 +97,6 @@ public class DLibraryDescription
           buildRuleResolver,
           pathResolver,
           ruleFinder,
-          cxxPlatform,
-          dBuckConfig,
           /* compilerFlags */ ImmutableList.of(),
           args.getSrcs(),
           dIncludes,
@@ -116,8 +114,6 @@ public class DLibraryDescription
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       SourceList sources,
       DIncludes dIncludes,
@@ -148,7 +144,8 @@ public class DLibraryDescription
             buildTarget,
             cxxPlatform.getFlavor(),
             pic,
-            cxxPlatform.getStaticLibraryExtension());
+            cxxPlatform.getStaticLibraryExtension(),
+            cxxBuckConfig.isUniqueLibraryNameEnabled());
 
     return Archive.from(
         staticTarget,

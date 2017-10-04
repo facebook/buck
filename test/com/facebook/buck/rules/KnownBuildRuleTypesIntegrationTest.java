@@ -21,8 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
+import com.facebook.buck.android.toolchain.TestAndroidToolchain;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleCxxPlatforms;
 import com.facebook.buck.apple.AppleSdk;
@@ -30,13 +29,14 @@ import com.facebook.buck.apple.AppleSdkDiscovery;
 import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.apple.AppleToolchain;
 import com.facebook.buck.apple.AppleToolchainDiscovery;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -95,13 +95,14 @@ public class KnownBuildRuleTypesIntegrationTest {
             Optional.empty());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    toolchainProvider.addAndroidToolchain(new TestAndroidToolchain());
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         Matchers.containsString(
             "There are two conflicting SDKs providing the same platform \"macosx-i386\":\n"));
     KnownBuildRuleTypes.createInstance(
-        buckConfig, projectFilesystem, processExecutor, androidDirectoryResolver, sdkEnvironment);
+        buckConfig, projectFilesystem, processExecutor, toolchainProvider, sdkEnvironment);
   }
 }

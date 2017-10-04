@@ -16,14 +16,14 @@
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.AndroidLinkableMetadata;
-import com.facebook.buck.android.NdkCxxPlatform;
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.TopologicalSort;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * When linking shared libraries, by default, all symbols are exported from the library. In a
@@ -74,6 +75,7 @@ public class NativeRelinker {
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private final ImmutableList<RelinkerRule> rules;
+  private final ImmutableList<Pattern> symbolPatternWhitelist;
 
   public NativeRelinker(
       BuildTarget buildTarget,
@@ -84,7 +86,8 @@ public class NativeRelinker {
       CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibs,
-      ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets) {
+      ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets,
+      ImmutableList<Pattern> symbolPatternWhitelist) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
@@ -96,6 +99,7 @@ public class NativeRelinker {
     this.resolver = resolver;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
+    this.symbolPatternWhitelist = symbolPatternWhitelist;
 
     /*
     When relinking a library, any symbols needed by a (transitive) dependent must continue to be
@@ -252,7 +256,8 @@ public class NativeRelinker {
         cxxBuckConfig,
         source,
         linker,
-        linkerArgs);
+        linkerArgs,
+        symbolPatternWhitelist);
   }
 
   public ImmutableMap<AndroidLinkableMetadata, SourcePath> getRelinkedLibs() {

@@ -24,12 +24,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.FakeProjectFileHashCache;
 import com.facebook.buck.testutil.FileHashEntryMatcher;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -57,7 +58,8 @@ public class RecordingFileHashLoaderTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
-    projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath().toRealPath());
+    projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath().toRealPath());
   }
 
   @Test

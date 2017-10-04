@@ -19,8 +19,8 @@ package com.facebook.buck.jvm.java;
 import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.zip.CustomZipEntry;
-import com.facebook.buck.zip.JarBuilder;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;

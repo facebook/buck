@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.Step;
@@ -63,7 +63,7 @@ public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps imp
     if (outputFile == null) {
       return null;
     }
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputFile);
   }
 
   public FakeBuildRule setOutputFile(@Nullable String outputFile) {

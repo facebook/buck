@@ -1,0 +1,31 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+    ],
+    tests = [
+        "//test/com/facebook/buck/io/filesystem/impl:impl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/eden:eden",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
+        "//src/com/facebook/buck/log:api",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/autosparse:autosparse",
+        "//src/com/facebook/buck/util/autosparse:autosparse_config",
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

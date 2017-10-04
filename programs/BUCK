@@ -102,6 +102,7 @@ python_binary(
     main = "buck.py",
     visibility = [
         "//scripts/packages/debian:debian",
+        "//test/com/facebook/buck/testutil/integration:integration-py",
     ],
     deps = [
         ":bucklib",

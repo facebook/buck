@@ -25,7 +25,7 @@ import com.facebook.buck.cxx.toolchain.elf.ElfSectionLookupResult;
 import com.facebook.buck.cxx.toolchain.elf.ElfStringTable;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.cxx.toolchain.elf.ElfVerDef;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;

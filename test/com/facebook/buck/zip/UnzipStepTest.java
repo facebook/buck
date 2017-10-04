@@ -19,7 +19,7 @@ package com.facebook.buck.zip;
 import static com.facebook.buck.testutil.FakeProjectFilesystem.createJavaOnlyFilesystem;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;

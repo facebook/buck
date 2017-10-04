@@ -19,7 +19,7 @@ import com.facebook.buck.ide.intellij.BaseIjModuleRule;
 import com.facebook.buck.ide.intellij.ModuleBuildContext;
 import com.facebook.buck.ide.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.CommonDescriptionArg;
 import com.facebook.buck.rules.TargetNode;
 

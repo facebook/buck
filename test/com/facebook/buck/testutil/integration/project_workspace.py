@@ -27,7 +27,7 @@ def run_buck_process(command, cwd=None):
         buck_path = os.path.join(root_directory, 'bin', 'buck.bat')
         args = ['cmd.exe', '/C', buck_path] + list(command)
     else:
-        buck_path = os.path.join(root_directory, 'bin', 'buck')
+        buck_path = os.path.join(root_directory, 'buck-out', 'gen', 'programs', 'buck.pex')
         args = [buck_path] + list(command)
     # Pass thru our environment, except disabling buckd so that we can be sure the right buck
     # is run.

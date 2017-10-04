@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -116,15 +116,15 @@ public class SplitResources extends AbstractBuildRule {
   }
 
   public SourcePath getPathToRDotTxt() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), rDotTxtOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), rDotTxtOutputPath);
   }
 
   public SourcePath getPathToPrimaryResources() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), primaryResourcesOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), primaryResourcesOutputPath);
   }
 
   public SourcePath getPathToExoResources() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), exoResourcesOutputPath);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), exoResourcesOutputPath);
   }
 
   public Path getScratchDirectory() {

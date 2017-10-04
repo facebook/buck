@@ -23,11 +23,10 @@ import static com.facebook.buck.ide.intellij.projectview.Patterns.optional;
 import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.GenAidl;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
-import com.facebook.buck.config.Config;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.ide.intellij.projectview.shared.SharedConstants;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -45,6 +44,7 @@ import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -278,6 +278,7 @@ public class ProjectView {
           .add("/res/", capture("anim", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("xml", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("menu", NONCAPTURE_DASH_PART), "/")
+          .add("/res/", capture("mipmap", NONCAPTURE_DASH_PART), "/")
           .add("/res/", capture("animator"), "/")
           .build();
 
@@ -332,8 +333,12 @@ public class ProjectView {
   }
 
   private void mangledResourceLink(Matcher match, String input) {
+    if (!input.endsWith(DOT_XML)) {
+      stderr("Ignoring %s, which does not end with .xml!\n", input);
+      return;
+    }
+
     String fileName = basename(input);
-    // It's safe to assume input is a .xml file
     String name = fileName.substring(0, fileName.length() - DOT_XML.length());
 
     String path = match.group(1).replace('/', '_');

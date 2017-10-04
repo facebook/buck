@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -81,7 +81,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
     return transitiveAnalyzeRules
         .stream()
-        .map(rule -> new ExplicitBuildTargetSourcePath(rule.getBuildTarget(), rule.getSpecsDir()))
+        .map(rule -> ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), rule.getSpecsDir()))
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 
@@ -162,6 +162,6 @@ class CxxInferAnalyze extends AbstractBuildRule {
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), reportFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), reportFile);
   }
 }

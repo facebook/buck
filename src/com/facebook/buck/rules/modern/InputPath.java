@@ -16,11 +16,12 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public final class InputPath implements Comparable<InputPath> {
   private SourcePath sourcePath;
@@ -44,7 +45,7 @@ public final class InputPath implements Comparable<InputPath> {
 
   /** This returns a SourcePath that can only be resolved by a LimitedSourcePathResolver. */
   public SourcePath getLimitedSourcePath() {
-    return new LimitedSourcePath(sourcePath);
+    return LimitedSourcePath.of(sourcePath);
   }
 
   /**
@@ -64,5 +65,25 @@ public final class InputPath implements Comparable<InputPath> {
     public static SourcePath getSourcePathFrom(InputPath inputPath) {
       return inputPath.getSourcePath();
     }
+  }
+
+  @Override
+  public String toString() {
+    return "InputPath{sourcePath=" + sourcePath + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof InputPath)) {
+      return false;
+    }
+
+    InputPath that = (InputPath) o;
+    return this.getSourcePath().equals(that.getSourcePath());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(sourcePath);
   }
 }

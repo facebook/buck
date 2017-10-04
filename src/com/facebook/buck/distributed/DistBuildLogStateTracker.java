@@ -16,17 +16,17 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.LogLineBatch;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogStreamType;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.NamedTemporaryFile;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +53,7 @@ public class DistBuildLogStateTracker {
   private final ProjectFilesystem filesystem;
   private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = new HashMap<>();
   private Set<String> createdLogDirRootsByRunId = new HashSet<>();
-  private List<RunId> runIdsWithLogDirs = new ArrayList<>();
+  private List<BuildSlaveRunId> runIdsWithLogDirs = new ArrayList<>();
 
   public DistBuildLogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {
     this.logDirectoryPath = logDirectoryPath;
@@ -76,7 +76,7 @@ public class DistBuildLogStateTracker {
       if (streamLogs.isSetErrorMessage()) {
         LOG.error(
             "Failed to get stream logs for runId [%]. Error: %s",
-            streamLogs.slaveStream.runId, streamLogs.errorMessage);
+            streamLogs.slaveStream.buildSlaveRunId, streamLogs.errorMessage);
 
         continue;
       }
@@ -85,16 +85,16 @@ public class DistBuildLogStateTracker {
     }
   }
 
-  public List<RunId> runIdsToMaterializeLogDirsFor(
+  public List<BuildSlaveRunId> runIdsToMaterializeLogDirsFor(
       Collection<BuildSlaveInfo> latestBuildSlaveInfos) {
-    List<RunId> runIds = new ArrayList<>();
+    List<BuildSlaveRunId> runIds = new ArrayList<>();
     for (BuildSlaveInfo buildSlaveInfo : latestBuildSlaveInfos) {
       if (!buildSlaveInfo.isSetLogDirZipWritten()) {
-        LOG.error("No log dir written for runId [%s]", buildSlaveInfo.runId);
+        LOG.error("No log dir written for runId [%s]", buildSlaveInfo.buildSlaveRunId);
         continue;
       }
 
-      runIds.add(buildSlaveInfo.runId);
+      runIds.add(buildSlaveInfo.buildSlaveRunId);
     }
 
     return runIds;
@@ -104,19 +104,20 @@ public class DistBuildLogStateTracker {
     for (LogDir logDir : logDirs) {
       if (logDir.isSetErrorMessage()) {
         LOG.error(
-            "Failed to fetch log dir for runId [%s]. Error: %s", logDir.runId, logDir.errorMessage);
+            "Failed to fetch log dir for runId [%s]. Error: %s",
+            logDir.buildSlaveRunId, logDir.errorMessage);
         continue;
       }
 
       try {
         writeLogDirToDisk(logDir);
       } catch (IOException e) {
-        LOG.error(e, "Erorr while materializing log dir for runId [%s]", logDir.runId);
+        LOG.error(e, "Erorr while materializing log dir for runId [%s]", logDir.buildSlaveRunId);
       }
     }
   }
 
-  public List<RunId> getRunIdsWithLogDirs() {
+  public List<BuildSlaveRunId> getRunIdsWithLogDirs() {
     return runIdsWithLogDirs;
   }
 
@@ -142,7 +143,7 @@ public class DistBuildLogStateTracker {
             && seenStreamState.seenBatchLineCount >= lastReceivedBatch.lines.size())) {
       LOG.warn(
           "Received stale logs for runID [%s] and stream [%s]",
-          streamLogs.slaveStream.runId, streamLogs.slaveStream.streamType);
+          streamLogs.slaveStream.buildSlaveRunId, streamLogs.slaveStream.streamType);
       return;
     }
 
@@ -172,9 +173,9 @@ public class DistBuildLogStateTracker {
 
   private void createRealtimeLogRequests(
       BuildSlaveInfo buildSlaveInfo, LogStreamType streamType, List<LogLineBatchRequest> requests) {
-    RunId runId = buildSlaveInfo.runId;
+    BuildSlaveRunId runId = buildSlaveInfo.buildSlaveRunId;
     SlaveStream slaveStream = new SlaveStream();
-    slaveStream.setRunId(runId);
+    slaveStream.setBuildSlaveRunId(runId);
     slaveStream.setStreamType(streamType);
 
     int latestBatchNumber = getLatestBatchNumber(buildSlaveInfo, streamType);
@@ -272,7 +273,7 @@ public class DistBuildLogStateTracker {
 
   private void writeLogStreamLinesToDisk(SlaveStream slaveStream, List<String> newLines) {
     Path outputLogFilePath =
-        getStreamLogFilePath(slaveStream.runId.id, slaveStream.streamType.toString());
+        getStreamLogFilePath(slaveStream.buildSlaveRunId.id, slaveStream.streamType.toString());
     try (OutputStream outputStream =
         new BufferedOutputStream(new FileOutputStream(outputLogFilePath.toFile(), true))) {
       for (String logLine : newLines) {
@@ -295,11 +296,11 @@ public class DistBuildLogStateTracker {
       LOG.warn(
           "Skipping materialiation of remote buck-out log dir for runId [%s]"
               + " as content length was zero",
-          logDir.runId);
+          logDir.buildSlaveRunId);
       return;
     }
 
-    Path buckLogUnzipPath = getRemoteBuckLogPath(logDir.runId.id);
+    Path buckLogUnzipPath = getRemoteBuckLogPath(logDir.buildSlaveRunId.id);
 
     try (NamedTemporaryFile zipFile = new NamedTemporaryFile("remoteBuckLog", "zip")) {
       Files.write(zipFile.get(), logDir.data.array());
@@ -309,7 +310,7 @@ public class DistBuildLogStateTracker {
           buckLogUnzipPath,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-      runIdsWithLogDirs.add(logDir.runId);
+      runIdsWithLogDirs.add(logDir.buildSlaveRunId);
     }
   }
 

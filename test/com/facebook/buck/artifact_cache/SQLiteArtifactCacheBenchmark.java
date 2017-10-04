@@ -17,9 +17,10 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -74,7 +75,7 @@ public class SQLiteArtifactCacheBenchmark {
 
   @Before
   public void setUp() throws InterruptedException, IOException, SQLException {
-    filesystem = new ProjectFilesystem(tmpDir.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot());
 
     emptyFile = tmpDir.newFile(".empty");
     inlinedFile = tmpDir.newFile(".inlined");

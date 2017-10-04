@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;

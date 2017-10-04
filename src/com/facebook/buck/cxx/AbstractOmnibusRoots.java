@@ -102,7 +102,7 @@ abstract class AbstractOmnibusRoots {
       new AbstractBreadthFirstTraversal<NativeLinkable>(includedRootDeps.values()) {
         @Override
         public Iterable<NativeLinkable> visit(NativeLinkable linkable) throws RuntimeException {
-          if (linkable.getPreferredLinkage(cxxPlatform) == NativeLinkable.Linkage.SHARED) {
+          if (!linkable.supportsOmnibusLinking(cxxPlatform)) {
             excluded.put(linkable.getBuildTarget(), linkable);
             return ImmutableSet.of();
           }

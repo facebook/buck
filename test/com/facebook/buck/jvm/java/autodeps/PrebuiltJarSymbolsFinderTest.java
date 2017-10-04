@@ -24,7 +24,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
@@ -39,8 +40,8 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.FakeClock;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -129,7 +130,7 @@ public class PrebuiltJarSymbolsFinderTest {
                 new JavaSymbolsRule(
                     BuildTargetFactory.newInstance("//foo:rule"),
                     finder,
-                    new ProjectFilesystem(tmp.getRoot()));
+                    TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
           } catch (InterruptedException | IOException e) {
             throw new RuntimeException(e);
           }
@@ -174,7 +175,7 @@ public class PrebuiltJarSymbolsFinderTest {
         new JavaSymbolsRule(
             BuildTargetFactory.newInstance("//foo:rule"),
             createFinderForGeneratedJar("//foo:jar_genrule1"),
-            new ProjectFilesystem(tmp.getRoot()));
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
     RuleKey key1 =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
@@ -184,7 +185,7 @@ public class PrebuiltJarSymbolsFinderTest {
         new JavaSymbolsRule(
             BuildTargetFactory.newInstance("//foo:rule"),
             createFinderForGeneratedJar("//foo:jar_genrule2"),
-            new ProjectFilesystem(tmp.getRoot()));
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
     RuleKey key2 =
         new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
             .build(javaSymbolsRule2);
@@ -209,14 +210,14 @@ public class PrebuiltJarSymbolsFinderTest {
       }
     }
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get(jarFileName));
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }
 
   private PrebuiltJarSymbolsFinder createFinderForGeneratedJar(String target) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
-    SourcePath sourcePath = new DefaultBuildTargetSourcePath(buildTarget);
+    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTarget);
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }
 }

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.classes;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -184,5 +185,17 @@ public class BuildCommandIntegrationTest {
         result.getStderr(),
         Matchers.containsString(
             "//:example_py does not have an output that is compatible with `buck build --out`"));
+  }
+
+  @Test
+  public void lastOutputDir() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult =
+        workspace.runBuckBuild("-c", "build.create_build_output_symlinks_enabled=true", "//:bar");
+    runBuckResult.assertSuccess();
+    assertTrue(
+        Files.exists(workspace.getBuckPaths().getLastOutputDir().toAbsolutePath().resolve("bar")));
   }
 }

@@ -36,6 +36,7 @@ public class AuditCommand extends AbstractContainerCommand {
     @SubCommand(name = "owner", impl = AuditOwnerCommand.class),
     @SubCommand(name = "rules", impl = AuditRulesCommand.class),
     @SubCommand(name = "tests", impl = AuditTestsCommand.class),
+    @SubCommand(name = "includes", impl = AuditIncludesCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;

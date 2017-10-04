@@ -1,7 +1,7 @@
 import Foundation
 
 @objc public class SwiftClass: NSObject {
-    public func printStuff() {
+    @objc public func printStuff() {
         NSLog("HAIFROMSWIFT")
     }
 }

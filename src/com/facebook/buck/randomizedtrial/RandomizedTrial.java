@@ -17,7 +17,9 @@
 package com.facebook.buck.randomizedtrial;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildId;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -29,7 +31,7 @@ import java.util.Random;
 
 /**
  * Simple implementation of A/B testing. Each RandomizedTrial selects a group to which buck instance
- * belongs to. This choice is stable and currently based on hostname, test name and user name.
+ * belongs to.
  */
 public class RandomizedTrial {
   private static final Supplier<String> HOSTNAME_SUPPLIER =
@@ -49,10 +51,31 @@ public class RandomizedTrial {
   /**
    * Returns a group for trial with given name.
    *
+   * <p>This choice is stable for each test/user/hostname.
+   *
    * @param name name of trial.
    * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
    */
-  public static <T extends Enum<T> & WithProbability> T getGroup(String name, Class<T> enumClass) {
+  public static <T extends Enum<T> & WithProbability> T getGroupStable(
+      String name, Class<T> enumClass) {
+    return selectGroup(name, enumClass, getPoint(name));
+  }
+
+  /**
+   * Returns a group for trial with given name.
+   *
+   * <p>This choice is stable for a particular buildId/test/user/hostname.
+   *
+   * @param name name of trial.
+   * @param enumClass Class of an enum which conforms to {@link WithProbability} interface.
+   */
+  public static <T extends Enum<T> & WithProbability> T getGroup(
+      String name, BuildId buildId, Class<T> enumClass) {
+    return selectGroup(name, enumClass, getPoint(name, buildId.toString()));
+  }
+
+  private static <T extends Enum<T> & WithProbability> T selectGroup(
+      String name, Class<T> enumClass, double point) {
     EnumSet<T> enumSet = EnumSet.allOf(enumClass);
 
     double sumOfAllProbabilities = enumSet.stream().mapToDouble(x -> x.getProbability()).sum();
@@ -63,7 +86,6 @@ public class RandomizedTrial {
         name,
         sumOfAllProbabilities);
 
-    final double point = getPoint(name);
     double remainder = point;
     for (T value : enumSet) {
       remainder -= value.getProbability();
@@ -77,8 +99,8 @@ public class RandomizedTrial {
   }
 
   @VisibleForTesting
-  static double getPoint(String name) {
-    return getPointForKey(getKey(name));
+  static double getPoint(String... names) {
+    return getPointForKey(getKey(names));
   }
 
   /**
@@ -92,13 +114,13 @@ public class RandomizedTrial {
         .nextDouble();
   }
 
-  private static String getKey(String name) {
+  private static String getKey(String... names) {
     String username = System.getProperty("user.name");
     if (username == null) {
       username = "unknown";
     }
     String hostname = HOSTNAME_SUPPLIER.get();
-    String result = username + "@" + hostname + "/" + name;
+    String result = username + "@" + hostname + "/" + Joiner.on("/").join(names);
     LOG.debug("Determined key: '%s'", result);
     return result;
   }

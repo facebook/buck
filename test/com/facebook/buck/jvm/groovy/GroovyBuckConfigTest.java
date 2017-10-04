@@ -19,13 +19,14 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.RawConfig;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -103,7 +104,8 @@ public class GroovyBuckConfigTest {
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig)
       throws InterruptedException {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     Config config = new Config(RawConfig.of(rawConfig));
     BuckConfig buckConfig =
         new BuckConfig(
@@ -112,7 +114,7 @@ public class GroovyBuckConfigTest {
             Architecture.detect(),
             Platform.detect(),
             environment,
-            new DefaultCellPathResolver(projectFilesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config));
 
     return new GroovyBuckConfig(buckConfig);
   }

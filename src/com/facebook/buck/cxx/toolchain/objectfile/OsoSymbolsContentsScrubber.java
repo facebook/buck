@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import com.facebook.buck.io.FileContentsScrubber;
+import com.facebook.buck.io.file.FileContentsScrubber;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.channels.FileChannel;

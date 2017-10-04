@@ -16,12 +16,14 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.listener.BroadcastEventListener;
+import com.facebook.buck.io.WatchmanOverflowEvent;
+import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
@@ -32,8 +34,6 @@ import com.facebook.buck.parser.thrift.RemoteDaemonicCellState;
 import com.facebook.buck.parser.thrift.RemoteDaemonicParserState;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.WatchmanOverflowEvent;
-import com.facebook.buck.util.WatchmanPathEvent;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
@@ -210,7 +210,7 @@ public class DaemonicParserState {
       for (Map<String, Object> rawNode : rawNodes) {
         if (rawNode.containsKey(INCLUDES_META_RULE)) {
           for (String path :
-              Preconditions.checkNotNull((List<String>) rawNode.get(INCLUDES_META_RULE))) {
+              Preconditions.checkNotNull((Iterable<String>) rawNode.get(INCLUDES_META_RULE))) {
             dependentsOfEveryNode.add(cell.getFilesystem().resolve(path));
           }
         } else if (rawNode.containsKey(CONFIGS_META_RULE)) {

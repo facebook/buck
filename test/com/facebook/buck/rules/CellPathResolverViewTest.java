@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
@@ -82,7 +82,7 @@ public class CellPathResolverViewTest {
   }
 
   private CellPathResolver getTestDelegate() {
-    return new DefaultCellPathResolver(
+    return DefaultCellPathResolver.of(
         filesystem.getPath("foo/root"),
         ImmutableMap.of(
             "a", filesystem.getPath("foo/a"),

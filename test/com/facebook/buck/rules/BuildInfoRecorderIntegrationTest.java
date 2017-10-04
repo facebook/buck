@@ -22,7 +22,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -46,16 +45,7 @@ public class BuildInfoRecorderIntegrationTest {
 
   @Test
   public void testPerformUploadToArtifactCache() throws IOException, InterruptedException {
-    BuildInfoRecorder buildInfoRecorder =
-        createBuildInfoRecorder(
-            new FakeProjectFilesystem() {
-              @Override
-              public void createZip(Collection<Path> pathsToIncludeInZip, Path out)
-                  throws IOException {
-                // For this test, nothing really cares about the content, so just write out the name.
-                writeBytesToPath(out.toString().getBytes(), out);
-              }
-            });
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(new FakeProjectFilesystem());
     Path cacheDir = Files.createTempDirectory("root");
     ArtifactCache artifactCache =
         TestArtifactCaches.createDirCacheForTest(cacheDir, Paths.get("cache"));

@@ -71,8 +71,10 @@ class AnnotationProcessorFactory implements AutoCloseable {
     } catch (ReflectiveOperationException e) {
       // If this happens, then the build is really in trouble. Better warn the user.
       throw new HumanReadableException(
+          e,
           "%s: javac unable to load annotation processor: %s",
-          target.getFullyQualifiedName(), name);
+          target.getFullyQualifiedName(),
+          name);
     }
   }
 

@@ -159,6 +159,7 @@ final class JavaBuildGraphProcessor {
                 .setCellPathResolver(params.getCell().getCellPathResolver())
                 .setBuildCellRootPath(params.getCell().getRoot())
                 .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+                .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
                 .build();
 
         SourcePathResolver pathResolver =

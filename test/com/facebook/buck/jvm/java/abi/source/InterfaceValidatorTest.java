@@ -49,12 +49,18 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         ImmutableMap.of("Foo.java", "@interface Foo { @interface Inner { } };"), false);
 
     assertErrors(
-        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+        "Foo.java:1: error: Annotation definitions must be in rules with required_for_source_only_abi = True.\n"
             + "@interface Foo { @interface Inner { } };\n"
-            + " ^",
-        "Foo.java:1: error: Annotation definitions are not allowed in a Buck rule with required_for_source_abi absent or set to False. Move this annotation to a rule with required_for_source_abi = True.\n"
+            + " ^\n"
+            + "  For a quick fix, add required_for_source_only_abi = True to //:rule.\n"
+            + "  A better fix is to move Foo to a new rule that contains only\n"
+            + "  annotations, and mark that rule required_for_source_only_abi.",
+        "Foo.java:1: error: Annotation definitions must be in rules with required_for_source_only_abi = True.\n"
             + "@interface Foo { @interface Inner { } };\n"
-            + "                  ^");
+            + "                  ^\n"
+            + "  For a quick fix, add required_for_source_only_abi = True to //:rule.\n"
+            + "  A better fix is to move Inner to a new rule that contains only\n"
+            + "  annotations, and mark that rule required_for_source_only_abi.");
   }
 
   @Test
@@ -373,6 +379,6 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
         sources,
         // A side effect of our hacky test class loader appears to be that this only works if
         // it's NOT a lambda. LoL.
-        new ValidatingTaskListenerFactory(requiredForSourceAbi));
+        new ValidatingTaskListenerFactory("//:rule", requiredForSourceAbi));
   }
 }

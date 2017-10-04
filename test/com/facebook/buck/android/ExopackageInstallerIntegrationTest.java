@@ -22,11 +22,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.android.common.SdkConstants;
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
-import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -85,7 +86,7 @@ public class ExopackageInstallerIntegrationTest {
   @Before
   public void setUp() throws Exception {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    filesystem = new ProjectFilesystem(tmpFolder.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     executionContext = TestExecutionContext.newInstance();
     currentBuildState = null;
     filesystem.mkdirs(dexDirectory);

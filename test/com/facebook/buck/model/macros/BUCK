@@ -1,0 +1,9 @@
+standard_java_test(
+    name = "macros",
+    deps = [
+        "//src/com/facebook/buck/model/macros:macros",
+        "//src/com/facebook/buck/rules/macros:macros",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

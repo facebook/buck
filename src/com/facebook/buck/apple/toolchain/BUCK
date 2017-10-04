@@ -7,8 +7,9 @@ java_library(
     deps = [
         "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
-        "//src/com/facebook/buck/cli:config",
+        "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/util:exceptions",

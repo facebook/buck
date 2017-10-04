@@ -1,4 +1,0 @@
-[java]
-    abi_generation_mode = source_with_deps
-    compile_against_abis = true
-    jar_spool_mode = direct_to_jar

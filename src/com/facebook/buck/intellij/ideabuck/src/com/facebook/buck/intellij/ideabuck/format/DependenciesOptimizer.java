@@ -22,8 +22,11 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckValueArray;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
+import com.intellij.lang.ImportOptimizer;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -35,61 +38,143 @@ import org.jetbrains.annotations.NotNull;
 
 /** A utility class for sorting buck dependencies alphabetically. */
 public class DependenciesOptimizer {
+  private static final Logger LOG = Logger.getInstance(DependenciesOptimizer.class);
+
   private static final String DEPENDENCIES_KEYWORD = "deps";
   private static final String PROVIDED_DEPENDENCIES_KEYWORD = "provided_deps";
   private static final String EXPORTED_DEPENDENCIES_KEYWORD = "exported_deps";
 
+  private static final String DEPENDENCIES_FORMAT_PATTERN = "%2$d dependenc%3$s pruned";
+
   private DependenciesOptimizer() {}
 
-  public static void optimzeDeps(@NotNull PsiFile file) {
-    final PropertyVisitor visitor = new PropertyVisitor();
-    file.accept(
-        new BuckVisitor() {
-          @Override
-          public void visitElement(PsiElement node) {
-            node.acceptChildren(this);
-            node.accept(visitor);
-          }
-        });
+  static class OptimizerInstance implements ImportOptimizer.CollectingInfoRunnable {
 
-    // Commit modifications.
-    final PsiDocumentManager manager = PsiDocumentManager.getInstance(file.getProject());
-    manager.doPostponedOperationsAndUnblockDocument(manager.getDocument(file));
-  }
+    final PsiFile psiFile;
+    int sortedArrays = 0;
+    int prunedDependencies = 0;
 
-  private static class PropertyVisitor extends BuckVisitor {
+    OptimizerInstance(PsiFile psiFile) {
+      this.psiFile = psiFile;
+    }
+
     @Override
-    public void visitProperty(@NotNull BuckProperty property) {
-      BuckPropertyLvalue lValue = property.getPropertyLvalue();
-      if (lValue == null
-          || (!DEPENDENCIES_KEYWORD.equals(lValue.getText())
-              && !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText())
-              && !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
-        return;
+    public void run() {
+      optimizeDeps(psiFile);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public String getUserNotificationInfo() {
+      if (sortedArrays == 0 && prunedDependencies == 0) {
+        return "Dependencies were already sorted properly";
       }
 
-      List<BuckValue> values = property.getExpression().getValueList();
-      for (BuckValue value : values) {
-        BuckValueArray array = value.getValueArray();
-        if (array != null) {
-          sortArray(array);
+      String result =
+          sortedArrays == 0
+              ? null
+              : String.format("%d array%s sorted", sortedArrays, sortedArrays == 1 ? "" : "s");
+
+      if (prunedDependencies > 0) {
+        result =
+            String.format(
+                sortedArrays == 0
+                    ? DEPENDENCIES_FORMAT_PATTERN
+                    : "%s; " + DEPENDENCIES_FORMAT_PATTERN,
+                result,
+                prunedDependencies,
+                prunedDependencies == 1 ? "y" : "ies");
+      }
+
+      return result;
+    }
+
+    private void optimizeDeps(@NotNull PsiFile file) {
+      final PropertyVisitor visitor = new PropertyVisitor();
+      file.accept(
+          new BuckVisitor() {
+            @Override
+            public void visitElement(PsiElement node) {
+              node.acceptChildren(this);
+              node.accept(visitor);
+            }
+          });
+
+      // Commit modifications.
+      final PsiDocumentManager manager = PsiDocumentManager.getInstance(file.getProject());
+      manager.doPostponedOperationsAndUnblockDocument(manager.getDocument(file));
+    }
+
+    private void sortArray(BuckValueArray array) {
+      BuckArrayElements arrayElements = array.getArrayElements();
+      PsiElement[] arrayValues = arrayElements.getChildren();
+      PsiElement[] unsortedArrayValues = Arrays.copyOf(arrayValues, arrayValues.length);
+      Arrays.sort(arrayValues, PSI_SORT_ORDER);
+
+      boolean changed = false;
+      PsiElement[] copiedValues = new PsiElement[arrayValues.length];
+      for (int index = 0; index < arrayValues.length; ++index) {
+        PsiElement newValue = arrayValues[index];
+        copiedValues[index] = newValue.copy();
+        changed |= unsortedArrayValues[index] != newValue; // |= is cheaper than a branch
+      }
+      if (changed) {
+        sortedArrays += 1;
+      }
+
+      for (int index = 0; index < copiedValues.length; ++index) {
+        arrayElements.getChildren()[index].replace(copiedValues[index]);
+      }
+    }
+
+    private void removeDuplicates(BuckValueArray array) {
+      // These are NOT the same copies we put back in sortArray()
+      BuckArrayElements arrayElements = array.getArrayElements();
+      PsiElement[] arrayValues = arrayElements.getChildren();
+      for (int index = arrayValues.length - 1; index > 0; --index) {
+        PsiElement element = arrayValues[index];
+        String elementText = element.getText();
+        int prior = index - 1;
+        while (prior >= 0 && elementText.equals(arrayValues[prior].getText())) {
+          prior -= 1;
+        }
+        // prior now points to the first PsiElement that is not a dup of element
+        int deletions = index - 1 - prior;
+        if (deletions == 0) {
+          continue; // there are no dups of arrayValues[index]
+        }
+        LOG.info(String.format("Deleting children %d to %d", prior + 1, index - 1));
+        prunedDependencies += deletions;
+        PsiElement first = arrayValues[prior + 1];
+        PsiElement last =
+            // NOT arrayValues[index - 1], because we want to delete trailing comma and whitespace
+            element.getPrevSibling();
+
+        arrayElements.deleteChildRange(first, last);
+        index = prior + 1; // resume scan at first PsiElement that didn't match
+      }
+    }
+
+    private class PropertyVisitor extends BuckVisitor {
+      @Override
+      public void visitProperty(@NotNull BuckProperty property) {
+        BuckPropertyLvalue lValue = property.getPropertyLvalue();
+        if (lValue == null
+            || (!DEPENDENCIES_KEYWORD.equals(lValue.getText())
+                && !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText())
+                && !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
+          return;
+        }
+
+        List<BuckValue> values = property.getExpression().getValueList();
+        for (BuckValue value : values) {
+          BuckValueArray array = value.getValueArray();
+          if (array != null) {
+            sortArray(array);
+            removeDuplicates(array);
+          }
         }
       }
-    }
-  }
-
-  private static void sortArray(BuckValueArray array) {
-    BuckArrayElements arrayElements = array.getArrayElements();
-    PsiElement[] arrayValues = arrayElements.getChildren();
-    Arrays.sort(arrayValues, PSI_SORT_ORDER);
-
-    PsiElement[] oldValues = new PsiElement[arrayValues.length];
-    for (int i = 0; i < arrayValues.length; ++i) {
-      oldValues[i] = arrayValues[i].copy();
-    }
-
-    for (int i = 0; i < arrayValues.length; ++i) {
-      arrayElements.getChildren()[i].replace(oldValues[i]);
     }
   }
 
@@ -152,7 +237,8 @@ public class DependenciesOptimizer {
           });
 
   /** Returns the preferred sort order of dependencies. */
-  public static Ordering<String> sortOrder() {
+  @VisibleForTesting
+  static Ordering<String> sortOrder() {
     return SORT_ORDER;
   }
 }

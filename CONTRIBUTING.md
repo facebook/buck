@@ -217,4 +217,4 @@ assertEquals(ImmutableList.of(8675309L), t.getPhoneNumbers());
 assertFalse(t.getDescription().isPresent());
 ```
 
-For more documentation, see the reference at http://immutables.github.io.
+For more documentation, see the reference at https://immutables.github.io.

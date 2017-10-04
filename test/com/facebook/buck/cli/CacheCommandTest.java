@@ -28,10 +28,11 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
-import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
@@ -176,7 +177,8 @@ public class CacheCommandTest extends EasyMockSupport {
             0L,
             0L,
             1000L,
-            false);
+            false,
+            Optional.empty());
     eventBus.register(listener);
     return listener;
   }

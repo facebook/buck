@@ -1,0 +1,2 @@
+include_defs('//build_defs')
+load('//:java_rules.bzl', 'my_rule')

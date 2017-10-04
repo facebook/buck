@@ -17,7 +17,7 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

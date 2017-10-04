@@ -15,14 +15,14 @@
  */
 package com.facebook.buck.android.relinker;
 
-import com.facebook.buck.android.NdkCxxPlatforms;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.InternalFlavor;
@@ -56,19 +56,24 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements OverrideScheduleRule {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
-  @AddToRuleKey private final NdkCxxPlatforms.TargetCpuType cpuType;
+  @AddToRuleKey private final TargetCpuType cpuType;
   @AddToRuleKey private final SourcePath baseLibSourcePath;
   @AddToRuleKey private final Tool objdump;
   @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
   @AddToRuleKey @Nullable private final Linker linker;
+
+  @AddToRuleKey(stringify = true)
+  private final ImmutableList<Pattern> symbolWhitelist;
 
   private final BuildRuleParams buildRuleParams;
   private final CxxBuckConfig cxxBuckConfig;
@@ -81,12 +86,13 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> symbolsNeededPaths,
-      NdkCxxPlatforms.TargetCpuType cpuType,
+      TargetCpuType cpuType,
       Tool objdump,
       CxxBuckConfig cxxBuckConfig,
       SourcePath baseLibSourcePath,
       @Nullable Linker linker,
-      ImmutableList<Arg> linkerArgs) {
+      ImmutableList<Arg> linkerArgs,
+      ImmutableList<Pattern> symbolWhitelist) {
     super(
         buildTarget, projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs));
     this.pathResolver = resolver;
@@ -98,6 +104,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.symbolsNeededPaths = symbolsNeededPaths;
     this.baseLibSourcePath = baseLibSourcePath;
     this.linker = linker;
+    this.symbolWhitelist = symbolWhitelist;
   }
 
   private static BuildRuleParams withDepsFromArgs(
@@ -106,7 +113,8 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(ruleFinder))));
   }
 
-  private static String getVersionScript(Set<String> needed, Set<String> provided) {
+  private static String getVersionScript(
+      Set<String> needed, Set<String> provided, List<Pattern> whitelist) {
     Set<String> keep =
         new ImmutableSet.Builder<String>()
             .addAll(Sets.intersection(needed, provided))
@@ -119,6 +127,11 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       }
                       if (s.contains("Java_")) {
                         return true;
+                      }
+                      for (Pattern pattern : whitelist) {
+                        if (pattern.matcher(s).matches()) {
+                          return true;
+                        }
                       }
                       return false;
                     }))
@@ -135,11 +148,11 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public SourcePath getLibFileSourcePath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibFilePath());
   }
 
   public SourcePath getSymbolsNeededPath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getSymbolsNeededOutPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getSymbolsNeededOutPath());
   }
 
   @Override
@@ -210,7 +223,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getLibFilePath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibFilePath());
   }
 
   @Override
@@ -255,7 +268,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       throws IOException, InterruptedException {
     Symbols sym = getSymbols(executor, getBaseLibPath());
     Set<String> defined = Sets.difference(sym.all, sym.undefined);
-    String versionScript = getVersionScript(symbolsNeeded, defined);
+    String versionScript = getVersionScript(symbolsNeeded, defined, symbolWhitelist);
 
     Files.write(
         absolutify(getRelativeVersionFilePath()),

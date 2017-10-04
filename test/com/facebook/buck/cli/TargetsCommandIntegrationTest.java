@@ -26,7 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -605,6 +605,10 @@ public class TargetsCommandIntegrationTest {
     String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
 
     assertEquals(expectedRootPath, cellPath.asText());
+
+    JsonNode ruleType = targetNode.get("buck.ruleType");
+    assertNotNull(ruleType);
+    assertEquals("genrule", ruleType.asText());
   }
 
   @Test

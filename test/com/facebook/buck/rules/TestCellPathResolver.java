@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.rules;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 
 public final class TestCellPathResolver {
   public static CellPathResolver get(ProjectFilesystem projectFilesystem) {
-    return new DefaultCellPathResolver(projectFilesystem.getRootPath(), ImmutableMap.of());
+    return DefaultCellPathResolver.of(projectFilesystem.getRootPath(), ImmutableMap.of());
   }
 
   private TestCellPathResolver() {}

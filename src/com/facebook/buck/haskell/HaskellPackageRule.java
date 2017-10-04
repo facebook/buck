@@ -17,8 +17,8 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -38,6 +38,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -276,13 +277,13 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPackageDb());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb());
   }
 
   public HaskellPackage getPackage() {
     return HaskellPackage.builder()
         .setInfo(packageInfo)
-        .setPackageDb(new ExplicitBuildTargetSourcePath(getBuildTarget(), getPackageDb()))
+        .setPackageDb(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb()))
         .addAllLibraries(libraries)
         .addAllInterfaces(interfaces)
         .addAllObjects(objects)
@@ -301,6 +302,11 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       this.resolver = resolver;
       this.args = args;
       this.env = env;
+    }
+
+    @Override
+    protected boolean shouldPrintStderr(Verbosity verbosity) {
+      return !verbosity.isSilent();
     }
 
     @Override

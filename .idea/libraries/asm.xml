@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="asm">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/asm/asm-debug-all-6.0_BETA.jar!/" />
+    </SOURCES>
+  </library>
+</component>

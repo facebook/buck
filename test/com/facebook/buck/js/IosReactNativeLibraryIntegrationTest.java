@@ -21,7 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -32,7 +33,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,15 +50,9 @@ public class IosReactNativeLibraryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
   }
 
-  @Before
-  public void setUp() throws InterruptedException, IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "ios_rn", tmpFolder);
-    workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
-  }
-
   @Test
-  public void testBundleOutputContainsJSAndResources() throws IOException {
+  public void testBundleOutputContainsJSAndResources() throws IOException, InterruptedException {
+    setupWorkspace("ios_rn");
     workspace.runBuckBuild("//:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
         BuildTargets.getGenPath(
@@ -69,7 +63,8 @@ public class IosReactNativeLibraryIntegrationTest {
   }
 
   @Test
-  public void testUnbundleOutputContainsJSAndResources() throws IOException {
+  public void testUnbundleOutputContainsJSAndResources() throws IOException, InterruptedException {
+    setupWorkspace("ios_rn");
     workspace.runBuckBuild("//:DemoApp-Unbundle#iphonesimulator-x86_64,no-debug").assertSuccess();
     workspace.verify(
         BuildTargets.getGenPath(
@@ -80,7 +75,9 @@ public class IosReactNativeLibraryIntegrationTest {
   }
 
   @Test
-  public void testFlavoredBundleOutputDoesNotContainJSAndResources() throws IOException {
+  public void testFlavoredBundleOutputDoesNotContainJSAndResources()
+      throws IOException, InterruptedException {
+    setupWorkspace("ios_rn");
     workspace
         .runBuckBuild("//:DemoApp#iphonesimulator-x86_64,rn_no_bundle,no-debug")
         .assertSuccess();
@@ -99,7 +96,8 @@ public class IosReactNativeLibraryIntegrationTest {
   }
 
   @Test
-  public void testShowOutputReturnsPathToJSBundleFile() throws IOException {
+  public void testShowOutputReturnsPathToJSBundleFile() throws IOException, InterruptedException {
+    setupWorkspace("ios_rn");
     String target = "//js:DemoAppJS";
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("targets", "--show-output", target);
@@ -113,7 +111,9 @@ public class IosReactNativeLibraryIntegrationTest {
   }
 
   @Test
-  public void testShowOutputReturnsSourceMapWithSourceMapFlavor() throws IOException {
+  public void testShowOutputReturnsSourceMapWithSourceMapFlavor()
+      throws IOException, InterruptedException {
+    setupWorkspace("ios_rn");
     String target = "//js:DemoAppJS#source_map";
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("targets", "--show-output", target);
@@ -124,5 +124,20 @@ public class IosReactNativeLibraryIntegrationTest {
             BuildTargetFactory.newInstance(target),
             ReactNativeBundle.SOURCE_MAP_OUTPUT_FORMAT);
     assertThat(result.getStdout().trim().split(" ")[1], Matchers.equalTo(path.toString()));
+  }
+
+  @Test
+  public void testGenerateProjectMetadata() throws IOException, InterruptedException {
+    setupWorkspace("ios_rn_project");
+    workspace
+        .runBuckCommand("project", "--config", "project.ide=xcode", "//:DemoApp")
+        .assertSuccess();
+    workspace.verify();
+  }
+
+  private void setupWorkspace(String name) throws IOException, InterruptedException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, name, tmpFolder);
+    workspace.setUp();
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 }

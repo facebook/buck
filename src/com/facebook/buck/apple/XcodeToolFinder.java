@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.FileFinder;
+import com.facebook.buck.io.file.FileFinder;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.cache.CacheBuilder;

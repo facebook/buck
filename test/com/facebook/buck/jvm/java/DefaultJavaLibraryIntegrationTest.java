@@ -32,8 +32,9 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
@@ -41,7 +42,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.JsonMatcher;
-import com.facebook.buck.testutil.Zip;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
@@ -103,7 +104,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   @Before
   public void setUp() throws InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -733,8 +734,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
           BuildTargets.getGenPath(filesystem, binary2Target, "%s.jar")
         }) {
       Path file = workspace.getPath(filename);
-      try (Zip zip = new Zip(file, /* for writing? */ false)) {
-        Set<String> allNames = zip.getFileNames();
+      try (ZipArchive zipArchive = new ZipArchive(file, /* for writing? */ false)) {
+        Set<String> allNames = zipArchive.getFileNames();
         // Representative file from provided_deps we don't expect to be there.
         assertFalse(allNames.contains("org/junit/Test.class"));
 
@@ -975,11 +976,14 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     setUpProjectWorkspaceForScenario("ap_crashes");
 
     ProcessResult result = workspace.runBuckBuild("//:main");
+    // TODO(cjhopman): These shouldn't be reported as internal errors.
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "//:main failed on step javac with an exception",
-            "java.lang.RuntimeException: Test crash!"));
+            "Buck encountered an internal error",
+            "java.lang.RuntimeException: Test crash!",
+            "    When running <javac>.",
+            "    When building rule //:main."));
   }
 
   /** Asserts that the specified file exists and returns its contents. */

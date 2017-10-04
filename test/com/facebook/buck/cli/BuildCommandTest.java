@@ -24,7 +24,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.command.BuildExecutionResult;
 import com.facebook.buck.command.BuildReport;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -106,7 +106,7 @@ public class BuildCommandTest {
             + "\u001B[31mFAIL\u001B[0m //fake:rule4\n"
             + "\n"
             + " ** Summary of failures encountered during the build **\n"
-            + "Rule //fake:rule2 FAILED because some.\n";
+            + "Rule //fake:rule2 FAILED because some.";
     String observedReport =
         new BuildReport(buildExecutionResult, resolver)
             .generateForConsole(
@@ -128,7 +128,7 @@ public class BuildCommandTest {
             + "OK   //fake:rule3 FETCHED_FROM_CACHE\n"
             + "FAIL //fake:rule4\n\n"
             + " ** Summary of failures encountered during the build **\n"
-            + "Rule //fake:rule2 FAILED because some.\n";
+            + "Rule //fake:rule2 FAILED because some.";
     String observedReport =
         new BuildReport(buildExecutionResult, resolver)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));

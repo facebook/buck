@@ -16,7 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;

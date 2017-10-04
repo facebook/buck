@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.MacroException;
+import com.facebook.buck.model.macros.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -58,7 +58,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
   }
 
   @Override
-  QueryOutputsMacro fromQuery(Query query) {
+  public QueryOutputsMacro fromQuery(Query query) {
     return QueryOutputsMacro.of(query);
   }
 

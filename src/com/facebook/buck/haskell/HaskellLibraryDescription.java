@@ -19,15 +19,23 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
+import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
+import com.facebook.buck.cxx.CxxSourceTypes;
+import com.facebook.buck.cxx.CxxToolFlags;
+import com.facebook.buck.cxx.ExplicitCxxToolFlags;
+import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -49,6 +57,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -66,6 +75,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -182,7 +192,8 @@ public class HaskellLibraryDescription
                 ? CxxSourceRuleFactory.PicType.PDC
                 : CxxSourceRuleFactory.PicType.PIC,
             platform.getCxxPlatform().getStaticLibraryExtension(),
-            hsProfile ? "_p" : ""),
+            hsProfile ? "_p" : "",
+            cxxBuckConfig.isUniqueLibraryNameEnabled()),
         compileRule.getObjects(),
         // TODO(#20466393): Currently, GHC produces nono-deterministically sized object files.
         // This means that it's possible to get a thin archive fetched from cache originating from
@@ -225,24 +236,22 @@ public class HaskellLibraryDescription
       target = target.withoutFlavors(HaskellDescriptionUtils.PROF);
     }
 
-    Optional<Archive> archive = resolver.getRuleOptionalWithType(target, Archive.class);
-    if (archive.isPresent()) {
-      return archive.get();
-    }
-
-    return resolver.addToIndex(
-        createStaticLibrary(
+    return (Archive)
+        resolver.computeIfAbsent(
             target,
-            projectFilesystem,
-            baseParams,
-            resolver,
-            pathResolver,
-            ruleFinder,
-            platform,
-            args,
-            deps,
-            depType,
-            hsProfile));
+            target1 ->
+                createStaticLibrary(
+                    target1,
+                    projectFilesystem,
+                    baseParams,
+                    resolver,
+                    pathResolver,
+                    ruleFinder,
+                    platform,
+                    args,
+                    deps,
+                    depType,
+                    hsProfile));
   }
 
   private HaskellPackageRule createPackage(
@@ -429,24 +438,106 @@ public class HaskellLibraryDescription
       target = target.withAppendedFlavors(HaskellDescriptionUtils.PROF);
     }
 
-    Optional<HaskellPackageRule> packageRule =
-        resolver.getRuleOptionalWithType(target, HaskellPackageRule.class);
-    if (packageRule.isPresent()) {
-      return packageRule.get();
-    }
-    return resolver.addToIndex(
-        createPackage(
+    return (HaskellPackageRule)
+        resolver.computeIfAbsent(
             target,
+            target1 ->
+                createPackage(
+                    target1,
+                    projectFilesystem,
+                    baseParams,
+                    resolver,
+                    pathResolver,
+                    ruleFinder,
+                    platform,
+                    args,
+                    deps,
+                    depType,
+                    hsProfile));
+  }
+
+  private HaskellHaddockLibRule requireHaddockLibrary(
+      BuildTarget baseTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams baseParams,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      HaskellPlatform platform,
+      HaskellLibraryDescriptionArg args) {
+    CxxPlatform cxxPlatform = platform.getCxxPlatform();
+    CxxDeps allDeps =
+        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+    ImmutableSet<BuildRule> deps = allDeps.get(resolver, cxxPlatform);
+
+    // Collect all Haskell deps
+    ImmutableSet.Builder<SourcePath> haddockInterfaces = ImmutableSet.builder();
+    final ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
+        ImmutableSortedMap.naturalOrder();
+    final ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
+        ImmutableSortedMap.naturalOrder();
+
+    // Traverse all deps to pull interfaces
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
+      @Override
+      public Iterable<BuildRule> visit(BuildRule rule) {
+        ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
+        if (rule instanceof HaskellCompileDep || rule instanceof PrebuiltHaskellLibrary) {
+          HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
+
+          // Get haddock-interfaces
+          HaskellHaddockInput inp = haskellCompileDep.getHaddockInput(platform);
+          haddockInterfaces.addAll(inp.getInterfaces());
+
+          HaskellCompileInput compileInput =
+              haskellCompileDep.getCompileInput(platform, Linker.LinkableDepType.STATIC, true);
+          boolean firstOrderDep = deps.contains(rule);
+          for (HaskellPackage pkg : compileInput.getPackages()) {
+            if (firstOrderDep) {
+              exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
+            } else {
+              packagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
+            }
+          }
+          traverse.addAll(haskellCompileDep.getCompileDeps(platform));
+        }
+        return traverse.build();
+      }
+    }.start();
+
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps);
+    ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
+    PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
+    toolFlagsBuilder.setPlatformFlags(
+        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
+    for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
+      ppFlagsBuilder.addAllIncludes(input.getIncludes());
+      ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
+      toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
+    }
+    ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
+
+    return resolver.addToIndex(
+        HaskellHaddockLibRule.from(
+            baseTarget.withAppendedFlavors(Type.HADDOCK.getFlavor(), platform.getFlavor()),
             projectFilesystem,
             baseParams,
-            resolver,
-            pathResolver,
             ruleFinder,
+            HaskellSources.from(
+                baseTarget, resolver, pathResolver, ruleFinder, platform, "srcs", args.getSrcs()),
+            platform.getHaddock().resolve(resolver),
+            args.getHaddockFlags(),
+            args.getCompilerFlags(),
+            platform.getLinkerFlags(),
+            haddockInterfaces.build(),
+            packagesBuilder.build(),
+            exposedPackagesBuilder.build(),
+            getPackageInfo(platform, baseTarget),
             platform,
-            args,
-            deps,
-            depType,
-            hsProfile));
+            CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
+                .resolve(resolver),
+            ppFlagsBuilder.build()));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -512,26 +603,22 @@ public class HaskellLibraryDescription
         Sets.intersection(
                 baseTarget.getFlavors(), Sets.union(Type.FLAVOR_VALUES, platforms.getFlavors()))
             .isEmpty());
-    BuildTarget target =
-        baseTarget.withAppendedFlavors(Type.SHARED.getFlavor(), platform.getFlavor());
 
-    Optional<HaskellLinkRule> linkRule =
-        resolver.getRuleOptionalWithType(target, HaskellLinkRule.class);
-    if (linkRule.isPresent()) {
-      return linkRule.get();
-    }
-    return resolver.addToIndex(
-        createSharedLibrary(
-            target,
-            projectFilesystem,
-            baseParams,
-            resolver,
-            pathResolver,
-            ruleFinder,
-            platform,
-            args,
-            deps,
-            hsProfile));
+    return (HaskellLinkRule)
+        resolver.computeIfAbsent(
+            baseTarget.withAppendedFlavors(Type.SHARED.getFlavor(), platform.getFlavor()),
+            target ->
+                createSharedLibrary(
+                    target,
+                    projectFilesystem,
+                    baseParams,
+                    resolver,
+                    pathResolver,
+                    ruleFinder,
+                    platform,
+                    args,
+                    deps,
+                    hsProfile));
   }
 
   @Override
@@ -614,6 +701,16 @@ public class HaskellLibraryDescription
                   ? Linker.LinkableDepType.STATIC
                   : Linker.LinkableDepType.STATIC_PIC,
               args.isEnableProfiling());
+        case HADDOCK:
+          return requireHaddockLibrary(
+              baseTarget,
+              projectFilesystem,
+              params,
+              resolver,
+              pathResolver,
+              ruleFinder,
+              platform.get(),
+              args);
       }
 
       throw new IllegalStateException(
@@ -646,6 +743,17 @@ public class HaskellLibraryDescription
                 depType,
                 hsProfile);
         return HaskellCompileInput.builder().addPackages(rule.getPackage()).build();
+      }
+
+      @Override
+      public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
+        BuildTarget target =
+            buildTarget.withAppendedFlavors(Type.HADDOCK.getFlavor(), platform.getFlavor());
+        HaskellHaddockLibRule rule = (HaskellHaddockLibRule) resolver.requireRule(target);
+        return HaskellHaddockInput.builder()
+            .addAllInterfaces(rule.getInterfaces())
+            .addAllOutputDirs(rule.getOutputDirs())
+            .build();
       }
 
       @Override
@@ -779,7 +887,8 @@ public class HaskellLibraryDescription
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
-    ;
+
+    HADDOCK(InternalFlavor.of("haddock"));
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =
         ImmutableList.copyOf(Type.values())
@@ -829,6 +938,11 @@ public class HaskellLibraryDescription
     @Value.Default
     default boolean isEnableProfiling() {
       return false;
+    }
+
+    @Value.Default
+    default ImmutableList<String> getHaddockFlags() {
+      return ImmutableList.of();
     }
   }
 }

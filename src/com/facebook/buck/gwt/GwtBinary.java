@@ -17,7 +17,7 @@
 package com.facebook.buck.gwt;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -200,7 +200,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /** @return The {@code .zip} file produced by this rule. */
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), outputFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputFile);
   }
 
   /**

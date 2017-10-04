@@ -17,7 +17,6 @@
 package com.facebook.buck.ide.intellij.projectview;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -164,27 +163,4 @@ public class ProjectViewIntegrationTest {
   }
 
   // endregion Structural tests
-
-  // region View folder in repo?
-
-  /** Tests that a view folder in the repo is detected and rejected */
-  @Test
-  public void testViewFolderInRepo() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "structuralTests", temporaryFolder);
-    workspace.setUp();
-
-    Path badViewPath = workspace.getPath("illegalViewDirectory");
-    assertFalse(Files.exists(badViewPath));
-    Files.createDirectory(badViewPath);
-    assertTrue(Files.exists(badViewPath));
-    assertEquals(0, badViewPath.toFile().list().length);
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project", "--view", badViewPath.toString(), "//testdata:testdata");
-    result.assertFailure("This should fail");
-  }
-
-  // endregion View folder in repo?
 }

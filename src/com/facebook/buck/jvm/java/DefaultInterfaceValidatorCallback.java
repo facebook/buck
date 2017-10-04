@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.jvm.java.abi.source.api.InterfaceValidatorCallback;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import java.io.IOException;
 import java.util.EnumSet;
@@ -30,18 +31,27 @@ import javax.tools.StandardLocation;
 
 class DefaultInterfaceValidatorCallback implements InterfaceValidatorCallback {
   private final JavaFileManager fileManager;
-  private final boolean ruleIsRequiredForSourceAbi;
+  private final BuildTarget buildTarget;
+  private final boolean ruleIsRequiredForSourceOnlyAbi;
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
   public DefaultInterfaceValidatorCallback(
-      JavaFileManager fileManager, boolean ruleIsRequiredForSourceAbi) {
+      JavaFileManager fileManager,
+      BuildTarget buildTarget,
+      boolean ruleIsRequiredForSourceOnlyAbi) {
     this.fileManager = fileManager;
-    this.ruleIsRequiredForSourceAbi = ruleIsRequiredForSourceAbi;
+    this.buildTarget = buildTarget;
+    this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
   }
 
   @Override
-  public boolean ruleIsRequiredForSourceAbi() {
-    return ruleIsRequiredForSourceAbi;
+  public String getRuleName() {
+    return buildTarget.toString();
+  }
+
+  @Override
+  public boolean ruleIsRequiredForSourceOnlyAbi() {
+    return ruleIsRequiredForSourceOnlyAbi;
   }
 
   @Override

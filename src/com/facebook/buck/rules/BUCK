@@ -25,17 +25,17 @@ java_library(
 java_immutables_library(
     name = "source_path",
     srcs = [
-        "AbstractExopackageInfo.java",
+        "AbstractArchiveMemberSourcePath.java",
+        "AbstractDefaultBuildTargetSourcePath.java",
+        "AbstractExplicitBuildTargetSourcePath.java",
+        "AbstractForwardingBuildTargetSourcePath.java",
         "BuildTargetSourcePath.java",
-        "DefaultBuildTargetSourcePath.java",
-        "ExplicitBuildTargetSourcePath.java",
-        "ForwardingBuildTargetSourcePath.java",
         "PathSourcePath.java",
         "SourcePathResolver.java",
     ],
     exported_deps = [
-        ":archive_member_source_path",
         ":source_path_interface",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     visibility = ["PUBLIC"],
     deps = [
@@ -44,19 +44,6 @@ java_immutables_library(
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
-    ],
-)
-
-java_immutables_library(
-    name = "archive_member_source_path",
-    srcs = [
-        "AbstractArchiveMemberSourcePath.java",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        ":source_path_interface",
     ],
 )
 
@@ -71,7 +58,7 @@ java_library(
     deps = [
         ":cell_path_resolver_impls",
         ":interfaces",
-        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/util/config:config",
         "//third-party/java/guava:guava",
     ],
 )
@@ -101,12 +88,11 @@ java_immutables_library(
         "//src/com/facebook/buck/android:cxxruntime",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:steps",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
@@ -120,11 +106,11 @@ java_immutables_library(
         "//src/com/facebook/buck/gwt:gwt",
         "//src/com/facebook/buck/halide:halide",
         "//src/com/facebook/buck/haskell:haskell",
-        "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io:watchman",
-        "//src/com/facebook/buck/io/filesystem:skylark",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/filesystem/skylark:skylark",
         "//src/com/facebook/buck/js:js",
         "//src/com/facebook/buck/json:json",
         "//src/com/facebook/buck/jvm/groovy:groovy",
@@ -153,12 +139,14 @@ java_immutables_library(
         "//src/com/facebook/buck/swift:platform",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
+        "//src/com/facebook/buck/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/versions:versions",
-        "//src/com/facebook/buck/zip:rules",
+        "//src/com/facebook/buck/zip/rules:rules",
         "//third-party/java/bazel:skylark-lang",
     ],
 )
@@ -292,10 +280,10 @@ java_immutables_library(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/io:BuckPaths",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:model",
@@ -319,27 +307,6 @@ java_immutables_library(
 )
 
 java_library(
-    name = "transformer",
-    srcs = [
-        "DefaultTargetNodeToBuildRuleTransformer.java",
-    ],
-    exported_deps = [
-        ":abstract_description_arg",
-        ":build_rule",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        ":interfaces",
-        ":rule_key",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/rules/query:query",
-        "//third-party/java/guava:guava",
-    ],
-)
-
-java_library(
     name = "target_graph_hashing",
     srcs = [
         "TargetGraphHashing.java",
@@ -355,6 +322,7 @@ java_library(
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/hashing:hashing",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/util:exceptions",
@@ -399,6 +367,7 @@ java_immutables_library(
         "AbstractCachingBuildEngineBuckConfig.java",
         "AbstractResourceAwareSchedulingInfo.java",
         "AbstractRuleScheduleInfo.java",
+        "ActionGraphCache.java",
         "BinaryWrapperRule.java",
         "BuildEngine.java",
         "BuildInfo.java",
@@ -415,6 +384,7 @@ java_immutables_library(
         "CachingBuildRuleBuilder.java",
         "DefaultBuildableContext.java",
         "DefaultOnDiskBuildInfo.java",
+        "DefaultTargetNodeToBuildRuleTransformer.java",
         "ExternalTestRunnerRule.java",
         "FilesystemBuildInfoStore.java",
         "HasInstallHelpers.java",
@@ -449,25 +419,26 @@ java_immutables_library(
         ":interfaces",
         ":rule_key",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/hashing:hashing",
-        "//src/com/facebook/buck/io:BuckPaths",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/model:build_id",
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/model:simple_types",
         "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/randomizedtrial:randomizedtrial",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/sqlite:sqlite",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
@@ -475,15 +446,14 @@ java_immutables_library(
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/timing:timing",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:object_mapper",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/collect:collect",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/zip:zip",
         "//src/com/facebook/buck/versions:versions",
-        "//src/com/facebook/buck/zip:unzip",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
@@ -509,37 +479,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "action_graph_cache",
-    srcs = [
-        "ActionGraphCache.java",
-    ],
-    tests = [
-        "//test/com/facebook/buck/rules:rules",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        ":rule_key",
-        ":source_path",
-        ":transformer",
-        "//src/com/facebook/buck/cli:config",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/external:external_lib",
-        "//src/com/facebook/buck/event/listener:BroadcastEventListener",
-        "//src/com/facebook/buck/graph:graph",
-        "//src/com/facebook/buck/log:api",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/model:simple_types",
-        "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/rules/keys:keys",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:watchman",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 java_immutables_library(
     name = "relative_cell_name",
     srcs = [
@@ -550,27 +489,29 @@ java_immutables_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "cell_path_resolver_impls",
     srcs = [
+        "AbstractDefaultCellPathResolver.java",
         "CellPathResolverView.java",
-        "DefaultCellPathResolver.java",
+    ],
+    exported_deps = [
+        ":interfaces",
+        "//src/com/facebook/buck/util/config:config",
     ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        ":interfaces",
         ":relative_cell_name",
-        "//src/com/facebook/buck/config:config",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "visibility",
     srcs = [
         "ObeysVisibility.java",

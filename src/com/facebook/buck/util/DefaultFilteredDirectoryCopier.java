@@ -16,7 +16,8 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Predicate;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -79,7 +80,7 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
             if (pred.apply(srcPath)) {
               Path destPath = destDir.resolve(srcDir.relativize(srcPath));
               filesystem.createParentDirs(destPath);
-              filesystem.copy(srcPath, destPath, ProjectFilesystem.CopySourceMode.FILE);
+              filesystem.copy(srcPath, destPath, CopySourceMode.FILE);
             }
             return FileVisitResult.CONTINUE;
           }

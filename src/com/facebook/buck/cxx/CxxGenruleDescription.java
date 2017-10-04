@@ -25,17 +25,17 @@ import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroFinder;
-import com.facebook.buck.model.MacroMatchResult;
-import com.facebook.buck.model.MacroReplacer;
+import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.model.macros.MacroFinder;
+import com.facebook.buck.model.macros.MacroMatchResult;
+import com.facebook.buck.model.macros.MacroReplacer;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -539,7 +539,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return input
           .targets
           .stream()
-          .map(DefaultBuildTargetSourcePath::new)
+          .map(DefaultBuildTargetSourcePath::of)
           .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     }
   }
@@ -697,18 +697,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     private SymlinkTree requireSymlinkTree(
         BuildRuleResolver resolver, ImmutableList<BuildRule> rules) {
-      BuildTarget symlinkTreeTarget =
-          CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget(
-              buildTarget, cxxPlatform.getFlavor());
-      SymlinkTree symlinkTree =
-          resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orElse(null);
-      if (symlinkTree == null) {
-        symlinkTree =
-            resolver.addToIndex(
-                CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
-                    buildTarget, filesystem, cxxPlatform, rules, NativeLinkable.class::isInstance));
-      }
-      return symlinkTree;
+      return CxxDescriptionEnhancer.requireSharedLibrarySymlinkTree(
+          buildTarget, filesystem, resolver, cxxPlatform, rules, NativeLinkable.class::isInstance);
     }
 
     /**

@@ -17,8 +17,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.Parser;
@@ -32,9 +34,10 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -109,4 +112,8 @@ public interface AbstractCommandRunnerParams {
   Optional<InvocationInfo> getInvocationInfo();
 
   Optional<RuleKeyCacheRecycler<RuleKey>> getDefaultRuleKeyFactoryCacheRecycler();
+
+  ProjectFilesystemFactory getProjectFilesystemFactory();
+
+  ToolchainProvider getToolchainProvider();
 }

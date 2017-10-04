@@ -22,9 +22,8 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescriptionArg;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.ProjectTestsMode;
-import com.facebook.buck.config.Configs;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
@@ -59,6 +58,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.annotations.VisibleForTesting;
@@ -188,7 +188,7 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Killing existing Xcode if needed");
 
-    checkForAndKillXcodeIfRunning(getIdePrompt(buckConfig));
+    checkForAndKillXcodeIfRunning(getIDEForceKill(buckConfig));
 
     LOG.debug("Xcode project generation: Computing graph roots");
 
@@ -236,12 +236,29 @@ public class XCodeProjectCommandHelper {
     return runXcodeProjectGenerator(executor, targetGraphAndTargets, passedInTargetsSet);
   }
 
-  /**
-   * Returns true if Buck should prompt to kill a running IDE before changing its files, false
-   * otherwise.
-   */
-  private boolean getIdePrompt(BuckConfig buckConfig) {
-    return buckConfig.getBooleanValue("project", "ide_prompt", true);
+  private static String getIDEForceKillSectionName() {
+    return "project";
+  }
+
+  private static String getIDEForceKillFieldName() {
+    return "ide_force_kill";
+  }
+
+  private IDEForceKill getIDEForceKill(BuckConfig buckConfig) {
+    Optional<IDEForceKill> forceKill =
+        buckConfig.getEnum(
+            getIDEForceKillSectionName(), getIDEForceKillFieldName(), IDEForceKill.class);
+    if (forceKill.isPresent()) {
+      return forceKill.get();
+    }
+
+    // Support legacy config if new key is missing.
+    Optional<Boolean> legacyPrompty = buckConfig.getBoolean("project", "ide_prompt");
+    if (legacyPrompty.isPresent()) {
+      return legacyPrompty.get().booleanValue() ? IDEForceKill.PROMPT : IDEForceKill.NEVER;
+    }
+
+    return IDEForceKill.PROMPT;
   }
 
   private ProjectTestsMode testsMode(BuckConfig buckConfig) {
@@ -503,8 +520,14 @@ public class XCodeProjectCommandHelper {
     return (TargetNode<XcodeWorkspaceConfigDescriptionArg, ?>) targetNode;
   }
 
-  private void checkForAndKillXcodeIfRunning(boolean enablePrompt)
+  private void checkForAndKillXcodeIfRunning(IDEForceKill forceKill)
       throws InterruptedException, IOException {
+    if (forceKill == IDEForceKill.NEVER) {
+      // We don't even check if Xcode is running because pkill can hang.
+      LOG.debug("Prompt to kill Xcode is disabled");
+      return;
+    }
+
     if (!processManager.isPresent()) {
       LOG.warn("Could not check if Xcode is running (no process manager)");
       return;
@@ -515,37 +538,57 @@ public class XCodeProjectCommandHelper {
       return;
     }
 
-    boolean canPromptResult = canPrompt(environment);
-    if (enablePrompt && canPromptResult) {
-      if (prompt(
-          "Xcode is currently running. Buck will modify files Xcode currently has "
-              + "open, which can cause it to become unstable.\n\n"
-              + "Kill Xcode and continue?")) {
-        processManager.get().killProcess(XCODE_PROCESS_NAME);
-      } else {
-        console
-            .getStdOut()
-            .println(
-                console
-                    .getAnsi()
-                    .asWarningText(
-                        "Xcode is running. Generated projects might be lost or corrupted if Xcode "
-                            + "currently has them open."));
-      }
-      console
-          .getStdOut()
-          .format(
-              "To disable this prompt in the future, add the following to %s: \n\n"
-                  + "[project]\n"
-                  + "  ide_prompt = false\n\n",
-              cell.getFilesystem()
-                  .getRootPath()
-                  .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
-                  .toAbsolutePath());
-    } else {
-      LOG.debug(
-          "Xcode is running, but cannot prompt to kill it (enabled %s, can prompt %s)",
-          enablePrompt, canPromptResult);
+    switch (forceKill) {
+      case PROMPT:
+        {
+          boolean canPromptResult = canPrompt(environment);
+          if (canPromptResult) {
+            if (prompt(
+                "Xcode is currently running. Buck will modify files Xcode currently has "
+                    + "open, which can cause it to become unstable.\n\n"
+                    + "Kill Xcode and continue?")) {
+              processManager.get().killProcess(XCODE_PROCESS_NAME);
+            } else {
+              console
+                  .getStdOut()
+                  .println(
+                      console
+                          .getAnsi()
+                          .asWarningText(
+                              "Xcode is running. Generated projects might be lost or corrupted if Xcode "
+                                  + "currently has them open."));
+            }
+            console
+                .getStdOut()
+                .format(
+                    "To disable this prompt in the future, add the following to %s: \n\n"
+                        + "[%s]\n"
+                        + "  %s = %s\n\n"
+                        + "If you would like to always kill Xcode, use '%s'.\n",
+                    cell.getFilesystem()
+                        .getRootPath()
+                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
+                        .toAbsolutePath(),
+                    getIDEForceKillSectionName(),
+                    getIDEForceKillFieldName(),
+                    IDEForceKill.NEVER.toString().toLowerCase(),
+                    IDEForceKill.ALWAYS.toString().toLowerCase());
+          } else {
+            LOG.debug(
+                "Xcode is running, but cannot prompt to kill it (force kill %s, can prompt %s)",
+                forceKill.toString(), canPromptResult);
+          }
+          break;
+        }
+      case ALWAYS:
+        {
+          LOG.debug("Will try to force kill Xcode without prompting...");
+          processManager.get().killProcess(XCODE_PROCESS_NAME);
+          console.getStdOut().println(console.getAnsi().asWarningText("Xcode was force killed."));
+          break;
+        }
+      case NEVER:
+        break;
     }
   }
 

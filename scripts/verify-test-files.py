@@ -21,6 +21,7 @@ import tempfile
 
 IGNORE_PREFIXES = [
   'buck-out',
+  'build-ij',
   'src/com/facebook/buck/testrunner',
   # t13833822
   'src/com/facebook/buck/intellij/ideabuck/tests/integration',

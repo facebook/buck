@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Either;
@@ -31,6 +31,7 @@ import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
+import com.facebook.buck.rules.modern.InputPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,6 +93,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer(pathExistenceVerificationMode);
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
+    TypeCoercer<InputPath> inputPathTypeCoercer = new InputPathTypeCoercer(sourcePathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
@@ -107,6 +109,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           pathTypeCoercer,
           flavorTypeCoercer,
           sourcePathTypeCoercer,
+          inputPathTypeCoercer,
           buildTargetTypeCoercer,
           buildTargetPatternTypeCoercer,
 

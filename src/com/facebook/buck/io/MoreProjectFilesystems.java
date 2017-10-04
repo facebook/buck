@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.NoSuchFileException;

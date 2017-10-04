@@ -37,7 +37,7 @@ public class RustBinaryDescriptionTest {
     RustBinaryBuilder binaryBuilder =
         RustBinaryBuilder.from("//:bin")
             .setSrcs(
-                ImmutableSortedSet.of(new DefaultBuildTargetSourcePath(srcBuilder.getTarget())));
+                ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(srcBuilder.build(), binaryBuilder.build());
     BuildRuleResolver ruleResolver =

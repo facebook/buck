@@ -83,7 +83,7 @@ public class JavaSourceJarTest {
   public void shouldOnlyIncludePathBasedSources() {
     SourcePath fileBased = new FakeSourcePath("some/path/File.java");
     SourcePath ruleBased =
-        new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//cheese:cake"));
+        DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);
     expect(finderStub.findJavaPackageFolder((Path) anyObject())).andStubReturn(Paths.get("cheese"));

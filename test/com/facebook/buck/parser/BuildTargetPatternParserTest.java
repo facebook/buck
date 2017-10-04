@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
@@ -108,7 +108,7 @@ public class BuildTargetPatternParserTest {
 
     final ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver cellNames =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             filesystem.getPath("foo/root"),
             ImmutableMap.of("other", filesystem.getPath("foo/other")));
 
@@ -128,7 +128,7 @@ public class BuildTargetPatternParserTest {
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver rootCellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             filesystem.getPath("root").normalize(),
             ImmutableMap.of(
                 "other", filesystem.getPath("other").normalize(),

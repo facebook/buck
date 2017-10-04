@@ -71,12 +71,14 @@ public class MinionModeRunner implements DistBuildModeRunner {
             FinishedBuildingResponse finishedResponse =
                 client.finishedBuilding(minionId, buildExitCode);
             if (!finishedResponse.isContinueBuilding()) {
+              LOG.debug(String.format("Minion [%s] told to finish building.", minionId));
               return 0;
             }
             break;
 
           case RETRY_LATER:
             try {
+              LOG.debug(String.format("Minion [%s] told to retry later. Sleeping..", minionId));
               Thread.sleep(RETRY_BACKOFF_MILLIS);
             } catch (InterruptedException e) {
               throw new RuntimeException(e);
@@ -84,6 +86,7 @@ public class MinionModeRunner implements DistBuildModeRunner {
             break;
 
           case CLOSE_CLIENT:
+            LOG.debug(String.format("Minion [%s] told to close client.", minionId));
             return 0;
 
           case UNKNOWN:

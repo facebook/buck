@@ -6,7 +6,6 @@ standard_java_test(
         "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
-        "//src/com/facebook/buck/rules:transformer",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",

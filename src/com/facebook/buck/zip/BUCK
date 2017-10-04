@@ -1,60 +1,6 @@
-java_library(
-    name = "stream",
-    srcs = [
-        "AppendingZipOutputStreamImpl.java",
-        "ByteIo.java",
-        "CentralDirectory.java",
-        "CustomJarOutputStream.java",
-        "CustomZipEntry.java",
-        "CustomZipOutputStream.java",
-        "DeterministicManifest.java",
-        "DeterministicZipBuilder.java",
-        "DirectoryJarEntryContainer.java",
-        "EntryAccounting.java",
-        "JarBuilder.java",
-        "JarEntryContainer.java",
-        "JarEntrySupplier.java",
-        "OverwritingZipOutputStreamImpl.java",
-        "ZipConstants.java",
-        "ZipFileJarEntryContainer.java",
-        "ZipOutputStreams.java",
-        "ZipWriteTest.java",
-    ],
-    tests = [
-        "//test/com/facebook/buck/zip:zip",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/io:more-paths",
-        "//src/com/facebook/buck/timing:timing",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/function:function",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
-java_library(
-    name = "unzip",
-    srcs = ["Unzip.java"],
-    tests = [
-        "//test/com/facebook/buck/zip:zip",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/util:util",
-        "//third-party/java/commons-compress:commons-compress",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_immutables_library(
-    name = "steps",
-    srcs = glob(["*Step.java"]) + [
-        "ZipScrubber.java",
-    ],
+    name = "zip",
+    srcs = glob(["*.java"]),
     tests = [
         "//test/com/facebook/buck/zip:zip",
     ],
@@ -65,76 +11,22 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/rules:rules",
         "//src/com/facebook/buck/shell:rules",
-        "//src/com/facebook/buck/thrift:thrift",
+        "//src/com/facebook/buck/zip/rules:rules",
         "//test/com/facebook/buck/android:integration1",
         "//test/com/facebook/buck/android:integration2",
         "//test/com/facebook/buck/zip:zip",
     ],
     deps = [
-        ":constants",
-        ":stream",
-        ":unzip",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:simple_types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
-    ],
-)
-
-java_immutables_library(
-    name = "rules",
-    srcs = [
-        "SrcZipAwareFileBundler.java",
-        "Zip.java",
-        "ZipFileDescription.java",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/rules:types",
-        "//test/com/facebook/buck/zip:zip",
-    ],
-    deps = [
-        ":constants",
-        ":steps",
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/jvm/java:support",
-        "//src/com/facebook/buck/model:model",
-        "//src/com/facebook/buck/parser:rule_pattern",
-        "//src/com/facebook/buck/rules:build_rule",
-        "//src/com/facebook/buck/rules:interfaces",
-        "//src/com/facebook/buck/rules:source_path",
-        "//src/com/facebook/buck/rules/keys:keys",
-        "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/step/fs:fs",
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/versions:versions",
-        "//third-party/java/guava:guava",
-        "//third-party/java/infer-annotations:infer-annotations",
-    ],
-)
-
-java_library(
-    name = "constants",
-    srcs = [
-        "ZipCompressionLevel.java",
-    ],
-    visibility = ["PUBLIC"],
-)
-
-java_binary(
-    name = "zip-write-test",
-    main_class = "com.facebook.buck.zip.ZipWriteTest",
-    deps = [
-        ":stream",
-        "//src/com/facebook/buck/model:simple_types",
-        "//src/com/facebook/buck/timing:timing",
-        "//src/com/facebook/buck/util/immutables:immutables",
-        "//third-party/java/guava:guava",
-        "//third-party/java/immutables:immutables",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/jsr:jsr305",
+        "//src/com/facebook/buck/util/zip:zip",
     ],
 )

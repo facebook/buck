@@ -16,9 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 
-public interface JavacProvider extends RuleKeyAppendable {
+public interface JavacProvider {
   Javac resolve(SourcePathRuleFinder ruleFinder);
 }

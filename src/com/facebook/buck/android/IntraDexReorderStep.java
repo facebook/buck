@@ -16,7 +16,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
@@ -28,8 +28,8 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.UnzipStep;
-import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;

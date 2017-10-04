@@ -18,21 +18,22 @@ package com.facebook.buck.util.autosparse;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ProjectFilesystemDelegate;
-import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemDelegateFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.TestProcessExecutorFactory;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -301,7 +302,10 @@ public class AutoSparseIntegrationTest {
     Files.copy(hgRepoZipPath, hgRepoZipCopyPath, REPLACE_EXISTING);
 
     Unzip.extractZipFile(
-        hgRepoZipCopyPath, repoPath, Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+        new DefaultProjectFilesystemFactory(),
+        hgRepoZipCopyPath,
+        repoPath,
+        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return repoPath;
   }

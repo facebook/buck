@@ -16,9 +16,9 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.MoreCollectors;
@@ -179,7 +179,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       } else {
         if (consecutiveMultiFetchErrorCount.incrementAndGet()
             == MAX_CONSECUTIVE_MULTI_FETCH_ERRORS) {
-          LOG.error("Too many MultiFetch errors, falling back to Fetch only.");
+          LOG.info("Too many MultiFetch errors, falling back to Fetch only.");
           enableMultiFetch = false;
         }
       }

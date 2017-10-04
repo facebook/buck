@@ -17,7 +17,7 @@
 package com.facebook.buck.step.external;
 
 import com.facebook.buck.build_type.BuildType;
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

@@ -19,8 +19,8 @@ package com.facebook.buck.shell;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -67,14 +67,10 @@ public class WorkerToolDescriptionTest {
   }
 
   private static BuildTarget wrapExeInCommandAlias(BuildRuleResolver resolver, BuildRule shBinary) {
-    try {
-      return new CommandAliasBuilder(BuildTargetFactory.newInstance("//:no_output"))
-          .setExe(shBinary.getBuildTarget())
-          .build(resolver)
-          .getBuildTarget();
-    } catch (NoSuchBuildTargetException e) {
-      throw new RuntimeException(e);
-    }
+    return new CommandAliasBuilder(BuildTargetFactory.newInstance("//:no_output"))
+        .setExe(shBinary.getBuildTarget())
+        .build(resolver)
+        .getBuildTarget();
   }
 
   private static WorkerTool createWorkerTool(

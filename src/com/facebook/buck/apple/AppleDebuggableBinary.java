@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -65,16 +65,13 @@ public class AppleDebuggableBinary extends AbstractBuildRule
   static AppleDebuggableBinary createFromUnstrippedBinary(
       ProjectFilesystem filesystem,
       BuildTarget baseTarget,
-      ProvidesLinkedBinaryDeps unstrippedBinaryRule) {
-    Stream.Builder<BuildRule> otherDeps = Stream.builder();
-    unstrippedBinaryRule.getCompileDeps().forEach(otherDeps);
-    unstrippedBinaryRule.getStaticLibraryDeps().forEach(otherDeps);
+      HasAppleDebugSymbolDeps unstrippedBinaryRule) {
     return new AppleDebuggableBinary(
         filesystem,
         baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.DWARF.getFlavor()),
         unstrippedBinaryRule,
         Optional.empty(),
-        otherDeps.build());
+        unstrippedBinaryRule.getAppleDebugSymbolDeps());
   }
 
   /**
@@ -139,7 +136,7 @@ public class AppleDebuggableBinary extends AbstractBuildRule
 
   /** Indicates whether its possible to wrap given _binary_ rule. */
   public static boolean canWrapBinaryBuildRule(BuildRule binaryBuildRule) {
-    return binaryBuildRule instanceof ProvidesLinkedBinaryDeps;
+    return binaryBuildRule instanceof HasAppleDebugSymbolDeps;
   }
 
   public static boolean isBuildRuleDebuggable(BuildRule buildRule) {
@@ -149,7 +146,7 @@ public class AppleDebuggableBinary extends AbstractBuildRule
     }
 
     // fat/thin binaries and dynamic libraries may have dSYMs
-    if (buildRule instanceof ProvidesLinkedBinaryDeps
+    if (buildRule instanceof HasAppleDebugSymbolDeps
         || buildRule instanceof AppleDebuggableBinary) {
       return true;
     }
@@ -165,7 +162,7 @@ public class AppleDebuggableBinary extends AbstractBuildRule
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(
+    return ForwardingBuildTargetSourcePath.of(
         getBuildTarget(),
         Preconditions.checkNotNull(
             binaryRule.getSourcePathToOutput(), "binary should always have an output path"));

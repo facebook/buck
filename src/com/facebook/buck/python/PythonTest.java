@@ -17,7 +17,7 @@
 package com.facebook.buck.python;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Pair;
@@ -123,7 +123,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return new ForwardingBuildTargetSourcePath(getBuildTarget(), binary.getSourcePathToOutput());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), binary.getSourcePathToOutput());
   }
 
   @Override

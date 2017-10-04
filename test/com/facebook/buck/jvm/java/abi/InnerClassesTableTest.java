@@ -580,7 +580,7 @@ public class InnerClassesTableTest {
       AccessFlags accessFlags = new AccessFlags(elements);
       InnerClassesTable innerClassesTable = new InnerClassesTable(descriptorFactory, accessFlags);
 
-      ClassNode classNode = new ClassNode(Opcodes.ASM5);
+      ClassNode classNode = new ClassNode(Opcodes.ASM6);
       innerClassesTable.reportInnerClassReferences(topElement, classNode);
 
       assertEquals(

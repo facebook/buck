@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 /** Bundles together some information about whether and how we should split up dex files. */
-class DexSplitMode implements RuleKeyAppendable {
+class DexSplitMode implements AddsToRuleKey {
   public static final DexSplitMode NO_SPLIT =
       new DexSplitMode(
           /* shouldSplitDex */ false,
@@ -40,11 +40,15 @@ class DexSplitMode implements RuleKeyAppendable {
           /* secondaryDexHeadClassesFile */ Optional.empty(),
           /* secondaryDexTailClassesFile */ Optional.empty());
 
-  private final boolean shouldSplitDex;
-  private final DexStore dexStore;
-  private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
-  private final long linearAllocHardLimit;
-  private final ImmutableSet<String> primaryDexPatterns;
+  @AddToRuleKey private final boolean shouldSplitDex;
+
+  @AddToRuleKey private final DexStore dexStore;
+
+  @AddToRuleKey private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
+
+  @AddToRuleKey private final long linearAllocHardLimit;
+
+  @AddToRuleKey private final ImmutableSet<String> primaryDexPatterns;
 
   /**
    * File that whitelists the class files that should be in the primary dex.
@@ -56,7 +60,7 @@ class DexSplitMode implements RuleKeyAppendable {
    * java/util/Map$Entry
    * </pre>
    */
-  private final Optional<SourcePath> primaryDexClassesFile;
+  @AddToRuleKey private final Optional<SourcePath> primaryDexClassesFile;
 
   /**
    * File identifying the class files used in scenarios we want to fit in the primary dex. We will
@@ -70,14 +74,14 @@ class DexSplitMode implements RuleKeyAppendable {
    *   java/util/Map$Entry
    * </pre>
    */
-  private final Optional<SourcePath> primaryDexScenarioFile;
+  @AddToRuleKey private final Optional<SourcePath> primaryDexScenarioFile;
 
   /**
    * Boolean identifying whether we should allow the build to succeed if all the classes identified
    * by primaryDexScenarioFile + dependencies do not fit in the primary dex. The default is false,
    * which causes the build to fail in this case.
    */
-  private final boolean isPrimaryDexScenarioOverflowAllowed;
+  @AddToRuleKey private final boolean isPrimaryDexScenarioOverflowAllowed;
 
   /**
    * File that whitelists the class files that should be in the first secondary dexes.
@@ -89,7 +93,7 @@ class DexSplitMode implements RuleKeyAppendable {
    * java/util/Map$Entry
    * </pre>
    */
-  private final Optional<SourcePath> secondaryDexHeadClassesFile;
+  @AddToRuleKey private final Optional<SourcePath> secondaryDexHeadClassesFile;
 
   /**
    * File that whitelists the class files that should be in the last secondary dexes.
@@ -101,7 +105,7 @@ class DexSplitMode implements RuleKeyAppendable {
    * java/util/Map$Entry
    * </pre>
    */
-  private final Optional<SourcePath> secondaryDexTailClassesFile;
+  @AddToRuleKey private final Optional<SourcePath> secondaryDexTailClassesFile;
 
   /**
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
@@ -183,20 +187,5 @@ class DexSplitMode implements RuleKeyAppendable {
 
   public Optional<SourcePath> getSecondaryDexTailClassesFile() {
     return secondaryDexTailClassesFile;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("dexStore", dexStore);
-    sink.setReflectively("dexSplitStrategy", dexSplitStrategy);
-    sink.setReflectively(
-        "isPrimaryDexScenarioOverflowAllowed", isPrimaryDexScenarioOverflowAllowed);
-    sink.setReflectively("linearAllocHardLimit", linearAllocHardLimit);
-    sink.setReflectively("primaryDexPatterns", primaryDexPatterns);
-    sink.setReflectively("primaryDexClassesFile", primaryDexClassesFile);
-    sink.setReflectively("primaryDexScenarioFile", primaryDexScenarioFile);
-    sink.setReflectively("secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
-    sink.setReflectively("secondaryDexTailClassesFile", secondaryDexTailClassesFile);
-    sink.setReflectively("shouldSplitDex", shouldSplitDex);
   }
 }

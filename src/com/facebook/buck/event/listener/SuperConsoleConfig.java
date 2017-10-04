@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import java.util.Optional;
 
@@ -67,6 +67,10 @@ public class SuperConsoleConfig {
   public int getNumberOfSlowRulesToShow() {
     return getPositiveInt(SECTION_NAME, "number_of_slow_rules_to_show")
         .orElse(DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW);
+  }
+
+  public boolean shouldShowSlowRulesInConsole() {
+    return delegate.getBooleanValue(SECTION_NAME, "show_slow_rules_in_console", false);
   }
 
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {

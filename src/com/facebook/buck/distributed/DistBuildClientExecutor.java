@@ -16,7 +16,12 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.CREATE_DISTRIBUTED_BUILD;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.MATERIALIZE_SLAVE_LOGS;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.PERFORM_DISTRIBUTED_BUILD;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.PUBLISH_BUILD_SLAVE_FINISHED_STATS;
 
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJob;
@@ -26,17 +31,17 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.HumanReadableException;
@@ -79,7 +84,7 @@ public class DistBuildClientExecutor {
   private final DistBuildClientStatsTracker distBuildClientStats;
   private final ScheduledExecutorService scheduler;
   private final int statusPollIntervalMillis;
-  private final Map<RunId, Integer> nextEventIdBySlaveRunId = new HashMap<>();
+  private final Map<BuildSlaveRunId, Integer> nextEventIdBySlaveRunId = new HashMap<>();
   private final Set<String> seenSlaveRunIds = new HashSet<>();
 
   public static class ExecutionResult {
@@ -400,7 +405,7 @@ public class DistBuildClientExecutor {
 
     // TODO(shivanker, alisdair): Replace this with a multiFetch request.
     for (String id : job.getSlaveInfoByRunId().keySet()) {
-      RunId runId = new RunId();
+      BuildSlaveRunId runId = new BuildSlaveRunId();
       runId.setId(id);
       slaveStatusFutures.add(
           networkExecutorService.submit(
@@ -428,7 +433,7 @@ public class DistBuildClientExecutor {
     List<BuildSlaveEventsQuery> fetchEventQueries = new LinkedList<>();
 
     for (String id : job.getSlaveInfoByRunId().keySet()) {
-      RunId runId = new RunId();
+      BuildSlaveRunId runId = new BuildSlaveRunId();
       runId.setId(id);
       fetchEventQueries.add(
           distBuildService.createBuildSlaveEventsQuery(
@@ -451,8 +456,8 @@ public class DistBuildClientExecutor {
                       .stream()
                       .sorted(
                           (event1, event2) -> {
-                            RunId runId1 = event1.getSecond().getRunId();
-                            RunId runId2 = event2.getSecond().getRunId();
+                            BuildSlaveRunId runId1 = event1.getSecond().getBuildSlaveRunId();
+                            BuildSlaveRunId runId2 = event2.getSecond().getBuildSlaveRunId();
 
                             int result = runId1.compareTo(runId2);
                             if (result == 0) {
@@ -466,7 +471,7 @@ public class DistBuildClientExecutor {
               for (Pair<Integer, BuildSlaveEvent> sequenceIdAndEvent : sequenceIdAndEvents) {
                 BuildSlaveEvent slaveEvent = sequenceIdAndEvent.getSecond();
                 nextEventIdBySlaveRunId.put(
-                    slaveEvent.getRunId(), sequenceIdAndEvent.getFirst() + 1);
+                    slaveEvent.getBuildSlaveRunId(), sequenceIdAndEvent.getFirst() + 1);
                 switch (slaveEvent.getEventType()) {
                   case CONSOLE_EVENT:
                     ConsoleEvent consoleEvent =
@@ -526,7 +531,7 @@ public class DistBuildClientExecutor {
         new ArrayList<>(job.getSlaveInfoByRunIdSize());
     for (Map.Entry<String, BuildSlaveInfo> entry : job.getSlaveInfoByRunId().entrySet()) {
       String runIdStr = entry.getKey();
-      RunId runId = entry.getValue().getRunId();
+      BuildSlaveRunId runId = entry.getValue().getBuildSlaveRunId();
 
       slaveFinishedStatsFutures.add(
           executor.submit(
@@ -554,7 +559,7 @@ public class DistBuildClientExecutor {
                         .setBuildSlaveStatus(
                             new BuildSlaveStatus()
                                 .setStampedeId(job.getStampedeId())
-                                .setRunId(runId)));
+                                .setBuildSlaveRunId(runId)));
               }));
     }
 
@@ -572,7 +577,7 @@ public class DistBuildClientExecutor {
       return;
     }
 
-    List<RunId> runIds =
+    List<BuildSlaveRunId> runIds =
         distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values());
     if (runIds.size() == 0) {
       return;

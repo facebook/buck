@@ -21,6 +21,7 @@ from project_workspace import run_buck_process
 
 
 class TestBuckRun(unittest.TestCase):
+    @unittest.skipUnless(os.name == 'posix', 'This test fails on windows')
     def test_buck_run(self):
         test_data = os.path.join('test', 'com', 'facebook', 'buck', 'cli', 'testdata', 'buck_run')
         with ProjectWorkspace(test_data) as workspace:

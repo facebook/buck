@@ -17,12 +17,23 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection<AlterRuleKey>> {
 
@@ -36,7 +47,25 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
   @Override
   public ImmutableCollection<AlterRuleKey> load(Class<?> key) throws Exception {
     ImmutableList.Builder<AlterRuleKey> builder = ImmutableList.builder();
+    List<Class<?>> superClasses = new ArrayList<>();
+
+    // Collect the superclasses first so that they are added before interfaces. That seems more
+    // aesthetically pleasing to me.
     for (Class<?> current = key; !Object.class.equals(current); current = current.getSuperclass()) {
+      superClasses.add(current);
+    }
+
+    LinkedHashSet<Class<?>> superClassesAndInterfaces = new LinkedHashSet<>();
+    Queue<Class<?>> workQueue = new LinkedList<>();
+    workQueue.addAll(superClasses);
+    while (!workQueue.isEmpty()) {
+      Class<?> cls = workQueue.poll();
+      if (superClassesAndInterfaces.add(cls)) {
+        workQueue.addAll(Arrays.asList(cls.getInterfaces()));
+      }
+    }
+
+    for (Class<?> current : superClassesAndInterfaces) {
       ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors =
           ImmutableSortedMap.orderedBy(COMPARATOR);
       for (final Field field : current.getDeclaredFields()) {
@@ -44,7 +73,23 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
         final AddToRuleKey annotation = field.getAnnotation(AddToRuleKey.class);
         if (annotation != null) {
           ValueExtractor valueExtractor = new FieldValueExtractor(field);
-          sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, annotation));
+          sortedExtractors.put(
+              valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
+        }
+      }
+      for (final Method method : current.getDeclaredMethods()) {
+        method.setAccessible(true);
+        final AddToRuleKey annotation = method.getAnnotation(AddToRuleKey.class);
+        if (annotation != null) {
+          Preconditions.checkState(
+              hasImmutableAnnotation(current) && AddsToRuleKey.class.isAssignableFrom(current),
+              "AddToRuleKey can only be applied to methods of Immutables. It cannot be applied to %s.%s(...)",
+              current.getName(),
+              method.getName());
+
+          ValueExtractor valueExtractor = new ValueMethodValueExtractor(method);
+          sortedExtractors.put(
+              valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
         }
       }
       builder.addAll(sortedExtractors.build().values());
@@ -52,8 +97,15 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     return builder.build();
   }
 
-  private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, AddToRuleKey annotation) {
-    if (annotation.stringify()) {
+  private boolean hasImmutableAnnotation(Class<?> current) {
+    // Value.Immutable only has CLASS retention, so we need to detect this based on our own
+    // annotations.
+    return current.getAnnotation(BuckStyleImmutable.class) != null
+        || current.getAnnotation(BuckStyleTuple.class) != null;
+  }
+
+  private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, boolean stringify) {
+    if (stringify) {
       return new StringifyAlterRuleKey(valueExtractor);
     } else {
       return new DefaultAlterRuleKey(valueExtractor);

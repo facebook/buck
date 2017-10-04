@@ -56,7 +56,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
   @Before
   public void setUp() throws Exception {
-    cellRoots = new DefaultCellPathResolver(ROOT, ImmutableMap.of());
+    cellRoots = DefaultCellPathResolver.of(ROOT, ImmutableMap.of());
   }
 
   @Test

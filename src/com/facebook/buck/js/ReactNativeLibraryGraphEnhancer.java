@@ -19,7 +19,7 @@ package com.facebook.buck.js;
 import com.facebook.buck.android.Aapt2Compile;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -118,7 +118,7 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRuleParams paramsForResource = params.withExtraDeps(ImmutableSortedSet.of(bundle));
 
       SourcePath resources =
-          new ExplicitBuildTargetSourcePath(bundle.getBuildTarget(), bundle.getResources());
+          ExplicitBuildTargetSourcePath.of(bundle.getBuildTarget(), bundle.getResources());
       BuildRule resource =
           new AndroidResource(
               buildTargetForResource,

@@ -61,6 +61,49 @@ apple_asset_catalog(
   launch_image = 'LaunchImage',
 )
 
+genrule(
+  name = 'MakeCombinedAssets',
+  cmd = 'mkdir $OUT && for s in $SRCS; do cp -r $s/* $OUT/; done',
+  srcs = [
+    'Assets2.xcassets',
+  ],
+  out = "Combined.xcassets",
+)
+
+apple_asset_catalog(
+  name = "AssetsCombined",
+  dirs = [ ':MakeCombinedAssets' ],
+)
+
+apple_bundle(
+  name = 'CombinedAssetsApp',
+  binary = ':CombinedAssetsAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+)
+
+apple_binary(
+  name = 'CombinedAssetsAppBinary',
+  preprocessor_flags = ['-fobjc-arc'],
+  headers = glob([
+    'DemoAppBinary/*.h',
+  ]),
+  srcs = glob([
+    'DemoAppBinary/*.m',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+  libraries = [
+    '$SDKROOT/usr/lib/libobjc.dylib',
+  ],
+  deps = [
+    ':DemoAppLibrary',
+    ':AssetsCombined',
+  ],
+)
+
 apple_asset_catalog(
   name = 'ExtraIconAndLaunchImage',
   dirs = [ 'ExtraIconAndLaunchImage.xcassets' ],

@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.DistBuildCreatedEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -61,10 +62,19 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       TestResultSummaryVerbosity summaryVerbosity,
       boolean hideSucceededRules,
       int numberOfSlowRulesToShow,
+      boolean showSlowRulesInConsole,
       Locale locale,
       Path testLogPath,
-      ExecutionEnvironment executionEnvironment) {
-    super(console, clock, locale, executionEnvironment, true, numberOfSlowRulesToShow);
+      ExecutionEnvironment executionEnvironment,
+      Optional<BuildId> buildId) {
+    super(
+        console,
+        clock,
+        locale,
+        executionEnvironment,
+        true,
+        numberOfSlowRulesToShow,
+        showSlowRulesInConsole);
     this.locale = locale;
     this.parseTime = new AtomicLong(0);
     this.hideSucceededRules = hideSucceededRules;
@@ -76,6 +86,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             summaryVerbosity,
             locale,
             Optional.of(testLogPath));
+
+    if (buildId.isPresent()) {
+      printLines(ImmutableList.<String>builder().add(getBuildLogLine(buildId.get())));
+    }
+  }
+
+  public static String getBuildLogLine(BuildId buildId) {
+    return "Build UUID: " + buildId.toString();
   }
 
   @Override
@@ -184,8 +202,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   @Subscribe
   public void logEvent(ConsoleEvent event) {
-    if (console.getVerbosity().isSilent()
-        && !event.getLevel().equals(Level.SEVERE)) {
+    if (console.getVerbosity().isSilent() && !event.getLevel().equals(Level.SEVERE)) {
       return;
     }
     ImmutableList.Builder<String> lines = ImmutableList.builder();

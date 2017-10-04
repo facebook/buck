@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -25,7 +25,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
@@ -230,7 +230,9 @@ public class FakeAppleRuleDescriptions {
           DEFAULT_PLATFORM.getFlavor(),
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(ImmutableList.of()),
-          DEFAULT_BUCK_CONFIG.getView(AppleConfig.class));
+          DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
+          new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
+          DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
 
   /** A fake apple_binary description with an iOS platform for use in tests. */
   public static final AppleBinaryDescription BINARY_DESCRIPTION =

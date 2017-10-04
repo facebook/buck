@@ -22,7 +22,7 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -171,7 +171,7 @@ public class HaskellBinaryDescription
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Add the binary as the first argument.
-    executableBuilder.addArg(SourcePathArg.of(new DefaultBuildTargetSourcePath(binaryTarget)));
+    executableBuilder.addArg(SourcePathArg.of(DefaultBuildTargetSourcePath.of(binaryTarget)));
 
     Path outputDir = BuildTargets.getGenPath(projectFilesystem, binaryTarget, "%s").getParent();
     Path outputPath = outputDir.resolve(binaryTarget.getShortName());

@@ -34,7 +34,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -213,30 +213,24 @@ public class HaskellDescriptionUtils {
       ImmutableList<String> flags,
       HaskellSources srcs) {
 
-    BuildTarget target = getCompileBuildTarget(buildTarget, platform, depType, hsProfile);
-
-    // If this rule has already been generated, return it.
-    Optional<HaskellCompileRule> existing =
-        resolver.getRuleOptionalWithType(target, HaskellCompileRule.class);
-    if (existing.isPresent()) {
-      return existing.get();
-    }
-
-    return resolver.addToIndex(
-        HaskellDescriptionUtils.createCompileRule(
-            target,
-            projectFilesystem,
-            params,
-            resolver,
-            ruleFinder,
-            deps,
-            platform,
-            depType,
-            hsProfile,
-            main,
-            packageInfo,
-            flags,
-            srcs));
+    return (HaskellCompileRule)
+        resolver.computeIfAbsent(
+            getCompileBuildTarget(buildTarget, platform, depType, hsProfile),
+            target ->
+                HaskellDescriptionUtils.createCompileRule(
+                    target,
+                    projectFilesystem,
+                    params,
+                    resolver,
+                    ruleFinder,
+                    deps,
+                    platform,
+                    depType,
+                    hsProfile,
+                    main,
+                    packageInfo,
+                    flags,
+                    srcs));
   }
 
   /**

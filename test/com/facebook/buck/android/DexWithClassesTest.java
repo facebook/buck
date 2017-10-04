@@ -48,7 +48,7 @@ public class DexWithClassesTest {
             buildTarget, new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
-        .setBuildOutput(
+        .setBuildOutputForTests(
             new DexProducedFromJavaLibrary.BuildOutput(
                 /* weightEstimate */ 1600,
                 /* classNamesToHashes */ ImmutableSortedMap.of(
@@ -75,7 +75,7 @@ public class DexWithClassesTest {
             buildTarget, new FakeProjectFilesystem(), params, javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
-        .setBuildOutput(
+        .setBuildOutputForTests(
             new DexProducedFromJavaLibrary.BuildOutput(
                 /* weightEstimate */ 1600,
                 /* classNamesToHashes */ ImmutableSortedMap.of(),

@@ -27,12 +27,12 @@ import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildJobState;
-import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildSlaveEventBusListener;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.DefaultClock;
@@ -87,7 +87,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Nullable
   @Option(name = RUN_ID_ARG_NAME, usage = "Stampede RunId for this instance of BuildSlave.")
-  private String runId;
+  private String buildSlaveRunId;
 
   @Nullable private DistBuildSlaveEventBusListener slaveEventListener;
 
@@ -142,7 +142,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 jobState,
                 params.getCell(),
                 params.getKnownBuildRuleTypesFactory(),
-                params.getSdkEnvironment());
+                params.getSdkEnvironment(),
+                params.getProjectFilesystemFactory());
         timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 
         try (CommandThreadManager pool =
@@ -161,6 +162,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                   fileMaterializationStatsTracker,
                   params.getScheduledExecutor(),
                   params.getExecutors().get(ExecutorPool.CPU),
+                  params.getProjectFilesystemFactory(),
                   getGlobalCacheDirOptional());
           DistBuildSlaveExecutor distBuildExecutor =
               DistBuildFactory.createDistBuildExecutor(
@@ -262,7 +264,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   }
 
   private void checkArgs() {
-    if (buildStateFile == null && (!getStampedeIdOptional().isPresent() || runId == null)) {
+    if (buildStateFile == null
+        && (!getStampedeIdOptional().isPresent() || buildSlaveRunId == null)) {
       throw new HumanReadableException(
           String.format(
               "Options '%s' and '%s' are both required when '%s' is not provided.",
@@ -273,15 +276,16 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private void initEventListener(ScheduledExecutorService scheduledExecutorService) {
     if (slaveEventListener == null) {
       checkArgs();
-      RunId runId = new RunId();
+      BuildSlaveRunId runId = new BuildSlaveRunId();
       runId.setId(
           Preconditions.checkNotNull(
-              this.runId, "This should have been already made sure by checkArgs()."));
+              this.buildSlaveRunId, "This should have been already made sure by checkArgs()."));
 
       slaveEventListener =
           new DistBuildSlaveEventBusListener(
               getStampedeId(),
               runId,
+              Preconditions.checkNotNull(distBuildMode, "Dist build mode not set"),
               new DefaultClock(),
               timeStatsTracker,
               fileMaterializationStatsTracker,

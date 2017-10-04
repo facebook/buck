@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -107,6 +107,14 @@ public class HaskellPrebuiltLibraryDescription
         return HaskellCompileInput.builder()
             .addAllFlags(args.getExportedCompilerFlags())
             .addPackages(pkg)
+            .build();
+      }
+
+      @Override
+      public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
+        return HaskellHaddockInput.builder()
+            .addAllInterfaces(ImmutableList.of())
+            .addAllOutputDirs(ImmutableList.of())
             .build();
       }
 

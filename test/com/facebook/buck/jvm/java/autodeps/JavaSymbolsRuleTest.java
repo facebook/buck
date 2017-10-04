@@ -19,7 +19,8 @@ package com.facebook.buck.jvm.java.autodeps;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -64,7 +65,8 @@ public class JavaSymbolsRuleTest {
   public void ensureJsonFilesGetWritten() throws IOException, InterruptedException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "java_library_symbols_finder", tmp)
         .setUp();
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     ImmutableSortedSet<SourcePath> srcs =
         ImmutableSortedSet.<SourcePath>naturalOrder()
@@ -73,7 +75,7 @@ public class JavaSymbolsRuleTest {
                     .map(Paths::get)
                     .map(p -> new PathSourcePath(projectFilesystem, p))
                     .iterator())
-            .add(new DefaultBuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
+            .add(DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:bar")))
             .build();
     JavaFileParser javaFileParser =
         JavaFileParser.createJavaFileParser(

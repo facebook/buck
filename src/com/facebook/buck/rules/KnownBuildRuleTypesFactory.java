@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 
@@ -29,21 +29,25 @@ import java.io.IOException;
 public class KnownBuildRuleTypesFactory {
 
   private final ProcessExecutor executor;
-  private final AndroidDirectoryResolver directoryResolver;
   private final SdkEnvironment sdkEnvironment;
+  private final ToolchainProvider toolchainProvider;
 
   public KnownBuildRuleTypesFactory(
       ProcessExecutor executor,
-      AndroidDirectoryResolver directoryResolver,
-      SdkEnvironment sdkEnvironment) {
+      SdkEnvironment sdkEnvironment,
+      ToolchainProvider toolchainProvider) {
     this.executor = executor;
-    this.directoryResolver = directoryResolver;
     this.sdkEnvironment = sdkEnvironment;
+    this.toolchainProvider = toolchainProvider;
   }
 
   public KnownBuildRuleTypes create(BuckConfig config, ProjectFilesystem filesystem)
       throws IOException, InterruptedException {
     return KnownBuildRuleTypes.createInstance(
-        config, filesystem, executor, directoryResolver, sdkEnvironment);
+        config, filesystem, executor, toolchainProvider, sdkEnvironment);
+  }
+
+  public ToolchainProvider getToolchainProvider() {
+    return toolchainProvider;
   }
 }

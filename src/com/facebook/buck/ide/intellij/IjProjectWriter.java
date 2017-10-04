@@ -20,7 +20,7 @@ import com.facebook.buck.ide.intellij.model.ContentRoot;
 import com.facebook.buck.ide.intellij.model.IjLibrary;
 import com.facebook.buck.ide.intellij.model.IjModule;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

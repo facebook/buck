@@ -29,8 +29,8 @@ import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.ide.intellij.aggregation.AggregationMode;
 import com.facebook.buck.ide.intellij.model.DependencyType;
@@ -44,7 +44,7 @@ import com.facebook.buck.ide.intellij.model.IjProjectConfig;
 import com.facebook.buck.ide.intellij.model.folders.IjFolder;
 import com.facebook.buck.ide.intellij.model.folders.SourceFolder;
 import com.facebook.buck.ide.intellij.model.folders.TestFolder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -599,11 +599,7 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testOverrideSdkFromBuckConfig() throws Exception {
-    IjModuleFactory factory =
-        createIjModuleFactory(
-            FakeBuckConfig.builder()
-                .setSections("[intellij]", "java_library_sdk_names = 1.8 => TestSDK")
-                .build());
+    IjModuleFactory factory = createIjModuleFactory();
 
     Path moduleBasePath = Paths.get("java/com/example");
     TargetNode<?, ?> defaultJavaNode =

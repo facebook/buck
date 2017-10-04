@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.resources;
 
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;

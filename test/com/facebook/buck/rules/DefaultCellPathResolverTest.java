@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.config.ConfigBuilder;
+import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +49,7 @@ public class DefaultCellPathResolverTest {
     Files.createDirectories(cell2Root);
 
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             cell1Root,
             ConfigBuilder.createFromText(
                 REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
@@ -74,7 +74,7 @@ public class DefaultCellPathResolverTest {
     Path cell2Root = root.resolve("repo2");
 
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             cell1Root,
             ConfigBuilder.createFromText(
                 REPOSITORIES_SECTION, " simple = " + cell2Root.toString()));
@@ -108,7 +108,7 @@ public class DefaultCellPathResolverTest {
     Files.createSymbolicLink(symlinkPath, cell2Root);
 
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             cell1Root, ConfigBuilder.createFromText(REPOSITORIES_SECTION, " two = ../repo2"));
 
     Files.write(
@@ -141,7 +141,7 @@ public class DefaultCellPathResolverTest {
     Files.createDirectories(cellCenterRoot);
 
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             cell1Root,
             ConfigBuilder.createFromText(
                 REPOSITORIES_SECTION,
@@ -174,7 +174,7 @@ public class DefaultCellPathResolverTest {
   public void canonicalCellNameForRootIsEmpty() {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             vfs.getPath("/foo/root"), ImmutableMap.of("root", vfs.getPath("/foo/root")));
     assertEquals(Optional.empty(), cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/root")));
   }
@@ -183,7 +183,7 @@ public class DefaultCellPathResolverTest {
   public void canonicalCellNameForCellIsLexicographicallySmallest() {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     DefaultCellPathResolver cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             vfs.getPath("/foo/root"),
             ImmutableMap.of(
                 "root", vfs.getPath("/foo/root"),
@@ -193,7 +193,7 @@ public class DefaultCellPathResolverTest {
     assertEquals(Optional.of("a"), cellPathResolver.getCanonicalCellName(vfs.getPath("/foo/cell")));
 
     cellPathResolver =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             vfs.getPath("/foo/root"),
             ImmutableMap.of(
                 "root", vfs.getPath("/foo/root"),

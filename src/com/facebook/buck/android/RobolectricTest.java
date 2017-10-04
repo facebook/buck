@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -24,7 +24,9 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Either;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
@@ -32,9 +34,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +52,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,6 +79,10 @@ public class RobolectricTest extends JavaTest {
 
   private static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
+  private final boolean passDirectoriesInFile;
+  private final Path resourceDirectoriesPath;
+  private final Path assetDirectoriesPath;
+
   protected RobolectricTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -94,7 +104,8 @@ public class RobolectricTest extends JavaTest {
       Optional<Level> stdErrLogLevel,
       Optional<SourcePath> unbundledResourcesRoot,
       Optional<String> robolectricRuntimeDependency,
-      Optional<SourcePath> robolectricManifest) {
+      Optional<SourcePath> robolectricManifest,
+      boolean passDirectoriesInFile) {
     super(
         buildTarget,
         projectFilesystem,
@@ -123,11 +134,48 @@ public class RobolectricTest extends JavaTest {
     this.optionalDummyRDotJava = optionalDummyRDotJava;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
+    this.passDirectoriesInFile = passDirectoriesInFile;
+
+    resourceDirectoriesPath = getResourceDirectoriesPath(projectFilesystem, buildTarget);
+    assetDirectoriesPath = getAssetDirectoriesPath(projectFilesystem, buildTarget);
+  }
+
+  @VisibleForTesting
+  static Path getResourceDirectoriesPath(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+    return BuildTargets.getGenPath(
+        projectFilesystem, buildTarget, "%s/robolectric-resource-directories");
+  }
+
+  @VisibleForTesting
+  static Path getAssetDirectoriesPath(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+    return BuildTargets.getGenPath(
+        projectFilesystem, buildTarget, "%s/robolectric-asset-directories");
   }
 
   @Override
   protected ImmutableSet<Path> getBootClasspathEntries(ExecutionContext context) {
     return ImmutableSet.copyOf(context.getAndroidPlatformTarget().getBootclasspathEntries());
+  }
+
+  @Override
+  protected void addPreTestSteps(
+      BuildContext buildContext, ImmutableList.Builder<Step> stepsBuilder) {
+    stepsBuilder.add(
+        new WriteFileStep(
+            getProjectFilesystem(),
+            getDirectoriesContent(
+                buildContext.getSourcePathResolver(), HasAndroidResourceDeps::getRes),
+            resourceDirectoriesPath,
+            false));
+    stepsBuilder.add(
+        new WriteFileStep(
+            getProjectFilesystem(),
+            getDirectoriesContent(
+                buildContext.getSourcePathResolver(), HasAndroidResourceDeps::getAssets),
+            assetDirectoriesPath,
+            false));
   }
 
   @Override
@@ -139,7 +187,7 @@ public class RobolectricTest extends JavaTest {
     Preconditions.checkState(
         optionalDummyRDotJava.isPresent(), "DummyRDotJava must have been created!");
     vmArgsBuilder.add(
-        getRobolectricResourceDirectories(
+        getRobolectricResourceDirectoriesArg(
             pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
     vmArgsBuilder.add(
         getRobolectricAssetsDirectories(
@@ -156,27 +204,69 @@ public class RobolectricTest extends JavaTest {
   }
 
   @VisibleForTesting
-  String getRobolectricResourceDirectories(
+  String getRobolectricResourceDirectoriesArg(
       SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
+    String argValue;
+    if (passDirectoriesInFile) {
+      argValue = "@" + resourceDirectoriesPath.toString();
+    } else {
+      argValue =
+          Joiner.on(File.pathSeparator)
+              .join(
+                  getDirs(resourceDeps.stream().map(HasAndroidResourceDeps::getRes), pathResolver));
+    }
 
-    String resourceDirectories =
-        getDirs(resourceDeps.stream().map(HasAndroidResourceDeps::getRes), pathResolver);
-
-    return String.format(
-        "-D%s=%s", LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME, resourceDirectories);
+    return String.format("-D%s=%s", LIST_OF_RESOURCE_DIRECTORIES_PROPERTY_NAME, argValue);
   }
 
   @VisibleForTesting
   String getRobolectricAssetsDirectories(
       SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
+    String argValue;
+    if (passDirectoriesInFile) {
+      argValue = "@" + assetDirectoriesPath.toString();
+    } else {
+      argValue =
+          Joiner.on(File.pathSeparator)
+              .join(
+                  getDirs(
+                      resourceDeps.stream().map(HasAndroidResourceDeps::getAssets), pathResolver));
+    }
 
-    String assetsDirectories =
-        getDirs(resourceDeps.stream().map(HasAndroidResourceDeps::getAssets), pathResolver);
-
-    return String.format("-D%s=%s", LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME, assetsDirectories);
+    return String.format("-D%s=%s", LIST_OF_ASSETS_DIRECTORIES_PROPERTY_NAME, argValue);
   }
 
-  private String getDirs(Stream<SourcePath> sourcePathStream, SourcePathResolver pathResolver) {
+  @Override
+  public void onPreTest(BuildContext buildContext) throws IOException {
+    getProjectFilesystem()
+        .writeContentsToPath(
+            getDirectoriesContent(
+                buildContext.getSourcePathResolver(), HasAndroidResourceDeps::getRes),
+            resourceDirectoriesPath);
+    getProjectFilesystem()
+        .writeContentsToPath(
+            getDirectoriesContent(
+                buildContext.getSourcePathResolver(), HasAndroidResourceDeps::getAssets),
+            assetDirectoriesPath);
+  }
+
+  private String getDirectoriesContent(
+      SourcePathResolver pathResolver, Function<HasAndroidResourceDeps, SourcePath> filter) {
+    String content;
+    if (optionalDummyRDotJava.isPresent()) {
+      Iterable<String> resourceDirectories =
+          getDirs(
+              optionalDummyRDotJava.get().getAndroidResourceDeps().stream().map(filter),
+              pathResolver);
+      content = Joiner.on('\n').join(resourceDirectories);
+    } else {
+      content = "";
+    }
+    return content;
+  }
+
+  private Iterable<String> getDirs(
+      Stream<SourcePath> sourcePathStream, SourcePathResolver pathResolver) {
 
     return sourcePathStream
         .filter(Objects::nonNull)
@@ -197,7 +287,7 @@ public class RobolectricTest extends JavaTest {
               }
             })
         .map(Object::toString)
-        .collect(Collectors.joining(File.pathSeparator));
+        .collect(Collectors.toList());
   }
 
   @Override

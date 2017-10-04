@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
+import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.Modifier;
 import java.util.Optional;
@@ -48,7 +49,7 @@ public class DefaultClassInfoFactory {
           "%s is not assignable to Buildable.",
           clazz.getName());
       Class<?> superClazz = clazz.getSuperclass();
-      if (!superClazz.equals(Object.class)) {
+      if (isIgnoredBaseClass(superClazz)) {
         // This ensures that classesInfo holds an entry for the super class and computeClassInfo
         // can get it without having to modify the map.
         LOG.verbose(
@@ -80,12 +81,16 @@ public class DefaultClassInfoFactory {
 
     Optional<ClassInfo<? super T>> superInfo = Optional.empty();
     Class<?> superClazz = clazz.getSuperclass();
-    if (!superClazz.equals(Object.class)) {
+    if (isIgnoredBaseClass(superClazz)) {
       // It's guaranteed that the superclass's info is already computed.
       @SuppressWarnings("unchecked")
       ClassInfo<? super T> superClazzInfo = (ClassInfo<? super T>) classesInfo.get(superClazz);
       superInfo = Optional.of(superClazzInfo);
     }
     return new DefaultClassInfo<>(clazz, superInfo);
+  }
+
+  private static boolean isIgnoredBaseClass(Class<?> superClazz) {
+    return !superClazz.equals(Object.class) && !superClazz.equals(ModernBuildRule.class);
   }
 }

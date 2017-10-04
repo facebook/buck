@@ -19,14 +19,28 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.google.common.collect.ImmutableCollection;
+import javax.annotation.Nullable;
 
 public abstract class ConfiguredCompilerFactory {
 
+  // TODO(jkeljo): args is not actually Nullable in all subclasses, but it is also not
+  // straightforward to create a safe "empty" default value. Find a fix.
   public abstract ConfiguredCompiler configure(
-      JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver);
+      @Nullable JvmLibraryArg args, JavacOptions javacOptions, BuildRuleResolver resolver);
 
-  public boolean trackClassUsage(JavacOptions javacOptions) {
-    return javacOptions.trackClassUsage();
+  public boolean trackClassUsage(@SuppressWarnings("unused") JavacOptions javacOptions) {
+    return false;
+  }
+
+  public boolean shouldCompileAgainstAbis() {
+    // Buck's ABI generation support was built for Java and hasn't been extended for other JVM
+    // languages yet, so this is defaulted false.
+    // See https://github.com/facebook/buck/issues/1386
+    return false;
+  }
+
+  public boolean shouldGenerateSourceAbi() {
+    return false;
   }
 
   public void addTargetDeps(

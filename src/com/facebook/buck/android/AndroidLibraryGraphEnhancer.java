@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;
 import com.facebook.buck.jvm.java.HasJavaAbi;
@@ -27,13 +27,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -42,7 +42,7 @@ public class AndroidLibraryGraphEnhancer {
   public static final Flavor DUMMY_R_DOT_JAVA_FLAVOR = InternalFlavor.of("dummy_r_dot_java");
 
   private final BuildTarget dummyRDotJavaBuildTarget;
-  private final BuildRuleParams originalBuildRuleParams;
+  private final ImmutableSortedSet<BuildRule> originalDeps;
   private final Javac javac;
   private final JavacOptions javacOptions;
   private final DependencyMode resourceDependencyMode;
@@ -55,7 +55,7 @@ public class AndroidLibraryGraphEnhancer {
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      SortedSet<BuildRule> buildRuleDeps,
       Javac javac,
       JavacOptions javacOptions,
       DependencyMode resourceDependencyMode,
@@ -66,7 +66,7 @@ public class AndroidLibraryGraphEnhancer {
     this.projectFilesystem = projectFilesystem;
     Preconditions.checkState(!HasJavaAbi.isAbiTarget(buildTarget));
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
-    this.originalBuildRuleParams = buildRuleParams;
+    this.originalDeps = ImmutableSortedSet.copyOf(buildRuleDeps);
     this.javac = javac;
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
     this.javacOptions =
@@ -93,7 +93,6 @@ public class AndroidLibraryGraphEnhancer {
       return previouslyCreated.map(input -> (DummyRDotJava) input);
     }
 
-    SortedSet<BuildRule> originalDeps = originalBuildRuleParams.getBuildDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
 
     switch (resourceDependencyMode) {
@@ -127,16 +126,10 @@ public class AndroidLibraryGraphEnhancer {
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(
                       javac, javacOptions, ExtraClasspathFromContextFunction.EMPTY);
-              BuildRuleParams dummyRDotJavaParams =
-                  compileToJarStepFactory.addInputs(
-                      // DummyRDotJava inherits no dependencies from its android_library beyond the compiler
-                      // that is used to build it
-                      originalBuildRuleParams.withoutDeclaredDeps().withoutExtraDeps(), ruleFinder);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
                   projectFilesystem,
-                  dummyRDotJavaParams,
                   ruleFinder,
                   androidResourceDeps,
                   compileToJarStepFactory,

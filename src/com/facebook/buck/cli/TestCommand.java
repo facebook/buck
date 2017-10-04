@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -371,6 +372,19 @@ public class TestCommand extends BuildCommand {
                   }
                 })
             .collect(MoreCollectors.toImmutableList());
+
+    StreamSupport.stream(
+            testRules.spliterator(),
+            params.getBuckConfig().isParallelExternalTestSpecComputationEnabled())
+        .map(ExternalTestRunnerRule.class::cast)
+        .forEach(
+            rule -> {
+              try {
+                rule.onPreTest(buildContext);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
 
     // Serialize the specs to a file to pass into the test runner.
     Path infoFile =

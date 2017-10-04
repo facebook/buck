@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.randomizedtrial.RandomizedTrial;
@@ -56,7 +56,7 @@ public class AndroidInstallConfig {
             .getEnum("install", "concurrent_install", ConcurrentInstall.class)
             .orElse(CONCURRENT_INSTALL_DEFAULT);
     if (state == ConcurrentInstall.EXPERIMENT) {
-      state = RandomizedTrial.getGroup("concurrent_install", ConcurrentInstall.class);
+      state = RandomizedTrial.getGroupStable("concurrent_install", ConcurrentInstall.class);
       ExperimentEvent event =
           new ExperimentEvent("concurrent_install", state.toString(), "", null, null);
       eventBus.ifPresent((bus) -> bus.post(event));

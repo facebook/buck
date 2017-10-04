@@ -20,10 +20,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.ConfigBuilder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.ConfigBuilder;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,7 +45,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void testCanConstructBuildFileTreeFromFilesystemOnOsX()
       throws InterruptedException, IOException {
     Path tempDir = tmp.getRoot();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir);
 
     Path command = tempDir.resolve("src/com/facebook/buck/command");
     Files.createDirectories(command);
@@ -76,7 +77,7 @@ public class FilesystemBackedBuildFileTreeTest {
   public void testCanConstructBuildFileTreeFromFilesystem()
       throws InterruptedException, IOException {
     Path tempDir = tmp.getRoot();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir);
 
     Path command = tempDir.resolve("src/com/example/build/command");
     Files.createDirectories(command);
@@ -129,7 +130,7 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(fooBazBuck);
 
     Config config = ConfigBuilder.createFromText("[project]", "ignore = foo/bar");
-    ProjectFilesystem filesystem = new ProjectFilesystem(tempDir, config);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir, config);
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Collection<Path> children =
@@ -147,7 +148,7 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.createDirectory(root.resolve("foo"));
     Files.createFile(root.resolve("foo/BUCK"));
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
@@ -160,7 +161,7 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.createDirectory(root.resolve("foo"));
     Files.createFile(root.resolve("foo/BUCK"));
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(root);
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
@@ -171,7 +172,8 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckOutputDirectoriesByDefault()
       throws InterruptedException, IOException {
     Path root = tmp.getRoot();
-    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(root, new Config());
 
     Path buckOut = root.resolve(filesystem.getBuckPaths().getBuckOut());
     Files.createDirectories(buckOut);
@@ -199,7 +201,8 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(sibling);
 
     // Config doesn't set any "ignore" entries.
-    ProjectFilesystem filesystem = new ProjectFilesystem(root, new Config());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(root, new Config());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     Optional<Path> ancestor =

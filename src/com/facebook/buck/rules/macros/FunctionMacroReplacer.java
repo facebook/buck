@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.MacroException;
-import com.facebook.buck.model.MacroMatchResult;
-import com.facebook.buck.model.MacroReplacer;
+import com.facebook.buck.model.macros.MacroException;
+import com.facebook.buck.model.macros.MacroMatchResult;
+import com.facebook.buck.model.macros.MacroReplacer;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 

@@ -22,17 +22,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.ConfigBuilder;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.model.BuildTarget;
@@ -69,11 +67,14 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
@@ -106,10 +107,11 @@ public class DistBuildStateTest {
 
   private void setUp(BuckConfig buckConfig) {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, androidDirectoryResolver);
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
+    sdkEnvironment = SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
+
     knownBuildRuleTypesFactory =
-        new KnownBuildRuleTypesFactory(processExecutor, androidDirectoryResolver, sdkEnvironment);
+        new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider);
   }
 
   @Test
@@ -127,7 +129,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
     setUp(buckConfig);
@@ -148,7 +150,8 @@ public class DistBuildStateTest {
             dump,
             rootCellWhenLoading,
             knownBuildRuleTypesFactory,
-            sdkEnvironment);
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
     assertThat(cells.get(0).getBuckConfig(), Matchers.equalTo(buckConfig));
@@ -178,7 +181,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(buckConfig).build();
     setUp(buckConfig);
@@ -196,7 +199,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
 
     BuildJobState dump =
         DistBuildState.dump(
@@ -213,7 +216,8 @@ public class DistBuildStateTest {
             dump,
             rootCellWhenLoading,
             knownBuildRuleTypesFactory,
-            sdkEnvironment);
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
 
     assertThat(cells, Matchers.aMapWithSize(1));
@@ -271,7 +275,8 @@ public class DistBuildStateTest {
             dump,
             rootCellWhenLoading,
             knownBuildRuleTypesFactory,
-            sdkEnvironment);
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory());
 
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
@@ -300,8 +305,8 @@ public class DistBuildStateTest {
     Path cell2Root = parentFs.resolve("cell2");
     parentFs.mkdirs(cell1Root);
     parentFs.mkdirs(cell2Root);
-    ProjectFilesystem cell1Filesystem = new ProjectFilesystem(cell1Root);
-    ProjectFilesystem cell2Filesystem = new ProjectFilesystem(cell2Root);
+    ProjectFilesystem cell1Filesystem = TestProjectFilesystems.createProjectFilesystem(cell1Root);
+    ProjectFilesystem cell2Filesystem = TestProjectFilesystems.createProjectFilesystem(cell2Root);
 
     Config config =
         new Config(
@@ -320,7 +325,7 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(cell1Root, config));
+            DefaultCellPathResolver.of(cell1Root, config));
     Cell rootCellWhenSaving =
         new TestCellBuilder().setFilesystem(cell1Filesystem).setBuckConfig(buckConfig).build();
     setUp(buckConfig);
@@ -349,10 +354,15 @@ public class DistBuildStateTest {
                 .putAll(System.getenv())
                 .put("envKey", "envValue")
                 .build(),
-            new DefaultCellPathResolver(cell1Root, localConfig));
+            DefaultCellPathResolver.of(cell1Root, localConfig));
     DistBuildState distributedBuildState =
         DistBuildState.load(
-            localBuckConfig, dump, rootCellWhenLoading, knownBuildRuleTypesFactory, sdkEnvironment);
+            localBuckConfig,
+            dump,
+            rootCellWhenLoading,
+            knownBuildRuleTypesFactory,
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory());
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));
 
@@ -444,7 +454,7 @@ public class DistBuildStateTest {
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance(cellOneFilesystem.getRootPath(), "//:foo"),
                 cellOneFilesystem)
-            .addSrc(new DefaultBuildTargetSourcePath(target))
+            .addSrc(DefaultBuildTargetSourcePath.of(target))
             .build(),
         JavaLibraryBuilder.createBuilder(target, cellTwoFilesystem).build());
   }

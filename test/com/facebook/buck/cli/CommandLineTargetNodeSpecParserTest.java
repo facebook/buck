@@ -19,7 +19,8 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.config.FakeBuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;

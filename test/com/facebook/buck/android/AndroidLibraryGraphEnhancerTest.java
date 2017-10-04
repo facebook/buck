@@ -24,7 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -34,7 +34,6 @@ import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -42,7 +41,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TestBuildRuleParams;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreCollectors;
@@ -63,7 +61,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
+            ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -86,7 +84,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create(),
+            ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -130,15 +128,11 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRes(new FakeSourcePath("android_res/com/example/res2"))
                 .build());
 
-    BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create()
-            .withDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2));
-
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             new FakeProjectFilesystem(),
-            buildRuleParams,
+            ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             DependencyMode.FIRST_ORDER,
@@ -194,15 +188,11 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRes(new FakeSourcePath("android_res/com/example/res2"))
                 .build());
 
-    BuildRuleParams buildRuleParams =
-        TestBuildRuleParams.create()
-            .withDeclaredDeps(ImmutableSortedSet.of(resourceRule1, resourceRule2));
-
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             buildTarget,
             new FakeProjectFilesystem(),
-            buildRuleParams,
+            ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                 .setAnnotationProcessingParams(
@@ -247,7 +237,7 @@ public class AndroidLibraryGraphEnhancerTest {
         new AndroidLibraryGraphEnhancer(
             target,
             new FakeProjectFilesystem(),
-            TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(dep)),
+            ImmutableSortedSet.of(dep),
             JavacFactory.create(ruleFinder, javaConfig, null),
             options,
             DependencyMode.FIRST_ORDER,

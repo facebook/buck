@@ -28,10 +28,10 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
@@ -56,14 +56,15 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.zip.Unzip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -139,6 +140,8 @@ class CachingBuildRuleBuilder {
   private final BuildRuleScopeManager buildRuleScopeManager;
 
   // These fields contain data that may be computed during a build.
+
+  private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
 
   /**
    * This is used to weakly cache the manifest RuleKeyAndInputs. It is not set until after the
@@ -277,10 +280,10 @@ class CachingBuildRuleBuilder {
               LOG.debug(thrown, "Building rule [%s] failed.", rule.getBuildTarget());
 
               if (consoleLogBuildFailuresInline) {
-                eventBus.post(ConsoleEvent.severe(getErrorMessageIncludingBuildRule(thrown)));
+                eventBus.post(ConsoleEvent.severe(getErrorMessageIncludingBuildRule()));
               }
 
-              thrown = maybeAttachBuildRuleNameToException(thrown);
+              thrown = addBuildRuleContextToException(thrown);
               recordFailureAndCleanUp(thrown);
 
               return Futures.immediateFuture(BuildResult.failure(rule, thrown));
@@ -589,8 +592,9 @@ class CachingBuildRuleBuilder {
       }
 
       // Push to cache.
-      buildInfoRecorder.performUploadToArtifactCache(
-          ImmutableSet.copyOf(ruleKeys), artifactCache, eventBus);
+      uploadCompleteFuture =
+          buildInfoRecorder.performUploadToArtifactCache(
+              ImmutableSet.copyOf(ruleKeys), artifactCache, eventBus);
 
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
@@ -714,7 +718,8 @@ class CachingBuildRuleBuilder {
             BuildResult.success(
                 rule,
                 BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                CacheResult.localKeyUnchangedHit()));
+                CacheResult.localKeyUnchangedHit(),
+                uploadCompleteFuture));
       }
     }
     return Optional.empty();
@@ -867,7 +872,10 @@ class CachingBuildRuleBuilder {
     if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
       return Optional.of(
           BuildResult.success(
-              rule, BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
+              rule,
+              BuildRuleSuccessType.MATCHING_RULE_KEY,
+              CacheResult.localKeyUnchangedHit(),
+              uploadCompleteFuture));
     }
     return Optional.empty();
   }
@@ -907,7 +915,8 @@ class CachingBuildRuleBuilder {
         BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
         BuildInfo.MetadataKey.DEP_FILE);
     return Optional.of(
-        BuildResult.success(rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult));
+        BuildResult.success(
+            rule, BuildRuleSuccessType.FETCHED_FROM_CACHE, cacheResult, uploadCompleteFuture));
   }
 
   private ListenableFuture<Optional<BuildResult>> handleDepsResults(List<BuildResult> depResults) {
@@ -1003,27 +1012,12 @@ class CachingBuildRuleBuilder {
         new BuildRuleDiagnosticData(ruleDeps.get(rule), diagnosticKeysBuilder.build()));
   }
 
-  private Throwable maybeAttachBuildRuleNameToException(@Nonnull Throwable thrown) {
-    if ((thrown instanceof HumanReadableException) || (thrown instanceof InterruptedException)) {
-      return thrown;
-    }
-    String message = thrown.getMessage();
-    if (message != null && message.contains(rule.toString())) {
-      return thrown;
-    }
-    return new RuntimeException(getErrorMessageIncludingBuildRule(thrown), thrown);
+  private Throwable addBuildRuleContextToException(@Nonnull Throwable thrown) {
+    return new BuckUncheckedExecutionException("", thrown, getErrorMessageIncludingBuildRule());
   }
 
-  private String getErrorMessageIncludingBuildRule(@Nonnull Throwable thrown) {
-    String betterMessage =
-        String.format(
-            "Building rule [%s] failed. Caused by [%s]",
-            rule.getBuildTarget(), thrown.getClass().getSimpleName());
-    if (thrown.getMessage() != null) {
-      betterMessage += ":\n" + thrown.getMessage();
-    }
-
-    return betterMessage;
+  private String getErrorMessageIncludingBuildRule() {
+    return String.format("When building rule %s.", rule.getBuildTarget());
   }
 
   private ListenableFuture<CacheResult>
@@ -1076,6 +1070,12 @@ class CachingBuildRuleBuilder {
         });
   }
 
+  private void invalidateInitializeFromDiskState() {
+    if (rule instanceof InitializableFromDisk) {
+      ((InitializableFromDisk<?>) rule).getBuildOutputInitializer().invalidate();
+    }
+  }
+
   private ListenableFuture<CacheResult> fetch(
       ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
@@ -1126,6 +1126,9 @@ class CachingBuildRuleBuilder {
       LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
       return cacheResult;
     }
+
+    invalidateInitializeFromDiskState();
+
     Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
 
@@ -1209,9 +1212,10 @@ class CachingBuildRuleBuilder {
   }
 
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable) throws IOException {
-    BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
-    T buildOutput = buildOutputInitializer.initializeFromDisk(onDiskBuildInfo);
-    buildOutputInitializer.setBuildOutput(buildOutput);
+    try (Scope ignored = LeafEvents.scope(eventBus, "initialize_from_disk")) {
+      BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
+      buildOutputInitializer.initializeFromDisk(onDiskBuildInfo);
+    }
   }
 
   /** @return whether we should upload the given rules artifacts to cache. */
@@ -1363,22 +1367,22 @@ class CachingBuildRuleBuilder {
             new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
       ByteStreams.copy(inputStream, outputStream);
     }
-    cache
-        .store(
+
+    uploadCompleteFuture =
+        cache.store(
             ArtifactInfo.builder().addRuleKeys(manifestKey.getRuleKey()).build(),
-            BorrowablePath.borrowablePath(tempFile))
-        .addListener(
-            () -> {
-              try {
-                Files.deleteIfExists(tempFile);
-              } catch (IOException e) {
-                LOG.warn(
-                    e,
-                    "Error occurred while deleting temporary manifest file for %s",
-                    manifestPath);
-              }
-            },
-            MoreExecutors.directExecutor());
+            BorrowablePath.borrowablePath(tempFile));
+
+    uploadCompleteFuture.addListener(
+        () -> {
+          try {
+            Files.deleteIfExists(tempFile);
+          } catch (IOException e) {
+            LOG.warn(
+                e, "Error occurred while deleting temporary manifest file for %s", manifestPath);
+          }
+        },
+        MoreExecutors.directExecutor());
   }
 
   private Optional<RuleKeyAndInputs> calculateManifestKey(BuckEventBus eventBus)
@@ -1471,7 +1475,8 @@ class CachingBuildRuleBuilder {
                       BuildResult.success(
                           rule,
                           BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
-                          cacheResult));
+                          cacheResult,
+                          uploadCompleteFuture));
                 }
                 return Optional.<BuildResult>empty();
               });
@@ -1501,7 +1506,8 @@ class CachingBuildRuleBuilder {
               BuildResult.success(
                   rule,
                   BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY,
-                  CacheResult.localKeyUnchangedHit())));
+                  CacheResult.localKeyUnchangedHit(),
+                  uploadCompleteFuture)));
     }
 
     // Try to fetch the artifact using the input-based rule key.
@@ -1521,7 +1527,10 @@ class CachingBuildRuleBuilder {
                   BuildInfo.MetadataKey.DEP_FILE);
               return Optional.of(
                   BuildResult.success(
-                      rule, BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
+                      rule,
+                      BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
+                      cacheResult,
+                      uploadCompleteFuture));
             }
           }
           return Optional.empty();
@@ -1642,7 +1651,8 @@ class CachingBuildRuleBuilder {
         // futures provided by the ExecutorService.
         future.set(
             Optional.of(
-                BuildResult.success(rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult)));
+                BuildResult.success(
+                    rule, BuildRuleSuccessType.BUILT_LOCALLY, cacheResult, uploadCompleteFuture)));
       } catch (Throwable t) {
         future.setException(t);
       }
@@ -1654,6 +1664,8 @@ class CachingBuildRuleBuilder {
      */
     private void executeCommandsNowThatDepsAreBuilt()
         throws InterruptedException, StepFailedException {
+
+      invalidateInitializeFromDiskState();
 
       LOG.debug("Building locally: %s", rule);
       // Attempt to get an approximation of how long it takes to actually run the command.

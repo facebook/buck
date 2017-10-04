@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;

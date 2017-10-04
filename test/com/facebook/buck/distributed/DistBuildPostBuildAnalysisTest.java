@@ -19,11 +19,10 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_F
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.cli.DistBuildCommand;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.distributed.thrift.RunId;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRuleDurationTracker;
@@ -38,6 +37,8 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -60,16 +61,16 @@ public class DistBuildPostBuildAnalysisTest {
 
   private final BuildId buildId = new BuildId("97eb735b-27c9-4d60-9564-fb0694a53b03");
   private final StampedeId stampedeId = new StampedeId();
-  private final RunId runId1 = new RunId();
-  private final RunId runId2 = new RunId();
+  private final BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
+  private final BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
 
   private ObjectWriter objectWriter;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     stampedeId.setId("stampede5057850940756389804");
-    runId1.setId("stampede-slave1241653611715395998");
-    runId2.setId("stampede-slave8890909885267341364");
+    buildSlaveRunId1.setId("stampede-slave1241653611715395998");
+    buildSlaveRunId2.setId("stampede-slave8890909885267341364");
 
     objectWriter =
         ObjectMappers.legacyCreate()
@@ -147,7 +148,10 @@ public class DistBuildPostBuildAnalysisTest {
 
     Map<String, BuildRuleMachineLogEntry> resultMap =
         DistBuildPostBuildAnalysis.extractBuildRules(
-            ruleEvents.stream().map(event -> buildRuleFinishedAsMachineReadable(event)));
+            ruleEvents
+                .stream()
+                .map(event -> buildRuleFinishedAsMachineReadable(event))
+                .collect(Collectors.toList()));
 
     Assert.assertEquals(2, resultMap.keySet().size());
     Assert.assertTrue(
@@ -188,13 +192,14 @@ public class DistBuildPostBuildAnalysisTest {
     workspace.setUp();
 
     Config config = Configs.createDefaultConfig(tmpPath.getRoot());
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpPath.getRoot(), config);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot(), config);
     DistBuildPostBuildAnalysis analysis =
         new DistBuildPostBuildAnalysis(
             buildId,
             stampedeId,
             filesystem.resolve(tmpPath.getRoot()),
-            ImmutableList.of(runId1, runId2),
+            ImmutableList.of(buildSlaveRunId1, buildSlaveRunId2),
             DistBuildCommand.class.getSimpleName().toLowerCase());
     Assert.assertEquals(
         analysis.dumpResultsToLogFile(analysis.runAnalysis()),

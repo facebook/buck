@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Pair;
@@ -197,23 +197,20 @@ public class RustCompileUtils {
 
     String filename = crateType.filenameFor(crateName, cxxPlatform);
 
-    return resolver.addToIndex(
-        RustCompileRule.from(
-            ruleFinder,
-            target,
-            projectFilesystem,
-            params,
-            filename,
-            rustConfig.getRustCompiler().resolve(resolver),
-            rustConfig
-                .getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType())
-                .resolve(resolver),
-            args.build(),
-            depArgs.build(),
-            linkerArgs.build(),
-            CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
-            CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),
-            crateType.hasOutput()));
+    return RustCompileRule.from(
+        ruleFinder,
+        target,
+        projectFilesystem,
+        params,
+        filename,
+        rustConfig.getRustCompiler().resolve(resolver),
+        rustConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType()).resolve(resolver),
+        args.build(),
+        depArgs.build(),
+        linkerArgs.build(),
+        CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
+        CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),
+        crateType.hasOutput());
   }
 
   public static RustCompileRule requireBuild(
@@ -232,32 +229,27 @@ public class RustCompileUtils {
       Linker.LinkableDepType depType,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule) {
-    BuildTarget target = getCompileBuildTarget(buildTarget, cxxPlatform, crateType);
-
-    // If this rule has already been generated, return it.
-    Optional<RustCompileRule> existing =
-        resolver.getRuleOptionalWithType(target, RustCompileRule.class);
-    if (existing.isPresent()) {
-      return existing.get();
-    }
-
-    return createBuild(
-        target,
-        crateName,
-        projectFilesystem,
-        params,
-        resolver,
-        ruleFinder,
-        cxxPlatform,
-        rustConfig,
-        extraFlags,
-        extraLinkerFlags,
-        linkerInputs,
-        crateType,
-        depType,
-        true,
-        sources,
-        rootModule);
+    return (RustCompileRule)
+        resolver.computeIfAbsent(
+            getCompileBuildTarget(buildTarget, cxxPlatform, crateType),
+            target ->
+                createBuild(
+                    target,
+                    crateName,
+                    projectFilesystem,
+                    params,
+                    resolver,
+                    ruleFinder,
+                    cxxPlatform,
+                    rustConfig,
+                    extraFlags,
+                    extraLinkerFlags,
+                    linkerInputs,
+                    crateType,
+                    depType,
+                    true,
+                    sources,
+                    rootModule));
   }
 
   public static Linker.LinkableDepType getLinkStyle(
@@ -384,23 +376,27 @@ public class RustCompileUtils {
     }
 
     final RustCompileRule buildRule =
-        createBuild(
-            binaryTarget,
-            crate,
-            projectFilesystem,
-            params,
-            resolver,
-            ruleFinder,
-            cxxPlatform,
-            rustBuckConfig,
-            rustcArgs.build(),
-            linkerArgs.build(),
-            /* linkerInputs */ ImmutableList.of(),
-            isCheck ? CrateType.CHECKBIN : CrateType.BIN,
-            linkStyle,
-            rpath,
-            rootModuleAndSources.getSecond(),
-            rootModuleAndSources.getFirst());
+        (RustCompileRule)
+            resolver.computeIfAbsent(
+                binaryTarget,
+                binaryTarget1 ->
+                    createBuild(
+                        binaryTarget1,
+                        crate,
+                        projectFilesystem,
+                        params,
+                        resolver,
+                        ruleFinder,
+                        cxxPlatform,
+                        rustBuckConfig,
+                        rustcArgs.build(),
+                        linkerArgs.build(),
+                        /* linkerInputs */ ImmutableList.of(),
+                        isCheck ? CrateType.CHECKBIN : CrateType.BIN,
+                        linkStyle,
+                        rpath,
+                        rootModuleAndSources.getSecond(),
+                        rootModuleAndSources.getFirst()));
 
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));
@@ -417,7 +413,7 @@ public class RustCompileUtils {
 
       @Override
       public SourcePath getSourcePathToOutput() {
-        return new ForwardingBuildTargetSourcePath(
+        return ForwardingBuildTargetSourcePath.of(
             getBuildTarget(), buildRule.getSourcePathToOutput());
       }
     };

@@ -21,10 +21,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.abi.source.FrontendOnlyJavacTask;
+import com.facebook.buck.jvm.java.abi.source.api.ErrorSuppressingDiagnosticListener;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacPlugin;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TreesMessager;
-import com.facebook.buck.zip.DeterministicManifest;
+import com.facebook.buck.util.zip.DeterministicManifest;
 import com.google.common.base.Joiner;
 import com.google.common.io.ByteStreams;
 import com.sun.source.tree.CompilationUnitTree;
@@ -207,11 +208,6 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       Iterable<? extends TypeElement> result =
           (Iterable<? extends TypeElement>)
               javacTask.getClass().getMethod("enter").invoke(javacTask);
-      if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
-        fail(
-            "Compilation failed! Diagnostics:\n"
-                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
-      }
       return result;
     } catch (IllegalAccessException | NoSuchMethodException e) {
       throw new AssertionError(e);
@@ -219,9 +215,17 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
       Throwable cause = e.getCause();
       if (cause instanceof IOException) {
         throw (IOException) cause;
+      } else if (!getDiagnosticMessages().isEmpty()) {
+        return Collections.emptyList();
       }
 
       throw new AssertionError(e);
+    } finally {
+      if (!allowCompilationErrors && !diagnosticCollector.getDiagnosticMessages().isEmpty()) {
+        fail(
+            "Compilation failed! Diagnostics:\n"
+                + getDiagnosticMessages().stream().collect(Collectors.joining("\n")));
+      }
     }
   }
 
@@ -274,13 +278,23 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
         options.add(Joiner.on(File.pathSeparatorChar).join(classpath));
       }
 
+      ErrorSuppressingDiagnosticListener errorSuppressingDiagnosticListener =
+          new ErrorSuppressingDiagnosticListener(diagnosticCollector);
       JavacTask innerTask =
           (JavacTask)
               javaCompiler.getTask(
-                  null, fileManager, diagnosticCollector, options, null, sourceFiles);
+                  null,
+                  fileManager,
+                  useFrontendOnlyJavacTask
+                      ? errorSuppressingDiagnosticListener
+                      : diagnosticCollector,
+                  options,
+                  null,
+                  sourceFiles);
 
       if (useFrontendOnlyJavacTask) {
         javacTask = new FrontendOnlyJavacTask(innerTask);
+        errorSuppressingDiagnosticListener.setTask(innerTask);
       } else {
         javacTask = new BuckJavacTask(innerTask);
       }

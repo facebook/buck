@@ -28,7 +28,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -64,6 +64,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -77,6 +78,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
+import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -579,8 +582,28 @@ public class CxxDescriptionEnhancer {
       BuildTarget target,
       Flavor platform,
       CxxSourceRuleFactory.PicType pic,
-      String extension) {
-    return getStaticLibraryPath(filesystem, target, platform, pic, extension, "");
+      String extension,
+      boolean uniqueLibraryNameEnabled) {
+    return getStaticLibraryPath(
+        filesystem, target, platform, pic, extension, "", uniqueLibraryNameEnabled);
+  }
+
+  public static String getStaticLibraryBasename(
+      BuildTarget target, String suffix, boolean uniqueLibraryNameEnabled) {
+    String postfix = "";
+    if (uniqueLibraryNameEnabled) {
+      String hashedPath =
+          BaseEncoding.base64Url()
+              .omitPadding()
+              .encode(
+                  Hashing.sha1()
+                      .hashString(
+                          target.getUnflavoredBuildTarget().getFullyQualifiedName(), Charsets.UTF_8)
+                      .asBytes())
+              .substring(0, 10);
+      postfix = "-" + hashedPath;
+    }
+    return target.getShortName() + postfix + suffix;
   }
 
   public static Path getStaticLibraryPath(
@@ -589,8 +612,12 @@ public class CxxDescriptionEnhancer {
       Flavor platform,
       CxxSourceRuleFactory.PicType pic,
       String extension,
-      String suffix) {
-    String name = String.format("lib%s%s.%s", target.getShortName(), suffix, extension);
+      String suffix,
+      boolean uniqueLibraryNameEnabled) {
+    String name =
+        String.format(
+            "lib%s.%s",
+            getStaticLibraryBasename(target, suffix, uniqueLibraryNameEnabled), extension);
     return BuildTargets.getGenPath(
             filesystem, createStaticLibraryBuildTarget(target, platform, pic), "%s")
         .resolve(name);
@@ -1175,14 +1202,12 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       Iterable<? extends BuildRule> deps,
       Predicate<Object> traverse) {
-    BuildTarget target = createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor());
-    SymlinkTree tree = resolver.getRuleOptionalWithType(target, SymlinkTree.class).orElse(null);
-    if (tree == null) {
-      tree =
-          resolver.addToIndex(
-              createSharedLibrarySymlinkTree(buildTarget, filesystem, cxxPlatform, deps, traverse));
-    }
-    return tree;
+    return (SymlinkTree)
+        resolver.computeIfAbsent(
+            createSharedLibrarySymlinkTreeTarget(buildTarget, cxxPlatform.getFlavor()),
+            ignored ->
+                createSharedLibrarySymlinkTree(
+                    buildTarget, filesystem, cxxPlatform, deps, traverse));
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {

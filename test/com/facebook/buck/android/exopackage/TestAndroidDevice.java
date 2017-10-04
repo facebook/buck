@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

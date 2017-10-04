@@ -21,9 +21,10 @@ import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.AndroidPlatformTargetSupplier;
 import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.config.ActionGraphParallelizationMode;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -55,9 +56,9 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Function;
@@ -206,7 +207,7 @@ public class DistBuildSlaveExecutor {
                 /* skipActionGraphCache */ false,
                 Preconditions.checkNotNull(targetGraph),
                 args.getCacheKeySeed(),
-                false);
+                ActionGraphParallelizationMode.DISABLED);
     tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }
@@ -258,7 +259,7 @@ public class DistBuildSlaveExecutor {
     // 2. Add the Operating System roots.
     allCachesBuilder.addAll(
         DefaultFileHashCache.createOsRootDirectoriesCaches(
-            rootCell.getBuckConfig().getFileHashCacheMode()));
+            args.getProjectFilesystemFactory(), rootCell.getBuckConfig().getFileHashCacheMode()));
 
     return new StackedFileHashCache(allCachesBuilder.build());
   }
@@ -407,6 +408,7 @@ public class DistBuildSlaveExecutor {
                   .setBuildCellRootPath(args.getRootCell().getRoot())
                   .setProcessExecutor(processExecutor)
                   .setEnvironment(distBuildConfig.getEnvironment())
+                  .setProjectFilesystemFactory(args.getProjectFilesystemFactory())
                   .build();
           Build build =
               new Build(

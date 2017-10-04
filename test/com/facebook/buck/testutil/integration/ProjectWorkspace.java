@@ -26,19 +26,19 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.Main;
 import com.facebook.buck.cli.TestRunning;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.CellConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanWatcher;
+import com.facebook.buck.io.file.MoreFiles;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
@@ -50,6 +50,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.SdkEnvironment;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.toolchain.impl.TestToolchainProvider;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -58,7 +59,8 @@ import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.WatchmanWatcher;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
@@ -79,6 +81,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.channels.Channels;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
@@ -98,6 +102,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
+import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
 
 /**
@@ -145,10 +150,14 @@ public class ProjectWorkspace {
         }
       };
 
+  private static final String TEST_CELL_LOCATION =
+      "test/com/facebook/buck/testutil/integration/testlibs";
+
   private boolean isSetUp = false;
   private final Map<String, Map<String, String>> localConfigs = new HashMap<>();
   private final Path templatePath;
   private final Path destPath;
+  private final boolean addBuckRepoCell;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
   @Nullable private Main.KnownBuildRuleTypesFactoryFactory knownBuildRuleTypesFactoryFactory;
 
@@ -164,9 +173,15 @@ public class ProjectWorkspace {
   }
 
   @VisibleForTesting
-  ProjectWorkspace(Path templateDir, final Path targetFolder) {
+  ProjectWorkspace(Path templateDir, Path targetFolder, boolean addBuckRepoCell) {
     this.templatePath = templateDir;
     this.destPath = targetFolder;
+    this.addBuckRepoCell = addBuckRepoCell;
+  }
+
+  @VisibleForTesting
+  ProjectWorkspace(Path templateDir, final Path targetFolder) {
+    this(templateDir, targetFolder, false);
   }
 
   /**
@@ -247,6 +262,11 @@ public class ProjectWorkspace {
     // `disableThreadLimitOverride`.
     addBuckConfigLocalOption("build", "threads", "2");
 
+    if (addBuckRepoCell) {
+      addBuckConfigLocalOption(
+          "repositories", "buck", Paths.get(TEST_CELL_LOCATION).toAbsolutePath().toString());
+    }
+
     // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
     // from buck-out while watchman indexes/touches files.
     if (!Files.exists(getPath(".watchmanconfig"))) {
@@ -295,7 +315,8 @@ public class ProjectWorkspace {
     if (projectFilesystemAndConfig == null) {
       Config config = Configs.createDefaultConfig(destPath);
       projectFilesystemAndConfig =
-          new ProjectFilesystemAndConfig(new ProjectFilesystem(destPath, config), config);
+          new ProjectFilesystemAndConfig(
+              TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
     }
     return projectFilesystemAndConfig;
   }
@@ -498,72 +519,100 @@ public class ProjectWorkspace {
       CapturingPrintStream stderr,
       String... args)
       throws IOException {
-    assertTrue("setUp() must be run before this method is invoked", isSetUp);
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    InputStream stdin = new ByteArrayInputStream("".getBytes());
+    try {
+      assertTrue("setUp() must be run before this method is invoked", isSetUp);
+      CapturingPrintStream stdout = new CapturingPrintStream();
+      InputStream stdin = new ByteArrayInputStream("".getBytes());
 
-    // Construct a limited view of the parent environment for the child.
-    // TODO(#5754812): we should eventually get tests working without requiring these be set.
-    ImmutableList<String> inheritedEnvVars =
-        ImmutableList.of(
-            "ANDROID_HOME",
-            "ANDROID_NDK",
-            "ANDROID_NDK_REPOSITORY",
-            "ANDROID_SDK",
-            // TODO(grumpyjames) Write an equivalent of the groovyc and startGroovy
-            // scripts provided by the groovy distribution in order to remove these two.
-            "GROOVY_HOME",
-            "JAVA_HOME",
-            "NDK_HOME",
-            "PATH",
-            "PATHEXT",
+      // Construct a limited view of the parent environment for the child.
+      // TODO(#5754812): we should eventually get tests working without requiring these be set.
+      ImmutableList<String> inheritedEnvVars =
+          ImmutableList.of(
+              "ANDROID_HOME",
+              "ANDROID_NDK",
+              "ANDROID_NDK_REPOSITORY",
+              "ANDROID_SDK",
+              // TODO(grumpyjames) Write an equivalent of the groovyc and startGroovy
+              // scripts provided by the groovy distribution in order to remove these two.
+              "GROOVY_HOME",
+              "JAVA_HOME",
+              "NDK_HOME",
+              "PATH",
+              "PATHEXT",
 
-            // Needed by ndk-build on Windows
-            "OS",
-            "ProgramW6432",
-            "ProgramFiles(x86)",
+              // Needed by ndk-build on Windows
+              "OS",
+              "ProgramW6432",
+              "ProgramFiles(x86)",
 
-            // The haskell integration tests call into GHC, which needs HOME to be set.
-            "HOME",
+              // The haskell integration tests call into GHC, which needs HOME to be set.
+              "HOME",
 
-            // TODO(#6586154): set TMP variable for ShellSteps
-            "TMP");
-    Map<String, String> envBuilder = new HashMap<>();
-    for (String variable : inheritedEnvVars) {
-      String value = System.getenv(variable);
-      if (value != null) {
-        envBuilder.put(variable, value);
+              // TODO(#6586154): set TMP variable for ShellSteps
+              "TMP");
+      Map<String, String> envBuilder = new HashMap<>();
+      for (String variable : inheritedEnvVars) {
+        String value = System.getenv(variable);
+        if (value != null) {
+          envBuilder.put(variable, value);
+        }
+      }
+      envBuilder.putAll(environmentOverrides);
+      ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
+
+      Main main =
+          knownBuildRuleTypesFactoryFactory == null
+              ? new Main(stdout, stderr, stdin)
+              : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
+      int exitCode;
+      try {
+        exitCode =
+            main.runMainWithExitCode(
+                new BuildId(),
+                repoRoot,
+                context,
+                sanizitedEnv,
+                CommandMode.TEST,
+                WatchmanWatcher.FreshInstanceAction.NONE,
+                System.nanoTime(),
+                ImmutableList.copyOf(args));
+      } catch (InterruptedException e) {
+        e.printStackTrace(stderr);
+        exitCode = Main.FAIL_EXIT_CODE;
+        Threads.interruptCurrentThread();
+      }
+
+      return new ProcessResult(
+          exitCode,
+          stdout.getContentsAsString(Charsets.UTF_8),
+          stderr.getContentsAsString(Charsets.UTF_8));
+    } finally {
+      // javac has a global cache of zip/jar file content listings. It determines the validity of
+      // a given cache entry based on the modification time of the zip file in question. In normal
+      // usage, this is fine. However, in tests, we often will do a build, change something, and
+      // then rapidly do another build. If this happens quickly, javac can be operating from
+      // incorrect information when reading a jar file, resulting in "bad class file" or
+      // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
+      // the compiler and clearing the cache.
+      try {
+        Class<?> cacheClass =
+            Class.forName(
+                "com.sun.tools.javac.file.ZipFileIndexCache",
+                false,
+                ToolProvider.getSystemToolClassLoader());
+
+        Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
+        Method clearCacheMethod = cacheClass.getMethod("clearCache");
+
+        Object cache = getSharedInstanceMethod.invoke(cacheClass);
+        clearCacheMethod.invoke(cache);
+      } catch (ClassNotFoundException
+          | IllegalAccessException
+          | InvocationTargetException
+          | NoSuchMethodException e) {
+        throw new RuntimeException(e);
       }
     }
-    envBuilder.putAll(environmentOverrides);
-    ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
-
-    Main main =
-        knownBuildRuleTypesFactoryFactory == null
-            ? new Main(stdout, stderr, stdin)
-            : new Main(stdout, stderr, stdin, knownBuildRuleTypesFactoryFactory);
-    int exitCode;
-    try {
-      exitCode =
-          main.runMainWithExitCode(
-              new BuildId(),
-              repoRoot,
-              context,
-              sanizitedEnv,
-              CommandMode.TEST,
-              WatchmanWatcher.FreshInstanceAction.NONE,
-              System.nanoTime(),
-              ImmutableList.copyOf(args));
-    } catch (InterruptedException e) {
-      e.printStackTrace(stderr);
-      exitCode = Main.FAIL_EXIT_CODE;
-      Threads.interruptCurrentThread();
-    }
-
-    return new ProcessResult(
-        exitCode,
-        stdout.getContentsAsString(Charsets.UTF_8),
-        stderr.getContentsAsString(Charsets.UTF_8));
   }
 
   /**
@@ -703,9 +752,6 @@ public class ProjectWorkspace {
 
     TestConsole console = new TestConsole();
     ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
-    DefaultAndroidDirectoryResolver directoryResolver =
-        new DefaultAndroidDirectoryResolver(
-            filesystem.getRootPath().getFileSystem(), env, Optional.empty(), Optional.empty());
     ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
     BuckConfig buckConfig =
         new BuckConfig(
@@ -714,16 +760,19 @@ public class ProjectWorkspace {
             Architecture.detect(),
             Platform.detect(),
             env,
-            new DefaultCellPathResolver(filesystem.getRootPath(), config));
+            DefaultCellPathResolver.of(filesystem.getRootPath(), config));
+    TestToolchainProvider toolchainProvider = new TestToolchainProvider();
     SdkEnvironment sdkEnvironment =
-        SdkEnvironment.create(buckConfig, processExecutor, directoryResolver);
+        SdkEnvironment.create(buckConfig, processExecutor, toolchainProvider);
+
     return CellProvider.createForLocalBuild(
             filesystem,
             Watchman.NULL_WATCHMAN,
             buckConfig,
             CellConfig.of(),
-            new KnownBuildRuleTypesFactory(processExecutor, directoryResolver, sdkEnvironment),
-            sdkEnvironment)
+            new KnownBuildRuleTypesFactory(processExecutor, sdkEnvironment, toolchainProvider),
+            sdkEnvironment,
+            new DefaultProjectFilesystemFactory())
         .getCellByPath(filesystem.getRootPath());
   }
 

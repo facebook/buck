@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBuildConfig.ReadValuesStep;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -55,7 +55,7 @@ public class AndroidBuildConfigTest {
   public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
-        new ExplicitBuildTargetSourcePath(
+        ExplicitBuildTargetSourcePath.of(
             BUILD_TARGET,
             BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")),
         buildConfig.getSourcePathToOutput());

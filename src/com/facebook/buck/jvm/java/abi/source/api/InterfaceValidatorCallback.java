@@ -19,5 +19,7 @@ package com.facebook.buck.jvm.java.abi.source.api;
 public interface InterfaceValidatorCallback {
   boolean classIsOnBootClasspath(String binaryName);
 
-  boolean ruleIsRequiredForSourceAbi();
+  String getRuleName();
+
+  boolean ruleIsRequiredForSourceOnlyAbi();
 }

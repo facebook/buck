@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.in;
@@ -33,7 +34,8 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -73,7 +75,7 @@ public class AppleBundleIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
   }
@@ -621,19 +623,18 @@ public class AppleBundleIntegrationTest {
 
   @Test
   public void appBundleVariantDirectoryMustEndInLproj() throws IOException {
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        Matchers.matchesPattern(
-            "Variant files have to be in a directory with name ending in '\\.lproj', "
-                + "but '.*/cc/Localizable.strings' is not."));
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_invalid_variant", tmp);
     workspace.setUp();
-
-    workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug").assertFailure();
+    ProjectWorkspace.ProcessResult processResult =
+        workspace.runBuckCommand("build", "//:DemoApp#iphonesimulator-x86_64,no-debug");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        allOf(
+            containsString("Variant files have to be in a directory with name ending in '.lproj',"),
+            containsString("/cc/Localizable.strings' is not.")));
   }
 
   @Test
@@ -707,6 +708,42 @@ public class AppleBundleIntegrationTest {
     workspace.verify(Paths.get("DemoApp_output.expected"), outputPath);
     Path appPath = outputPath.resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Assets.car"))));
+  }
+
+  @Test
+  public void generatedAppleAssetCatalogsAreIncludedInBundle() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_asset_catalogs_are_included_in_bundle", tmp);
+    workspace.setUp();
+    BuildTarget appTarget = BuildTargetFactory.newInstance("//:CombinedAssetsApp#no-debug");
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:MakeCombinedAssets");
+    BuildTarget assetTarget = appTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
+    workspace.runBuckCommand("build", appTarget.getFullyQualifiedName()).assertSuccess();
+
+    // Check that the genrule was invoked
+    workspace.getBuildLog().assertTargetBuiltLocally(genruleTarget.getFullyQualifiedName());
+
+    // Check the actool output: Merged.bundle/Assets.car
+    assertFileInOutputContainsString(
+        "Image2", workspace, assetTarget, "%s/Merged.bundle/Assets.car");
+
+    // Check the app package: Assets.car
+    assertFileInOutputContainsString(
+        "Image2",
+        workspace,
+        appTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+        "%s/" + appTarget.getShortName() + ".app/Assets.car");
+  }
+
+  private void assertFileInOutputContainsString(
+      String needle, ProjectWorkspace workspace, BuildTarget target, String genPathFormat)
+      throws IOException {
+    Path outputPath = BuildTargets.getGenPath(filesystem, target, genPathFormat);
+    final Path path = workspace.getPath(outputPath);
+    assertTrue(Files.exists(path));
+    final String contents = workspace.getFileContents(outputPath);
+    assertTrue(contents.contains(needle));
   }
 
   @Test

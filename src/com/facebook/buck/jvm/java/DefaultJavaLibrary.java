@@ -18,10 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildContext;
@@ -38,12 +38,12 @@ import com.facebook.buck.rules.RulePipelineStateFactory;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SupportsPipelining;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -80,13 +80,13 @@ import javax.annotation.Nullable;
  * Then this would compile {@code FeedStoryRenderer.java} against Guava and the classes generated
  * from the {@code //src/com/facebook/feed/model:model} rule.
  */
-public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class DefaultJavaLibrary extends AbstractBuildRule
     implements JavaLibrary,
         HasClasspathEntries,
         ExportDependencies,
         InitializableFromDisk<JavaLibrary.Data>,
         AndroidPackageable,
-        MaybeRequiredForSourceAbi,
+        MaybeRequiredForSourceOnlyAbi,
         SupportsInputBasedRuleKey,
         SupportsDependencyFileRuleKey,
         SupportsPipelining<JavacPipelineState>,
@@ -99,12 +99,15 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final JarContentsSupplier outputJarContentsSupplier;
   @Nullable private final BuildTarget abiJar;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
-  @AddToRuleKey private final boolean requiredForSourceAbi;
+  @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
+
+  // This is automatically added to the rule key by virtue of being returned from getBuildDeps.
+  private final ImmutableSortedSet<BuildRule> buildDeps;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
   // on. This is because various methods in this class perform dependency traversal that rely on
   // these deps being represented as their full-jar dependency form.
-  private final SortedSet<BuildRule> fullJarDeclaredDeps;
+  private final SortedSet<BuildRule> firstOrderPackageableDeps;
   private final ImmutableSortedSet<BuildRule> fullJarExportedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarProvidedDeps;
 
@@ -115,24 +118,24 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   private final BuildOutputInitializer<Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
 
-  @Nullable private CalculateAbiFromSource sourceAbi;
+  @Nullable private CalculateSourceAbi sourceAbi;
 
-  public static DefaultJavaLibraryBuilder builder(
-      TargetGraph targetGraph,
+  public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      CellPathResolver cellRoots,
-      JavaBuckConfig javaBuckConfig) {
-    return new DefaultJavaLibraryBuilder(
-        targetGraph,
+      ConfiguredCompilerFactory compilerFactory,
+      @Nullable JavaBuckConfig javaBuckConfig,
+      @Nullable JavaLibraryDescription.CoreArg args) {
+    return new DefaultJavaLibraryRules.Builder(
         buildTarget,
         projectFilesystem,
         params,
         buildRuleResolver,
-        cellRoots,
-        javaBuckConfig);
+        compilerFactory,
+        javaBuckConfig,
+        args);
   }
 
   @Override
@@ -143,18 +146,19 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   protected DefaultJavaLibrary(
       BuildTarget buildTarget,
       final ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ImmutableSortedSet<BuildRule> buildDeps,
       SourcePathResolver resolver,
       JarBuildStepsFactory jarBuildStepsFactory,
       Optional<SourcePath> proguardConfig,
-      SortedSet<BuildRule> fullJarDeclaredDeps,
+      SortedSet<BuildRule> firstOrderPackageableDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       @Nullable BuildTarget abiJar,
       Optional<String> mavenCoords,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean requiredForSourceAbi) {
-    super(buildTarget, projectFilesystem, params);
+      boolean requiredForSourceOnlyAbi) {
+    super(buildTarget, projectFilesystem);
+    this.buildDeps = buildDeps;
     this.jarBuildStepsFactory = jarBuildStepsFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
@@ -172,13 +176,18 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
       }
     }
 
+    Sets.SetView<BuildRule> missingExports =
+        Sets.difference(fullJarExportedDeps, firstOrderPackageableDeps);
+    // Exports should have been copied over to declared before invoking this constructor
+    Preconditions.checkState(missingExports.isEmpty());
+
     this.proguardConfig = proguardConfig;
-    this.fullJarDeclaredDeps = fullJarDeclaredDeps;
+    this.firstOrderPackageableDeps = firstOrderPackageableDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
-    this.requiredForSourceAbi = requiredForSourceAbi;
+    this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
 
     this.outputJarContentsSupplier = new JarContentsSupplier(resolver, getSourcePathToOutput());
     this.abiJar = abiJar;
@@ -203,11 +212,16 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   @Override
-  public boolean getRequiredForSourceAbi() {
-    return requiredForSourceAbi;
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 
-  public void setSourceAbi(CalculateAbiFromSource sourceAbi) {
+  @Override
+  public boolean getRequiredForSourceOnlyAbi() {
+    return requiredForSourceOnlyAbi;
+  }
+
+  public void setSourceAbi(CalculateSourceAbi sourceAbi) {
     this.sourceAbi = sourceAbi;
   }
 
@@ -240,7 +254,7 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return Sets.union(fullJarDeclaredDeps, fullJarExportedDeps);
+    return firstOrderPackageableDeps;
   }
 
   @Override
@@ -341,10 +355,14 @@ public class DefaultJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
+    // TODO(jkeljo): Subtracting out provided deps is probably not the right behavior (we don't
+    // do it when assembling the contents of a java_binary), but it is long-standing and projects
+    // are depending upon it. The long term direction should be that we add an
+    // `exported_provided_deps` field and either require that a dependency be present in only one
+    // list or define a strict order of precedence among the lists (exported overrides deps
+    // overrides exported_provided overrides provided.)
     return AndroidPackageableCollector.getPackageableRules(
-        ImmutableSortedSet.copyOf(
-            Sets.difference(
-                Sets.union(fullJarDeclaredDeps, fullJarExportedDeps), fullJarProvidedDeps)));
+        ImmutableSortedSet.copyOf(Sets.difference(firstOrderPackageableDeps, fullJarProvidedDeps)));
   }
 
   @Override

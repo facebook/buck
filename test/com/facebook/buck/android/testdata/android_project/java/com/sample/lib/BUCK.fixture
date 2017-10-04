@@ -1,6 +1,6 @@
 android_library(
   name = 'lib',
-  srcs = glob(['*.java']),
+  srcs = glob(['Sample*.java']),
   deps = [
     '//res/com/sample/title:title',
     '//res/com/sample/top:top',
@@ -12,8 +12,69 @@ android_library(
 )
 
 android_library(
+  name = 'lib_with_dep_with_exported_and_provided_deps',
+  srcs = glob(['Sample*.java']),
+  deps = [
+    ':dep_with_exported_provided_dep',
+    '//res/com/sample/title:title',
+    '//res/com/sample/top:top',
+    '//res/com/sample/asset_only:asset_only',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+android_library(
+  name = 'dep_with_exported_provided_dep',
+  srcs = [
+    'Dep.java',
+  ],
+  deps = [
+    ':dep_provided_dep',
+  ],
+  exported_deps = [
+    ':exported_dep',
+    ':exported_provided_dep',
+  ],
+  provided_deps = [
+    ':dep_provided_dep',
+    ':exported_provided_dep',
+    ':provided_dep',
+  ],
+)
+
+android_library(
+  name = 'dep_provided_dep',
+  srcs = [
+    'DepProvidedDep.java',
+  ],
+)
+
+android_library(
+  name = 'exported_provided_dep',
+  srcs = [
+    'ExportedProvidedDep.java',
+  ],
+)
+
+android_library(
+  name = 'exported_dep',
+  srcs = [
+    'ExportedDep.java',
+  ],
+)
+
+android_library(
+  name = 'provided_dep',
+  srcs = [
+    'ProvidedDep.java',
+  ],
+)
+
+android_library(
   name = 'lib_using_transitive_empty_res',
-  srcs = glob(['*.java']),
+  srcs = glob(['Sample*.java']),
   deps = [
     '//res/com/sample/empty_res:empty_res',
   ],
@@ -26,6 +87,19 @@ android_library(
   name = 'lib_depending_on_main_lib',
   deps = [
     ':lib',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+robolectric_test(
+  name = 'test',
+  srcs = glob(['*.java']),
+  deps = [
+    '//res/com/sample/title:title',
+    '//res/com/sample/top:top',
+    '//res/com/sample/asset_only:asset_only',
   ],
   visibility = [
     'PUBLIC',

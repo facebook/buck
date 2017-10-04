@@ -126,9 +126,9 @@ public abstract class AbstractRuleKeyHasherTest<HASH> {
     hashes.add(newHasher().putBuildTarget(TARGET_1).hash());
     hashes.add(newHasher().putBuildTarget(TARGET_2).hash());
     hashes.add(
-        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash());
+        newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash());
     hashes.add(
-        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_2)).hash());
+        newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_2)).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 0).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.LIST, 42).hash());
     hashes.add(newHasher().putContainer(RuleKeyHasher.Container.MAP, 0).hash());
@@ -190,8 +190,8 @@ public abstract class AbstractRuleKeyHasherTest<HASH> {
     assertEquals(
         newHasher().putBuildTarget(TARGET_1).hash(), newHasher().putBuildTarget(TARGET_1).hash());
     assertEquals(
-        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash(),
-        newHasher().putBuildTargetSourcePath(new DefaultBuildTargetSourcePath(TARGET_1)).hash());
+        newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash(),
+        newHasher().putBuildTargetSourcePath(DefaultBuildTargetSourcePath.of(TARGET_1)).hash());
   }
 
   protected ArchiveMemberPath newArchiveMember(String archivePath, String memberPath) {

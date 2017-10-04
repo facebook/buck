@@ -25,14 +25,15 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -98,7 +99,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
     workspace.setUp();
@@ -239,7 +240,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib1Target = newTarget("//test:lib1");
     CxxSourceRuleFactory factory1 =
         newFactoryBuilder(lib1Target, new FakeProjectFilesystem(), "-frtti")
-            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
             .build();
     CxxPreprocessAndCompile lib1 =
         factory1.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
@@ -250,7 +251,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory factory2 =
         newFactoryBuilder(lib2Target, new FakeProjectFilesystem(), "-frtti")
-            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
             .build();
     CxxPreprocessAndCompile lib2 =
         factory2.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
@@ -261,7 +262,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib3Target = newTarget("//test:lib3");
     CxxSourceRuleFactory factory3 =
         newFactoryBuilder(lib3Target, new FakeProjectFilesystem(), "-fno-rtti")
-            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
             .build();
     CxxPreprocessAndCompile lib3 =
         factory3.requirePreprocessAndCompileBuildRule("lib3.cpp", newSource("lib3.cpp"));
@@ -304,7 +305,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget libTarget = newTarget("//test:lib");
     CxxSourceRuleFactory factory1 =
         newFactoryBuilder(libTarget, new FakeProjectFilesystem(), "-flag-for-factory")
-            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
             .build();
     CxxPreprocessAndCompile lib =
         factory1.requirePreprocessAndCompileBuildRule(
@@ -369,7 +370,7 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory lib2Factory =
         newFactoryBuilder(lib2Target, new FakeProjectFilesystem())
-            .setPrecompiledHeader(new DefaultBuildTargetSourcePath(pchTarget))
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
             .build();
     CxxPreprocessAndCompile lib2 =
         lib2Factory.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));

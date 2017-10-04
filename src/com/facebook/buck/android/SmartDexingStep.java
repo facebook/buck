@@ -17,7 +17,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -30,8 +30,8 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.RepackZipEntriesStep;
-import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;

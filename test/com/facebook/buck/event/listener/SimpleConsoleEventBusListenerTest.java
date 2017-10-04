@@ -373,10 +373,12 @@ public class SimpleConsoleEventBusListenerTest {
             TestResultSummaryVerbosity.of(false, false),
             hideSucceededRules,
             /* numberOfSlowRulesToShow */ 0,
+            false,
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(
-                ImmutableMap.copyOf(System.getenv()), System.getProperties()));
+                ImmutableMap.copyOf(System.getenv()), System.getProperties()),
+            Optional.empty());
 
     eventBus.register(listener);
   }

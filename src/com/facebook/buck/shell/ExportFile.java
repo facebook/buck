@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -167,7 +167,7 @@ public class ExportFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // allocated for the copy.
     return mode == ExportFileDescription.Mode.REFERENCE
         ? src
-        : new ExplicitBuildTargetSourcePath(getBuildTarget(), getCopiedPath());
+        : ExplicitBuildTargetSourcePath.of(getBuildTarget(), getCopiedPath());
   }
 
   @Override

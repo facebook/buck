@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
-import com.facebook.buck.io.FileScrubber;
+import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;

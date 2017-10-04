@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -173,7 +173,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public SourcePath getSourcePathToPrimaryDex() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getPrimaryDexPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPrimaryDexPath());
   }
 
   private Path getSecondaryDexRoot() {
@@ -192,17 +192,17 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     if (dexSplitMode.getDexStore() == DexStore.RAW) {
       // Raw classes*.dex files go in the top-level of the APK.
       secondaryDexDirectories.add(
-          new ExplicitBuildTargetSourcePath(getBuildTarget(), paths.jarfilesSubdir));
+          ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.jarfilesSubdir));
     } else {
       // Otherwise, we want to include the metadata and jars as assets.
       secondaryDexDirectories.add(
-          new ExplicitBuildTargetSourcePath(getBuildTarget(), paths.metadataDir));
+          ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.metadataDir));
       secondaryDexDirectories.add(
-          new ExplicitBuildTargetSourcePath(getBuildTarget(), paths.jarfilesDir));
+          ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.jarfilesDir));
     }
     //always add additional dex stores and metadata as assets
     secondaryDexDirectories.add(
-        new ExplicitBuildTargetSourcePath(getBuildTarget(), paths.additionalJarfilesDir));
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.additionalJarfilesDir));
     return secondaryDexDirectories.build();
   }
 
@@ -418,11 +418,11 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   public SourcePath getMetadataTxtSourcePath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getMetadataTxtPath());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getMetadataTxtPath());
   }
 
   public SourcePath getDexDirectorySourcePath() {
-    return new ExplicitBuildTargetSourcePath(getBuildTarget(), getDexDirectory());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getDexDirectory());
   }
 
   @Nullable

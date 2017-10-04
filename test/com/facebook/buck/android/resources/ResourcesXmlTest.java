@@ -19,7 +19,8 @@ package com.facebook.buck.android.resources;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -54,7 +55,8 @@ public class ResourcesXmlTest {
   @Before
   public void setUp() throws InterruptedException, IOException {
     filesystem =
-        new ProjectFilesystem(TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
+        TestProjectFilesystems.createProjectFilesystem(
+            TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
     apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
   }
 

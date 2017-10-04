@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.network;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.slb.SlbBuckConfig;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;

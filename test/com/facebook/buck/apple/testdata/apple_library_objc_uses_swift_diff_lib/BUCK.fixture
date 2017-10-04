@@ -1,0 +1,20 @@
+apple_library(
+    name='Foo',
+    srcs=['dummy.swift'],
+    swift_version = '4',
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    ],
+)
+
+apple_library(
+    name='Bar',
+    srcs=['Hello.m'],
+    exported_headers = ['Hello.h'],
+    deps = [
+      ':Foo',
+    ],
+    frameworks = [
+        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    ],
+)

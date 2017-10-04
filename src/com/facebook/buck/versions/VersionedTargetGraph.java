@@ -17,14 +17,21 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class VersionedTargetGraph extends TargetGraph {
@@ -70,12 +77,56 @@ public class VersionedTargetGraph extends TargetGraph {
       return this;
     }
 
+    @Nullable
+    private TargetNode<?, ?> getVersionedSubGraphParent(TargetNode<?, ?> node) {
+
+      // If this node is a root node in the versioned subgraph, there's no dependent and we return
+      // `null`.
+      if (!TargetGraphVersionTransformations.isVersionPropagator(node)
+          && !TargetGraphVersionTransformations.getVersionedNode(node).isPresent()) {
+        return null;
+      }
+
+      // Otherwise, return any dependent node.  For reproducibility/determinism, we sort the list
+      // of dependents and return the first one.
+      return Iterables.getFirst(ImmutableSortedSet.copyOf(graph.getIncomingNodesFor(node)), null);
+    }
+
+    private HumanReadableException getUnexpectedVersionedNodeError(TargetNode<?, ?> node) {
+      String msg =
+          String.format(
+              "Found versioned node %s from unversioned, top-level target:%s",
+              node.getBuildTarget(), System.lineSeparator());
+      ArrayList<TargetNode<?, ?>> trace = new ArrayList<>();
+      for (TargetNode<?, ?> n = node; n != null; n = getVersionedSubGraphParent(n)) {
+        trace.add(n);
+      }
+      msg +=
+          trace
+              .stream()
+              .map(
+                  n ->
+                      String.format(
+                          "    %s (%s)", n, Description.getBuildRuleType(n.getDescription())))
+              .collect(Collectors.joining(" depended on by" + System.lineSeparator()));
+      return new HumanReadableException(msg);
+    }
+
+    private void checkGraph(TraversableGraph<TargetNode<?, ?>> graph) {
+      for (TargetNode<?, ?> node : graph.getNodes()) {
+        if (TargetGraphVersionTransformations.getVersionedNode(node).isPresent()) {
+          throw getUnexpectedVersionedNodeError(node);
+        }
+      }
+    }
+
     public Builder addEdge(TargetNode<?, ?> src, TargetNode<?, ?> dst) {
       graph.addEdge(src, dst);
       return this;
     }
 
     public VersionedTargetGraph build() {
+      checkGraph(graph);
       return new VersionedTargetGraph(
           graph, FlavorSearchTargetNodeFinder.of(ImmutableMap.copyOf(index)));
     }

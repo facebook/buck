@@ -15,14 +15,15 @@
  */
 package com.facebook.buck.android.apkmodule;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractAPKModule implements RuleKeyAppendable, Comparable<AbstractAPKModule> {
+abstract class AbstractAPKModule implements Comparable<AbstractAPKModule>, AddsToRuleKey {
+  @AddToRuleKey
   public abstract String getName();
 
   @Value.Derived
@@ -37,11 +38,6 @@ abstract class AbstractAPKModule implements RuleKeyAppendable, Comparable<Abstra
     } else {
       return String.format("store%04x", getName().hashCode() & 0xFFFF);
     }
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("name", getName());
   }
 
   @Override

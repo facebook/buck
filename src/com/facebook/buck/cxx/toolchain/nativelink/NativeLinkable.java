@@ -94,6 +94,11 @@ public interface NativeLinkable {
    */
   ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform);
 
+  /** @return whether this {@link NativeLinkable} supports omnibus linking. */
+  default boolean supportsOmnibusLinking(@SuppressWarnings("unused") CxxPlatform cxxPlatform) {
+    return true;
+  }
+
   enum Linkage {
     ANY,
     STATIC,

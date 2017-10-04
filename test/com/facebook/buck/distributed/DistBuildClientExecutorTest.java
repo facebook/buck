@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
@@ -41,6 +41,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventType;
 import com.facebook.buck.distributed.thrift.BuildSlaveEventsQuery;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
+import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
@@ -48,7 +49,6 @@ import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveRealTimeLogsResponse;
-import com.facebook.buck.distributed.thrift.RunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.event.BuckEventBus;
@@ -164,20 +164,20 @@ public class DistBuildClientExecutorTest {
   }
 
   private BuildJob createBuildJobWithSlaves() {
-    RunId runId1 = new RunId();
-    runId1.setId("runid1");
+    BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
+    buildSlaveRunId1.setId("runid1");
     BuildSlaveInfo slaveInfo1 = new BuildSlaveInfo();
-    slaveInfo1.setRunId(runId1);
+    slaveInfo1.setBuildSlaveRunId(buildSlaveRunId1);
 
-    RunId runId2 = new RunId();
-    runId2.setId("runid2");
+    BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
+    buildSlaveRunId2.setId("runid2");
     BuildSlaveInfo slaveInfo2 = new BuildSlaveInfo();
-    slaveInfo2.setRunId(runId2);
+    slaveInfo2.setBuildSlaveRunId(buildSlaveRunId2);
 
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
-    job.putToSlaveInfoByRunId(runId1.getId(), slaveInfo1);
-    job.putToSlaveInfoByRunId(runId2.getId(), slaveInfo2);
+    job.putToSlaveInfoByRunId(buildSlaveRunId1.getId(), slaveInfo1);
+    job.putToSlaveInfoByRunId(buildSlaveRunId2.getId(), slaveInfo2);
 
     return job;
   }
@@ -186,26 +186,26 @@ public class DistBuildClientExecutorTest {
   public void testFetchingSlaveStatuses()
       throws IOException, ExecutionException, InterruptedException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds =
+    List<BuildSlaveRunId> buildSlaveRunIds =
         job.getSlaveInfoByRunId()
             .values()
             .stream()
-            .map(BuildSlaveInfo::getRunId)
+            .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
 
     BuildSlaveStatus slaveStatus0 = new BuildSlaveStatus();
     slaveStatus0.setStampedeId(stampedeId);
-    slaveStatus0.setRunId(runIds.get(0));
+    slaveStatus0.setBuildSlaveRunId(buildSlaveRunIds.get(0));
     slaveStatus0.setTotalRulesCount(5);
 
     BuildSlaveStatus slaveStatus1 = new BuildSlaveStatus();
     slaveStatus1.setStampedeId(stampedeId);
-    slaveStatus1.setRunId(runIds.get(1));
+    slaveStatus1.setBuildSlaveRunId(buildSlaveRunIds.get(1));
     slaveStatus1.setTotalRulesCount(10);
 
-    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, runIds.get(0)))
+    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunIds.get(0)))
         .andReturn(Optional.of(slaveStatus0));
-    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, runIds.get(1)))
+    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunIds.get(1)))
         .andReturn(Optional.of(slaveStatus1));
     replay(mockDistBuildService);
 
@@ -220,22 +220,22 @@ public class DistBuildClientExecutorTest {
   public void testFetchingSlaveEvents()
       throws IOException, ExecutionException, InterruptedException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds =
+    List<BuildSlaveRunId> buildSlaveRunIds =
         job.getSlaveInfoByRunId()
             .values()
             .stream()
-            .map(BuildSlaveInfo::getRunId)
+            .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
 
     // Create queries.
     BuildSlaveEventsQuery query0 = new BuildSlaveEventsQuery();
-    query0.setRunId(runIds.get(0));
+    query0.setBuildSlaveRunId(buildSlaveRunIds.get(0));
     BuildSlaveEventsQuery query1 = new BuildSlaveEventsQuery();
-    query0.setRunId(runIds.get(1));
+    query0.setBuildSlaveRunId(buildSlaveRunIds.get(1));
 
     // Create first event.
     BuildSlaveEvent event1 = new BuildSlaveEvent();
-    event1.setRunId(runIds.get(0));
+    event1.setBuildSlaveRunId(buildSlaveRunIds.get(0));
     event1.setStampedeId(stampedeId);
     event1.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
     BuildSlaveConsoleEvent consoleEvent1 = new BuildSlaveConsoleEvent();
@@ -247,7 +247,7 @@ public class DistBuildClientExecutorTest {
 
     // Create second event.
     BuildSlaveEvent event2 = new BuildSlaveEvent();
-    event2.setRunId(runIds.get(1));
+    event2.setBuildSlaveRunId(buildSlaveRunIds.get(1));
     event2.setStampedeId(stampedeId);
     event2.setEventType(BuildSlaveEventType.CONSOLE_EVENT);
     BuildSlaveConsoleEvent consoleEvent2 = new BuildSlaveConsoleEvent();
@@ -258,9 +258,9 @@ public class DistBuildClientExecutorTest {
     Pair<Integer, BuildSlaveEvent> eventWithSeqId2 = new Pair<>(1, event2);
 
     // Set expectations.
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runIds.get(0), 0))
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunIds.get(0), 0))
         .andReturn(query0);
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runIds.get(1), 0))
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunIds.get(1), 0))
         .andReturn(query1);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query0, query1)))
         .andReturn(ImmutableList.of(eventWithSeqId1, eventWithSeqId2));
@@ -272,11 +272,11 @@ public class DistBuildClientExecutorTest {
     // At the end, also test that sequence ids are being maintained properly.
     expect(
             mockDistBuildService.createBuildSlaveEventsQuery(
-                stampedeId, runIds.get(0), eventWithSeqId1.getFirst() + 1))
+                stampedeId, buildSlaveRunIds.get(0), eventWithSeqId1.getFirst() + 1))
         .andReturn(query0);
     expect(
             mockDistBuildService.createBuildSlaveEventsQuery(
-                stampedeId, runIds.get(1), eventWithSeqId2.getFirst() + 1))
+                stampedeId, buildSlaveRunIds.get(1), eventWithSeqId2.getFirst() + 1))
         .andReturn(query1);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query0, query1)))
         .andReturn(ImmutableList.of());
@@ -341,26 +341,26 @@ public class DistBuildClientExecutorTest {
   @Test
   public void testMaterializingLogDirs() throws IOException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds =
+    List<BuildSlaveRunId> buildSlaveRunIds =
         job.getSlaveInfoByRunId()
             .values()
             .stream()
-            .map(BuildSlaveInfo::getRunId)
+            .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
 
     LogDir logDir0 = new LogDir();
-    logDir0.setRunId(runIds.get(0));
+    logDir0.setBuildSlaveRunId(buildSlaveRunIds.get(0));
     logDir0.setData("Here is some data.".getBytes());
     LogDir logDir1 = new LogDir();
-    logDir1.setRunId(runIds.get(1));
+    logDir1.setBuildSlaveRunId(buildSlaveRunIds.get(1));
     logDir1.setData("Here is some more data.".getBytes());
 
     MultiGetBuildSlaveLogDirResponse logDirResponse = new MultiGetBuildSlaveLogDirResponse();
     logDirResponse.addToLogDirs(logDir0);
     logDirResponse.addToLogDirs(logDir1);
     expect(mockLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values()))
-        .andReturn(runIds);
-    expect(mockDistBuildService.fetchBuildSlaveLogDir(stampedeId, runIds))
+        .andReturn(buildSlaveRunIds);
+    expect(mockDistBuildService.fetchBuildSlaveLogDir(stampedeId, buildSlaveRunIds))
         .andReturn(logDirResponse);
     mockLogStateTracker.materializeLogDirs(ImmutableList.of(logDir0, logDir1));
     expectLastCall().once();
@@ -377,32 +377,37 @@ public class DistBuildClientExecutorTest {
   @Test
   public void testPublishingBuildSlaveFinishedStats() throws IOException {
     final BuildJob job = createBuildJobWithSlaves();
-    List<RunId> runIds =
+    List<BuildSlaveRunId> buildSlaveRunIds =
         job.getSlaveInfoByRunId()
             .values()
             .stream()
-            .map(BuildSlaveInfo::getRunId)
+            .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
 
     List<BuildSlaveFinishedStats> finishedStatsList = new ArrayList<>();
 
     // Return empty stats for the first slave and test the expected response.
-    expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, runIds.get(0)))
+    expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, buildSlaveRunIds.get(0)))
         .andReturn(Optional.empty());
     finishedStatsList.add(
         new BuildSlaveFinishedStats()
             .setBuildSlaveStatus(
-                new BuildSlaveStatus().setStampedeId(stampedeId).setRunId(runIds.get(0))));
+                new BuildSlaveStatus()
+                    .setStampedeId(stampedeId)
+                    .setBuildSlaveRunId(buildSlaveRunIds.get(0))));
 
-    for (int idx = 1; idx < runIds.size(); ++idx) {
-      RunId runId = runIds.get(idx);
+    for (int idx = 1; idx < buildSlaveRunIds.size(); ++idx) {
+      BuildSlaveRunId buildSlaveRunId = buildSlaveRunIds.get(idx);
       BuildSlaveFinishedStats finishedStats =
           new BuildSlaveFinishedStats()
-              .setBuildSlaveStatus(new BuildSlaveStatus().setStampedeId(stampedeId).setRunId(runId))
+              .setBuildSlaveStatus(
+                  new BuildSlaveStatus()
+                      .setStampedeId(stampedeId)
+                      .setBuildSlaveRunId(buildSlaveRunId))
               .setExitCode(idx);
 
       finishedStatsList.add(finishedStats);
-      expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, runId))
+      expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, buildSlaveRunId))
           .andReturn(Optional.of(finishedStats));
     }
 
@@ -434,8 +439,8 @@ public class DistBuildClientExecutorTest {
    */
   @Test
   public void testOrderlyExecution() throws IOException, InterruptedException {
-    final RunId runId = new RunId();
-    runId.setId("my-fav-runid");
+    final BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    buildSlaveRunId.setId("my-fav-runid");
     BuildJob job = new BuildJob();
     job.setStampedeId(stampedeId);
 
@@ -490,25 +495,26 @@ public class DistBuildClientExecutorTest {
 
     job = job.deepCopy(); // new copy
     BuildSlaveInfo slaveInfo1 = new BuildSlaveInfo();
-    slaveInfo1.setRunId(runId);
-    job.putToSlaveInfoByRunId(runId.getId(), slaveInfo1);
+    slaveInfo1.setBuildSlaveRunId(buildSlaveRunId);
+    job.putToSlaveInfoByRunId(buildSlaveRunId.getId(), slaveInfo1);
 
     BuildSlaveEventsQuery query = new BuildSlaveEventsQuery();
-    query.setRunId(runId);
+    query.setBuildSlaveRunId(buildSlaveRunId);
 
     BuildSlaveStatus slaveStatus = new BuildSlaveStatus();
     slaveStatus.setStampedeId(stampedeId);
-    slaveStatus.setRunId(runId);
+    slaveStatus.setBuildSlaveRunId(buildSlaveRunId);
     slaveStatus.setTotalRulesCount(5);
 
     expect(mockDistBuildService.getCurrentBuildJobState(stampedeId)).andReturn(job);
 
     expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
         .andReturn(ImmutableList.of());
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0)).andReturn(query);
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 0))
+        .andReturn(query);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
         .andReturn(ImmutableList.of());
-    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, runId))
+    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunId))
         .andReturn(Optional.empty());
 
     ////////////////////////////////////////////////////
@@ -521,12 +527,13 @@ public class DistBuildClientExecutorTest {
 
     expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
         .andReturn(ImmutableList.of());
-    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, runId))
+    expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunId))
         .andReturn(Optional.of(slaveStatus));
-    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, runId, 0)).andReturn(query);
+    expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 0))
+        .andReturn(query);
     expect(mockDistBuildService.multiGetBuildSlaveEvents(ImmutableList.of(query)))
         .andReturn(ImmutableList.of());
-    expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, runId))
+    expect(mockDistBuildService.fetchBuildSlaveFinishedStats(stampedeId, buildSlaveRunId))
         .andReturn(Optional.empty());
     mockEventBus.post(anyObject(ClientSideBuildSlaveFinishedStatsEvent.class));
     expectLastCall().times(1);

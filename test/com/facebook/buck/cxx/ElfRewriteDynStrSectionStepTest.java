@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -73,7 +73,8 @@ public class ElfRewriteDynStrSectionStepTest {
     Path lib = tmp.getRoot().getFileSystem().getPath("libfoo.so");
     ImmutableSet<String> originalStrings = readDynStr(lib);
     ElfRewriteDynStrSectionStep step =
-        ElfRewriteDynStrSectionStep.of(new ProjectFilesystem(tmp.getRoot()), lib);
+        ElfRewriteDynStrSectionStep.of(
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()), lib);
     step.execute(TestExecutionContext.newInstance());
     ImmutableSet<String> rewrittenStrings = readDynStr(lib);
     // Verify that the rewritten string table is a subset of the original.

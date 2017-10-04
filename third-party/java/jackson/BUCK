@@ -44,9 +44,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    visibility = [
-        "//src/com/facebook/buck/util:object_mapper",
-    ],
+    visibility = ["PUBLIC"],
 )
 
 prebuilt_jar(

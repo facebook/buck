@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.autodeps;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;

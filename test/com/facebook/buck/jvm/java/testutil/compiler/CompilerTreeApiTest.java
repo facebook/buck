@@ -25,10 +25,10 @@ import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
-import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -50,6 +50,9 @@ import org.junit.Rule;
 
 /** Base class for tests that want to use the Compiler Tree API exposed by javac. */
 public abstract class CompilerTreeApiTest {
+  private static final Pattern ERROR_LINE =
+      Pattern.compile("(?s)^(?<path>.*[/\\\\])?(?<message>(?<filename>[^/\\\\]+[.]java):.*)$");
+
   public interface TaskListenerFactory {
     TaskListener newTaskListener(BuckJavacTask task);
   }
@@ -219,10 +222,9 @@ public abstract class CompilerTreeApiTest {
         testCompiler
             .getDiagnosticMessages()
             .stream()
-            .map(
-                diagnosticMessage ->
-                    diagnosticMessage.substring(
-                        diagnosticMessage.lastIndexOf(File.separatorChar) + 1))
+            .map(ERROR_LINE::matcher)
+            .filter(matcher -> matcher.matches())
+            .map(matcher -> matcher.group("message"))
             .collect(Collectors.toSet()),
         Matchers.containsInAnyOrder(messages));
   }

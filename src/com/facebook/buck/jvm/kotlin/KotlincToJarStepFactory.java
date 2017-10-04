@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.io.PathOrGlobMatcher;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathFromContextFunction;

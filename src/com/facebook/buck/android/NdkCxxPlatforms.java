@@ -16,6 +16,11 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidToolchain;
+import com.facebook.buck.android.toolchain.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -34,7 +39,7 @@ import com.facebook.buck.cxx.toolchain.linker.GnuLinker;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
@@ -42,6 +47,7 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.VersionedTool;
+import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.annotations.VisibleForTesting;
@@ -194,10 +200,15 @@ public class NdkCxxPlatforms {
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
-      AndroidDirectoryResolver androidDirectoryResolver,
       Platform platform,
+      ToolchainProvider toolchainProvider,
       Optional<String> ndkVersion) {
-    Optional<Path> ndkRoot = androidDirectoryResolver.getNdkOrAbsent();
+    if (!toolchainProvider.isToolchainPresent(AndroidToolchain.DEFAULT_NAME)) {
+      return ImmutableMap.of();
+    }
+    AndroidToolchain androidToolchain =
+        toolchainProvider.getByName(AndroidToolchain.DEFAULT_NAME, AndroidToolchain.class);
+    Optional<Path> ndkRoot = androidToolchain.getAndroidNdk().map(AndroidNdk::getNdkRootPath);
     if (!ndkRoot.isPresent()) {
       return ImmutableMap.of();
     }
@@ -968,16 +979,6 @@ public class NdkCxxPlatforms {
         .addAll(DEFAULT_COMMON_COMPILER_FLAGS)
         .addAll(config.getExtraNdkCxxFlags())
         .build();
-  }
-
-  /** The CPU architectures to target. */
-  public enum TargetCpuType {
-    ARM,
-    ARMV7,
-    ARM64,
-    X86,
-    X86_64,
-    MIPS,
   }
 
   /** The build toolchain, named (including compiler version) after the target platform/arch. */

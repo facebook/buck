@@ -7,13 +7,12 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:watchman",
         "//src/com/facebook/buck/python:config",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util:watchman",
     ],
 )
 
@@ -56,7 +55,6 @@ java_immutables_library(
         ":config",
         ":rule_pattern",
         "//src-gen:thrift",
-        "//src/com/facebook/buck/cli:config",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/event:event",
@@ -65,8 +63,9 @@ java_immutables_library(
         "//src/com/facebook/buck/event/listener:BroadcastEventListener",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
         "//src/com/facebook/buck/io:watchman",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/json:json",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/model:model",
@@ -77,10 +76,8 @@ java_immutables_library(
         "//src/com/facebook/buck/rules:types",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:object_mapper",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util:watchman",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//third-party/java/concurrent-locks:concurrent-locks",
         "//third-party/java/jackson:jackson-annotations",
@@ -96,6 +93,9 @@ java_library(
         "BuildTargetPatternParser.java",
         "NoSuchBuildTargetException.java",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/model:model",
+    ],
     tests = [
         "//test/com/facebook/buck/parser:integration",
         "//test/com/facebook/buck/parser:parser",
@@ -105,7 +105,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:interfaces",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",

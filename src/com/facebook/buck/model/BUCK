@@ -22,12 +22,6 @@ SIMPLE_TYPES_SRCS = [
     "Pair.java",
 ]
 
-java_immutables_library(
-    name = "macros",
-    srcs = MACRO_SRCS,
-    visibility = ["PUBLIC"],
-)
-
 java_library(
     name = "simple_types",
     srcs = SIMPLE_TYPES_SRCS,
@@ -49,9 +43,9 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/io:BuckPaths",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io:more-paths",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/log:api",
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/util:exceptions",

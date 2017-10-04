@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -171,24 +171,23 @@ public class JavaLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(defaultOptions, buildTarget, projectFilesystem, resolver, args);
 
-    DefaultJavaLibraryBuilder defaultJavaLibraryBuilder =
-        DefaultJavaLibrary.builder(
-                targetGraph,
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
+        DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
                 projectFilesystem,
                 params,
                 resolver,
-                cellRoots,
-                javaBuckConfig)
-            .setArgs(args)
+                new JavaConfiguredCompilerFactory(javaBuckConfig),
+                javaBuckConfig,
+                args)
             .setJavacOptions(javacOptions)
-            .setTrackClassUsage(javacOptions.trackClassUsage());
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
-      return defaultJavaLibraryBuilder.buildAbi();
+      return defaultJavaLibraryRules.buildAbi();
     }
 
-    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryBuilder.build();
+    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryRules.buildLibrary();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;

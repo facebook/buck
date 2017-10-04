@@ -18,10 +18,10 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.zip.CustomZipEntry;
-import com.facebook.buck.zip.JarBuilder;
-import com.facebook.buck.zip.JarEntryContainer;
-import com.facebook.buck.zip.JarEntrySupplier;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.JarBuilder;
+import com.facebook.buck.util.zip.JarEntryContainer;
+import com.facebook.buck.util.zip.JarEntrySupplier;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;

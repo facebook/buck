@@ -16,11 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 
-public class ConstantJavacProvider implements JavacProvider {
-  private final Javac javac;
+public class ConstantJavacProvider implements JavacProvider, AddsToRuleKey {
+  @AddToRuleKey private final Javac javac;
 
   public ConstantJavacProvider(Javac javac) {
     this.javac = javac;
@@ -29,10 +30,5 @@ public class ConstantJavacProvider implements JavacProvider {
   @Override
   public Javac resolve(SourcePathRuleFinder resolver) {
     return javac;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    javac.appendToRuleKey(sink);
   }
 }

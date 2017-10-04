@@ -16,10 +16,10 @@
 
 package com.facebook.buck.ide.intellij;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.cli.parameter_extractors.ProjectViewParameters;
+import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.ProjectTestsMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.ide.intellij.model.IjProjectConfig;

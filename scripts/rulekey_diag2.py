@@ -305,7 +305,7 @@ interactive commands:
     fk <criteria>       finds and lists all the keys matching the given criteria
     fkr <criteria>      finds and lists all the reference keys matching the given criteria
                         criteria: pattern1 field1 [pattern2 field2 pattern3 field3 ...]
-                        e.g.: `fk java/com/example/my_target .name`
+                        e.g.: `fk java/com/example/my_target .target_name`
     pk <hahs>           shows rulekey composition for the given key hash
     pkr <hahs>          shows rulekey composition for the given reference key hash
     pt                  shows all the targets whose rulekey differ from the reference key hash

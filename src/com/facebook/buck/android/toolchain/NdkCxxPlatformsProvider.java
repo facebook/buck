@@ -16,53 +16,17 @@
 
 package com.facebook.buck.android.toolchain;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.NdkCxxPlatform;
-import com.facebook.buck.android.NdkCxxPlatforms;
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 
 public class NdkCxxPlatformsProvider {
 
-  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms;
+  private final ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms;
 
-  NdkCxxPlatformsProvider(
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms) {
+  public NdkCxxPlatformsProvider(ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms) {
     this.ndkCxxPlatforms = ndkCxxPlatforms;
   }
 
-  public ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms() {
+  public ImmutableMap<TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms() {
     return ndkCxxPlatforms;
-  }
-
-  public static NdkCxxPlatformsProvider create(
-      BuckConfig config,
-      ProjectFilesystem filesystem,
-      AndroidDirectoryResolver androidDirectoryResolver) {
-
-    Platform platform = Platform.detect();
-    AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-
-    Optional<String> ndkVersion = androidConfig.getNdkVersion();
-    if (!ndkVersion.isPresent()) {
-      ndkVersion = androidDirectoryResolver.getNdkVersion();
-    }
-
-    ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
-        NdkCxxPlatforms.getPlatforms(
-            cxxBuckConfig,
-            androidConfig,
-            filesystem,
-            androidDirectoryResolver,
-            platform,
-            ndkVersion);
-
-    return new NdkCxxPlatformsProvider(ndkCxxPlatforms);
   }
 }

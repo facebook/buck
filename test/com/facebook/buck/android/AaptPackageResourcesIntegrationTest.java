@@ -18,13 +18,14 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipConstants;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,7 +51,7 @@ public class AaptPackageResourcesIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test

@@ -34,7 +34,7 @@ public interface OutOfProcessJavacConnectionInterface {
    * @param pathToSrcsListAsString Path represented as String.
    * @param workingDirectory Path represented as String, or null.
    * @param pluginFields Serialized instance of {@link JavacPluginJsr199Fields} as a map.
-   * @param javaCompilationModeAsString String representation of {@link JavacCompilationMode} enum.
+   * @param abiGenerationModeAsString String representation of {@link AbiGenerationMode} enum.
    * @return ID of the invocation object
    */
   int newBuildInvocation(
@@ -46,8 +46,8 @@ public interface OutOfProcessJavacConnectionInterface {
       String pathToSrcsListAsString,
       @Nullable String workingDirectory,
       List<Map<String, Object>> pluginFields,
-      String javaCompilationModeAsString,
-      boolean requiredForSourceAbi);
+      String abiGenerationModeAsString,
+      boolean requiredForSourceOnlyAbi);
 
   int buildSourceAbiJar(int invocationId, String abiJarPath);
 

@@ -185,7 +185,7 @@ public class BuildTargetParserTest {
   public void testParseWithRepoName() {
     final Path localRepoRoot = Paths.get("/opt/local/repo");
     CellPathResolver cellRoots =
-        new DefaultCellPathResolver(
+        DefaultCellPathResolver.of(
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 

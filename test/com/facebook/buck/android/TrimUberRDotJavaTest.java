@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -83,7 +84,8 @@ public class TrimUberRDotJavaTest {
   private void doTrimingTest(
       Optional<String> keepResourcePattern, String rDotJavaContentsAfterFiltering)
       throws InterruptedException, IOException {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
@@ -118,7 +120,7 @@ public class TrimUberRDotJavaTest {
             new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary
         .getBuildOutputInitializer()
-        .setBuildOutput(
+        .setBuildOutputForTests(
             dexProducedFromJavaLibrary.initializeFromDisk(
                 new FakeOnDiskBuildInfo()
                     .putMetadata(DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "1")
