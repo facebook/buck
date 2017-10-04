@@ -264,8 +264,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    // Create the .dex files if we aren't doing pre-dexing.
-    addFinalDxSteps(context, steps);
+    if (appModularityResult.isPresent()) {
+      steps.add(createAndroidModuleConsistencyStep(context));
+    }
 
     ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
@@ -613,42 +614,38 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   /** Adds steps to do the final dexing or dex merging before building the apk. */
-  private void addFinalDxSteps(BuildContext buildContext, ImmutableList.Builder<Step> steps) {
-    Optional<Path> proguardFullConfigFile = Optional.empty();
-    Optional<Path> proguardMappingFile = Optional.empty();
-    if (shouldProguard) {
-      Path proguardConfigDir = getProguardTextFilesPath();
-      proguardFullConfigFile = Optional.of(proguardConfigDir.resolve("configuration.txt"));
-      proguardMappingFile = Optional.of(proguardConfigDir.resolve("mapping.txt"));
-    }
+  private AndroidModuleConsistencyStep createAndroidModuleConsistencyStep(
+      BuildContext buildContext) {
+    Optional<Path> proguardConfigDir =
+        shouldProguard ? Optional.of(getProguardTextFilesPath()) : Optional.empty();
+    Optional<Path> proguardFullConfigFile =
+        proguardConfigDir.map(p -> p.resolve("configuration.txt"));
+    Optional<Path> proguardMappingFile = proguardConfigDir.map(p -> p.resolve("mapping.txt"));
 
-    if (appModularityResult.isPresent()) {
-      ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-          moduleMappedClasspathEntriesForConsistency
-              .get()
-              .entrySet()
-              .stream()
-              .flatMap(
-                  entry ->
-                      entry
-                          .getValue()
-                          .stream()
-                          .map(
-                              v ->
-                                  new AbstractMap.SimpleEntry<>(
-                                      entry.getKey(),
-                                      buildContext.getSourcePathResolver().getAbsolutePath(v))))
-              .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
+    ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
+        moduleMappedClasspathEntriesForConsistency
+            .get()
+            .entrySet()
+            .stream()
+            .flatMap(
+                entry ->
+                    entry
+                        .getValue()
+                        .stream()
+                        .map(
+                            v ->
+                                new AbstractMap.SimpleEntry<>(
+                                    entry.getKey(),
+                                    buildContext.getSourcePathResolver().getAbsolutePath(v))))
+            .collect(MoreCollectors.toImmutableMultimap(e -> e.getKey(), e -> e.getValue()));
 
-      steps.add(
-          AndroidModuleConsistencyStep.ensureModuleConsistency(
-              buildContext.getSourcePathResolver().getRelativePath(appModularityResult.get()),
-              additionalDexStoreToJarPathMap,
-              filesystem,
-              proguardFullConfigFile,
-              proguardMappingFile,
-              skipProguard));
-    }
+    return AndroidModuleConsistencyStep.ensureModuleConsistency(
+        buildContext.getSourcePathResolver().getRelativePath(appModularityResult.get()),
+        additionalDexStoreToJarPathMap,
+        filesystem,
+        proguardFullConfigFile,
+        proguardMappingFile,
+        skipProguard);
   }
 
   public ProjectFilesystem getProjectFilesystem() {
