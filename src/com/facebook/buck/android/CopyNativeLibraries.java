@@ -73,6 +73,7 @@ import org.immutables.value.Value;
 public class CopyNativeLibraries extends AbstractBuildRule implements SupportsInputBasedRuleKey {
   @AddToRuleKey private final ImmutableSet<TargetCpuType> cpuFilters;
   @AddToRuleKey private final ImmutableSet<SourcePath> nativeLibDirectories;
+  @AddToRuleKey private final ImmutableSet<SourcePath> nativeLibAssetDirectories;
   @AddToRuleKey private final ImmutableSet<StrippedObjectDescription> stripLibRules;
   @AddToRuleKey private final ImmutableSet<StrippedObjectDescription> stripLibAssetRules;
   @AddToRuleKey private final String moduleName;
@@ -86,6 +87,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
       ImmutableSet<StrippedObjectDescription> strippedLibs,
       ImmutableSet<StrippedObjectDescription> strippedLibsAssets,
       ImmutableSet<SourcePath> nativeLibDirectories,
+      ImmutableSet<SourcePath> nativeLibAssetDirectories,
       ImmutableSet<TargetCpuType> cpuFilters,
       String moduleName) {
     super(buildTarget, projectFilesystem);
@@ -93,6 +95,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
         !nativeLibDirectories.isEmpty() || !strippedLibs.isEmpty() || !strippedLibsAssets.isEmpty(),
         "There should be at least one native library to copy.");
     this.nativeLibDirectories = nativeLibDirectories;
+    this.nativeLibAssetDirectories = nativeLibAssetDirectories;
     this.stripLibRules = strippedLibs;
     this.stripLibAssetRules = strippedLibsAssets;
     this.cpuFilters = cpuFilters;
@@ -224,6 +227,16 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
           getProjectFilesystem(),
           context.getSourcePathResolver().getAbsolutePath(nativeLibDir),
           pathToNativeLibs,
+          cpuFilters,
+          steps);
+    }
+
+    for (SourcePath nativeLibDir : nativeLibAssetDirectories.asList().reverse()) {
+      copyNativeLibrary(
+          context,
+          getProjectFilesystem(),
+          context.getSourcePathResolver().getAbsolutePath(nativeLibDir),
+          pathToNativeLibsAssets,
           cpuFilters,
           steps);
     }

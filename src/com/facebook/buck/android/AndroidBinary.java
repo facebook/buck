@@ -251,7 +251,6 @@ public class AndroidBinary extends AbstractBuildRule
             redexOptions
                 .map(options -> enhancementResult.getAdditionalRedexInputs())
                 .orElse(ImmutableList.of()),
-            this.cpuFilters,
             exopackageModes,
             enhancementResult,
             xzCompressionLevel,

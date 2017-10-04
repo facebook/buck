@@ -307,6 +307,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableCollection<SourcePath> nativeLibsDirectories =
           packageableCollection.getNativeLibsDirectories().get(module);
 
+      ImmutableCollection<SourcePath> nativeLibsAssetsDirectories =
+          packageableCollection.getNativeLibAssetsDirectories().get(module);
+
       if (filteredStrippedLibsMap.isEmpty()
           && filteredStrippedLibsAssetsMap.isEmpty()
           && nativeLibsDirectories.isEmpty()) {
@@ -319,7 +322,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               module,
               filteredStrippedLibsMap,
               filteredStrippedLibsAssetsMap,
-              nativeLibsDirectories));
+              nativeLibsDirectories,
+              nativeLibsAssetsDirectories));
       hasCopyNativeLibraries = true;
     }
     return resultBuilder
@@ -362,7 +366,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       APKModule module,
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap,
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap,
-      ImmutableCollection<SourcePath> nativeLibsDirectories) {
+      ImmutableCollection<SourcePath> nativeLibsDirectories,
+      ImmutableCollection<SourcePath> nativeLibAssetsDirectories) {
     return new CopyNativeLibraries(
         originalBuildTarget.withAppendedFlavors(
             InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName())),
@@ -371,6 +376,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         ImmutableSet.copyOf(filteredStrippedLibsMap.values()),
         ImmutableSet.copyOf(filteredStrippedLibsAssetsMap.values()),
         ImmutableSet.copyOf(nativeLibsDirectories),
+        ImmutableSet.copyOf(nativeLibAssetsDirectories),
         cpuFilters,
         module.getName());
   }

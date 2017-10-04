@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -256,14 +255,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
         packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();
-    if (nativeLibrariesOptional.isPresent()
-        && nativeLibrariesOptional.get().containsKey(apkModuleGraph.getRootAPKModule())) {
-      aarExtraDepsBuilder.add(
-          resolver.addToIndex(
-              nativeLibrariesOptional.get().get(apkModuleGraph.getRootAPKModule())));
-    }
-
-    Optional<Path> assembledNativeLibsDir =
+    Optional<CopyNativeLibraries> rootModuleCopyNativeLibraries =
         nativeLibrariesOptional.map(
             input -> {
               // there will be only one value for the root module
@@ -273,8 +265,13 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
                 throw new HumanReadableException(
                     "Native libraries are present but not in the root application module.");
               }
-              return copyNativeLibraries.getPathToNativeLibsDir();
+              aarExtraDepsBuilder.add(copyNativeLibraries);
+              return copyNativeLibraries;
             });
+    Optional<SourcePath> assembledNativeLibsDir =
+        rootModuleCopyNativeLibraries.map(cnl -> cnl.getSourcePathToNativeLibsDir());
+    Optional<SourcePath> assembledNativeLibsAssetsDir =
+        rootModuleCopyNativeLibraries.map(cnl -> cnl.getSourcePathToNativeLibsAssetsDir());
     BuildRuleParams androidAarParams =
         originalBuildRuleParams.withExtraDeps(aarExtraDepsBuilder.build());
     return new AndroidAar(
@@ -286,7 +283,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
         assembleResourceDirectories.getSourcePathToOutput(),
         assembleAssetsDirectories.getSourcePathToOutput(),
         assembledNativeLibsDir,
-        ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()),
+        assembledNativeLibsAssetsDir,
         classpathToIncludeInAar.build());
   }
 

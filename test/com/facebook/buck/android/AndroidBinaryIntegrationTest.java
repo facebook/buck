@@ -242,6 +242,20 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testPrebuiltNativeLibraryIsIncluded() throws IOException {
+    Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_prebuilt_native_libs");
+    ZipInspector zipInspector = new ZipInspector(output);
+    zipInspector.assertFileExists("lib/armeabi/libprebuilt.so");
+  }
+
+  @Test
+  public void testPrebuiltNativeLibraryAsAssetIsIncluded() throws IOException {
+    Path output = workspace.buildAndReturnOutput("//apps/sample:app_with_prebuilt_native_libs");
+    ZipInspector zipInspector = new ZipInspector(output);
+    zipInspector.assertFileExists("assets/lib/armeabi/libprebuilt_asset.so");
+  }
+
+  @Test
   public void testEditingNdkLibraryForcesRebuild() throws IOException, InterruptedException {
     String apkWithNdkLibrary = "//apps/sample:app_with_ndk_library";
     Path output = workspace.buildAndReturnOutput(apkWithNdkLibrary);

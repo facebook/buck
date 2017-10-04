@@ -5,3 +5,17 @@ ndk_library(
   ],
   visibility = ['PUBLIC'],
 )
+
+prebuilt_native_library(
+  name = 'prebuilt_native',
+  native_libs = 'prebuilt',
+  is_asset = False,
+  visibility = ['PUBLIC'],
+)
+
+prebuilt_native_library(
+  name = 'prebuilt_native_asset',
+  native_libs = 'prebuilt_asset',
+  is_asset = True,
+  visibility = ['PUBLIC'],
+)
