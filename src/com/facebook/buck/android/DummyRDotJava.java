@@ -371,6 +371,11 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
+  public boolean jarContains(String path) {
+    return outputJarContentsSupplier.jarContains(path);
+  }
+
+  @Override
   public Optional<BuildTarget> getAbiJar() {
     return Optional.of(getBuildTarget());
   }

@@ -28,6 +28,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.zip.Unzip;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -89,6 +90,8 @@ public interface HasJavaAbi {
 
   ImmutableSortedSet<SourcePath> getJarContents();
 
+  boolean jarContains(String path);
+
   /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
   default Optional<BuildTarget> getAbiJar() {
     return Optional.of(getBuildTarget().withAppendedFlavors(CLASS_ABI_FLAVOR));
@@ -98,6 +101,7 @@ public interface HasJavaAbi {
     private final SourcePathResolver resolver;
     @Nullable private final SourcePath jarSourcePath;
     @Nullable private ImmutableSortedSet<SourcePath> contents;
+    @Nullable private ImmutableSet<String> contentPaths;
 
     public JarContentsSupplier(SourcePathResolver resolver, @Nullable SourcePath jarSourcePath) {
       this.resolver = resolver;
@@ -127,11 +131,28 @@ public interface HasJavaAbi {
                   .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
                   .collect(MoreCollectors.toImmutableSortedSet());
         }
+        contentPaths =
+            contents
+                .stream()
+                .map(
+                    sourcePath -> {
+                      if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+                        return ((ExplicitBuildTargetSourcePath) sourcePath).getResolvedPath();
+                      } else {
+                        return ((ArchiveMemberSourcePath) sourcePath).getMemberPath();
+                      }
+                    })
+                .map(Path::toString)
+                .collect(MoreCollectors.toImmutableSet());
       }
     }
 
     public ImmutableSortedSet<SourcePath> get() {
       return Preconditions.checkNotNull(contents, "Must call load first.");
+    }
+
+    public boolean jarContains(String path) {
+      return contentPaths.contains(path);
     }
   }
 }

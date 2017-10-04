@@ -94,6 +94,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public boolean jarContains(String path) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return srcs;
   }

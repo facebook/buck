@@ -138,6 +138,11 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean jarContains(String path) {
+    return abiJarContentsSupplier.jarContains(path);
+  }
+
+  @Override
   public Object initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     abiJarContentsSupplier.load();

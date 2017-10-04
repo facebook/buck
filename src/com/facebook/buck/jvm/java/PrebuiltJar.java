@@ -309,6 +309,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean jarContains(String path) {
+    return binaryJarContentsSupplier.jarContains(path);
+  }
+
+  @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
   }

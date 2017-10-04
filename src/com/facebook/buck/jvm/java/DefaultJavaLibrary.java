@@ -323,6 +323,11 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     return outputJarContentsSupplier.get();
   }
 
+  @Override
+  public boolean jarContains(String path) {
+    return outputJarContentsSupplier.jarContains(path);
+  }
+
   /** Instructs this rule to report the ABI it has on disk as its current ABI. */
   @Override
   public JavaLibrary.Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {

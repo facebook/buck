@@ -110,4 +110,9 @@ public class CompareAbis extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableSortedSet<SourcePath> getJarContents() {
     return outputPathContentsSupplier.get();
   }
+
+  @Override
+  public boolean jarContains(String path) {
+    return outputPathContentsSupplier.jarContains(path);
+  }
 }

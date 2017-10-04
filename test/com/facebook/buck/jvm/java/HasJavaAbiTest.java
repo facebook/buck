@@ -51,6 +51,11 @@ public class HasJavaAbiTest {
       public ImmutableSortedSet<SourcePath> getJarContents() {
         throw new UnsupportedOperationException();
       }
+
+      @Override
+      public boolean jarContains(String path) {
+        throw new UnsupportedOperationException();
+      }
     };
   }
 }
