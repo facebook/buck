@@ -23,6 +23,7 @@
 <h3>3.3</h3>
 <ul>
   <li>"Optimize Imports" now removes duplicate dependencies.</li>
+  <li>The paste code will not transform text if within a non-empty string.</li>
 </ul>
 
 <h3>3.2</h3>

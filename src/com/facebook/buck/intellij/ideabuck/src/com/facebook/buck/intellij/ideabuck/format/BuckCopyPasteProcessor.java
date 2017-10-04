@@ -23,6 +23,7 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.intellij.codeInsight.editorActions.CopyPastePreProcessor;
+import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.RawText;
@@ -38,8 +39,10 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.TokenType;
+import com.intellij.psi.impl.source.tree.TreeElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiUtilCore;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,14 +80,34 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
       return text;
     }
 
-    if (BuckPsiUtils.hasElementType(
-        element.getNode(),
-        TokenType.WHITE_SPACE,
-        BuckTypes.SINGLE_QUOTED_STRING,
-        BuckTypes.DOUBLE_QUOTED_STRING)) {
+    ASTNode elementNode = element.getNode();
+    // A simple test of the element type
+    boolean isQuotedString =
+        BuckPsiUtils.hasElementType(
+            elementNode, BuckTypes.SINGLE_QUOTED_STRING, BuckTypes.DOUBLE_QUOTED_STRING);
+    // isQuotedString will be true if the caret is under the left quote, the right quote,
+    // or anywhere in between. But pasting with caret under the left quote acts differently than
+    // pasting in other isQuotedString positions: Text will be inserted before the quotes, not
+    // inside them
+    boolean inQuotedString = false;
+    if (isQuotedString) {
+      inQuotedString =
+          element instanceof TreeElement
+              && ((TreeElement) element).getStartOffset() < selectionStart;
+    }
+    if (isQuotedString || BuckPsiUtils.hasElementType(elementNode, TokenType.WHITE_SPACE)) {
+      if (inQuotedString) {
+        // We want to impose the additional requirement that the string is currently empty. That is,
+        // if you are pasting into an existing target, we don't want to process the paste text.
+        String elementText = elementNode.getText().trim();
+        if (!(elementText.equals("''") || elementText.equals("\"\""))) {
+          return text;
+        }
+      }
+
       PsiElement property = BuckPsiUtils.findAncestorWithType(element, BuckTypes.PROPERTY);
       if (checkPropertyName(property)) {
-        return formatPasteText(text, element, project);
+        return formatPasteText(text, element, project, inQuotedString);
       }
     }
     return text;
@@ -141,7 +164,8 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
    * <p>Multiline pastes: {@code "import com.foo.Foo;\nimport com.bar.Bar;" ->
    * "//java/com/foo:foo\n//java/com/bar:bar"}
    */
-  private String formatPasteText(String text, PsiElement element, Project project) {
+  private String formatPasteText(
+      String text, PsiElement element, Project project, boolean inQuotedString) {
     Iterable<String> paths = Splitter.on('\n').trimResults().omitEmptyStrings().split(text);
     List<String> results = new ArrayList<>();
     for (String path : paths) {
@@ -149,7 +173,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
 
       Matcher matcher = UNSOLVED_DEPENDENCY_PATTERN.matcher(path);
       if (matcher.matches()) {
-        resolution = resolveUnsolvedBuckDependency(element, project, matcher.group(2));
+        resolution = resolveUnsolvedBuckDependency(project, matcher.group(2));
       } else if (SOLVED_DEPENDENCY_PATTERN.matcher(path).matches()) {
         resolution = buildSolvedBuckDependency(path);
       } // else we don't know how to format this
@@ -158,6 +182,18 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         // Any non-target results in no formatting
         return text;
       }
+
+      // We have text to paste - figure out if we should wrap it in "\"%s\","
+      IElementType elementType = element.getNode().getElementType();
+
+      // Is the cursor in whitespace?
+      boolean whitespace = elementType == TokenType.WHITE_SPACE;
+
+      // If the cursor is in whitespace, or under a left quote, then we should wrap the paste text
+      if (whitespace || !inQuotedString) {
+        resolution = "\"" + resolution + "\",";
+      }
+
       results.add(resolution);
     }
     return Joiner.on('\n').skipNulls().join(results);
@@ -165,7 +201,6 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
 
   private String buildSolvedBuckDependency(String path) {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append('"');
     if (!(path.startsWith("//") || path.startsWith(":"))) {
       if (path.startsWith("/")) {
         stringBuilder.append('/');
@@ -173,11 +208,11 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         stringBuilder.append("//");
       }
     }
-    return stringBuilder.append(path).append("\",").toString();
+    return stringBuilder.append(path).toString();
   }
 
   @Nullable
-  private String resolveUnsolvedBuckDependency(PsiElement element, Project project, String path) {
+  private String resolveUnsolvedBuckDependency(Project project, String path) {
     VirtualFile buckFile = referenceNameToBuckFile(project, path);
     if (buckFile != null) {
       path = buckFile.getPath().replaceFirst(project.getBasePath(), "");
@@ -191,9 +226,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         String lastWord = path.substring(path.lastIndexOf("/") + 1, path.length());
         path += ":" + lastWord;
       }
-      if (element.getNode().getElementType() == TokenType.WHITE_SPACE) {
-        path = "\"" + path + "\",";
-      }
+
       return path;
     } else {
       return null;

@@ -26,6 +26,8 @@ import java.io.IOException;
 public class BuckCopyPasteProcessorTest extends BuckTestCase {
 
   private static final String FIXTURE = ".fixture";
+  private static final String BUCK = "BUCK";
+  private static final String DOT_BUCK = "." + BUCK;
 
   private void doTest(String pasteText, String expected, String... testdata) throws Exception {
     if (testdata != null && testdata.length > 0) {
@@ -35,15 +37,15 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
 
         for (PsiFile file : files) {
           String name = file.getName();
-          if (name.endsWith(FIXTURE)) {
+          String newName = maybeRenameFixture(name);
+          if (name != newName) {
             // Rename, without the .fixture extension
-            String shortName = name.substring(0, name.length() - FIXTURE.length());
             VirtualFile fixture = file.getVirtualFile();
             Exception[] inWriteAction = new Exception[1]; // we (may) set [0] in a lambda
             application.runWriteAction(
                 () -> {
                   try {
-                    fixture.rename(this, shortName);
+                    fixture.rename(this, newName);
                   } catch (IOException e) {
                     inWriteAction[0] = e;
                   }
@@ -64,6 +66,18 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
         processor.preprocessOnPaste(
             getProject(), myFixture.getFile(), myFixture.getEditor(), pasteText, null);
     assertEquals(expected, actual);
+  }
+
+  private static String maybeRenameFixture(String name) {
+    if (name.endsWith(FIXTURE)) {
+      return name.substring(0, name.length() - FIXTURE.length());
+    }
+
+    if (name.endsWith(DOT_BUCK)) {
+      return BUCK;
+    }
+
+    return name;
   }
 
   public void testPasteSingleTarget1() throws Exception {
@@ -95,7 +109,9 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
 
   // region BuckCopyPasteProcessor.formatPasteText examples
 
-  private static final String EXPECTED = "\"//src/com/example/activity:activity\",";
+  private static final String RAW_TARGET = "//src/com/example/activity:activity";
+  private static final String WRAPPED_TARGET = "\"" + RAW_TARGET + "\",";
+  private static final String UNQUALIFIED = "MyFirstActivity";
 
   private static final String[] TESTDATA =
       new String[] {
@@ -103,25 +119,26 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
       };
 
   public void testPasteImportStatement() throws Exception {
-    doTest("import com.example.activity.MyFirstActivity", EXPECTED, TESTDATA);
+    doTest("import com.example.activity.MyFirstActivity", WRAPPED_TARGET, TESTDATA);
   }
 
   public void testPastePackageStatement() throws Exception {
-    doTest("package com.example.activity;", EXPECTED, TESTDATA);
+    doTest("package com.example.activity;", WRAPPED_TARGET, TESTDATA);
   }
 
   public void testPasteShortClassname() throws Exception {
-    // This is not actually one of the examples. This will only work if there is one and only one
-    // match to the short name.
-    doTest("MyFirstActivity", EXPECTED, TESTDATA);
+    // This is not actually one of the examples. This test will only work if there is one and
+    // only one match to the short name.
+
+    doTest(UNQUALIFIED, WRAPPED_TARGET, TESTDATA);
   }
 
   public void testPasteQualifiedClassname() throws Exception {
-    doTest("com.example.activity.MyFirstActivity", EXPECTED, TESTDATA);
+    doTest("com.example.activity.MyFirstActivity", WRAPPED_TARGET, TESTDATA);
   }
 
   public void testPasteBuckPath() throws Exception {
-    doTest("/src/com/example/activity/BUCK", EXPECTED, TESTDATA);
+    doTest("/src/com/example/activity/BUCK", WRAPPED_TARGET, TESTDATA);
   }
 
   public void testPasteTarget() throws Exception {
@@ -129,4 +146,61 @@ public class BuckCopyPasteProcessorTest extends BuckTestCase {
   }
 
   // endregion BuckCopyPasteProcessor.formatPasteText examples
+
+  // region Context sensitivity tests
+
+  // 1. we should only transform text if the cursor is in a deps or visibility array AND
+  // 2. if the cursor is in whitespace or within an empty string
+
+  public void testUnqualifiedContext() throws Exception {
+    // caret to left of double-quoted string
+    doTest(
+        UNQUALIFIED,
+        WRAPPED_TARGET,
+        "com/example/activity/left.BUCK",
+        "com/example/activity/MyFirstActivity.java");
+
+    // caret in empty double-quoted string
+    doTest(
+        UNQUALIFIED,
+        RAW_TARGET,
+        "com/example/activity/in.BUCK",
+        "com/example/activity/MyFirstActivity.java");
+
+    // caret under comma after double-quoted string
+    doTest(
+        UNQUALIFIED,
+        UNQUALIFIED,
+        "com/example/activity/right.BUCK",
+        "com/example/activity/MyFirstActivity.java");
+
+    // caret in populated double-quoted string
+    doTest(
+        UNQUALIFIED,
+        UNQUALIFIED,
+        "com/example/activity/nonempty.BUCK",
+        "com/example/activity/MyFirstActivity.java");
+  }
+
+  public void testQualifiedContext() throws Exception {
+    final String qualified = "//apps/myapp:app";
+    final String wrapped = "\"//apps/myapp:app\",";
+
+    // caret to left of double-quoted string
+    doTest(qualified, wrapped, "com/example/activity/left.BUCK");
+
+    // caret to left of non-empty, double-quoted string
+    doTest(qualified, wrapped, "com/example/activity/left_of_nonempty_string.BUCK");
+
+    // caret in empty double-quoted string
+    doTest(qualified, qualified, "com/example/activity/in.BUCK");
+
+    // caret under comma after double-quoted string
+    doTest(qualified, qualified, "com/example/activity/right.BUCK");
+
+    // caret in populated double-quoted string
+    doTest(qualified, qualified, "com/example/activity/nonempty.BUCK");
+  }
+
+  // endregion Context sensitivity tests
 }

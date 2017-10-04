@@ -3,6 +3,6 @@ java_library(
     srcs = glob(["**.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//third-party/java/guava:guava",   <caret>
+        <caret>"//third-party/java/guava:guava",
     ],
 )
