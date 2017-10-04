@@ -141,7 +141,7 @@ public class JavacStep implements Step {
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getPathToSourcesList(),
                   compilerParameters.getWorkingDirectory(),
-                  javacOptions.getAbiGenerationMode(),
+                  compilerParameters.getAbiGenerationMode(),
                   compilerParameters.getSourceOnlyAbiRuleInfo())) {
         if (abiJar != null) {
           declaredDepsBuildResult =

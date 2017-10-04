@@ -128,12 +128,6 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     return false;
   }
 
-  @Value.Default
-  @AddToRuleKey
-  public AbiGenerationMode getAbiGenerationMode() {
-    return AbiGenerationMode.CLASS;
-  }
-
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
     if (getBootclasspath().isPresent()) {
       String bootclasspath = getBootclasspath().get();

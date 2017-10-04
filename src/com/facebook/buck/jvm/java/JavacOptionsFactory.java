@@ -47,15 +47,6 @@ public final class JavacOptionsFactory {
       builder.setTargetLevel(jvmLibraryArg.getTarget().get());
     }
 
-    if (jvmLibraryArg.getGenerateSourceOnlyAbi().isPresent()
-        && !jvmLibraryArg.getGenerateSourceOnlyAbi().get()) {
-      // This parameter can only be used to turn off source-only ABI generation where it would
-      // otherwise be employed.
-      AbiGenerationMode defaultMode = defaultOptions.getAbiGenerationMode();
-      builder.setAbiGenerationMode(
-          defaultMode == AbiGenerationMode.SOURCE_ONLY ? AbiGenerationMode.SOURCE : defaultMode);
-    }
-
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
     AnnotationProcessingParams annotationParams =

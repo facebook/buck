@@ -58,6 +58,11 @@ abstract class AbstractCompilerParameters {
   public abstract Path getAbiJarPath();
 
   @Value.Default
+  public AbiGenerationMode getAbiGenerationMode() {
+    return AbiGenerationMode.CLASS;
+  }
+
+  @Value.Default
   public boolean shouldTrackClassUsage() {
     return false;
   }

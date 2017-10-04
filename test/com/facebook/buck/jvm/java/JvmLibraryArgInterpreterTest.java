@@ -44,12 +44,7 @@ public class JvmLibraryArgInterpreterTest {
 
   @Before
   public void createHelpers() throws Exception {
-    defaults =
-        JavacOptions.builder()
-            .setSourceLevel("8")
-            .setTargetLevel("8")
-            .setAbiGenerationMode(AbiGenerationMode.CLASS)
-            .build();
+    defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
 
     ruleResolver =
         new SingleThreadedBuildRuleResolver(
@@ -149,40 +144,6 @@ public class JvmLibraryArgInterpreterTest {
   public void testNoJavacSpecIfNoJavacArg() {
     JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").build();
     assertNull(arg.getJavacSpec());
-  }
-
-  @Test
-  public void sourceOnlyAbiGenerationCanBeDisabledPerTarget() {
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setGenerateSourceOnlyAbi(false).build();
-    defaults = defaults.withAbiGenerationMode(AbiGenerationMode.SOURCE_ONLY);
-
-    JavacOptions options = createJavacOptions(arg);
-
-    assertEquals(options.getAbiGenerationMode(), AbiGenerationMode.SOURCE);
-  }
-
-  @Test
-  public void disablingSourceOnlyAbiDoesNotChangeOtherSettings() {
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setGenerateSourceOnlyAbi(false).build();
-    defaults = defaults.withAbiGenerationMode(AbiGenerationMode.CLASS);
-
-    JavacOptions options = createJavacOptions(arg);
-
-    assertEquals(options.getAbiGenerationMode(), AbiGenerationMode.CLASS);
-  }
-
-  @Test
-  public void sourceOnlyAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
-    assertEquals(defaults.getAbiGenerationMode(), AbiGenerationMode.CLASS);
-
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setGenerateSourceOnlyAbi(true).build();
-
-    JavacOptions options = createJavacOptions(arg);
-
-    assertEquals(options.getAbiGenerationMode(), AbiGenerationMode.CLASS);
   }
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {

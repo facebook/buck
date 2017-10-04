@@ -89,16 +89,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
     builder.setTrackClassUsage(trackClassUsage());
 
-    AbiGenerationMode abiGenerationMode = getAbiGenerationMode();
-    builder.setAbiGenerationMode(abiGenerationMode);
-    if (abiGenerationMode.isSourceAbi()) {
-      builder.setSpoolMode(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR);
-    } else {
-      Optional<AbstractJavacOptions.SpoolMode> spoolMode =
-          delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
-      if (spoolMode.isPresent()) {
-        builder.setSpoolMode(spoolMode.get());
-      }
+    Optional<AbstractJavacOptions.SpoolMode> spoolMode =
+        delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
+    if (spoolMode.isPresent()) {
+      builder.setSpoolMode(spoolMode.get());
     }
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);

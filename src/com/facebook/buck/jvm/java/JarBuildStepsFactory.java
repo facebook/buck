@@ -66,6 +66,7 @@ public class JarBuildStepsFactory
   private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
+  @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
   @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
 
   public JarBuildStepsFactory(
@@ -81,6 +82,7 @@ public class JarBuildStepsFactory
       boolean trackClassUsage,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
+      AbiGenerationMode abiGenerationMode,
       @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
@@ -94,6 +96,7 @@ public class JarBuildStepsFactory
     this.trackClassUsage = trackClassUsage;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
+    this.abiGenerationMode = abiGenerationMode;
     this.ruleInfo = ruleInfo;
   }
 
@@ -144,6 +147,7 @@ public class JarBuildStepsFactory
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(false)
             .setShouldGenerateAbiJar(true)
+            .setAbiGenerationMode(abiGenerationMode)
             .setSourceOnlyAbiRuleInfo(ruleInfo)
             .build();
 
@@ -180,6 +184,7 @@ public class JarBuildStepsFactory
             .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(trackClassUsage)
+            .setAbiGenerationMode(abiGenerationMode)
             .setSourceOnlyAbiRuleInfo(ruleInfo)
             .build();
 

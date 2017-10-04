@@ -204,16 +204,32 @@ public abstract class DefaultJavaLibraryRules {
     return null;
   }
 
-  private boolean willProduceOutputJar() {
+  private boolean willProduceAbiJar() {
     return !getSrcs().isEmpty() || !getResources().isEmpty() || getManifestFile().isPresent();
   }
 
+  @Value.Lazy
+  AbiGenerationMode getAbiGenerationMode() {
+    AbiGenerationMode result =
+        Preconditions.checkNotNull(getJavaBuckConfig()).getAbiGenerationMode();
+
+    if (result == AbiGenerationMode.CLASS) {
+      return result;
+    }
+
+    if (!shouldBuildSourceAbi()) {
+      return AbiGenerationMode.CLASS;
+    }
+
+    return result;
+  }
+
   private boolean willProduceSourceAbi() {
-    return willProduceOutputJar() && shouldBuildSourceAbi();
+    return willProduceAbiJar() && getAbiGenerationMode().isSourceAbi();
   }
 
   private boolean willProduceClassAbi() {
-    return willProduceOutputJar() && (!willProduceSourceAbi() || willProduceCompareAbis());
+    return willProduceAbiJar() && (!willProduceSourceAbi() || willProduceCompareAbis());
   }
 
   private boolean willProduceCompareAbis() {
@@ -376,6 +392,7 @@ public abstract class DefaultJavaLibraryRules {
         getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
         classpaths.getCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
+        getAbiGenerationMode(),
         getSourceOnlyAbiRuleInfo());
   }
 

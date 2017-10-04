@@ -396,35 +396,7 @@ public class JavaBuckConfigTest {
   @Test
   public void testCompileFullJarsByDefault() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(options.getAbiGenerationMode(), Matchers.equalTo(AbiGenerationMode.CLASS));
-  }
-
-  @Test
-  public void testSourceABI() throws IOException {
-    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(options.getAbiGenerationMode(), Matchers.equalTo(AbiGenerationMode.SOURCE));
-  }
-
-  @Test
-  public void testMigratingToSourceOnlyABI() throws IOException {
-    String content =
-        Joiner.on('\n').join("[java]", "    abi_generation_mode = migrating_to_source_only");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(
-        options.getAbiGenerationMode(),
-        Matchers.equalTo(AbiGenerationMode.MIGRATING_TO_SOURCE_ONLY));
-  }
-
-  @Test
-  public void testSourceOnlyABI() throws IOException {
-    String content = Joiner.on('\n').join("[java]", "    abi_generation_mode = source_only");
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
-    JavacOptions options = config.getDefaultJavacOptions();
-    assertThat(options.getAbiGenerationMode(), Matchers.equalTo(AbiGenerationMode.SOURCE_ONLY));
+    assertThat(config.getAbiGenerationMode(), Matchers.equalTo(AbiGenerationMode.CLASS));
   }
 
   private void assertOptionKeyAbsent(JavacOptions options, String key) {
