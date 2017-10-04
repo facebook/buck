@@ -19,29 +19,38 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
-  private final JavaFileManager fileManager;
   private final BuildTarget buildTarget;
   private final boolean ruleIsRequiredForSourceOnlyAbi;
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
 
+  @Nullable private JavaFileManager fileManager;
+
   public DefaultSourceOnlyAbiRuleInfo(
-      JavaFileManager fileManager,
-      BuildTarget buildTarget,
-      boolean ruleIsRequiredForSourceOnlyAbi) {
-    this.fileManager = fileManager;
+      BuildTarget buildTarget, boolean ruleIsRequiredForSourceOnlyAbi) {
     this.buildTarget = buildTarget;
     this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
+  }
+
+  @Override
+  public void setFileManager(JavaFileManager fileManager) {
+    this.fileManager = fileManager;
+  }
+
+  private JavaFileManager getFileManager() {
+    return Preconditions.checkNotNull(fileManager);
   }
 
   @Override
@@ -67,8 +76,9 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
       packageContents = new HashSet<>();
 
       try {
+        JavaFileManager fileManager = getFileManager();
         for (JavaFileObject javaFileObject :
-            this.fileManager.list(
+            fileManager.list(
                 StandardLocation.PLATFORM_CLASS_PATH,
                 packageName,
                 EnumSet.of(JavaFileObject.Kind.CLASS),

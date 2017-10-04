@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -272,6 +273,11 @@ public abstract class DefaultJavaLibraryRules {
     return getArgs() != null && getArgs().getRequiredForSourceOnlyAbi();
   }
 
+  @Value.Lazy
+  SourceOnlyAbiRuleInfo getSourceOnlyAbiRuleInfo() {
+    return new DefaultSourceOnlyAbiRuleInfo(getLibraryTarget(), getRequiredForSourceOnlyAbi());
+  }
+
   @Nullable
   private CalculateSourceAbi getSourceAbiRule() {
     if (!willProduceSourceAbi()) {
@@ -370,7 +376,7 @@ public abstract class DefaultJavaLibraryRules {
         getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
         classpaths.getCompileTimeClasspathSourcePaths(),
         getClassesToRemoveFromJar(),
-        getRequiredForSourceOnlyAbi());
+        getSourceOnlyAbiRuleInfo());
   }
 
   @org.immutables.builder.Builder.AccessibleFields

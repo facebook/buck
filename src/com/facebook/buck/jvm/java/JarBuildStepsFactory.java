@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
@@ -65,7 +66,7 @@ public class JarBuildStepsFactory
   private final ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths;
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
-  @AddToRuleKey private final boolean ruleRequiredForSourceOnlyAbi;
+  @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
 
   public JarBuildStepsFactory(
       ProjectFilesystem projectFilesystem,
@@ -80,7 +81,7 @@ public class JarBuildStepsFactory
       boolean trackClassUsage,
       ImmutableSortedSet<SourcePath> compileTimeClasspathSourcePaths,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
-      boolean ruleRequiredForSourceOnlyAbi) {
+      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     this.projectFilesystem = projectFilesystem;
     this.ruleFinder = ruleFinder;
     this.configuredCompiler = configuredCompiler;
@@ -93,7 +94,7 @@ public class JarBuildStepsFactory
     this.trackClassUsage = trackClassUsage;
     this.compileTimeClasspathSourcePaths = compileTimeClasspathSourcePaths;
     this.classesToRemoveFromJar = classesToRemoveFromJar;
-    this.ruleRequiredForSourceOnlyAbi = ruleRequiredForSourceOnlyAbi;
+    this.ruleInfo = ruleInfo;
   }
 
   public boolean producesJar() {
@@ -143,7 +144,7 @@ public class JarBuildStepsFactory
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(false)
             .setShouldGenerateAbiJar(true)
-            .setRuleIsRequiredForSourceOnlyAbi(ruleRequiredForSourceOnlyAbi)
+            .setSourceOnlyAbiRuleInfo(ruleInfo)
             .build();
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
@@ -179,7 +180,7 @@ public class JarBuildStepsFactory
             .setSourceFileSourcePaths(srcs, projectFilesystem, context.getSourcePathResolver())
             .setStandardPaths(buildTarget, projectFilesystem)
             .setShouldTrackClassUsage(trackClassUsage)
-            .setRuleIsRequiredForSourceOnlyAbi(ruleRequiredForSourceOnlyAbi)
+            .setSourceOnlyAbiRuleInfo(ruleInfo)
             .build();
 
     ResourcesParameters resourcesParameters = getResourcesParameters();

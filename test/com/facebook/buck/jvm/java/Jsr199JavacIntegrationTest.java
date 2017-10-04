@@ -144,7 +144,7 @@ public class Jsr199JavacIntegrationTest {
                 pathToSrcsList,
                 Paths.get("working"),
                 AbiGenerationMode.CLASS,
-                false)
+                null)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -197,7 +197,7 @@ public class Jsr199JavacIntegrationTest {
                 pathToSrcsList,
                 Paths.get("working"),
                 AbiGenerationMode.CLASS,
-                false)
+                null)
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -299,7 +299,7 @@ public class Jsr199JavacIntegrationTest {
               pathToSrcsList,
               Paths.get("working"),
               AbiGenerationMode.CLASS,
-              false)
+              null)
           .buildClasses();
       fail("Did not expect compilation to succeed");
     } catch (OutOfMemoryError ex) {

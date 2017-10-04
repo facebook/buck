@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.Tool;
@@ -24,6 +25,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 public interface Javac extends RuleKeyAppendable, Tool {
 
@@ -45,7 +47,7 @@ public interface Javac extends RuleKeyAppendable, Tool {
       Path pathToSrcsList,
       Path workingDirectory,
       AbiGenerationMode abiGenerationMode,
-      boolean requiredForSourceOnlyAbi);
+      @Nullable SourceOnlyAbiRuleInfo ruleInfo);
 
   String getDescription(
       ImmutableList<String> options,

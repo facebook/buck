@@ -46,8 +46,7 @@ public interface OutOfProcessJavacConnectionInterface {
       String pathToSrcsListAsString,
       @Nullable String workingDirectory,
       List<Map<String, Object>> pluginFields,
-      String abiGenerationModeAsString,
-      boolean requiredForSourceOnlyAbi);
+      String abiGenerationModeAsString);
 
   int buildSourceAbiJar(int invocationId, String abiJarPath);
 

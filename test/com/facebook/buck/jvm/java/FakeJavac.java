@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /** Fake implementation of {@link Javac} for tests. */
 public class FakeJavac implements Javac {
@@ -72,7 +74,7 @@ public class FakeJavac implements Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       AbiGenerationMode abiGenerationMode,
-      boolean requiredForSourceOnlyAbi) {
+      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     return new Invocation() {
       @Override
       public int buildSourceAbiJar(Path sourceAbiJar) throws InterruptedException {

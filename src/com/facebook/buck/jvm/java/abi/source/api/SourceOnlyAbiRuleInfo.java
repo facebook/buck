@@ -16,7 +16,11 @@
 
 package com.facebook.buck.jvm.java.abi.source.api;
 
+import javax.tools.JavaFileManager;
+
 public interface SourceOnlyAbiRuleInfo {
+  void setFileManager(JavaFileManager fileManager);
+
   boolean classIsOnBootClasspath(String binaryName);
 
   String getRuleName();

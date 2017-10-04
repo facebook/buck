@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTaskProxyImpl;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;
 import com.sun.source.util.TaskListener;
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileManager;
 
 class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerFactory {
   private final String ruleName;
@@ -46,6 +47,9 @@ class ValidatingTaskListenerFactory implements CompilerTreeApiTest.TaskListenerF
           public boolean ruleIsRequiredForSourceOnlyAbi() {
             return requiredForSourceAbi;
           }
+
+          @Override
+          public void setFileManager(JavaFileManager fileManager) {}
 
           @Override
           public boolean classIsOnBootClasspath(String binaryName) {

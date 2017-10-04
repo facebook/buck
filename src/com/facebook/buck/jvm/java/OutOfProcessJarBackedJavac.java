@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
@@ -28,6 +29,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
 
@@ -51,7 +53,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       Path pathToSrcsList,
       Path workingDirectory,
       AbiGenerationMode abiGenerationMode,
-      boolean requiredForSourceOnlyAbi) {
+      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
 
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
     if (LOG.isVerboseEnabled()) {
@@ -73,8 +75,7 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
                 .stream()
                 .map(JavacPluginJsr199FieldsSerializer::serialize)
                 .collect(Collectors.toList()),
-            abiGenerationMode.toString(),
-            requiredForSourceOnlyAbi));
+            abiGenerationMode.toString()));
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskListener;
 import com.facebook.buck.jvm.java.plugin.api.BuckJavacTaskProxy;
@@ -68,7 +69,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
-  private final boolean requiredForSourceOnlyAbi;
+  @Nullable private final SourceOnlyAbiRuleInfo ruleInfo;
   private final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
@@ -85,7 +86,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       AbiGenerationMode abiGenerationMode,
-      boolean requiredForSourceOnlyAbi) {
+      @Nullable SourceOnlyAbiRuleInfo ruleInfo) {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
@@ -94,7 +95,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.abiGenerationMode = abiGenerationMode;
-    this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
+    this.ruleInfo = ruleInfo;
   }
 
   @Override
@@ -361,13 +362,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
       BuckJavacTaskListener taskListener = null;
-      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()) {
+      if (abiGenerationMode.checkForSourceOnlyAbiCompatibility() && ruleInfo != null) {
+        ruleInfo.setFileManager(fileManager);
         taskListener =
             SourceBasedAbiStubber.newValidatingTaskListener(
                 pluginLoader,
                 javacTask,
-                new DefaultSourceOnlyAbiRuleInfo(
-                    fileManager, invokingRule, requiredForSourceOnlyAbi),
+                ruleInfo,
                 abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
       }
 

@@ -91,8 +91,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
       String pathToSrcsListAsString,
       @Nullable String workingDirectoryAsString,
       List<Map<String, Object>> pluginFields,
-      String abiGenerationModeAsString,
-      boolean requiredForSourceOnlyAbi) {
+      String abiGenerationModeAsString) {
 
     PrintStream printStreamForStdErr = new PrintStream(new ByteArrayOutputStream());
 
@@ -145,7 +144,7 @@ public class OutOfProcessInvocationReceiver implements OutOfProcessJavacConnecti
             pathToSrcsList,
             workingDirectory,
             AbiGenerationMode.valueOf(abiGenerationModeAsString),
-            requiredForSourceOnlyAbi);
+            null);
     int invocationId = nextInvocationId.getAndIncrement();
     invocations.put(invocationId, invocation);
 
