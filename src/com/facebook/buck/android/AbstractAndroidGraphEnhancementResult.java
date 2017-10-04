@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -40,21 +39,11 @@ interface AbstractAndroidGraphEnhancementResult {
 
   Either<PreDexMerge, NonPreDexedDexBuildable> getDexMergeRule();
 
-  ImmutableList<SourcePath> getProguardConfigs();
-
-  Optional<Boolean> getPackageAssetLibraries();
-
   SourcePath getPrimaryResourcesApkPath();
 
   ImmutableList<SourcePath> getPrimaryApkAssetZips();
 
   ImmutableList<SourcePath> getExoResources();
-
-  /**
-   * Compiled R.java for use by ProGuard. This should go away if/when we create a separate rule for
-   * ProGuard.
-   */
-  JavaLibrary getCompiledUberRDotJava();
 
   /**
    * This includes everything from the corresponding {@link
@@ -64,8 +53,6 @@ interface AbstractAndroidGraphEnhancementResult {
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
   SourcePath getAndroidManifestPath();
-
-  SourcePath getSourcePathToAaptGeneratedProguardConfigFile();
 
   APKModuleGraph getAPKModuleGraph();
 
