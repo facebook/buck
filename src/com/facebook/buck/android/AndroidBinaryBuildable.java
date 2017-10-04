@@ -87,15 +87,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final SourcePath androidManifestPath;
 
   @AddToRuleKey private final DexFilesInfo dexFilesInfo;
+  @AddToRuleKey private final NativeFilesInfo nativeFilesInfo;
+  @AddToRuleKey private final ResourceFilesInfo resourceFilesInfo;
 
-  @AddToRuleKey private final boolean packageAssetLibraries;
-  @AddToRuleKey private final boolean compressAssetLibraries;
-  @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
-  @AddToRuleKey private Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs;
-
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
-  @AddToRuleKey private final SourcePath resourcesApkPath;
-  @AddToRuleKey private final ImmutableList<SourcePath> primaryApkAssetsZips;
+  @AddToRuleKey final boolean packageAssetLibraries;
+  @AddToRuleKey final boolean compressAssetLibraries;
 
   @AddToRuleKey private final Optional<RedexOptions> redexOptions;
 
@@ -148,18 +144,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.additionalRedexInputs = additionalRedexInputs;
     this.exopackageModes = exopackageModes;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.packageAssetLibraries = packageAssetLibraries;
-    this.compressAssetLibraries = compressAssetLibraries;
+
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.androidManifestPath = androidManifestPath;
-    this.resourcesApkPath = resourcesApkPath;
-    this.primaryApkAssetsZips = primaryApkAssetsZips;
     this.isCompressResources = isCompressResources;
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
-
-    this.pathsToThirdPartyJars =
-        ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars());
 
     this.apkModules =
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
@@ -169,10 +159,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     boolean exopackageForNativeEnabled =
         AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes);
+    Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
     if (exopackageForNativeEnabled) {
-      this.nativeLibsDirs = Optional.empty();
+      nativeLibsDirs = Optional.empty();
     } else {
-      this.nativeLibsDirs =
+      nativeLibsDirs =
           copyNativeLibraries.map(
               cnl ->
                   cnl.entrySet()
@@ -182,7 +173,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                               e -> e.getKey(), e -> e.getValue().getSourcePathToNativeLibsDir())));
     }
 
-    this.nativeLibsAssetsDirs =
+    Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs =
         copyNativeLibraries.map(
             cnl ->
                 cnl.entrySet()
@@ -207,6 +198,15 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     } else {
       this.dexFilesInfo = enhancementDexFilesInfo;
     }
+    this.nativeFilesInfo = new NativeFilesInfo(nativeLibsDirs, nativeLibsAssetsDirs);
+    this.packageAssetLibraries = packageAssetLibraries;
+    this.compressAssetLibraries = compressAssetLibraries;
+
+    this.resourceFilesInfo =
+        new ResourceFilesInfo(
+            ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars()),
+            resourcesApkPath,
+            primaryApkAssetsZips);
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -241,16 +241,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     for (final APKModule module : apkModules) {
       boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
       if (!AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)
-          && nativeLibsDirs.isPresent()
-          && nativeLibsDirs.get().containsKey(module)) {
+          && nativeFilesInfo.nativeLibsDirs.isPresent()
+          && nativeFilesInfo.nativeLibsDirs.get().containsKey(module)) {
         if (shouldPackageAssetLibraries) {
           nativeLibraryDirectoriesBuilder.add(
-              pathResolver.getRelativePath(nativeLibsDirs.get().get(module)));
+              pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirs.get().get(module)));
         } else {
           nativeLibraryDirectoriesBuilder.add(
-              pathResolver.getRelativePath(nativeLibsDirs.get().get(module)));
+              pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirs.get().get(module)));
           nativeLibraryDirectoriesBuilder.add(
-              pathResolver.getRelativePath(nativeLibsAssetsDirs.get().get(module)));
+              pathResolver.getRelativePath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module)));
         }
       }
 
@@ -277,7 +277,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     // If non-english strings are to be stored as assets, pass them to ApkBuilder.
     ImmutableSet.Builder<Path> zipFiles = ImmutableSet.builder();
-    RichStream.from(primaryApkAssetsZips).map(pathResolver::getRelativePath).forEach(zipFiles::add);
+    RichStream.from(resourceFilesInfo.primaryApkAssetsZips)
+        .map(pathResolver::getRelativePath)
+        .forEach(zipFiles::add);
 
     if (AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
       // We need to include a few dummy native libraries with our application so that Android knows
@@ -305,7 +307,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
     ImmutableSet<Path> thirdPartyJars =
-        pathsToThirdPartyJars
+        resourceFilesInfo
+            .pathsToThirdPartyJars
             .stream()
             .map(resolver::getAbsolutePath)
             .collect(MoreCollectors.toImmutableSet());
@@ -318,7 +321,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     steps.add(
         new ApkBuilderStep(
             getProjectFilesystem(),
-            pathResolver.getAbsolutePath(resourcesApkPath),
+            pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath),
             getSignedApkPath(),
             pathResolver.getRelativePath(dexFilesInfo.primaryDexPath),
             allAssetDirectories,
@@ -396,13 +399,17 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             });
 
     if (packageAssetLibraries || !module.isRootModule()) {
+      // TODO(cjhopman): This block should probably all be handled by CopyNativeLibraries.
       // TODO(cjhopman): Why is this packaging native libs as assets even when native exopackage is
       // enabled?
-      if (nativeLibsAssetsDirs.isPresent() && nativeLibsAssetsDirs.get().containsKey(module)) {
+      if (nativeFilesInfo.nativeLibsAssetsDirs.isPresent()
+          && nativeFilesInfo.nativeLibsAssetsDirs.get().containsKey(module)) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
         // in CopyNativeLibraries.getBuildSteps().
         Path cxxNativeLibsSrc =
-            context.getSourcePathResolver().getRelativePath(nativeLibsAssetsDirs.get().get(module));
+            context
+                .getSourcePathResolver()
+                .getRelativePath(nativeFilesInfo.nativeLibsAssetsDirs.get().get(module));
         steps.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
