@@ -40,9 +40,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.nio.file.Path;
@@ -133,10 +131,9 @@ public class CopyNativeLibrariesTest {
             target,
             new FakeProjectFilesystem(),
             ruleFinder,
-            ImmutableSortedSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
             ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
-            ImmutableMap.of(),
-            ImmutableMap.of(),
             ImmutableSet.of(),
             "dex");
 

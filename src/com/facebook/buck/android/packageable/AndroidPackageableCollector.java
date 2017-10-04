@@ -148,7 +148,6 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector addNativeLibsDirectory(
       BuildTarget owner, SourcePath nativeLibDir) {
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
-    collectionBuilder.putNativeLibsTargets(module, owner);
     if (module.isRootModule()) {
       collectionBuilder.putNativeLibsDirectories(module, nativeLibDir);
     } else {
@@ -177,7 +176,6 @@ public class AndroidPackageableCollector {
       BuildTarget owner, SourcePath assetsDir) {
     // We need to build the native target in order to have the assets available still.
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
-    collectionBuilder.putNativeLibsTargets(module, owner);
     collectionBuilder.putNativeLibAssetsDirectories(module, assetsDir);
     return this;
   }

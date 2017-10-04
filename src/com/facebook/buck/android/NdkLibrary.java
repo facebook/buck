@@ -28,7 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -217,10 +217,10 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public void addToCollector(AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
-          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibraryPath()));
     } else {
       collector.addNativeLibsDirectory(
-          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibraryPath()));
     }
   }
 }

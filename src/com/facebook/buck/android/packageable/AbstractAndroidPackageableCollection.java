@@ -70,9 +70,6 @@ interface AbstractAndroidPackageableCollection {
 
   AndroidPackageableCollection.ResourceDetails getResourceDetails();
 
-  /** A set of build targets that produce native libraries. */
-  ImmutableMultimap<APKModule, BuildTarget> getNativeLibsTargets();
-
   /** Native libraries mapped from modules. */
   ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
 
