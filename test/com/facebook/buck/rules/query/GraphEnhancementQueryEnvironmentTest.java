@@ -38,6 +38,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -174,6 +175,19 @@ public class GraphEnhancementQueryEnvironmentTest {
     assertThat(
         env.getFwdDeps(ImmutableSet.of(getQueryTarget("//:sublib"))),
         Matchers.contains(getQueryTarget("//:bottom")));
+  }
+
+  @Test
+  public void forEachFwdDeps() {
+    GraphEnhancementQueryEnvironment env = buildQueryEnvironmentWithGraph();
+    // lib -> sublib
+    ImmutableList.Builder<Object> libDeps = ImmutableList.builder();
+    env.forEachFwdDep(ImmutableSet.of(getQueryTarget("//:lib")), libDeps::add);
+    assertThat(libDeps.build(), Matchers.contains(getQueryTarget("//:sublib")));
+    // sublib -> bottom
+    ImmutableList.Builder<Object> subLibDeps = ImmutableList.builder();
+    env.forEachFwdDep(ImmutableSet.of(getQueryTarget("//:sublib")), subLibDeps::add);
+    assertThat(subLibDeps.build(), Matchers.contains(getQueryTarget("//:bottom")));
   }
 
   @Test

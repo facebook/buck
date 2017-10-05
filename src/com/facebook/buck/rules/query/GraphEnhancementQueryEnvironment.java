@@ -45,12 +45,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A query environment that can be used for graph-enhancement, including macro expansion or dynamic
@@ -97,36 +96,25 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     return targetEvaluator;
   }
 
-  @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
-    ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
-    for (QueryTarget target : targets) {
-      List<QueryBuildTarget> deps =
-          getNode(target)
-              .getParseDeps()
-              .stream()
-              .map(QueryBuildTarget::of)
-              .collect(Collectors.toList());
-      builder.addAll(deps);
-    }
-    return builder.build();
+  private Stream<QueryTarget> getFwdDepsStream(Iterable<QueryTarget> targets) {
+    Stream<QueryTarget> targetStream = StreamSupport.stream(targets.spliterator(), false);
+    return targetStream
+        .map(this::getNode)
+        .map(node -> node.getParseDeps())
+        .map(Set::stream)
+        .reduce(Stream::concat)
+        .orElse(Stream.empty())
+        .map(QueryBuildTarget::of);
   }
 
   @Override
-  public void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action)
-      throws QueryException {
-    for (QueryTarget target : targets) {
-      TargetNode<?, ?> node = getNode(target);
-      for (BuildTarget dep : node.getDeclaredDeps()) {
-        action.accept(QueryBuildTarget.of(dep));
-      }
-      for (BuildTarget dep : node.getExtraDeps()) {
-        action.accept(QueryBuildTarget.of(dep));
-      }
-      for (BuildTarget dep : node.getTargetGraphOnlyDeps()) {
-        action.accept(QueryBuildTarget.of(dep));
-      }
-    }
+  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
+    return getFwdDepsStream(targets).collect(MoreCollectors.toImmutableSet());
+  }
+
+  @Override
+  public void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action) {
+    getFwdDepsStream(targets).forEach(action);
   }
 
   @Override
