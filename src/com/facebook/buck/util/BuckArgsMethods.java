@@ -72,8 +72,8 @@ public class BuckArgsMethods {
   }
 
   /**
-   * Expland AT-file syntax in a way that matches what args4j does. We have this because we'd like
-   * to correctly log the arguments coming from the AT-files and there is no way to get the expanded
+   * Expand AT-file syntax in a way that matches what args4j does. We have this because we'd like to
+   * correctly log the arguments coming from the AT-files and there is no way to get the expanded
    * args array from args4j.
    *
    * @param args original args array
@@ -85,29 +85,33 @@ public class BuckArgsMethods {
         .flatMap(
             arg -> {
               if (arg.startsWith("@")) {
-                String[] parts = arg.split("#", 2);
-                String unresolvedArgsPath = parts[0].substring(1);
-                Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
-                Optional<String> flavors =
-                    parts.length == 2 ? Optional.of(parts[1]) : Optional.empty();
-
-                if (!Files.exists(argsPath)) {
-                  throw new HumanReadableException(
-                      "The file "
-                          + unresolvedArgsPath
-                          + " can't be found. Please make sure the path exists relatively to the "
-                          + "current folder.");
-                }
-                try {
-                  return getArgsFromPath(argsPath, flavors);
-                } catch (IOException e) {
-                  throw new HumanReadableException(e, "Could not read options from " + arg);
-                }
+                return expandFile(arg.substring(1), projectRoot);
               } else {
                 return ImmutableList.of(arg).stream();
               }
             })
         .collect(MoreCollectors.toImmutableList());
+  }
+
+  /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
+  private static Stream<? extends String> expandFile(String arg, Path projectRoot) {
+    String[] parts = arg.split("#", 2);
+    String unresolvedArgsPath = parts[0];
+    Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
+
+    if (!Files.exists(argsPath)) {
+      throw new HumanReadableException(
+          "The file "
+              + unresolvedArgsPath
+              + " can't be found. Please make sure the path exists relatively to the "
+              + "current folder.");
+    }
+    Optional<String> flavors = parts.length == 2 ? Optional.of(parts[1]) : Optional.empty();
+    try {
+      return getArgsFromPath(argsPath, flavors);
+    } catch (IOException e) {
+      throw new HumanReadableException(e, "Could not read options from " + arg);
+    }
   }
 
   /**
