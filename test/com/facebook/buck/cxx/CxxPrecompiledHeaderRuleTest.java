@@ -31,7 +31,11 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.model.BuildTarget;
@@ -45,6 +49,9 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.DefaultBuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -53,27 +60,27 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -81,7 +88,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-@SuppressWarnings("all")
 public class CxxPrecompiledHeaderRuleTest {
 
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
@@ -333,6 +339,131 @@ public class CxxPrecompiledHeaderRuleTest {
     assertTrue(seek(pchCmd, "-flag-for-factory").size() > 0);
   }
 
+  @Test
+  public void pchDepsNotRepeatedInLinkArgs() throws Exception {
+    assumeTrue(platformOkForPCHTests());
+
+    final BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//test:header");
+    final BuildTarget publicHeaderSymlinkTreeTarget =
+        BuildTargetFactory.newInstance("//test:symlink");
+    final BuildTarget privateHeaderTarget = BuildTargetFactory.newInstance("//test:privateheader");
+    final BuildTarget privateHeaderSymlinkTreeTarget =
+        BuildTargetFactory.newInstance("//test:privatesymlink");
+
+    ruleResolver.addToIndex(new FakeBuildRule(publicHeaderTarget));
+    ruleResolver.addToIndex(new FakeBuildRule(publicHeaderSymlinkTreeTarget));
+    ruleResolver.addToIndex(new FakeBuildRule(privateHeaderTarget));
+    ruleResolver.addToIndex(new FakeBuildRule(privateHeaderSymlinkTreeTarget));
+
+    BuildRuleParams libParams = TestBuildRuleParams.create();
+    BuildRule liba =
+        ruleResolver.addToIndex(
+            new FakeBuildRule("//test:liba").setOutputFile(Paths.get("lib.a").toString()));
+    BuildRule libso =
+        ruleResolver.addToIndex(
+            new FakeBuildRule("//test:libso").setOutputFile(Paths.get("lib.so").toString()));
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//test:lib");
+    FakeCxxLibrary lib =
+        ruleResolver.addToIndex(
+            new FakeCxxLibrary(
+                libTarget,
+                filesystem,
+                libParams,
+                publicHeaderTarget,
+                publicHeaderSymlinkTreeTarget,
+                privateHeaderTarget,
+                privateHeaderSymlinkTreeTarget,
+                liba,
+                libso,
+                Paths.get("/tmp/lib.so"),
+                "lib.so.1",
+                ImmutableSortedSet.of()));
+
+    BuildTarget pchTarget = newTarget("//test:pch");
+    CxxPrecompiledHeaderTemplate pchTemplate =
+        ruleResolver.addToIndex(
+            newPCH(
+                pchTarget,
+                new FakeSourcePath(
+                    filesystem, filesystem.getRootPath().resolve("test/header.h").toString()),
+                ImmutableSortedSet.of(lib)));
+
+    BuildTarget binTarget = BuildTargetFactory.newInstance("//test:bin");
+
+    CxxPreprocessAndCompile binBuildRule =
+        newFactoryBuilder(binTarget, filesystem)
+            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
+            .build()
+            .requirePreprocessAndCompileBuildRule(
+                new FakeSourcePath(filesystem, "test/lib.cpp").toString(),
+                newCxxSourceBuilder()
+                    .setPath(new FakeSourcePath(filesystem, "test/bin.cpp"))
+                    .build());
+    ruleResolver.addToIndex(binBuildRule);
+
+    CxxPrecompiledHeader foundPCH = null;
+    for (BuildRule dep : binBuildRule.getBuildDeps()) {
+      if (dep instanceof CxxPrecompiledHeader) {
+        foundPCH = (CxxPrecompiledHeader) dep;
+      }
+    }
+
+    assertNotNull(foundPCH);
+    final CxxPrecompiledHeader pch = foundPCH;
+
+    ImmutableList<SourcePath> binObjects =
+        ImmutableList.of(new FakeSourcePath(filesystem, "bin.o"));
+    ImmutableList<NativeLinkable> nativeLinkableDeps =
+        ImmutableList.<NativeLinkable>builder()
+            .add(pchTemplate)
+            .addAll(
+                RichStream.from(pch.getBuildDeps()).filter(NativeLinkable.class).toImmutableList())
+            .addAll(
+                RichStream.from(lib.getBuildDeps()).filter(NativeLinkable.class).toImmutableList())
+            .build();
+    CxxLink binLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CXX_CONFIG_PCH_ENABLED,
+            PLATFORM_SUPPORTING_PCH,
+            filesystem,
+            ruleResolver,
+            pathResolver,
+            ruleFinder,
+            CxxDescriptionEnhancer.createCxxLinkTarget(
+                binTarget, Optional.of(LinkerMapMode.NO_LINKER_MAP)),
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(), // soname
+            Paths.get("/tmp/bin.prog"),
+            Linker.LinkableDepType.STATIC,
+            /*thinLTO*/ false,
+            nativeLinkableDeps,
+            Optional.empty(), // cxxRuntimeType,
+            Optional.empty(), // bundleLoader,
+            ImmutableSet.of(), // blacklist,
+            ImmutableSet.of(libTarget), // linkWholeDeps,
+            NativeLinkableInput.builder().addAllArgs(SourcePathArg.from(binObjects)).build(),
+            Optional.<LinkOutputPostprocessor>empty());
+
+    CxxWriteArgsToFileStep argsToFile = null;
+    for (Step step :
+        binLink.getBuildSteps(
+            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext())) {
+      if (step instanceof CxxWriteArgsToFileStep) {
+        argsToFile = (CxxWriteArgsToFileStep) step;
+        break;
+      }
+    }
+    assertNotNull(argsToFile);
+
+    int libaCount = 0;
+    for (String arg : argsToFile.getArgFileContents()) {
+      if (arg.equals("lib.a") || arg.endsWith("/lib.a")) {
+        ++libaCount;
+      }
+    }
+    assertEquals(1, libaCount);
+  }
+
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
       assertThat(container, Matchers.hasItem(item));
@@ -511,17 +642,6 @@ public class CxxPrecompiledHeaderRuleTest {
                     .toString())
             .getExitCode(),
         51);
-  }
-
-  private static void getAllFiles(TreeMap<Path, byte[]> out, Path dir) throws Exception {
-    assertTrue(dir.toFile().isDirectory());
-    for (Path relativeEntry : Files.list(dir).collect(Collectors.toList())) {
-      if (relativeEntry.toFile().isDirectory()) {
-        getAllFiles(out, relativeEntry);
-      } else {
-        out.put(relativeEntry, Files.readAllBytes(relativeEntry));
-      }
-    }
   }
 
   @Test

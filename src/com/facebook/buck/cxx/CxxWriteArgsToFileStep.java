@@ -25,6 +25,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -62,6 +63,11 @@ class CxxWriteArgsToFileStep implements Step {
   private CxxWriteArgsToFileStep(Path argFilePath, ImmutableList<String> argFileContents) {
     this.argFilePath = argFilePath;
     this.argFileContents = argFileContents;
+  }
+
+  @VisibleForTesting
+  ImmutableList<String> getArgFileContents() {
+    return argFileContents;
   }
 
   static ImmutableList<String> stringify(

@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -110,8 +109,10 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
 
   /**
    * This class doesn't add any native linkable code of its own, it just has deps which need to be
-   * passed along and up to the top-level (e.g. a `cxx_binary`) rule. Take all our linkable deps,
-   * then, and pass it along as our linker input.
+   * passed along (see {@link #getNativeLinkableDeps()} and {@link #getNativeLinkableExportedDeps()}
+   * for the handling of those linkables).
+   *
+   * @return empty {@link NativeLinkableInput}
    */
   @Override
   public NativeLinkableInput getNativeLinkableInput(
@@ -119,8 +120,7 @@ public class CxxPrecompiledHeaderTemplate extends NoopBuildRuleWithDeclaredAndEx
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
       ImmutableSet<LanguageExtensions> languageExtensions) {
-    return NativeLinkables.getTransitiveNativeLinkableInput(
-        cxxPlatform, getBuildDeps(), type, NativeLinkable.class::isInstance);
+    return NativeLinkableInput.of();
   }
 
   @Override
