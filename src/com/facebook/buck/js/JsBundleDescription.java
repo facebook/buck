@@ -127,9 +127,9 @@ public class JsBundleDescription
     params = JsUtil.withWorkerDependencyOnly(params, resolver, args.getWorker());
 
     final Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
-    ImmutableSortedSet<JsLibrary> libraryDeps =
-        new TransitiveLibraryDependencies(buildTarget, targetGraph, resolver)
-            .collect(args.getDeps());
+    TransitiveLibraryDependencies libsResolver =
+        new TransitiveLibraryDependencies(buildTarget, targetGraph, resolver);
+    ImmutableSortedSet<JsLibrary> libraryDeps = libsResolver.collect(args.getDeps());
 
     BuildRuleParams paramsWithLibraries = params.copyAppendingExtraDeps(libraryDeps);
     ImmutableSortedSet<SourcePath> libraries =
@@ -152,6 +152,17 @@ public class JsBundleDescription
           resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
     }
 
+    ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups =
+        args.getLibraryGroups()
+            .stream()
+            .map(
+                group ->
+                    group
+                        .stream()
+                        .map(lib -> libsResolver.requireLibrary(lib).getSourcePathToOutput())
+                        .collect(MoreCollectors.toImmutableSet()))
+            .collect(MoreCollectors.toImmutableList());
+
     String bundleName = getBundleName(args, buildTarget.getFlavors());
 
     return new JsBundle(
@@ -160,6 +171,7 @@ public class JsBundleDescription
         paramsWithLibraries,
         libraries,
         entryPoints,
+        libraryPathGroups,
         bundleName,
         resolver.getRuleWithType(args.getWorker(), WorkerTool.class));
   }
@@ -274,6 +286,12 @@ public class JsBundleDescription
 
     /** For R.java */
     Optional<String> getAndroidPackage();
+
+    /**
+     * Get the ordered list of library groups that should be bundled together, in the case of
+     * "bundle splitting".
+     */
+    ImmutableList<ImmutableSet<BuildTarget>> getLibraryGroups();
   }
 
   private static String getBundleName(

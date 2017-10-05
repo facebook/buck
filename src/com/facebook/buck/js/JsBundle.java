@@ -44,6 +44,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
 
+  @AddToRuleKey private final ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups;
+
   @AddToRuleKey private final WorkerTool worker;
 
   protected JsBundle(
@@ -52,11 +54,13 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
+      ImmutableList<ImmutableSet<SourcePath>> libraryPathGroups,
       String bundleName,
       WorkerTool worker) {
     super(buildTarget, projectFilesystem, params);
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
+    this.libraryPathGroups = libraryPathGroups;
     this.libraries = libraries;
     this.worker = worker;
   }
@@ -74,7 +78,20 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 Stream.of(
                     "bundle",
                     JsFlavors.bundleJobArgs(getBuildTarget().getFlavors()),
+                    // FIXME(T22331999): This is broken if paths contain spaces.
                     JsUtil.resolveMapJoin(libraries, sourcePathResolver, p -> "--lib " + p),
+                    libraryPathGroups
+                        .stream()
+                        .map(
+                            group ->
+                                group
+                                    .stream()
+                                    .map(sourcePathResolver::getAbsolutePath)
+                                    .map(path -> path.toString())
+                                    // FIXME(T22331999): This is broken if paths contain commas.
+                                    .collect(Collectors.joining(",")))
+                        .map(group -> "--lib-group " + group)
+                        .collect(Collectors.joining(" ")),
                     String.format(
                         "--root %s --sourcemap %s --assets %s --out %s/%s",
                         getProjectFilesystem().getRootPath(),
