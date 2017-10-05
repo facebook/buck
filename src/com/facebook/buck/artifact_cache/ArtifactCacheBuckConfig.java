@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.randomizedtrial.WithProbability;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
@@ -176,7 +177,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   public int getHttpFetchConcurrency() {
     return (int)
-        Math.min(buckConfig.getMaximumResourceAmounts().getNetworkIO(), getThreadPoolSize());
+        Math.min(
+            buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getNetworkIO(),
+            getThreadPoolSize());
   }
 
   public int getMultiFetchLimit() {

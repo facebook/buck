@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
@@ -589,46 +588,6 @@ public class BuckConfigTest {
   public void hasUserDefinedValueReturnsFalseForNoSetting() {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(ImmutableMap.of()).build();
     assertFalse(buckConfig.hasUserDefinedValue("cache", "mode"));
-  }
-
-  @Test
-  public void testGettingResourceAmountsPerRuleType() throws InterruptedException, IOException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join("[resources_per_rule]", "some_rule = 1, 20, 3, 4", "other_rule = 4,30,2,1"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    ImmutableMap<String, ResourceAmounts> result = config.getResourceAmountsPerRuleType();
-    assertEquals(
-        ImmutableMap.of(
-            "some_rule", ResourceAmounts.of(1, 20, 3, 4),
-            "other_rule", ResourceAmounts.of(4, 30, 2, 1)),
-        result);
-  }
-
-  @Test
-  public void testInvalidResourceAmountsConfiguration() throws InterruptedException, IOException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[resources_per_rule]",
-                    "some_rule = 1, 20, 3, 4",
-                    "other_rule = 4,30,2,1",
-                    "wrong_config = 1,2,3,4,5,6,7,8,9,0"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    try {
-      config.getResourceAmountsPerRuleType();
-    } catch (IllegalArgumentException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.containsString(
-              "Buck config entry [resources_per_rule].wrong_config"
-                  + " contains 10 values, but expected to contain 4 values in the following order: "
-                  + "cpu, memory, disk_io, network_io"));
-      return;
-    }
-    assertThat("IllegalArgumentException should be thrown", Matchers.equalTo(""));
   }
 
   @Test

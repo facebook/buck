@@ -17,6 +17,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -72,9 +73,10 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   }
 
   public ResourceAwareSchedulingInfo getResourceAwareSchedulingInfo() {
+    ResourcesConfig resourcesConfig = getDelegate().getView(ResourcesConfig.class);
     return ResourceAwareSchedulingInfo.of(
-        getDelegate().isResourceAwareSchedulingEnabled(),
-        getDelegate().getDefaultResourceAmounts(),
-        getDelegate().getResourceAmountsPerRuleType());
+        resourcesConfig.isResourceAwareSchedulingEnabled(),
+        resourcesConfig.getDefaultResourceAmounts(),
+        resourcesConfig.getResourceAmountsPerRuleType());
   }
 }
