@@ -490,7 +490,8 @@ public class HaskellLibraryDescription
           haddockInterfaces.addAll(inp.getInterfaces());
 
           HaskellCompileInput compileInput =
-              haskellCompileDep.getCompileInput(platform, Linker.LinkableDepType.STATIC, true);
+              haskellCompileDep.getCompileInput(
+                  platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
           boolean firstOrderDep = deps.contains(rule);
           for (HaskellPackage pkg : compileInput.getPackages()) {
             if (firstOrderDep) {
