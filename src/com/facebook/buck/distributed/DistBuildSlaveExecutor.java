@@ -342,6 +342,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private class LocalBuilderImpl implements LocalBuilder {
+    private static final boolean KEEP_GOING = true;
     private final BuckConfig distBuildConfig;
     private final CachingBuildEngineBuckConfig engineConfig;
     private final ResourcesConfig resourcesConfig;
@@ -353,7 +354,7 @@ public class DistBuildSlaveExecutor {
     }
 
     @Override
-    public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
+    public int buildLocallyAndReturnExitCode(Iterable<String> targetToBuildStrings)
         throws IOException, InterruptedException {
       // TODO(ruibm): Fix this to work with Android.
       MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
@@ -423,9 +424,9 @@ public class DistBuildSlaveExecutor {
                   args.getClock(),
                   executionContext)) {
 
-        return build.executeAndPrintFailuresToEventBus(
-            fullyQualifiedNameToBuildTarget(targetsToBuild),
-            /* isKeepGoing */ true,
+        return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
+            fullyQualifiedNameToBuildTarget(targetToBuildStrings),
+            KEEP_GOING,
             args.getBuckEventBus(),
             args.getConsole(),
             Optional.empty());
