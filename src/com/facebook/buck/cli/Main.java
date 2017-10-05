@@ -434,6 +434,25 @@ public final class Main {
                 platform, getClientEnvironment(context))));
   }
 
+  private OptionalInt parseArgs(ImmutableList<String> args, BuckCommand command) {
+    // Parse the command line args.
+    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
+    try {
+      cmdLineParser.parseArgument(args);
+    } catch (CmdLineException e) {
+      // Can't go through the console for prettification since that needs the BuckConfig, and that
+      // needs to be created with the overrides, which are parsed from the command line here, which
+      // required the console to print the message that parsing has failed. So just write to stderr
+      // and be done with it.
+      stdErr.println(e.getLocalizedMessage());
+      stdErr.println("For help see 'buck --help'.");
+      return OptionalInt.of(1);
+    }
+    // Return help strings fast if the command is a help request.
+    OptionalInt result = command.runHelp(stdErr);
+    return result;
+  }
+
   /**
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
@@ -456,27 +475,10 @@ public final class Main {
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, projectRoot);
 
-    // Parse the command line args.
     BuckCommand command = new BuckCommand();
-    AdditionalOptionsCmdLineParser cmdLineParser = new AdditionalOptionsCmdLineParser(command);
-    try {
-      cmdLineParser.parseArgument(args);
-    } catch (CmdLineException e) {
-      // Can't go through the console for prettification since that needs the BuckConfig, and that
-      // needs to be created with the overrides, which are parsed from the command line here, which
-      // required the console to print the message that parsing has failed. So just write to stderr
-      // and be done with it.
-      stdErr.println(e.getLocalizedMessage());
-      stdErr.println("For help see 'buck --help'.");
-      return 1;
-    }
-
-    {
-      // Return help strings fast if the command is a help request.
-      OptionalInt result = command.runHelp(stdErr);
-      if (result.isPresent()) {
-        return result.getAsInt();
-      }
+    OptionalInt returnCode = parseArgs(args, command);
+    if (returnCode.isPresent()) {
+      return returnCode.getAsInt();
     }
 
     // Setup logging.
