@@ -106,8 +106,8 @@ public class AppleBinaryDescription
       ProvisioningProfileStore provisioningProfileStore,
       AppleConfig appleConfig) {
     this.delegate = delegate;
-    this.swiftDelegate =
-        appleConfig.shouldUseSwiftDelegate() ? Optional.of(swiftDelegate) : Optional.empty();
+    // TODO(T22135033): Make apple_binary not use a Swift delegate
+    this.swiftDelegate = Optional.of(swiftDelegate);
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
