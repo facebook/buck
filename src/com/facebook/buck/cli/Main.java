@@ -453,6 +453,51 @@ public final class Main {
     return result;
   }
 
+  private void setupLogging(
+      CommandMode commandMode, BuckCommand command, ImmutableList<String> args) throws IOException {
+    // Setup logging.
+    if (commandMode.isLoggingEnabled()) {
+      // Reset logging each time we run a command while daemonized.
+      // This will cause us to write a new log per command.
+      LOG.debug("Rotating log.");
+      LogConfig.flushLogs();
+      LogConfig.setupLogging(command.getLogConfig());
+
+      if (LOG.isDebugEnabled()) {
+        Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
+        String buildDateStr;
+        if (gitCommitTimestamp == null) {
+          buildDateStr = "(unknown)";
+        } else {
+          buildDateStr =
+              new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US)
+                  .format(new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
+        }
+        String buildRev = System.getProperty("buck.git_commit", "(unknown)");
+        LOG.debug("Starting up (build date %s, rev %s), args: %s", buildDateStr, buildRev, args);
+        LOG.debug("System properties: %s", System.getProperties());
+      }
+    }
+  }
+
+  private Config setupDefaultConfig(Path canonicalRootPath, BuckCommand command)
+      throws IOException {
+    ImmutableMap<RelativeCellName, Path> cellMapping =
+        DefaultCellPathResolver.bootstrapPathMapping(
+            canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
+    RawConfig rootCellConfigOverrides;
+    try {
+      ImmutableMap<Path, RawConfig> overridesByPath =
+          command.getConfigOverrides().getOverridesByPath(cellMapping);
+      rootCellConfigOverrides =
+          Optional.ofNullable(overridesByPath.get(canonicalRootPath)).orElse(RawConfig.of());
+    } catch (MalformedOverridesException exception) {
+      rootCellConfigOverrides =
+          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
+    }
+    return Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
+  }
+
   /**
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
@@ -481,47 +526,12 @@ public final class Main {
       return returnCode.getAsInt();
     }
 
-    // Setup logging.
-    if (commandMode.isLoggingEnabled()) {
-
-      // Reset logging each time we run a command while daemonized.
-      // This will cause us to write a new log per command.
-      LOG.debug("Rotating log.");
-      LogConfig.flushLogs();
-      LogConfig.setupLogging(command.getLogConfig());
-
-      if (LOG.isDebugEnabled()) {
-        Long gitCommitTimestamp = Long.getLong("buck.git_commit_timestamp");
-        String buildDateStr;
-        if (gitCommitTimestamp == null) {
-          buildDateStr = "(unknown)";
-        } else {
-          buildDateStr =
-              new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US)
-                  .format(new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
-        }
-        String buildRev = System.getProperty("buck.git_commit", "(unknown)");
-        LOG.debug("Starting up (build date %s, rev %s), args: %s", buildDateStr, buildRev, args);
-        LOG.debug("System properties: %s", System.getProperties());
-      }
-    }
+    setupLogging(commandMode, command, args);
 
     // Setup filesystem and buck config.
+
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
-    ImmutableMap<RelativeCellName, Path> cellMapping =
-        DefaultCellPathResolver.bootstrapPathMapping(
-            canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
-    RawConfig rootCellConfigOverrides = RawConfig.of();
-    try {
-      ImmutableMap<Path, RawConfig> overridesByPath =
-          command.getConfigOverrides().getOverridesByPath(cellMapping);
-      rootCellConfigOverrides =
-          Optional.ofNullable(overridesByPath.get(canonicalRootPath)).orElse(RawConfig.of());
-    } catch (MalformedOverridesException exception) {
-      rootCellConfigOverrides =
-          command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME);
-    }
-    Config config = Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
+    Config config = setupDefaultConfig(canonicalRootPath, command);
 
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     ProjectFilesystem filesystem =
