@@ -498,6 +498,17 @@ public final class Main {
     return Configs.createDefaultConfig(canonicalRootPath, rootCellConfigOverrides);
   }
 
+  private ImmutableSet<Path> getProjectWatchList(
+      Path canonicalRootPath, BuckConfig buckConfig, DefaultCellPathResolver cellPathResolver) {
+    return ImmutableSet.<Path>builder()
+        .add(canonicalRootPath)
+        .addAll(
+            buckConfig.getView(ParserConfig.class).getWatchCells()
+                ? cellPathResolver.getPathMapping().values()
+                : ImmutableList.of())
+        .build();
+  }
+
   /**
    * @param buildId an identifier for this command execution.
    * @param context an optional NGContext that is present if running inside a Nailgun server.
@@ -529,7 +540,6 @@ public final class Main {
     setupLogging(commandMode, command, args);
 
     // Setup filesystem and buck config.
-
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
     Config config = setupDefaultConfig(canonicalRootPath, command);
 
@@ -543,13 +553,8 @@ public final class Main {
         new BuckConfig(
             config, filesystem, architecture, platform, clientEnvironment, cellPathResolver);
     ImmutableSet<Path> projectWatchList =
-        ImmutableSet.<Path>builder()
-            .add(canonicalRootPath)
-            .addAll(
-                buckConfig.getView(ParserConfig.class).getWatchCells()
-                    ? cellPathResolver.getPathMapping().values()
-                    : ImmutableList.of())
-            .build();
+        getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
+
     Optional<ImmutableList<String>> allowedJavaSpecificiationVersions =
         buckConfig.getAllowedJavaSpecificationVersions();
     if (allowedJavaSpecificiationVersions.isPresent()) {
