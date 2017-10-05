@@ -179,10 +179,13 @@ public class DefaultRuleKeyCache<V> implements RuleKeyCache<V> {
     List<Stream<Object>> dependents = new ArrayList<>();
     nodes.forEach(
         key -> {
-          LOG.verbose("invalidating node %s", key);
           Node<Object, V> node = cache.remove(new IdentityWrapper<>(key));
-          dependents.add(node.dependents.build());
-          evictionCount.increment();
+          // This node may have already been removed due to being someone else's reverse dependency.
+          if (node != null) {
+            LOG.verbose("invalidating node %s", key);
+            dependents.add(node.dependents.build());
+            evictionCount.increment();
+          }
         });
     if (!dependents.isEmpty()) {
       invalidateNodes(dependents.stream().flatMap(x -> x));

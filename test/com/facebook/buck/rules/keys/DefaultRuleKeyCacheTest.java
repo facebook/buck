@@ -99,6 +99,30 @@ public class DefaultRuleKeyCacheTest {
   }
 
   @Test
+  public void invalidatingDiamondDependencyWorksCorrectly() {
+    // A -> B
+    // |    |
+    // v    v
+    // C -> D
+
+    RuleKeyInput input = RuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    TestRule ruleA = new TestRule();
+    TestRule ruleB = new TestRule();
+    TestRule ruleC = new TestRule();
+    TestRule ruleD = new TestRule();
+
+    DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
+    cache.get(ruleA, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
+    cache.get(ruleB, r -> new RuleKeyResult<>("", ImmutableList.of(ruleA), ImmutableList.of()));
+    cache.get(ruleC, r -> new RuleKeyResult<>("", ImmutableList.of(ruleA), ImmutableList.of()));
+    cache.get(
+        ruleD, r -> new RuleKeyResult<>("", ImmutableList.of(ruleB, ruleC), ImmutableList.of()));
+    assertTrue(cache.isCached(ruleD));
+    cache.invalidateInputs(ImmutableList.of(input));
+    assertFalse(cache.isCached(ruleD));
+  }
+
+  @Test
   public void testHitMissStats() {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
     TestRule rule = new TestRule();
