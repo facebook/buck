@@ -1,0 +1,15 @@
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/android:config",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/android:utils",
+        "//test/com/facebook/buck/config:FakeBuckConfig",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/junit:junit",
+    ],
+)
