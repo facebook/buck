@@ -1,19 +1,19 @@
 java_test(
   name = 'tests1',
   srcs = glob(['*Junit.java']),
-  deps = [ '//lib:junit' ],
+  deps = [ 'buck//third-party/java/junit:junit' ],
 )
 
 java_test(
   name = 'tests2',
   test_type = 'testng',
   srcs = glob(['*TestNG.java']),
-  deps = [ '//lib:testng' ],
+  deps = [ 'buck//third-party/java/testng:testng' ],
 )
 
 java_test(
   name = 'tests3',
   srcs = glob(['*Junit412.java']),
-  deps = [ '//lib:junit-4.12' ],
+  deps = [ 'buck//third-party/java/junit:junit' ],
 )
 
