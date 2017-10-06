@@ -9,7 +9,7 @@ public class UmbrellaHeaderTest {
 
   @Test
   public void testUmbrellaHeader() {
-    UmbrellaHeader header = new UmbrellaHeader(ImmutableList.of("header1.h", "header2.h"));
-    assertEquals("#import \"header1.h\"\n" + "#import \"header2.h\"\n", header.render());
+    UmbrellaHeader header = new UmbrellaHeader("lib", ImmutableList.of("header1.h", "header2.h"));
+    assertEquals("#import <lib/header1.h>\n#import <lib/header2.h>\n", header.render());
   }
 }

@@ -19,13 +19,18 @@ import com.google.common.collect.ImmutableList;
 
 public class UmbrellaHeader {
 
+  private final String targetName;
   private final ImmutableList<String> headerNames;
 
-  public UmbrellaHeader(ImmutableList<String> headerNames) {
+  public UmbrellaHeader(String targetName, ImmutableList<String> headerNames) {
+    this.targetName = targetName;
     this.headerNames = headerNames;
   }
 
   public String render() {
-    return headerNames.stream().map(x -> "#import \"" + x + "\"\n").reduce("", String::concat);
+    return headerNames
+        .stream()
+        .map(x -> String.format("#import <%s/%s>\n", targetName, x))
+        .reduce("", String::concat);
   }
 }
