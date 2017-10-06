@@ -6,6 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/buck-out/.trash" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/bin" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/log" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/test-ignore" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

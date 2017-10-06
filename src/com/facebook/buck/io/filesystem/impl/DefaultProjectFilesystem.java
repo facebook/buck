@@ -377,8 +377,27 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot, final FileVisitor<Path> fileVisitor) throws IOException {
+    walkRelativeFileTree(pathRelativeToProjectRoot, fileVisitor, true);
+  }
+
+  @Override
+  public void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor, boolean skipIgnored)
+      throws IOException {
     walkRelativeFileTree(
-        pathRelativeToProjectRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), fileVisitor);
+        pathRelativeToProjectRoot,
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+        fileVisitor,
+        skipIgnored);
+  }
+
+  @Override
+  public void walkRelativeFileTree(
+      Path pathRelativeToProjectRoot,
+      EnumSet<FileVisitOption> visitOptions,
+      final FileVisitor<Path> fileVisitor)
+      throws IOException {
+    walkRelativeFileTree(pathRelativeToProjectRoot, visitOptions, fileVisitor, true);
   }
 
   /** Walks a project-root relative file tree with a visitor and visit options. */
@@ -386,7 +405,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
-      final FileVisitor<Path> fileVisitor)
+      FileVisitor<Path> fileVisitor,
+      boolean skipIgnored)
       throws IOException {
 
     FileVisitor<Path> relativizingVisitor =
@@ -421,7 +441,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
           }
         };
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    walkFileTree(rootPath, visitOptions, relativizingVisitor);
+    walkFileTree(rootPath, visitOptions, relativizingVisitor, skipIgnored);
   }
 
   /** Allows {@link Files#walkFileTree} to be faked in tests. */
@@ -434,7 +454,14 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public void walkFileTree(Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor)
       throws IOException {
-    new FileTreeWalker(root, options, fileVisitor).walk();
+    walkFileTree(root, options, fileVisitor, true);
+  }
+
+  @Override
+  public void walkFileTree(
+      Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
+      throws IOException {
+    new FileTreeWalker(root, options, fileVisitor, skipIgnored).walk();
   }
 
   @Override
@@ -987,18 +1014,28 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     private final FileVisitor<Path> visitor;
     private final Path root;
     private final boolean followLinks;
+    private final boolean skipIgnored;
     private ArrayDeque<DirWalkState> state;
 
-    FileTreeWalker(Path root, Set<FileVisitOption> options, FileVisitor<Path> pathFileVisitor) {
+    FileTreeWalker(
+        Path root,
+        Set<FileVisitOption> options,
+        FileVisitor<Path> pathFileVisitor,
+        boolean skipIgnored) {
       this.followLinks = options.contains(FileVisitOption.FOLLOW_LINKS);
       this.visitor = pathFileVisitor;
       this.root = root;
       this.state = new ArrayDeque<>();
+      this.skipIgnored = skipIgnored;
     }
 
     private ImmutableList<Path> getContents(Path root) throws IOException {
-      try (DirectoryStream<Path> stream =
-          Files.newDirectoryStream(root, input -> !isIgnored(relativize(input)))) {
+      DirectoryStream.Filter<? super Path> skipIgnoredFilter =
+          input -> !isIgnored(relativize(input));
+      DirectoryStream.Filter<? super Path> doNotSkipFilter = input -> true;
+      DirectoryStream.Filter<? super Path> filter =
+          skipIgnored ? skipIgnoredFilter : doNotSkipFilter;
+      try (DirectoryStream<Path> stream = Files.newDirectoryStream(root, filter)) {
         return FluentIterable.from(stream).toSortedList(Comparator.naturalOrder());
       }
     }
