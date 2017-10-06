@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /** Encapsulates headers from a single root location. */
 public abstract class CxxHeaders implements RuleKeyAppendable {
@@ -43,6 +44,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   /** @return the root of the includes. */
+  @Nullable
   public abstract SourcePath getRoot();
 
   /** @return the path to the optional header map to use for this header pack. */
@@ -52,6 +54,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
    *     the root, but can be overridden to use an alternate path.
    */
+  @Nullable
   public abstract SourcePath getIncludeRoot();
 
   /**
@@ -91,10 +94,12 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
             cxxHeaders.getIncludeType(),
             resolveSourcePathAndShorten(resolver, headerMap.get(), pathMinimizer).toString());
       }
-      roots.put(
-          cxxHeaders.getIncludeType(),
-          resolveSourcePathAndShorten(resolver, cxxHeaders.getIncludeRoot(), pathMinimizer)
-              .toString());
+      if (cxxHeaders.getIncludeRoot() != null) {
+        roots.put(
+            cxxHeaders.getIncludeType(),
+            resolveSourcePathAndShorten(resolver, cxxHeaders.getIncludeRoot(), pathMinimizer)
+                .toString());
+      }
     }
 
     // Define the include type ordering.  We always add local ("-I") include paths first so that

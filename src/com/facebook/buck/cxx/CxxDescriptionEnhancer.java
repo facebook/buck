@@ -492,7 +492,8 @@ public class CxxDescriptionEnhancer {
       ImmutableSet<FrameworkPath> frameworks,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps,
       ImmutableList<String> includeDirs,
-      Optional<SymlinkTree> symlinkTree) {
+      Optional<SymlinkTree> symlinkTree,
+      ImmutableSortedSet<SourcePath> rawHeaders) {
 
     // Add the private includes of any rules which this rule depends on, and which list this rule as
     // a test.
@@ -540,6 +541,10 @@ public class CxxDescriptionEnhancer {
             CxxSandboxInclude.from(
                 symlinkTree.get(), includeDir, CxxPreprocessables.IncludeType.LOCAL));
       }
+    }
+
+    if (!rawHeaders.isEmpty()) {
+      builder.addIncludes(CxxRawHeaders.of(rawHeaders));
     }
 
     builder.addAllIncludes(allIncludes.build()).addAllFrameworks(frameworks);
@@ -779,7 +784,8 @@ public class CxxDescriptionEnhancer {
         args.getPlatformLinkerFlags(),
         args.getCxxRuntimeType(),
         args.getIncludeDirs(),
-        Optional.empty());
+        Optional.empty(),
+        args.getRawHeaders());
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -811,7 +817,8 @@ public class CxxDescriptionEnhancer {
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableList<String> includeDirs,
-      Optional<Boolean> xcodePrivateHeadersSymlinks) {
+      Optional<Boolean> xcodePrivateHeadersSymlinks,
+      ImmutableSortedSet<SourcePath> rawHeaders) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     //    TODO(beefon): should be:
@@ -867,7 +874,8 @@ public class CxxDescriptionEnhancer {
                     .filter(CxxPreprocessorDep.class::isInstance)
                     .toImmutableList()),
             includeDirs,
-            sandboxTree);
+            sandboxTree,
+            rawHeaders);
 
     ImmutableListMultimap.Builder<CxxSource.Type, Arg> allCompilerFlagsBuilder =
         ImmutableListMultimap.builder();

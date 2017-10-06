@@ -68,6 +68,8 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call native_common.link_whole /}
 
+{call cxx_common.raw_headers_arg /}
+
 {call buck.arg}
   {param name : 'soname' /}
   {param default : 'None' /}

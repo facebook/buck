@@ -199,7 +199,8 @@ public class CxxPythonExtensionDescription
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
             args.getIncludeDirs(),
-            sandboxTree);
+            sandboxTree,
+            args.getRawHeaders());
 
     // Generate rule to build the object files.
     ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =

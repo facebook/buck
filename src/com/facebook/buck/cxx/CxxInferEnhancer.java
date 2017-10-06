@@ -303,7 +303,8 @@ public final class CxxInferEnhancer {
             cxxPlatform,
             RichStream.from(deps).filter(CxxPreprocessorDep.class::isInstance).toImmutableList()),
         args.getIncludeDirs(),
-        sandboxTree);
+        sandboxTree,
+        args.getRawHeaders());
   }
 
   private ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(

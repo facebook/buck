@@ -285,7 +285,7 @@ class Depfiles {
           String errorMessage =
               String.format(
                   "%s: included an untracked header \"%s\"\n\n"
-                      + "Please reference this header file from \"headers\" or \"exported_headers\" \n"
+                      + "Please reference this header file from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
                       + "in the appropriate build rule.",
                   inputPath, repoRelativePath.orElse(header));
           eventBus.post(

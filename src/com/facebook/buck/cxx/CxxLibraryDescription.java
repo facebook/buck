@@ -228,7 +228,8 @@ public class CxxLibraryDescription
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
         args.getIncludeDirs(),
-        sandboxTree);
+        sandboxTree,
+        args.getRawHeaders());
   }
 
   private static ImmutableList<SourcePath> requireObjects(
@@ -1165,6 +1166,10 @@ public class CxxLibraryDescription
               cxxPreprocessorInputBuilder.addIncludes(
                   CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
             }
+
+            if (!args.getRawHeaders().isEmpty()) {
+              cxxPreprocessorInputBuilder.addIncludes(CxxRawHeaders.of(args.getRawHeaders()));
+            }
           }
 
           CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
@@ -1295,6 +1300,26 @@ public class CxxLibraryDescription
     @Value.Default
     default SourceList getExportedHeaders() {
       return SourceList.EMPTY;
+    }
+
+    @Value.Check
+    @Override
+    default void checkHeadersUsage() {
+      LinkableCxxConstructorArg.super.checkHeadersUsage();
+
+      if (getRawHeaders().isEmpty()) {
+        return;
+      }
+
+      if (!getExportedHeaders().isEmpty()) {
+        throw new HumanReadableException(
+            "Cannot use `exported_headers` and `raw_headers` in the same rule.");
+      }
+
+      if (!getExportedPlatformHeaders().getPatternsAndValues().isEmpty()) {
+        throw new HumanReadableException(
+            "Cannot use `exported_platform_headers` and `raw_headers` in the same rule.");
+      }
     }
 
     @Value.Default
