@@ -323,7 +323,7 @@ public class TestCommand extends BuildCommand {
           testRules,
           build.getExecutionContext(),
           getTestRunningOptions(params),
-          testPool.getListeningExecutorService(),
+          testPool.getWeightedListeningExecutorService(),
           buildEngine,
           new DefaultStepRunner(),
           buildContext,
