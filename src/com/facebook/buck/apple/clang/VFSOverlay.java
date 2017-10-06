@@ -1,6 +1,7 @@
 package com.facebook.buck.apple.clang;
 
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,7 +12,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 
 /**
  * VFSOverlays are used for similar purposes to headermaps, but can be used to overlay more than
@@ -33,7 +33,7 @@ public class VFSOverlay {
   private final boolean case_sensitive = false;
 
   @JsonProperty("roots")
-  private ImmutableList<Directory> computeRoots() {
+  private ImmutableList<VirtualDirectory> computeRoots() {
     Multimap<Path, Pair<Path, Path>> byParent = MultimapBuilder.hashKeys().hashSetValues().build();
     overlays.forEach(
         (virtual, real) -> {
@@ -43,7 +43,14 @@ public class VFSOverlay {
         .asMap()
         .entrySet()
         .stream()
-        .map(e -> new Directory(e.getKey(), e.getValue()))
+        .map(
+            e ->
+                new VirtualDirectory(
+                    e.getKey(),
+                    e.getValue()
+                        .stream()
+                        .map(x -> new VirtualFile(x.getFirst(), x.getSecond()))
+                        .collect(MoreCollectors.toImmutableList())))
         .collect(MoreCollectors.toImmutableList());
   }
 
@@ -57,8 +64,8 @@ public class VFSOverlay {
     return ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsString(this);
   }
 
-  @JsonSerialize(as = Directory.class)
-  private class Directory {
+  @JsonSerialize(as = VirtualDirectory.class)
+  private class VirtualDirectory {
 
     @SuppressWarnings("PMD.UnusedPrivateField")
     @JsonProperty
@@ -66,24 +73,17 @@ public class VFSOverlay {
 
     @JsonProperty private final Path name;
 
-    private final Collection<Pair<Path, Path>> contents;
-
     @JsonProperty("contents")
-    private ImmutableList<File> computeContents() {
-      return this.contents
-          .stream()
-          .map(x -> new File(x.getFirst(), x.getSecond()))
-          .collect(MoreCollectors.toImmutableList());
-    }
+    private final ImmutableList<VirtualFile> fileList;
 
-    public Directory(Path root, Collection<Pair<Path, Path>> contents) {
+    public VirtualDirectory(Path root, ImmutableList<VirtualFile> fileList) {
       this.name = root;
-      this.contents = contents;
+      this.fileList = fileList;
     }
   }
 
-  @JsonSerialize(as = File.class)
-  private class File {
+  @JsonSerialize(as = VirtualFile.class)
+  private class VirtualFile {
     @SuppressWarnings("PMD.UnusedPrivateField")
     @JsonProperty
     private final String type = "file";
@@ -93,9 +93,15 @@ public class VFSOverlay {
     @JsonProperty("external-contents")
     private final Path realPath;
 
-    public File(Path name, Path realPath) {
+    public VirtualFile(Path name, Path realPath) {
       this.name = name;
       this.realPath = realPath;
+      if (!realPath.isAbsolute()) {
+        throw new HumanReadableException(
+            "Attempting to make vfsoverlay with non-absolute path '%s' for external contents "
+                + "field. Only absolute paths are currently supported.",
+            realPath);
+      }
     }
   }
 }
