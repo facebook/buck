@@ -1,11 +1,11 @@
 package com.facebook.buck.apple.clang;
 
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
@@ -94,14 +94,13 @@ public class VFSOverlay {
     private final Path realPath;
 
     public VirtualFile(Path name, Path realPath) {
+      Preconditions.checkState(
+          realPath.isAbsolute(),
+          "Attempting to make vfsoverlay with non-absolute path '%s' for "
+              + "external contents field. Only absolute paths are currently supported.",
+          realPath);
       this.name = name;
       this.realPath = realPath;
-      if (!realPath.isAbsolute()) {
-        throw new HumanReadableException(
-            "Attempting to make vfsoverlay with non-absolute path '%s' for external contents "
-                + "field. Only absolute paths are currently supported.",
-            realPath);
-      }
     }
   }
 }
