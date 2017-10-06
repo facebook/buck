@@ -89,7 +89,7 @@ class CommandLineArgs:
         return self.command is None or "--help" in self.command_options
 
     def is_version(self):
-        return self.command is None and "--version" in self.buck_options
+        return self.command is None and any(v in self.buck_options for v in ['--version', '-V'])
 
 
 class BuckToolException(Exception):

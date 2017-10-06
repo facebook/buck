@@ -577,14 +577,6 @@ public final class Main {
     // Setup the console.
     final Console console = makeCustomConsole(context, verbosity, buckConfig);
 
-    // dirty! this is a temporary fix to speed up buck --version
-    // this will go away with permanent fix that dispatches commands providing only needed
-    // parameters which are lazily initialized
-    if (command.subcommand instanceof VersionCommand) {
-      ((VersionCommand) command.subcommand).printVersion(console);
-      return 0;
-    }
-
     // No more early outs: if this command is not read only, acquire the command semaphore to
     // become the only executing read/write command.
     // This must happen immediately before the try block to ensure that the semaphore is released.
