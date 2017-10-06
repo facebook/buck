@@ -603,6 +603,14 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     }
   }
 
+  @Override
+  public boolean isCacheable() {
+    // TODO(cjhopman): We don't correctly sanitize paths in some of the proguard configuration
+    // files. If we correctly sanitize those paths (or remove the configuration files from the
+    // recorded outputs), we can make this rule cacheable.
+    return false;
+  }
+
   /**
    * Create dex artifacts for all of the individual directories of compiled .class files (or the
    * obfuscated jar files if proguard is used). If split dex is used, multiple dex artifacts will be
