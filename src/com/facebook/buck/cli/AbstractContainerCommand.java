@@ -44,6 +44,15 @@ public abstract class AbstractContainerCommand implements Command {
   @SuppressWarnings("PMD.UnusedPrivateField")
   private boolean helpScreen;
 
+  @Option(
+    name = "--flagfile",
+    aliases = {"-f"},
+    metaVar = "FILE",
+    usage = "File to read command line arguments from."
+  )
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private String[] files;
+
   protected String getSubcommandsFieldName() {
     return "subcommand";
   }
