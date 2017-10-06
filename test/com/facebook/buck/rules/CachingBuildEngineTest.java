@@ -1825,7 +1825,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
                 BuildContext context, CellPathResolver cellPathResolver) {
-              return ImmutableList.of(new PathSourcePath(filesystem, input));
+              return ImmutableList.of(PathSourcePath.of(filesystem, input));
             }
 
             @Override
@@ -1919,7 +1919,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
                 BuildContext context, CellPathResolver cellPathResolver) {
-              return ImmutableList.of(new PathSourcePath(filesystem, input));
+              return ImmutableList.of(PathSourcePath.of(filesystem, input));
             }
 
             @Override
@@ -1995,7 +1995,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
                 BuildContext context, CellPathResolver cellPathResolver) {
-              return ImmutableList.of(new PathSourcePath(filesystem, input));
+              return ImmutableList.of(PathSourcePath.of(filesystem, input));
             }
 
             @Override
@@ -2048,7 +2048,7 @@ public class CachingBuildEngineTest {
       final ImmutableSet<SourcePath> inputsBefore = ImmutableSet.of();
       DepFileBuildRule rule =
           new DepFileBuildRule(target, filesystem, params) {
-            @AddToRuleKey private final SourcePath path = new PathSourcePath(filesystem, inputFile);
+            @AddToRuleKey private final SourcePath path = PathSourcePath.of(filesystem, inputFile);
 
             @Override
             public ImmutableList<Step> getBuildSteps(
@@ -2357,8 +2357,7 @@ public class CachingBuildEngineTest {
           new DepFileBuildRule(target, filesystem, params) {
             @AddToRuleKey private final SourcePath path = genrule.getSourcePathToOutput();
 
-            @AddToRuleKey
-            private final SourcePath otherDep = new PathSourcePath(filesystem, input2);
+            @AddToRuleKey private final SourcePath otherDep = PathSourcePath.of(filesystem, input2);
 
             @Override
             public ImmutableList<Step> getBuildSteps(
@@ -2488,7 +2487,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
                 BuildContext context, CellPathResolver cellPathResolver) {
-              return ImmutableList.of(new PathSourcePath(filesystem, input));
+              return ImmutableList.of(PathSourcePath.of(filesystem, input));
             }
 
             @Override
@@ -2612,7 +2611,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
                 BuildContext context, CellPathResolver cellPathResolver) {
-              return ImmutableList.of(new PathSourcePath(filesystem, input));
+              return ImmutableList.of(PathSourcePath.of(filesystem, input));
             }
 
             @Override
@@ -2694,7 +2693,7 @@ public class CachingBuildEngineTest {
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       BuildRuleParams params = TestBuildRuleParams.create();
       final SourcePath input =
-          new PathSourcePath(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
+          PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
       filesystem.touch(pathResolver.getRelativePath(input));
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
@@ -2838,7 +2837,7 @@ public class CachingBuildEngineTest {
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       BuildRuleParams params = TestBuildRuleParams.create();
       final SourcePath input =
-          new PathSourcePath(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
+          PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
       filesystem.touch(pathResolver.getRelativePath(input));
       final Path output = Paths.get("output");
       DepFileBuildRule rule =
@@ -3682,8 +3681,8 @@ public class CachingBuildEngineTest {
 
     @Before
     public void setUpChild() throws Exception {
-      depfileInput = new PathSourcePath(filesystem, Paths.get("path/in/depfile"));
-      nonDepfileInput = new PathSourcePath(filesystem, Paths.get("path/not/in/depfile"));
+      depfileInput = FakeSourcePath.of(filesystem, "path/in/depfile");
+      nonDepfileInput = FakeSourcePath.of(filesystem, "path/not/in/depfile");
       dependency =
           new NoopBuildRuleWithValueAddedToRuleKey(
               BUILD_TARGET.withFlavors(InternalFlavor.of("noop")), filesystem);

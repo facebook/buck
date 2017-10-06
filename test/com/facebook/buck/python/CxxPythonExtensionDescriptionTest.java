@@ -148,7 +148,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxLibraryBuilder(cxxLibraryTarget)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("something.cpp"), ImmutableList.of())));
+                    SourceWithFlags.of(FakeSourcePath.of("something.cpp"), ImmutableList.of())));
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
                 target,
@@ -433,7 +433,7 @@ public class CxxPythonExtensionDescriptionTest {
 
     CxxLibraryBuilder depBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
     CxxPythonExtensionBuilder extensionBuilder =
         new CxxPythonExtensionBuilder(
                 BuildTargetFactory.newInstance("//:rule"),

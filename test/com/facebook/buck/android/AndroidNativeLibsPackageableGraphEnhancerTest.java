@@ -142,7 +142,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib"))
             .setSoname("somelib.so")
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test/bar.cpp"))));
     TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     BuildRuleResolver ruleResolver =
@@ -325,13 +325,12 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     CxxLibraryBuilder cxxLibraryBuilder1 =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib1"))
             .setSoname("somelib.so")
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test/bar.cpp"))));
     TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription1 = cxxLibraryBuilder1.build();
     CxxLibraryBuilder cxxLibraryBuilder2 =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxxlib2"))
             .setSoname("somelib.so")
-            .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar2.cpp"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test/bar2.cpp"))));
     TargetNode<CxxLibraryDescriptionArg, ?> cxxLibraryDescription2 = cxxLibraryBuilder2.build();
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(

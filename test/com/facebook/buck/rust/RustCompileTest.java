@@ -64,7 +64,7 @@ public class RustCompileTest {
   public void crateRootMainInSrcs() {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
-            "//:donotcare", ImmutableSortedSet.of(new FakeSourcePath("main.rs")));
+            "//:donotcare", ImmutableSortedSet.of(FakeSourcePath.of("main.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
   }
 
@@ -72,7 +72,7 @@ public class RustCompileTest {
   public void crateRootTargetNameInSrcs() {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
-            "//:myname", ImmutableSortedSet.of(new FakeSourcePath("myname.rs")));
+            "//:myname", ImmutableSortedSet.of(FakeSourcePath.of("myname.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
   }
 
@@ -82,7 +82,7 @@ public class RustCompileTest {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
             "//:myname",
-            ImmutableSortedSet.of(new FakeSourcePath("main.rs"), new FakeSourcePath("myname.rs")));
+            ImmutableSortedSet.of(FakeSourcePath.of("main.rs"), FakeSourcePath.of("myname.rs")));
     linkable.getCrateRoot();
   }
 

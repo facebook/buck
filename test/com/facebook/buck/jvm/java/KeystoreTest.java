@@ -40,8 +40,8 @@ public class KeystoreTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
-        .setStore(new FakeSourcePath("keystores/debug.keystore"))
-        .setProperties(new FakeSourcePath("keystores/debug.keystore.properties"))
+        .setStore(FakeSourcePath.of("keystores/debug.keystore"))
+        .setProperties(FakeSourcePath.of("keystores/debug.keystore.properties"))
         .build(ruleResolver);
   }
 
@@ -50,9 +50,9 @@ public class KeystoreTest {
     Keystore keystore = createKeystoreRuleForTest();
     assertEquals("keystore", keystore.getType());
 
-    assertEquals(new FakeSourcePath("keystores/debug.keystore"), keystore.getPathToStore());
+    assertEquals(FakeSourcePath.of("keystores/debug.keystore"), keystore.getPathToStore());
     assertEquals(
-        new FakeSourcePath("keystores/debug.keystore.properties"),
+        FakeSourcePath.of("keystores/debug.keystore.properties"),
         keystore.getPathToPropertiesFile());
   }
 

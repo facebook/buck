@@ -82,7 +82,7 @@ public class ExportFileDescription
       src = args.getSrc().get();
     } else {
       src =
-          new PathSourcePath(
+          PathSourcePath.of(
               projectFilesystem,
               buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
     }

@@ -79,7 +79,7 @@ public class AppleLibraryDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(dep.getBuildTarget()));
     BuildRule binary = builder.build(resolver);
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
@@ -92,8 +92,8 @@ public class AppleLibraryDescriptionTest {
 
   @Test
   public void swiftMetadata() throws Exception {
-    final SourcePath objCSourcePath = new FakeSourcePath("foo.m");
-    final SourcePath swiftSourcePath = new FakeSourcePath("bar.swift");
+    final SourcePath objCSourcePath = FakeSourcePath.of("foo.m");
+    final SourcePath swiftSourcePath = FakeSourcePath.of("bar.swift");
 
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//:library");
     TargetNode<?, ?> binaryNode =

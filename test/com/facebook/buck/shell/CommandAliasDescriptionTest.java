@@ -80,7 +80,7 @@ public class CommandAliasDescriptionTest {
 
     BuildTarget innerTarget = BuildTargetFactory.newInstance("//inner:tool");
     TargetNode<?, ?> innerNode =
-        new ExportFileBuilder(innerTarget).setSrc(new FakeSourcePath("fake/path")).build();
+        new ExportFileBuilder(innerTarget).setSrc(FakeSourcePath.of("fake/path")).build();
 
     CommandAliasBuilder.BuildResult result =
         builder.setExe(builder.subBuilder(delegate).setExe(innerNode).build()).buildResult();
@@ -315,7 +315,7 @@ public class CommandAliasDescriptionTest {
         (platform, inputs) -> {
           CommandAliasBuilder.BuildResult result = multiPlatformScenario(platform);
           assertEquals(
-              Stream.of(inputs).map(FakeSourcePath::new).collect(Collectors.toSet()),
+              Stream.of(inputs).map(FakeSourcePath::of).collect(Collectors.toSet()),
               result.commandAlias().getExecutableCommand().getInputs());
         };
 
@@ -414,7 +414,7 @@ public class CommandAliasDescriptionTest {
                       builder.addBuildRule(BuildTargetFactory.newInstance("//b:dep" + index))))
               .setInputs(
                   ImmutableSortedSet.of(
-                      new FakeSourcePath("a" + index), new FakeSourcePath("b" + index)))
+                      FakeSourcePath.of("a" + index), FakeSourcePath.of("b" + index)))
               .build();
     }
 

@@ -114,14 +114,14 @@ public class CxxPreprocessablesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//hello/world:test");
     ImmutableMap<String, SourcePath> headerMap =
         ImmutableMap.of(
-            "foo/bar.h", new FakeSourcePath("header1.h"),
-            "foo/hello.h", new FakeSourcePath("header2.h"));
+            "foo/bar.h", FakeSourcePath.of("header1.h"),
+            "foo/hello.h", FakeSourcePath.of("header2.h"));
 
     // Verify that the resolveHeaderMap returns sane results.
     ImmutableMap<Path, SourcePath> expected =
         ImmutableMap.of(
-            target.getBasePath().resolve("foo/bar.h"), new FakeSourcePath("header1.h"),
-            target.getBasePath().resolve("foo/hello.h"), new FakeSourcePath("header2.h"));
+            target.getBasePath().resolve("foo/bar.h"), FakeSourcePath.of("header1.h"),
+            target.getBasePath().resolve("foo/hello.h"), FakeSourcePath.of("header2.h"));
     ImmutableMap<Path, SourcePath> actual =
         CxxPreprocessables.resolveHeaderMap(target.getBasePath(), headerMap);
     assertEquals(expected, actual);
@@ -196,7 +196,7 @@ public class CxxPreprocessablesTest {
     ImmutableMap<Path, SourcePath> links =
         ImmutableMap.of(
             Paths.get("link1"),
-            new FakeSourcePath("hello"),
+            FakeSourcePath.of("hello"),
             Paths.get("link2"),
             genrule.getSourcePathToOutput());
 

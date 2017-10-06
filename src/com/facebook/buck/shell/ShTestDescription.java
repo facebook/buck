@@ -109,7 +109,7 @@ public class ShTestDescription
         testArgs,
         testEnv,
         FluentIterable.from(args.getResources())
-            .transform(p -> new PathSourcePath(projectFilesystem, p))
+            .transform(p -> PathSourcePath.of(projectFilesystem, p))
             .toSortedSet(Ordering.natural()),
         args.getTestRuleTimeoutMs().map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.getRunTestSeparately(),

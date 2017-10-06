@@ -96,9 +96,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     links =
         ImmutableMap.of(
             link1,
-            new PathSourcePath(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1)),
+            PathSourcePath.of(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1)),
             link2,
-            new PathSourcePath(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file2)));
+            PathSourcePath.of(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file2)));
 
     // The output path used by the buildable for the link tree.
     symlinkTreeRoot =
@@ -164,7 +164,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             symlinkTreeRoot,
             ImmutableMap.of(
                 Paths.get("different/link"),
-                new PathSourcePath(
+                PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
 
     // Calculate their rule keys and verify they're different.

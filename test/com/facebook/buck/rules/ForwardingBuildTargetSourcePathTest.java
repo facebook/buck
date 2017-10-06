@@ -44,7 +44,7 @@ public class ForwardingBuildTargetSourcePathTest {
     Path relativePath = Paths.get("foo/bar");
     ForwardingBuildTargetSourcePath sourcePath =
         ForwardingBuildTargetSourcePath.of(
-            target, new PathSourcePath(new FakeProjectFilesystem(), relativePath));
+            target, PathSourcePath.of(new FakeProjectFilesystem(), relativePath));
     assertEquals(target, sourcePath.getTarget());
     assertEquals(relativePath, pathResolver.getRelativePath(sourcePath));
   }

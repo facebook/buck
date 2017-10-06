@@ -66,7 +66,7 @@ public class AppleBundleDescriptionTest {
         AppleBundleDescriptionArg.builder()
             .setName("bundle")
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(binary)
             .setDeps(
                 ImmutableSortedSet.of(
@@ -124,7 +124,7 @@ public class AppleBundleDescriptionTest {
         AppleBundleDescriptionArg.builder()
             .setName("bundle")
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(binary)
             .setDeps(
                 ImmutableSortedSet.<BuildTarget>naturalOrder()
@@ -166,7 +166,7 @@ public class AppleBundleDescriptionTest {
     TargetNode<?, ?> bundleNode =
         new AppleBundleBuilder(bundleTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(binaryTarget)
             .build();
 

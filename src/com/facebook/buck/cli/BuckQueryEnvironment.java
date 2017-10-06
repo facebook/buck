@@ -262,7 +262,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     TargetNode<?, ?> node = getNode(target);
     return node.getInputs()
         .stream()
-        .map(path -> new PathSourcePath(node.getFilesystem(), path))
+        .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(MoreCollectors.toImmutableSet());
   }
@@ -449,7 +449,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
           MorePaths.relativize(
               rootPath, cell.getFilesystem().resolve(path.get()).resolve(cell.getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
-      SourcePath sourcePath = new PathSourcePath(cell.getFilesystem(), buildFilePath);
+      SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
       builder.add(QueryFileTarget.of(sourcePath));
     }
     return builder.build();

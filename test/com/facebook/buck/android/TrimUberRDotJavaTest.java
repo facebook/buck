@@ -30,7 +30,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -136,7 +136,7 @@ public class TrimUberRDotJavaTest {
             trimTarget,
             filesystem,
             TestBuildRuleParams.create(),
-            Optional.of(new PathSourcePath(filesystem, rDotJavaDir)),
+            Optional.of(FakeSourcePath.of(filesystem, rDotJavaDir)),
             ImmutableList.of(dexProducedFromJavaLibrary),
             keepResourcePattern);
     resolver.addToIndex(trimUberRDotJava);

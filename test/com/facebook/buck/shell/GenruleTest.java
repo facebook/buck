@@ -130,10 +130,10 @@ public class GenruleTest {
             .setOut("AndroidManifest.xml")
             .setSrcs(
                 ImmutableList.of(
-                    new PathSourcePath(
+                    PathSourcePath.of(
                         filesystem,
                         filesystem.getPath("src/com/facebook/katana/convert_to_katana.py")),
-                    new PathSourcePath(
+                    PathSourcePath.of(
                         filesystem,
                         filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml"))))
             .build(ruleResolver, filesystem);
@@ -319,7 +319,7 @@ public class GenruleTest {
      */
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     DefaultWorkerTool workerTool =
@@ -422,7 +422,7 @@ public class GenruleTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(ruleResolver);
 
     BuildRule workerToolRule =
@@ -466,9 +466,9 @@ public class GenruleTest {
             .setBash("ignored")
             .setSrcs(
                 ImmutableList.of(
-                    new PathSourcePath(filesystem, filesystem.getPath("in-dir.txt")),
-                    new PathSourcePath(filesystem, filesystem.getPath("foo/bar.html")),
-                    new PathSourcePath(filesystem, filesystem.getPath("other/place.txt"))))
+                    PathSourcePath.of(filesystem, filesystem.getPath("in-dir.txt")),
+                    PathSourcePath.of(filesystem, filesystem.getPath("foo/bar.html")),
+                    PathSourcePath.of(filesystem, filesystem.getPath("other/place.txt"))))
             .setOut("example-file")
             .build(resolver);
 
@@ -824,7 +824,7 @@ public class GenruleTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
+            .setMain(PathSourcePath.of(filesystem, Paths.get("dep.exe")))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath("something", Paths.get("dep.exe"));
     filesystem.writeContentsToPath(
@@ -857,7 +857,7 @@ public class GenruleTest {
             .setOut("something")
             .build(resolver);
     new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-        .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
+        .setMain(PathSourcePath.of(filesystem, Paths.get("dep.exe")))
         .setDeps(ImmutableSortedSet.of(extra.getBuildTarget()))
         .build(resolver, filesystem);
     rule = ruleBuilder.build(resolver);
@@ -886,7 +886,7 @@ public class GenruleTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .setMain(new PathSourcePath(filesystem, Paths.get("dep.exe")))
+            .setMain(PathSourcePath.of(filesystem, Paths.get("dep.exe")))
             .build(resolver, filesystem);
     filesystem.writeContentsToPath(
         "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));

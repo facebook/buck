@@ -40,12 +40,12 @@ public class JarShapeTest {
   public void shouldOnlyIncludeGivenJarInASingleJar() throws NoSuchBuildTargetException {
     TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder("//:dep")
-            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .addSrc(FakeSourcePath.of("SomeFile.java"))
             .build();
 
     TargetNode<?, ?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
-            .addSrc(new FakeSourcePath("Library.java"))
+            .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(depNode.getBuildTarget())
             .build();
 
@@ -68,12 +68,12 @@ public class JarShapeTest {
   public void aMavenJarWithoutMavenTransitiveDepsIsAnUberJar() throws NoSuchBuildTargetException {
     TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder("//:dep")
-            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .addSrc(FakeSourcePath.of("SomeFile.java"))
             .build();
 
     TargetNode<?, ?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
-            .addSrc(new FakeSourcePath("Library.java"))
+            .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(depNode.getBuildTarget())
             .build();
 
@@ -96,18 +96,18 @@ public class JarShapeTest {
   public void shouldBeAbleToCreateAMavenJar() throws NoSuchBuildTargetException {
     TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder("//:dep")
-            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .addSrc(FakeSourcePath.of("SomeFile.java"))
             .build();
 
     TargetNode<?, ?> mavenDepNode =
         JavaLibraryBuilder.createBuilder("//:maven-dep")
-            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .addSrc(FakeSourcePath.of("SomeFile.java"))
             .setMavenCoords("com.example:somelib:1.0")
             .build();
 
     TargetNode<?, ?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
-            .addSrc(new FakeSourcePath("Library.java"))
+            .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(depNode.getBuildTarget())
             .addDep(mavenDepNode.getBuildTarget())
             .build();
@@ -133,20 +133,20 @@ public class JarShapeTest {
       throws NoSuchBuildTargetException {
     TargetNode<?, ?> deepMavenDepNode =
         JavaLibraryBuilder.createBuilder("//:deep-maven")
-            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .addSrc(FakeSourcePath.of("SomeFile.java"))
             .setMavenCoords("com.example:cheese:2.0")
             .build();
 
     TargetNode<?, ?> mavenDepNode =
         JavaLibraryBuilder.createBuilder("//:maven-dep")
-            .addSrc(new FakeSourcePath("SomeFile.java"))
+            .addSrc(FakeSourcePath.of("SomeFile.java"))
             .setMavenCoords("com.example:somelib:1.0")
             .addDep(deepMavenDepNode.getBuildTarget())
             .build();
 
     TargetNode<?, ?> libNode =
         JavaLibraryBuilder.createBuilder("//:lib")
-            .addSrc(new FakeSourcePath("Library.java"))
+            .addSrc(FakeSourcePath.of("Library.java"))
             .addDep(deepMavenDepNode.getBuildTarget())
             .addDep(mavenDepNode.getBuildTarget())
             .build();

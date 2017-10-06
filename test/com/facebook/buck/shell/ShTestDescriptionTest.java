@@ -63,7 +63,7 @@ public class ShTestDescriptionTest {
             .build(resolver);
     ShTestBuilder shTestBuilder =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setTest(new FakeSourcePath("test.sh"))
+            .setTest(FakeSourcePath.of("test.sh"))
             .setArgs(ImmutableList.of("$(location //:dep)"));
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
@@ -86,7 +86,7 @@ public class ShTestDescriptionTest {
             .build(resolver);
     ShTestBuilder shTestBuilder =
         new ShTestBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setTest(new FakeSourcePath("test.sh"))
+            .setTest(FakeSourcePath.of("test.sh"))
             .setEnv(ImmutableMap.of("LOC", "$(location //:dep)"));
     assertThat(shTestBuilder.findImplicitDeps(), Matchers.hasItem(dep.getBuildTarget()));
     ShTest shTest = shTestBuilder.build(resolver);
@@ -105,7 +105,7 @@ public class ShTestDescriptionTest {
     Path resource = filesystem.getPath("resource");
     filesystem.touch(resource);
 
-    SourcePath test = new FakeSourcePath(filesystem, "some_test");
+    SourcePath test = FakeSourcePath.of(filesystem, "some_test");
     filesystem.touch(Paths.get("some_test"));
 
     // Create a test rule without resources attached.
@@ -139,7 +139,7 @@ public class ShTestDescriptionTest {
     filesystem.touch(resource);
     TargetNode<?, ?> shTestWithResources =
         new ShTestBuilder(target)
-            .setTest(new FakeSourcePath(filesystem, "some_test"))
+            .setTest(FakeSourcePath.of(filesystem, "some_test"))
             .setResources(ImmutableSortedSet.of(resource))
             .build();
     assertThat(shTestWithResources.getInputs(), Matchers.hasItem(resource));

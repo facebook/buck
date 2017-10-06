@@ -82,7 +82,7 @@ public class JavacSpecTest {
 
   @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
-    SourcePath javacPath = new FakeSourcePath("path/to/javac");
+    SourcePath javacPath = FakeSourcePath.of("path/to/javac");
 
     specBuilder.setJavacPath(Either.ofRight(javacPath));
     ExternalJavac javac = (ExternalJavac) getJavac();
@@ -93,7 +93,7 @@ public class JavacSpecTest {
   @Test
   public void returnsExternalCompilerIfCompilerArgHasPath() {
     Path externalJavac = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
-    SourcePath sourcePath = new FakeSourcePath(externalJavac.toString());
+    SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder.setCompiler(either);
@@ -105,7 +105,7 @@ public class JavacSpecTest {
   @Test
   public void compilerArgTakesPrecedenceOverJavacPathArg() {
     Path externalJavacPath = Paths.get("/foo/bar/javac.exe").toAbsolutePath();
-    SourcePath sourcePath = new FakeSourcePath(externalJavacPath.toString());
+    SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     specBuilder.setCompiler(either).setJavacPath(Either.ofLeft(Paths.get("does-not-exist")));
@@ -116,7 +116,7 @@ public class JavacSpecTest {
 
   @Test
   public void returnsJarBackedJavacWhenJarPathPresent() throws IOException {
-    SourcePath javacJarPath = new FakeSourcePath("path/to/javac.jar");
+    SourcePath javacJarPath = FakeSourcePath.of("path/to/javac.jar");
 
     specBuilder.setJavacJarPath(javacJarPath);
     JarBackedJavac javac = (JarBackedJavac) getJavac();
@@ -151,7 +151,7 @@ public class JavacSpecTest {
     specBuilder
         .setCompiler(either)
         .setJavacJarPath(
-            new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
+            PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JarBackedJavac javac = (JarBackedJavac) getJavac();
 
     assertThat(javac.getInputs(), Matchers.contains(prebuiltJar.getSourcePathToOutput()));
@@ -159,7 +159,7 @@ public class JavacSpecTest {
 
   @Test
   public void returnsOutOfProcessJarBackedJavacIfRequested() throws IOException {
-    SourcePath javacJarPath = new FakeSourcePath("path/to/javac.jar");
+    SourcePath javacJarPath = FakeSourcePath.of("path/to/javac.jar");
 
     specBuilder.setJavacJarPath(javacJarPath).setJavacLocation(Javac.Location.OUT_OF_PROCESS);
     OutOfProcessJarBackedJavac javac = (OutOfProcessJarBackedJavac) getJavac();
@@ -169,7 +169,7 @@ public class JavacSpecTest {
 
   @Test
   public void customCompilerClassNameIsSet() throws IOException {
-    FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
+    PathSourcePath javacJarPath = FakeSourcePath.of("javac_jar");
     String compilerClassName = "test.compiler";
     specBuilder.setJavacJarPath(javacJarPath).setCompilerClassName(compilerClassName);
 
@@ -180,7 +180,7 @@ public class JavacSpecTest {
 
   @Test(expected = HumanReadableException.class)
   public void mayOnlyPassOneOfJavacOrJavacJar() {
-    FakeSourcePath sourcePath = new FakeSourcePath("path");
+    PathSourcePath sourcePath = FakeSourcePath.of("path");
     specBuilder.setJavacPath(Either.ofRight(sourcePath)).setJavacJarPath(sourcePath);
 
     getJavac();

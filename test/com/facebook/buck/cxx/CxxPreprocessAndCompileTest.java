@@ -109,7 +109,7 @@ public class CxxPreprocessAndCompileTest {
           .addRuleFlags(StringArg.of("-O3"))
           .build();
   private static final Path DEFAULT_OUTPUT = Paths.get("test.o");
-  private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
+  private static final SourcePath DEFAULT_INPUT = FakeSourcePath.of("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
   private static final RuleKeyAppendableFunction<FrameworkPath, Path>
@@ -285,7 +285,7 @@ public class CxxPreprocessAndCompileTest {
                         DEFAULT_COMPILER,
                         DEFAULT_TOOL_FLAGS),
                     DEFAULT_OUTPUT,
-                    new FakeSourcePath("different"),
+                    FakeSourcePath.of("different"),
                     DEFAULT_INPUT_TYPE,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                     Optional.empty()));
@@ -351,8 +351,7 @@ public class CxxPreprocessAndCompileTest {
 
     PreprocessorFlags defaultFlags = PreprocessorFlags.builder().build();
     PreprocessorFlags alteredFlags =
-        defaultFlags.withFrameworkPaths(
-            FrameworkPath.ofSourcePath(new FakeSourcePath("different")));
+        defaultFlags.withFrameworkPaths(FrameworkPath.ofSourcePath(FakeSourcePath.of("different")));
     assertNotEquals(testData.generate(defaultFlags), testData.generate(alteredFlags));
   }
 
@@ -387,7 +386,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_COMPILER,
                 flags),
             output,
-            new FakeSourcePath(input.toString()),
+            FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             Optional.empty());
@@ -412,10 +411,10 @@ public class CxxPreprocessAndCompileTest {
       throws Exception {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
-    SourcePath preprocessor = new PathSourcePath(filesystem, filesystem.getPath("preprocessor"));
+    SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();
 
-    SourcePath compiler = new PathSourcePath(filesystem, filesystem.getPath("compiler"));
+    SourcePath compiler = FakeSourcePath.of(filesystem, "compiler");
     Tool compilerTool = new CommandTool.Builder().addInput(compiler).build();
 
     SourcePathResolver pathResolver =
@@ -430,7 +429,7 @@ public class CxxPreprocessAndCompileTest {
     filesystem.writeContentsToPath(
         "test.o: " + pathResolver.getRelativePath(DEFAULT_INPUT) + " ",
         filesystem.getPath("test.o.dep"));
-    FakeSourcePath fakeInput = new FakeSourcePath(filesystem, "test.cpp");
+    PathSourcePath fakeInput = FakeSourcePath.of(filesystem, "test.cpp");
 
     CxxPreprocessAndCompile cxxPreprocess =
         CxxPreprocessAndCompile.preprocessAndCompile(
@@ -509,7 +508,7 @@ public class CxxPreprocessAndCompileTest {
             params,
             compilerDelegate,
             output,
-            new FakeSourcePath(input.toString()),
+            FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             Optional.empty());
@@ -562,7 +561,7 @@ public class CxxPreprocessAndCompileTest {
                 COMPILER_WITH_COLOR_SUPPORT,
                 CxxToolFlags.of()),
             output,
-            new FakeSourcePath(input.toString()),
+            FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
             Optional.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

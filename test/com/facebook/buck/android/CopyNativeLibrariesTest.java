@@ -133,7 +133,7 @@ public class CopyNativeLibrariesTest {
             ruleFinder,
             ImmutableSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
+            ImmutableSet.of(FakeSourcePath.of("lib1"), FakeSourcePath.of("lib2")),
             ImmutableSet.of(),
             ImmutableSet.of(),
             "dex");

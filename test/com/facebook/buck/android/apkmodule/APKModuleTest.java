@@ -113,8 +113,8 @@ public class APKModuleTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     nodeBuilder.add(
         KeystoreBuilder.createBuilder(keystoreTarget)
-            .setStore(new FakeSourcePath("debug.keystore"))
-            .setProperties(new FakeSourcePath("keystore.properties"))
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
             .build());
 
     BuildTarget androidBinaryTarget =
@@ -122,7 +122,7 @@ public class APKModuleTest {
             "//src/com/facebook/test-android-binary:test-android-binary");
     nodeBuilder.add(
         AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
-            .setManifest(new FakeSourcePath("AndroidManifest.xml"))
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystoreTarget)
             .setOriginalDeps(
                 ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget, commonLibraryTarget))
@@ -234,14 +234,14 @@ public class APKModuleTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     nodeBuilder.add(
         KeystoreBuilder.createBuilder(keystoreTarget)
-            .setStore(new FakeSourcePath("debug.keystore"))
-            .setProperties(new FakeSourcePath("keystore.properties"))
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
             .build());
 
     BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
     nodeBuilder.add(
         AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
-            .setManifest(new FakeSourcePath("AndroidManifest.xml"))
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystoreTarget)
             .setOriginalDeps(
                 ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget, commonLibraryTarget))
@@ -330,14 +330,14 @@ public class APKModuleTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     nodeBuilder.add(
         KeystoreBuilder.createBuilder(keystoreTarget)
-            .setStore(new FakeSourcePath("debug.keystore"))
-            .setProperties(new FakeSourcePath("keystore.properties"))
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
             .build());
 
     BuildTarget androidBinaryTarget = BuildTargetFactory.newInstance("//:test-android-binary");
     nodeBuilder.add(
         AndroidBinaryBuilder.createBuilder(androidBinaryTarget)
-            .setManifest(new FakeSourcePath("AndroidManifest.xml"))
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystoreTarget)
             .setOriginalDeps(
                 ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget, commonLibraryTarget))

@@ -135,7 +135,7 @@ public class PomIntegrationTest {
         createMavenPublishable(
             "//example:template",
             "example.com:project:1.0.0",
-            new FakeSourcePath(
+            FakeSourcePath.of(
                 TestDataHelper.getTestDataDirectory(getClass())
                     .resolve("poms/template-pom.xml")
                     .toString()));

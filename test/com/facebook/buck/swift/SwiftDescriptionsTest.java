@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -51,11 +52,11 @@ public class SwiftDescriptionsTest {
 
     CxxLibraryDescriptionArg.Builder args = CxxLibraryDescriptionArg.builder().setName("bar");
 
-    FakeSourcePath swiftSrc = new FakeSourcePath("foo/bar.swift");
+    PathSourcePath swiftSrc = FakeSourcePath.of("foo/bar.swift");
 
     args.setSrcs(
         ImmutableSortedSet.of(
-            SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")), SourceWithFlags.of(swiftSrc)));
+            SourceWithFlags.of(FakeSourcePath.of("foo/foo.cpp")), SourceWithFlags.of(swiftSrc)));
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         pathResolver, outputBuilder, args.build(), buildTarget);

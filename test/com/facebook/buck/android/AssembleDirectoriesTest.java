@@ -75,7 +75,7 @@ public class AssembleDirectoriesTest {
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:output_folder");
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
-            new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
+            FakeSourcePath.of(filesystem, "folder_a"), FakeSourcePath.of(filesystem, "folder_b"));
     BuildRuleResolver ruleResolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

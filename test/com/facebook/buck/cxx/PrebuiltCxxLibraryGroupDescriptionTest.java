@@ -67,7 +67,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    SourcePath includes = new FakeSourcePath("include");
+    SourcePath includes = FakeSourcePath.of("include");
     CxxPreprocessorDep lib =
         (CxxPreprocessorDep)
             new PrebuiltCxxLibraryGroupBuilder(target)
@@ -86,7 +86,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    SourcePath path = new FakeSourcePath("include");
+    SourcePath path = FakeSourcePath.of("include");
     NativeLinkable lib =
         (NativeLinkable)
             new PrebuiltCxxLibraryGroupBuilder(target)
@@ -111,7 +111,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    SourcePath path = new FakeSourcePath("include");
+    SourcePath path = FakeSourcePath.of("include");
     NativeLinkable lib =
         (NativeLinkable)
             new PrebuiltCxxLibraryGroupBuilder(target)
@@ -136,8 +136,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    SourcePath lib1 = new FakeSourcePath("dir/lib1.so");
-    PathSourcePath lib2 = new FakeSourcePath("dir/lib2.so");
+    SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
+    PathSourcePath lib2 = FakeSourcePath.of("dir/lib2.so");
     NativeLinkable lib =
         (NativeLinkable)
             new PrebuiltCxxLibraryGroupBuilder(target)
@@ -184,8 +184,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    SourcePath lib1 = new FakeSourcePath("dir/lib1.so");
-    SourcePath lib2 = new FakeSourcePath("dir/lib2.so");
+    SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
+    SourcePath lib2 = FakeSourcePath.of("dir/lib2.so");
     NativeLinkable lib =
         (NativeLinkable)
             new PrebuiltCxxLibraryGroupBuilder(target)
@@ -276,8 +276,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         (CxxLibrary)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep2")).build(resolver);
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    SourcePath lib1 = new FakeSourcePath("dir/lib1.so");
-    SourcePath lib2 = new FakeSourcePath("dir/lib2.so");
+    SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");
+    SourcePath lib2 = FakeSourcePath.of("dir/lib2.so");
     BuildRule buildRule =
         new PrebuiltCxxLibraryGroupBuilder(target)
             .setSharedLink(ImmutableList.of("$(lib lib1.so)", "$(lib lib2.so)"))

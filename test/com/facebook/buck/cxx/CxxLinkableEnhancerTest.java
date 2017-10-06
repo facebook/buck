@@ -45,7 +45,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -77,7 +76,7 @@ public class CxxLinkableEnhancerTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("libblah.a");
   private static final ImmutableList<Arg> DEFAULT_INPUTS =
       SourcePathArg.from(
-          new FakeSourcePath("a.o"), new FakeSourcePath("b.o"), new FakeSourcePath("c.o"));
+          FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
   private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM =
       CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
@@ -183,7 +182,7 @@ public class CxxLinkableEnhancerTest {
             NativeLinkableInput.builder()
                 .setArgs(
                     SourcePathArg.from(
-                        new FakeSourcePath("simple.o"),
+                        FakeSourcePath.of("simple.o"),
                         genrule1.getSourcePathToOutput(),
                         genrule2.getSourcePathToOutput()))
                 .build(),
@@ -528,11 +527,11 @@ public class CxxLinkableEnhancerTest {
             /* thinLto */ false,
             EMPTY_DEPS,
             Optional.empty(),
-            Optional.of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
+            Optional.of(FakeSourcePath.of(filesystem, "path/to/MyBundleLoader")),
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder()
-                .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
+                .setArgs(SourcePathArg.from(FakeSourcePath.of("simple.o")))
                 .build(),
             Optional.empty());
     assertThat(Arg.stringify(cxxLink.getArgs(), pathResolver), hasItem("-bundle"));
@@ -571,7 +570,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder()
-                .setArgs(SourcePathArg.from(new FakeSourcePath("simple.o")))
+                .setArgs(SourcePathArg.from(FakeSourcePath.of("simple.o")))
                 .build(),
             Optional.empty());
     resolver.addToIndex(bundleLoaderRule);
@@ -597,7 +596,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             NativeLinkableInput.builder()
-                .setArgs(SourcePathArg.from(new FakeSourcePath("another.o")))
+                .setArgs(SourcePathArg.from(FakeSourcePath.of("another.o")))
                 .build(),
             Optional.empty());
 
@@ -623,7 +622,7 @@ public class CxxLinkableEnhancerTest {
                         Paths.get("Library/Frameworks/XCTest.framework"),
                         Optional.empty())),
                 FrameworkPath.ofSourcePath(
-                    new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
+                    FakeSourcePath.of(projectFilesystem, "Vendor/Bar/Bar.framework"))));
 
     assertEquals(
         ImmutableList.of(

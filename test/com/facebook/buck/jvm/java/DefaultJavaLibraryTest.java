@@ -190,7 +190,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     try {
       createJavaLibraryBuilder(BuildTargetFactory.newInstance("//library:code"))
-          .addResource(new FakeSourcePath("library"))
+          .addResource(FakeSourcePath.of("library"))
           .build(ruleResolver, filesystem);
       fail("An exception should have been thrown because a directory was passed as a resource.");
     } catch (HumanReadableException e) {
@@ -1251,7 +1251,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableSortedSet<SourcePath> srcsAsPaths =
         FluentIterable.from(srcs)
             .transform(Paths::get)
-            .transform(p -> (SourcePath) new PathSourcePath(projectFilesystem, p))
+            .transform(p -> (SourcePath) PathSourcePath.of(projectFilesystem, p))
             .toSortedSet(Ordering.natural());
 
     BuildRuleParams buildRuleParams =
@@ -1313,10 +1313,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(Paths.get("bdeafhkgcji.java"))
             .addSrc(Paths.get("bdehgaifjkc.java"))
             .addSrc(Paths.get("cfiabkjehgd.java"))
-            .addResource(new FakeSourcePath("becgkaifhjd.txt"))
-            .addResource(new FakeSourcePath("bkhajdifcge.txt"))
-            .addResource(new FakeSourcePath("cabfghjekid.txt"))
-            .addResource(new FakeSourcePath("chkdbafijge.txt"))
+            .addResource(FakeSourcePath.of("becgkaifhjd.txt"))
+            .addResource(FakeSourcePath.of("bkhajdifcge.txt"))
+            .addResource(FakeSourcePath.of("cabfghjekid.txt"))
+            .addResource(FakeSourcePath.of("chkdbafijge.txt"))
             .build(resolver1, filesystem);
 
     BuildRuleResolver resolver2 =
@@ -1330,10 +1330,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .addSrc(Paths.get("bdehgaifjkc.java"))
             .addSrc(Paths.get("bdeafhkgcji.java"))
             .addSrc(Paths.get("agifhbkjdec.java"))
-            .addResource(new FakeSourcePath("chkdbafijge.txt"))
-            .addResource(new FakeSourcePath("cabfghjekid.txt"))
-            .addResource(new FakeSourcePath("bkhajdifcge.txt"))
-            .addResource(new FakeSourcePath("becgkaifhjd.txt"))
+            .addResource(FakeSourcePath.of("chkdbafijge.txt"))
+            .addResource(FakeSourcePath.of("cabfghjekid.txt"))
+            .addResource(FakeSourcePath.of("bkhajdifcge.txt"))
+            .addResource(FakeSourcePath.of("becgkaifhjd.txt"))
             .build(resolver2, filesystem);
 
     ImmutableMap.Builder<String, String> fileHashes = ImmutableMap.builder();
@@ -1500,7 +1500,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return JavaLibraryBuilder.createBuilder(target, testJavaBuckConfig)
               .addSrc(Paths.get("MyClass.java"))
-              .setProguardConfig(new FakeSourcePath("MyProguardConfig"))
+              .setProguardConfig(FakeSourcePath.of("MyProguardConfig"))
               .build(ruleResolver);
         }
       };
@@ -1514,7 +1514,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               new SourcePathRuleFinder(ruleResolver),
               new FakeProjectFilesystem(),
               TestBuildRuleParams.create(),
-              new FakeSourcePath("java/src/com/facebook/somejava/library/library-abi.jar"));
+              FakeSourcePath.of("java/src/com/facebook/somejava/library/library-abi.jar"));
         }
       };
 
@@ -1588,7 +1588,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   testJavaBuckConfig,
                   null)
               .setJavacOptions(options)
-              .setSrcs(ImmutableSortedSet.of(new FakeSourcePath(src)))
+              .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of(src)))
               .setResources(ImmutableSortedSet.of())
               .setDeps(new JavaLibraryDeps.Builder(ruleResolver).build())
               .setProguardConfig(Optional.empty())

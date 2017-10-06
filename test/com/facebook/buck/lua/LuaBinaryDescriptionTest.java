@@ -141,7 +141,7 @@ public class LuaBinaryDescriptionTest {
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setSoname("libfoo.so.1.0")
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("hello.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("hello.c"))));
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
@@ -167,10 +167,10 @@ public class LuaBinaryDescriptionTest {
   public void duplicateIdenticalModules() throws Exception {
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
-            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")));
+            .setSrcs(ImmutableSortedMap.of("foo.lua", FakeSourcePath.of("test")));
     LuaLibraryBuilder libraryBBuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
-            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")));
+            .setSrcs(ImmutableSortedMap.of("foo.lua", FakeSourcePath.of("test")));
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
@@ -192,10 +192,10 @@ public class LuaBinaryDescriptionTest {
   public void duplicateConflictingModules() throws Exception {
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
-            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("foo")));
+            .setSrcs(ImmutableSortedMap.of("foo.lua", FakeSourcePath.of("foo")));
     LuaLibraryBuilder libraryBBuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
-            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("bar")));
+            .setSrcs(ImmutableSortedMap.of("foo.lua", FakeSourcePath.of("bar")));
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
@@ -220,7 +220,7 @@ public class LuaBinaryDescriptionTest {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("foo.py"))));
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))));
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
@@ -246,11 +246,11 @@ public class LuaBinaryDescriptionTest {
     CxxLibraryBuilder py2CxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:py2_library"))
             .setSoname("libpy2.so")
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("hello.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("hello.c"))));
     CxxLibraryBuilder py3CxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:py3_library"))
             .setSoname("libpy3.so")
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("hello.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("hello.c"))));
     CxxPythonExtensionBuilder cxxPythonExtensionBuilder =
         new CxxPythonExtensionBuilder(
                 BuildTargetFactory.newInstance("//:extension"),
@@ -306,7 +306,7 @@ public class LuaBinaryDescriptionTest {
     PythonLibraryBuilder pythonLibraryBuilder =
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("foo.py"))));
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))));
     LuaBinaryBuilder luaBinaryBuilder =
         new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMainModule("hello.world")
@@ -332,14 +332,14 @@ public class LuaBinaryDescriptionTest {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("transitive_dep.c"))));
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))))
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
     CxxLibraryBuilder cxxBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))))
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     LuaBinaryBuilder binaryBuilder =
@@ -371,14 +371,14 @@ public class LuaBinaryDescriptionTest {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("transitive_dep.c"))));
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))))
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
     CxxLibraryBuilder cxxBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))))
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
 
     LuaBinaryBuilder binaryBuilder =
@@ -411,19 +411,19 @@ public class LuaBinaryDescriptionTest {
     CxxLibraryBuilder transitiveCxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:transitive_dep"))
             .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("transitive_dep.c"))));
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("transitive_dep.c"))));
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("dep.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))))
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
     CxxLibraryBuilder cxxBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("cxx.c"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))))
             .setDeps(ImmutableSortedSet.of(cxxDepBuilder.getTarget()));
     CxxLibraryBuilder nativeStarterCxxBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:native_starter"))
             .setSrcs(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("native_starter.c"))))
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("native_starter.c"))))
             .setDeps(ImmutableSortedSet.of(transitiveCxxDepBuilder.getTarget()));
 
     LuaBinaryBuilder binaryBuilder =
@@ -460,7 +460,7 @@ public class LuaBinaryDescriptionTest {
     PrebuiltCxxLibraryBuilder python2Builder =
         new PrebuiltCxxLibraryBuilder(PYTHON2_DEP_TARGET)
             .setProvided(true)
-            .setSharedLib(new FakeSourcePath("lipython2.so"));
+            .setSharedLib(FakeSourcePath.of("lipython2.so"));
 
     CxxPythonExtensionBuilder extensionBuilder =
         new CxxPythonExtensionBuilder(
@@ -500,11 +500,11 @@ public class LuaBinaryDescriptionTest {
 
   @Test
   public void platformDeps() throws Exception {
-    SourcePath libASrc = new FakeSourcePath("libA.lua");
+    SourcePath libASrc = FakeSourcePath.of("libA.lua");
     LuaLibraryBuilder libraryABuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:libA"))
             .setSrcs(ImmutableSortedSet.of(libASrc));
-    SourcePath libBSrc = new FakeSourcePath("libB.lua");
+    SourcePath libBSrc = FakeSourcePath.of("libB.lua");
     LuaLibraryBuilder libraryBBuilder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:libB"))
             .setSrcs(ImmutableSortedSet.of(libBSrc));

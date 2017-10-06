@@ -77,7 +77,7 @@ public class AndroidResourceIndexMiniAaptTest {
         new MiniAapt(
             resolver,
             filesystem,
-            new FakeSourcePath(filesystem, "res"),
+            FakeSourcePath.of(filesystem, "res"),
             Paths.get("android_resources.json"),
             ImmutableSet.of(),
             false,

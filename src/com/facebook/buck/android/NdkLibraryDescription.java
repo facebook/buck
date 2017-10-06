@@ -313,7 +313,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescriptionA
                 throws IOException {
               if (EXTENSIONS_REGEX.matcher(file.toString()).matches()) {
                 srcs.add(
-                    new PathSourcePath(
+                    PathSourcePath.of(
                         filesystem, buildRulePath.resolve(rootDirectory.relativize(file))));
               }
 

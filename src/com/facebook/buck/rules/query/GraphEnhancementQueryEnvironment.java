@@ -127,7 +127,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     TargetNode<?, ?> node = getNode(target);
     return node.getInputs()
         .stream()
-        .map(path -> new PathSourcePath(node.getFilesystem(), path))
+        .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(MoreCollectors.toImmutableSet());
   }

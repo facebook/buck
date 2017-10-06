@@ -45,7 +45,7 @@ public class LuaLibraryDescriptionTest {
   public void unnamedSource() throws Exception {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")));
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("some/foo.lua")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
@@ -56,14 +56,14 @@ public class LuaLibraryDescriptionTest {
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "some/foo.lua", new FakeSourcePath("some/foo.lua"))));
+                "some/foo.lua", FakeSourcePath.of("some/foo.lua"))));
   }
 
   @Test
   public void namedSource() throws Exception {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(ImmutableSortedMap.of("bar.lua", new FakeSourcePath("foo.lua")));
+            .setSrcs(ImmutableSortedMap.of("bar.lua", FakeSourcePath.of("foo.lua")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
@@ -74,14 +74,14 @@ public class LuaLibraryDescriptionTest {
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "some/bar.lua", new FakeSourcePath("foo.lua"))));
+                "some/bar.lua", FakeSourcePath.of("foo.lua"))));
   }
 
   @Test
   public void baseModuleSource() throws Exception {
     LuaLibraryBuilder builder =
         new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")))
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("some/foo.lua")))
             .setBaseModule("blah");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
@@ -93,7 +93,7 @@ public class LuaLibraryDescriptionTest {
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "blah/foo.lua", new FakeSourcePath("some/foo.lua"))));
+                "blah/foo.lua", FakeSourcePath.of("some/foo.lua"))));
   }
 
   @Test

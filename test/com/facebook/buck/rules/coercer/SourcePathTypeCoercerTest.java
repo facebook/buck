@@ -67,7 +67,7 @@ public class SourcePathTypeCoercerTest {
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(cellRoots, projectFilesystem, pathRelativeToProjectRoot, path);
 
-    assertEquals(new PathSourcePath(projectFilesystem, Paths.get(path)), sourcePath);
+    assertEquals(PathSourcePath.of(projectFilesystem, Paths.get(path)), sourcePath);
   }
 
   @Test

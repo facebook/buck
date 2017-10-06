@@ -332,7 +332,7 @@ public class BuckConfig implements ConfigPathGetter {
       return Optional.of(DefaultBuildTargetSourcePath.of(target));
     } catch (BuildTargetParseException e) {
       return Optional.of(
-          new PathSourcePath(
+          PathSourcePath.of(
               projectFilesystem,
               checkPathExists(
                   value.get(),
@@ -345,7 +345,7 @@ public class BuckConfig implements ConfigPathGetter {
     if (path == null) {
       return null;
     }
-    return new PathSourcePath(
+    return PathSourcePath.of(
         projectFilesystem,
         checkPathExists(
             path.toString(),

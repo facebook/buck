@@ -358,7 +358,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                       .build();
               nativeLinkableLibsBuilder.put(
                   runtimeLinkableMetadata,
-                  new PathSourcePath(projectFilesystem, platform.getCxxSharedRuntimePath().get()));
+                  PathSourcePath.of(projectFilesystem, platform.getCxxSharedRuntimePath().get()));
             });
   }
 

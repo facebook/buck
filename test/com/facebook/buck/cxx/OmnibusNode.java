@@ -93,6 +93,6 @@ class OmnibusNode implements NativeLinkable {
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of(
-        getBuildTarget().toString(), new FakeSourcePath(getBuildTarget().toString()));
+        getBuildTarget().toString(), FakeSourcePath.of(getBuildTarget().toString()));
   }
 }

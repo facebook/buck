@@ -1011,7 +1011,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(new PathSourcePath(getProjectFilesystem(), bundleBinaryPath)))
+        .addArg(SourcePathArg.of(PathSourcePath.of(getProjectFilesystem(), bundleBinaryPath)))
         .build();
   }
 }

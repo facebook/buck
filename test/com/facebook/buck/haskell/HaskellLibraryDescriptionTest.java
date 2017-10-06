@@ -215,7 +215,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder builder =
         new HaskellLibraryBuilder(target, HaskellTestUtils.DEFAULT_PLATFORMS, cxxBuckConfig)
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("Test.hs"))))
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))
             .setLinkWhole(true);
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(

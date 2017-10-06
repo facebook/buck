@@ -17,36 +17,34 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;
+import org.immutables.value.Value;
 
-public class PathSourcePath implements SourcePath {
+@BuckStyleTuple
+@Value.Immutable(prehash = true)
+public abstract class AbstractPathSourcePath implements SourcePath {
 
-  private final ProjectFilesystem filesystem;
+  protected abstract ProjectFilesystem getFilesystem();
 
   // A name for the path.  Used for equality, hashcode, and comparisons.
-  private final String relativePathName;
+  protected abstract String getRelativePathName();
 
   // A supplier providing the path.  Used to resolve to `Path` used to access the file.
-  private final Supplier<Path> relativePath;
+  protected abstract Supplier<Path> getRelativePathSupplier();
 
-  public PathSourcePath(
-      ProjectFilesystem filesystem, String relativePathName, Supplier<Path> relativePath) {
-    this.filesystem = filesystem;
-    this.relativePathName = relativePathName;
-    this.relativePath = relativePath;
-  }
-
-  public PathSourcePath(ProjectFilesystem filesystem, Path relativePath) {
-    this(filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
+  public static AbstractPathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
+    return PathSourcePath.of(
+        filesystem, relativePath.toString(), Suppliers.ofInstance(relativePath));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(filesystem.getRootPath(), relativePathName);
+    return Objects.hash(getFilesystem().getRootPath(), getRelativePathName());
   }
 
   @Override
@@ -54,17 +52,17 @@ public class PathSourcePath implements SourcePath {
     if (this == other) {
       return true;
     }
-    if (!(other instanceof PathSourcePath)) {
+    if (!(other instanceof AbstractPathSourcePath)) {
       return false;
     }
-    PathSourcePath that = (PathSourcePath) other;
-    return relativePathName.equals(that.relativePathName)
-        && filesystem.getRootPath().equals(that.filesystem.getRootPath());
+    AbstractPathSourcePath that = (AbstractPathSourcePath) other;
+    return getRelativePathName().equals(that.getRelativePathName())
+        && getFilesystem().getRootPath().equals(that.getFilesystem().getRootPath());
   }
 
   @Override
   public String toString() {
-    return filesystem.getRootPath().resolve(relativePathName).toString();
+    return getFilesystem().getRootPath().resolve(getRelativePathName()).toString();
   }
 
   @Override
@@ -78,19 +76,15 @@ public class PathSourcePath implements SourcePath {
       return classComparison;
     }
 
-    PathSourcePath that = (PathSourcePath) other;
+    AbstractPathSourcePath that = (AbstractPathSourcePath) other;
 
     return ComparisonChain.start()
-        .compare(filesystem.getRootPath(), that.filesystem.getRootPath())
-        .compare(relativePathName, that.relativePathName)
+        .compare(getFilesystem().getRootPath(), that.getFilesystem().getRootPath())
+        .compare(getRelativePathName(), that.getRelativePathName())
         .result();
   }
 
-  public ProjectFilesystem getFilesystem() {
-    return filesystem;
-  }
-
   public Path getRelativePath() {
-    return relativePath.get();
+    return getRelativePathSupplier().get();
   }
 }

@@ -1416,7 +1416,7 @@ public class ParserTest {
 
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
-          ImmutableSortedSet.of(new PathSourcePath(filesystem, Paths.get("foo/bar/Bar.java"))),
+          ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java"))),
           libRule.getJavaSrcs());
     }
 
@@ -1434,8 +1434,8 @@ public class ParserTest {
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
           ImmutableSet.of(
-              new PathSourcePath(filesystem, Paths.get("foo/bar/Bar.java")),
-              new PathSourcePath(filesystem, Paths.get("foo/bar/Baz.java"))),
+              PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java")),
+              PathSourcePath.of(filesystem, Paths.get("foo/bar/Baz.java"))),
           libRule.getJavaSrcs());
     }
   }
@@ -1470,8 +1470,8 @@ public class ParserTest {
 
       assertEquals(
           ImmutableSortedSet.of(
-              new PathSourcePath(filesystem, Paths.get("foo/bar/Bar.java")),
-              new PathSourcePath(filesystem, Paths.get("foo/bar/Baz.java"))),
+              PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java")),
+              PathSourcePath.of(filesystem, Paths.get("foo/bar/Baz.java"))),
           libRule.getJavaSrcs());
     }
 
@@ -1488,7 +1488,7 @@ public class ParserTest {
 
       JavaLibrary libRule = (JavaLibrary) resolver.requireRule(libTarget);
       assertEquals(
-          ImmutableSortedSet.of(new PathSourcePath(filesystem, Paths.get("foo/bar/Bar.java"))),
+          ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java"))),
           libRule.getJavaSrcs());
     }
   }

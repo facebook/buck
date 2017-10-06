@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NonHashableSourcePathContainer;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
@@ -115,7 +116,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setSrc(new PathSourcePath(filesystem, output))
+            .setSrc(PathSourcePath.of(filesystem, output))
             .build(resolver, filesystem);
 
     // Build a rule key with a particular hash set for the output for the above rule.
@@ -196,7 +197,7 @@ public class InputBasedRuleKeyFactoryTest {
         new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
           RuleKeyAppendableWithInput input =
-              new RuleKeyAppendableWithInput(new PathSourcePath(filesystem, output));
+              new RuleKeyAppendableWithInput(PathSourcePath.of(filesystem, output));
         };
 
     // Build a rule key with a particular hash set for the output for the above rule.
@@ -281,7 +282,7 @@ public class InputBasedRuleKeyFactoryTest {
     FakeFileHashCache hashCache = new FakeFileHashCache(new HashMap<>());
 
     hashCache.set(filePath.toAbsolutePath(), HashCode.fromInt(0));
-    PathSourcePath sourcePath = new PathSourcePath(fileSystem, filePath);
+    PathSourcePath sourcePath = FakeSourcePath.of(fileSystem, filePath.toString());
     NonHashableSourcePathContainer nonHashablePath = new NonHashableSourcePathContainer(sourcePath);
     RuleKey inputKey1 = computeRuleKey(hashCache, pathResolver, ruleFinder, nonHashablePath);
 
@@ -315,7 +316,7 @@ public class InputBasedRuleKeyFactoryTest {
         new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
           NestedRuleKeyAppendableWithInput input =
-              new NestedRuleKeyAppendableWithInput(new PathSourcePath(filesystem, inputFile));
+              new NestedRuleKeyAppendableWithInput(PathSourcePath.of(filesystem, inputFile));
         };
 
     // Verify rule key isn't calculated.
@@ -346,7 +347,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setSrc(new PathSourcePath(filesystem, input))
+            .setSrc(PathSourcePath.of(filesystem, input))
             .build(resolver, filesystem);
 
     // Verify rule key isn't calculated.
@@ -381,7 +382,7 @@ public class InputBasedRuleKeyFactoryTest {
             .setOut("out")
             .setSrcs(
                 ImmutableList.of(
-                    new PathSourcePath(filesystem, input1), new PathSourcePath(filesystem, input2)))
+                    PathSourcePath.of(filesystem, input1), PathSourcePath.of(filesystem, input2)))
             .build(resolver, filesystem);
 
     // Verify rule key isn't calculated.
@@ -414,7 +415,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setSrc(new PathSourcePath(filesystem, input))
+            .setSrc(PathSourcePath.of(filesystem, input))
             .build(resolver, filesystem);
 
     // Verify rule key isn't calculated.
@@ -448,7 +449,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule tooLargeRule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:large_rule"))
             .setOut("out")
-            .setSrc(new PathSourcePath(filesystem, tooLargeInput))
+            .setSrc(PathSourcePath.of(filesystem, tooLargeInput))
             .build(resolver, filesystem);
     expectedException.expect(SizeLimiter.SizeLimitException.class);
     factory.build(tooLargeRule);
@@ -479,7 +480,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule smallEnoughRule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:small_rule"))
             .setOut("out")
-            .setSrc(new PathSourcePath(filesystem, input))
+            .setSrc(PathSourcePath.of(filesystem, input))
             .build(resolver, filesystem);
     factory.build(smallEnoughRule);
   }

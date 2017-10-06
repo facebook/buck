@@ -390,7 +390,7 @@ public class DistBuildFileHashesTest {
               TestBuildRuleParams.create(),
               null,
               ArchiveMemberSourcePath.of(
-                  new PathSourcePath(projectFilesystem, archivePath), archiveMemberPath)));
+                  PathSourcePath.of(projectFilesystem, archivePath), archiveMemberPath)));
     }
 
     @Override

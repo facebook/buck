@@ -56,7 +56,7 @@ public class ApplePackageDescriptionTest {
             AppleBundleBuilder.createBuilder(bundleBuildTarget)
                 .setBinary(binaryBuildTarget)
                 .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-                .setInfoPlist(new FakeSourcePath("Info.plist"))
+                .setInfoPlist(FakeSourcePath.of("Info.plist"))
                 .build());
 
     ApplePackageDescriptionArg arg =
@@ -109,7 +109,7 @@ public class ApplePackageDescriptionTest {
             AppleBundleBuilder.createBuilder(bundleBuildTarget)
                 .setBinary(binaryBuildTarget)
                 .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-                .setInfoPlist(new FakeSourcePath("Info.plist"))
+                .setInfoPlist(FakeSourcePath.of("Info.plist"))
                 .build());
 
     ApplePackageDescriptionArg arg =

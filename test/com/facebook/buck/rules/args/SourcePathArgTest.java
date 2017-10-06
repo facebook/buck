@@ -37,7 +37,7 @@ public class SourcePathArgTest {
 
   @Test
   public void stringify() {
-    SourcePath path = new FakeSourcePath("something");
+    SourcePath path = FakeSourcePath.of("something");
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
             new SourcePathRuleFinder(

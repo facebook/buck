@@ -62,7 +62,7 @@ public class PythonLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
     String sourceName = "main.py";
-    SourcePath source = new FakeSourcePath("foo/" + sourceName);
+    SourcePath source = FakeSourcePath.of("foo/" + sourceName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -109,8 +109,8 @@ public class PythonLibraryDescriptionTest {
   public void platformSrcs() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
     PythonLibraryBuilder builder =
         new PythonLibraryBuilder(target)
             .setPlatformSrcs(
@@ -142,8 +142,8 @@ public class PythonLibraryDescriptionTest {
   public void platformResources() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.dat");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.dat");
     PythonLibraryBuilder builder =
         new PythonLibraryBuilder(target)
             .setPlatformResources(
@@ -174,8 +174,8 @@ public class PythonLibraryDescriptionTest {
   @Test
   public void versionedSrcs() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
     GenruleBuilder transitiveDepBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:tdep")).setOut("out");
     VersionedAliasBuilder depBuilder =
@@ -224,8 +224,8 @@ public class PythonLibraryDescriptionTest {
   @Test
   public void versionedResources() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
     GenruleBuilder transitiveDepBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:tdep")).setOut("out");
     VersionedAliasBuilder depBuilder =

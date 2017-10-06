@@ -64,7 +64,7 @@ public class JavaTestBuilder
   }
 
   public JavaTestBuilder addSrc(Path path) {
-    getArgForPopulating().addSrcs(new PathSourcePath(new FakeProjectFilesystem(), path));
+    getArgForPopulating().addSrcs(PathSourcePath.of(new FakeProjectFilesystem(), path));
     return this;
   }
 

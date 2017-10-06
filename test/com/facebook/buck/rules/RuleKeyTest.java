@@ -140,14 +140,14 @@ public class RuleKeyTest {
         createBuilder(resolver, ruleFinder)
             .setReflectively("long", 42L)
             .setReflectively("boolean", true)
-            .setReflectively("path", new FakeSourcePath("location/of/the/rebel/plans"))
+            .setReflectively("path", FakeSourcePath.of("location/of/the/rebel/plans"))
             .build(RuleKey::new);
 
     RuleKey manual =
         createBuilder(resolver, ruleFinder)
             .setReflectively("long", 42L)
             .setReflectively("boolean", true)
-            .setReflectively("path", new FakeSourcePath("location/of/the/rebel/plans"))
+            .setReflectively("path", FakeSourcePath.of("location/of/the/rebel/plans"))
             .build(RuleKey::new);
 
     assertEquals(manual, reflective);
@@ -342,30 +342,30 @@ public class RuleKeyTest {
         buildResult(
             createBuilder(resolver, ruleFinder)
                 .setReflectively(
-                    "key", new PathSourcePath(projectFilesystem, Paths.get("something")))),
+                    "key", PathSourcePath.of(projectFilesystem, Paths.get("something")))),
         buildResult(
             createBuilder(resolver, ruleFinder)
                 .setReflectively(
-                    "key", new PathSourcePath(projectFilesystem, Paths.get("something", "else")))));
+                    "key", PathSourcePath.of(projectFilesystem, Paths.get("something", "else")))));
 
     // ... as should changing the key
     assertNotEquals(
         buildResult(
             createBuilder(resolver, ruleFinder)
                 .setReflectively(
-                    "key", new PathSourcePath(projectFilesystem, Paths.get("something")))),
+                    "key", PathSourcePath.of(projectFilesystem, Paths.get("something")))),
         buildResult(
             createBuilder(resolver, ruleFinder)
                 .setReflectively(
                     "different-key",
-                    new PathSourcePath(projectFilesystem, Paths.get("something")))));
+                    PathSourcePath.of(projectFilesystem, Paths.get("something")))));
   }
 
   @Test
   public void setNonHashingSourcePathsWithDifferentRelativePaths() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    PathSourcePath sourcePathOne = new PathSourcePath(projectFilesystem, Paths.get("something"));
-    PathSourcePath sourcePathTwo = new PathSourcePath(projectFilesystem, Paths.get("something2"));
+    PathSourcePath sourcePathOne = FakeSourcePath.of(projectFilesystem, "something");
+    PathSourcePath sourcePathTwo = FakeSourcePath.of(projectFilesystem, "something2");
 
     // Changing the relative path should change the rule key
     SourcePathRuleFinder ruleFinder1 =
@@ -471,8 +471,7 @@ public class RuleKeyTest {
 
     ExplicitBuildTargetSourcePath archive1 =
         ExplicitBuildTargetSourcePath.of(fakeBuildRule.getBuildTarget(), Paths.get("location"));
-    PathSourcePath archive2 =
-        new PathSourcePath(new FakeProjectFilesystem(), Paths.get("otherLocation"));
+    PathSourcePath archive2 = FakeSourcePath.of("otherLocation");
 
     // Verify that two ArchiveMemberSourcePaths with the same archive and path
     assertEquals(
@@ -511,7 +510,7 @@ public class RuleKeyTest {
   @Test
   public void canAddMapsToRuleKeys() {
     ImmutableMap<String, ?> map =
-        ImmutableMap.of("path", new FakeSourcePath("some/path"), "boolean", true);
+        ImmutableMap.of("path", FakeSourcePath.of("some/path"), "boolean", true);
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
@@ -528,7 +527,7 @@ public class RuleKeyTest {
   public void keysOfMapsAddedToRuleKeysDoNotNeedToBeStrings() {
     ImmutableMap<?, ?> map =
         ImmutableMap.of(
-            new FakeSourcePath("some/path"), "woohoo!", 42L, "life, the universe and everything");
+            FakeSourcePath.of("some/path"), "woohoo!", 42L, "life, the universe and everything");
 
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
@@ -686,7 +685,7 @@ public class RuleKeyTest {
             .build(RuleKey::new);
     RuleKey noopRuleKey =
         new NoopSetterRuleKeyBuilder(ruleFinder, pathResolver, hashCache, ruleKeyFactory)
-            .setReflectively("key", new FakeSourcePath("value"))
+            .setReflectively("key", FakeSourcePath.of("value"))
             .build(RuleKey::new);
 
     assertThat(noopRuleKey, is(equalTo(nullRuleKey)));

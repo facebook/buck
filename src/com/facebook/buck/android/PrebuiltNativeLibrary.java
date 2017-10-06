@@ -101,10 +101,10 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   public void addToCollector(AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
-          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), PathSourcePath.of(getProjectFilesystem(), getLibraryPath()));
     } else {
       collector.addNativeLibsDirectory(
-          getBuildTarget(), new PathSourcePath(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), PathSourcePath.of(getProjectFilesystem(), getLibraryPath()));
     }
   }
 }

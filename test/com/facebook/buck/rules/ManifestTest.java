@@ -72,7 +72,7 @@ public class ManifestTest {
   public void addEntry() throws IOException {
     Manifest manifest = new Manifest(new RuleKey("cc"));
     RuleKey key = new RuleKey("aa");
-    SourcePath input = new FakeSourcePath("input.h");
+    SourcePath input = FakeSourcePath.of("input.h");
     HashCode hashCode = HashCode.fromInt(20);
     FileHashCache fileHashCache =
         new FakeFileHashCache(ImmutableMap.of(RESOLVER.getAbsolutePath(input), hashCode));
@@ -89,8 +89,7 @@ public class ManifestTest {
     Manifest manifest = new Manifest(new RuleKey("cc"));
     RuleKey key = new RuleKey("aa");
     SourcePath input =
-        ArchiveMemberSourcePath.of(
-            new FakeSourcePath("somewhere/a.jar"), Paths.get("Member.class"));
+        ArchiveMemberSourcePath.of(FakeSourcePath.of("somewhere/a.jar"), Paths.get("Member.class"));
     HashCode hashCode = HashCode.fromInt(20);
     FileHashCache fileHashCache =
         new FakeFileHashCache(
@@ -113,12 +112,12 @@ public class ManifestTest {
 
     Path tmp1 = Files.createTempDirectory("tmp1");
     ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
-    SourcePath input1 = new PathSourcePath(filesystem1, Paths.get("input.h"));
+    SourcePath input1 = PathSourcePath.of(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
     Path tmp2 = Files.createTempDirectory("tmp2");
     ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
-    SourcePath input2 = new PathSourcePath(filesystem2, Paths.get("input.h"));
+    SourcePath input2 = PathSourcePath.of(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 
     FileHashCache fileHashCache =
@@ -159,7 +158,7 @@ public class ManifestTest {
   @Test
   public void lookupMatch() throws IOException {
     RuleKey key = new RuleKey("aa");
-    SourcePath input = new FakeSourcePath("input.h");
+    SourcePath input = FakeSourcePath.of("input.h");
     HashCode hashCode = HashCode.fromInt(20);
     Manifest manifest =
         Manifest.fromMap(
@@ -179,12 +178,12 @@ public class ManifestTest {
 
     Path tmp1 = Files.createTempDirectory("tmp1");
     ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
-    SourcePath input1 = new PathSourcePath(filesystem1, Paths.get("input.h"));
+    SourcePath input1 = PathSourcePath.of(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
     Path tmp2 = Files.createTempDirectory("tmp2");
     ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
-    SourcePath input2 = new PathSourcePath(filesystem2, Paths.get("input.h"));
+    SourcePath input2 = PathSourcePath.of(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 
     FileHashCache fileHashCache =
@@ -225,7 +224,7 @@ public class ManifestTest {
   @Test
   public void lookupHashMismatch() throws IOException {
     RuleKey key = new RuleKey("aa");
-    SourcePath input = new FakeSourcePath("input.h");
+    SourcePath input = FakeSourcePath.of("input.h");
     Manifest manifest =
         Manifest.fromMap(
             new RuleKey("cc"),
@@ -243,7 +242,7 @@ public class ManifestTest {
   @Test
   public void lookupMissingHeader() throws IOException {
     RuleKey key = new RuleKey("aa");
-    SourcePath input = new FakeSourcePath("input.h");
+    SourcePath input = FakeSourcePath.of("input.h");
     Manifest manifest =
         Manifest.fromMap(
             new RuleKey("cc"),
@@ -260,7 +259,7 @@ public class ManifestTest {
   public void lookupMatchAfterHashMismatch() throws IOException {
     RuleKey key1 = new RuleKey("aa");
     RuleKey key2 = new RuleKey("bb");
-    SourcePath input = new FakeSourcePath("input.h");
+    SourcePath input = FakeSourcePath.of("input.h");
     Manifest manifest =
         Manifest.fromMap(
             new RuleKey("cc"),

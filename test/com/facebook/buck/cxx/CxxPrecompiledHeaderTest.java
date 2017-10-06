@@ -88,7 +88,7 @@ public class CxxPrecompiledHeaderTest {
                 compiler,
                 CxxToolFlags.of()),
             CxxToolFlags.of(),
-            new FakeSourcePath("foo.h"),
+            FakeSourcePath.of("foo.h"),
             CxxSource.Type.C,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
     resolver.addToIndex(precompiledHeader);

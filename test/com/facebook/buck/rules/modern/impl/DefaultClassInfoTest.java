@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -134,7 +135,7 @@ public class DefaultClassInfoTest {
     InputPath targetInputPath2 = new InputPath(targetSourcePath2);
     InputPath targetInputPath3 = new InputPath(targetSourcePath3);
 
-    PathSourcePath pathSourcePath = new PathSourcePath(filesystem, Paths.get("path"));
+    PathSourcePath pathSourcePath = FakeSourcePath.of(filesystem, "path");
     InputPath pathInputPath = new InputPath(pathSourcePath);
 
     DerivedClass buildable =

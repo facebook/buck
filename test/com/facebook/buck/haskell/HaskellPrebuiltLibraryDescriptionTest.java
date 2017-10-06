@@ -50,12 +50,12 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void staticLibraries() throws Exception {
-    PathSourcePath lib = new FakeSourcePath("libfoo.a");
+    PathSourcePath lib = FakeSourcePath.of("libfoo.a");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setStaticLibs(ImmutableList.of(lib));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -73,12 +73,12 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void sharedLibraries() throws Exception {
-    PathSourcePath lib = new FakeSourcePath("libfoo.so");
+    PathSourcePath lib = FakeSourcePath.of("libfoo.so");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setSharedLibs(ImmutableMap.of("libfoo.so", lib));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -96,12 +96,12 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void interfaces() throws Exception {
-    PathSourcePath interfaces = new FakeSourcePath("interfaces");
+    PathSourcePath interfaces = FakeSourcePath.of("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setImportDirs(ImmutableList.of(interfaces));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -118,7 +118,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
   @Test
   public void packageDb() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PathSourcePath db = new FakeSourcePath("package.conf.d");
+    PathSourcePath db = FakeSourcePath.of("package.conf.d");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target).setVersion("1.0.0").setDb(db);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
@@ -139,7 +139,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setId("id");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -162,7 +162,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setExportedLinkerFlags(ImmutableList.of(flag));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -189,7 +189,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setExportedCompilerFlags(ImmutableList.of(flag));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -209,13 +209,13 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void cxxHeaderDirs() throws Exception {
-    PathSourcePath interfaces = new FakeSourcePath("interfaces");
+    PathSourcePath interfaces = FakeSourcePath.of("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PathSourcePath path = new FakeSourcePath("include_dir");
+    PathSourcePath path = FakeSourcePath.of("include_dir");
     PrebuiltHaskellLibraryBuilder builder =
         new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(new FakeSourcePath("package.conf.d"))
+            .setDb(FakeSourcePath.of("package.conf.d"))
             .setImportDirs(ImmutableList.of(interfaces))
             .setCxxHeaderDirs(ImmutableSortedSet.of(path));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());

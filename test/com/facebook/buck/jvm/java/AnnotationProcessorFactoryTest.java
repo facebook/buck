@@ -53,7 +53,7 @@ public class AnnotationProcessorFactoryTest {
   private boolean isAnnotationProcessorClassLoaderReused(
       String annotationProcessor, boolean canReuseClasspath) throws MalformedURLException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    SourcePath classpath = new FakeSourcePath("some/path/to.jar");
+    SourcePath classpath = FakeSourcePath.of("some/path/to.jar");
     ClassLoader baseClassLoader = ToolProvider.getSystemToolClassLoader();
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:test");

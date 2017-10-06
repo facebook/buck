@@ -64,8 +64,8 @@ public class AppleTestDescriptionTest {
                 ImmutableList.of(
                     StringWithMacrosUtils.format(
                         "--linker-script=%s", LocationMacro.of(depBuilder.getTarget()))))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
-            .setInfoPlist(new FakeSourcePath("Info.plist"));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build(), depBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -103,18 +103,18 @@ public class AppleTestDescriptionTest {
 
     AppleBinaryBuilder testHostBinaryBuilder =
         AppleBinaryBuilder.createBuilder(testHostBinTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
 
     AppleBundleBuilder testHostBundleBuilder =
         AppleBundleBuilder.createBuilder(testHostBundleTarget)
             .setBinary(testHostBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(new FakeSourcePath(("Info.plist")));
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")));
 
     AppleTestBuilder testBuilder =
         AppleTestBuilder.createBuilder(testTarget)
-            .setInfoPlist(new FakeSourcePath(("Info.plist")))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
             .isUiTest(true)
             .setTestHostApp(Optional.of(testHostBundleTarget));
 

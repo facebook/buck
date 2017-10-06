@@ -102,7 +102,7 @@ public class PrecompiledHeaderFeatureTest {
           preconfiguredSourceRuleFactoryBuilder(resolver)
               .setCxxPlatform(getPlatform())
               .setCxxBuckConfig(buildConfig(pchEnabled))
-              .setPrefixHeader(new FakeSourcePath(headerFilename))
+              .setPrefixHeader(FakeSourcePath.of(headerFilename))
               .setPrecompiledHeader(Optional.empty())
               .build()
               .requirePreprocessAndCompileBuildRule(
@@ -160,7 +160,7 @@ public class PrecompiledHeaderFeatureTest {
       CxxSourceRuleFactory factory =
           preconfiguredSourceRuleFactoryBuilder(resolver)
               .setCxxPlatform(platform)
-              .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+              .setPrefixHeader(FakeSourcePath.of(("foo.pch")))
               .setCxxBuckConfig(config)
               .build();
 
@@ -207,7 +207,7 @@ public class PrecompiledHeaderFeatureTest {
                               File.separatorChar,
                               Paths.get("."),
                               ImmutableBiMap.of(from, "melon"))))
-                  .setPrefixHeader(new FakeSourcePath(("foo.pch")))
+                  .setPrefixHeader(FakeSourcePath.of(("foo.pch")))
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
                   .build();
           BuildRule rule =
@@ -245,7 +245,7 @@ public class PrecompiledHeaderFeatureTest {
                   .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
                   .putAllCompilerFlags(CxxSource.Type.C_CPP_OUTPUT, StringArg.from(flags))
-                  .setPrefixHeader(new FakeSourcePath(("foo.h")))
+                  .setPrefixHeader(FakeSourcePath.of(("foo.h")))
                   .build();
           BuildRule rule =
               factory.requirePreprocessAndCompileBuildRule(
@@ -285,7 +285,7 @@ public class PrecompiledHeaderFeatureTest {
                               .setPreprocessorFlags(
                                   ImmutableMultimap.of(CxxSource.Type.C, StringArg.of(flags)))
                               .build()))
-                  .setPrefixHeader(new FakeSourcePath(("foo.h")))
+                  .setPrefixHeader(FakeSourcePath.of(("foo.h")))
                   .build();
           BuildRule rule =
               factory.requirePreprocessAndCompileBuildRule(
@@ -418,7 +418,7 @@ public class PrecompiledHeaderFeatureTest {
 
   /** Configures a CxxSource.Builder representing a C source file. */
   private static CxxSource.Builder preconfiguredCxxSourceBuilder() {
-    return CxxSource.builder().setType(CxxSource.Type.C).setPath(new FakeSourcePath("foo.c"));
+    return CxxSource.builder().setType(CxxSource.Type.C).setPath(FakeSourcePath.of("foo.c"));
   }
 
   private static CxxBuckConfig buildConfig(boolean pchEnabled) {

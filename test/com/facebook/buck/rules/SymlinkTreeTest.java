@@ -94,9 +94,9 @@ public class SymlinkTreeTest {
     links =
         ImmutableMap.of(
             link1,
-            new PathSourcePath(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1)),
+            PathSourcePath.of(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1)),
             link2,
-            new PathSourcePath(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file2)));
+            PathSourcePath.of(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file2)));
 
     // The output path used by the buildable for the link tree.
     outputPath = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
@@ -150,7 +150,7 @@ public class SymlinkTreeTest {
             outputPath,
             ImmutableMap.of(
                 Paths.get("different/link"),
-                new PathSourcePath(
+                PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
@@ -273,7 +273,7 @@ public class SymlinkTreeTest {
             outputPath,
             ImmutableMap.of(
                 Paths.get("../something"),
-                new PathSourcePath(
+                PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))));
     int exitCode =
         symlinkTree.getVerifyStep().execute(TestExecutionContext.newInstance()).getExitCode();
@@ -290,7 +290,7 @@ public class SymlinkTreeTest {
 
     ImmutableSortedSet<SourcePath> sourcePaths =
         ImmutableSortedSet.of(
-            new FakeSourcePath("one"), new FakeSourcePath("two/two"), new FakeSourcePath("three"));
+            FakeSourcePath.of("one"), FakeSourcePath.of("two/two"), FakeSourcePath.of("three"));
 
     ImmutableBiMap<SourcePath, Path> resolvedDuplicates =
         SymlinkTree.resolveDuplicateRelativePaths(sourcePaths, resolver);
@@ -318,10 +318,10 @@ public class SymlinkTreeTest {
 
     ImmutableBiMap<SourcePath, Path> expected =
         ImmutableBiMap.of(
-            new FakeSourcePath(fsOne, "a/one.a"), Paths.get("a/one.a"),
-            new FakeSourcePath(fsOne, "a/two"), Paths.get("a/two"),
-            new FakeSourcePath(fsTwo, "a/one.a"), Paths.get("a/one-1.a"),
-            new FakeSourcePath(fsTwo, "a/two"), Paths.get("a/two-1"));
+            FakeSourcePath.of(fsOne, "a/one.a"), Paths.get("a/one.a"),
+            FakeSourcePath.of(fsOne, "a/two"), Paths.get("a/two"),
+            FakeSourcePath.of(fsTwo, "a/one.a"), Paths.get("a/one-1.a"),
+            FakeSourcePath.of(fsTwo, "a/two"), Paths.get("a/two-1"));
 
     ImmutableBiMap<SourcePath, Path> resolvedDuplicates =
         SymlinkTree.resolveDuplicateRelativePaths(
@@ -349,12 +349,12 @@ public class SymlinkTreeTest {
 
     ImmutableBiMap<SourcePath, Path> expected =
         ImmutableBiMap.<SourcePath, Path>builder()
-            .put(new FakeSourcePath(fsOne, "a/one.a"), Paths.get("a/one.a"))
-            .put(new FakeSourcePath(fsOne, "a/two"), Paths.get("a/two"))
-            .put(new FakeSourcePath(fsOne, "a/two-1"), Paths.get("a/two-1"))
-            .put(new FakeSourcePath(fsTwo, "a/one.a"), Paths.get("a/one-1.a"))
-            .put(new FakeSourcePath(fsTwo, "a/two"), Paths.get("a/two-2"))
-            .put(new FakeSourcePath(fsThree, "a/two"), Paths.get("a/two-3"))
+            .put(FakeSourcePath.of(fsOne, "a/one.a"), Paths.get("a/one.a"))
+            .put(FakeSourcePath.of(fsOne, "a/two"), Paths.get("a/two"))
+            .put(FakeSourcePath.of(fsOne, "a/two-1"), Paths.get("a/two-1"))
+            .put(FakeSourcePath.of(fsTwo, "a/one.a"), Paths.get("a/one-1.a"))
+            .put(FakeSourcePath.of(fsTwo, "a/two"), Paths.get("a/two-2"))
+            .put(FakeSourcePath.of(fsThree, "a/two"), Paths.get("a/two-3"))
             .build();
 
     ImmutableBiMap<SourcePath, Path> resolvedDuplicates =

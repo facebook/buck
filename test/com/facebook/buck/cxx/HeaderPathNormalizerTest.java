@@ -58,7 +58,7 @@ public class HeaderPathNormalizerTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path header = filesystem.getPath("foo/bar.h");
-    SourcePath headerPath = new PathSourcePath(filesystem, header);
+    SourcePath headerPath = PathSourcePath.of(filesystem, header);
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addHeader(headerPath).build();
     assertThat(
@@ -77,7 +77,7 @@ public class HeaderPathNormalizerTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path header = filesystem.getPath("foo/bar.h");
-    SourcePath headerPath = new PathSourcePath(filesystem, header);
+    SourcePath headerPath = PathSourcePath.of(filesystem, header);
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addHeader(headerPath).build();
     assertThat(
@@ -99,7 +99,7 @@ public class HeaderPathNormalizerTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path header = filesystem.getPath("foo/bar.h");
-    SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());
+    SourcePath headerDirPath = PathSourcePath.of(filesystem, header.getParent());
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addHeaderDir(headerDirPath).build();
     assertThat(
@@ -124,7 +124,7 @@ public class HeaderPathNormalizerTest {
                 new SingleThreadedBuildRuleResolver(
                     TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
     Path header = filesystem.getPath("foo/bar.pch");
-    SourcePath headerPath = new PathSourcePath(filesystem, header);
+    SourcePath headerPath = PathSourcePath.of(filesystem, header);
     HeaderPathNormalizer normalizer =
         new HeaderPathNormalizer.Builder(pathResolver).addPrefixHeader(headerPath).build();
     assertThat(

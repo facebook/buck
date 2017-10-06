@@ -52,12 +52,12 @@ public class AndroidInstrumentationApkDescriptionTest {
             .build();
     TargetNode<?, ?> keystore =
         KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
-            .setStore(new FakeSourcePath("store"))
-            .setProperties(new FakeSourcePath("properties"))
+            .setStore(FakeSourcePath.of("store"))
+            .setProperties(FakeSourcePath.of("properties"))
             .build();
     TargetNode<?, ?> androidBinary =
         AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
-            .setManifest(new FakeSourcePath("manifest.xml"))
+            .setManifest(FakeSourcePath.of("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .setNoDx(ImmutableSet.of(transitiveDepNode.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
@@ -65,7 +65,7 @@ public class AndroidInstrumentationApkDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNode<?, ?> androidInstrumentationApk =
         AndroidInstrumentationApkBuilder.createBuilder(target)
-            .setManifest(new FakeSourcePath("manifest.xml"))
+            .setManifest(FakeSourcePath.of("manifest.xml"))
             .setApk(androidBinary.getBuildTarget())
             .build();
 

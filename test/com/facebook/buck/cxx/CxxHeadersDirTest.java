@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -68,7 +68,7 @@ public class CxxHeadersDirTest {
     filesystem.mkdirs(headerDir);
     CxxHeadersDir cxxHeaders =
         CxxHeadersDir.of(
-            CxxPreprocessables.IncludeType.SYSTEM, new PathSourcePath(filesystem, headerDir));
+            CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of(filesystem, headerDir));
     filesystem.writeContentsToPath("something", headerDir.resolve("bar.h"));
     RuleKey ruleKey1 = getRuleKey(filesystem, cxxHeaders);
     filesystem.writeContentsToPath("something else", headerDir.resolve("bar.h"));
@@ -85,12 +85,12 @@ public class CxxHeadersDirTest {
         getRuleKey(
             filesystem,
             CxxHeadersDir.of(
-                CxxPreprocessables.IncludeType.LOCAL, new PathSourcePath(filesystem, headerDir)));
+                CxxPreprocessables.IncludeType.LOCAL, FakeSourcePath.of(filesystem, headerDir)));
     RuleKey ruleKey2 =
         getRuleKey(
             filesystem,
             CxxHeadersDir.of(
-                CxxPreprocessables.IncludeType.SYSTEM, new PathSourcePath(filesystem, headerDir)));
+                CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of(filesystem, headerDir)));
     assertThat(ruleKey1, Matchers.not(Matchers.equalTo(ruleKey2)));
   }
 }

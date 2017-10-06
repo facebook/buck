@@ -54,7 +54,7 @@ public class PathRelativizerTest {
   public void testOutputPathToSourcePath() {
     assertEquals(
         Paths.get("../../source/path/foo.h"),
-        pathRelativizer.outputPathToSourcePath(new FakeSourcePath("source/path/foo.h")));
+        pathRelativizer.outputPathToSourcePath(FakeSourcePath.of("source/path/foo.h")));
   }
 
   @Test

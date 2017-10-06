@@ -70,17 +70,17 @@ public class PrebuiltOcamlLibraryDescription
     final Optional<SourcePath> staticNativeLibraryPath =
         bytecodeOnly
             ? Optional.empty()
-            : Optional.of(new PathSourcePath(projectFilesystem, libPath.resolve(nativeLib)));
+            : Optional.of(PathSourcePath.of(projectFilesystem, libPath.resolve(nativeLib)));
     final SourcePath staticBytecodeLibraryPath =
-        new PathSourcePath(projectFilesystem, libPath.resolve(bytecodeLib));
+        PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
         cLibs
             .stream()
-            .map(input -> new PathSourcePath(projectFilesystem, libPath.resolve(input)))
+            .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
             .collect(MoreCollectors.toImmutableList());
 
     final SourcePath bytecodeLibraryPath =
-        new PathSourcePath(projectFilesystem, libPath.resolve(bytecodeLib));
+        PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 

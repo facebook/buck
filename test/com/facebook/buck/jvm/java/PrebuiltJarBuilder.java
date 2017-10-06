@@ -37,7 +37,7 @@ public class PrebuiltJarBuilder
   }
 
   public PrebuiltJarBuilder setBinaryJar(Path binaryJar) {
-    return setBinaryJar(new PathSourcePath(new FakeProjectFilesystem(), binaryJar));
+    return setBinaryJar(PathSourcePath.of(new FakeProjectFilesystem(), binaryJar));
   }
 
   public PrebuiltJarBuilder setBinaryJar(SourcePath binaryJar) {

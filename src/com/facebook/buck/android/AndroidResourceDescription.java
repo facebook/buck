@@ -229,7 +229,7 @@ public class AndroidResourceDescription
       BuildRuleResolver ruleResolver, TargetNode<AndroidResourceDescriptionArg, ?> node) {
     AndroidResourceDescriptionArg arg = node.getConstructorArg();
     if (arg.getProjectRes().isPresent()) {
-      return Optional.of(new PathSourcePath(node.getFilesystem(), arg.getProjectRes().get()));
+      return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectRes().get()));
     }
     if (!arg.getRes().isPresent()) {
       return Optional.empty();
@@ -245,7 +245,7 @@ public class AndroidResourceDescription
       BuildRuleResolver ruleResolver, TargetNode<AndroidResourceDescriptionArg, ?> node) {
     AndroidResourceDescriptionArg arg = node.getConstructorArg();
     if (arg.getProjectAssets().isPresent()) {
-      return Optional.of(new PathSourcePath(node.getFilesystem(), arg.getProjectAssets().get()));
+      return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectAssets().get()));
     }
     if (!arg.getAssets().isPresent()) {
       return Optional.empty();
@@ -322,7 +322,7 @@ public class AndroidResourceDescription
           public FileVisitResult visitFile(Path file, BasicFileAttributes attr) throws IOException {
             String filename = file.getFileName().toString();
             if (isPossibleResourceName(filename)) {
-              paths.put(MorePaths.relativize(inputDir, file), new PathSourcePath(filesystem, file));
+              paths.put(MorePaths.relativize(inputDir, file), PathSourcePath.of(filesystem, file));
             }
             return FileVisitResult.CONTINUE;
           }

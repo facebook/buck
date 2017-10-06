@@ -29,8 +29,8 @@ java_immutables_library(
         "AbstractDefaultBuildTargetSourcePath.java",
         "AbstractExplicitBuildTargetSourcePath.java",
         "AbstractForwardingBuildTargetSourcePath.java",
+        "AbstractPathSourcePath.java",
         "BuildTargetSourcePath.java",
-        "PathSourcePath.java",
         "SourcePathResolver.java",
     ],
     exported_deps = [

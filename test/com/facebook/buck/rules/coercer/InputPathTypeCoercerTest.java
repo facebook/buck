@@ -65,7 +65,7 @@ public class InputPathTypeCoercerTest {
     InputPath input =
         inputPathTypeCoercer.coerce(cellRoots, projectFilesystem, pathRelativeToProjectRoot, path);
 
-    assertEquals(new InputPath(new PathSourcePath(projectFilesystem, Paths.get(path))), input);
+    assertEquals(new InputPath(PathSourcePath.of(projectFilesystem, Paths.get(path))), input);
   }
 
   @Test

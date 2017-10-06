@@ -41,13 +41,13 @@ public class AppleResourcesTest {
 
     Set<SourcePath> variants =
         ImmutableSet.of(
-            new FakeSourcePath("path/aa.lproj/Localizable.strings"),
-            new FakeSourcePath("path/bb.lproj/Localizable.strings"),
-            new FakeSourcePath("path/cc.lproj/Localizable.strings"));
+            FakeSourcePath.of("path/aa.lproj/Localizable.strings"),
+            FakeSourcePath.of("path/bb.lproj/Localizable.strings"),
+            FakeSourcePath.of("path/cc.lproj/Localizable.strings"));
 
     TargetNode<AppleResourceDescriptionArg, ?> resourceNode =
         AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
+            .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
             .setDirs(ImmutableSet.of())
             .setVariants(variants)
             .build();
@@ -68,7 +68,7 @@ public class AppleResourcesTest {
     BuildTarget fooResourceTarget = BuildTargetFactory.newInstance("//foo:resource");
     TargetNode<AppleResourceDescriptionArg, ?> fooResourceNode =
         AppleResourceBuilder.createBuilder(fooResourceTarget)
-            .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
+            .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
             .setDirs(ImmutableSet.of())
             .build();
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -79,7 +79,7 @@ public class AppleResourcesTest {
     BuildTarget barResourceTarget = BuildTargetFactory.newInstance("//bar:resource");
     TargetNode<AppleResourceDescriptionArg, ?> barResourceNode =
         AppleResourceBuilder.createBuilder(barResourceTarget)
-            .setFiles(ImmutableSet.of(new FakeSourcePath("bar.png")))
+            .setFiles(ImmutableSet.of(FakeSourcePath.of("bar.png")))
             .setDirs(ImmutableSet.of())
             .build();
     TargetNode<AppleLibraryDescriptionArg, ?> barLibNode =

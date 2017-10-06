@@ -790,7 +790,7 @@ public class AppleCxxPlatformsTest {
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
-                      new FakeSourcePath(projectFilesystem, source),
+                      FakeSourcePath.of(projectFilesystem, source),
                       ImmutableList.of()));
           break;
         case COMPILE:
@@ -799,7 +799,7 @@ public class AppleCxxPlatformsTest {
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
-                      new FakeSourcePath(projectFilesystem, source),
+                      FakeSourcePath.of(projectFilesystem, source),
                       ImmutableList.of()));
           break;
         default:
@@ -850,7 +850,7 @@ public class AppleCxxPlatformsTest {
               ImmutableSet.of(),
               ImmutableSet.of(),
               NativeLinkableInput.builder()
-                  .setArgs(SourcePathArg.from(new FakeSourcePath("input.o")))
+                  .setArgs(SourcePathArg.from(FakeSourcePath.of("input.o")))
                   .build(),
               Optional.empty());
       ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));

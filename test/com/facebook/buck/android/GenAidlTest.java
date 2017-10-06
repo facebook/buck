@@ -35,6 +35,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -62,8 +63,8 @@ public class GenAidlTest {
     ProjectFilesystem stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
 
-    FakeSourcePath pathToAidl =
-        new FakeSourcePath(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
+    PathSourcePath pathToAidl =
+        FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     String importPath = Paths.get("java/com/example/base").toString();
 
     BuildTarget target =

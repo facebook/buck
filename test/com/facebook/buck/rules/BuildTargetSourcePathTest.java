@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -155,7 +154,7 @@ public class BuildTargetSourcePathTest {
     FakeBuildRule rule3 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:rule3"));
     resolver.addToIndex(rule3);
 
-    PathSourcePath sourcePath0 = new PathSourcePath(new FakeProjectFilesystem(), Paths.get("boom"));
+    PathSourcePath sourcePath0 = FakeSourcePath.of("boom");
     ForwardingBuildTargetSourcePath sourcePath1 =
         ForwardingBuildTargetSourcePath.of(rule1.getBuildTarget(), sourcePath0);
     ForwardingBuildTargetSourcePath sourcePath2 =

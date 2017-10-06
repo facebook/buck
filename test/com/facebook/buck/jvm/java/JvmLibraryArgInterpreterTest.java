@@ -122,7 +122,7 @@ public class JvmLibraryArgInterpreterTest {
     JvmLibraryArg arg =
         ExampleJvmLibraryArg.builder()
             .setName("foo")
-            .setJavacJar(new FakeSourcePath("does-not-exist"))
+            .setJavacJar(FakeSourcePath.of("does-not-exist"))
             .build();
 
     assertEquals(arg.getJavacJar(), arg.getJavacSpec().getJavacJarPath());
@@ -133,7 +133,7 @@ public class JvmLibraryArgInterpreterTest {
     JvmLibraryArg arg =
         ExampleJvmLibraryArg.builder()
             .setName("foo")
-            .setJavacJar(new FakeSourcePath("does-not-exist"))
+            .setJavacJar(FakeSourcePath.of("does-not-exist"))
             .setCompilerClassName("compiler")
             .build();
 

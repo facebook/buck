@@ -108,7 +108,7 @@ public class RobolectricTestRuleTest {
     for (int i = 0; i < 10; i++) {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
-      resDepsBuilder.add(new ResourceRule(new FakeSourcePath(path)));
+      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(path)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -146,7 +146,7 @@ public class RobolectricTestRuleTest {
     for (int i = 0; i < 10; i++) {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
-      resDepsBuilder.add(new ResourceRule(new FakeSourcePath(path)));
+      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(path)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -189,7 +189,7 @@ public class RobolectricTestRuleTest {
       String path = "java/src/com/facebook/base/" + i + "/res";
       filesystem.mkdirs(Paths.get(path).resolve("values"));
       String assetPath = "java/src/com/facebook/base/" + i + "/assets";
-      resDepsBuilder.add(new ResourceRule(new FakeSourcePath(path), new FakeSourcePath(assetPath)));
+      resDepsBuilder.add(new ResourceRule(FakeSourcePath.of(path), FakeSourcePath.of(assetPath)));
     }
     ImmutableList<HasAndroidResourceDeps> resDeps = resDepsBuilder.build();
 
@@ -268,11 +268,11 @@ public class RobolectricTestRuleTest {
         robolectricTest.getRobolectricResourceDirectoriesArg(
             pathResolver,
             ImmutableList.of(
-                new ResourceRule(new PathSourcePath(filesystem, resDep1)),
-                new ResourceRule(new PathSourcePath(filesystem, resDep2)),
+                new ResourceRule(FakeSourcePath.of(filesystem, resDep1)),
+                new ResourceRule(FakeSourcePath.of(filesystem, resDep2)),
                 new ResourceRule(null),
-                new ResourceRule(new PathSourcePath(filesystem, resDep3)),
-                new ResourceRule(new PathSourcePath(filesystem, resDep4))));
+                new ResourceRule(FakeSourcePath.of(filesystem, resDep3)),
+                new ResourceRule(FakeSourcePath.of(filesystem, resDep4))));
 
     assertEquals(expectedVmArgBuilder.toString(), result);
   }
@@ -300,8 +300,7 @@ public class RobolectricTestRuleTest {
     try {
       robolectricTest.getRobolectricResourceDirectoriesArg(
           pathResolver,
-          ImmutableList.of(
-              new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there_res")))));
+          ImmutableList.of(new ResourceRule(FakeSourcePath.of(filesystem, "not_there_res"))));
       fail("Expected FileNotFoundException");
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("not_there_res"));
@@ -349,10 +348,10 @@ public class RobolectricTestRuleTest {
         robolectricTest.getRobolectricAssetsDirectories(
             pathResolver,
             ImmutableList.of(
-                new ResourceRule(null, new PathSourcePath(filesystem, assetsDep1)),
+                new ResourceRule(null, FakeSourcePath.of(filesystem, assetsDep1)),
                 new ResourceRule(null, null),
-                new ResourceRule(null, new PathSourcePath(filesystem, assetsDep2)),
-                new ResourceRule(null, new PathSourcePath(filesystem, assetsDep3))));
+                new ResourceRule(null, FakeSourcePath.of(filesystem, assetsDep2)),
+                new ResourceRule(null, FakeSourcePath.of(filesystem, assetsDep3))));
 
     assertEquals(expectedVmArgBuilder.toString(), result);
   }
@@ -380,8 +379,7 @@ public class RobolectricTestRuleTest {
     try {
       robolectricTest.getRobolectricResourceDirectoriesArg(
           pathResolver,
-          ImmutableList.of(
-              new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there_assets")))));
+          ImmutableList.of(new ResourceRule(FakeSourcePath.of(filesystem, "not_there_assets"))));
       fail("Expected FileNotFoundException");
     } catch (RuntimeException e) {
       assertThat(e.getMessage(), Matchers.containsString("not_there_assets"));

@@ -57,7 +57,7 @@ public class PrebuiltNativeLibraryDescription
     try {
       librarySources =
           FluentIterable.from(projectFilesystem.getFilesUnderPath(args.getNativeLibs()))
-              .transform(p -> new PathSourcePath(projectFilesystem, p))
+              .transform(p -> PathSourcePath.of(projectFilesystem, p))
               .toSortedSet(Ordering.natural());
     } catch (IOException e) {
       throw new HumanReadableException(e, "Error traversing directory %s.", args.getNativeLibs());

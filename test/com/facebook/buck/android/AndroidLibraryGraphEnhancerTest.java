@@ -117,7 +117,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
-                .setRes(new FakeSourcePath("android_res/com/example/res1"))
+                .setRes(FakeSourcePath.of("android_res/com/example/res1"))
                 .build());
     BuildRule resourceRule2 =
         ruleResolver.addToIndex(
@@ -125,7 +125,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
-                .setRes(new FakeSourcePath("android_res/com/example/res2"))
+                .setRes(FakeSourcePath.of("android_res/com/example/res2"))
                 .build());
 
     AndroidLibraryGraphEnhancer graphEnhancer =
@@ -177,7 +177,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
-                .setRes(new FakeSourcePath("android_res/com/example/res1"))
+                .setRes(FakeSourcePath.of("android_res/com/example/res1"))
                 .build());
     BuildRule resourceRule2 =
         ruleResolver.addToIndex(
@@ -185,7 +185,7 @@ public class AndroidLibraryGraphEnhancerTest {
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
-                .setRes(new FakeSourcePath("android_res/com/example/res2"))
+                .setRes(FakeSourcePath.of("android_res/com/example/res2"))
                 .build());
 
     AndroidLibraryGraphEnhancer graphEnhancer =

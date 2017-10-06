@@ -89,9 +89,9 @@ public class PythonPackagedBinaryTest {
             "main",
             PythonPackageComponents.of(
                 ImmutableMap.of(
-                    Paths.get(main), new PathSourcePath(projectFilesystem, mainSrc),
-                    Paths.get(mod1), new PathSourcePath(projectFilesystem, src1),
-                    Paths.get(mod2), new PathSourcePath(projectFilesystem, src2)),
+                    Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
+                    Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
+                    Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2)),
                 ImmutableMap.of(),
                 ImmutableMap.of(),
                 ImmutableSet.of(),

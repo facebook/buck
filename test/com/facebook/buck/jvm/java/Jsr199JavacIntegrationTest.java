@@ -325,8 +325,7 @@ public class Jsr199JavacIntegrationTest {
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
 
-    Optional<SourcePath> jar =
-        javacJar.map(p -> new PathSourcePath(new FakeProjectFilesystem(), p));
+    Optional<SourcePath> jar = javacJar.map(p -> PathSourcePath.of(new FakeProjectFilesystem(), p));
     if (jar.isPresent()) {
       return new JarBackedJavac(
           JavacSpec.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()));
