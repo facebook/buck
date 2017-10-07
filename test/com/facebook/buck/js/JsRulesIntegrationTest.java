@@ -221,4 +221,20 @@ public class JsRulesIntegrationTest {
         .assertSuccess();
     workspace.verify(Paths.get("ios_app_with_genrule.expected"), genPath);
   }
+
+  @Test
+  public void apkContainsGenruleOutputAndBundleResources()
+      throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app_with_genrule");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
+
+    zipInspector.assertFileExists("assets/postprocessed.txt");
+    zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
+    zipInspector.assertFileDoesNotExist("assets/fruit-salad-in-a-bundle.js");
+  }
 }

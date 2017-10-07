@@ -126,16 +126,14 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return jsBundle instanceof JsBundleAndroid
-        ? ((JsBundleAndroid) jsBundle).getRequiredPackageables()
+    return jsBundle instanceof AndroidPackageable
+        ? ((AndroidPackageable) jsBundle).getRequiredPackageables()
         : ImmutableList.of();
   }
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    if (jsBundle instanceof JsBundleAndroid) {
-      ((JsBundleAndroid) jsBundle).addToCollector(collector);
-    }
+    collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
   }
 
   @Override

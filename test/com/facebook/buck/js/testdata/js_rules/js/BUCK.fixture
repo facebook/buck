@@ -71,6 +71,7 @@ js_bundle(
     name = 'fruit-with-extras',
     bundle_name = 'some-fruit-with-delicious-extras.js',
     entry = ['yoghurt', 'banana', 'apple'],
+    android_package = 'com.sample',
     deps = [':extras', ':fruit'],
     worker = ':packager_worker',
 )

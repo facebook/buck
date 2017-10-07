@@ -16,7 +16,6 @@
 
 package com.facebook.buck.js;
 
-import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetNode;
@@ -158,7 +156,9 @@ public class JsBundleGenruleDescriptionTest {
         jsBundleAndroid.getRequiredPackageables(), setup.genrule().getRequiredPackageables());
 
     AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
-    expect(collector.addAssetsDirectory(anyObject(BuildTarget.class), anyObject(SourcePath.class)))
+    expect(
+            collector.addAssetsDirectory(
+                setup.rule().getBuildTarget(), setup.rule().getSourcePathToOutput()))
         .andReturn(collector);
     replay(collector);
     setup.genrule().addToCollector(collector);
@@ -166,12 +166,8 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
-  public void doesNothingIfUnderlyingBundleIsNotForAndroid() {
+  public void returnsNothingIfUnderlyingBundleIsNotForAndroid() {
     assertEquals(ImmutableList.of(), setup.genrule().getRequiredPackageables());
-
-    AndroidPackageableCollector collector = EasyMock.createMock(AndroidPackageableCollector.class);
-    replay(collector);
-    setup.genrule().addToCollector(collector);
   }
 
   @Test
