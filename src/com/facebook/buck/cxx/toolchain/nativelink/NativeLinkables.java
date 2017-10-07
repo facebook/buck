@@ -185,10 +185,6 @@ public class NativeLinkables {
 
   public static Linker.LinkableDepType getLinkStyle(
       NativeLinkable.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
-    System.out.println("getLinkStyle in Linkables");
-    System.out.println("requested" + requestedLinkStyle);
-    System.out.println("preferredLinkage" + preferredLinkage);
-    System.out.flush();
     Linker.LinkableDepType linkStyle;
     switch (preferredLinkage) {
       case SHARED:
@@ -206,8 +202,6 @@ public class NativeLinkables {
       default:
         throw new IllegalStateException();
     }
-
-    System.out.println("DETERMINED" + linkStyle);
     return linkStyle;
   }
 

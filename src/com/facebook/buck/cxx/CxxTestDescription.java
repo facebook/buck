@@ -148,7 +148,6 @@ public class CxxTestDescription
       final BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       final CxxTestDescriptionArg args) {
-    System.out.println("args in createBuildRule");
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(inputBuildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(inputBuildTarget);
