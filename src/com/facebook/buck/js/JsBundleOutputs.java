@@ -24,16 +24,18 @@ import com.facebook.buck.rules.SourcePath;
  * source map, and assets/resources used from within the packaged JS source code.
  */
 public interface JsBundleOutputs extends BuildRule {
+  String JS_DIR_NAME = "js";
+
   /**
    * @return the file name of the main JavaScript bundle file. This does not necessarily have to be
    *     the only JavaScript file written.
    */
   String getBundleName();
 
-  /** @return the {@link SourcePath} to the built JavaScript. Can be a directory. */
+  /** @return the {@link SourcePath} to the directory containing the built JavaScript. */
   @Override
   default SourcePath getSourcePathToOutput() {
-    return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), "js");
+    return JsUtil.relativeToOutputRoot(getBuildTarget(), getProjectFilesystem(), JS_DIR_NAME);
   }
 
   /**

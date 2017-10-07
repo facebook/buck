@@ -1,0 +1,15 @@
+bundle --lib @/buck-out/gen/js/extras.json --lib @/buck-out/gen/js/fruit.json --root @ --sourcemap @/buck-out/gen/js/fruit-with-extras/map/some-fruit-with-delicious-extras.js.map --assets @/buck-out/gen/js/fruit-with-extras/res yoghurt banana apple
+library --root @
+transform --arbitrary extra --flags --filename js/extras/choclate-chips.js
+var choclateChips;
+transform --arbitrary extra --flags --filename js/extras/yoghurt.js
+var yoghurt;
+library --root @
+transform --filename js/apple.js
+var apple;
+transform --filename js/banana.js
+var banana;
+transform --filename js/pear.js
+var pear;
+postprocessed
+postprocessed again

@@ -112,3 +112,23 @@ js_library(
     worker = ':packager_worker',
 )
 
+js_bundle_genrule(
+    name = "genrule-inner",
+    js_bundle = ":fruit-with-extras",
+    bash = r"""
+        set -e
+        echo "CP STEP" >&2
+        cp "$JS_DIR/$JS_BUNDLE_NAME" "$OUT/"
+        ls "$OUT" >&2
+        echo "ECHO STEP" >&2
+        echo postprocessed >> "$OUT/$JS_BUNDLE_NAME"
+    """,
+)
+
+js_bundle_genrule(
+    name = "genrule-outer",
+    js_bundle = ":genrule-inner",
+    bash = r"""cp "$JS_DIR/$JS_BUNDLE_NAME" "$OUT/postprocessed.txt" && echo postprocessed again >> "$OUT/postprocessed.txt" """,
+    visibility = ["PUBLIC"],
+)
+

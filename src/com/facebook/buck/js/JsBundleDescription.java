@@ -62,15 +62,19 @@ public class JsBundleDescription
         Flavored,
         HasAppleBundleResourcesDescription<JsBundleDescriptionArg> {
 
-  private static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
+  static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
       ImmutableSet.of(
           JsFlavors.PLATFORM_DOMAIN,
           JsFlavors.OPTIMIZATION_DOMAIN,
           JsFlavors.RAM_BUNDLE_DOMAIN,
-          JsFlavors.SOURCE_MAP_DOMAIN);
+          JsFlavors.OUTPUT_OPTIONS_DOMAIN);
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+    return supportsFlavors(flavors);
+  }
+
+  static boolean supportsFlavors(ImmutableSet<Flavor> flavors) {
     return JsFlavors.validateFlavors(flavors, FLAVOR_DOMAINS);
   }
 
@@ -265,6 +269,11 @@ public class JsBundleDescription
       BuildRuleResolver resolver) {
     JsBundleOutputs bundle =
         resolver.getRuleWithType(targetNode.getBuildTarget(), JsBundleOutputs.class);
+    addAppleBundleResources(builder, bundle);
+  }
+
+  static void addAppleBundleResources(
+      AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
     builder.addDirsContainingResourceDirs(
         bundle.getSourcePathToOutput(), bundle.getSourcePathToResources());
   }

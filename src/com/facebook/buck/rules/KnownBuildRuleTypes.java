@@ -101,6 +101,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.JsBundleDescription;
+import com.facebook.buck.js.JsBundleGenruleDescription;
 import com.facebook.buck.js.JsLibraryDescription;
 import com.facebook.buck.js.ReactNativeBuckConfig;
 import com.facebook.buck.jvm.groovy.GroovyBuckConfig;
@@ -552,6 +553,7 @@ public class KnownBuildRuleTypes {
             defaultJavaCxxPlatform,
             cxxPlatforms));
     builder.register(new JsBundleDescription());
+    builder.register(new JsBundleGenruleDescription());
     builder.register(new JsLibraryDescription());
     builder.register(new KeystoreDescription());
     builder.register(

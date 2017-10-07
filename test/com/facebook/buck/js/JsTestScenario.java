@@ -154,6 +154,11 @@ public class JsTestScenario {
       return this;
     }
 
+    public Builder bundleGenrule(BuildTarget genruleTarget, BuildTarget bundleTarget) {
+      nodes.add(new JsBundleGenruleBuilder(genruleTarget, bundleTarget, filesystem).build());
+      return this;
+    }
+
     private void addLibrary(
         BuildTarget target,
         @Nullable String basePath,
