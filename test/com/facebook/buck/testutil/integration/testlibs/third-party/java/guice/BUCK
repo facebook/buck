@@ -4,12 +4,8 @@ prebuilt_jar(
     licenses = [
         "COPYING",
     ],
-    source_jar = "guice-3.0-sources.jar",
     visibility = [
-        "//src/com/facebook/buck/testrunner:testng",
-        "//third-party/java/aether:aether-impl",
-        "//third-party/java/closure-templates:closure-templates",
-        "//third-party/java/maven:maven-aether-provider",
+        "PUBLIC",
     ],
     deps = [
         ":assisted-inject",
@@ -24,7 +20,6 @@ prebuilt_jar(
     licenses = [
         "COPYING",
     ],
-    source_jar = "guice-assistedinject-3.0-sources.jar",
     deps = [
         "//third-party/java/aopalliance:aopalliance",
     ],
@@ -36,5 +31,4 @@ prebuilt_jar(
     licenses = [
         "COPYING",
     ],
-    source_jar = "guice-multibindings-3.0-sources.jar",
 )
