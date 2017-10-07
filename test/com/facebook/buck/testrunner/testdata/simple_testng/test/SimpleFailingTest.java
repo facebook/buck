@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2017-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -18,14 +18,9 @@ package com.example;
 
 import org.testng.annotations.Test;
 
-public class SimpleTest {
+public class SimpleFailingTest {
 
   @Test
-  public void victory() {
-    System.out.println("all i do is win");
-  }
-
-  @Test(expectedExceptions = RuntimeException.class)
   public void defeat() {
     throw new RuntimeException();
   }

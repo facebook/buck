@@ -6,6 +6,7 @@ prebuilt_jar(
     ],
     source_jar = "guice-3.0-sources.jar",
     visibility = [
+        "//src/com/facebook/buck/testrunner:testng",
         "//third-party/java/aether:aether-impl",
         "//third-party/java/closure-templates:closure-templates",
         "//third-party/java/maven:maven-aether-provider",

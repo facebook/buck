@@ -16,6 +16,7 @@ prebuilt_jar(
         "LICENSE-330",
     ],
     visibility = [
+        "//src/com/facebook/buck/testrunner:testng",
         "//third-party/java/guice:guice",
     ],
 )
