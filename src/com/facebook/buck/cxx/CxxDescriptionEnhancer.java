@@ -816,7 +816,8 @@ public class CxxDescriptionEnhancer {
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableList<String> includeDirs,
-      Optional<Boolean> xcodePrivateHeadersSymlinks) {
+      Optional<Boolean> xcodePrivateHeadersSymlinks,
+      ImmutableSortedSet<SourcePath> rawHeaders) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
