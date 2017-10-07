@@ -164,6 +164,15 @@ public class CxxLinkableEnhancer {
       NativeLinkableInput immediateLinkableInput,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
+      StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+
+            for(int i=0; i<elements.length; i++) {
+                System.out.println(elements[i]);
+            }
+
+      System.out.println("createCxxLinkableBuildRule");
+      System.out.println(depType);
+      System.out.flush();
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
 
@@ -181,6 +190,14 @@ public class CxxLinkableEnhancer {
             .map(
                 nativeLinkable -> {
                   NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
+                  System.out.println("cxxPlatform");
+                  System.out.println("" + cxxPlatform);
+                  System.out.println("link");
+                  System.out.println(link);
+                  System.out.println("depType");
+                  System.out.println(depType);
+                  System.out.flush();
+
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
                           cxxPlatform,

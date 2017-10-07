@@ -724,6 +724,14 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode) {
 
+    System.out.println("---");
+    System.out.println("---");
+    System.out.println("ARGS IN createBuildRulesForCxxBinaryDescriptionArg");
+    System.out.println(args);
+    System.out.println("---");
+    System.out.println("---");
+    System.out.println("---");
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ImmutableMap<String, CxxSource> srcs =
@@ -748,6 +756,18 @@ public class CxxDescriptionEnhancer {
     extraDeps.stream().map(resolver::getRule).forEach(depsBuilder::add);
     ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
+    Linker.LinkableDepType linkStyle = args.getLinkStyle().orElse(
+        args.getStaticPicLib().isPresent()
+            ? Linker.LinkableDepType.STATIC_PIC
+            : Linker.LinkableDepType.STATIC);
+
+    System.out.println("PELIGRO");
+    System.out.println(args.getLinkStyle());
+    System.out.println(args.getStaticPicLib());
+    System.out.println("PELIGRO");
+    System.out.flush();
+
+
     return createBuildRulesForCxxBinary(
         target,
         projectFilesystem,
@@ -763,7 +783,7 @@ public class CxxDescriptionEnhancer {
             : ImmutableSet.of(),
         stripStyle,
         flavoredLinkerMapMode,
-        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+        linkStyle,
         args.getThinLto(),
         args.getPreprocessorFlags(),
         args.getPlatformPreprocessorFlags(),
@@ -812,6 +832,11 @@ public class CxxDescriptionEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableList<String> includeDirs,
       Optional<Boolean> xcodePrivateHeadersSymlinks) {
+
+    System.out.println("createBuildRulesForCxxBinary");
+    System.out.println(linkStyle);
+    System.out.flush();
+
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     //    TODO(beefon): should be:
@@ -1021,6 +1046,8 @@ public class CxxDescriptionEnhancer {
       ImmutableList.Builder<Arg> argsBuilder,
       BuildTarget linkRuleTarget,
       ImmutableSet<BuildTarget> linkWholeDeps) {
+    System.out.println("createCxxLinkRule");
+    System.out.flush();
     return (CxxLink)
         resolver.computeIfAbsent(
             linkRuleTarget,
@@ -1211,6 +1238,9 @@ public class CxxDescriptionEnhancer {
   }
 
   public static Flavor flavorForLinkableDepType(Linker.LinkableDepType linkableDepType) {
+    System.out.println("flavorForLinkableDepType");
+    System.out.println(linkableDepType);
+    System.out.flush();
     switch (linkableDepType) {
       case STATIC:
         return STATIC_FLAVOR;

@@ -17,11 +17,15 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import java.util.Optional;
+import com.facebook.buck.rules.SourcePath;
 import org.immutables.value.Value;
+import java.util.Optional;
 
 public interface LinkableCxxConstructorArg extends CxxConstructorArg {
   Optional<Linker.LinkableDepType> getLinkStyle();
+
+  @Value.Default
+  Optional<SourcePath> getStaticPicLib();
 
   @Value.Default
   default boolean getThinLto() {

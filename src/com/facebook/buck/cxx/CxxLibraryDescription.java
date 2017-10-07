@@ -439,6 +439,10 @@ public class CxxLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
+
+    System.out.println("createSharedLibrary");
+    System.out.flush();
+
     BuildTarget buildTargetWithoutLinkerMapMode =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(
             buildTargetMaybeWithLinkerMapMode,
@@ -634,6 +638,9 @@ public class CxxLibraryDescription
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             buildTarget, cxxPlatform.getFlavor(), pic);
 
+    System.out.println("STATIC_TARGET IN createStaticLibraryBuildRule");
+    System.out.println(staticTarget);
+
     if (objects.isEmpty()) {
       return new NoopBuildRule(staticTarget, projectFilesystem) {
         @Override
@@ -651,6 +658,9 @@ public class CxxLibraryDescription
             pic,
             cxxPlatform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled());
+    System.out.println("staticLibraryPath IN createStaticLibraryBuildRule");
+    System.out.println(staticLibraryPath);
+    System.out.flush();
     return Archive.from(
         staticTarget,
         projectFilesystem,
@@ -679,6 +689,9 @@ public class CxxLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
+    System.out.println("createSharedLibraryBuildRule");
+    System.out.println(linkableDepType);
+    System.out.flush();
     ImmutableList.Builder<StringWithMacros> linkerFlags = ImmutableList.builder();
 
     linkerFlags.addAll(
@@ -755,6 +768,14 @@ public class CxxLibraryDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       CxxLibraryDescriptionArg args) {
+    System.out.println("BuildTarget");
+    System.out.println(buildTarget);
+    System.out.println("TargetGraph");
+    System.out.println(targetGraph);
+    System.out.println("createBuildRule");
+    System.out.println(args.getLinkStyle());
+    System.out.println("----");
+    System.out.flush();
     return createBuildRule(
         buildTarget,
         projectFilesystem,
@@ -784,11 +805,25 @@ public class CxxLibraryDescription
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
 
+    System.out.println("CxxLibraryDescription - createBuildRule");
+    System.out.println(linkableDepType);
+
+    System.out.flush();
+
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
     CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraDeps).build();
+
+    System.out.println("BUILD TARGET");
+    System.out.println(buildTarget);
+
+    System.out.println("TYPE");
+    System.out.println(type);
+
+    System.out.println("PLATFORM");
+    System.out.println(platform);
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
@@ -854,14 +889,20 @@ public class CxxLibraryDescription
       // rule builder methods.
 
       BuildTarget untypedBuildTarget = getUntypedBuildTarget(buildTarget);
+
       switch (type.get().getValue()) {
         case HEADERS:
+          System.out.println("HEADERS codepath before linkableDepType");
           return createHeaderSymlinkTreeBuildRule(
               untypedBuildTarget, projectFilesystem, resolver, platform.get(), args);
         case EXPORTED_HEADERS:
+          System.out.println("EXPORTED_HEADERS codepath before linkableDepType");
           return createExportedPlatformHeaderSymlinkTreeBuildRule(
               untypedBuildTarget, projectFilesystem, resolver, platform.get(), args);
         case SHARED:
+          System.out.println("Shared codepath before linkableDepType");
+          System.out.println(linkableDepType);
+          System.out.flush();
           return createSharedLibraryBuildRule(
               untypedBuildTarget,
               projectFilesystem,
@@ -878,9 +919,11 @@ public class CxxLibraryDescription
               transitiveCxxPreprocessorInputFunction,
               delegate);
         case SHARED_INTERFACE:
+          System.out.println("SHARED_INTERFACE codepath before linkableDepType");
           return createSharedLibraryInterface(
               untypedBuildTarget, projectFilesystem, resolver, platform.get());
         case MACH_O_BUNDLE:
+          System.out.println("MACH_O_BUNDLE codepath before linkableDepType");
           return createSharedLibraryBuildRule(
               untypedBuildTarget,
               projectFilesystem,
@@ -897,6 +940,7 @@ public class CxxLibraryDescription
               transitiveCxxPreprocessorInputFunction,
               delegate);
         case STATIC:
+          System.out.println("STATIC codepath before linkableDepType");
           return createStaticLibraryBuildRule(
               untypedBuildTarget,
               projectFilesystem,
@@ -910,6 +954,7 @@ public class CxxLibraryDescription
               transitiveCxxPreprocessorInputFunction,
               delegate);
         case STATIC_PIC:
+          System.out.println("STATIC_PIC codepath before linkableDepType");
           return createStaticLibraryBuildRule(
               untypedBuildTarget,
               projectFilesystem,

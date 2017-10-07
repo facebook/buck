@@ -102,8 +102,12 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
       Optional<SourcePath> lib,
       Optional<PatternMatchedCollection<SourcePath>> platformLib,
       Optional<VersionMatchedCollection<SourcePath>> versionedLib) {
+    System.out.println(parameter +  lib + cxxPlatform + platformLib + selectedVersions + versionedLib);
     Optional<SourcePath> path =
         getParameter(parameter, lib, cxxPlatform, platformLib, selectedVersions, versionedLib);
+    System.out.println("PATH");
+    System.out.println(path);
+    System.out.flush();
     return path.map(
         p ->
             CxxGenruleDescription.fixupSourcePath(
@@ -134,6 +138,8 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    System.out.println("STATIC LIB FETCH");
+    System.out.flush();
     return getLibrary(
         resolver,
         cxxPlatform,
@@ -151,6 +157,8 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    System.out.println("STATIC_PIC LIB FETCH");
+    System.out.flush();
     return getLibrary(
         resolver,
         cxxPlatform,

@@ -272,6 +272,8 @@ public class CxxBinaryDescription
       AbstractCxxBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    System.out.println("findDepsForTargetFromConstructorArgs");
+    System.out.flush();
     extraDepsBuilder.addAll(
         findDepsForTargetFromConstructorArgs(buildTarget, constructorArg.getDefaultPlatform()));
     constructorArg

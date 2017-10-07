@@ -253,6 +253,8 @@ public class PrebuiltCxxLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Optional<String> versionSubDir,
       PrebuiltCxxLibraryDescriptionArg args) {
+    System.out.println("createSharedLibraryBuildRule");
+    System.out.flush();
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -713,11 +715,17 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+        System.out.println("getPreferredLinkage");
+        System.out.println(args);
+        System.out.flush();
         if (args.isHeaderOnly()) {
           return Linkage.ANY;
         }
         if (args.isForceStatic()) {
           return Linkage.STATIC;
+        }
+        if (args.getStaticPicLib().isPresent()) {
+          return NativeLinkable.Linkage.STATIC;
         }
         if (args.getPreferredLinkage().orElse(Linkage.ANY) != Linkage.ANY) {
           return args.getPreferredLinkage().get();
