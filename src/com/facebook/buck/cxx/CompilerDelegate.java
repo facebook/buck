@@ -19,9 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -34,12 +34,12 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 
 /** Helper class for generating compiler invocations for a cxx compilation rule. */
-class CompilerDelegate implements RuleKeyAppendable {
+class CompilerDelegate implements AddsToRuleKey {
   // Fields that are added to rule key as is.
-  private final Compiler compiler;
+  @AddToRuleKey private final Compiler compiler;
 
   // Fields that added to the rule key with some processing.
-  private final CxxToolFlags compilerFlags;
+  @AddToRuleKey private final CxxToolFlags compilerFlags;
 
   // Fields that are not added to the rule key.
   private final SourcePathResolver resolver;
@@ -54,13 +54,6 @@ class CompilerDelegate implements RuleKeyAppendable {
     this.sanitizer = sanitizer;
     this.compiler = compiler;
     this.compilerFlags = flags;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("compiler", compiler);
-    sink.setReflectively("platformCompilerFlags", compilerFlags.getPlatformFlags());
-    sink.setReflectively("ruleCompilerFlags", compilerFlags.getRuleFlags());
   }
 
   /** Returns the argument list for executing the compiler. */
