@@ -6,5 +6,6 @@ prebuilt_jar(
     ],
     visibility = [
         "//third-party/java/guice:assisted-inject",
+        "//test/com/facebook/buck/testutil/integration/testlibs/...",
     ],
 )

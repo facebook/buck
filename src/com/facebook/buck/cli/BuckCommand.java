@@ -57,6 +57,8 @@ public class BuckCommand extends AbstractContainerCommand {
   @Nullable
   Command subcommand;
 
+  // --version is handled in python, but leave it here for --help
+  @SuppressWarnings("unused")
   @Option(
     name = "--version",
     aliases = {"-V"},
@@ -74,12 +76,7 @@ public class BuckCommand extends AbstractContainerCommand {
 
   @Override
   public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (subcommand == null && version) {
-      // The --version flag behaves like a subcommand.
-      return new VersionCommand().run(params);
-    } else {
-      return super.run(params);
-    }
+    return super.run(params);
   }
 
   @Override

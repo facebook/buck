@@ -68,7 +68,7 @@ public class PythonBuckConfig {
               new CacheLoader<ProjectFilesystem, PathSourcePath>() {
                 @Override
                 public PathSourcePath load(@Nonnull ProjectFilesystem filesystem) {
-                  return new PathSourcePath(
+                  return PathSourcePath.of(
                       filesystem,
                       PythonBuckConfig.class + "/__test_main__.py",
                       new PackagedResource(filesystem, PythonBuckConfig.class, "__test_main__.py"));

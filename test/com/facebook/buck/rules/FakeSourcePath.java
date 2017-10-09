@@ -18,14 +18,23 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import java.nio.file.Path;
 
-public class FakeSourcePath extends PathSourcePath {
+public final class FakeSourcePath {
 
-  public FakeSourcePath(String path) {
-    this(new FakeProjectFilesystem(), path);
+  public static PathSourcePath of(String path) {
+    return of(new FakeProjectFilesystem(), path);
   }
 
-  public FakeSourcePath(ProjectFilesystem filesystem, String path) {
-    super(filesystem, filesystem.getPath(path));
+  public static PathSourcePath of(ProjectFilesystem filesystem, String path) {
+    return of(filesystem, filesystem.getPath(path));
+  }
+
+  public static PathSourcePath of(Path path) {
+    return of(new FakeProjectFilesystem(), path);
+  }
+
+  public static PathSourcePath of(ProjectFilesystem filesystem, Path path) {
+    return (PathSourcePath) AbstractPathSourcePath.of(filesystem, path);
   }
 }

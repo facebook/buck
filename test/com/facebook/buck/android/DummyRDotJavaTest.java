@@ -76,7 +76,7 @@ public class DummyRDotJavaTest {
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
-                .setRes(new FakeSourcePath("android_res/com/example/res1"))
+                .setRes(FakeSourcePath.of("android_res/com/example/res1"))
                 .build());
     setAndroidResourceBuildOutput(resourceRule1);
     BuildRule resourceRule2 =
@@ -85,7 +85,7 @@ public class DummyRDotJavaTest {
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
-                .setRes(new FakeSourcePath("android_res/com/example/res2"))
+                .setRes(FakeSourcePath.of("android_res/com/example/res2"))
                 .build());
     setAndroidResourceBuildOutput(resourceRule2);
 

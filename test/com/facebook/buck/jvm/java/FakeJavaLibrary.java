@@ -117,7 +117,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
     Preconditions.checkNotNull(srcs);
     this.srcs =
         FluentIterable.from(srcs)
-            .transform(p -> (SourcePath) new PathSourcePath(new FakeProjectFilesystem(), p))
+            .transform(p -> (SourcePath) PathSourcePath.of(new FakeProjectFilesystem(), p))
             .toSortedSet(Ordering.natural());
     return this;
   }

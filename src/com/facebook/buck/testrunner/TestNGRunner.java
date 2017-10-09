@@ -33,6 +33,7 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
 import org.testng.annotations.Factory;
+import org.testng.annotations.Guice;
 import org.testng.annotations.ITestAnnotation;
 import org.testng.annotations.Test;
 import org.testng.internal.annotations.JDK15AnnotationFinder;
@@ -107,17 +108,26 @@ public final class TestNGRunner extends BaseRunner {
         || Modifier.isAbstract(klassModifiers)) {
       return false;
     }
-    // Test classes must have a public, no-arg constructor.
+    // Test classes must either have a public, no-arg constructor, or have a constructor that
+    // initializes using dependency injection, via the org.testng.annotations.Guice annotation on
+    // the class and the com.google.inject.Inject or javax.inject.Inject annotation on the
+    // constructor.
     boolean foundPublicNoArgConstructor = false;
+    boolean foundInjectedConstructor = false;
+    boolean hasGuiceAnnotation = klass.getAnnotationsByType(Guice.class).length > 0;
     for (Constructor<?> c : klass.getConstructors()) {
       if (Modifier.isPublic(c.getModifiers())) {
-        if (c.getParameterCount() != 0) {
-          return false;
+        if (c.getParameterCount() == 0) {
+          foundPublicNoArgConstructor = true;
         }
-        foundPublicNoArgConstructor = true;
+        if (hasGuiceAnnotation
+            && (c.getAnnotationsByType(com.google.inject.Inject.class).length > 0
+                || c.getAnnotationsByType(javax.inject.Inject.class).length > 0)) {
+          foundInjectedConstructor = true;
+        }
       }
     }
-    if (!foundPublicNoArgConstructor) {
+    if (!foundPublicNoArgConstructor && !foundInjectedConstructor) {
       return false;
     }
     // Test classes must have at least one public test method (or something that generates tests)

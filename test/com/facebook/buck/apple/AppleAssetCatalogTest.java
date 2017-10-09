@@ -66,7 +66,7 @@ public class AppleAssetCatalogTest {
     exception.expectMessage(
         "Target //:foobar had asset catalog dir catalog.wrongextension - asset catalog dirs must end with .xcassets");
     AppleAssetCatalog.validateAssetCatalogs(
-        ImmutableSortedSet.of(new FakeSourcePath(filesystem, invalidName)),
+        ImmutableSortedSet.of(FakeSourcePath.of(filesystem, invalidName)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -79,7 +79,7 @@ public class AppleAssetCatalogTest {
     tmp.newFolder(catalogName);
 
     AppleAssetCatalog.validateAssetCatalogs(
-        ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
+        ImmutableSortedSet.of(FakeSourcePath.of(filesystem, catalogName)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -119,7 +119,7 @@ public class AppleAssetCatalogTest {
     tmp.newFolder(complicationsetName);
 
     AppleAssetCatalog.validateAssetCatalogs(
-        ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
+        ImmutableSortedSet.of(FakeSourcePath.of(filesystem, catalogName)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -148,8 +148,8 @@ public class AppleAssetCatalogTest {
 
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(
-            new FakeSourcePath(filesystem, catalogName1),
-            new FakeSourcePath(filesystem, catalogName2)),
+            FakeSourcePath.of(filesystem, catalogName1),
+            FakeSourcePath.of(filesystem, catalogName2)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -178,8 +178,8 @@ public class AppleAssetCatalogTest {
 
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(
-            new FakeSourcePath(filesystem, catalogName1),
-            new FakeSourcePath(filesystem, catalogName2)),
+            FakeSourcePath.of(filesystem, catalogName1),
+            FakeSourcePath.of(filesystem, catalogName2)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -195,7 +195,7 @@ public class AppleAssetCatalogTest {
     exception.expectMessage(
         "Target //:foobar had asset catalog dir catalog.wrongextension - asset catalog dirs must end with .xcassets");
     AppleAssetCatalog.validateAssetCatalogs(
-        ImmutableSortedSet.of(new FakeSourcePath(filesystem, invalidName)),
+        ImmutableSortedSet.of(FakeSourcePath.of(filesystem, invalidName)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -208,7 +208,7 @@ public class AppleAssetCatalogTest {
     tmp.newFolder(catalogName);
 
     AppleAssetCatalog.validateAssetCatalogs(
-        ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
+        ImmutableSortedSet.of(FakeSourcePath.of(filesystem, catalogName)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -262,7 +262,7 @@ public class AppleAssetCatalogTest {
     exception.expectMessage("some.textureset doesn't have Contents.json");
     exception.expectMessage("some.complicationset doesn't have Contents.json");
     AppleAssetCatalog.validateAssetCatalogs(
-        ImmutableSortedSet.of(new FakeSourcePath(filesystem, catalogName)),
+        ImmutableSortedSet.of(FakeSourcePath.of(filesystem, catalogName)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -294,8 +294,8 @@ public class AppleAssetCatalogTest {
         "image.png is included by two asset catalogs: 'other_catalog.xcassets' and 'catalog.xcassets'");
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(
-            new FakeSourcePath(filesystem, catalogName1),
-            new FakeSourcePath(filesystem, catalogName2)),
+            FakeSourcePath.of(filesystem, catalogName1),
+            FakeSourcePath.of(filesystem, catalogName2)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,
@@ -324,8 +324,8 @@ public class AppleAssetCatalogTest {
 
     AppleAssetCatalog.validateAssetCatalogs(
         ImmutableSortedSet.of(
-            new FakeSourcePath(filesystem, catalogName1),
-            new FakeSourcePath(filesystem, catalogName2)),
+            FakeSourcePath.of(filesystem, catalogName1),
+            FakeSourcePath.of(filesystem, catalogName2)),
         BuildTargetFactory.newInstance("//:foobar"),
         filesystem,
         resolver,

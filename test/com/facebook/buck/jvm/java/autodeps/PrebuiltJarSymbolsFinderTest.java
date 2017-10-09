@@ -211,7 +211,7 @@ public class PrebuiltJarSymbolsFinderTest {
     }
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get(jarFileName));
+    SourcePath sourcePath = PathSourcePath.of(filesystem, Paths.get(jarFileName));
     return new PrebuiltJarSymbolsFinder(sourcePath);
   }
 

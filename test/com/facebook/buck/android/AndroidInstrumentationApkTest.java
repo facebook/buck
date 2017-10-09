@@ -95,8 +95,8 @@ public class AndroidInstrumentationApkTest {
 
     BuildRule keystore =
         KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
-            .setProperties(new FakeSourcePath("keystores/debug.properties"))
-            .setStore(new FakeSourcePath("keystores/debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystores/debug.properties"))
+            .setStore(FakeSourcePath.of("keystores/debug.keystore"))
             .build(ruleResolver);
 
     // AndroidBinaryRule transitively depends on :lib1, :lib2, and :lib3.
@@ -105,7 +105,7 @@ public class AndroidInstrumentationApkTest {
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
         ImmutableSortedSet.of(javaLibrary2.getBuildTarget(), javaLibrary3.getBuildTarget());
     androidBinaryBuilder
-        .setManifest(new FakeSourcePath("apps/AndroidManifest.xml"))
+        .setManifest(FakeSourcePath.of("apps/AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
         .setOriginalDeps(originalDepsTargets);
     AndroidBinary androidBinary = androidBinaryBuilder.build(ruleResolver);
@@ -119,7 +119,7 @@ public class AndroidInstrumentationApkTest {
             .setName(buildTarget.getShortName())
             .setApk(androidBinary.getBuildTarget())
             .setDeps(apkOriginalDepsTargets)
-            .setManifest(new FakeSourcePath("apps/InstrumentationAndroidManifest.xml"))
+            .setManifest(FakeSourcePath.of("apps/InstrumentationAndroidManifest.xml"))
             .build();
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

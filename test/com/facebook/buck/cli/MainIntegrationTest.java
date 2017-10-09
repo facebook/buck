@@ -36,7 +36,7 @@ public class MainIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testBuckNoArgs() throws IOException, InterruptedException {
+  public void testBuckNoArgs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
@@ -51,7 +51,7 @@ public class MainIntegrationTest {
   }
 
   @Test
-  public void testBuckHelp() throws IOException, InterruptedException {
+  public void testBuckHelp() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_project", tmp);
     workspace.setUp();
@@ -66,7 +66,7 @@ public class MainIntegrationTest {
   }
 
   @Test
-  public void testConfigOverride() throws IOException, InterruptedException {
+  public void testConfigOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
@@ -82,7 +82,7 @@ public class MainIntegrationTest {
   }
 
   @Test
-  public void testNoRepositoriesConfigOverride() throws IOException, InterruptedException {
+  public void testNoRepositoriesConfigOverride() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
@@ -99,7 +99,7 @@ public class MainIntegrationTest {
   }
 
   @Test
-  public void testConfigRemoval() throws IOException, InterruptedException {
+  public void testConfigRemoval() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_removals", tmp);
     workspace.setUp();
@@ -156,8 +156,9 @@ public class MainIntegrationTest {
             "  verify-caches  Verify contents of internal Buck in-memory caches.",
             "",
             "Options:",
-            " --help (-h)    : Shows this screen and exits.",
-            " --version (-V) : Show version number.",
+            " --flagfile (-f) FILE : File to read command line arguments from.",
+            " --help (-h)          : Shows this screen and exits.",
+            " --version (-V)       : Show version number.",
             "",
             "");
   }

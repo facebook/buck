@@ -107,7 +107,7 @@ public class MergeAndroidResourcesSourcesTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:output_folder");
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
-            new FakeSourcePath(filesystem, "res_in_1"), new FakeSourcePath(filesystem, "res_in_2"));
+            FakeSourcePath.of(filesystem, "res_in_1"), FakeSourcePath.of(filesystem, "res_in_2"));
     SourcePathRuleFinder ruleFinder =
         new SourcePathRuleFinder(
             new SingleThreadedBuildRuleResolver(

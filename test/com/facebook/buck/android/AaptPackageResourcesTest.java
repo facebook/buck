@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -65,13 +64,13 @@ public class AaptPackageResourcesTest {
 
   SourcePath createPathSourcePath(String path, String contentForHash) {
     hashCache.set(filesystem.resolve(path), HashCode.fromInt(contentForHash.hashCode()));
-    return new FakeSourcePath(filesystem, path);
+    return FakeSourcePath.of(filesystem, path);
   }
 
   FilteredResourcesProvider createIdentifyResourcesProvider(String... paths) {
     return new IdentityResourcesProvider(
         RichStream.from(paths)
-            .map(p -> (SourcePath) new FakeSourcePath(filesystem, p))
+            .map(p -> (SourcePath) FakeSourcePath.of(filesystem, p))
             .toImmutableList());
   }
 
@@ -84,7 +83,7 @@ public class AaptPackageResourcesTest {
                 BuildTargetFactory.newInstance("//:resource1"), filesystem)
             .setRDotJavaPackage("package1")
             .setRes(Paths.get("res1"))
-            .setAssets(new PathSourcePath(filesystem, Paths.get("asset1")))
+            .setAssets(FakeSourcePath.of(filesystem, "asset1"))
             .build();
 
     TargetNode<?, ?> resourceNode2 =
@@ -92,7 +91,7 @@ public class AaptPackageResourcesTest {
                 BuildTargetFactory.newInstance("//:resource2"), filesystem)
             .setRDotJavaPackage("package2")
             .setRes(Paths.get("res2"))
-            .setAssets(new PathSourcePath(filesystem, Paths.get("asset2")))
+            .setAssets(FakeSourcePath.of(filesystem, "asset2"))
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode, resourceNode2);

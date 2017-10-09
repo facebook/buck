@@ -86,7 +86,7 @@ public class ApkGenruleDescriptionTest {
     public ApkInfo getApkInfo() {
       return ApkInfo.builder()
           .setApkPath(apkPath)
-          .setManifestPath(new FakeSourcePath("nothing"))
+          .setManifestPath(FakeSourcePath.of("nothing"))
           .build();
     }
 

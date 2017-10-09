@@ -196,10 +196,16 @@ class Depfiles {
               "Could not find input source (%s) in dep file prereqs (%s)",
               inputPath,
               prereqs);
-          return prereqs.subList(inputIndex + 1, prereqs.size());
+          ImmutableList<String> includes = prereqs.subList(inputIndex + 1, prereqs.size());
+          return includes;
         }
       case SHOW_INCLUDES:
-        return filesystem.readLines(sourceDepFile);
+        // An intermediate depfile in `show_include` mode contains a source file + used headers
+        // (see CxxPreprocessAndCompileStep for details).
+        // So, we "strip" the the source file first.
+        List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
+        List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
+        return includes;
       default:
         // never happens
         throw new IllegalStateException();
@@ -285,7 +291,7 @@ class Depfiles {
           String errorMessage =
               String.format(
                   "%s: included an untracked header \"%s\"\n\n"
-                      + "Please reference this header file from \"headers\" or \"exported_headers\" \n"
+                      + "Please reference this header file from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
                       + "in the appropriate build rule.",
                   inputPath, repoRelativePath.orElse(header));
           eventBus.post(

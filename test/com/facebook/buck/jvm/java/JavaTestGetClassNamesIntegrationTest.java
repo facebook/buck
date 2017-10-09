@@ -107,6 +107,6 @@ public class JavaTestGetClassNamesIntegrationTest {
   }
 
   private SourcePath makeSourcePath(String relative) {
-    return new PathSourcePath(projectFilesystem, Paths.get(relative));
+    return PathSourcePath.of(projectFilesystem, Paths.get(relative));
   }
 }

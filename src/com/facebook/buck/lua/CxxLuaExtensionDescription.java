@@ -162,7 +162,8 @@ public class CxxLuaExtensionDescription
                     ImmutableSet.of(),
                     CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, deps),
                     args.getIncludeDirs(),
-                    sandboxTree))
+                    sandboxTree,
+                    args.getRawHeaders()))
             .build();
 
     // Generate rule to build the object files.

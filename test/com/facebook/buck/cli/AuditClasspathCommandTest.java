@@ -90,12 +90,12 @@ public class AuditClasspathCommandTest {
             .build();
     TargetNode<?, ?> keystoreNode =
         KeystoreBuilder.createBuilder(keystoreTarget)
-            .setStore(new FakeSourcePath("debug.keystore"))
-            .setProperties(new FakeSourcePath("keystore.properties"))
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
             .build();
     TargetNode<?, ?> testAndroidNode =
         AndroidBinaryBuilder.createBuilder(testAndroidTarget)
-            .setManifest(new FakeSourcePath("AndroidManifest.xml"))
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystoreTarget)
             .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
             .build();

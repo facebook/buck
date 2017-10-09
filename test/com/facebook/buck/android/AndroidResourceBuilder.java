@@ -56,7 +56,7 @@ public class AndroidResourceBuilder
   }
 
   public AndroidResourceBuilder setRes(Path res) {
-    return setRes(new PathSourcePath(new FakeProjectFilesystem(), res));
+    return setRes(PathSourcePath.of(new FakeProjectFilesystem(), res));
   }
 
   public AndroidResourceBuilder setAssets(SourcePath assets) {

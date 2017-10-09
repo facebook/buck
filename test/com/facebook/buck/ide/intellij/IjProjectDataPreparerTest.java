@@ -173,7 +173,7 @@ public class IjProjectDataPreparerTest {
                 baseInlineTestsTargetNode,
                 baseTestsTargetNode),
             ImmutableMap.of(
-                baseInlineTestsTargetNode, new FakeSourcePath("buck-out/baseInlineTests.jar")),
+                baseInlineTestsTargetNode, FakeSourcePath.of("buck-out/baseInlineTests.jar")),
             Functions.constant(Optional.empty()));
     IjLibrary hamcrestLibrary =
         IjModuleGraphTest.getLibraryForTarget(moduleGraph, hamcrestTargetNode);

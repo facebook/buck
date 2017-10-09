@@ -81,7 +81,7 @@ public class JavaSourceJarTest {
 
   @Test
   public void shouldOnlyIncludePathBasedSources() {
-    SourcePath fileBased = new FakeSourcePath("some/path/File.java");
+    SourcePath fileBased = FakeSourcePath.of("some/path/File.java");
     SourcePath ruleBased =
         DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//cheese:cake"));
 

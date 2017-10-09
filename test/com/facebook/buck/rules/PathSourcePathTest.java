@@ -30,7 +30,7 @@ public class PathSourcePathTest {
   @Test
   public void shouldResolveFilesUsingTheBuildContextsFileSystem() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    PathSourcePath path = new PathSourcePath(projectFilesystem, Paths.get("cheese"));
+    PathSourcePath path = FakeSourcePath.of(projectFilesystem, "cheese");
 
     SourcePathResolver resolver =
         DefaultSourcePathResolver.from(
@@ -46,7 +46,7 @@ public class PathSourcePathTest {
   public void shouldReturnTheOriginalPathAsTheReference() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path expected = Paths.get("cheese");
-    PathSourcePath path = new PathSourcePath(projectFilesystem, expected);
+    PathSourcePath path = FakeSourcePath.of(projectFilesystem, expected.toString());
 
     assertEquals(expected, path.getRelativePath());
   }
@@ -60,15 +60,15 @@ public class PathSourcePathTest {
     String nameA = "nameA";
     String nameB = "nameB";
     PathSourcePath clonedPathA1 =
-        new PathSourcePath(projectFilesystem, nameA, Suppliers.ofInstance(relativePath1));
+        PathSourcePath.of(projectFilesystem, nameA, Suppliers.ofInstance(relativePath1));
     PathSourcePath pathA1 =
-        new PathSourcePath(projectFilesystem, nameA, Suppliers.ofInstance(relativePath1));
+        PathSourcePath.of(projectFilesystem, nameA, Suppliers.ofInstance(relativePath1));
     PathSourcePath pathA2 =
-        new PathSourcePath(projectFilesystem, nameA, Suppliers.ofInstance(relativePath2));
+        PathSourcePath.of(projectFilesystem, nameA, Suppliers.ofInstance(relativePath2));
     PathSourcePath pathB1 =
-        new PathSourcePath(projectFilesystem, nameB, Suppliers.ofInstance(relativePath1));
+        PathSourcePath.of(projectFilesystem, nameB, Suppliers.ofInstance(relativePath1));
     PathSourcePath pathB2 =
-        new PathSourcePath(projectFilesystem, nameB, Suppliers.ofInstance(relativePath2));
+        PathSourcePath.of(projectFilesystem, nameB, Suppliers.ofInstance(relativePath2));
 
     // check relative paths
     assertEquals(relativePath1, pathA1.getRelativePath());

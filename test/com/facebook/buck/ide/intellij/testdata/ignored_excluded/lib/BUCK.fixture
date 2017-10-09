@@ -1,0 +1,3 @@
+android_library(
+    name = "src_release",
+)

@@ -1,8 +1,30 @@
 java_test(
-  name = 'test',
-  test_type = 'testng',
-  srcs = glob(['*.java']),
+  name = "simple-test",
+  test_type = "testng",
+  srcs = ["SimpleTest.java"],
   deps = [
-    '//lib:testng',
+    "buck//third-party/java/hamcrest:hamcrest",
+    "buck//third-party/java/testng:testng",
+  ],
+)
+
+java_test(
+  name = "simple-failing-test",
+  test_type = "testng",
+  srcs = ["SimpleFailingTest.java"],
+  deps = [
+    "buck//third-party/java/testng:testng",
+  ],
+)
+
+java_test(
+  name = "injection-test",
+  test_type = "testng",
+  srcs = ["InjectionTest.java"],
+  deps = [
+    "buck//third-party/java/guice:guice",
+    "buck//third-party/java/hamcrest:hamcrest",
+    "buck//third-party/java/jsr:jsr330",
+    "buck//third-party/java/testng:testng",
   ],
 )

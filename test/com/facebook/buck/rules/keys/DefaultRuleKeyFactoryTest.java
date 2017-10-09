@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -564,7 +565,7 @@ public class DefaultRuleKeyFactoryTest {
             noopRuleKeyCache);
 
     // Create a sample input.
-    PathSourcePath input = new PathSourcePath(filesystem, filesystem.getPath("input"));
+    PathSourcePath input = FakeSourcePath.of(filesystem, "input");
     filesystem.touch(input.getRelativePath());
 
     // Create a sample dep rule.
@@ -620,7 +621,7 @@ public class DefaultRuleKeyFactoryTest {
             noopRuleKeyCache);
 
     // Create a sample input.
-    PathSourcePath input = new PathSourcePath(filesystem, filesystem.getPath("input"));
+    PathSourcePath input = FakeSourcePath.of(filesystem, "input");
     filesystem.touch(input.getRelativePath());
 
     // Create a sample dep rule.

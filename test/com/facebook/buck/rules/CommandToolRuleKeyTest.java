@@ -51,7 +51,7 @@ public class CommandToolRuleKeyTest {
   @Test
   public void sourcePathArgsContributeToRuleKeys() {
     String input = "input";
-    SourcePath path = new FakeSourcePath(input);
+    SourcePath path = FakeSourcePath.of(input);
     CommandTool tool = command(SourcePathArg.of(path));
 
     RuleKey ruleKey = ruleKey(tool, fakeHashCache(input, Strings.repeat("a", 40)));
@@ -91,7 +91,7 @@ public class CommandToolRuleKeyTest {
   @Test
   public void sourcePathEnvValuesContributeToRuleKeys() {
     String input = "input";
-    SourcePath path = new FakeSourcePath(input);
+    SourcePath path = FakeSourcePath.of(input);
     CommandTool tool =
         command(
             StringArg.of("arbitrary"), builder -> builder.addEnv("key", SourcePathArg.of(path)));

@@ -55,6 +55,6 @@ public class GroovyLibraryBuilder
   }
 
   public GroovyLibraryBuilder addSrc(Path path) {
-    return addSrc(new PathSourcePath(projectFilesystem, path));
+    return addSrc(PathSourcePath.of(projectFilesystem, path));
   }
 }

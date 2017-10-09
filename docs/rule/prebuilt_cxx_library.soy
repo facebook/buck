@@ -135,6 +135,8 @@ files and provides various flags to control how they are linked and exported.
 
 {call cxx_common.supports_merged_linking /}
 
+{call cxx_common.raw_headers_arg /}
+
 {call buck.arg}
   {param name: 'lib_name' /}
   {{param default: '{name}' /}}
@@ -286,6 +288,79 @@ prebuilt_cxx_library(
     'include',
   ],
 )
+</pre>{/literal}
+
+<p>
+  While porting from the deprecated API to the newer API, it may also be useful
+  to add helper macros which re-implement the old API using the new API:
+</p>
+
+{literal}<pre class="prettyprint lang-py">
+
+import os
+
+
+__all__ = ['deprecated_prebuilt_cxx_library']
+
+
+def _get_lib(name, lib_dir, lib_name, ext):
+    """
+    Get a base-path relative library path with the given extension.
+    """
+
+    parts = []
+    parts.append(lib_dir)
+    parts.append('lib{}{}'.format(lib_name or name, ext))
+    return os.path.join(*parts)
+
+
+def _find_lib(name, lib_dir, lib_name, ext):
+    """
+    Return the base-path relative library path with the given extension if it
+    exists, otherwise return `None`.
+    """
+
+    lib = _get_lib(name, lib_dir, lib_name, ext)
+    lib_path = os.path.join(get_base_path(), lib)
+    add_build_file_dep('//' + lib_path)
+
+  ` # NOTE: While necessary to re-implement the deprecated API, I/O in BUCK
+    # files is a *bad* idea and support for this may very likely be removed.
+    if os.path.exists(lib_path):
+        return lib
+
+
+def deprecated_prebuilt_cxx_library(
+        name,
+        lib_dir='lib',
+        lib_name=None,
+        include_dirs=None,
+        header_only=False,
+        **kwargs):
+
+    static_lib = None
+    static_pic_lib = None
+    shared_lib = None
+    preferred_linkage = None
+
+    if not header_only:
+        static_lib = _find_lib(name, lib_dir, lib_name, '.a')
+        static_pic_lib = _find_lib(name, lib_dir, lib_name, '_pic.a')
+        shared_lib = _find_lib(name, lib_dir, lib_name, '.so')
+
+        if static_lib is None and static_pic_lib is None:
+            preferred_linkage = 'shared'
+
+    prebuilt_cxx_library(
+        name,
+        static_lib=static_lib,
+        static_pic_lib=static_pic_lib,
+        shared_lib=shared_lib,
+        preferred_linkage=preferred_linkage,
+        header_only=header_only,
+        header_dirs=include_dirs,
+        **kwargs
+    )
 </pre>{/literal}
 
 {/param}

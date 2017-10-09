@@ -83,7 +83,7 @@ public class WorkerToolDescriptionTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     BuildTarget exe = getExe.apply(resolver, shBinaryRule);

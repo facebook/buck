@@ -47,6 +47,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.rules.AbstractPathSourcePath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -54,7 +55,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -139,7 +139,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             Optional.empty(),
             /* locales */ ImmutableSet.of(),
-            createStrictMock(PathSourcePath.class),
+            createStrictMock(AbstractPathSourcePath.class),
             AndroidBinary.PackageType.DEBUG,
             /* cpuFilters */ ImmutableSet.of(),
             /* shouldBuildStringSourceMap */ false,
@@ -184,7 +184,7 @@ public class AndroidBinaryGraphEnhancerTest {
             filesystem,
             ruleFinder,
             ruleResolver,
-            /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
             new IdentityResourcesProvider(ImmutableList.of()),
             ImmutableList.of(),
             /* skipCrunchPngs */ false,
@@ -198,9 +198,9 @@ public class AndroidBinaryGraphEnhancerTest {
                 ImmutableSet.of(javaDep2BuildTarget),
                 /* resourcesToExclude */ ImmutableSet.of(),
                 new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
-            .addClasspathEntry(((HasJavaClassHashes) javaDep1), new FakeSourcePath("ignored"))
-            .addClasspathEntry(((HasJavaClassHashes) javaDep2), new FakeSourcePath("ignored"))
-            .addClasspathEntry(((HasJavaClassHashes) javaLib), new FakeSourcePath("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
             .build();
 
     ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
@@ -289,7 +289,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             Optional.empty(),
             /* locales */ ImmutableSet.of(),
-            new FakeSourcePath("AndroidManifest.xml"),
+            FakeSourcePath.of("AndroidManifest.xml"),
             AndroidBinary.PackageType.DEBUG,
             /* cpuFilters */ ImmutableSet.of(),
             /* shouldBuildStringSourceMap */ false,
@@ -413,7 +413,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             Optional.empty(),
             /* locales */ ImmutableSet.of(),
-            new FakeSourcePath("AndroidManifest.xml"),
+            FakeSourcePath.of("AndroidManifest.xml"),
             AndroidBinary.PackageType.DEBUG,
             /* cpuFilters */ ImmutableSet.of(),
             /* shouldBuildStringSourceMap */ false,
@@ -478,7 +478,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             Optional.empty(),
             /* locales */ ImmutableSet.of(),
-            new FakeSourcePath("AndroidManifest.xml"),
+            FakeSourcePath.of("AndroidManifest.xml"),
             AndroidBinary.PackageType.DEBUG,
             /* cpuFilters */ ImmutableSet.of(),
             /* shouldBuildStringSourceMap */ false,
@@ -552,7 +552,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 null,
                 null,
                 ImmutableSortedMap.of(),
-                new FakeSourcePath("manifest"),
+                FakeSourcePath.of("manifest"),
                 false));
 
     // set it up.
@@ -572,7 +572,7 @@ public class AndroidBinaryGraphEnhancerTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             Optional.empty(),
             /* locales */ ImmutableSet.of(),
-            new FakeSourcePath("AndroidManifest.xml"),
+            FakeSourcePath.of("AndroidManifest.xml"),
             AndroidBinary.PackageType.DEBUG,
             /* cpuFilters */ ImmutableSet.of(),
             /* shouldBuildStringSourceMap */ false,
@@ -620,8 +620,8 @@ public class AndroidBinaryGraphEnhancerTest {
   private NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
     return NonPredexedDexBuildableArgs.builder()
         .setSdkProguardConfig(ProGuardObfuscateStep.SdkProguardType.NONE)
-        .setDexReorderDataDumpFile(new FakeSourcePath(""))
-        .setDexReorderToolFile(new FakeSourcePath(""))
+        .setDexReorderDataDumpFile(FakeSourcePath.of(""))
+        .setDexReorderToolFile(FakeSourcePath.of(""))
         .setDxExecutorService(MoreExecutors.newDirectExecutorService())
         .setDxMaxHeapSize("")
         .setJavaRuntimeLauncher(new FakeJavac())

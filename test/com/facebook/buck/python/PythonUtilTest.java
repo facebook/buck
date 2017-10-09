@@ -50,10 +50,10 @@ public class PythonUtilTest {
             target.getBasePath(),
             ImmutableList.of(
                 SourceList.ofNamedSources(
-                    ImmutableSortedMap.of("hello.py", new FakeSourcePath("goodbye.py")))));
+                    ImmutableSortedMap.of("hello.py", FakeSourcePath.of("goodbye.py")))));
     assertEquals(
         ImmutableMap.<Path, SourcePath>of(
-            target.getBasePath().resolve("hello.py"), new FakeSourcePath("goodbye.py")),
+            target.getBasePath().resolve("hello.py"), FakeSourcePath.of("goodbye.py")),
         srcs);
   }
 }

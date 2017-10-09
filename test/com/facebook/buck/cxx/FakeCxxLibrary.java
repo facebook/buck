@@ -165,7 +165,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
     return ImmutableMap.of(
-        sharedLibrarySoname, new PathSourcePath(getProjectFilesystem(), sharedLibraryOutput));
+        sharedLibrarySoname, PathSourcePath.of(getProjectFilesystem(), sharedLibraryOutput));
   }
 
   @Override

@@ -32,6 +32,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -255,6 +256,8 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
                         return FileVisitResult.CONTINUE;
                       }
                     });
+              } catch (NoSuchFileException e) {
+                LOG.debug(e, "The folder containing provisioning profile was not found.");
               } catch (IOException e) {
                 if (e.getCause() instanceof InterruptedException) {
                   LOG.error(e, "Interrupted while searching for mobileprovision files");

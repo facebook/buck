@@ -41,7 +41,7 @@ public class RustLibraryDescriptionTest {
                 ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(srcBuilder.getTarget())));
     RustBinaryBuilder binaryBuilder =
         RustBinaryBuilder.from("//:bin")
-            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("main.rs")))
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("main.rs")))
             .setDeps(ImmutableSortedSet.of(libraryBuilder.getTarget()));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(

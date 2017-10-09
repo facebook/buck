@@ -246,7 +246,9 @@ class CxxPreprocessAndCompileStep implements Step {
               .stream()
               .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
               .collect(Collectors.toList());
-      filesystem.writeLinesToPath(includeLines, depFile.get());
+      Iterable<String> srcAndIncludes =
+          Iterables.concat(ImmutableList.of(filesystem.resolve(input).toString()), includeLines);
+      filesystem.writeLinesToPath(srcAndIncludes, depFile.get());
       List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
       err =
           errorLines

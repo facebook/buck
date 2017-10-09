@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SymlinkTree;
@@ -106,13 +105,13 @@ public class AndroidResourceDescriptionTest {
         equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get("image.png"),
-                new FakeSourcePath(filesystem, "res/image.png"),
+                FakeSourcePath.of(filesystem, "res/image.png"),
                 Paths.get("layout.xml"),
-                new FakeSourcePath(filesystem, "res/layout.xml"),
+                FakeSourcePath.of(filesystem, "res/layout.xml"),
                 Paths.get("_file"),
-                new FakeSourcePath(filesystem, "res/_file"),
+                FakeSourcePath.of(filesystem, "res/_file"),
                 Paths.get("dirs/values/strings.xml"),
-                new FakeSourcePath(filesystem, "res/dirs/values/strings.xml"))));
+                FakeSourcePath.of(filesystem, "res/dirs/values/strings.xml"))));
   }
 
   @Test
@@ -174,13 +173,13 @@ public class AndroidResourceDescriptionTest {
     TargetNode<?, ?> targetNode =
         AndroidResourceBuilder.createBuilder(target, filesystem)
             .setRDotJavaPackage("com.example")
-            .setRes(new PathSourcePath(filesystem, Paths.get("res")))
+            .setRes(FakeSourcePath.of(filesystem, "res"))
             .setAssets(
                 ImmutableSortedMap.of(
-                    "file1.txt", new PathSourcePath(filesystem, Paths.get("assets/file1.txt")),
-                    "file3.txt", new PathSourcePath(filesystem, Paths.get("assets/file3.txt")),
-                    "picasa.ini", new PathSourcePath(filesystem, Paths.get("assets/ignored")),
-                    "not_ignored", new PathSourcePath(filesystem, Paths.get("assets/CVS"))))
+                    "file1.txt", FakeSourcePath.of(filesystem, "assets/file1.txt"),
+                    "file3.txt", FakeSourcePath.of(filesystem, "assets/file3.txt"),
+                    "picasa.ini", FakeSourcePath.of(filesystem, "assets/ignored"),
+                    "not_ignored", FakeSourcePath.of(filesystem, "assets/CVS")))
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNode);
     BuildRuleResolver resolver =
@@ -203,11 +202,11 @@ public class AndroidResourceDescriptionTest {
             equalTo(
                 ImmutableSortedMap.of(
                     Paths.get("file1.txt"),
-                    new PathSourcePath(filesystem, Paths.get("assets/file1.txt")),
+                    FakeSourcePath.of(filesystem, "assets/file1.txt"),
                     Paths.get("file3.txt"),
-                    new PathSourcePath(filesystem, Paths.get("assets/file3.txt")),
+                    FakeSourcePath.of(filesystem, "assets/file3.txt"),
                     Paths.get("not_ignored"),
-                    new PathSourcePath(filesystem, Paths.get("assets/CVS"))))));
+                    FakeSourcePath.of(filesystem, "assets/CVS")))));
 
     assertThat(
         deps.get(1).getBuildTarget(),
@@ -220,7 +219,6 @@ public class AndroidResourceDescriptionTest {
         is(
             equalTo(
                 ImmutableSortedMap.of(
-                    Paths.get("file1.txt"),
-                    new PathSourcePath(filesystem, Paths.get("res/file1.txt"))))));
+                    Paths.get("file1.txt"), FakeSourcePath.of(filesystem, "res/file1.txt")))));
   }
 }

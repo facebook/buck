@@ -61,7 +61,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -155,9 +154,9 @@ public class NewNativeTargetProjectMutatorTest {
   public void testSourceGroups() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    SourcePath foo = new FakeSourcePath("Group1/foo.m");
-    SourcePath bar = new FakeSourcePath("Group1/bar.m");
-    SourcePath baz = new FakeSourcePath("Group2/baz.m");
+    SourcePath foo = FakeSourcePath.of("Group1/foo.m");
+    SourcePath bar = FakeSourcePath.of("Group1/bar.m");
+    SourcePath baz = FakeSourcePath.of("Group2/baz.m");
     mutator.setSourcesWithFlags(
         ImmutableSet.of(
             SourceWithFlags.of(foo),
@@ -187,9 +186,9 @@ public class NewNativeTargetProjectMutatorTest {
   public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    SourcePath foo = new FakeSourcePath("HeaderGroup1/foo.h");
-    SourcePath bar = new FakeSourcePath("HeaderGroup1/bar.h");
-    SourcePath baz = new FakeSourcePath("HeaderGroup2/baz.h");
+    SourcePath foo = FakeSourcePath.of("HeaderGroup1/foo.h");
+    SourcePath bar = FakeSourcePath.of("HeaderGroup1/bar.h");
+    SourcePath baz = FakeSourcePath.of("HeaderGroup2/baz.h");
     mutator.setPublicHeaders(ImmutableSet.of(bar, baz));
     mutator.setPrivateHeaders(ImmutableSet.of(foo));
     NewNativeTargetProjectMutator.Result result =
@@ -217,7 +216,7 @@ public class NewNativeTargetProjectMutatorTest {
   @Test
   public void testPrefixHeaderInSourceGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    SourcePath prefixHeader = new FakeSourcePath("Group1/prefix.pch");
+    SourcePath prefixHeader = FakeSourcePath.of("Group1/prefix.pch");
     mutator.setPrefixHeader(Optional.of(prefixHeader));
 
     NewNativeTargetProjectMutator.Result result =
@@ -261,7 +260,7 @@ public class NewNativeTargetProjectMutatorTest {
     AppleResourceDescriptionArg arg =
         AppleResourceDescriptionArg.builder()
             .setName("resources")
-            .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
+            .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
             .build();
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));
@@ -332,7 +331,7 @@ public class NewNativeTargetProjectMutatorTest {
     AppleAssetCatalogDescriptionArg arg =
         AppleAssetCatalogDescriptionArg.builder()
             .setName("some_rule")
-            .setDirs(ImmutableSortedSet.of(new FakeSourcePath("AssetCatalog1.xcassets")))
+            .setDirs(ImmutableSortedSet.of(FakeSourcePath.of("AssetCatalog1.xcassets")))
             .build();
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
@@ -351,7 +350,7 @@ public class NewNativeTargetProjectMutatorTest {
 
     TargetNode<?, ?> prebuildNode =
         XcodePrebuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
-            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("script/input.png")))
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("script/input.png")))
             .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
             .setCmd("echo \"hello world!\"")
             .build();
@@ -392,7 +391,7 @@ public class NewNativeTargetProjectMutatorTest {
     TargetNode<?, ?> reactNativeNode =
         IosReactNativeLibraryBuilder.builder(depBuildTarget, buckConfig)
             .setBundleName("Apps/Foo/FooBundle.js")
-            .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))
+            .setEntryPath(FakeSourcePath.of(filesystem, "js/FooApp.js"))
             .build();
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(

@@ -280,7 +280,7 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
                               .toString()
                               .replaceFirst(
                                   OcamlCompilables.OCAML_MLL_REGEX, OcamlCompilables.OCAML_ML));
-              return new PathSourcePath(getProjectFilesystem(), out);
+              return PathSourcePath.of(getProjectFilesystem(), out);
             });
   }
 
@@ -294,7 +294,7 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
               ImmutableList.Builder<SourcePath> toReturn = ImmutableList.builder();
 
               toReturn.add(
-                  new PathSourcePath(
+                  PathSourcePath.of(
                       getProjectFilesystem(),
                       getGeneratedSourceDir()
                           .resolve(
@@ -302,7 +302,7 @@ abstract class AbstractOcamlBuildContext implements RuleKeyAppendable {
                                   OcamlCompilables.OCAML_MLY_REGEX, OcamlCompilables.OCAML_ML))));
 
               toReturn.add(
-                  new PathSourcePath(
+                  PathSourcePath.of(
                       getProjectFilesystem(),
                       getGeneratedSourceDir()
                           .resolve(

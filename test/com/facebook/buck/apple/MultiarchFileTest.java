@@ -86,7 +86,7 @@ public class MultiarchFileTest {
                     AppleLibraryBuilder.createBuilder(
                             target.withAppendedFlavors(InternalFlavor.of("static")))
                         .setSrcs(
-                            ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+                            ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
           },
           {
             "AppleLibraryDescription (shared)",
@@ -96,7 +96,7 @@ public class MultiarchFileTest {
                     AppleLibraryBuilder.createBuilder(
                             target.withAppendedFlavors(InternalFlavor.of("shared")))
                         .setSrcs(
-                            ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))))
+                            ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))))
           },
         });
   }

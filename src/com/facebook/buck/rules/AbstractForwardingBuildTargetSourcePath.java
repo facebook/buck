@@ -44,7 +44,6 @@ public abstract class AbstractForwardingBuildTargetSourcePath implements BuildTa
       return true;
     }
 
-    //// TODO I don't like this
     if (!(other instanceof AbstractForwardingBuildTargetSourcePath)) {
       return false;
     }

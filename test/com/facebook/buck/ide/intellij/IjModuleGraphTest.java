@@ -397,8 +397,8 @@ public class IjModuleGraphTest {
     TargetNode<?, ?> productKeystoreTarget =
         KeystoreBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/src/com/facebook/library:keystore"))
-            .setStore(new FakeSourcePath("store"))
-            .setProperties(new FakeSourcePath("properties"))
+            .setStore(FakeSourcePath.of("store"))
+            .setProperties(FakeSourcePath.of("properties"))
             .build();
 
     TargetNode<?, ?> libraryJavaTarget =
@@ -449,7 +449,7 @@ public class IjModuleGraphTest {
     IjModuleGraph moduleGraph =
         createModuleGraph(
             ImmutableSet.of(productGenruleTarget, libraryJavaTarget, productTarget),
-            ImmutableMap.of(productTarget, new FakeSourcePath("buck-out/product.jar")),
+            ImmutableMap.of(productTarget, FakeSourcePath.of("buck-out/product.jar")),
             Functions.constant(Optional.empty()));
 
     IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
@@ -475,7 +475,7 @@ public class IjModuleGraphTest {
     IjModuleGraph moduleGraph =
         createModuleGraph(
             ImmutableSet.of(productTarget),
-            ImmutableMap.of(productTarget, new FakeSourcePath("buck-out/product.jar")),
+            ImmutableMap.of(productTarget, FakeSourcePath.of("buck-out/product.jar")),
             input -> {
               if (input == productTarget) {
                 return Optional.of(rDotJavaClassPath);

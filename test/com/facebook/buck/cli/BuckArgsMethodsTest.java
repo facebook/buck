@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.BuckArgsMethods;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -28,10 +29,12 @@ import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuckArgsMethodsTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testArgFileExpansion() throws IOException {
@@ -95,6 +98,44 @@ public class BuckArgsMethodsTest {
             ImmutableList.of("arg1", "@" + pyArgWithFlavors.toString() + "#fl1,fl2"),
             tmp.getRoot()),
         Matchers.contains("arg1", "--flavors", "fl1,fl2"));
+  }
+
+  @Test
+  public void flagsFromFlagFileAreExtracted() throws Exception {
+    Path arg = tmp.newFile("argsfile");
+    Files.write(arg, ImmutableList.of("arg2", "arg3"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "-f", arg.toString()), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "--flagfile", arg.toString()), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3"));
+  }
+
+  @Test
+  public void bothAtFileSyntaxAreSupported() throws Exception {
+    Path argsfile = tmp.newFile("argsfile");
+    Files.write(argsfile, ImmutableList.of("arg2", "arg3"));
+
+    Path argsfile2 = tmp.newFile("argsfile2");
+    Files.write(argsfile2, ImmutableList.of("arg4", "arg5"));
+
+    assertThat(
+        BuckArgsMethods.expandAtFiles(
+            ImmutableList.of("arg1", "-f", argsfile.toString(), "@argsfile2"), tmp.getRoot()),
+        Matchers.contains("arg1", "arg2", "arg3", "arg4", "arg5"));
+  }
+
+  @Test
+  public void invalidUsageOfFlagFileArgumentIsReported() {
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage("-f should be followed by a path.");
+
+    BuckArgsMethods.expandAtFiles(ImmutableList.of("arg1", "-f"), tmp.getRoot());
   }
 
   @Test

@@ -66,7 +66,7 @@ public class NdkLibraryBuilder
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {
             return ImmutableSortedSet.of(
-                new PathSourcePath(filesystem, buildRulePath.resolve("Android.mk")));
+                PathSourcePath.of(filesystem, buildRulePath.resolve("Android.mk")));
           }
         },
         target,

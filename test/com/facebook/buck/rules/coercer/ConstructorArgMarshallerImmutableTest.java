@@ -163,7 +163,7 @@ public class ConstructorArgMarshallerImmutableTest {
                 "targetPath", ":peas"));
 
     assertEquals(
-        new PathSourcePath(projectFilesystem, Paths.get("example/path/cheese.txt")),
+        PathSourcePath.of(projectFilesystem, Paths.get("example/path/cheese.txt")),
         built.getFilePath());
     assertEquals(DefaultBuildTargetSourcePath.of(target), built.getTargetPath());
   }

@@ -78,11 +78,11 @@ public class PreprocessorFlagsTest {
             {
               "frameworkPaths",
               defaultFlags.withFrameworkPaths(
-                  FrameworkPath.ofSourcePath(new FakeSourcePath("different"))),
+                  FrameworkPath.ofSourcePath(FakeSourcePath.of("different"))),
               true,
             },
             {
-              "prefixHeader", defaultFlags.withPrefixHeader(new FakeSourcePath("different")), true,
+              "prefixHeader", defaultFlags.withPrefixHeader(FakeSourcePath.of("different")), true,
             }
           });
     }

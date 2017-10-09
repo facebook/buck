@@ -51,7 +51,7 @@ public class WorkerToolTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     BuildRule workerRule =
@@ -98,12 +98,12 @@ public class WorkerToolTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     BuildRule exportFileRule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
-            .setSrc(new FakeSourcePath("file.txt"))
+            .setSrc(FakeSourcePath.of("file.txt"))
             .build(resolver);
 
     WorkerToolBuilder workerToolBuilder =
@@ -134,12 +134,12 @@ public class WorkerToolTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     BuildRule exportFileRule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
-            .setSrc(new FakeSourcePath("file.txt"))
+            .setSrc(FakeSourcePath.of("file.txt"))
             .build(resolver);
 
     WorkerToolBuilder workerToolBuilder =
@@ -169,12 +169,12 @@ public class WorkerToolTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     BuildRule exportFileRule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//:file"))
-            .setSrc(new FakeSourcePath("file.txt"))
+            .setSrc(FakeSourcePath.of("file.txt"))
             .build(resolver);
 
     WorkerToolBuilder workerToolBuilder =

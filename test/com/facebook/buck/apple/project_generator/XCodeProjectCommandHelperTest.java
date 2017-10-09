@@ -102,7 +102,7 @@ public class XCodeProjectCommandHelperTest {
     fooTestNode =
         AppleTestBuilder.createBuilder(fooTestTarget)
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -124,19 +124,19 @@ public class XCodeProjectCommandHelperTest {
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
             .setBinary(fooBinBinaryTarget)
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     bazTestNode =
         AppleTestBuilder.createBuilder(bazTestTarget)
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     fooBinTestNode =
         AppleTestBuilder.createBuilder(fooBinTestTarget)
             .setDeps(ImmutableSortedSet.of(fooBinTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux:bin");
@@ -148,7 +148,7 @@ public class XCodeProjectCommandHelperTest {
     BuildTarget workspaceExtraTestTarget = BuildTargetFactory.newInstance("//foo:extra-xctest");
     workspaceExtraTestNode =
         AppleTestBuilder.createBuilder(workspaceExtraTestTarget)
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     BuildTarget workspaceTarget = BuildTargetFactory.newInstance("//foo:workspace");

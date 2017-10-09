@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +36,7 @@ public class ShBinaryDescriptionTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    FakeSourcePath main = new FakeSourcePath("main.sh");
+    PathSourcePath main = FakeSourcePath.of("main.sh");
     ShBinary shBinary =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
@@ -48,8 +49,8 @@ public class ShBinaryDescriptionTest {
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    FakeSourcePath main = new FakeSourcePath("main.sh");
-    FakeSourcePath resource = new FakeSourcePath("resource.dat");
+    PathSourcePath main = FakeSourcePath.of("main.sh");
+    PathSourcePath resource = FakeSourcePath.of("resource.dat");
     ShBinary shBinary =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)

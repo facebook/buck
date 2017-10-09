@@ -682,7 +682,10 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
    */
   @Override
   public final void walkRelativeFileTree(
-      Path path, EnumSet<FileVisitOption> visitOptions, FileVisitor<Path> fileVisitor)
+      Path path,
+      EnumSet<FileVisitOption> visitOptions,
+      FileVisitor<Path> fileVisitor,
+      boolean skipIgnored)
       throws IOException {
 
     if (!isDirectory(path)) {

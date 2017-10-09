@@ -27,14 +27,16 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
+
+  private static final ImmutableSet<String> FLAG_FILE_OPTIONS = ImmutableSet.of("-f", "--flagfile");
 
   private BuckArgsMethods() {
     // Utility class.
@@ -76,21 +78,32 @@ public class BuckArgsMethods {
    * correctly log the arguments coming from the AT-files and there is no way to get the expanded
    * args array from args4j.
    *
+   * <p>In addition to files passed using a regular {@code @} syntax, this method also extracts
+   * command line arguments from AT-file syntax files passed via {@code -f} or {@code --flagfile}
+   * command line option.
+   *
    * @param args original args array
    * @param projectRoot path against which any {@code @args} path arguments will be resolved.
    * @return args array with AT-files expanded.
    */
   public static ImmutableList<String> expandAtFiles(Iterable<String> args, Path projectRoot) {
-    return StreamSupport.stream(args.spliterator(), /* parallel */ false)
-        .flatMap(
-            arg -> {
-              if (arg.startsWith("@")) {
-                return expandFile(arg.substring(1), projectRoot);
-              } else {
-                return ImmutableList.of(arg).stream();
-              }
-            })
-        .collect(MoreCollectors.toImmutableList());
+    Iterator<String> argsIterator = args.iterator();
+    Stream<? extends String> argumentStream = Stream.empty();
+    while (argsIterator.hasNext()) {
+      String arg = argsIterator.next();
+      if (FLAG_FILE_OPTIONS.contains(arg)) {
+        if (!argsIterator.hasNext()) {
+          throw new HumanReadableException(arg + " should be followed by a path.");
+        }
+        argumentStream =
+            Stream.concat(argumentStream, expandFile(argsIterator.next(), projectRoot));
+      } else if (arg.startsWith("@")) {
+        argumentStream = Stream.concat(argumentStream, expandFile(arg.substring(1), projectRoot));
+      } else {
+        argumentStream = Stream.concat(argumentStream, ImmutableList.of(arg).stream());
+      }
+    }
+    return argumentStream.collect(MoreCollectors.toImmutableList());
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */

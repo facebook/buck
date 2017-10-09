@@ -49,6 +49,6 @@ public class FauxKotlinLibraryBuilder
   }
 
   public FauxKotlinLibraryBuilder addSrc(Path path) {
-    return addSrc(new PathSourcePath(projectFilesystem, path));
+    return addSrc(PathSourcePath.of(projectFilesystem, path));
   }
 }

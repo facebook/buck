@@ -134,7 +134,7 @@ public class ClasspathMacroExpanderTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildRule rule =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
-            .setSrc(new FakeSourcePath("some-file.jar"))
+            .setSrc(FakeSourcePath.of("some-file.jar"))
             .build(ruleResolver);
 
     expander.expand(pathResolver, rule);

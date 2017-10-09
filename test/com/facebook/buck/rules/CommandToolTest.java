@@ -67,7 +67,7 @@ public class CommandToolTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Build a source path which wraps a build rule.
-    SourcePath path = new PathSourcePath(filesystem, Paths.get("output"));
+    SourcePath path = PathSourcePath.of(filesystem, Paths.get("output"));
 
     // Test command and inputs for just passing the source path.
     CommandTool tool = new CommandTool.Builder().addArg(SourcePathArg.of(path)).build();
@@ -100,7 +100,7 @@ public class CommandToolTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    SourcePath path = new FakeSourcePath("input");
+    SourcePath path = FakeSourcePath.of("input");
     CommandTool tool =
         new CommandTool.Builder().addArg("runit").addEnv("PATH", SourcePathArg.of(path)).build();
 

@@ -35,9 +35,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
-import com.facebook.buck.util.concurrent.ResourceAmounts;
-import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -45,7 +42,6 @@ import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -72,8 +68,6 @@ import java.util.regex.Pattern;
 public class BuckConfig implements ConfigPathGetter {
 
   private static final String ALIAS_SECTION_HEADER = "alias";
-  public static final String RESOURCES_SECTION_HEADER = "resources";
-  public static final String RESOURCES_PER_RULE_SECTION_HEADER = "resources_per_rule";
   private static final String TEST_SECTION_HEADER = "test";
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
@@ -338,7 +332,7 @@ public class BuckConfig implements ConfigPathGetter {
       return Optional.of(DefaultBuildTargetSourcePath.of(target));
     } catch (BuildTargetParseException e) {
       return Optional.of(
-          new PathSourcePath(
+          PathSourcePath.of(
               projectFilesystem,
               checkPathExists(
                   value.get(),
@@ -351,7 +345,7 @@ public class BuckConfig implements ConfigPathGetter {
     if (path == null) {
       return null;
     }
-    return new PathSourcePath(
+    return PathSourcePath.of(
         projectFilesystem,
         checkPathExists(
             path.toString(),
@@ -714,7 +708,7 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
   }
 
-  private int getDefaultMaximumNumberOfThreads() {
+  public int getDefaultMaximumNumberOfThreads() {
     return getDefaultMaximumNumberOfThreads(Runtime.getRuntime().availableProcessors());
   }
 
@@ -922,90 +916,10 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue("project", "buck_out_compat_link", false);
   }
 
-  public ResourceAllocationFairness getResourceAllocationFairness() {
-    return config
-        .getEnum(
-            RESOURCES_SECTION_HEADER,
-            "resource_allocation_fairness",
-            ResourceAllocationFairness.class)
-        .orElse(ResourceAllocationFairness.FAIR);
-  }
-
-  public boolean isResourceAwareSchedulingEnabled() {
-    return config.getBooleanValue(
-        RESOURCES_SECTION_HEADER, "resource_aware_scheduling_enabled", false);
-  }
-
   public boolean isGrayscaleImageProcessingEnabled() {
-    return config.getBooleanValue(RESOURCES_SECTION_HEADER, "resource_grayscale_enabled", false);
+    // TODO(tyurins): move to android section
+    return config.getBooleanValue("resources", "resource_grayscale_enabled", false);
   }
-
-  public ImmutableMap<String, ResourceAmounts> getResourceAmountsPerRuleType() {
-    ImmutableMap.Builder<String, ResourceAmounts> result = ImmutableMap.builder();
-    ImmutableMap<String, String> entries = getEntriesForSection(RESOURCES_PER_RULE_SECTION_HEADER);
-    for (String ruleName : entries.keySet()) {
-      ImmutableList<String> configAmounts =
-          getListWithoutComments(RESOURCES_PER_RULE_SECTION_HEADER, ruleName);
-      Preconditions.checkArgument(
-          configAmounts.size() == ResourceAmounts.RESOURCE_TYPE_COUNT,
-          "Buck config entry [%s].%s contains %s values, but expected to contain %s values "
-              + "in the following order: cpu, memory, disk_io, network_io",
-          RESOURCES_PER_RULE_SECTION_HEADER,
-          ruleName,
-          configAmounts.size(),
-          ResourceAmounts.RESOURCE_TYPE_COUNT);
-      ResourceAmounts amounts =
-          ResourceAmounts.of(
-              Integer.valueOf(configAmounts.get(0)),
-              Integer.valueOf(configAmounts.get(1)),
-              Integer.valueOf(configAmounts.get(2)),
-              Integer.valueOf(configAmounts.get(3)));
-      result.put(ruleName, amounts);
-    }
-    return result.build();
-  }
-
-  public int getManagedThreadCount() {
-    if (!isResourceAwareSchedulingEnabled()) {
-      return getNumThreads();
-    }
-    return config
-        .getLong(RESOURCES_SECTION_HEADER, "managed_thread_count")
-        .orElse((long) getNumThreads() + getDefaultMaximumNumberOfThreads())
-        .intValue();
-  }
-
-  public ResourceAmounts getDefaultResourceAmounts() {
-    if (!isResourceAwareSchedulingEnabled()) {
-      return ResourceAmounts.of(1, 0, 0, 0);
-    }
-    return ResourceAmounts.of(
-        config
-            .getInteger(RESOURCES_SECTION_HEADER, "default_cpu_amount")
-            .orElse(ResourceAmountsEstimator.DEFAULT_CPU_AMOUNT),
-        config
-            .getInteger(RESOURCES_SECTION_HEADER, "default_memory_amount")
-            .orElse(ResourceAmountsEstimator.DEFAULT_MEMORY_AMOUNT),
-        config
-            .getInteger(RESOURCES_SECTION_HEADER, "default_disk_io_amount")
-            .orElse(ResourceAmountsEstimator.DEFAULT_DISK_IO_AMOUNT),
-        config
-            .getInteger(RESOURCES_SECTION_HEADER, "default_network_io_amount")
-            .orElse(ResourceAmountsEstimator.DEFAULT_NETWORK_IO_AMOUNT));
-  }
-
-  public ResourceAmounts getMaximumResourceAmounts() {
-    ResourceAmounts estimated = ResourceAmountsEstimator.getEstimatedAmounts();
-    return ResourceAmounts.of(
-        getNumThreads(estimated.getCpu()),
-        getInteger(BuckConfig.RESOURCES_SECTION_HEADER, "max_memory_resource")
-            .orElse(estimated.getMemory()),
-        getInteger(BuckConfig.RESOURCES_SECTION_HEADER, "max_disk_io_resource")
-            .orElse(estimated.getDiskIO()),
-        getInteger(BuckConfig.RESOURCES_SECTION_HEADER, "max_network_io_resource")
-            .orElse(estimated.getNetworkIO()));
-  }
-
   /** @return whether to enabled versions on build/test command. */
   public boolean getBuildVersions() {
     return getBooleanValue("build", "versions", false);

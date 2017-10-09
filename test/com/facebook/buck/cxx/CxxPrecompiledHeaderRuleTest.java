@@ -144,7 +144,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   public CxxSource newSource(String filename) {
-    return newCxxSourceBuilder().setPath(new FakeSourcePath(filename)).build();
+    return newCxxSourceBuilder().setPath(FakeSourcePath.of(filename)).build();
   }
 
   public CxxSource newSource() {
@@ -177,7 +177,7 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   private CxxPrecompiledHeaderTemplate newPCH(BuildTarget pchTarget) {
-    return newPCH(pchTarget, new FakeSourcePath("header.h"), /* deps */ ImmutableSortedSet.of());
+    return newPCH(pchTarget, FakeSourcePath.of("header.h"), /* deps */ ImmutableSortedSet.of());
   }
 
   /** Return the sublist, starting at {@code toFind}, or empty list if not found. */
@@ -317,7 +317,7 @@ public class CxxPrecompiledHeaderRuleTest {
         factory1.requirePreprocessAndCompileBuildRule(
             "lib.cpp",
             newCxxSourceBuilder()
-                .setPath(new FakeSourcePath("lib.cpp"))
+                .setPath(FakeSourcePath.of("lib.cpp"))
                 .setFlags(ImmutableList.of("-flag-for-source"))
                 .build());
     ruleResolver.addToIndex(lib);
@@ -384,7 +384,7 @@ public class CxxPrecompiledHeaderRuleTest {
         ruleResolver.addToIndex(
             newPCH(
                 pchTarget,
-                new FakeSourcePath(
+                FakeSourcePath.of(
                     filesystem, filesystem.getRootPath().resolve("test/header.h").toString()),
                 ImmutableSortedSet.of(lib)));
 
@@ -395,9 +395,9 @@ public class CxxPrecompiledHeaderRuleTest {
             .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
             .build()
             .requirePreprocessAndCompileBuildRule(
-                new FakeSourcePath(filesystem, "test/lib.cpp").toString(),
+                FakeSourcePath.of(filesystem, "test/lib.cpp").toString(),
                 newCxxSourceBuilder()
-                    .setPath(new FakeSourcePath(filesystem, "test/bin.cpp"))
+                    .setPath(FakeSourcePath.of(filesystem, "test/bin.cpp"))
                     .build());
     ruleResolver.addToIndex(binBuildRule);
 
@@ -411,8 +411,7 @@ public class CxxPrecompiledHeaderRuleTest {
     assertNotNull(foundPCH);
     final CxxPrecompiledHeader pch = foundPCH;
 
-    ImmutableList<SourcePath> binObjects =
-        ImmutableList.of(new FakeSourcePath(filesystem, "bin.o"));
+    ImmutableList<SourcePath> binObjects = ImmutableList.of(FakeSourcePath.of(filesystem, "bin.o"));
     ImmutableList<NativeLinkable> nativeLinkableDeps =
         ImmutableList.<NativeLinkable>builder()
             .add(pchTemplate)
@@ -478,7 +477,7 @@ public class CxxPrecompiledHeaderRuleTest {
         CxxPreprocessorInput.builder()
             .addIncludes(
                 CxxHeadersDir.of(
-                    CxxPreprocessables.IncludeType.SYSTEM, new FakeSourcePath("/tmp/sys")))
+                    CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of("/tmp/sys")))
             .build();
 
     BuildTarget lib1Target = newTarget("//some/other/dir:lib1");
@@ -495,7 +494,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget pchTarget = newTarget("//test:pch");
     CxxPrecompiledHeaderTemplate pch =
-        newPCH(pchTarget, new FakeSourcePath("header.h"), ImmutableSortedSet.of(lib1));
+        newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of(lib1));
     ruleResolver.addToIndex(pch);
 
     BuildTarget lib2Target = newTarget("//test:lib2");

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -252,11 +253,11 @@ public class TestCommand extends BuildCommand {
     return buckConfig.getNumThreads();
   }
 
-  public int getNumTestManagedThreads(BuckConfig buckConfig) {
+  public int getNumTestManagedThreads(ResourcesConfig resourcesConfig) {
     if (isDebugEnabled()) {
       return 1;
     }
-    return buckConfig.getManagedThreadCount();
+    return resourcesConfig.getManagedThreadCount();
   }
 
   private TestRunningOptions getTestRunningOptions(CommandRunnerParams params) {
@@ -307,13 +308,14 @@ public class TestCommand extends BuildCommand {
       return 1;
     }
 
+    ResourcesConfig resourcesConfig = params.getBuckConfig().getView(ResourcesConfig.class);
     ConcurrencyLimit concurrencyLimit =
         new ConcurrencyLimit(
             getNumTestThreads(params.getBuckConfig()),
-            params.getBuckConfig().getResourceAllocationFairness(),
-            getNumTestManagedThreads(params.getBuckConfig()),
-            params.getBuckConfig().getDefaultResourceAmounts(),
-            params.getBuckConfig().getMaximumResourceAmounts());
+            resourcesConfig.getResourceAllocationFairness(),
+            getNumTestManagedThreads(resourcesConfig),
+            resourcesConfig.getDefaultResourceAmounts(),
+            resourcesConfig.getMaximumResourceAmounts());
     try (CommandThreadManager testPool = new CommandThreadManager("Test-Run", concurrencyLimit)) {
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getRuleResolver());
       return TestRunning.runTests(
@@ -321,7 +323,7 @@ public class TestCommand extends BuildCommand {
           testRules,
           build.getExecutionContext(),
           getTestRunningOptions(params),
-          testPool.getListeningExecutorService(),
+          testPool.getWeightedListeningExecutorService(),
           buildEngine,
           new DefaultStepRunner(),
           buildContext,

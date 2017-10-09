@@ -50,7 +50,7 @@ public class WorkerMacroArgTest {
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
-            .setMain(new FakeSourcePath("bin/exe"))
+            .setMain(FakeSourcePath.of("bin/exe"))
             .build(resolver);
 
     String startupArgs = "startupargs";

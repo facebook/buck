@@ -60,10 +60,10 @@ public class DependencyFileRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    SourcePath usedSourcePath = new PathSourcePath(filesystem, Paths.get("usedInput"));
-    SourcePath unusedSourcePath = new PathSourcePath(filesystem, Paths.get("unusedInput"));
-    SourcePath noncoveredSourcePath = new PathSourcePath(filesystem, Paths.get("noncoveredInput"));
-    SourcePath interestingSourcePath = new PathSourcePath(filesystem, Paths.get("interestingIn"));
+    SourcePath usedSourcePath = PathSourcePath.of(filesystem, Paths.get("usedInput"));
+    SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("unusedInput"));
+    SourcePath noncoveredSourcePath = PathSourcePath.of(filesystem, Paths.get("noncoveredInput"));
+    SourcePath interestingSourcePath = PathSourcePath.of(filesystem, Paths.get("interestingIn"));
 
     testKeysWhenInputContentsChanges(
         ruleFinder,
@@ -119,7 +119,7 @@ public class DependencyFileRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    SourcePath archivePath = new PathSourcePath(filesystem, Paths.get("archive"));
+    SourcePath archivePath = PathSourcePath.of(filesystem, Paths.get("archive"));
     SourcePath usedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("used"));
     SourcePath unusedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("unused"));
     SourcePath noncoveredSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("nc"));
@@ -893,8 +893,8 @@ public class DependencyFileRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
-    SourcePath unusedSourcePath = new PathSourcePath(filesystem, Paths.get("input0"));
-    SourcePath sourcePath = new PathSourcePath(filesystem, Paths.get("input"));
+    SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("input0"));
+    SourcePath sourcePath = PathSourcePath.of(filesystem, Paths.get("input"));
     DependencyFileEntry dependencyFileEntry =
         DependencyFileEntry.fromSourcePath(sourcePath, pathResolver);
 

@@ -127,7 +127,7 @@ public class SrcZipAwareFileBundlerTest {
     subDirectoryFile2 = filesystem.getRootPath().resolve("src/subDir/file2");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src/file3");
 
-    bundleFiles(ImmutableSortedSet.of(new PathSourcePath(filesystem, src)));
+    bundleFiles(ImmutableSortedSet.of(PathSourcePath.of(filesystem, src)));
 
     List<Path> bundledFilesCollection = getBundledFilesCollection();
 
@@ -152,7 +152,7 @@ public class SrcZipAwareFileBundlerTest {
     subDirectoryFile2 = filesystem.getRootPath().resolve("src/file1");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src/subDires/file1");
 
-    bundleFiles(ImmutableSortedSet.of(new PathSourcePath(filesystem, src)));
+    bundleFiles(ImmutableSortedSet.of(PathSourcePath.of(filesystem, src)));
 
     List<Path> bundledFilesCollection = getBundledFilesCollection();
 
@@ -180,10 +180,9 @@ public class SrcZipAwareFileBundlerTest {
 
     bundleFiles(
         ImmutableSortedSet.of(
-            new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
-            new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
-            new PathSourcePath(
-                filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
+            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
+            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
+            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
   }
 
   @Test
@@ -198,10 +197,9 @@ public class SrcZipAwareFileBundlerTest {
 
     bundleFiles(
         ImmutableSortedSet.of(
-            new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
-            new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
-            new PathSourcePath(
-                filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
+            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
+            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
+            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
 
     List<Path> bundledFilesCollection = getBundledFilesCollection();
 

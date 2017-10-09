@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -48,13 +49,13 @@ public class DefaultIjLibraryFactoryTest {
   private TargetNode<?, ?> guava;
   private IjLibrary guavaLibrary;
   private TargetNode<?, ?> androidSupport;
-  private FakeSourcePath androidSupportBinaryPath;
-  private FakeSourcePath androidSupportResClassPath;
+  private PathSourcePath androidSupportBinaryPath;
+  private PathSourcePath androidSupportResClassPath;
   private IjLibrary androidSupportLibrary;
   private IjLibrary baseLibrary;
   private TargetNode<?, ?> base;
-  private FakeSourcePath androidSupportBinaryJarPath;
-  private FakeSourcePath baseOutputPath;
+  private PathSourcePath androidSupportBinaryJarPath;
+  private PathSourcePath baseOutputPath;
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private IjLibraryFactory factory;
 
@@ -72,7 +73,7 @@ public class DefaultIjLibraryFactoryTest {
             .setBinaryJar(guavaJarPath)
             .build();
 
-    androidSupportBinaryPath = new FakeSourcePath("third_party/java/support/support.aar");
+    androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
     androidSupport =
         AndroidPrebuiltAarBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/java/support:support"))
@@ -85,11 +86,10 @@ public class DefaultIjLibraryFactoryTest {
             .addDep(guava.getBuildTarget())
             .build();
 
-    androidSupportBinaryJarPath = new FakeSourcePath("buck_out/support.aar/classes.jar");
+    androidSupportBinaryJarPath = FakeSourcePath.of("buck_out/support.aar/classes.jar");
     androidSupportResClassPath =
-        new FakeSourcePath(
-            "buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/res");
-    baseOutputPath = new FakeSourcePath("buck-out/base.jar");
+        FakeSourcePath.of("buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/res");
+    baseOutputPath = FakeSourcePath.of("buck-out/base.jar");
 
     libraryFactoryResolver =
         new IjLibraryFactoryResolver() {

@@ -272,7 +272,7 @@ public class MergeAndroidResourcesStepTest {
                 AndroidResourceRuleBuilder.newBuilder()
                     .setRuleFinder(ruleFinder)
                     .setBuildTarget(resTarget)
-                    .setRes(new FakeSourcePath("a/res"))
+                    .setRes(FakeSourcePath.of("a/res"))
                     .setRDotJavaPackage("com.res.a")
                     .build(),
             entriesBuilder.getProjectFilesystem().getPath("b-R.txt"),
@@ -280,7 +280,7 @@ public class MergeAndroidResourcesStepTest {
                 AndroidResourceRuleBuilder.newBuilder()
                     .setRuleFinder(ruleFinder)
                     .setBuildTarget(resTarget)
-                    .setRes(new FakeSourcePath("b/res"))
+                    .setRes(FakeSourcePath.of("b/res"))
                     .setRDotJavaPackage("com.res.b")
                     .build(),
             entriesBuilder.getProjectFilesystem().getPath("c-R.txt"),
@@ -288,7 +288,7 @@ public class MergeAndroidResourcesStepTest {
                 AndroidResourceRuleBuilder.newBuilder()
                     .setRuleFinder(ruleFinder)
                     .setBuildTarget(resTarget)
-                    .setRes(new FakeSourcePath("c/res"))
+                    .setRes(FakeSourcePath.of("c/res"))
                     .setRDotJavaPackage("com.res.c")
                     .build()),
         Optional.empty(),
@@ -321,7 +321,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(resTarget)
-            .setRes(new FakeSourcePath("res"))
+            .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.res1")
             .build();
     buildRuleResolver.addToIndex(res);
@@ -387,7 +387,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(target)
-            .setRes(new FakeSourcePath("res"))
+            .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.facebook")
             .build();
     buildRuleResolver.addToIndex(resource);
@@ -472,7 +472,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(target)
-            .setRes(new FakeSourcePath("res"))
+            .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.facebook")
             .build();
     buildRuleResolver.addToIndex(resource);
@@ -546,7 +546,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(res1Target)
-            .setRes(new FakeSourcePath("res1"))
+            .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
             .build();
     buildRuleResolver.addToIndex(res1);
@@ -555,7 +555,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(res2Target)
-            .setRes(new FakeSourcePath("res2"))
+            .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("res2")
             .build();
     buildRuleResolver.addToIndex(res2);
@@ -605,7 +605,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(res1Target)
-            .setRes(new FakeSourcePath("res1"))
+            .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
             .build();
     buildRuleResolver.addToIndex(res1);
@@ -655,7 +655,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(res1Target)
-            .setRes(new FakeSourcePath("res1"))
+            .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
             .build();
     buildRuleResolver.addToIndex(res1);
@@ -710,7 +710,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(res1Target)
-            .setRes(new FakeSourcePath("res1"))
+            .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("package")
             .build();
     buildRuleResolver.addToIndex(res1);
@@ -719,7 +719,7 @@ public class MergeAndroidResourcesStepTest {
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(ruleFinder)
             .setBuildTarget(res2Target)
-            .setRes(new FakeSourcePath("res2"))
+            .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("package")
             .build();
     buildRuleResolver.addToIndex(res2);

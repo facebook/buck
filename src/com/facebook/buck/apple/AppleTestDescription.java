@@ -375,7 +375,7 @@ public class AppleTestDescription
           ExplicitBuildTargetSourcePath.of(
               unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
-      return Optional.of(new PathSourcePath(projectFilesystem, appleConfig.getXctoolPath().get()));
+      return Optional.of(PathSourcePath.of(projectFilesystem, appleConfig.getXctoolPath().get()));
     } else {
       return Optional.empty();
     }

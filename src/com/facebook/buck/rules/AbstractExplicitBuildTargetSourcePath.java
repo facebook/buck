@@ -48,7 +48,6 @@ public abstract class AbstractExplicitBuildTargetSourcePath implements BuildTarg
       return true;
     }
 
-    //// TODO I don't like this :/
     if (!(other instanceof AbstractExplicitBuildTargetSourcePath)) {
       return false;
     }

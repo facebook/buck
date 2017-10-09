@@ -25,6 +25,7 @@ import com.facebook.buck.cli.MetadataChecker;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
+import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -341,26 +342,29 @@ public class DistBuildSlaveExecutor {
   }
 
   private class LocalBuilderImpl implements LocalBuilder {
+    private static final boolean KEEP_GOING = true;
     private final BuckConfig distBuildConfig;
     private final CachingBuildEngineBuckConfig engineConfig;
+    private final ResourcesConfig resourcesConfig;
 
     public LocalBuilderImpl() {
       this.distBuildConfig = args.getRemoteRootCellConfig();
       this.engineConfig = distBuildConfig.getView(CachingBuildEngineBuckConfig.class);
+      this.resourcesConfig = distBuildConfig.getView(ResourcesConfig.class);
     }
 
     @Override
-    public int buildLocallyAndReturnExitCode(Iterable<String> targetsToBuild)
+    public int buildLocallyAndReturnExitCode(Iterable<String> targetToBuildStrings)
         throws IOException, InterruptedException {
       // TODO(ruibm): Fix this to work with Android.
       MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
       final ConcurrencyLimit concurrencyLimit =
           new ConcurrencyLimit(
               4,
-              distBuildConfig.getResourceAllocationFairness(),
+              resourcesConfig.getResourceAllocationFairness(),
               4,
-              distBuildConfig.getDefaultResourceAmounts(),
-              distBuildConfig.getMaximumResourceAmounts().withCpu(4));
+              resourcesConfig.getDefaultResourceAmounts(),
+              resourcesConfig.getMaximumResourceAmounts().withCpu(4));
       final DefaultProcessExecutor processExecutor = new DefaultProcessExecutor(args.getConsole());
       try (CachingBuildEngine buildEngine =
               new CachingBuildEngine(
@@ -420,9 +424,9 @@ public class DistBuildSlaveExecutor {
                   args.getClock(),
                   executionContext)) {
 
-        return build.executeAndPrintFailuresToEventBus(
-            fullyQualifiedNameToBuildTarget(targetsToBuild),
-            /* isKeepGoing */ true,
+        return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
+            fullyQualifiedNameToBuildTarget(targetToBuildStrings),
+            KEEP_GOING,
             args.getBuckEventBus(),
             args.getConsole(),
             Optional.empty());

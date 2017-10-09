@@ -34,6 +34,7 @@ import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +73,15 @@ public class CxxPreprocessables {
       @Override
       public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
         return pp.quoteIncludeArgs(includeRoots);
+      }
+    },
+
+    /** Headers are not added by buck */
+    RAW {
+      @Override
+      public Iterable<String> includeArgs(
+          Preprocessor preprocessor, Iterable<String> includeRoots) {
+        return ImmutableList.of();
       }
     },
     ;

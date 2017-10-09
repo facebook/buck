@@ -3,6 +3,7 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/buck-out/.trash" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/bin" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out/log" isTestSource="false" />
     </content>

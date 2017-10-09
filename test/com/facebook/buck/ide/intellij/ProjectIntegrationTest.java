@@ -290,6 +290,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("scala_project");
   }
 
+  @Test
+  public void testIgnoredPathAddedToExcludedFolders() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("ignored_excluded");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();

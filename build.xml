@@ -248,6 +248,8 @@
   <fileset dir="${third-party.dir}/java" id="testrunner.jars">
     <include name="android/ddmlib-25.3.0.jar" />
     <include name="guava/guava-20.0.jar" />
+    <include name="guice/guice-3.0.jar" />
+    <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
     <include name="junit/junit-4.12.jar" />
     <include name="testng/testng-6.8.jar" />

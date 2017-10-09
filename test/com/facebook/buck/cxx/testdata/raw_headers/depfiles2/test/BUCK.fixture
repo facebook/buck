@@ -1,0 +1,8 @@
+cxx_library(
+  name = 'test',
+  srcs = [
+    'test.cpp',
+  ],
+  deps = ['//depfiles2/headers:headers'],
+  compiler_flags = ['-I', 'depfiles2/headers'],
+)

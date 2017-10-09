@@ -1,0 +1,10 @@
+prebuilt_jar(
+    name = "aopalliance",
+    binary_jar = "aopalliance.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

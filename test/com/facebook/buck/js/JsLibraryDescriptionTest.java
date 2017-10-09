@@ -57,7 +57,7 @@ public class JsLibraryDescriptionTest {
   public void subBasePathForSourceFiles() {
     final String basePath = "base/path";
     final String filePath = String.format("%s/sub/file.js", targetDirectory);
-    final JsTestScenario scenario = buildScenario(basePath, new FakeSourcePath(filePath));
+    final JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
 
     assertEquals(
         "arbitrary/path/base/path/sub/file.js",
@@ -68,7 +68,7 @@ public class JsLibraryDescriptionTest {
   public void relativeBasePathForSourceFiles() {
     final String basePath = "../base/path";
     final String filePath = String.format("%s/sub/file.js", targetDirectory);
-    final JsTestScenario scenario = buildScenario(basePath, new FakeSourcePath(filePath));
+    final JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
 
     assertEquals(
         "arbitrary/base/path/sub/file.js", findFileRule(scenario.resolver).getVirtualPath().get());
@@ -119,7 +119,7 @@ public class JsLibraryDescriptionTest {
     BuildTarget withFlavors = this.target.withFlavors(flavors);
     JsTestScenario scenario =
         scenarioBuilder
-            .library(withFlavors, new FakeSourcePath("apples"), new FakeSourcePath("pears"))
+            .library(withFlavors, FakeSourcePath.of("apples"), FakeSourcePath.of("pears"))
             .build();
 
     RichStream.from(scenario.resolver.getRule(withFlavors).getBuildDeps())
@@ -141,7 +141,7 @@ public class JsLibraryDescriptionTest {
     BuildTarget withPlatformFlavor = target.withFlavors(platformFlavor);
     JsTestScenario scenario =
         scenarioBuilder
-            .library(withPlatformFlavor, new FakeSourcePath("apples"), new FakeSourcePath("pears"))
+            .library(withPlatformFlavor, FakeSourcePath.of("apples"), FakeSourcePath.of("pears"))
             .build();
 
     long numFileDeps =

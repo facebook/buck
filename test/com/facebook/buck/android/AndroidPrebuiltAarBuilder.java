@@ -47,7 +47,7 @@ public class AndroidPrebuiltAarBuilder
   }
 
   public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
-    getArgForPopulating().setSourceJar(Optional.of(new FakeSourcePath(sourcesJar.toString())));
+    getArgForPopulating().setSourceJar(Optional.of(FakeSourcePath.of(sourcesJar.toString())));
     return this;
   }
 

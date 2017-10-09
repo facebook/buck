@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
@@ -210,7 +211,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.of("libc.so", new FakeSourcePath("libc.so")));
+            ImmutableMap.of("libc.so", FakeSourcePath.of("libc.so")));
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
@@ -218,7 +219,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             NativeLinkable.Linkage.STATIC,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.of("libb.so", new FakeSourcePath("libb.so")));
+            ImmutableMap.of("libb.so", FakeSourcePath.of("libb.so")));
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
@@ -226,7 +227,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.of("liba.so", new FakeSourcePath("liba.so")));
+            ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -236,8 +237,8 @@ public class NativeLinkablesTest {
         sharedLibs,
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
-                "liba.so", new FakeSourcePath("liba.so"),
-                "libc.so", new FakeSourcePath("libc.so"))));
+                "liba.so", FakeSourcePath.of("liba.so"),
+                "libc.so", FakeSourcePath.of("libc.so"))));
   }
 
   @Test
@@ -292,7 +293,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.of("liba.so", new FakeSourcePath("liba1.so")));
+            ImmutableMap.of("liba.so", FakeSourcePath.of("liba1.so")));
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
@@ -300,7 +301,7 @@ public class NativeLinkablesTest {
             ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.of("liba.so", new FakeSourcePath("liba2.so")));
+            ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
     NativeLinkables.getTransitiveSharedLibraries(
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableList.of(a, b),
@@ -309,7 +310,7 @@ public class NativeLinkablesTest {
 
   @Test
   public void duplicateIdenticalLibsDoNotConflict() throws Exception {
-    FakeSourcePath path = new FakeSourcePath("libc.so");
+    PathSourcePath path = FakeSourcePath.of("libc.so");
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",

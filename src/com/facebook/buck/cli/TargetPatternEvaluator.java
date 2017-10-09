@@ -133,7 +133,7 @@ public class TargetPatternEvaluator {
 
     return filePaths
         .stream()
-        .map(path -> new PathSourcePath(rootCell.getFilesystem(), path))
+        .map(path -> PathSourcePath.of(rootCell.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(MoreCollectors.toImmutableSortedSet());
   }

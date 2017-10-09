@@ -32,7 +32,6 @@ import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -77,7 +76,7 @@ public class AndroidManifestTest {
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
     SourcePathResolver pathResolver = buildContext.getSourcePathResolver();
-    expect(pathResolver.getAbsolutePath(new PathSourcePath(filesystem, skeletonPath)))
+    expect(pathResolver.getAbsolutePath(FakeSourcePath.of(filesystem, skeletonPath)))
         .andStubReturn(filesystem.resolve(skeletonPath));
 
     expect(pathResolver.getAllAbsolutePaths(ImmutableSortedSet.of()))
@@ -116,7 +115,7 @@ public class AndroidManifestTest {
     AndroidManifestDescriptionArg arg =
         AndroidManifestDescriptionArg.builder()
             .setName("some_manifest")
-            .setSkeleton(new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml"))
+            .setSkeleton(FakeSourcePath.of("java/com/example/AndroidManifestSkeleton.xml"))
             .build();
     return description.createBuildRule(
         TargetGraph.EMPTY,

@@ -49,6 +49,6 @@ public class FauxScalaLibraryBuilder
   }
 
   public FauxScalaLibraryBuilder addSrc(Path path) {
-    return addSrc(new PathSourcePath(projectFilesystem, path));
+    return addSrc(PathSourcePath.of(projectFilesystem, path));
   }
 }

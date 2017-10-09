@@ -176,6 +176,19 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
+  private Path getObjectDir() {
+    return getOutputDir().resolve("objects");
+  }
+
+  private Path getInterfaceDir() {
+    return getOutputDir().resolve("interfaces");
+  }
+
+  /** @return the path where the compiler places generated FFI stub files. */
+  private Path getStubDir() {
+    return getOutputDir().resolve("stubs");
+  }
+
   private Path getInterface() {
     String name = getBuildTarget().getShortName();
     return getOutputDir().resolve(name + "-haddock-interface");
@@ -326,10 +339,15 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
           MoreIterables.zipAndConcat(Iterables.cycle("-expose-package"), exposeBuilder.build()));
       cmdArgs.addAll(linkerFlags);
       cmdArgs.addAll(getPreprocessorFlags(resolver));
+      // Tell GHC where to place build files for TemplateHaskell
+      cmdArgs.add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString());
+      cmdArgs.add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString());
+      cmdArgs.add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString());
 
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))
           .addAll(getTypeFlags())
+          .add("--no-tmp-comp-dir")
           .add("--no-warnings")
           .addAll(
               MoreIterables.zipAndConcat(

@@ -42,7 +42,6 @@ import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -74,7 +73,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -150,8 +148,8 @@ public class CxxBinaryDescriptionTest {
     CxxLibraryBuilder depBuilder =
         new CxxLibraryBuilder(depTarget)
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.h"))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));
     BuildTarget archiveTarget =
         depTarget.withAppendedFlavors(
             CxxDescriptionEnhancer.STATIC_FLAVOR, cxxPlatform.getFlavor());
@@ -166,11 +164,11 @@ public class CxxBinaryDescriptionTest {
         new CxxBinaryBuilder(target, cxxBuckConfig)
             .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
+                    SourceWithFlags.of(FakeSourcePath.of("test/bar.cpp")),
                     SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genSourceTarget))))
             .setHeaders(
                 ImmutableSortedSet.of(
-                    new FakeSourcePath("test/bar.h"),
+                    FakeSourcePath.of("test/bar.h"),
                     DefaultBuildTargetSourcePath.of(genHeaderTarget)))
             .setDeps(ImmutableSortedSet.of(depTarget));
 
@@ -260,8 +258,7 @@ public class CxxBinaryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     new CxxBinaryBuilder(target, cxxBuckConfig)
         .setSrcs(
-            ImmutableSortedSet.of(
-                SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))))
+            ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))))
         .build(resolver, filesystem);
   }
 
@@ -405,9 +402,9 @@ public class CxxBinaryDescriptionTest {
     binaryBuilder
         .setLibraries(
             ImmutableSortedSet.of(
-                FrameworkPath.ofSourcePath(new FakeSourcePath("/some/path/libs.dylib")),
-                FrameworkPath.ofSourcePath(new FakeSourcePath("/another/path/liba.dylib"))))
-        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+                FrameworkPath.ofSourcePath(FakeSourcePath.of("/some/path/libs.dylib")),
+                FrameworkPath.ofSourcePath(FakeSourcePath.of("/another/path/liba.dylib"))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -434,7 +431,7 @@ public class CxxBinaryDescriptionTest {
                     InternalFlavor.of("shared"),
                     StripStyle.ALL_SYMBOLS.getFlavor()),
             cxxBuckConfig);
-    binaryBuilder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.c"))));
+    binaryBuilder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(

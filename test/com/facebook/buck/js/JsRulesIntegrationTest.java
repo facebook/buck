@@ -16,6 +16,7 @@
 
 package com.facebook.buck.js;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
@@ -30,6 +31,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -187,5 +189,52 @@ public class JsRulesIntegrationTest {
             "//js:fruit-with-extras#android,dependencies")
         .assertSuccess();
     workspace.verify(Paths.get("dependencies.expected"), genPath);
+  }
+
+  @Test
+  public void bundleGenrule() throws IOException {
+    workspace.runBuckBuild("//js:genrule-inner", "//js:genrule-outer").assertSuccess();
+    workspace.verify(Paths.get("bundle_genrules.expected"), genPath);
+
+    String genruleSourceMapTarget = "//js:genrule-outer#source_map";
+    String underlyingBundleSourceMapTarget = "//js:fruit-with-extras#source_map";
+    ImmutableMap<String, Path> sourceMapPaths =
+        workspace.buildMultipleAndReturnOutputs(
+            genruleSourceMapTarget, underlyingBundleSourceMapTarget);
+    assertEquals(
+        sourceMapPaths.get(underlyingBundleSourceMapTarget),
+        sourceMapPaths.get(genruleSourceMapTarget));
+
+    String genruleDepsTarget = "//js:genrule-outer#dependencies";
+    String underlyingBundleDepsTarget = "//js:fruit-with-extras#dependencies";
+    ImmutableMap<String, Path> depsPaths =
+        workspace.buildMultipleAndReturnOutputs(genruleDepsTarget, underlyingBundleDepsTarget);
+    assertEquals(depsPaths.get(underlyingBundleDepsTarget), depsPaths.get(genruleDepsTarget));
+  }
+
+  @Test
+  public void appleBundleDependingOnJsBundleGenruleContainsBundleAndResources() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    workspace
+        .runBuckBuild("//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")
+        .assertSuccess();
+    workspace.verify(Paths.get("ios_app_with_genrule.expected"), genPath);
+  }
+
+  @Test
+  public void apkContainsGenruleOutputAndBundleResources()
+      throws IOException, InterruptedException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app_with_genrule");
+    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(BuildTargets.getGenPath(projectFilesystem, target, "%s.apk")));
+
+    zipInspector.assertFileExists("assets/postprocessed.txt");
+    zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
+    zipInspector.assertFileDoesNotExist("assets/fruit-salad-in-a-bundle.js");
   }
 }

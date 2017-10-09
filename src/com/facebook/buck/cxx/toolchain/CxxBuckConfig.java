@@ -298,7 +298,8 @@ public class CxxBuckConfig {
   }
 
   public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {
-    return delegate.getBooleanValue(cxxSection, "enable_deprecated_prebuilt_cxx_library_api", true);
+    return delegate.getBooleanValue(
+        cxxSection, "enable_deprecated_prebuilt_cxx_library_api", false);
   }
 
   @Value.Immutable

@@ -76,7 +76,7 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder =
         PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setSrcs(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("blah.py"))));
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("blah.py"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -102,7 +102,7 @@ public class PythonTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
     String sourceName = "main.py";
-    SourcePath source = new FakeSourcePath("foo/" + sourceName);
+    SourcePath source = FakeSourcePath.of("foo/" + sourceName);
 
     // Run without a base module set and verify it defaults to using the build target
     // base name.
@@ -166,8 +166,8 @@ public class PythonTestDescriptionTest {
   public void platformSrcs() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
     PythonTestBuilder builder =
         PythonTestBuilder.create(target)
             .setPlatformSrcs(
@@ -196,8 +196,8 @@ public class PythonTestDescriptionTest {
   public void platformResources() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.dat");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.dat");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.dat");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.dat");
     PythonTestBuilder builder =
         PythonTestBuilder.create(target)
             .setPlatformResources(
@@ -317,7 +317,7 @@ public class PythonTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ShBinaryBuilder pexExecutorBuilder =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
-            .setMain(new FakeSourcePath("run.sh"));
+            .setMain(FakeSourcePath.of("run.sh"));
     PythonTestBuilder builder =
         new PythonTestBuilder(
             BuildTargetFactory.newInstance("//:bin"),
@@ -352,7 +352,7 @@ public class PythonTestDescriptionTest {
   public void pexExecutorRuleIsAddedToParseTimeDeps() throws Exception {
     ShBinaryBuilder pexExecutorBuilder =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:pex_executor"))
-            .setMain(new FakeSourcePath("run.sh"));
+            .setMain(FakeSourcePath.of("run.sh"));
     PythonTestBuilder builder =
         new PythonTestBuilder(
             BuildTargetFactory.newInstance("//:bin"),
@@ -408,8 +408,8 @@ public class PythonTestDescriptionTest {
   public void versionedSrcs() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
     PythonTestBuilder builder =
@@ -440,8 +440,8 @@ public class PythonTestDescriptionTest {
   public void versionedResources() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:lib");
-    SourcePath matchedSource = new FakeSourcePath("foo/a.py");
-    SourcePath unmatchedSource = new FakeSourcePath("foo/b.py");
+    SourcePath matchedSource = FakeSourcePath.of("foo/a.py");
+    SourcePath unmatchedSource = FakeSourcePath.of("foo/b.py");
     GenruleBuilder depBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep")).setOut("out");
     PythonTestBuilder builder =
@@ -504,11 +504,11 @@ public class PythonTestDescriptionTest {
 
   @Test
   public void platformDeps() throws Exception {
-    SourcePath libASrc = new FakeSourcePath("libA.py");
+    SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libA"))
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
-    SourcePath libBSrc = new FakeSourcePath("libB.py");
+    SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:libB"))
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
@@ -545,14 +545,14 @@ public class PythonTestDescriptionTest {
         CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("platB"));
     FlavorDomain<CxxPlatform> cxxPlatforms =
         FlavorDomain.from("C/C++ platform", ImmutableList.of(platformA, platformB));
-    SourcePath libASrc = new FakeSourcePath("libA.py");
+    SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
         new PythonLibraryBuilder(
                 BuildTargetFactory.newInstance("//:libA"),
                 PythonTestUtils.PYTHON_PLATFORMS,
                 cxxPlatforms)
             .setSrcs(SourceList.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
-    SourcePath libBSrc = new FakeSourcePath("libB.py");
+    SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         new PythonLibraryBuilder(
                 BuildTargetFactory.newInstance("//:libB"),

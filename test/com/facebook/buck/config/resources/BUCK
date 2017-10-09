@@ -1,0 +1,12 @@
+standard_java_test(
+    name = "config",
+    deps = [
+        "//src/com/facebook/buck/config:config",
+        "//src/com/facebook/buck/config/resources:resources",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//test/com/facebook/buck/config:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

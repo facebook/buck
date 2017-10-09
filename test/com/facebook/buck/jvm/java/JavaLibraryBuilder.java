@@ -131,7 +131,7 @@ public class JavaLibraryBuilder
   }
 
   public JavaLibraryBuilder addSrc(Path path) {
-    return addSrc(new PathSourcePath(projectFilesystem, path));
+    return addSrc(PathSourcePath.of(projectFilesystem, path));
   }
 
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {

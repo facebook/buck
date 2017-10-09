@@ -16,22 +16,51 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TestBuildRuleParams;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.stream.Stream;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class BuildTargetsQueueTest {
+  public static final String TRANSITIVE_DEP_RULE = "//:transitive_dep";
+  public static final String HAS_RUNTIME_DEP_RULE = "//:runtime_dep";
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
   public static final String TARGET_NAME = "//foo:one";
+
+  private static class FakeHasRuntimeDepsRule extends FakeBuildRule implements HasRuntimeDeps {
+    private final ImmutableSortedSet<BuildRule> runtimeDeps;
+
+    public FakeHasRuntimeDepsRule(
+        BuildTarget target, ProjectFilesystem filesystem, BuildRule... runtimeDeps) {
+      super(target, filesystem);
+      this.runtimeDeps = ImmutableSortedSet.copyOf(runtimeDeps);
+    }
+
+    @Override
+    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+      return runtimeDeps.stream().map(BuildRule::getBuildTarget);
+    }
+  }
 
   @Test
   public void testEmptyQueue() {
@@ -63,6 +92,25 @@ public class BuildTargetsQueueTest {
     Assert.assertEquals(
         0,
         queue.dequeueZeroDependencyNodes(ImmutableList.of(target.getFullyQualifiedName())).size());
+  }
+
+  @Test
+  public void testResolverWithTargetThatHasRuntimeDep()
+      throws NoSuchBuildTargetException, InterruptedException {
+    BuildRuleResolver resolver = createRuntimeDepsResolver();
+    BuildTarget target = BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE);
+    BuildTargetsQueue queue = BuildTargetsQueue.newQueue(resolver, ImmutableList.of(target));
+    ImmutableList<String> zeroDepTargets = queue.dequeueZeroDependencyNodes(ImmutableList.of());
+    Assert.assertEquals(1, zeroDepTargets.size());
+    Assert.assertEquals(TRANSITIVE_DEP_RULE, zeroDepTargets.get(0));
+
+    ImmutableList<String> newZeroDepNodes =
+        queue.dequeueZeroDependencyNodes(ImmutableList.of(TRANSITIVE_DEP_RULE));
+    Assert.assertEquals(1, newZeroDepNodes.size());
+    Assert.assertEquals(HAS_RUNTIME_DEP_RULE, newZeroDepNodes.get(0));
+
+    Assert.assertEquals(
+        0, queue.dequeueZeroDependencyNodes(ImmutableList.of(HAS_RUNTIME_DEP_RULE)).size());
   }
 
   @Test
@@ -98,6 +146,28 @@ public class BuildTargetsQueueTest {
             JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:two"))
                 .build(resolver));
     buildRules.forEach(resolver::addToIndex);
+    return resolver;
+  }
+
+  private BuildRuleResolver createRuntimeDepsResolver()
+      throws NoSuchBuildTargetException, InterruptedException {
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuildRuleResolver resolver =
+        new SingleThreadedBuildRuleResolver(
+            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    // Create a regular build rule
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(TRANSITIVE_DEP_RULE);
+    BuildRuleParams ruleParams = TestBuildRuleParams.create();
+    FakeBuildRule transitiveRuntimeDep = new FakeBuildRule(buildTarget, filesystem, ruleParams);
+    resolver.addToIndex(transitiveRuntimeDep);
+
+    // Create a build rule with runtime deps
+    FakeBuildRule runtimeDepRule =
+        new FakeHasRuntimeDepsRule(
+            BuildTargetFactory.newInstance(HAS_RUNTIME_DEP_RULE), filesystem, transitiveRuntimeDep);
+    resolver.addToIndex(runtimeDepRule);
+
     return resolver;
   }
 

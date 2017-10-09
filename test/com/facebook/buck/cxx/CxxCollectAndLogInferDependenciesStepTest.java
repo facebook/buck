@@ -36,7 +36,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -88,7 +87,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
           }
         };
 
-    SourcePath preprocessor = new PathSourcePath(filesystem, Paths.get("preprocessor"));
+    SourcePath preprocessor = FakeSourcePath.of(filesystem, "preprocessor");
     Tool preprocessorTool = new CommandTool.Builder().addInput(preprocessor).build();
 
     PreprocessorDelegate preprocessorDelegate =
@@ -109,7 +108,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         buildRuleParams,
         CxxToolFlags.of(),
         CxxToolFlags.of(),
-        new FakeSourcePath("src.c"),
+        FakeSourcePath.of("src.c"),
         AbstractCxxSource.Type.C,
         Paths.get("src.o"),
         preprocessorDelegate,

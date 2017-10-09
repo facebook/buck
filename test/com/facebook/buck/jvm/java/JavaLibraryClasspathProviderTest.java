@@ -79,7 +79,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     bNode =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
-            .setSrcs(ImmutableList.of(new FakeSourcePath(filesystem, "foo/b.java")))
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(filesystem, "foo/b.java")))
             .setCmd("echo $(classpath //foo:d")
             .setOut("b.out")
             .build();

@@ -163,7 +163,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?, ?> fooBinNode =
         AppleBundleBuilder.createBuilder(fooBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(fooBinBinaryTarget)
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
             .build();
@@ -178,19 +178,19 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?, ?> bazTestNode =
         AppleTestBuilder.createBuilder(bazTestTarget)
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     TargetNode<?, ?> fooTestNode =
         AppleTestBuilder.createBuilder(fooTestTarget)
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
             .build();
 
     TargetNode<?, ?> fooBinTestNode =
         AppleTestBuilder.createBuilder(fooBinTestTarget)
             .setDeps(ImmutableSortedSet.of(fooBinTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     BuildTarget quxBinTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "bin");
@@ -558,7 +558,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?, ?> fooBinNode =
         AppleBundleBuilder.createBuilder(fooBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setBinary(fooBinBinaryTarget)
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
             .build();
@@ -574,19 +574,19 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<?, ?> bazTestNode =
         AppleTestBuilder.createBuilder(bazTestTarget)
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     TargetNode<?, ?> fooTestNode =
         AppleTestBuilder.createBuilder(fooTestTarget)
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setDeps(ImmutableSortedSet.of(bazLibTarget))
             .build();
 
     TargetNode<?, ?> fooBinTestNode =
         AppleTestBuilder.createBuilder(fooBinTestTarget)
             .setDeps(ImmutableSortedSet.of(fooBinTarget))
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
     BuildTarget quxBinTarget =

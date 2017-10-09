@@ -59,6 +59,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -260,7 +261,7 @@ public class DefaultIjModuleFactoryTest {
     TargetNode<?, ?> androidBinary =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/test:test"))
-            .setManifest(new FakeSourcePath("java/com/example/test/AndroidManifest.xml"))
+            .setManifest(FakeSourcePath.of("java/com/example/test/AndroidManifest.xml"))
             .setOriginalDeps(ImmutableSortedSet.of(javaLibBase.getBuildTarget()))
             .setKeystore(keystoreTarget)
             .build();
@@ -550,7 +551,7 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     String manifestName = "Manifest.xml";
-    SourcePath manifestPath = new FakeSourcePath(manifestName);
+    SourcePath manifestPath = FakeSourcePath.of(manifestName);
     TargetNode<?, ?> androidBinary =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example:droid"))
@@ -629,7 +630,7 @@ public class DefaultIjModuleFactoryTest {
   @Test
   public void testAndroidPrebuiltAar() {
     final SourcePath androidSupportBinaryPath =
-        new FakeSourcePath("third_party/java/support/support.aar");
+        FakeSourcePath.of("third_party/java/support/support.aar");
     final Path androidSupportSourcesPath =
         Paths.get("third_party/java/support/support-sources.jar");
     final String androidSupportJavadocUrl = "file:///support/docs";
@@ -709,7 +710,7 @@ public class DefaultIjModuleFactoryTest {
               @Override
               public Path getAndroidManifestPath(
                   TargetNode<AndroidBinaryDescriptionArg, ?> targetNode) {
-                return ((FakeSourcePath) targetNode.getConstructorArg().getManifest())
+                return ((PathSourcePath) targetNode.getConstructorArg().getManifest())
                     .getRelativePath();
               }
 
@@ -761,7 +762,7 @@ public class DefaultIjModuleFactoryTest {
     String sourceName = "cpp/lib/foo.cpp";
     TargetNode<?, ?> cxxLibrary =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//cpp/lib:foo"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath(sourceName))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(sourceName))))
             .build();
 
     Path moduleBasePath = Paths.get("cpp/lib");

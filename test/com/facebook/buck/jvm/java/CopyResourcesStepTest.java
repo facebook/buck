@@ -76,9 +76,9 @@ public class CopyResourcesStepTest {
             ResourcesParameters.builder()
                 .setResources(
                     ImmutableSortedSet.of(
-                        new FakeSourcePath(
+                        FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/base/data.json"),
-                        new FakeSourcePath(
+                        FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/common/util/data.json")))
                 .setResourcesRoot(Optional.empty())
                 .build(),
@@ -147,9 +147,9 @@ public class CopyResourcesStepTest {
             ResourcesParameters.builder()
                 .setResources(
                     ImmutableSortedSet.<SourcePath>of(
-                        new FakeSourcePath(
+                        FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/base/data.json"),
-                        new FakeSourcePath(
+                        FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/common/util/data.json")))
                 .setResourcesRoot(Optional.empty())
                 .build(),
@@ -219,9 +219,9 @@ public class CopyResourcesStepTest {
             ResourcesParameters.builder()
                 .setResources(
                     ImmutableSortedSet.of(
-                        new FakeSourcePath(
+                        FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/base/data.json"),
-                        new FakeSourcePath(
+                        FakeSourcePath.of(
                             filesystem, "android/java/src/com/facebook/common/util/data.json")))
                 .setResourcesRoot(Optional.empty())
                 .build(),

@@ -293,7 +293,7 @@ public class DistBuildStateTest {
         Lists.newArrayList("A.java", "B.java", "C.java")
             .stream()
             .map(f -> reconstructedCellFilesystem.getPath(f))
-            .map(p -> new PathSourcePath(reconstructedCellFilesystem, p))
+            .map(p -> PathSourcePath.of(reconstructedCellFilesystem, p))
             .map(ImmutableSortedSet::of)
             .collect(Collectors.toList()));
   }

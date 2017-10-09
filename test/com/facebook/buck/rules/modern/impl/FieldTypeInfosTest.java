@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.modern.InputPath;
@@ -175,7 +176,7 @@ public class FieldTypeInfosTest {
     FieldTypeInfo<InputPath> typeInfo =
         FieldTypeInfoFactory.forFieldTypeToken(new TypeToken<InputPath>() {});
 
-    PathSourcePath sourcePath = new PathSourcePath(filesystem, Paths.get("path"));
+    PathSourcePath sourcePath = FakeSourcePath.of(filesystem, "path");
     InputPath value = new InputPath(sourcePath);
     EasyMock.expect(inputRuleResolver.resolve(value)).andReturn(Optional.empty());
 
@@ -255,7 +256,7 @@ public class FieldTypeInfosTest {
         ExplicitBuildTargetSourcePath.of(target, Paths.get("path"));
     InputPath targetInputPath = new InputPath(targetSourcePath);
 
-    PathSourcePath pathSourcePath = new PathSourcePath(filesystem, Paths.get("path"));
+    PathSourcePath pathSourcePath = FakeSourcePath.of(filesystem, "path");
     InputPath pathInputPath = new InputPath(pathSourcePath);
     ImmutableList<InputPath> value = ImmutableList.of(targetInputPath, pathInputPath);
 

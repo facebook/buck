@@ -59,7 +59,7 @@ public class CxxErrorTransformerTest {
     Path replacement = filesystem.resolve("hello/world.h");
 
     HeaderPathNormalizer.Builder normalizerBuilder = new HeaderPathNormalizer.Builder(pathResolver);
-    normalizerBuilder.addHeader(new FakeSourcePath(replacement.toString()), original);
+    normalizerBuilder.addHeader(FakeSourcePath.of(replacement.toString()), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
     return ImmutableList.copyOf(

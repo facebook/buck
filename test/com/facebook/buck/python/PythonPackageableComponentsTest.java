@@ -38,14 +38,14 @@ public class PythonPackageableComponentsTest {
   public void testMergeZipSafe() {
     PythonPackageComponents compA =
         PythonPackageComponents.of(
-            ImmutableMap.of(Paths.get("test"), new FakeSourcePath("sourceA")),
+            ImmutableMap.of(Paths.get("test"), FakeSourcePath.of("sourceA")),
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
             Optional.of(true));
     PythonPackageComponents compB =
         PythonPackageComponents.of(
-            ImmutableMap.of(Paths.get("test2"), new FakeSourcePath("sourceB")),
+            ImmutableMap.of(Paths.get("test2"), FakeSourcePath.of("sourceB")),
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -65,9 +65,9 @@ public class PythonPackageableComponentsTest {
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     Path dest = Paths.get("test");
-    builder.addModule(dest, new FakeSourcePath("sourceA"), them);
+    builder.addModule(dest, FakeSourcePath.of("sourceA"), them);
     try {
-      builder.addModule(dest, new FakeSourcePath("sourceB"), them);
+      builder.addModule(dest, FakeSourcePath.of("sourceB"), them);
       fail("expected to throw");
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("duplicate entries"));
@@ -81,14 +81,14 @@ public class PythonPackageableComponentsTest {
     Path dest = Paths.get("test");
     PythonPackageComponents compA =
         PythonPackageComponents.of(
-            ImmutableMap.of(dest, new FakeSourcePath("sourceA")),
+            ImmutableMap.of(dest, FakeSourcePath.of("sourceA")),
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
             Optional.empty());
     PythonPackageComponents compB =
         PythonPackageComponents.of(
-            ImmutableMap.of(dest, new FakeSourcePath("sourceB")),
+            ImmutableMap.of(dest, FakeSourcePath.of("sourceB")),
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
@@ -108,7 +108,7 @@ public class PythonPackageableComponentsTest {
     BuildTarget me = BuildTargetFactory.newInstance("//:me");
     BuildTarget them = BuildTargetFactory.newInstance("//:them");
     Path dest = Paths.get("test");
-    SourcePath path = new FakeSourcePath("source");
+    SourcePath path = FakeSourcePath.of("source");
     PythonPackageComponents compA =
         PythonPackageComponents.of(
             ImmutableMap.of(dest, path),

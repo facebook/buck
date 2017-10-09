@@ -108,8 +108,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
-            .setStaticLib(new FakeSourcePath("libfoo.a"))
-            .setSharedLib(new FakeSourcePath("libfoo.so"));
+            .setStaticLib(FakeSourcePath.of("libfoo.a"))
+            .setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -123,7 +123,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             ImmutableList.of(
                 FileListableLinkerInputArg.withSourcePathArg(
                     SourcePathArg.of(
-                        new PathSourcePath(filesystem, TARGET.getBasePath().resolve("libfoo.a"))))),
+                        PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.a"))))),
             ImmutableSet.of(),
             ImmutableSet.of());
     assertEquals(
@@ -135,7 +135,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         NativeLinkableInput.of(
             ImmutableList.of(
                 SourcePathArg.of(
-                    new PathSourcePath(filesystem, TARGET.getBasePath().resolve("libfoo.so")))),
+                    PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so")))),
             ImmutableSet.of(),
             ImmutableSet.of());
     assertEquals(
@@ -176,7 +176,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder libBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setProvided(true)
-            .setSharedLib(new FakeSourcePath("libfoo.so"));
+            .setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -189,7 +189,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         NativeLinkableInput.of(
             ImmutableList.of(
                 SourcePathArg.of(
-                    new PathSourcePath(filesystem, TARGET.getBasePath().resolve("libfoo.so")))),
+                    PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so")))),
             ImmutableSet.of(),
             ImmutableSet.of());
     assertEquals(
@@ -201,7 +201,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void missingSharedLibsAreAutoBuilt() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
-        new PrebuiltCxxLibraryBuilder(TARGET).setStaticLib(new FakeSourcePath("libfoo.a"));
+        new PrebuiltCxxLibraryBuilder(TARGET).setStaticLib(FakeSourcePath.of("libfoo.a"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -247,7 +247,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
-        new PrebuiltCxxLibraryBuilder(TARGET).setSharedLib(new FakeSourcePath("libfoo.so"));
+        new PrebuiltCxxLibraryBuilder(TARGET).setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) libBuilder.build(resolver, filesystem, targetGraph);
@@ -255,7 +255,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             getSharedLibrarySoname(arg),
-            new PathSourcePath(filesystem, TARGET.getBasePath().resolve("libfoo.so"))),
+            PathSourcePath.of(filesystem, TARGET.getBasePath().resolve("libfoo.so"))),
         lib.getSharedLibraries(CXX_PLATFORM));
   }
 
@@ -316,7 +316,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void goodPathNoLocation() throws NoSuchBuildTargetException {
     PrebuiltCxxLibraryBuilder libraryBuilder =
         new PrebuiltCxxLibraryBuilder(TARGET_TWO)
-            .setStaticLib(new FakeSourcePath("two/lib/libtarget.a"));
+            .setStaticLib(FakeSourcePath.of("two/lib/libtarget.a"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     BuildRuleResolver resolver =
@@ -394,10 +394,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 PatternMatchedCollection.<SourcePath>builder()
                     .add(
                         Pattern.compile(platform1.getFlavor().toString(), Pattern.LITERAL),
-                        new FakeSourcePath("libs/PLATFORM1/libtest-PLATFORM1.a"))
+                        FakeSourcePath.of("libs/PLATFORM1/libtest-PLATFORM1.a"))
                     .add(
                         Pattern.compile(platform2.getFlavor().toString(), Pattern.LITERAL),
-                        new FakeSourcePath("libs/PLATFORM2/libtest-PLATFORM2.a"))
+                        FakeSourcePath.of("libs/PLATFORM2/libtest-PLATFORM2.a"))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryBuilder.build());
     BuildRuleResolver resolver =
@@ -424,7 +424,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setExportedHeaders(
                 SourceList.ofNamedSources(
-                    ImmutableSortedMap.of("foo.h", new FakeSourcePath("foo.h"))));
+                    ImmutableSortedMap.of("foo.h", FakeSourcePath.of("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -451,11 +451,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
                     .add(
                         Pattern.compile(CXX_PLATFORM.getFlavor().toString()),
                         SourceList.ofNamedSources(
-                            ImmutableSortedMap.of("foo.h", new FakeSourcePath("foo.h"))))
+                            ImmutableSortedMap.of("foo.h", FakeSourcePath.of("foo.h"))))
                     .add(
                         Pattern.compile("DO NOT MATCH ANYTNING"),
                         SourceList.ofNamedSources(
-                            ImmutableSortedMap.of("bar.h", new FakeSourcePath("bar.h"))))
+                            ImmutableSortedMap.of("bar.h", FakeSourcePath.of("bar.h"))))
                     .build());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
@@ -512,7 +512,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setHeaderNamespace("hello")
             .setExportedHeaders(
-                SourceList.ofUnnamedSources(ImmutableSortedSet.of(new FakeSourcePath("foo.h"))));
+                SourceList.ofUnnamedSources(ImmutableSortedSet.of(FakeSourcePath.of("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -529,7 +529,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
   public void staticPicLibsUseCorrectPath() throws Exception {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder =
-        new PrebuiltCxxLibraryBuilder(TARGET).setStaticPicLib(new FakeSourcePath("libfoo_pic.a"));
+        new PrebuiltCxxLibraryBuilder(TARGET).setStaticPicLib(FakeSourcePath.of("libfoo_pic.a"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -558,7 +558,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary)
             libBuilder
-                .setStaticLib(new FakeSourcePath("libfoo.a"))
+                .setStaticLib(FakeSourcePath.of("libfoo.a"))
                 .build(resolver, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC_PIC);
@@ -587,8 +587,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setForceStatic(true)
-            .setSharedLib(new FakeSourcePath("libfoo.so"))
-            .setStaticLib(new FakeSourcePath("libfoo.a"));
+            .setSharedLib(FakeSourcePath.of("libfoo.so"))
+            .setStaticLib(FakeSourcePath.of("libfoo.a"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -605,7 +605,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder builder =
         new PrebuiltCxxLibraryBuilder(TARGET)
             .setExportedLinkerFlags(ImmutableList.of("--some-flag"))
-            .setStaticLib(new FakeSourcePath("libfoo.a"));
+            .setStaticLib(FakeSourcePath.of("libfoo.a"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -677,7 +677,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
-            .setHeaderDirs(ImmutableList.of(new FakeSourcePath("include")));
+            .setHeaderDirs(ImmutableList.of(FakeSourcePath.of("include")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -689,7 +689,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         contains(
             CxxHeadersDir.of(
                 CxxPreprocessables.IncludeType.SYSTEM,
-                new PathSourcePath(
+                PathSourcePath.of(
                     filesystem,
                     rule.getBuildTarget().getBasePath().getFileSystem().getPath("include")))));
   }
@@ -717,7 +717,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setSharedLib(new FakeSourcePath("lib/librule.so"))
+            .setSharedLib(FakeSourcePath.of("lib/librule.so"))
             .setLinkWithoutSoname(true);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver =
@@ -742,7 +742,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
-            .setSharedLib(new FakeSourcePath("libfoo.so"));
+            .setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -758,7 +758,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setProvided(true)
-            .setSharedLib(new FakeSourcePath("libfoo.so"));
+            .setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -833,7 +833,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     PrebuiltCxxLibraryBuilder ruleBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setStaticPicLib(new FakeSourcePath("libfoo_pic.a"))
+            .setStaticPicLib(FakeSourcePath.of("libfoo_pic.a"))
             .setExportedLinkerFlags(ImmutableList.of("--exported-flag"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
     BuildRuleResolver resolver =
@@ -888,7 +888,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     // First, make sure without any platform regex, we get something back for each of the interface
     // methods.
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
-        new PrebuiltCxxLibraryBuilder(target).setSharedLib(new FakeSourcePath("libfoo.so"));
+        new PrebuiltCxxLibraryBuilder(target).setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph1 = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver1 =
         new SingleThreadedBuildRuleResolver(
@@ -908,7 +908,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     // Now, verify we get nothing when the supported platform regex excludes our platform.
     prebuiltCxxLibraryBuilder
         .setSupportedPlatformsRegex(Pattern.compile("nothing"))
-        .setSharedLib(new FakeSourcePath("libfoo.so"));
+        .setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph2 = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     BuildRuleResolver resolver2 =
         new SingleThreadedBuildRuleResolver(
@@ -934,7 +934,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     builder.setSelectedVersions(ImmutableMap.of(dep, Version.of("1.0")));
     builder.setVersionedStaticLib(
         VersionMatchedCollection.<SourcePath>builder()
-            .add(ImmutableMap.of(dep, Version.of("1.0")), new FakeSourcePath("sub-dir/libfoo.a"))
+            .add(ImmutableMap.of(dep, Version.of("1.0")), FakeSourcePath.of("sub-dir/libfoo.a"))
             .build());
     TargetGraph graph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
     BuildRuleResolver resolver =

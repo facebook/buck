@@ -106,9 +106,8 @@ public class CxxCompilationDatabaseTest {
         PreprocessorFlags.builder()
             .addIncludes(
                 CxxHeadersDir.of(
-                    CxxPreprocessables.IncludeType.SYSTEM, new FakeSourcePath("/foo/bar")),
-                CxxHeadersDir.of(
-                    CxxPreprocessables.IncludeType.SYSTEM, new FakeSourcePath("/test")))
+                    CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of("/foo/bar")),
+                CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of("/test")))
             .build();
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
@@ -147,7 +146,7 @@ public class CxxCompilationDatabaseTest {
                     new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
                     CxxToolFlags.of()),
                 Paths.get("test.o"),
-                new FakeSourcePath(filesystem, "test.cpp"),
+                FakeSourcePath.of(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
                 Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

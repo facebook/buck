@@ -69,7 +69,7 @@ public class ArchiveTest {
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.of(
-          new FakeSourcePath("a.o"), new FakeSourcePath("b.o"), new FakeSourcePath("c.o"));
+          FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
@@ -158,7 +158,7 @@ public class ArchiveTest {
                     ImmutableList.of(),
                     ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT,
-                    ImmutableList.of(new FakeSourcePath("different")),
+                    ImmutableList.of(FakeSourcePath.of("different")),
                     /* cacheable */ true));
     assertNotEquals(defaultRuleKey, inputChange);
 
@@ -201,7 +201,7 @@ public class ArchiveTest {
             ImmutableList.of("-bar"),
             ArchiveContents.NORMAL,
             DEFAULT_OUTPUT,
-            ImmutableList.of(new FakeSourcePath("simple.o")),
+            ImmutableList.of(FakeSourcePath.of("simple.o")),
             /* cacheable */ true);
 
     BuildContext buildContext =
@@ -252,7 +252,7 @@ public class ArchiveTest {
             ArchiveContents.NORMAL,
             DEFAULT_OUTPUT,
             ImmutableList.of(
-                new FakeSourcePath("simple.o"),
+                FakeSourcePath.of("simple.o"),
                 genrule1.getSourcePathToOutput(),
                 genrule2.getSourcePathToOutput()),
             /* cacheable */ true);

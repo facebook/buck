@@ -52,7 +52,7 @@ public class QueryTargetAccessor {
     info.traverse(
         value -> {
           if (value instanceof Path) {
-            builder.add(QueryFileTarget.of(new PathSourcePath(node.getFilesystem(), (Path) value)));
+            builder.add(QueryFileTarget.of(PathSourcePath.of(node.getFilesystem(), (Path) value)));
           } else if (value instanceof SourcePath) {
             builder.add(extractSourcePath((SourcePath) value));
           } else if (value instanceof BuildTarget) {

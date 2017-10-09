@@ -33,7 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
@@ -783,7 +783,7 @@ public class DirArtifactCacheTest {
     private BuildRuleForTest(Path file) {
       super(BuildTargetFactory.newInstance("//foo:" + file.getFileName().toString()));
       // TODO(15468825) - PathSourcePath should be relative!11!!11!1!!!
-      this.file = new PathSourcePath(new FakeProjectFilesystem(), file);
+      this.file = FakeSourcePath.of(new FakeProjectFilesystem(), file);
     }
   }
 }

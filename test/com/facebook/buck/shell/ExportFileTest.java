@@ -145,7 +145,7 @@ public class ExportFileTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     ExportFile exportFile =
         new ExportFileBuilder(target)
-            .setSrc(new PathSourcePath(projectFilesystem, Paths.get("chips")))
+            .setSrc(PathSourcePath.of(projectFilesystem, Paths.get("chips")))
             .setOut("fish")
             .build(resolver, projectFilesystem);
 
@@ -171,7 +171,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetInputsFromSourcePaths() throws Exception {
     ExportFileBuilder builder =
-        new ExportFileBuilder(target).setSrc(new FakeSourcePath("chips")).setOut("cake");
+        new ExportFileBuilder(target).setSrc(FakeSourcePath.of("chips")).setOut("cake");
 
     BuildRuleResolver resolver =
         new SingleThreadedBuildRuleResolver(
@@ -246,7 +246,7 @@ public class ExportFileTest {
 
     ExportFileBuilder builder =
         new ExportFileBuilder(BuildTargetFactory.newInstance("//some:file"))
-            .setSrc(new PathSourcePath(filesystem, temp));
+            .setSrc(PathSourcePath.of(filesystem, temp));
 
     ExportFile rule =
         builder.build(
@@ -289,7 +289,7 @@ public class ExportFileTest {
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    SourcePath src = new FakeSourcePath(projectFilesystem, "source");
+    SourcePath src = FakeSourcePath.of(projectFilesystem, "source");
     ExportFile exportFile =
         new ExportFileBuilder(target)
             .setMode(ExportFileDescription.Mode.REFERENCE)
@@ -306,7 +306,7 @@ public class ExportFileTest {
         new SingleThreadedBuildRuleResolver(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem differentFilesystem = new FakeProjectFilesystem();
-    SourcePath src = new FakeSourcePath(differentFilesystem, "source");
+    SourcePath src = FakeSourcePath.of(differentFilesystem, "source");
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("must use `COPY` mode"));
     new ExportFileBuilder(target)
