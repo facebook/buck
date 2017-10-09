@@ -47,7 +47,8 @@ android_library(
     '-Xplugin=',
   ],
   deps = [
-    # deps are intentionally left out to fail the test since -Xplugin is not available yet.
+    '//res/com/sample/title:title',
+    '//res/com/sample/top:top',
   ],
   visibility = [
     'PUBLIC',
