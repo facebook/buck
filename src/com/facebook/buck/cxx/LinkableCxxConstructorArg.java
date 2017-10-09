@@ -24,7 +24,7 @@ import java.util.Optional;
 public interface LinkableCxxConstructorArg extends CxxConstructorArg {
   Optional<Linker.LinkableDepType> getLinkStyle();
 
-  @Value.Default
+  @Value
   Optional<SourcePath> getStaticPicLib();
 
   @Value.Default
