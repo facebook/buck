@@ -226,6 +226,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "cache_bundles_and_packages", true);
   }
 
+  public boolean linkAllObjC() {
+    return delegate.getBooleanValue(APPLE_SECTION, "always_link_with_objc_flag", true);
+  }
+
   public Optional<Path> getAppleDeviceHelperAbsolutePath() {
     return getOptionalPath(APPLE_SECTION, "device_helper_path");
   }

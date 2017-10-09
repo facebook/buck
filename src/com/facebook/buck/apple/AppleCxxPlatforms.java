@@ -194,8 +194,13 @@ public class AppleCxxPlatforms {
       cflagsBuilder.add("-fembed-bitcode");
     }
 
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
+
     ImmutableList.Builder<String> ldflagsBuilder = ImmutableList.builder();
-    ldflagsBuilder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion(), "-ObjC"));
+    ldflagsBuilder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
+    if (appleConfig.linkAllObjC()) {
+      ldflagsBuilder.addAll(Linkers.iXlinker("-ObjC"));
+    }
     if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
       ldflagsBuilder.addAll(
           Linkers.iXlinker("-bitcode_verify", "-bitcode_hide_symbols", "-bitcode_symbol_map"));
@@ -471,7 +476,6 @@ public class AppleCxxPlatforms {
             swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
             xcodeToolFinder);
 
-    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
     platformBuilder
         .setCxxPlatform(cxxPlatform)
         .setSwiftPlatform(swiftPlatform)

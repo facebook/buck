@@ -203,12 +203,30 @@ public class AppleTestIntegrationTest {
   @Test
   public void testLinkedAsMachOBundleWithNoDylibDeps() throws Exception {
 
+    doTestLinkedAsMachOBundleWithNoDylibDeps(true);
+  }
+
+  @Test
+  public void testLinkedUsingObjCLinkerFlag() throws Exception {
+
+    doTestLinkedAsMachOBundleWithNoDylibDeps(false);
+  }
+
+  private void doTestLinkedAsMachOBundleWithNoDylibDeps(boolean useObjCLinkerFlag)
+      throws Exception {
+
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_deps", tmp);
     workspace.setUp();
 
     BuildTarget buildTarget = workspace.newBuildTarget("//:foo");
-    workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName()).assertSuccess();
+    workspace
+        .runBuckCommand(
+            "build",
+            "--config",
+            "apple.always_link_with_objc_flag=" + useObjCLinkerFlag,
+            buildTarget.getFullyQualifiedName())
+        .assertSuccess();
 
     workspace.verify(
         Paths.get("foo_output.expected"),
@@ -249,7 +267,13 @@ public class AppleTestIntegrationTest {
     ProcessExecutor.Result nmResult = workspace.runCommand("nm", "-j", testBinaryPath.toString());
     assertEquals(0, nmResult.getExitCode());
     assertThat(nmResult.getStdout().orElse(""), containsString("_OBJC_CLASS_$_Foo"));
-    assertThat(nmResult.getStdout().orElse(""), containsString("_OBJC_CLASS_$_Bar"));
+    if (useObjCLinkerFlag) {
+      // -ObjC loaded Bar even though it wasn't referenced.
+      assertThat(nmResult.getStdout().orElse(""), containsString("_OBJC_CLASS_$_Bar"));
+    } else {
+      // Bar is not referenced and should not be in the resulting binary.
+      assertThat(nmResult.getStdout().orElse(""), not(containsString("_OBJC_CLASS_$_Bar")));
+    }
   }
 
   @Test
