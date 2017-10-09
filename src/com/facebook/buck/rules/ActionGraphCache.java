@@ -24,8 +24,6 @@ import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.io.WatchmanOverflowEvent;
-import com.facebook.buck.io.WatchmanPathEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
@@ -40,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -50,7 +47,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
@@ -63,10 +59,6 @@ public class ActionGraphCache {
   @Nullable private Pair<TargetGraph, ActionGraphAndResolver> lastActionGraph;
 
   @Nullable private HashCode lastTargetGraphHash;
-
-  private final AtomicReference<WatchmanPathEvent> watchmanPathEvent = new AtomicReference<>();
-  private final AtomicReference<WatchmanOverflowEvent> watchmanOverflowEvent =
-      new AtomicReference<>();
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
   public ActionGraphAndResolver getActionGraph(
@@ -105,12 +97,7 @@ public class ActionGraphCache {
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(keySeed);
-      WatchmanPathEvent watchmanPathEvent = this.watchmanPathEvent.get();
-      WatchmanOverflowEvent watchmanOverflowEvent = this.watchmanOverflowEvent.get();
-      if (lastActionGraph != null
-          && watchmanPathEvent == null
-          && watchmanOverflowEvent == null
-          && lastActionGraph.getFirst().equals(targetGraph)) {
+      if (lastActionGraph != null && lastActionGraph.getFirst().equals(targetGraph)) {
         eventBus.post(ActionGraphEvent.Cache.hit());
         LOG.info("ActionGraph cache hit.");
         if (checkActionGraphs) {
@@ -134,15 +121,6 @@ public class ActionGraphCache {
             LOG.info("ActionGraph cache miss. TargetGraphs mismatched but hashes are the same.");
             eventBus.post(ActionGraphEvent.Cache.missWithTargetGraphHashMatch());
           }
-          if (watchmanPathEvent != null) {
-            LOG.info("ActionGraphCache invalidation due to Watchman event %s.", watchmanPathEvent);
-            eventBus.post(ActionGraphEvent.Cache.missWithWatchmanPathEvent());
-          }
-          if (watchmanOverflowEvent != null) {
-            LOG.info(
-                "ActionGraphCache invalidation due to Watchman event %s.", watchmanOverflowEvent);
-            eventBus.post(ActionGraphEvent.Cache.missWithWatchmanOverflowEvent());
-          }
         }
         lastTargetGraphHash = targetGraphHash;
         Pair<TargetGraph, ActionGraphAndResolver> freshActionGraph =
@@ -157,8 +135,6 @@ public class ActionGraphCache {
         if (!skipActionGraphCache) {
           LOG.info("ActionGraph cache assignment. skipActionGraphCache? %s", skipActionGraphCache);
           lastActionGraph = freshActionGraph;
-          this.watchmanPathEvent.set(null);
-          this.watchmanOverflowEvent.set(null);
         }
       }
       finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
@@ -408,19 +384,6 @@ public class ActionGraphCache {
         throw new RuntimeException(mismatchInfo);
       }
     }
-  }
-
-  @Subscribe
-  public void invalidateBasedOn(WatchmanPathEvent event) {
-    // We invalidate in every case except a modify event.
-    if (event.getKind() != WatchmanPathEvent.Kind.MODIFY) {
-      watchmanPathEvent.set(event);
-    }
-  }
-
-  @Subscribe
-  public void invalidateBasedOn(WatchmanOverflowEvent event) {
-    watchmanOverflowEvent.set(event);
   }
 
   private void invalidateCache() {

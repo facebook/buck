@@ -110,7 +110,6 @@ final class Daemon implements Closeable {
             typeCoercerFactory,
             new ConstructorArgMarshaller(typeCoercerFactory));
     fileEventBus.register(parser);
-    fileEventBus.register(actionGraphCache);
 
     // Build the the rule key cache recycler.
     this.defaultRuleKeyFactoryCacheRecycler =
