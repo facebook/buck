@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 /** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
 
-  private static final ImmutableSet<String> FLAG_FILE_OPTIONS = ImmutableSet.of("-f", "--flagfile");
+  private static final ImmutableSet<String> FLAG_FILE_OPTIONS = ImmutableSet.of("--flagfile");
 
   private BuckArgsMethods() {
     // Utility class.
@@ -79,8 +79,8 @@ public class BuckArgsMethods {
    * args array from args4j.
    *
    * <p>In addition to files passed using a regular {@code @} syntax, this method also extracts
-   * command line arguments from AT-file syntax files passed via {@code -f} or {@code --flagfile}
-   * command line option.
+   * command line arguments from AT-file syntax files passed via {@code --flagfile} command line
+   * option.
    *
    * @param args original args array
    * @param projectRoot path against which any {@code @args} path arguments will be resolved.

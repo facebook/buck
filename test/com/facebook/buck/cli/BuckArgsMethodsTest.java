@@ -107,11 +107,6 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            ImmutableList.of("arg1", "-f", arg.toString()), tmp.getRoot()),
-        Matchers.contains("arg1", "arg2", "arg3"));
-
-    assertThat(
-        BuckArgsMethods.expandAtFiles(
             ImmutableList.of("arg1", "--flagfile", arg.toString()), tmp.getRoot()),
         Matchers.contains("arg1", "arg2", "arg3"));
   }
@@ -126,16 +121,17 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            ImmutableList.of("arg1", "-f", argsfile.toString(), "@argsfile2"), tmp.getRoot()),
+            ImmutableList.of("arg1", "--flagfile", argsfile.toString(), "@argsfile2"),
+            tmp.getRoot()),
         Matchers.contains("arg1", "arg2", "arg3", "arg4", "arg5"));
   }
 
   @Test
   public void invalidUsageOfFlagFileArgumentIsReported() {
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("-f should be followed by a path.");
+    thrown.expectMessage("--flagfile should be followed by a path.");
 
-    BuckArgsMethods.expandAtFiles(ImmutableList.of("arg1", "-f"), tmp.getRoot());
+    BuckArgsMethods.expandAtFiles(ImmutableList.of("arg1", "--flagfile"), tmp.getRoot());
   }
 
   @Test

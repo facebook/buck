@@ -46,7 +46,6 @@ public abstract class AbstractContainerCommand implements Command {
 
   @Option(
     name = "--flagfile",
-    aliases = {"-f"},
     metaVar = "FILE",
     usage = "File to read command line arguments from."
   )
