@@ -77,13 +77,21 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private void setUp(BuildTarget bundleTarget, Flavor... extraFlavors) {
-    JsTestScenario scenario =
-        JsTestScenario.builder()
-            .bundleWithDeps(bundleTarget)
-            .bundleGenrule(genruleTarget, bundleTarget)
-            .build();
+    setUpWithOptions(JsBundleGenruleBuilder.Options.of(genruleTarget, bundleTarget), extraFlavors);
+  }
 
-    setup = new TestSetup(scenario, genruleTarget.withAppendedFlavors(extraFlavors), bundleTarget);
+  private void setUpWithRewriteSourceMap(Flavor... extraFlavors) {
+    setUpWithOptions(
+        JsBundleGenruleBuilder.Options.of(genruleTarget, defaultBundleTarget).rewriteSourcemap(),
+        extraFlavors);
+  }
+
+  private void setUpWithOptions(JsBundleGenruleBuilder.Options options, Flavor... extraFlavors) {
+    JsTestScenario scenario =
+        JsTestScenario.builder().bundleWithDeps(options.jsBundle).bundleGenrule(options).build();
+
+    setup =
+        new TestSetup(scenario, genruleTarget.withAppendedFlavors(extraFlavors), options.jsBundle);
   }
 
   @Test
@@ -232,6 +240,96 @@ public class JsBundleGenruleDescriptionTest {
     assertThat(buildSteps.subList(mkJsDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
   }
 
+  @Test
+  public void exposesRewrittenSourceMap() {
+    setUpWithRewriteSourceMap();
+
+    JsBundleGenrule genrule = setup.genrule();
+    assertEquals(
+        JsUtil.relativeToOutputRoot(
+            genrule.getBuildTarget(),
+            genrule.getProjectFilesystem(),
+            JsUtil.getSourcemapPath(genrule)),
+        genrule.getSourcePathToSourceMap());
+  }
+
+  @Test
+  public void addsSourceMapAndSourceMapOutAsEnvironmentVariable() {
+    setUpWithRewriteSourceMap();
+
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver()));
+    ExecutionContext context = TestExecutionContext.newBuilder().build();
+
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    setup.genrule().addEnvironmentVariables(pathResolver, context, builder);
+    ImmutableMap<String, String> env = builder.build();
+
+    assertThat(
+        env,
+        hasEntry(
+            "SOURCEMAP",
+            pathResolver.getAbsolutePath(setup.jsBundle().getSourcePathToSourceMap()).toString()));
+    assertThat(
+        env,
+        hasEntry(
+            "SOURCEMAP_OUT",
+            pathResolver.getAbsolutePath(setup.genrule().getSourcePathToSourceMap()).toString()));
+  }
+
+  @Test
+  public void specialSourceMapTargetPointsToOwnSourceMap() {
+    setUpWithRewriteSourceMap(JsFlavors.SOURCE_MAP);
+
+    assertEquals(setup.genrule().getSourcePathToSourceMap(), setup.rule().getSourcePathToOutput());
+  }
+
+  @Test
+  public void createsSourcemapDir() {
+    setUpWithRewriteSourceMap();
+
+    JsBundleGenrule genrule = setup.genrule();
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    ImmutableList<Step> buildSteps =
+        ImmutableList.copyOf(genrule.getBuildSteps(context, buildableContext));
+
+    MkdirStep expectedStep =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                genrule.getProjectFilesystem(),
+                context
+                    .getSourcePathResolver()
+                    .getRelativePath(genrule.getSourcePathToSourceMap())
+                    .getParent()));
+    assertThat(buildSteps, hasItem(expectedStep));
+
+    int mkSourceMapDirIdx = buildSteps.indexOf(expectedStep);
+    assertThat(
+        buildSteps.subList(mkSourceMapDirIdx, buildSteps.size()), not(hasItem(any(RmStep.class))));
+  }
+
+  @Test
+  public void recordsSourcemapArtifact() {
+    setUpWithRewriteSourceMap();
+
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.resolver())));
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    setup.genrule().getBuildSteps(context, buildableContext);
+
+    assertThat(
+        buildableContext.getRecordedArtifacts(),
+        hasItem(
+            context
+                .getSourcePathResolver()
+                .getRelativePath(setup.genrule().getSourcePathToSourceMap())));
+  }
+
   private static class TestSetup {
     private final BuildTarget target;
     private final JsTestScenario scenario;
@@ -248,7 +346,9 @@ public class JsBundleGenruleDescriptionTest {
     }
 
     JsBundleGenrule genrule() {
-      return (JsBundleGenrule) rule();
+      return (JsBundleGenrule)
+          scenario.resolver.requireRule(
+              target.withoutFlavors(JsFlavors.DEPENDENCY_FILE, JsFlavors.SOURCE_MAP));
     }
 
     @SuppressWarnings("unchecked")

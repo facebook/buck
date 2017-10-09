@@ -237,4 +237,10 @@ public class JsRulesIntegrationTest {
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
     zipInspector.assertFileDoesNotExist("assets/fruit-salad-in-a-bundle.js");
   }
+
+  @Test
+  public void genruleAllowsToRewriteSourcemap() throws IOException {
+    workspace.runBuckBuild("//js:sourcemap-genrule#source_map").assertSuccess();
+    workspace.verify(Paths.get("sourcemap_genrule.expected"), genPath);
+  }
 }

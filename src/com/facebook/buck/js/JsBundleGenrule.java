@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
@@ -48,30 +47,31 @@ public class JsBundleGenrule extends Genrule
     implements AndroidPackageable, HasRuntimeDeps, JsBundleOutputs {
 
   @AddToRuleKey final SourcePath jsBundleSourcePath;
+  @AddToRuleKey final boolean rewriteSourcemap;
   private final JsBundleOutputs jsBundle;
 
   public JsBundleGenrule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      List<SourcePath> srcs,
+      JsBundleGenruleDescriptionArg args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      Optional<String> type,
       JsBundleOutputs jsBundle) {
     super(
         buildTarget,
         projectFilesystem,
         params,
-        srcs,
+        args.getSrcs(),
         cmd,
         bash,
         cmdExe,
-        type,
+        args.getType(),
         JsBundleOutputs.JS_DIR_NAME);
     this.jsBundle = jsBundle;
     jsBundleSourcePath = jsBundle.getSourcePathToOutput();
+    this.rewriteSourcemap = args.getRewriteSourcemap();
   }
 
   @Override
@@ -83,6 +83,14 @@ public class JsBundleGenrule extends Genrule
     environmentVariablesBuilder
         .put("JS_DIR", pathResolver.getAbsolutePath(jsBundle.getSourcePathToOutput()).toString())
         .put("JS_BUNDLE_NAME", jsBundle.getBundleName());
+
+    if (rewriteSourcemap) {
+      environmentVariablesBuilder.put(
+          "SOURCEMAP",
+          pathResolver.getAbsolutePath(jsBundle.getSourcePathToSourceMap()).toString());
+      environmentVariablesBuilder.put(
+          "SOURCEMAP_OUT", pathResolver.getAbsolutePath(getSourcePathToSourceMap()).toString());
+    }
   }
 
   @Override
@@ -98,25 +106,46 @@ public class JsBundleGenrule extends Genrule
     Preconditions.checkState(
         lastRmStep.isPresent(), "Genrule is expected to have at least on RmDir step");
 
-    return ImmutableList.<Step>builder()
-        // First, all Genrule steps including the last RmDir step are added
-        .addAll(buildSteps.subList(0, lastRmStep.getAsInt() + 1))
-        .add(
+    ImmutableList.Builder<Step> builder =
+        ImmutableList.<Step>builder()
+            // First, all Genrule steps including the last RmDir step are added
+            .addAll(buildSteps.subList(0, lastRmStep.getAsInt() + 1))
             // Our MkdirStep must run after all RmSteps created by Genrule to prevent immediate
             // deletion of the directory. It must, however, run before the genrule command itself runs.
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()))))
-        // Last, we add all remaining genrule commands after the last RmStep
-        .addAll(buildSteps.subList(lastRmStep.getAsInt() + 1, buildSteps.size()))
-        .build();
+            .add(
+                MkdirStep.of(
+                    BuildCellRelativePath.fromCellRelativePath(
+                        context.getBuildCellRootPath(),
+                        getProjectFilesystem(),
+                        context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()))));
+
+    if (rewriteSourcemap) {
+      // If the genrule rewrites the source map, too, we have to create the parent dir, and record
+      // the build artifact
+
+      SourcePath sourcePathToSourceMap = getSourcePathToSourceMap();
+      buildableContext.recordArtifact(
+          context.getSourcePathResolver().getRelativePath(sourcePathToSourceMap));
+      builder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  context
+                      .getSourcePathResolver()
+                      .getRelativePath(sourcePathToSourceMap)
+                      .getParent())));
+    }
+
+    // Last, we add all remaining genrule commands after the last RmStep
+    return builder.addAll(buildSteps.subList(lastRmStep.getAsInt() + 1, buildSteps.size())).build();
   }
 
   @Override
   public SourcePath getSourcePathToSourceMap() {
-    return jsBundle.getSourcePathToSourceMap();
+    return rewriteSourcemap
+        ? JsBundleOutputs.super.getSourcePathToSourceMap()
+        : jsBundle.getSourcePathToSourceMap();
   }
 
   @Override

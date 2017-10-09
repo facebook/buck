@@ -102,4 +102,8 @@ public class JsUtil {
         buildTarget,
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s").resolve(subpath));
   }
+
+  public static String getSourcemapPath(JsBundleOutputs jsBundleOutputs) {
+    return String.format("map/%s.map", jsBundleOutputs.getBundleName());
+  }
 }

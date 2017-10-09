@@ -154,8 +154,8 @@ public class JsTestScenario {
       return this;
     }
 
-    public Builder bundleGenrule(BuildTarget genruleTarget, BuildTarget bundleTarget) {
-      nodes.add(new JsBundleGenruleBuilder(genruleTarget, bundleTarget, filesystem).build());
+    public Builder bundleGenrule(JsBundleGenruleBuilder.Options options) {
+      nodes.add(new JsBundleGenruleBuilder(options, filesystem).build());
       return this;
     }
 

@@ -44,7 +44,7 @@ public interface JsBundleOutputs extends BuildRule {
    */
   default SourcePath getSourcePathToSourceMap() {
     return JsUtil.relativeToOutputRoot(
-        getBuildTarget(), getProjectFilesystem(), String.format("map/%s.map", getBundleName()));
+        getBuildTarget(), getProjectFilesystem(), JsUtil.getSourcemapPath(this));
   }
 
   /**

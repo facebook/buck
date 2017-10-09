@@ -32,4 +32,32 @@ public class JsBundleGenruleBuilder
     super(genruleDescription, target, projectFilesystem);
     getArgForPopulating().setJsBundle(bundleTarget);
   }
+
+  JsBundleGenruleBuilder(Options options, ProjectFilesystem projectFilesystem) {
+    super(genruleDescription, options.genruleTarget, projectFilesystem);
+    getArgForPopulating().setJsBundle(options.jsBundle);
+    if (options.rewriteSourcemap) {
+      getArgForPopulating().setRewriteSourcemap(true);
+    }
+  }
+
+  public static class Options {
+    BuildTarget genruleTarget;
+    BuildTarget jsBundle;
+    boolean rewriteSourcemap = false;
+
+    public static Options of(BuildTarget genruleTarget, BuildTarget jsBundle) {
+      return new Options(genruleTarget, jsBundle);
+    }
+
+    public Options rewriteSourcemap() {
+      rewriteSourcemap = true;
+      return this;
+    }
+
+    private Options(BuildTarget genruleTarget, BuildTarget jsBundle) {
+      this.genruleTarget = genruleTarget;
+      this.jsBundle = jsBundle;
+    }
+  }
 }

@@ -133,3 +133,13 @@ js_bundle_genrule(
     visibility = ["PUBLIC"],
 )
 
+js_bundle_genrule(
+    name = "sourcemap-genrule",
+    js_bundle = ":bundle-with-genrule-dep",
+    rewrite_sourcemap = True,
+    bash = r"""
+        set -e
+        echo "bundle" > "$OUT/bundle.txt"
+        sed 's/}/, "postprocessed": true}/' < "$SOURCEMAP" > "$SOURCEMAP_OUT"
+    """
+)

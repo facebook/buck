@@ -70,9 +70,15 @@ public class JsBundleGenruleDescription
       // SOURCE_MAP is a special flavor that allows accessing the written source map, typically
       // via export_file in reference mode
       // DEPENDENCY_FILE is a special flavor that triggers building a single file (format defined by the worker)
+
       SourcePath output =
-          Preconditions.checkNotNull(
-              jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
+          args.getRewriteSourcemap() && flavors.contains(JsFlavors.SOURCE_MAP)
+              ? ((JsBundleOutputs)
+                      resolver.requireRule(buildTarget.withoutFlavors(JsFlavors.SOURCE_MAP)))
+                  .getSourcePathToSourceMap()
+              : Preconditions.checkNotNull(
+                  jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
+
       Path fileName =
           DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))
               .getRelativePath(output)
@@ -96,11 +102,10 @@ public class JsBundleGenruleDescription
         buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(jsBundle)),
-        args.getSrcs(),
+        args,
         cmd,
         bash,
         cmdExe,
-        args.getType(),
         (JsBundleOutputs) jsBundle);
   }
 
@@ -133,6 +138,11 @@ public class JsBundleGenruleDescription
     @Override
     default String getOut() {
       return JsBundleOutputs.JS_DIR_NAME;
+    }
+
+    @Value.Default
+    default boolean getRewriteSourcemap() {
+      return false;
     }
 
     @Override
