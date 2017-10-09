@@ -540,8 +540,8 @@ public class ProjectGeneratorTest {
 
     TargetNode<?, ?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
-            .setExportedHeaders(ImmutableSortedSet.of(new FakeSourcePath("HeaderGroup1/bar.h")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setModular(true)
             .build();
@@ -564,8 +564,8 @@ public class ProjectGeneratorTest {
 
     TargetNode<?, ?> libNode =
         AppleLibraryBuilder.createBuilder(libTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("Foo.swift"))))
-            .setExportedHeaders(ImmutableSortedSet.of(new FakeSourcePath("HeaderGroup1/bar.h")))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setModular(false)
             .build();
