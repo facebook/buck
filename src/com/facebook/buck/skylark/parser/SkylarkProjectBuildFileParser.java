@@ -72,9 +72,8 @@ import javax.annotation.Nullable;
 /**
  * Parser for build files written using Skylark syntax.
  *
- * <p>NOTE: This parser is work in progress and does not support many functions provided by Python
- * DSL parser like {@code read_config} and {@code include_defs} (currently implemented as a noop),
- * so DO NOT USE it production.
+ * <p>NOTE: This parser is a work in progress and does not support many functions provided by Python
+ * DSL parser like {@code read_config} and {@code include_defs}, so DO NOT USE it production.
  */
 public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
@@ -91,24 +90,33 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final TypeCoercerFactory typeCoercerFactory;
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
+  private final PrintingEventHandler eventHandler;
 
   private SkylarkProjectBuildFileParser(
-      final ProjectBuildFileParserOptions options,
+      ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
-      TypeCoercerFactory typeCoercerFactory) {
+      TypeCoercerFactory typeCoercerFactory,
+      PrintingEventHandler eventHandler) {
     this.options = options;
     this.buckEventBus = buckEventBus;
     this.fileSystem = fileSystem;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.eventHandler = eventHandler;
   }
 
+  /** Create an instance of Skylark project build file parser using provided options. */
   public static SkylarkProjectBuildFileParser using(
-      final ProjectBuildFileParserOptions options,
+      ProjectBuildFileParserOptions options,
       BuckEventBus buckEventBus,
       FileSystem fileSystem,
       TypeCoercerFactory typeCoercerFactory) {
-    return new SkylarkProjectBuildFileParser(options, buckEventBus, fileSystem, typeCoercerFactory);
+    return new SkylarkProjectBuildFileParser(
+        options,
+        buckEventBus,
+        fileSystem,
+        typeCoercerFactory,
+        new PrintingEventHandler(EnumSet.allOf(EventKind.class)));
   }
 
   @Override
@@ -168,7 +176,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       throws IOException, BuildFileParseException, InterruptedException {
     // TODO(ttsugrii): consider using a less verbose event handler. Also fancy handler can be
     // configured for terminals that support it.
-    PrintingEventHandler eventHandler = new PrintingEventHandler(EnumSet.allOf(EventKind.class));
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(buildFile.toString());
     BuildFileAST buildFileAst =
         BuildFileAST.parseBuildFile(ParserInputSource.create(buildFilePath), eventHandler);
@@ -180,7 +187,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       Environment env =
           createBuildFileEvaluationEnvironment(
-              buildFile, buildFilePath, buildFileAst, eventHandler, mutability, parseContext);
+              buildFile, buildFilePath, buildFileAst, mutability, parseContext);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -202,15 +209,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Path buildFile,
       com.google.devtools.build.lib.vfs.Path buildFilePath,
       BuildFileAST buildFileAst,
-      PrintingEventHandler eventHandler,
       Mutability mutability,
       ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     Environment.Frame buckGlobals = getBuckGlobals();
     ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions(parseContext);
     ImmutableMap<String, Environment.Extension> importMap =
-        buildImportMap(
-            buildFileAst.getImports(), buckGlobals, buckRuleFunctions, parseContext, eventHandler);
+        buildImportMap(buildFileAst.getImports(), buckGlobals, buckRuleFunctions, parseContext);
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
@@ -234,8 +239,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       bazel.shaded.com.google.common.collect.ImmutableList<SkylarkImport> skylarkImports,
       Environment.Frame buckGlobals,
       ImmutableList<BuiltinFunction> buckRuleFunctions,
-      ParseContext parseContext,
-      PrintingEventHandler eventHandler)
+      ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
         ImmutableMap.builder();
@@ -253,11 +257,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         if (!extensionAst.getImports().isEmpty()) {
           envBuilder.setImportedExtensions(
               buildImportMap(
-                  extensionAst.getImports(),
-                  buckGlobals,
-                  buckRuleFunctions,
-                  parseContext,
-                  eventHandler));
+                  extensionAst.getImports(), buckGlobals, buckRuleFunctions, parseContext));
         }
         Environment extensionEnv = envBuilder.build();
         extensionEnv.setup("native", new NativeModule(buckRuleFunctions));
