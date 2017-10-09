@@ -267,6 +267,11 @@ public class CxxBuckConfig {
     return delegate.getInteger(cxxSection, "debug_path_sanitizer_limit").orElse(250);
   }
 
+  /** @return whether to remap to the underlying host platform or to use #default */
+  public boolean getShouldRemapHostPlatform() {
+    return delegate.getBooleanValue(cxxSection, "should_remap_host_platform", false);
+  }
+
   public Optional<ToolProvider> getToolProvider(String name) {
     return delegate.getView(ToolConfig.class).getToolProvider(cxxSection, name);
   }

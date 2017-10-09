@@ -95,9 +95,9 @@ public class CxxPlatformsProvider {
     }
 
     // Finalize our "default" host.
-    // TODO(kelliem) The host flavor should default to a concrete flavor
-    // like "linux-x86_64", not "default".
-    hostFlavor = DefaultCxxPlatforms.FLAVOR;
+    if (!cxxBuckConfig.getShouldRemapHostPlatform()) {
+      hostFlavor = DefaultCxxPlatforms.FLAVOR;
+    }
     Optional<String> hostCxxPlatformOverride = cxxBuckConfig.getHostPlatform();
     if (hostCxxPlatformOverride.isPresent()) {
       Flavor overrideFlavor = InternalFlavor.of(hostCxxPlatformOverride.get());
@@ -105,12 +105,17 @@ public class CxxPlatformsProvider {
         hostFlavor = overrideFlavor;
       }
     }
-    CxxPlatform hostCxxPlatform =
-        CxxPlatform.builder()
-            .from(cxxOverridePlatformsMap.get(hostFlavor))
-            .setFlavor(DefaultCxxPlatforms.FLAVOR)
-            .build();
-    cxxOverridePlatformsMap.put(DefaultCxxPlatforms.FLAVOR, hostCxxPlatform);
+    CxxPlatform hostCxxPlatform;
+    if (!cxxBuckConfig.getShouldRemapHostPlatform()) {
+      hostCxxPlatform =
+          CxxPlatform.builder()
+              .from(cxxOverridePlatformsMap.get(hostFlavor))
+              .setFlavor(DefaultCxxPlatforms.FLAVOR)
+              .build();
+      cxxOverridePlatformsMap.put(DefaultCxxPlatforms.FLAVOR, hostCxxPlatform);
+    } else {
+      hostCxxPlatform = cxxOverridePlatformsMap.get(hostFlavor);
+    }
 
     ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap =
         ImmutableMap.<Flavor, CxxPlatform>builder().putAll(cxxOverridePlatformsMap).build();

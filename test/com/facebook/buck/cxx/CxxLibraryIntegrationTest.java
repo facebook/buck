@@ -31,6 +31,7 @@ import com.facebook.buck.config.FakeBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
@@ -440,5 +441,24 @@ public class CxxLibraryIntegrationTest {
     Path rootPath = tmp.getRoot();
     assertTrue(
         Files.exists(rootPath.resolve("buck-out/gen/foo#default,static/libfoo-Z2_rLdsOWS.a")));
+  }
+
+  @Test
+  public void testShouldRemapHostPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--config", "cxx.should_remap_host_platform=false", "//:foo");
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//:foo#default"));
+
+    String hostFlavor = CxxPlatforms.getHostFlavor().getName();
+    result =
+        workspace.runBuckCommand(
+            "targets", "--config", "cxx.should_remap_host_platform=true", "//:foo");
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//:foo#" + hostFlavor));
   }
 }
