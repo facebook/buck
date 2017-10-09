@@ -523,10 +523,12 @@ public class KnownBuildRuleTypes {
     builder.register(new GoTestDescription(goBuckConfig, defaultTestRuleTimeoutMs));
     builder.register(new GraphqlLibraryDescription());
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
-    builder.register(new GroovyLibraryDescription(groovyBuckConfig, defaultJavacOptions));
+    builder.register(
+        new GroovyLibraryDescription(groovyBuckConfig, javaConfig, defaultJavacOptions));
     builder.register(
         new GroovyTestDescription(
             groovyBuckConfig,
+            javaConfig,
             defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs));

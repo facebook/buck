@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.groovy;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.HasJavaAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -58,16 +59,19 @@ public class GroovyTestDescription
       new MacroHandler(ImmutableMap.of("location", new LocationMacroExpander()));
 
   private final GroovyBuckConfig groovyBuckConfig;
+  private final JavaBuckConfig javaBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions defaultJavacOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
   public GroovyTestDescription(
       GroovyBuckConfig groovyBuckConfig,
+      JavaBuckConfig javaBuckConfig,
       JavaOptions javaOptions,
       JavacOptions defaultJavacOptions,
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.groovyBuckConfig = groovyBuckConfig;
+    this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = javaOptions;
     this.defaultJavacOptions = defaultJavacOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
@@ -92,14 +96,16 @@ public class GroovyTestDescription
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
-        DefaultGroovyLibraryBuilder.newInstance(
-            buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
-            projectFilesystem,
-            params,
-            resolver,
-            javacOptions,
-            groovyBuckConfig,
-            args);
+        new DefaultJavaLibraryRules.Builder(
+                buildTarget,
+                projectFilesystem,
+                params,
+                resolver,
+                new GroovyConfiguredCompilerFactory(groovyBuckConfig),
+                javaBuckConfig,
+                args)
+            .setJavacOptions(javacOptions)
+            .build();
 
     if (HasJavaAbi.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();

@@ -38,7 +38,7 @@ public class GroovyLibraryBuilder
   protected GroovyLibraryBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem, HashCode hashCode) {
     super(
-        new GroovyLibraryDescription(null, DEFAULT_JAVAC_OPTIONS),
+        new GroovyLibraryDescription(null, null, DEFAULT_JAVAC_OPTIONS),
         target,
         projectFilesystem,
         hashCode);
