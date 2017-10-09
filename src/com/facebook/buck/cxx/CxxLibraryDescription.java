@@ -440,7 +440,6 @@ public class CxxLibraryDescription
       ImmutableSet<BuildTarget> blacklist,
       TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
-
     BuildTarget buildTargetWithoutLinkerMapMode =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(
             buildTargetMaybeWithLinkerMapMode,
