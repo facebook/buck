@@ -81,7 +81,9 @@ abstract class AbstractOmnibusRoots {
      */
     public void addPotentialRoot(NativeLinkable node) {
       Optional<NativeLinkTarget> target = NativeLinkables.getNativeLinkTarget(node, cxxPlatform);
-      if (target.isPresent() && !excludes.contains(node.getBuildTarget())) {
+      if (target.isPresent()
+          && !excludes.contains(node.getBuildTarget())
+          && node.supportsOmnibusLinking(cxxPlatform)) {
         addIncludedRoot(target.get());
       } else {
         addExcludedRoot(node);
