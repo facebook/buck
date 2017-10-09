@@ -301,7 +301,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       if (timeOutMs.isPresent()) {
         timedOut = waitForTimeoutInternal(process, timeOutMs.get(), timeOutHandler);
         if (!processHelper.hasProcessFinished(process)) {
-          process.destroy();
+          process.destroyForcibly();
         }
       } else {
         process.waitFor();
