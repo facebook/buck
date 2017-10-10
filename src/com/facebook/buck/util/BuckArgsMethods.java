@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
@@ -42,11 +41,11 @@ public class BuckArgsMethods {
     // Utility class.
   }
 
-  private static Stream<String> getArgsFromTextFile(Path argsPath) throws IOException {
-    return Files.readAllLines(argsPath, Charsets.UTF_8).stream();
+  private static Iterable<String> getArgsFromTextFile(Path argsPath) throws IOException {
+    return Files.readAllLines(argsPath, Charsets.UTF_8);
   }
 
-  private static Stream<String> getArgsFromPythonFile(Path argsPath, String suffix)
+  private static Iterable<String> getArgsFromPythonFile(Path argsPath, String suffix)
       throws IOException {
     Process proc =
         Runtime.getRuntime()
@@ -56,11 +55,11 @@ public class BuckArgsMethods {
         OutputStream output = proc.getOutputStream();
         BufferedReader reader =
             new BufferedReader(new InputStreamReader(input, Charsets.UTF_8)); ) {
-      return reader.lines().collect(Collectors.toList()).stream();
+      return reader.lines().collect(Collectors.toList());
     }
   }
 
-  private static Stream<String> getArgsFromPath(Path argsPath, Optional<String> flavors)
+  private static Iterable<String> getArgsFromPath(Path argsPath, Optional<String> flavors)
       throws IOException {
     if (!argsPath.toAbsolutePath().toString().endsWith(".py")) {
       if (flavors.isPresent()) {
@@ -88,26 +87,25 @@ public class BuckArgsMethods {
    */
   public static ImmutableList<String> expandAtFiles(Iterable<String> args, Path projectRoot) {
     Iterator<String> argsIterator = args.iterator();
-    Stream<? extends String> argumentStream = Stream.empty();
+    ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
       String arg = argsIterator.next();
       if (FLAG_FILE_OPTIONS.contains(arg)) {
         if (!argsIterator.hasNext()) {
           throw new HumanReadableException(arg + " should be followed by a path.");
         }
-        argumentStream =
-            Stream.concat(argumentStream, expandFile(argsIterator.next(), projectRoot));
+        argumentsBuilder.addAll(expandFile(argsIterator.next(), projectRoot));
       } else if (arg.startsWith("@")) {
-        argumentStream = Stream.concat(argumentStream, expandFile(arg.substring(1), projectRoot));
+        argumentsBuilder.addAll(expandFile(arg.substring(1), projectRoot));
       } else {
-        argumentStream = Stream.concat(argumentStream, ImmutableList.of(arg).stream());
+        argumentsBuilder.add(arg);
       }
     }
-    return argumentStream.collect(MoreCollectors.toImmutableList());
+    return argumentsBuilder.build();
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
-  private static Stream<? extends String> expandFile(String arg, Path projectRoot) {
+  private static Iterable<? extends String> expandFile(String arg, Path projectRoot) {
     String[] parts = arg.split("#", 2);
     String unresolvedArgsPath = parts[0];
     Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
