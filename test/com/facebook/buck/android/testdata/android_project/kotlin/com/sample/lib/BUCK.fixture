@@ -58,6 +58,10 @@ android_library(
   name = 'lib_mixed_sources',
   srcs = glob(['*.kt', 'JavaClass.java']),
   language = 'KOTLIN',
+  deps = [
+    '//res/com/sample/title:title',
+    '//res/com/sample/top:top',
+  ],
   visibility = [
     'PUBLIC',
   ],
