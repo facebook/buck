@@ -871,6 +871,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
+    String buckClasspathEnvVarName = "BUCK_CLASSPATH";
+    String buckClasspath = System.getenv(buckClasspathEnvVarName);
+    if (buckClasspath == null || buckClasspath.isEmpty()) {
+      LOG.error(buckClasspathEnvVarName + " env var is not set. Will not upload the trace file.");
+      return;
+    }
+
     Path fullPath = projectFilesystem.resolve(tracePath);
     Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
     LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
@@ -879,7 +886,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       String[] args = {
         "java",
         "-cp",
-        System.getenv("BUCK_CLASSPATH"),
+        buckClasspath,
         "com.facebook.buck.util.trace.uploader.Main",
         "--buildId",
         buildId.toString(),
