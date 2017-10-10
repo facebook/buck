@@ -64,6 +64,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -873,7 +874,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
     String buckClasspathEnvVarName = "BUCK_CLASSPATH";
     String buckClasspath = System.getenv(buckClasspathEnvVarName);
-    if (buckClasspath == null || buckClasspath.isEmpty()) {
+    if (Strings.isNullOrEmpty(buckClasspath)) {
       LOG.error(buckClasspathEnvVarName + " env var is not set. Will not upload the trace file.");
       return;
     }
