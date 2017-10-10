@@ -69,12 +69,14 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTreeWithModuleMap;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
@@ -145,6 +147,7 @@ public class AppleLibraryDescription
     SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
         AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
+    SWIFT_UNDERLYING_MODULE(AppleDescriptions.SWIFT_UNDERLYING_MODULE_FLAVOR),
     ;
 
     private final Flavor flavor;
@@ -166,6 +169,7 @@ public class AppleLibraryDescription
     APPLE_SWIFT_MODULE_CXX_HEADERS(InternalFlavor.of("swift-module-cxx-headers")),
     APPLE_SWIFT_PREPROCESSOR_INPUT(InternalFlavor.of("swift-preprocessor-input")),
     APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT(InternalFlavor.of("swift-private-preprocessor-input")),
+    APPLE_SWIFT_UNDERLYING_MODULE_INPUT(InternalFlavor.of("swift-underlying-module-input")),
     ;
 
     private final Flavor flavor;
@@ -262,7 +266,11 @@ public class AppleLibraryDescription
     return maybeType.flatMap(
         type -> {
           FlavorDomain<CxxPlatform> cxxPlatforms = getCxxPlatformsProvider().getCxxPlatforms();
-          if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
+          if (type.getValue().equals(Type.SWIFT_UNDERLYING_MODULE)) {
+            return Optional.of(
+                createUnderlyingModuleSymlinkTreeBuildRule(
+                    buildTarget, projectFilesystem, graphBuilder, args));
+          } else if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
                 cxxPlatforms.getValue(buildTarget).orElseThrow(IllegalArgumentException::new);
 
@@ -617,6 +625,11 @@ public class AppleLibraryDescription
         && headerMode.get().equals(HeaderMode.SYMLINK_TREE_WITH_MODULEMAP)) {
       return createExportedModuleSymlinkTreeBuildRule(
           buildTarget, context.getProjectFilesystem(), graphBuilder, platform.get(), args);
+    } else if (platform.isPresent()
+        && libType.isPresent()
+        && libType.get().equals(Type.SWIFT_UNDERLYING_MODULE)) {
+      return createUnderlyingModuleSymlinkTreeBuildRule(
+          buildTarget, context.getProjectFilesystem(), graphBuilder, args);
     }
 
     return graphBuilder.computeIfAbsent(
@@ -685,6 +698,34 @@ public class AppleLibraryDescription
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
         headers.build(),
         HeaderVisibility.PUBLIC);
+  }
+
+  private HeaderSymlinkTree createUnderlyingModuleSymlinkTreeBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      AppleNativeTargetDescriptionArg args) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
+    ImmutableMap<Path, SourcePath> headers =
+        CxxPreprocessables.resolveHeaderMap(
+            Paths.get(""),
+            AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+                buildTarget,
+                pathResolver::getRelativePath,
+                headerPathPrefix,
+                args.getExportedHeaders()));
+
+    Path root = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s");
+    return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        root,
+        headers,
+        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
   }
 
   <U> Optional<U> createMetadataForLibrary(
@@ -831,6 +872,23 @@ public class AppleLibraryDescription
 
             CxxPreprocessorInput input = builder.build();
             return Optional.of(input).map(metadataClass::cast);
+          }
+        case APPLE_SWIFT_UNDERLYING_MODULE_INPUT:
+          {
+            if (!args.isModular()) {
+              return Optional.empty();
+            }
+            BuildTarget swiftCompileTarget =
+                baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_MODULE.getFlavor());
+            HeaderSymlinkTreeWithModuleMap modulemap =
+                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(swiftCompileTarget);
+            if (modulemap.getLinks().size() > 0) {
+              CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+              builder.addIncludes(
+                  CxxSymlinkTreeHeaders.from(modulemap, CxxPreprocessables.IncludeType.LOCAL));
+              return Optional.of(builder.build()).map(metadataClass::cast);
+            }
+            return Optional.empty();
           }
       }
     }
@@ -980,6 +1038,15 @@ public class AppleLibraryDescription
 
     return graphBuilder.requireMetadata(
         baseTarget.withAppendedFlavors(metadataType.getFlavor(), platform.getFlavor()),
+        CxxPreprocessorInput.class);
+  }
+
+  public static Optional<CxxPreprocessorInput> underlyingModuleCxxPreprocessorInput(
+      BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
+    return graphBuilder.requireMetadata(
+        target.withFlavors(
+            platform.getFlavor(),
+            AppleLibraryDescription.MetadataType.APPLE_SWIFT_UNDERLYING_MODULE_INPUT.getFlavor()),
         CxxPreprocessorInput.class);
   }
 
