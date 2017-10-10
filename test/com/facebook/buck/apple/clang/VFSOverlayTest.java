@@ -16,12 +16,13 @@
 
 package com.facebook.buck.apple.clang;
 
-import static org.junit.Assert.assertEquals;
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.file.MorePathsForTests;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
-import java.nio.file.Paths;
 import org.junit.Test;
 
 public class VFSOverlayTest {
@@ -35,9 +36,11 @@ public class VFSOverlayTest {
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
-                Paths.get("/virtual/path/module.modulemap"),
-                Paths.get("/real/path/overlayed.modulemap")));
-    assertEquals(readTestData("testdata/vfs_simple.yaml"), vfsOverlay.render());
+                MorePathsForTests.rootRelativePath("virtual/path/module.modulemap"),
+                MorePathsForTests.rootRelativePath("real/path/overlayed.modulemap")));
+    assertThat(
+        readTestData("testdata/vfs_simple.yaml"),
+        equalToIgnoringPlatformNewlines(vfsOverlay.render()));
   }
 
   @Test
@@ -45,12 +48,13 @@ public class VFSOverlayTest {
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
-                Paths.get("/virtual/path/module.modulemap"),
-                Paths.get("/real/path/overlayed.modulemap"),
-                Paths.get("/virtual/path/umbrella.h"),
-                Paths.get("/real/path/umbrella/umbrella.h")));
-
-    assertEquals(readTestData("testdata/vfs_twofiles.yaml"), vfsOverlay.render());
+                MorePathsForTests.rootRelativePath("virtual/path/module.modulemap"),
+                MorePathsForTests.rootRelativePath("real/path/overlayed.modulemap"),
+                MorePathsForTests.rootRelativePath("virtual/path/umbrella.h"),
+                MorePathsForTests.rootRelativePath("real/path/umbrella/umbrella.h")));
+    assertThat(
+        readTestData("testdata/vfs_twofiles.yaml"),
+        equalToIgnoringPlatformNewlines(vfsOverlay.render()));
   }
 
   @Test
@@ -58,11 +62,13 @@ public class VFSOverlayTest {
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
-                Paths.get("/virtual/path/module.modulemap"),
-                Paths.get("/real/path/overlayed.modulemap"),
-                Paths.get("/virtual/path-priv/umbrella.h"),
-                Paths.get("/real/path/umbrella/umbrella.h")));
-    assertEquals(readTestData("testdata/vfs_twodirs.yaml"), vfsOverlay.render());
+                MorePathsForTests.rootRelativePath("virtual/path/module.modulemap"),
+                MorePathsForTests.rootRelativePath("real/path/overlayed.modulemap"),
+                MorePathsForTests.rootRelativePath("virtual/path-priv/umbrella.h"),
+                MorePathsForTests.rootRelativePath("real/path/umbrella/umbrella.h")));
+    assertThat(
+        readTestData("testdata/vfs_twodirs.yaml"),
+        equalToIgnoringPlatformNewlines(vfsOverlay.render()));
   }
 
   @Test
@@ -74,12 +80,14 @@ public class VFSOverlayTest {
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
-                Paths.get("/virtual/module.modulemap"),
-                Paths.get("/real/path/overlayed.modulemap"),
-                Paths.get("/virtual/path/priv/umbrella.h"),
-                Paths.get("/real/path/umbrella/umbrella.h"),
-                Paths.get("/virtual/path/priv/entry.h"),
-                Paths.get("/real/path/umbrella/lib/entry.h")));
-    assertEquals(readTestData("testdata/vfs_nesteddirs.yaml"), vfsOverlay.render());
+                MorePathsForTests.rootRelativePath("virtual/module.modulemap"),
+                MorePathsForTests.rootRelativePath("real/path/overlayed.modulemap"),
+                MorePathsForTests.rootRelativePath("virtual/path/priv/umbrella.h"),
+                MorePathsForTests.rootRelativePath("real/path/umbrella/umbrella.h"),
+                MorePathsForTests.rootRelativePath("virtual/path/priv/entry.h"),
+                MorePathsForTests.rootRelativePath("real/path/umbrella/lib/entry.h")));
+    assertThat(
+        readTestData("testdata/vfs_nesteddirs.yaml"),
+        equalToIgnoringPlatformNewlines(vfsOverlay.render()));
   }
 }

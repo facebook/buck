@@ -8,5 +8,7 @@ java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
+        "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/util:testutil",
     ],
 )
