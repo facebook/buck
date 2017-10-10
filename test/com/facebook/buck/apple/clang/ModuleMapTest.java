@@ -16,7 +16,8 @@
 
 package com.facebook.buck.apple.clang;
 
-import static org.junit.Assert.assertEquals;
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
@@ -25,7 +26,7 @@ public class ModuleMapTest {
   @Test
   public void testNoSwift() {
     ModuleMap testMap = new ModuleMap("TestModule", ModuleMap.SwiftMode.NO_SWIFT);
-    assertEquals(
+    assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
             + "\n"
@@ -33,13 +34,13 @@ public class ModuleMapTest {
             + "    module * { export * }\n"
             + "}\n"
             + "\n",
-        testMap.render());
+        equalToIgnoringPlatformNewlines(testMap.render()));
   }
 
   @Test
   public void testIncludeSwift() {
     ModuleMap testMap = new ModuleMap("TestModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER);
-    assertEquals(
+    assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
             + "\n"
@@ -52,13 +53,13 @@ public class ModuleMapTest {
             + "    requires objc\n"
             + "}"
             + "\n",
-        testMap.render());
+        equalToIgnoringPlatformNewlines(testMap.render()));
   }
 
   @Test
   public void testExcludeSwift() {
     ModuleMap testMap = new ModuleMap("TestModule", ModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER);
-    assertEquals(
+    assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
             + "\n"
@@ -70,6 +71,6 @@ public class ModuleMapTest {
             + "    exclude header \"TestModule-Swift.h\"\n"
             + "}"
             + "\n",
-        testMap.render());
+        equalToIgnoringPlatformNewlines(testMap.render()));
   }
 }
