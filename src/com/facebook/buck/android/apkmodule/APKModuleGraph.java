@@ -25,6 +25,8 @@ import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
@@ -57,13 +59,13 @@ import java.util.Set;
  * the root. Targets that are dependencies of two or more groups but not dependencies of the root
  * are added to their own group.
  */
-public class APKModuleGraph {
+public class APKModuleGraph implements AddsToRuleKey {
 
   public static final String ROOT_APKMODULE_NAME = "dex";
 
   private final TargetGraph targetGraph;
-  private final BuildTarget target;
-  private final Optional<Map<String, List<BuildTarget>>> suppliedSeedConfigMap;
+  @AddToRuleKey private final BuildTarget target;
+  @AddToRuleKey private final Optional<Map<String, List<BuildTarget>>> suppliedSeedConfigMap;
   private final Optional<Set<BuildTarget>> seedTargets;
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
 

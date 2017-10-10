@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -25,11 +27,13 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractAndroidAppModularityGraphEnhancementResult {
+abstract class AbstractAndroidAppModularityGraphEnhancementResult implements AddsToRuleKey {
 
-  AndroidPackageableCollection getPackageableCollection();
+  public abstract AndroidPackageableCollection getPackageableCollection();
 
-  ImmutableSortedSet<BuildRule> getFinalDeps();
+  @AddToRuleKey
+  public abstract ImmutableSortedSet<BuildRule> getFinalDeps();
 
-  APKModuleGraph getAPKModuleGraph();
+  @AddToRuleKey
+  public abstract APKModuleGraph getAPKModuleGraph();
 }
