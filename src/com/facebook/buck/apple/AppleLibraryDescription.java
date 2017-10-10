@@ -306,7 +306,7 @@ public class AppleLibraryDescription
                         () ->
                             AppleLibraryDescriptionSwiftEnhancer
                                 .getPreprocessorInputsForAppleLibrary(
-                                    buildTarget, graphBuilder, cxxPlatform));
+                                    buildTarget, graphBuilder, cxxPlatform, args));
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createSwiftCompileRule(
@@ -616,7 +616,7 @@ public class AppleLibraryDescription
         && headerMode.isPresent()
         && headerMode.get().equals(HeaderMode.SYMLINK_TREE_WITH_MODULEMAP)) {
       return createExportedModuleSymlinkTreeBuildRule(
-          buildTarget, context.getProjectFilesystem(), graphBuilder, args);
+          buildTarget, context.getProjectFilesystem(), graphBuilder, platform.get(), args);
     }
 
     return graphBuilder.computeIfAbsent(
@@ -657,24 +657,33 @@ public class AppleLibraryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
       AppleNativeTargetDescriptionArg args) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
-    ImmutableSortedMap<String, SourcePath> headers =
-        AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            buildTarget,
-            pathResolver::getRelativePath,
-            headerPathPrefix,
-            args.getExportedHeaders());
+    ImmutableSortedMap.Builder<Path, SourcePath> headers = ImmutableSortedMap.naturalOrder();
+    headers.putAll(
+        CxxPreprocessables.resolveHeaderMap(
+            Paths.get(""),
+            AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
+                buildTarget,
+                pathResolver::getRelativePath,
+                headerPathPrefix,
+                args.getExportedHeaders())));
+    if (targetContainsSwift(buildTarget, graphBuilder)) {
+      headers.putAll(
+          AppleLibraryDescriptionSwiftEnhancer.getObjCGeneratedHeader(
+              buildTarget, graphBuilder, cxxPlatform, HeaderVisibility.PUBLIC));
+    }
 
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
-        CxxPreprocessables.resolveHeaderMap(Paths.get(""), headers),
+        headers.build(),
         HeaderVisibility.PUBLIC);
   }
 
