@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 public class BuckArgsMethods {
 
   private static final ImmutableSet<String> FLAG_FILE_OPTIONS = ImmutableSet.of("--flagfile");
+  private static final String PASS_THROUGH_DELIMITER = "--";
 
   private BuckArgsMethods() {
     // Utility class.
@@ -90,6 +91,12 @@ public class BuckArgsMethods {
     ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
       String arg = argsIterator.next();
+      if (PASS_THROUGH_DELIMITER.equals(arg)) {
+        // all flags after -- should be passed through without any preprocessing
+        argumentsBuilder.add(arg);
+        argumentsBuilder.addAll(argsIterator);
+        break;
+      }
       if (FLAG_FILE_OPTIONS.contains(arg)) {
         if (!argsIterator.hasNext()) {
           throw new HumanReadableException(arg + " should be followed by a path.");
