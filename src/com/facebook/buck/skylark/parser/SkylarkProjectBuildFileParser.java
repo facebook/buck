@@ -33,6 +33,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -95,6 +97,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final ProjectBuildFileParserOptions options;
   private final BuckEventBus buckEventBus;
   private final PrintingEventHandler eventHandler;
+  private final Supplier<ImmutableList<BuiltinFunction>> buckRuleFunctionsSupplier;
+  private final Supplier<NativeModule> nativeModuleSupplier;
+  private final Supplier<Environment.Frame> buckGlobalsSupplier;
 
   private SkylarkProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -107,6 +112,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     this.fileSystem = fileSystem;
     this.typeCoercerFactory = typeCoercerFactory;
     this.eventHandler = eventHandler;
+    // since Skylark parser is currently disabled by default, avoid creating functions in case
+    // it's never used
+    // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
+    this.buckRuleFunctionsSupplier = Suppliers.memoize(this::getBuckRuleFunctions)::get;
+    this.nativeModuleSupplier =
+        Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get()))::get;
+    this.buckGlobalsSupplier = Suppliers.memoize(this::getBuckGlobals)::get;
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -216,23 +228,18 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Mutability mutability,
       ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
-    Environment.Frame buckGlobals = getBuckGlobals();
-    ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions();
     ImmutableMap<String, Environment.Extension> importMap =
-        buildImportMap(buildFileAst.getImports(), buckGlobals, buckRuleFunctions, parseContext);
+        buildImportMap(buildFileAst.getImports(), parseContext);
     Environment env =
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
-            .setGlobals(buckGlobals)
+            .setGlobals(buckGlobalsSupplier.get())
             .setPhase(Environment.Phase.LOADING)
             .build();
     String basePath = getBasePath(buildFile);
     env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
     env.setupDynamic(PARSE_CONTEXT, parseContext);
     env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
-    for (BuiltinFunction buckRuleFunction : buckRuleFunctions) {
-      env.setup(buckRuleFunction.getName(), buckRuleFunction);
-    }
     return env;
   }
 
@@ -242,8 +249,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ImmutableMap<String, Environment.Extension> buildImportMap(
       bazel.shaded.com.google.common.collect.ImmutableList<SkylarkImport> skylarkImports,
-      Environment.Frame buckGlobals,
-      ImmutableList<BuiltinFunction> buckRuleFunctions,
       ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap.Builder<String, Environment.Extension> extensionMapBuilder =
@@ -258,14 +263,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           throw BuildFileParseException.createForUnknownParseError(
               "Cannot parse extension file " + skylarkImport.getImportString());
         }
-        Environment.Builder envBuilder = Environment.builder(mutability).setGlobals(buckGlobals);
+        Environment.Builder envBuilder =
+            Environment.builder(mutability).setGlobals(buckGlobalsSupplier.get());
         if (!extensionAst.getImports().isEmpty()) {
-          envBuilder.setImportedExtensions(
-              buildImportMap(
-                  extensionAst.getImports(), buckGlobals, buckRuleFunctions, parseContext));
+          envBuilder.setImportedExtensions(buildImportMap(extensionAst.getImports(), parseContext));
         }
         Environment extensionEnv = envBuilder.build();
-        extensionEnv.setup("native", new NativeModule(buckRuleFunctions));
+        extensionEnv.setup("native", nativeModuleSupplier.get());
         boolean success = extensionAst.exec(extensionEnv, eventHandler);
         if (!success) {
           throw BuildFileParseException.createForUnknownParseError(
@@ -283,11 +287,15 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return The environment frame with configured buck globals. This includes built-in rules like
    *     {@code java_library}.
    */
-  private static Environment.Frame getBuckGlobals() {
+  private Environment.Frame getBuckGlobals() {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
           Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
+
+      for (BuiltinFunction buckRuleFunction : buckRuleFunctionsSupplier.get()) {
+        globalEnv.setup(buckRuleFunction.getName(), buckRuleFunction);
+      }
       buckGlobals = globalEnv.getGlobals();
     }
     return buckGlobals;
