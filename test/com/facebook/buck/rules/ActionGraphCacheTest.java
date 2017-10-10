@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.config.ActionGraphParallelizationMode;
@@ -190,33 +189,6 @@ public class ActionGraphCacheTest {
     assertThat(resultRun1RuleKeys, Matchers.not(equalTo(resultRun2RuleKeys)));
     // Run1 and Run3 should match.
     assertThat(resultRun1RuleKeys, equalTo(resultRun3RuleKeys));
-  }
-
-  @Test
-  public void missWithTargetGraphHashMatch() {
-    ActionGraphCache cache = new ActionGraphCache();
-    cache.getActionGraph(
-        eventBus,
-        CHECK_GRAPHS, /* skipActionGraphCache */
-        false,
-        targetGraph,
-        keySeed,
-        ActionGraphParallelizationMode.DISABLED);
-    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
-    trackedEvents.clear();
-
-    // Do a second fetch which should miss but indicate the target graphs were the same.
-    assertFalse(cache.isCacheEmpty());
-    cache.getActionGraph(
-        eventBus,
-        CHECK_GRAPHS,
-        /* skipActionGraphCache */ false,
-        TargetGraphFactory.newInstance(nodeA, createTargetNode("B")),
-        keySeed,
-        ActionGraphParallelizationMode.DISABLED);
-    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphHashMatch.class));
-    assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
-    trackedEvents.clear();
   }
 
   // If this breaks it probably means the ActionGraphCache checking also breaks.

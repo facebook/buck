@@ -55,7 +55,7 @@ public class VersionedTargetGraphCacheTest {
   @Test
   public void testEmpty() throws Exception {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
-    TargetGraphAndBuildTargets graph = createSimpleGraph();
+    TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult result =
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
@@ -65,7 +65,7 @@ public class VersionedTargetGraphCacheTest {
   @Test
   public void testHit() throws Exception {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
-    TargetGraphAndBuildTargets graph = createSimpleGraph();
+    TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
@@ -79,7 +79,7 @@ public class VersionedTargetGraphCacheTest {
   @Test
   public void testPoolChangeCausesHit() throws Exception {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
-    TargetGraphAndBuildTargets graph = createSimpleGraph();
+    TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), graph, ImmutableMap.of(), POOL);
@@ -93,12 +93,12 @@ public class VersionedTargetGraphCacheTest {
   @Test
   public void testGraphChangeCausesMiss() throws Exception {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
-    TargetGraphAndBuildTargets firstGraph = createSimpleGraph();
+    TargetGraphAndBuildTargets firstGraph = createSimpleGraph("foo");
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), firstGraph, ImmutableMap.of(), POOL);
     assertEmpty(firstResult);
-    TargetGraphAndBuildTargets secondGraph = createSimpleGraph();
+    TargetGraphAndBuildTargets secondGraph = createSimpleGraph("bar");
     VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             BUS, new DefaultTypeCoercerFactory(), secondGraph, ImmutableMap.of(), POOL);
@@ -108,7 +108,7 @@ public class VersionedTargetGraphCacheTest {
   @Test
   public void testVersionUniverseChangeCausesMiss() throws Exception {
     VersionedTargetGraphCache cache = new VersionedTargetGraphCache();
-    TargetGraphAndBuildTargets graph = createSimpleGraph();
+    TargetGraphAndBuildTargets graph = createSimpleGraph("foo");
     ImmutableMap<String, VersionUniverse> firstVersionUniverses = ImmutableMap.of();
     VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
@@ -122,12 +122,14 @@ public class VersionedTargetGraphCacheTest {
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
   }
 
-  private TargetGraphAndBuildTargets createSimpleGraph() {
-    TargetNode<?, ?> root = new VersionRootBuilder("//:root").build();
+  private TargetGraphAndBuildTargets createSimpleGraph(String basePath) {
+    TargetNode<?, ?> root = new VersionRootBuilder(String.format("//%s:root", basePath)).build();
     TargetNode<ExportFileDescriptionArg, ExportFileDescription> v1 =
-        new ExportFileBuilder(BuildTargetFactory.newInstance("//:v1")).build();
+        new ExportFileBuilder(BuildTargetFactory.newInstance(String.format("//%s:v1", basePath)))
+            .build();
     TargetNode<ExportFileDescriptionArg, ExportFileDescription> v2 =
-        new ExportFileBuilder(BuildTargetFactory.newInstance("//:v2")).build();
+        new ExportFileBuilder(BuildTargetFactory.newInstance(String.format("//%s:v2", basePath)))
+            .build();
     TargetNode<VersionedAliasDescriptionArg, AbstractVersionedAliasDescription> alias =
         new VersionedAliasBuilder(versionedAlias)
             .setVersions(
@@ -136,7 +138,8 @@ public class VersionedTargetGraphCacheTest {
                     version2, v2.getBuildTarget()))
             .build();
     TargetNode<PythonTestDescriptionArg, PythonTestDescription> pythonTest =
-        PythonTestBuilder.create(BuildTargetFactory.newInstance("//:test"))
+        PythonTestBuilder.create(
+                BuildTargetFactory.newInstance(String.format("//%s:test", basePath)))
             .setDeps(ImmutableSortedSet.of(alias.getBuildTarget()))
             .build();
     TargetGraph graph = TargetGraphFactory.newInstance(root, pythonTest, alias, v1, v2);
