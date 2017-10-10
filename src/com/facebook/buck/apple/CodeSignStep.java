@@ -98,9 +98,8 @@ class CodeSignStep implements Step {
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor.Result result;
     ProcessExecutor processExecutor = context.getProcessExecutor();
-    result =
+    ProcessExecutor.Result result =
         processExecutor.launchAndExecute(
             processExecutorParams,
             options,
