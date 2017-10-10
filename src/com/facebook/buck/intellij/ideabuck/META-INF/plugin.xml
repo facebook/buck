@@ -171,6 +171,8 @@
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
 
+  <depends optional="true">org.jetbrains.android</depends>
+
   <extensions defaultExtensionNs="com.intellij">
     <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.file.BuckFileTypeFactory"/>
     <lang.parserDefinition
@@ -230,6 +232,10 @@
     <programRunner
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
     <runLineMarkerContributor language="JAVA" implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="com.android.project">
+    <featureEnableService implementation="com.facebook.buck.intellij.ideabuck.proj.BuckFeatureEnableService"/>
   </extensions>
 
   <actions>
