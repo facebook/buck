@@ -91,13 +91,16 @@ public class GroovyTestDescription
       BuildRuleResolver resolver,
       CellPathResolver cellRoots,
       GroovyTestDescriptionArg args) {
+    BuildTarget testsLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             defaultJavacOptions, buildTarget, projectFilesystem, resolver, args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         new DefaultJavaLibraryRules.Builder(
-                buildTarget,
+                testsLibraryBuildTarget,
                 projectFilesystem,
                 params,
                 resolver,
