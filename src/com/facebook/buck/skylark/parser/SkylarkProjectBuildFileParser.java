@@ -50,6 +50,7 @@ import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Mutability;
@@ -79,6 +80,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
 
+  // internal variable exposed to rules that is used to track parse events. This allows us to
+  // remove parse state from rules and as such makes rules reusable across parse invocations
+  private static final String PARSE_CONTEXT = "$parse_context";
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
       ImmutableSet.of("visibility", "within_view");
   private static final String PACKAGE_NAME_GLOBAL = "PACKAGE_NAME";
@@ -213,7 +217,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     Environment.Frame buckGlobals = getBuckGlobals();
-    ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions(parseContext);
+    ImmutableList<BuiltinFunction> buckRuleFunctions = getBuckRuleFunctions();
     ImmutableMap<String, Environment.Extension> importMap =
         buildImportMap(buildFileAst.getImports(), buckGlobals, buckRuleFunctions, parseContext);
     Environment env =
@@ -224,6 +228,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
             .build();
     String basePath = getBasePath(buildFile);
     env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
+    env.setupDynamic(PARSE_CONTEXT, parseContext);
     env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
     for (BuiltinFunction buckRuleFunction : buckRuleFunctions) {
       env.setup(buckRuleFunction.getName(), buckRuleFunction);
@@ -278,7 +283,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return The environment frame with configured buck globals. This includes built-in rules like
    *     {@code java_library}.
    */
-  private Environment.Frame getBuckGlobals() {
+  private static Environment.Frame getBuckGlobals() {
     Environment.Frame buckGlobals;
     try (Mutability mutability = Mutability.create("global")) {
       Environment globalEnv =
@@ -327,10 +332,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   /**
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
-  private ImmutableList<BuiltinFunction> getBuckRuleFunctions(ParseContext parseContext) {
+  private ImmutableList<BuiltinFunction> getBuckRuleFunctions() {
     ImmutableList.Builder<BuiltinFunction> ruleFunctionsBuilder = ImmutableList.builder();
     for (Description<?> description : options.getDescriptions()) {
-      ruleFunctionsBuilder.add(newRuleDefinition(description, parseContext));
+      ruleFunctionsBuilder.add(newRuleDefinition(description));
     }
     return ruleFunctionsBuilder.build();
   }
@@ -342,17 +347,16 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * capture passed attribute values in a map and adds them to the {@code ruleRegistry}.
    *
    * @param ruleClass The name of the rule to to define.
-   * @param parseContext The parse context tracking useful information like recorded rules.
    * @return Skylark function to handle the Buck rule.
    */
-  private BuiltinFunction newRuleDefinition(Description<?> ruleClass, ParseContext parseContext) {
+  private BuiltinFunction newRuleDefinition(Description<?> ruleClass) {
     String name = Description.getBuildRuleType(ruleClass).getName();
     return new BuiltinFunction(
         name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
 
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(
-          Map<String, Object> kwargs, FuncallExpression ast, Environment env) {
+          Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
         ImmutableMap.Builder<String, Object> builder =
             ImmutableMap.<String, Object>builder()
                 .put("buck.base_path", env.lookup(PACKAGE_NAME_GLOBAL))
@@ -362,6 +366,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
                 typeCoercerFactory, ruleClass.getConstructorArgType());
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo);
+        ParseContext parseContext = getParseContext(env, ast);
         parseContext.recordRule(builder.build());
         return Runtime.NONE;
       }
@@ -552,5 +557,20 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       this.rawRules = rawRules;
       this.loadedPaths = loadedPaths;
     }
+  }
+
+  /** Get the {@link ParseContext} by looking up in the environment. */
+  private static ParseContext getParseContext(Environment env, FuncallExpression ast)
+      throws EvalException {
+    @Nullable ParseContext value = (ParseContext) env.lookup(PARSE_CONTEXT);
+    if (value == null) {
+      // if PARSE_CONTEXT is missing, we're not called from a build file. This happens if someone
+      // uses native.some_func() in the wrong place.
+      throw new EvalException(
+          ast.getLocation(),
+          "The native module cannot be accessed from here. "
+              + "Wrap the function in a macro and call it from a BUCK file");
+    }
+    return value;
   }
 }
