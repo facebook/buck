@@ -41,6 +41,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +50,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * A query environment that can be used for graph-enhancement, including macro expansion or dynamic
@@ -97,13 +97,8 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   private Stream<QueryTarget> getFwdDepsStream(Iterable<QueryTarget> targets) {
-    Stream<QueryTarget> targetStream = StreamSupport.stream(targets.spliterator(), false);
-    return targetStream
-        .map(this::getNode)
-        .map(node -> node.getParseDeps())
-        .map(Set::stream)
-        .reduce(Stream::concat)
-        .orElse(Stream.empty())
+    return RichStream.from(targets)
+        .flatMap(target -> this.getNode(target).getParseDeps().stream())
         .map(QueryBuildTarget::of);
   }
 
