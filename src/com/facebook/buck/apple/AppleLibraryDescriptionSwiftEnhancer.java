@@ -87,6 +87,9 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
     PreprocessorFlags preprocessorFlags = flagsBuilder.build();
 
+    Optional<CxxPreprocessorInput> underlyingModule =
+        AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(target, graphBuilder, platform);
+
     return SwiftLibraryDescription.createSwiftCompileRule(
         platform,
         applePlatform.getSwiftPlatform().get(),
@@ -99,7 +102,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         filesystem,
         swiftArgs,
         preprocessor,
-        preprocessorFlags);
+        preprocessorFlags,
+        underlyingModule.isPresent());
   }
 
   /**
