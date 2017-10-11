@@ -552,7 +552,16 @@ public final class Main {
       return returnCode.getAsInt();
     }
 
-    setupLogging(commandMode, command, args);
+    try {
+      setupLogging(commandMode, command, args);
+    } catch (Throwable e) {
+      // Explicitly catch error and print to stderr
+      // because it is possible that logger is partially initialized
+      // and exception will be logged nowhere.
+      System.err.println("Failed to initialize logger");
+      e.printStackTrace();
+      return INTERNAL_ERROR_EXIT_CODE;
+    }
 
     // Setup filesystem and buck config.
     Path canonicalRootPath = projectRoot.toRealPath().normalize();
