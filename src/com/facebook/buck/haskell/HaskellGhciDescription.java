@@ -53,6 +53,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -292,29 +293,31 @@ public class HaskellGhciDescription
         HaskellSources.from(
             buildTarget, resolver, pathResolver, ruleFinder, platform, "srcs", args.getSrcs());
 
-    return resolver.addToIndex(
-        HaskellGhciRule.from(
-            buildTarget,
-            projectFilesystem,
-            params,
-            resolver,
-            srcs,
-            args.getCompilerFlags(),
-            args.getGhciBinDep(),
-            args.getGhciInit(),
-            omnibusSharedObject,
-            solibs.build(),
-            firstOrderHaskellPackages.build(),
-            haskellPackages.build(),
-            prebuiltHaskellPackages.build(),
-            args.isEnableProfiling(),
-            platform.getGhciScriptTemplate().get(),
-            platform.getGhciBinutils().get(),
-            platform.getGhciGhc().get(),
-            platform.getGhciLib().get(),
-            platform.getGhciCxx().get(),
-            platform.getGhciCc().get(),
-            platform.getGhciCpp().get()));
+    return HaskellGhciRule.from(
+        buildTarget,
+        projectFilesystem,
+        params,
+        ruleFinder,
+        srcs,
+        args.getCompilerFlags(),
+        args.getGhciBinDep()
+            .map(
+                target ->
+                    Preconditions.checkNotNull(resolver.getRule(target).getSourcePathToOutput())),
+        args.getGhciInit(),
+        omnibusSharedObject,
+        solibs.build(),
+        firstOrderHaskellPackages.build(),
+        haskellPackages.build(),
+        prebuiltHaskellPackages.build(),
+        args.isEnableProfiling(),
+        platform.getGhciScriptTemplate().get(),
+        platform.getGhciBinutils().get(),
+        platform.getGhciGhc().get(),
+        platform.getGhciLib().get(),
+        platform.getGhciCxx().get(),
+        platform.getGhciCc().get(),
+        platform.getGhciCpp().get());
   }
 
   @Override
