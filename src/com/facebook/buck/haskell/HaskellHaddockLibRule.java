@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -70,7 +69,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
   @AddToRuleKey ImmutableList<String> linkerFlags;
 
-  private final PreprocessorFlags ppFlags;
+  @AddToRuleKey private final PreprocessorFlags ppFlags;
 
   @AddToRuleKey HaskellSources srcs;
 
@@ -168,12 +167,6 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         platform,
         preprocessor,
         ppFlags);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    ppFlags.appendToRuleKey(sink);
-    sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
   private Path getObjectDir() {

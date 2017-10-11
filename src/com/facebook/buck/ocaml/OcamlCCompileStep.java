@@ -17,8 +17,8 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxHeaders;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -84,15 +84,18 @@ public class OcamlCCompileStep extends ShellStep {
     return args.environment;
   }
 
-  public static class Args implements RuleKeyAppendable {
+  public static class Args implements AddsToRuleKey {
     public final ImmutableMap<String, String> environment;
-    public final Tool ocamlCompiler;
-    public final ImmutableList<String> cCompiler;
-    public final ImmutableList<Arg> cFlags;
-    public final Optional<String> stdlib;
+    @AddToRuleKey public final Tool ocamlCompiler;
+    @AddToRuleKey public final ImmutableList<String> cCompiler;
+    @AddToRuleKey public final ImmutableList<Arg> cFlags;
+    @AddToRuleKey public final Optional<String> stdlib;
+
+    @AddToRuleKey(stringify = true)
     public final Path output;
-    public final SourcePath input;
-    public final ImmutableList<CxxHeaders> includes;
+
+    @AddToRuleKey public final SourcePath input;
+    @AddToRuleKey public final ImmutableList<CxxHeaders> includes;
 
     public Args(
         ImmutableMap<String, String> environment,
@@ -111,17 +114,6 @@ public class OcamlCCompileStep extends ShellStep {
       this.input = input;
       this.cFlags = cFlags;
       this.includes = includes;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("cCompiler", cCompiler);
-      sink.setReflectively("ocamlCompiler", ocamlCompiler);
-      sink.setReflectively("stdlib", stdlib);
-      sink.setReflectively("output", output.toString());
-      sink.setReflectively("input", input);
-      sink.setReflectively("cFlags", cFlags);
-      sink.setReflectively("includes", includes);
     }
   }
 }

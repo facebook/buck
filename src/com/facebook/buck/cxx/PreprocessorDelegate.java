@@ -141,7 +141,7 @@ final class PreprocessorDelegate implements RuleKeyAppendable {
     sink.setReflectively("preprocessor", preprocessor);
     sink.setReflectively("frameworkPathSearchPathFunction", frameworkPathSearchPathFunction);
     sink.setReflectively("headerVerification", headerVerification);
-    preprocessorFlags.appendToRuleKey(sink);
+    sink.setReflectively("preprocessorFlags", preprocessorFlags);
   }
 
   public HeaderPathNormalizer getHeaderPathNormalizer() {

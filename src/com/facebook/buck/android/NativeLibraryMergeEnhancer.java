@@ -40,11 +40,11 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -911,16 +911,14 @@ class NativeLibraryMergeEnhancer {
   }
 
   private static class SymbolLocalizingPostprocessor implements LinkOutputPostprocessor {
-    private final ImmutableSortedSet<String> symbolsToLocalize;
+    @AddToRuleKey private final ImmutableSortedSet<String> symbolsToLocalize;
+
+    @SuppressWarnings("unused")
+    @AddToRuleKey
+    private final String postprocessorType = "localize-dynamic-symbols";
 
     SymbolLocalizingPostprocessor(ImmutableSortedSet<String> symbolsToLocalize) {
       this.symbolsToLocalize = symbolsToLocalize;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("postprocessor.type", "localize-dynamic-symbols");
-      sink.setReflectively("symbolsToLocalize", symbolsToLocalize);
     }
 
     @Override

@@ -20,25 +20,23 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.InternalFlavor;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractGoPlatform implements FlavorConvertible, RuleKeyAppendable {
+abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
+
+  @AddToRuleKey
   abstract String getGoOs();
 
+  @AddToRuleKey
   abstract String getGoArch();
 
   abstract Optional<CxxPlatform> getCxxPlatform();
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("goos", getGoOs()).setReflectively("goarch", getGoArch());
-  }
 
   @Override
   public Flavor getFlavor() {

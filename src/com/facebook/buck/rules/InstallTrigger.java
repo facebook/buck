@@ -27,8 +27,11 @@ import java.util.Optional;
  * available during `buck install`, not `buck build` or `buck test`, etc. This is intended to be
  * used as an input to BuildRules that read device state so that they can be run on every build.
  */
-public class InstallTrigger implements RuleKeyAppendable {
+public class InstallTrigger implements AddsToRuleKey {
+  @SuppressWarnings("unused")
+  @AddToRuleKey
   private final SourcePath path;
+
   private final ProjectFilesystem filesystem;
 
   public InstallTrigger(ProjectFilesystem filesystem) {
@@ -44,10 +47,5 @@ public class InstallTrigger implements RuleKeyAppendable {
     Optional<String> uuid = filesystem.readFirstLine(getTriggerPath(filesystem));
     Preconditions.checkState(uuid.isPresent());
     Preconditions.checkState(uuid.get().equals(context.getBuildId().toString()));
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("path", path);
   }
 }

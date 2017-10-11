@@ -16,13 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** Pluggable postprocessor for the output of a {@link CxxLink}. */
-public interface LinkOutputPostprocessor extends RuleKeyAppendable {
+public interface LinkOutputPostprocessor extends AddsToRuleKey {
   ImmutableList<Step> getSteps(BuildContext context, Path linkOutput, Path finalOutput);
 }

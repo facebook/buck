@@ -16,8 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 /** Represents a identity used in code signing. */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
+abstract class AbstractCodeSignIdentity implements AddsToRuleKey {
   private static final Pattern STRICT_HASH_PATTERN = Pattern.compile("(^[A-Fa-f0-9]{40}$)");
 
   /**
@@ -52,6 +52,7 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
    *
    * <p>If absent, this identity represents an ad-hoc signing identity.
    */
+  @AddToRuleKey(stringify = true)
   public abstract Optional<HashCode> getFingerprint();
 
   /**
@@ -69,10 +70,5 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
     } else {
       return Optional.empty();
     }
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("code-sign-identity", getFingerprint().map(Object::toString));
   }
 }

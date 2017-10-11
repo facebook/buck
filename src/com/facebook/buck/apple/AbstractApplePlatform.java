@@ -17,8 +17,8 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -26,8 +26,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractApplePlatform
-    implements Comparable<AbstractApplePlatform>, RuleKeyAppendable {
+abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform>, AddsToRuleKey {
 
   public static final ApplePlatform IPHONEOS =
       ApplePlatform.builder()
@@ -175,8 +174,8 @@ abstract class AbstractApplePlatform
     return getName().compareTo(other.getName());
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("platform-name", getName());
+  @AddToRuleKey
+  public final String getPlatformName() {
+    return getName();
   }
 }

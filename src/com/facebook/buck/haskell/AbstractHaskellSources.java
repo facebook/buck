@@ -18,10 +18,10 @@ package com.facebook.buck.haskell;
 
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -36,8 +36,9 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractHaskellSources implements RuleKeyAppendable {
+abstract class AbstractHaskellSources implements AddsToRuleKey {
 
+  @AddToRuleKey
   @Value.NaturalOrder
   abstract ImmutableSortedMap<String, SourcePath> getModuleMap();
 
@@ -66,11 +67,6 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
 
   public ImmutableCollection<SourcePath> getSourcePaths() {
     return getModuleMap().values();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("modules", getModuleMap());
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {

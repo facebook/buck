@@ -34,7 +34,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -80,7 +79,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final ImmutableList<String> flags;
 
-  private final PreprocessorFlags ppFlags;
+  @AddToRuleKey private final PreprocessorFlags ppFlags;
   private final CxxPlatform cxxPlatform;
 
   @AddToRuleKey private boolean pic;
@@ -198,12 +197,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         packages,
         sources,
         preprocessor);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    ppFlags.appendToRuleKey(sink);
-    sink.setReflectively("headers", ppFlags.getIncludes());
   }
 
   private Path getObjectDir() {

@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -88,7 +87,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Preprocessor cPreprocessor;
 
-  private final PreprocessorFlags cxxDeps;
+  @AddToRuleKey private final PreprocessorFlags cxxDeps;
 
   SwiftCompile(
       CxxPlatform cxxPlatform,
@@ -132,12 +131,6 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.cPreprocessor = preprocessor;
     this.cxxDeps = cxxDeps;
     performChecks(buildTarget);
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    super.appendToRuleKey(sink);
-    cxxDeps.appendToRuleKey(sink);
   }
 
   private void performChecks(BuildTarget buildTarget) {

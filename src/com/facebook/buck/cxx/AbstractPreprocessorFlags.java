@@ -18,8 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.rules.AddToRuleKey;
+import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -37,13 +38,15 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractPreprocessorFlags {
+abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
   /** File set via {@code -include}. */
+  @AddToRuleKey
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
 
   /** Other flags included as is. */
+  @AddToRuleKey
   @Value.Parameter
   @Value.Default
   public CxxToolFlags getOtherFlags() {
@@ -51,10 +54,12 @@ abstract class AbstractPreprocessorFlags {
   }
 
   /** Directories set via {@code -I}. */
+  @AddToRuleKey
   @Value.Parameter
   public abstract ImmutableSet<CxxHeaders> getIncludes();
 
   /** Directories set via {@code -F}. */
+  @AddToRuleKey
   @Value.Parameter
   public abstract ImmutableSet<FrameworkPath> getFrameworkPaths();
 
@@ -79,17 +84,6 @@ abstract class AbstractPreprocessorFlags {
       deps.addAll(arg.getDeps(ruleFinder));
     }
     return deps.build();
-  }
-
-  /** Append to rule key the members which are not handled elsewhere. */
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("prefixHeader", getPrefixHeader());
-    sink.setReflectively("includes", getIncludes());
-    sink.setReflectively("frameworkRoots", getFrameworkPaths());
-
-    // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
-    // from contributing to the rule key.
-    sink.setReflectively("preprocessorFlags", getOtherFlags());
   }
 
   public CxxToolFlags getIncludePathFlags(
