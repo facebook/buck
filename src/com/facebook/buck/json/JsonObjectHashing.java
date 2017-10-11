@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import com.facebook.buck.hashing.StringHashing;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
+import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +48,9 @@ public class JsonObjectHashing {
    * the JSON object.
    */
   public static void hashJsonObject(Hasher hasher, @Nullable Object obj) {
+    if (obj instanceof SkylarkNestedSet) {
+      obj = ((SkylarkNestedSet) obj).toCollection();
+    }
     if (obj instanceof Map) {
       Map<?, ?> map = (Map<?, ?>) obj;
       ImmutableSortedMap.Builder<String, Optional<Object>> sortedMapBuilder =

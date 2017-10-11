@@ -22,7 +22,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.devtools.build.lib.collect.nestedset.NestedSetBuilder;
+import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -137,6 +141,22 @@ public class JsonObjectHashingTest {
 
     JsonObjectHashing.hashJsonObject(hasher1, map1);
     JsonObjectHashing.hashJsonObject(hasher2, map2);
+
+    assertEquals(hasher1.hash().toString(), hasher2.hash().toString());
+  }
+
+  @Test
+  public void depsetIsHashedAsACollection() {
+    SkylarkNestedSet depset =
+        SkylarkNestedSet.of(
+            String.class, NestedSetBuilder.<String>stableOrder().add("foo").add("bar").build());
+    Collection<String> collection = Arrays.asList("foo", "bar");
+
+    Hasher hasher1 = Hashing.sha1().newHasher();
+    Hasher hasher2 = Hashing.sha1().newHasher();
+
+    JsonObjectHashing.hashJsonObject(hasher1, depset);
+    JsonObjectHashing.hashJsonObject(hasher2, collection);
 
     assertEquals(hasher1.hash().toString(), hasher2.hash().toString());
   }
