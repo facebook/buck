@@ -82,7 +82,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
     return HasJavaAbi.isAbiTarget(buildTarget)
         ? defaultJavaLibraryRules.buildAbi()
-        : defaultJavaLibraryRules.buildLibrary();
+        : resolver.addToIndex(defaultJavaLibraryRules.buildLibrary());
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
