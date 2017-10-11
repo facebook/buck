@@ -1,6 +1,3 @@
-with allow_unsafe_import():
-    from sys import platform as os_platform
-
 def _add_immutables(**kwargs):
     kwargs['deps'] = list(set(kwargs.get('deps', [])).union([
         '//src/com/facebook/buck/util/immutables:immutables',
