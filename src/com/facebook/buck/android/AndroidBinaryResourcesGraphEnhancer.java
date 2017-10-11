@@ -147,6 +147,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     FilteredResourcesProvider filteredResourcesProvider;
     boolean needsResourceFiltering =
         resourceFilter.isEnabled()
+            || postFilterResourcesCmd.isPresent()
             || resourceCompressionMode.isStoreStringsAsAssets()
             || !locales.isEmpty();
 

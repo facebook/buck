@@ -93,7 +93,6 @@ android_binary(
     '//scripts:postfilter',
   ],
   post_filter_resources_cmd = '$(exe //scripts:postfilter)',
-  resource_filter = ['hdpi', 'xhdpi']
 )
 
 android_binary(

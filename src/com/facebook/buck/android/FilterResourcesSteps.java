@@ -115,7 +115,6 @@ public class FilterResourcesSteps {
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
-    Preconditions.checkArgument(filterByDensity || enableStringWhitelisting || !locales.isEmpty());
     Preconditions.checkArgument(
         !filterByDensity || (targetDensities != null && drawableFinder != null));
 
