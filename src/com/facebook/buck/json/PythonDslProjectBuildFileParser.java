@@ -639,7 +639,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         watchmanDiagnosticLevel = WatchmanDiagnostic.Level.ERROR;
         break;
       case "fatal":
-        throw new IOException(String.format("%s: %s", buildFile, message));
+        throw new IOException(String.format("%s (watchman): %s", buildFile, message));
       default:
         throw new RuntimeException(
             String.format(
