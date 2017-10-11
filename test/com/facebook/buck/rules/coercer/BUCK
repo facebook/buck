@@ -107,6 +107,7 @@ standard_java_test(
         "//third-party/java/aosp:aosp",
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
+        "//third-party/java/bazel:skylark-lang",
         "//third-party/java/dd-plist:dd-plist",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
