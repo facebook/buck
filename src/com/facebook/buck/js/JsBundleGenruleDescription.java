@@ -37,10 +37,13 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import org.immutables.value.Value;
 
 public class JsBundleGenruleDescription
@@ -98,10 +101,17 @@ public class JsBundleGenruleDescription
           buildTarget, bundleTarget);
     }
 
+    Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
     return new JsBundleGenrule(
         buildTarget,
         projectFilesystem,
-        params.withExtraDeps(ImmutableSortedSet.of(jsBundle)),
+        params.withExtraDeps(
+            Suppliers.memoize(
+                () ->
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
+                        .addAll(originalExtraDeps.get())
+                        .add(jsBundle)
+                        .build())),
         args,
         cmd,
         bash,

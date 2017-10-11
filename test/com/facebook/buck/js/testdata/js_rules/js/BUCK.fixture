@@ -126,10 +126,15 @@ js_bundle_genrule(
     """,
 )
 
+sh_binary(
+    name = "cp-and-append",
+    main = "cp-and-append.sh",
+)
+
 js_bundle_genrule(
     name = "genrule-outer",
     js_bundle = ":genrule-inner",
-    bash = r"""cp "$JS_DIR/$JS_BUNDLE_NAME" "$OUT/postprocessed.txt" && echo postprocessed again >> "$OUT/postprocessed.txt" """,
+    bash = r"""$(exe :cp-and-append) "$JS_DIR/$JS_BUNDLE_NAME" "$OUT/postprocessed.txt" "postprocessed again" """,
     visibility = ["PUBLIC"],
 )
 

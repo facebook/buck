@@ -77,13 +77,11 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private void setUp(BuildTarget bundleTarget, Flavor... extraFlavors) {
-    setUpWithOptions(JsBundleGenruleBuilder.Options.of(genruleTarget, bundleTarget), extraFlavors);
+    setUpWithOptions(builderOptions(bundleTarget), extraFlavors);
   }
 
   private void setUpWithRewriteSourceMap(Flavor... extraFlavors) {
-    setUpWithOptions(
-        JsBundleGenruleBuilder.Options.of(genruleTarget, defaultBundleTarget).rewriteSourcemap(),
-        extraFlavors);
+    setUpWithOptions(builderOptions().rewriteSourcemap(), extraFlavors);
   }
 
   private void setUpWithOptions(JsBundleGenruleBuilder.Options options, Flavor... extraFlavors) {
@@ -96,7 +94,7 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void dependsOnSpecifiedJsBundle() {
-    assertEquals(ImmutableSortedSet.of(setup.jsBundle()), setup.genrule().getBuildDeps());
+    assertThat(setup.genrule().getBuildDeps(), hasItem(setup.jsBundle()));
   }
 
   @Test
@@ -241,6 +239,23 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   @Test
+  public void dependsOnTargetsInMacros() {
+    BuildTarget locationTarget = BuildTargetFactory.newInstance("//location:target");
+
+    JsTestScenario scenario =
+        JsTestScenario.builder()
+            .bundleWithDeps(defaultBundleTarget)
+            .arbitraryRule(locationTarget)
+            .bundleGenrule(
+                builderOptions(
+                    String.format("$(location %s)", locationTarget.getFullyQualifiedName())))
+            .build();
+
+    BuildRule buildRule = scenario.resolver.requireRule(genruleTarget);
+    assertThat(buildRule.getBuildDeps(), hasItem(scenario.resolver.getRule(locationTarget)));
+  }
+
+  @Test
   public void exposesRewrittenSourceMap() {
     setUpWithRewriteSourceMap();
 
@@ -328,6 +343,22 @@ public class JsBundleGenruleDescriptionTest {
             context
                 .getSourcePathResolver()
                 .getRelativePath(setup.genrule().getSourcePathToSourceMap())));
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions(BuildTarget bundleTarget, String cmd) {
+    return JsBundleGenruleBuilder.Options.of(genruleTarget, bundleTarget).setCmd(cmd);
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions(BuildTarget bundleTarget) {
+    return builderOptions(bundleTarget, null);
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions(String cmd) {
+    return builderOptions(defaultBundleTarget, cmd);
+  }
+
+  private JsBundleGenruleBuilder.Options builderOptions() {
+    return builderOptions(defaultBundleTarget);
   }
 
   private static class TestSetup {
