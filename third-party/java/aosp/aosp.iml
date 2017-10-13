@@ -39,10 +39,12 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../errorprone/error-prone-annotations-2.0.15.jar!/" />
+          <root url="jar://$MODULE_DIR$/../errorprone/error_prone_annotations-2.0.19.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../errorprone/error_prone_annotations-2.0.19-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>
