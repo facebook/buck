@@ -294,7 +294,7 @@ public class AppleTestDescription
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages(),
             appleConfig.assetCatalogValidation(),
-            ImmutableList.of());
+            args.getCodesignFlags());
     resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);
@@ -515,7 +515,11 @@ public class AppleTestDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleTestDescriptionArg
-      extends AppleNativeTargetDescriptionArg, HasAppleBundleFields, HasContacts, HasTestTimeout {
+      extends AppleNativeTargetDescriptionArg,
+          HasAppleBundleFields,
+          HasAppleCodesignFields,
+          HasContacts,
+          HasTestTimeout {
     @Value.Default
     default boolean getRunTestSeparately() {
       return false;
