@@ -101,5 +101,6 @@
     <orderEntry type="library" name="android-tools-25.3.0" level="project" />
     <orderEntry type="library" name="jmh" level="project" />
     <orderEntry type="library" name="bazel" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
