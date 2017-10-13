@@ -134,6 +134,7 @@ The following sections are recognized by Buck:
     'lua',
     'maven_repositories',
     'ndk',
+    'ocaml',
     'parser',
     'project',
     'python',
@@ -2570,6 +2571,80 @@ your <code>.buckjavaargs</code> file</a>:
     </ul>
   {/param}
 {/call}
+
+{call buckconfig.section}
+  {param name: 'ocaml' /}
+  {param description}
+    <p>
+      This section configures the paths to the OCaml toolchain's binaries.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'ocaml.bytecode.compiler' /}
+  {param example_value: '/usr/local/bin/ocamlc.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/native.html">OCaml bytecode compiler (ocamlc)<a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'ocaml.compiler' /}
+  {param example_value: '/usr/local/bin/ocamlopt.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/comp.html">OCaml native-code compiler (ocamlopt)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'dep.tool' /}
+  {param example_value: '/usr/local/bin/ocamldep.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/depend.html">OCaml dependency generator (ocamldep)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'lex.compiler' /}
+  {param example_value: '/usr/local/bin/ocamllex.opt' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/lexyacc.html#sec296">OCaml lexer generator (ocamllex)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'yacc.compiler' /}
+  {param example_value: '/usr/local/bin/ocamlyacc' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/lexyacc.html#sec307">OCaml parser generator (ocamlyacc)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'debug' /}
+  {param example_value: '/usr/local/bin/ocamldebug' /}
+  {param description}
+    The path to the <a href="https://caml.inria.fr/pub/docs/manual-ocaml/debugger.html">OCaml debugger (ocamldebug)</a>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ocaml' /}
+  {param name: 'interop.includes' /}
+  {param example_value: '/usr/local/lib/ocaml' /}
+  {param description}
+    The path to the OCaml standard library directory
+    (see <a href="https://caml.inria.fr/pub/docs/manual-ocaml/intfc.html">Interfacing C with OCaml</a>).
+  {/param}
+{/call}
+
 
 {call buckconfig.section}
   {param name: 'parser' /}

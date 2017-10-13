@@ -37,7 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-/** OCaml linking step. Dependencies and inputs should be topologically ordered */
+/** Creates a debug launcher script for an ocaml binary */
 public class OcamlDebugLauncherStep implements Step {
 
   private final ProjectFilesystem filesystem;
