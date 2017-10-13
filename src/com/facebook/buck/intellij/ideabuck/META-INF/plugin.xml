@@ -239,6 +239,16 @@
   </extensions>
 
   <actions>
+    <group description="Generate projects below" id="GenerateProjects" text="GenProjects" type="">
+      <action
+              class="com.facebook.buck.intellij.ideabuck.actions.select.RunSelectedProjectsAction"
+              description="Generates project below."
+              icon="/icons/actions/Project.png"
+              id="GenerateProject"
+              text="Generate Buck Project below">
+        <add-to-group group-id="ProjectViewPopupMenu" anchor="after" relative-to-action="ReplaceInPath"/>
+      </action>
+    </group>
     <group id="buck.Menu">
       <action
           id="buck.GoToBuckFile"
