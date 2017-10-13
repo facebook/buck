@@ -148,3 +148,16 @@ js_bundle_genrule(
         sed 's/}/, "postprocessed": true}/' < "$SOURCEMAP" > "$SOURCEMAP_OUT"
     """
 )
+
+js_library(
+    name = 'fruit_with_tests',
+    srcs = ['apple.js', 'banana.js', 'pear.js'],
+    worker = ':packager_worker',
+    tests = [':test_for_fruit'],
+)
+
+sh_test(
+  name = 'test_for_fruit',
+  test = 'test_for_fruit.sh',
+  args = [],
+)
