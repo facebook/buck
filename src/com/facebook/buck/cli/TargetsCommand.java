@@ -20,6 +20,9 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
+import com.facebook.buck.graph.Dot;
+import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -126,6 +129,13 @@ public class TargetsCommand extends AbstractCommand {
 
   @Option(name = "--json", usage = "Print JSON representation of each target")
   private boolean json;
+
+  @Option(
+    name = "--dot",
+    usage =
+        "Output rule keys in DOT format, only works with both --show-rulekey and --show-transitive-rulekeys"
+  )
+  private boolean dot;
 
   @Option(name = "--print0", usage = "Delimit targets using the ASCII NUL character.")
   private boolean print0;
@@ -310,6 +320,14 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /**
+   * Determines if the results should be in DOT format. This is true when {@code --dot} parameter is
+   * specified along with {@code --show-rulekey} and {@code --show-transitive-rulekeys}
+   */
+  private boolean shouldUseDotFormat() {
+    return dot && isShowRuleKey() && isShowTransitiveRuleKeys();
+  }
+
+  /**
    * @return set of paths passed to {@code --assume-modified-files} if either {@code
    *     --assume-modified-files} or {@code --assume-no-modified-files} is used, absent otherwise.
    */
@@ -351,49 +369,111 @@ public class TargetsCommand extends AbstractCommand {
       return 1;
     }
 
-    if (isShowCellPath()
+    // shortcut to old plain simple format
+    if (!(isShowCellPath()
         || isShowOutput()
         || isShowFullOutput()
         || isShowRuleKey()
-        || isShowTargetHash()) {
-      ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
-      TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
-          buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
-      boolean useVersioning =
-          isShowRuleKey() || isShowOutput() || isShowFullOutput()
-              ? params.getBuckConfig().getBuildVersions()
-              : params.getBuckConfig().getTargetsVersions();
-      targetGraphAndBuildTargetsForShowRules =
-          useVersioning
-              ? toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules)
-              : targetGraphAndBuildTargetsForShowRules;
-      showRulesResult =
-          computeShowRules(
-              params,
-              executor,
-              new Pair<>(
-                  targetGraphAndBuildTargetsForShowRules.getTargetGraph(),
-                  targetGraphAndBuildTargetsForShowRules
-                      .getTargetGraph()
-                      .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
-
-      if (shouldUseJsonFormat()) {
-        ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
-        keysBuilder.addAll(showRulesResult.keySet());
-        Iterable<TargetNode<?, ?>> matchingNodes =
-            targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
-        printJsonForTargets(
-            params, executor, matchingNodes, showRulesResult, getOutputAttributes());
-      } else {
-        printShowRules(showRulesResult, params);
-      }
-      return 0;
+        || isShowTargetHash())) {
+      return printResults(
+          params,
+          executor,
+          getMatchingNodes(
+              params, buildTargetGraphAndTargets(params, executor), descriptionClasses));
     }
 
-    return printResults(
-        params,
-        executor,
-        getMatchingNodes(params, buildTargetGraphAndTargets(params, executor), descriptionClasses));
+    // shortcut to DOT format, it only works along with rule keys and transitive rule keys
+    // because we want to construct action graph
+    if (shouldUseDotFormat()) {
+      return printDotFormat(params, executor);
+    }
+
+    // plain or json output
+    ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
+    TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
+        buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
+    boolean useVersioning =
+        isShowRuleKey() || isShowOutput() || isShowFullOutput()
+            ? params.getBuckConfig().getBuildVersions()
+            : params.getBuckConfig().getTargetsVersions();
+    targetGraphAndBuildTargetsForShowRules =
+        useVersioning
+            ? toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules)
+            : targetGraphAndBuildTargetsForShowRules;
+    showRulesResult =
+        computeShowRules(
+            params,
+            executor,
+            new Pair<>(
+                targetGraphAndBuildTargetsForShowRules.getTargetGraph(),
+                targetGraphAndBuildTargetsForShowRules
+                    .getTargetGraph()
+                    .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
+
+    if (shouldUseJsonFormat()) {
+      ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
+      keysBuilder.addAll(showRulesResult.keySet());
+      Iterable<TargetNode<?, ?>> matchingNodes =
+          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
+      printJsonForTargets(params, executor, matchingNodes, showRulesResult, getOutputAttributes());
+    } else {
+      printShowRules(showRulesResult, params);
+    }
+
+    return 0;
+  }
+
+  /**
+   * Output rules along with dependencies as a graph in DOT format As a part of invocation,
+   * constructs both target and action graphs
+   */
+  private int printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
+      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException,
+          VersionException {
+    TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
+    ActionGraphAndResolver result =
+        params
+            .getActionGraphCache()
+            .getActionGraph(
+                params.getBuckEventBus(),
+                targetGraphAndTargets.getTargetGraph(),
+                params.getBuckConfig());
+
+    // construct real graph
+    MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
+
+    for (BuildRule rule : result.getActionGraph().getNodes()) {
+      actionGraphMutable.addNode(rule);
+      for (BuildRule node : rule.getBuildDeps()) {
+        actionGraphMutable.addEdge(rule, node);
+      }
+    }
+
+    // ruleKeyFactory is used to calculate rule key that we also want to display on a graph
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(
+            new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
+            params.getFileHashCache(),
+            DefaultSourcePathResolver.from(ruleFinder),
+            ruleFinder);
+
+    // it is time to construct DOT output
+    Dot<BuildRule> dot =
+        new Dot<>(
+            new DirectedAcyclicGraph<>(actionGraphMutable),
+            "action_graph",
+            node ->
+                node.getFullyQualifiedName()
+                    + " "
+                    + node.getType()
+                    + " "
+                    + ruleKeyFactory.build(node).toString(),
+            node -> node.getType(),
+            params.getConsole().getStdOut());
+    dot.writeOutput();
+
+    return 0;
   }
 
   private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(

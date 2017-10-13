@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -665,5 +666,39 @@ public class TargetsCommandIntegrationTest {
         ObjectMappers.READER.readTree(ObjectMappers.createParser(normalizeNewlines(expectedJson)));
 
     assertEquals("Output from targets command should match expected JSON.", expected, observed);
+  }
+
+  @Test
+  public void testRuleKeyDotOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command_dot", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-rulekey", "--show-transitive-rulekeys", "--dot", "//:test1");
+    result.assertSuccess();
+    String output = result.getStdout().trim();
+
+    Pattern pattern = Pattern.compile("digraph .* \\{(?<lines>.+)\\}", Pattern.DOTALL);
+    Matcher matcher = pattern.matcher(output);
+
+    assertTrue(matcher.find());
+    List<String> lines =
+        ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(matcher.group("lines")));
+
+    // make a vague assertion that test1 depends on test2; do not overload the test
+
+    // node test1
+    assertEquals(
+        1, lines.stream().filter(p -> p.contains("test1") && !p.contains("test2")).count());
+
+    // node test2
+    assertEquals(
+        1, lines.stream().filter(p -> p.contains("test2") && !p.contains("test1")).count());
+
+    // edge test1 -> test2
+    Pattern edgePattern = Pattern.compile("test1.+->.+test2");
+    assertEquals(1, lines.stream().filter(p -> edgePattern.matcher(p).find()).count());
   }
 }
