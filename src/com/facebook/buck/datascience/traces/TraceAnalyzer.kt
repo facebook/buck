@@ -15,6 +15,7 @@ import java.io.InputStream
 import java.net.URL
 import java.util.PriorityQueue
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ExecutionException
 import java.util.zip.GZIPInputStream
 
 /**
@@ -138,7 +139,7 @@ private data class QueuedTrace(
         val name: String,
         val stream: () -> InputStream)
 
-private fun <SummaryT> processTraces(
+private fun <SummaryT : Any> processTraces(
         args: List<String>,
         traceListFile: File,
         visitorClass: Class<TraceAnalysisVisitor<SummaryT>>,
@@ -162,11 +163,19 @@ private fun <SummaryT> processTraces(
                     summary
                 },
                 processThreadPool)
+        processFuture.addListener(Runnable {
+            try {
+                processFuture.get()
+            } catch (e: ExecutionException) {
+                // The ExecutionException isn't interesting.  Log the cause.
+                e.cause!!.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
         processFuture
     }
 
     try {
-        val summaries = Futures.allAsList(processFutures).get()
+        val summaries = Futures.successfulAsList(processFutures).get().filterNotNull()
 
         val finisher = visitorClass.newInstance()
         finisher.finishAnalysis(args, summaries)
