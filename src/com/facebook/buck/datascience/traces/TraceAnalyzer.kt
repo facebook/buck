@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import java.io.File
 import java.io.InputStream
 import java.net.URL
+import java.util.PriorityQueue
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.zip.GZIPInputStream
 
@@ -111,10 +112,13 @@ fun main(args: Array<String>) {
     val processThreadPool = MoreExecutors.listeningDecorator(
             MostExecutors.newMultiThreadExecutor("process", processThreadCount))
 
+    val eventBufferDepth = 1 shl 16
+
     processTraces(
             args.asList().subList(2, args.size),
             File(infile),
             logicClass as Class<TraceAnalysisVisitor<Any>>,
+            eventBufferDepth,
             fetchThreadPool,
             processThreadPool)
 }
@@ -123,6 +127,7 @@ private fun <SummaryT> processTraces(
         args: List<String>,
         traceListFile: File,
         visitorClass: Class<TraceAnalysisVisitor<SummaryT>>,
+        eventBufferDepth: Int,
         fetchThreadPool: ListeningExecutorService,
         processThreadPool: ListeningExecutorService) {
     val blobQueue = ArrayBlockingQueue<ByteArray>(1)
@@ -138,7 +143,7 @@ private fun <SummaryT> processTraces(
                 com.google.common.base.Function<Any, SummaryT> {
                     val traceBytes = blobQueue.poll()
                     val visitor = visitorClass.newInstance()
-                    val summary = processOneTrace(args, traceBytes, visitor)
+                    val summary = processOneTrace(args, traceBytes, visitor, eventBufferDepth)
                     summary
                 },
                 processThreadPool)
@@ -180,7 +185,8 @@ private fun maybeGunzip(rawStream: InputStream, path: String) =
 private fun <SummaryT> processOneTrace(
         args: List<String>,
         traceBytes: ByteArray,
-        visitor: TraceAnalysisVisitor<SummaryT>): SummaryT {
+        visitor: TraceAnalysisVisitor<SummaryT>,
+        eventBufferDepth: Int): SummaryT {
     visitor.init(args)
 
     val parser = ObjectMappers.createParser(traceBytes)
@@ -188,27 +194,56 @@ private fun <SummaryT> processOneTrace(
         throw IllegalStateException("Invalid token: " + parser.currentToken)
     }
 
-    loop@ while (true) {
+    // Timestamps are not monotonic in trace files.
+    // Part of this is because events from different threads can be reordered,
+    // But I've also seen unexplainable re-orderings within a thread.
+    // In theory, we could load the entire trace into memory and sort by timestamp.
+    // Instead, let's prematurely optimize and use a priority queue.
+    val pq = PriorityQueue(eventBufferDepth + 4, compareBy({ it: TraceEvent -> it.ts }))
+    var lastTimestamp = 0L
+
+    while (true) {
         when (parser.nextToken()) {
+            null -> {
+                // At EOF.  Nothing left to do.
+            }
             JsonToken.START_OBJECT -> {
-                val event = ObjectMappers.READER.readTree<JsonNode>(parser)
-                processOneEvent(event, visitor)
+                // Got an object, enqueue it.
+                val node = ObjectMappers.READER.readTree<JsonNode>(parser)
+                pq.add(parseTraceEvent(node))
             }
             JsonToken.END_ARRAY -> {
-                break@loop
+                // End of our array of events.
+                val nextNextToken = parser.nextToken()
+                if (nextNextToken != null) {
+                    throw IllegalStateException("Got token after END_ARRAY: " + nextNextToken)
+                }
             }
             else -> {
                 throw IllegalStateException("Invalid token: " + parser.currentToken)
             }
+        }
+
+        if (pq.isEmpty() && parser.isClosed) {
+            // No more events in queue or parser.
+            break
+        } else if (parser.isClosed || pq.size > eventBufferDepth) {
+            // Parser is closed (so we need to train the queue),
+            // OR the queue is "full" so we need to take something out.
+            val nextEvent = pq.poll()
+            if (nextEvent.ts < lastTimestamp) {
+                throw IllegalStateException(
+                        "Event went back in time.  Try a bigger queue.\n" + nextEvent)
+            }
+            lastTimestamp = nextEvent.ts
+            processOneEvent(nextEvent, visitor)
         }
     }
 
     return visitor.traceComplete()
 }
 
-private fun processOneEvent(node: JsonNode, visitor: TraceAnalysisVisitor<*>) {
-    val event = parseTraceEvent(node)
-
+private fun processOneEvent(event: TraceEvent, visitor: TraceAnalysisVisitor<*>) {
     // TODO: Be smart.
     visitor.eventBegin(event, TraceState(mapOf()))
 }
