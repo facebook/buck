@@ -260,7 +260,6 @@ public class AndroidResourceFilterIntegrationTest {
 
   @Test
   public void testStringArtifactsAreCached() throws InterruptedException, IOException {
-    Assume.assumeFalse(true);
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();

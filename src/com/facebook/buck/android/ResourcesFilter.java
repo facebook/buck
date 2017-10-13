@@ -78,9 +78,6 @@ import org.apache.commons.compress.utils.IOUtils;
  */
 public class ResourcesFilter extends AbstractBuildRule
     implements FilteredResourcesProvider, InitializableFromDisk<ResourcesFilter.BuildOutput> {
-
-  private static final String STRING_FILES_KEY = "string_files";
-
   enum ResourceCompressionMode {
     DISABLED(/* isCompressResources */ false, /* isStoreStringsAsAssets */ false),
     ENABLED(/* isCompressResources */ true, /* isStoreStringsAsAssets */ false),
@@ -239,18 +236,22 @@ public class ResourcesFilter extends AbstractBuildRule
             if (postFilterResourcesCmd.isPresent()) {
               buildableContext.recordArtifact(getRDotJsonPath());
             }
-            buildableContext.addMetadata(
-                STRING_FILES_KEY,
-                stringFilesBuilder
-                    .build()
-                    .stream()
-                    .map(Object::toString)
-                    .collect(MoreCollectors.toImmutableList()));
+            Path stringFiles = getStringFilesPath();
+            getProjectFilesystem().mkdirs(stringFiles.getParent());
+            getProjectFilesystem()
+                .writeLinesToPath(
+                    stringFilesBuilder.build().stream().map(Object::toString)::iterator,
+                    stringFiles);
+            buildableContext.recordArtifact(stringFiles);
             return StepExecutionResult.SUCCESS;
           }
         });
 
     return steps.build();
+  }
+
+  private Path getStringFilesPath() {
+    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/string_files");
   }
 
   private void maybeAddPostFilterCmdStep(
@@ -367,15 +368,13 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
+  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     ImmutableList<Path> stringFiles =
         onDiskBuildInfo
-            .getValues(STRING_FILES_KEY)
-            .get()
+            .getOutputFileContentsByLine(getStringFilesPath())
             .stream()
             .map(Paths::get)
             .collect(MoreCollectors.toImmutableList());
-
     return new BuildOutput(stringFiles);
   }
 
