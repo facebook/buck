@@ -328,7 +328,7 @@ public class Cell {
                   eventBus,
                   SkylarkFilesystem.using(filesystem),
                   typeCoercerFactory)),
-          Syntax.PYTHON_DSL);
+          parserConfig.getDefaultBuildFileSyntax());
     }
     return pythonDslProjectBuildFileParser;
   }

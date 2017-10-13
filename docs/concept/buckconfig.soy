@@ -2618,9 +2618,21 @@ your <code>.buckjavaargs</code> file</a>:
   {param example_value: 'true' /}
   {param description}
     Indicates whether support for experimental polyglot parsing should be enabled. When enabled,
-    build file can have a <code># BUILD FILE SYNTAX: </code> followed by one of supported syntax
-    names (currently <code>PYTHON_DSL</code>code> and very experimental <code>SKYLARK</code>.
-    This experimental flag is disabled by default.
+    build file can have a <code># BUILD FILE SYNTAX: </code> marker followed by one of supported
+    syntax names that include <code>PYTHON_DSL</code> and an experimental <code>SKYLARK</code>.
+    This flag is disabled by default.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'default_build_file_syntax' /}
+  {param example_value: 'SKYLARK' /}
+  {param description}
+    Specifies the default syntax assumed when parsing build files without explicit build syntax
+    marker (<code># BUILD FILE SYNTAX: </code>). This flag is only applicable when
+    <code>parser.polyglot_parsing_enabled</code> configuration is set to <code>true</code>.
+    By default it's value is set to <code>PYTHON_DSL</code>.
   {/param}
 {/call}
 

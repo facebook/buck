@@ -254,4 +254,15 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public boolean isPolyglotParsingEnabled() {
     return getDelegate().getBooleanValue("parser", "polyglot_parsing_enabled", false);
   }
+
+  /**
+   * @return a syntax to assume for build files without explicit build file syntax marker. *
+   *     <p>For a list of supported syntax see {@link Syntax}.
+   */
+  @Value.Lazy
+  public Syntax getDefaultBuildFileSyntax() {
+    return getDelegate()
+        .getEnum("parser", "default_build_file_syntax", Syntax.class)
+        .orElse(Syntax.PYTHON_DSL);
+  }
 }
