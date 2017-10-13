@@ -5,7 +5,6 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/model:model",

@@ -22,7 +22,6 @@ java_library(
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/annotations:annotations",
-        "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/project_generator:project_generator",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
@@ -175,7 +174,6 @@ java_test(
     resources = glob(["testdata/**"]),
     run_test_separately = True,
     deps = [
-        "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/cxx:rules",
@@ -210,7 +208,6 @@ java_test(
     ],
     resources = glob(["testdata/**"]),
     deps = [
-        "//src/com/facebook/buck/apple:platform",
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
