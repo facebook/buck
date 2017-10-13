@@ -24,6 +24,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicLong;
@@ -53,7 +54,10 @@ public class HybridProjectBuildFileParserTest {
 
   @Before
   public void setUp() throws Exception {
-    parser = new HybridProjectBuildFileParser(pythonDslParser, skylarkParser);
+    parser =
+        HybridProjectBuildFileParser.using(
+            ImmutableMap.of(Syntax.PYTHON_DSL, pythonDslParser, Syntax.SKYLARK, skylarkParser),
+            Syntax.PYTHON_DSL);
     buildFile = tmp.newFile("BUCK");
     processedBytes = new AtomicLong();
   }

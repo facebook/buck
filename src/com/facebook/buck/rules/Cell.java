@@ -318,12 +318,16 @@ public class Cell {
             new DefaultProcessExecutor(console));
     if (parserConfig.isPolyglotParsingEnabled()) {
       return HybridProjectBuildFileParser.using(
-          pythonDslProjectBuildFileParser,
-          SkylarkProjectBuildFileParser.using(
-              buildFileParserOptions,
-              eventBus,
-              SkylarkFilesystem.using(filesystem),
-              typeCoercerFactory));
+          ImmutableMap.of(
+              HybridProjectBuildFileParser.Syntax.PYTHON_DSL,
+              pythonDslProjectBuildFileParser,
+              HybridProjectBuildFileParser.Syntax.SKYLARK,
+              SkylarkProjectBuildFileParser.using(
+                  buildFileParserOptions,
+                  eventBus,
+                  SkylarkFilesystem.using(filesystem),
+                  typeCoercerFactory)),
+          HybridProjectBuildFileParser.Syntax.PYTHON_DSL);
     }
     return pythonDslProjectBuildFileParser;
   }

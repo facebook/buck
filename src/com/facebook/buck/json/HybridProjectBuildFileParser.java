@@ -18,10 +18,10 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,12 +31,16 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 /**
- * Hybrid project build file parser that uses Python DSL or Skylark depending on syntax requested
- * for each individual build file.
+ * Hybrid project build file parser that uses Python DSL, Skylark or any other {@link Syntax}
+ * depending on which one is requested for the individual build file.
  *
- * <p>The default is Python DSL, but clients can explicitly request desired syntax by adding {@value
+ * <p>The default syntax determines the syntax used in cases when {@value #SYNTAX_MARKER_START}
+ * marker is not used, but clients can explicitly request desired syntax by adding {@value
  * #SYNTAX_MARKER_START} parser directive to the beginning of the build file followed by one of the
  * supported {@link Syntax} values.
+ *
+ * <p>Note that default syntax is not used in cases when invalid syntax value is provided - instead
+ * in such cases an exception is thrown.
  */
 public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
@@ -61,14 +65,13 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
     }
   }
 
-  private final PythonDslProjectBuildFileParser pythonDslParser;
-  private final SkylarkProjectBuildFileParser skylarkParser;
+  private ImmutableMap<Syntax, ProjectBuildFileParser> parsers;
+  private final Syntax defaultSyntax;
 
-  HybridProjectBuildFileParser(
-      PythonDslProjectBuildFileParser pythonDslParser,
-      SkylarkProjectBuildFileParser skylarkParser) {
-    this.pythonDslParser = pythonDslParser;
-    this.skylarkParser = skylarkParser;
+  private HybridProjectBuildFileParser(
+      ImmutableMap<Syntax, ProjectBuildFileParser> parsers, Syntax defaultSyntax) {
+    this.parsers = parsers;
+    this.defaultSyntax = defaultSyntax;
   }
 
   @Override
@@ -86,14 +89,16 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public void reportProfile() throws IOException {
-    pythonDslParser.reportProfile();
-    skylarkParser.reportProfile();
+    for (ProjectBuildFileParser parser : parsers.values()) {
+      parser.reportProfile();
+    }
   }
 
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
-    pythonDslParser.close();
-    skylarkParser.close();
+    for (ProjectBuildFileParser parser : parsers.values()) {
+      parser.close();
+    }
   }
 
   /**
@@ -107,7 +112,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
       throws IOException, BuildFileParseException {
     @Nullable String firstLine = Files.readFirstLine(buildFile.toFile(), Charsets.UTF_8);
 
-    Syntax syntax = Syntax.PYTHON_DSL;
+    Syntax syntax = defaultSyntax;
     if (firstLine != null && firstLine.startsWith(SYNTAX_MARKER_START)) {
       String syntaxName = firstLine.substring(SYNTAX_MARKER_START.length());
       syntax =
@@ -119,19 +124,16 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
                               "Unrecognized syntax [%s] requested for build file [%s]",
                               syntaxName, buildFile)));
     }
-    switch (syntax) {
-      case SKYLARK:
-        return skylarkParser;
-      case PYTHON_DSL:
-        return pythonDslParser;
+    @Nullable ProjectBuildFileParser parser = parsers.get(syntax);
+    if (parser == null) {
+      throw new AssertionError(syntax + " is not mapped to any parser");
     }
-    throw new AssertionError(syntax + " is not mapped to any parser");
+    return parser;
   }
 
   /** @return The hybrid parser that supports Python DSL and Skylark syntax. */
   public static HybridProjectBuildFileParser using(
-      PythonDslProjectBuildFileParser pythonDslParser,
-      SkylarkProjectBuildFileParser skylarkParser) {
-    return new HybridProjectBuildFileParser(pythonDslParser, skylarkParser);
+      ImmutableMap<Syntax, ProjectBuildFileParser> parsers, Syntax defaultSyntax) {
+    return new HybridProjectBuildFileParser(parsers, defaultSyntax);
   }
 }
