@@ -18,22 +18,18 @@ from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler
 
-import StringIO
 import abc
 import functools
-import hashlib
 import imp
 import inspect
 import json
 import optparse
 import os
 import os.path
-import pstats
 import pywatchman
 import re
 import select
 import sys
-import tempfile
 import time
 import traceback
 import types
