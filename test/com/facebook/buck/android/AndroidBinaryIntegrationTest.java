@@ -449,8 +449,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/prebuilt/libs.txt");
     zipInspector.assertFileExists("assets/prebuilt/libs.xzs");
-    zipInspector.assertFileExists("assets/prebuilt_assets/libs.txt");
-    zipInspector.assertFileExists("assets/prebuilt_assets/libs.xzs");
+    zipInspector.assertFileExists("assets/prebuilt_asset/libs.txt");
+    zipInspector.assertFileExists("assets/prebuilt_asset/libs.xzs");
   }
 
   @Test
