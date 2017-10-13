@@ -166,16 +166,19 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
               @Nullable Collection<String> referencedResources = dx.getResourcesReferencedInCode();
               if (referencedResources != null) {
-                buildableContext.addMetadata(
+                writeMetadataValues(
+                    buildableContext,
                     REFERENCED_RESOURCES,
                     Ordering.natural().immutableSortedCopy(referencedResources));
               }
             }
 
-            buildableContext.addMetadata(WEIGHT_ESTIMATE, String.valueOf(weightEstimate.get()));
+            writeMetadataValue(
+                buildableContext, WEIGHT_ESTIMATE, String.valueOf(weightEstimate.get()));
 
             // Record the classnames to hashes map.
-            buildableContext.addMetadata(
+            writeMetadataValue(
+                buildableContext,
                 CLASSNAMES_TO_HASHES,
                 ObjectMappers.WRITER.writeValueAsString(
                     Maps.transformValues(classNamesToHashes, Object::toString)));
@@ -190,16 +193,35 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    int weightEstimate = Integer.parseInt(onDiskBuildInfo.getValue(WEIGHT_ESTIMATE).get());
+    int weightEstimate =
+        Integer.parseInt(readMetadataValue(onDiskBuildInfo, WEIGHT_ESTIMATE).get());
     Map<String, String> map =
         ObjectMappers.readValue(
-            onDiskBuildInfo.getValue(CLASSNAMES_TO_HASHES).get(),
+            readMetadataValue(onDiskBuildInfo, CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {});
     Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
     Optional<ImmutableList<String>> referencedResources =
-        onDiskBuildInfo.getValues(REFERENCED_RESOURCES);
+        readMetadataValues(onDiskBuildInfo, REFERENCED_RESOURCES);
     return new BuildOutput(
         weightEstimate, ImmutableSortedMap.copyOf(classnamesToHashes), referencedResources);
+  }
+
+  private void writeMetadataValues(
+      BuildableContext buildableContext, String key, ImmutableList<String> values) {
+    buildableContext.addMetadata(key, values);
+  }
+
+  private void writeMetadataValue(BuildableContext buildableContext, String key, String value) {
+    buildableContext.addMetadata(key, value);
+  }
+
+  private Optional<String> readMetadataValue(OnDiskBuildInfo onDiskBuildInfo, String key) {
+    return onDiskBuildInfo.getValue(key);
+  }
+
+  private Optional<ImmutableList<String>> readMetadataValues(
+      OnDiskBuildInfo onDiskBuildInfo, String key) {
+    return onDiskBuildInfo.getValues(key);
   }
 
   @Override
