@@ -3106,6 +3106,20 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'remap_src_paths' /}
+  {param example_value: 'no' /}
+  {param description}
+    Controls whether <code>rustc</code> remaps the source paths in its output. Buck will always
+    construct a link tree with the sources required for a given rule, which means the paths passed
+    to <code>rustc</code> are not the original source paths. This option will remap those paths
+    in compiler output, debug info, <code>file!()</code> and elsewhere to match the original
+    source names. The options are "no" (don't remap), "unstable" (remap using the experimental
+    version of these options) and "yes" (remap using the stable versions, probably 1.22 onwards).
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'test' /}
   {param description}

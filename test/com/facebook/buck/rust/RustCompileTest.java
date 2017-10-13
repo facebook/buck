@@ -238,7 +238,8 @@ public class RustCompileTest {
           ImmutableList.of(),
           srcs,
           rootModule,
-          true);
+          true,
+          RustBuckConfig.RemapSrcPaths.NO);
     }
 
     static FakeRustCompileRule from(String target, ImmutableSortedSet<SourcePath> srcs) {

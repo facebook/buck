@@ -210,7 +210,8 @@ public class RustCompileUtils {
         linkerArgs.build(),
         CxxGenruleDescription.fixupSourcePaths(resolver, ruleFinder, cxxPlatform, sources),
         CxxGenruleDescription.fixupSourcePath(resolver, ruleFinder, cxxPlatform, rootModule),
-        crateType.hasOutput());
+        crateType.hasOutput(),
+        rustConfig.getRemapSrcPaths());
   }
 
   public static RustCompileRule requireBuild(
