@@ -182,6 +182,15 @@ private fun maybeGunzip(rawStream: InputStream, path: String) =
     if (path.endsWith(".gz")) GZIPInputStream(rawStream)
     else rawStream
 
+/**
+ * Wrapper for TraceEvent that ensures stable sorting.
+ */
+private data class BufferedTraceEvent(
+        val ts: Long,
+        val order: Long,
+        val event: TraceEvent
+)
+
 private fun <SummaryT> processOneTrace(
         args: List<String>,
         traceBytes: ByteArray,
@@ -196,11 +205,14 @@ private fun <SummaryT> processOneTrace(
 
     // Timestamps are not monotonic in trace files.
     // Part of this is because events from different threads can be reordered,
-    // But I've also seen unexplainable re-orderings within a thread.
+    // But I've also seen re-orderings within a thread.
     // In theory, we could load the entire trace into memory and sort by timestamp.
     // Instead, let's prematurely optimize and use a priority queue.
-    val pq = PriorityQueue(eventBufferDepth + 4, compareBy({ it: TraceEvent -> it.ts }))
+    val pq = PriorityQueue<BufferedTraceEvent>(
+            eventBufferDepth + 4,  // +4 so I don't need to think about math.
+            compareBy({it.ts}, {it.order}))
     var lastTimestamp = 0L
+    var order = 1L
 
     while (true) {
         when (parser.nextToken()) {
@@ -210,7 +222,8 @@ private fun <SummaryT> processOneTrace(
             JsonToken.START_OBJECT -> {
                 // Got an object, enqueue it.
                 val node = ObjectMappers.READER.readTree<JsonNode>(parser)
-                pq.add(parseTraceEvent(node))
+                val event = parseTraceEvent(node)
+                pq.add(BufferedTraceEvent(event.ts, order++, event))
             }
             JsonToken.END_ARRAY -> {
                 // End of our array of events.
@@ -236,7 +249,7 @@ private fun <SummaryT> processOneTrace(
                         "Event went back in time.  Try a bigger queue.\n" + nextEvent)
             }
             lastTimestamp = nextEvent.ts
-            processOneEvent(nextEvent, visitor)
+            processOneEvent(nextEvent.event, visitor)
         }
     }
 
