@@ -194,34 +194,51 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     int weightEstimate =
-        Integer.parseInt(readMetadataValue(onDiskBuildInfo, WEIGHT_ESTIMATE).get());
+        Integer.parseInt(
+            readMetadataValue(getProjectFilesystem(), getBuildTarget(), WEIGHT_ESTIMATE).get());
     Map<String, String> map =
         ObjectMappers.readValue(
-            readMetadataValue(onDiskBuildInfo, CLASSNAMES_TO_HASHES).get(),
+            readMetadataValue(getProjectFilesystem(), getBuildTarget(), CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {});
     Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
-    Optional<ImmutableList<String>> referencedResources =
-        readMetadataValues(onDiskBuildInfo, REFERENCED_RESOURCES);
+    Optional<ImmutableList<String>> referencedResources = readMetadataValues(REFERENCED_RESOURCES);
     return new BuildOutput(
         weightEstimate, ImmutableSortedMap.copyOf(classnamesToHashes), referencedResources);
   }
 
+  private static Path getMetadataPath(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
+    return BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/metadata/" + key);
+  }
+
   private void writeMetadataValues(
-      BuildableContext buildableContext, String key, ImmutableList<String> values) {
-    buildableContext.addMetadata(key, values);
+      BuildableContext buildableContext, String key, ImmutableList<String> values)
+      throws IOException {
+    writeMetadataValue(buildableContext, key, ObjectMappers.WRITER.writeValueAsString(values));
   }
 
-  private void writeMetadataValue(BuildableContext buildableContext, String key, String value) {
-    buildableContext.addMetadata(key, value);
+  private void writeMetadataValue(BuildableContext buildableContext, String key, String value)
+      throws IOException {
+    Path path = getMetadataPath(getProjectFilesystem(), getBuildTarget(), key);
+    getProjectFilesystem().mkdirs(path.getParent());
+    getProjectFilesystem().writeContentsToPath(value, path);
+    buildableContext.recordArtifact(path);
   }
 
-  private Optional<String> readMetadataValue(OnDiskBuildInfo onDiskBuildInfo, String key) {
-    return onDiskBuildInfo.getValue(key);
+  @VisibleForTesting
+  static Optional<String> readMetadataValue(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
+    Path path = getMetadataPath(projectFilesystem, buildTarget, key);
+    return projectFilesystem.readFileIfItExists(path);
   }
 
-  private Optional<ImmutableList<String>> readMetadataValues(
-      OnDiskBuildInfo onDiskBuildInfo, String key) {
-    return onDiskBuildInfo.getValues(key);
+  private Optional<ImmutableList<String>> readMetadataValues(String key) throws IOException {
+    Optional<String> value = readMetadataValue(getProjectFilesystem(), getBuildTarget(), key);
+    if (value.isPresent()) {
+      return Optional.of(
+          ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {}));
+    }
+    return Optional.empty();
   }
 
   @Override
@@ -230,7 +247,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   }
 
   static class BuildOutput {
-    private final int weightEstimate;
+    @VisibleForTesting final int weightEstimate;
     private final ImmutableSortedMap<String, HashCode> classnamesToHashes;
     private final Optional<ImmutableList<String>> referencedResources;
 

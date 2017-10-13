@@ -39,10 +39,8 @@ import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FilesystemBuildInfoStore;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
@@ -58,7 +56,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -362,20 +359,14 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testDxFindsReferencedResources() throws InterruptedException, IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
-
+    BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex");
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
-    DefaultOnDiskBuildInfo buildInfo =
-        new DefaultOnDiskBuildInfo(
-            BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex"),
-            filesystem,
-            new FilesystemBuildInfoStore(filesystem));
-    Optional<ImmutableList<String>> resourcesFromMetadata =
-        buildInfo.getValues(DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+    Optional<String> resourcesFromMetadata =
+        DexProducedFromJavaLibrary.readMetadataValue(
+            filesystem, dexTarget, DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
     assertTrue(resourcesFromMetadata.isPresent());
-    assertEquals(
-        ImmutableSet.of("com.sample.top_layout", "com.sample2.title"),
-        ImmutableSet.copyOf(resourcesFromMetadata.get()));
+    assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
   }
 
   @Test
