@@ -138,7 +138,6 @@ java_immutables_library(
         "//src/com/facebook/buck/shell:worker",
         "//src/com/facebook/buck/skylark/parser:parser",
         "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/swift:platform",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
         "//src/com/facebook/buck/swift/toolchain/impl:impl",

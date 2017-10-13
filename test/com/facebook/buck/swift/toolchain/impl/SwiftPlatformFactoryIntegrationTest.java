@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.swift;
+package com.facebook.buck.swift.toolchain.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -34,7 +34,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class SwiftPlatformsIntegrationTest {
+public class SwiftPlatformFactoryIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -50,7 +50,8 @@ public class SwiftPlatformsIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() {
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build("iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
+        SwiftPlatformFactory.build(
+            "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
@@ -61,7 +62,7 @@ public class SwiftPlatformsIntegrationTest {
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithoutTools() throws IOException {
     Path dir = tmp.newFolder("foo");
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build(
+        SwiftPlatformFactory.build(
             "iphoneos", ImmutableSet.of(dir), swiftcTool, Optional.of(swiftStdTool));
     assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
@@ -73,7 +74,7 @@ public class SwiftPlatformsIntegrationTest {
     tmp.newFolder("foo2/usr/lib/swift_static/iphoneos");
     tmp.newFolder("foo3/usr/lib/swift_static/iphoneos");
     SwiftPlatform swiftPlatform =
-        SwiftPlatforms.build(
+        SwiftPlatformFactory.build(
             "iphoneos",
             ImmutableSet.of(
                 tmp.getRoot().resolve("foo"),

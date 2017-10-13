@@ -46,8 +46,8 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.swift.SwiftPlatforms;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
@@ -538,7 +538,7 @@ public class AppleCxxPlatforms {
 
     if (swiftc.isPresent()) {
       return Optional.of(
-          SwiftPlatforms.build(
+          SwiftPlatformFactory.build(
               platformName, sdkPaths.getToolchainPaths(), swiftc.get(), swiftStdLibTool));
     } else {
       return Optional.empty();

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.swift;
+package com.facebook.buck.swift.toolchain.impl;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.rules.Tool;
@@ -26,10 +26,10 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 
-public class SwiftPlatforms {
+public class SwiftPlatformFactory {
 
   // Utility class, do not instantiate.
-  private SwiftPlatforms() {}
+  private SwiftPlatformFactory() {}
 
   public static SwiftPlatform build(
       String platformName, Set<Path> toolchainPaths, Tool swiftc, Optional<Tool> swiftStdLibTool) {
