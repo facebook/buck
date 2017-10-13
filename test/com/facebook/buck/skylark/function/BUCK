@@ -1,5 +1,5 @@
 standard_java_test(
-    name = "skylark",
+    name = "function",
     deps = [
         "//src/com/facebook/buck/skylark/function:function",
         "//third-party/java/bazel:skylark-lang",

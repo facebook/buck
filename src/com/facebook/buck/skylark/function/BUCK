@@ -1,6 +1,6 @@
 java_library(
     name = "function",
-    srcs = ["Glob.java"],
+    srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/util:util",
