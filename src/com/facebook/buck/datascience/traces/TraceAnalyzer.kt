@@ -1,15 +1,19 @@
 package com.facebook.buck.datascience.traces
 
 import com.facebook.buck.util.ObjectMappers
+import com.facebook.buck.util.concurrent.MostExecutors
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.io.Closer
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListeningExecutorService
+import com.google.common.util.concurrent.MoreExecutors
 import java.io.File
 import java.io.InputStream
 import java.net.URL
+import java.util.concurrent.ArrayBlockingQueue
 import java.util.zip.GZIPInputStream
-
 
 /**
  * See the Chrome Trace Event Format doc.
@@ -99,28 +103,58 @@ fun main(args: Array<String>) {
 
     val logicClass = Class.forName("com.facebook.buck.datascience.traces." + visitorName)
 
+    val processThreadCount = Runtime.getRuntime().availableProcessors();
+    val fetchThreadCount = processThreadCount / 2;
+
+    val fetchThreadPool = MoreExecutors.listeningDecorator(
+            MostExecutors.newMultiThreadExecutor("fetch", fetchThreadCount))
+    val processThreadPool = MoreExecutors.listeningDecorator(
+            MostExecutors.newMultiThreadExecutor("process", processThreadCount))
+
     processTraces(
             args.asList().subList(2, args.size),
             File(infile),
-            logicClass as Class<TraceAnalysisVisitor<Any>>)
+            logicClass as Class<TraceAnalysisVisitor<Any>>,
+            fetchThreadPool,
+            processThreadPool)
 }
 
 private fun <SummaryT> processTraces(
         args: List<String>,
         traceListFile: File,
-        visitorClass: Class<TraceAnalysisVisitor<SummaryT>>) {
-    val summaries = mutableListOf<SummaryT>()
+        visitorClass: Class<TraceAnalysisVisitor<SummaryT>>,
+        fetchThreadPool: ListeningExecutorService,
+        processThreadPool: ListeningExecutorService) {
+    val blobQueue = ArrayBlockingQueue<ByteArray>(1)
 
-    // TODO: Parallelize.
-    traceListFile.forEachLine {
-        val traceBytes = openTrace(it)
-        val visitor = visitorClass.newInstance()
-        val summary = processOneTrace(args, traceBytes, visitor)
-        summaries.add(summary)
+    val processFutures = traceListFile.readLines().map {
+        val fetchFuture = fetchThreadPool.submit {
+            System.err.println(it)
+            val bytes = openTrace(it)
+            blobQueue.put(bytes)
+        }
+        val processFuture = Futures.transform(
+                fetchFuture,
+                com.google.common.base.Function<Any, SummaryT> {
+                    val traceBytes = blobQueue.poll()
+                    val visitor = visitorClass.newInstance()
+                    val summary = processOneTrace(args, traceBytes, visitor)
+                    summary
+                },
+                processThreadPool)
+        processFuture
     }
 
-    val finisher = visitorClass.newInstance()
-    finisher.finishAnalysis(args, summaries)
+    try {
+        val summaries = Futures.allAsList(processFutures).get()
+
+        val finisher = visitorClass.newInstance()
+        finisher.finishAnalysis(args, summaries)
+    } finally {
+        fetchThreadPool.shutdownNow()
+        processThreadPool.shutdownNow()
+    }
+
 }
 
 private fun openTrace(pathOrUrl: String): ByteArray {
