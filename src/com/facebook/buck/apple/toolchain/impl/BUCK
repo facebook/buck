@@ -5,7 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/apple:rules",
+        "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/io:io",

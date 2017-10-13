@@ -8,7 +8,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android/packageable:packageable",
-        "//src/com/facebook/buck/apple:rules",
+        "//src/com/facebook/buck/apple:apple",
         "//src/com/facebook/buck/config:config",
         "//src/com/facebook/buck/graph:graph",
         "//src/com/facebook/buck/io:io",
