@@ -20,6 +20,19 @@ python_library(
     ],
 )
 
+python_library(
+    name = "deterministic_set",
+    srcs = ["buck_parser/deterministic_set.py"],
+    base_module = "",
+)
+
+python_test(
+    name = "deterministic_set_test",
+    srcs = ["buck_parser/deterministic_set_test.py"],
+    base_module = "",
+    deps = [":deterministic_set"],
+)
+
 python_test(
     name = "buck_test",
     srcs = glob(["buck_parser/**/*_test.py"]),
