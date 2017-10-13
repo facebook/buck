@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Test;
 
 public class DotTest {
@@ -99,5 +100,42 @@ public class DotTest {
             "  B [style=filled,color=indianred1];"));
 
     assertEquals("}", lines.get(lines.size() - 1));
+  }
+
+  @Test
+  public void testEscaping() throws IOException {
+    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
+    mutableGraph.addEdge("A", "//B");
+    mutableGraph.addEdge("//B", "C1 C2");
+    mutableGraph.addEdge("//B", "D\"");
+
+    StringBuilder output = new StringBuilder();
+
+    Dot<String> dot =
+        new Dot<>(
+            new DirectedAcyclicGraph<>(mutableGraph),
+            "the_graph",
+            Functions.identity(),
+            name -> name.equals("A") ? "android_library" : "java_library",
+            output);
+    dot.writeOutput();
+
+    String dotGraph = output.toString();
+    List<String> lines = ImmutableList.copyOf(Splitter.on('\n').omitEmptyStrings().split(dotGraph));
+
+    // remove attributes because we are not interested what styles and colors are default
+    lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
+
+    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
+    assertEquals(
+        edges,
+        ImmutableSet.of(
+            "  A;",
+            "  \"//B\";",
+            "  \"C1 C2\";",
+            "  \"D\\\"\";",
+            "  A -> \"//B\";",
+            "  \"//B\" -> \"C1 C2\";",
+            "  \"//B\" -> \"D\\\"\";"));
   }
 }

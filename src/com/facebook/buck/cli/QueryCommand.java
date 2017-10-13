@@ -237,7 +237,7 @@ public class QueryCommand extends AbstractCommand {
         env.getTargetGraph(),
         "result_graph",
         env.getNodesFromQueryTargets(queryResult),
-        targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
+        targetNode -> targetNode.getBuildTarget().getFullyQualifiedName(),
         targetNode -> Description.getBuildRuleType(targetNode.getDescription()).getName(),
         params.getConsole().getStdOut(),
         shouldGenerateBFSOutput());
