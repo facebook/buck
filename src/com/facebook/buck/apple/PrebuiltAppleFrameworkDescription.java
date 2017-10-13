@@ -109,7 +109,8 @@ public class PrebuiltAppleFrameworkDescription
         args.getSupportedPlatformsRegex(),
         input ->
             CxxFlags.getFlagsWithPlatformMacroExpansion(
-                args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input));
+                args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input),
+        appleCxxPlatformsFlavorDomain);
   }
 
   @Override
