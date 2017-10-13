@@ -438,6 +438,22 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testPrebuiltDepModular() throws IOException {
+    String target = "//apps/sample:app_with_prebuilt_native_libs_modular";
+    workspace.runBuckCommand("build", target).assertSuccess();
+
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargets.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("assets/prebuilt/libs.txt");
+    zipInspector.assertFileExists("assets/prebuilt/libs.xzs");
+    zipInspector.assertFileExists("assets/prebuilt_assets/libs.txt");
+    zipInspector.assertFileExists("assets/prebuilt_assets/libs.xzs");
+  }
+
+  @Test
   public void testCxxLibraryDepClang() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep";
     ProjectWorkspace.ProcessResult result =

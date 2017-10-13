@@ -208,6 +208,22 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_with_prebuilt_native_libs_modular',
+  manifest = 'AndroidManifest.xml',
+  application_module_configs = {
+    'prebuilt' : ['//native/fakenative/jni:prebuilt_native'],
+    'prebuilt_asset' : ['//native/fakenative/jni:prebuilt_native_asset'],
+  },
+  keystore = '//keystores:debug',
+  package_asset_libraries = True,
+  deps = [
+    '//native/fakenative/jni:prebuilt_native',
+    '//native/fakenative/jni:prebuilt_native_asset',
+    '//res/com/sample/base:base',
+  ],
+)
+
+android_binary(
   name = 'app_cxx_lib_dep_modular',
   manifest = 'AndroidManifest.xml',
   application_module_targets = [

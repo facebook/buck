@@ -92,7 +92,10 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
       String moduleName) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(
-        !nativeLibDirectories.isEmpty() || !strippedLibs.isEmpty() || !strippedLibsAssets.isEmpty(),
+        !nativeLibDirectories.isEmpty()
+            || !nativeLibAssetDirectories.isEmpty()
+            || !strippedLibs.isEmpty()
+            || !strippedLibsAssets.isEmpty(),
         "There should be at least one native library to copy.");
     this.nativeLibDirectories = nativeLibDirectories;
     this.nativeLibAssetDirectories = nativeLibAssetDirectories;
