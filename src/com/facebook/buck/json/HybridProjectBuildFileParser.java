@@ -107,7 +107,8 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
     }
     @Nullable ProjectBuildFileParser parser = parsers.get(syntax);
     if (parser == null) {
-      throw new AssertionError(syntax + " is not mapped to any parser");
+      throw BuildFileParseException.createForUnknownParseError(
+          String.format("Syntax [%s] is not supported for build file [%s]", syntax, buildFile));
     }
     return parser;
   }

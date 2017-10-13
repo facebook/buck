@@ -138,6 +138,17 @@ public class HybridProjectBuildFileParserTest {
   }
 
   @Test
+  public void getAllCallsFailsOnUnsupportedSyntax() throws Exception {
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Syntax [PYTHON_DSL] is not supported for build file [" + buildFile + "]");
+    parser =
+        HybridProjectBuildFileParser.using(
+            ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK);
+    Files.write(buildFile, "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
+    parser.getAll(buildFile, processedBytes);
+  }
+
+  @Test
   public void reportProfileIsCalledForBothParsers() throws Exception {
     pythonDslParser.reportProfile();
     EasyMock.expectLastCall();
