@@ -293,7 +293,8 @@ public class AppleTestDescription
             debugFormat,
             appleConfig.useDryRunCodeSigning(),
             appleConfig.cacheBundlesAndPackages(),
-            appleConfig.assetCatalogValidation());
+            appleConfig.assetCatalogValidation(),
+            ImmutableList.of());
     resolver.addToIndex(bundle);
 
     Optional<SourcePath> xctool = getXctool(projectFilesystem, params, resolver);

@@ -576,7 +576,8 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       boolean dryRunCodeSigning,
       boolean cacheable,
-      AppleAssetCatalog.ValidationType assetCatalogValidation) {
+      AppleAssetCatalog.ValidationType assetCatalogValidation,
+      ImmutableList<String> codesignFlags) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             cxxPlatformFlavorDomain,
@@ -775,7 +776,8 @@ public class AppleDescriptions {
         codeSignIdentityStore,
         provisioningProfileStore,
         dryRunCodeSigning,
-        cacheable);
+        cacheable,
+        codesignFlags);
   }
 
   private static void addToIndex(BuildRuleResolver resolver, Optional<? extends BuildRule> rule) {

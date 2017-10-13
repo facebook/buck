@@ -403,7 +403,8 @@ public class AppleLibraryDescription
         debugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
-        appleConfig.assetCatalogValidation());
+        appleConfig.assetCatalogValidation(),
+        ImmutableList.of());
   }
 
   /**

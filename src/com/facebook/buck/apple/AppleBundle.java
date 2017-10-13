@@ -138,6 +138,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean dryRunCodeSigning;
 
+  @AddToRuleKey private final ImmutableList<String> codesignFlags;
+
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
@@ -181,7 +183,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       boolean dryRunCodeSigning,
-      boolean cacheable) {
+      boolean cacheable,
+      ImmutableList<String> codesignFlags) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
@@ -214,6 +217,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
     this.dryRunCodeSigning = dryRunCodeSigning;
     this.cacheable = cacheable;
+    this.codesignFlags = codesignFlags;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getSourcePathToOutput() != null;
@@ -603,7 +607,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 codesignAllocatePath,
                 dryRunCodeSigning
                     ? Optional.of(codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE))
-                    : Optional.empty()));
+                    : Optional.empty(),
+                codesignFlags));
       }
 
       stepsBuilder.add(
@@ -617,7 +622,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               codesignAllocatePath,
               dryRunCodeSigning
                   ? Optional.of(bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE))
-                  : Optional.empty()));
+                  : Optional.empty(),
+              codesignFlags));
     } else {
       addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),

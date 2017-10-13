@@ -335,7 +335,8 @@ public class AppleBinaryDescription
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
-        appleConfig.assetCatalogValidation());
+        appleConfig.assetCatalogValidation(),
+        ImmutableList.of());
   }
 
   private BuildRule createBinary(

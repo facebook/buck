@@ -175,7 +175,8 @@ public class AppleBundleDescription
         flavoredDebugFormat,
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
-        appleConfig.assetCatalogValidation());
+        appleConfig.assetCatalogValidation(),
+        args.getCodesignFlags());
   }
 
   /**
@@ -302,6 +303,7 @@ public class AppleBundleDescription
   interface AbstractAppleBundleDescriptionArg
       extends CommonDescriptionArg,
           HasAppleBundleFields,
+          HasAppleCodesignFields,
           HasDefaultPlatform,
           HasDeclaredDeps,
           HasTests {
