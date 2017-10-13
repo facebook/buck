@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class KotlinBuckConfig {
   private static final String SECTION = "kotlin";
+  private static final String JAVA_SECTION = "java";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
@@ -47,9 +49,10 @@ public class KotlinBuckConfig {
       ImmutableSet<SourcePath> classpathEntries =
           ImmutableSet.of(
               delegate.getSourcePath(getPathToStdlibJar()),
-              delegate.getSourcePath(getPathToCompilerJar()));
+              delegate.getSourcePath(getPathToCompilerJar()),
+              delegate.getSourcePath(getPathToTools()));
 
-      return new JarBackedReflectedKotlinc(classpathEntries);
+      return new JarBackedReflectedKotlinc(classpathEntries, getPathToAP(), getPathToStdlibJar());
     }
   }
 
@@ -132,6 +135,49 @@ public class KotlinBuckConfig {
   }
 
   /**
+   * Get the path to the Kotlin annotation processing jar.
+   *
+   * @return the Kotlin annotation processing jar path
+   */
+  Path getPathToAP() {
+    Path compiler = getKotlinHome().resolve("kotlin-annotation-processing.jar");
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    compiler = getKotlinHome().resolve(Paths.get("lib", "kotlin-annotation-processing.jar"));
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    compiler =
+        getKotlinHome().resolve(Paths.get("libexec", "lib", "kotlin-annotation-processing.jar"));
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve kotlin annotation processing JAR location (kotlin home:"
+            + getKotlinHome()
+            + ").");
+  }
+
+  /**
+   * Get the path to the java tools jar.
+   *
+   * @return the java tools jar path
+   */
+  Path getPathToTools() {
+    Path compiler = getJavaHome().resolve("lib/tools.jar");
+    if (Files.isRegularFile(compiler)) {
+      return compiler.normalize();
+    }
+
+    throw new HumanReadableException(
+        "Could not resolve tools JAR location (java home:" + getJavaHome() + ").");
+  }
+
+  /**
    * Determine whether external Kotlin compilation is being forced. The default is internal
    * (in-process) execution, but this can be overridden in .buckconfig by setting the "external"
    * property to "true".
@@ -198,6 +244,44 @@ public class KotlinBuckConfig {
     } catch (IOException io) {
       throw new HumanReadableException(
           "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.", io);
+    }
+  }
+
+  /**
+   * Find the Java home (installation) directory by searching in this order: <br>
+   *
+   * <ul>
+   *   <li>If the "java_home" directory is specified in .buckconfig then use it.
+   *   <li>Check the environment for a JAVA_HOME variable, if defined then use it.
+   * </ul>
+   *
+   * @return the Java home path
+   */
+  private Path getJavaHome() {
+    Map<String, String> environment = System.getenv();
+    try {
+      // Check the buck configuration for a specified kotlin home
+      Optional<String> value = delegate.getValue(JAVA_SECTION, "java_home");
+      if (value.isPresent()) {
+        boolean isAbsolute = Paths.get(value.get()).isAbsolute();
+        Optional<Path> homePath = delegate.getPath(JAVA_SECTION, "java_home", !isAbsolute);
+        if (homePath.isPresent() && Files.isDirectory(homePath.get())) {
+          return homePath.get().toRealPath().normalize();
+        } else {
+          throw new HumanReadableException(
+              "Java home directory (" + homePath + ") specified in .buckconfig was not found.");
+        }
+      } else if (environment.containsKey("JAVA_HOME")) {
+        return Paths.get(environment.get("JAVA_HOME")).normalize();
+      } else if (System.getProperty("java.home") != null) {
+        return Paths.get(System.getProperty("java.home")).normalize();
+      } else {
+        throw new HumanReadableException(
+            "Could not resolve java home directory, Consider setting JAVA_HOME.");
+      }
+    } catch (IOException io) {
+      throw new HumanReadableException(
+          "Could not resolve java home directory, Consider setting JAVA_HOME.", io);
     }
   }
 }

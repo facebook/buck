@@ -67,9 +67,16 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   private static final Map<Set<String>, Object> kotlinShims = new ConcurrentHashMap<>();
 
   private final ImmutableSet<SourcePath> compilerClassPath;
+  private final Path annotationProcessingClassPath;
+  private final Path pathToStdlibJar;
 
-  JarBackedReflectedKotlinc(ImmutableSet<SourcePath> compilerClassPath) {
+  JarBackedReflectedKotlinc(
+      ImmutableSet<SourcePath> compilerClassPath,
+      Path annotationProcessingClassPath,
+      Path pathToStdlibJar) {
     this.compilerClassPath = compilerClassPath;
+    this.annotationProcessingClassPath = annotationProcessingClassPath;
+    this.pathToStdlibJar = pathToStdlibJar;
   }
 
   @Override
@@ -93,6 +100,16 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   @Override
   public String getShortName() {
     return "kotlinc";
+  }
+
+  @Override
+  public Path getAPPaths() {
+    return annotationProcessingClassPath;
+  }
+
+  @Override
+  public Path getStdlibPath() {
+    return pathToStdlibJar;
   }
 
   @Override

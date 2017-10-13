@@ -119,6 +119,7 @@ public class ExternalKotlinc implements Kotlinc {
     ImmutableList<String> command =
         ImmutableList.<String>builder()
             .add(pathToKotlinc.toString())
+            .addAll(options)
             .addAll(
                 transform(
                     kotlinSourceFilePaths,
@@ -166,6 +167,16 @@ public class ExternalKotlinc implements Kotlinc {
   @Override
   public String getShortName() {
     return pathToKotlinc.toString();
+  }
+
+  @Override
+  public Path getAPPaths() {
+    throw new IllegalStateException("Not supported yet");
+  }
+
+  @Override
+  public Path getStdlibPath() {
+    throw new IllegalStateException("Not supported yet");
   }
 
   @Override
