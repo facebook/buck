@@ -16,40 +16,18 @@
 
 package com.facebook.buck.swift.toolchain;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftPlatform;
-import com.google.common.collect.ImmutableMap;
 
 public class SwiftPlatformsProvider {
 
   private final FlavorDomain<SwiftPlatform> swiftCxxPlatforms;
 
-  SwiftPlatformsProvider(FlavorDomain<SwiftPlatform> swiftCxxPlatforms) {
+  public SwiftPlatformsProvider(FlavorDomain<SwiftPlatform> swiftCxxPlatforms) {
     this.swiftCxxPlatforms = swiftCxxPlatforms;
   }
 
   public FlavorDomain<SwiftPlatform> getSwiftCxxPlatforms() {
     return swiftCxxPlatforms;
-  }
-
-  public static SwiftPlatformsProvider create(AppleCxxPlatformsProvider appleCxxPlatformsProvider) {
-
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatforms =
-        appleCxxPlatformsProvider.getAppleCxxPlatforms();
-
-    ImmutableMap.Builder<Flavor, SwiftPlatform> swiftPlatforms = ImmutableMap.builder();
-    for (Flavor flavor : appleCxxPlatforms.getFlavors()) {
-      appleCxxPlatforms
-          .getValue(flavor)
-          .getSwiftPlatform()
-          .ifPresent(swiftPlatform -> swiftPlatforms.put(flavor, swiftPlatform));
-    }
-    FlavorDomain<SwiftPlatform> swiftPlatformDomain =
-        new FlavorDomain<>("Swift Platform", swiftPlatforms.build());
-
-    return new SwiftPlatformsProvider(swiftPlatformDomain);
   }
 }

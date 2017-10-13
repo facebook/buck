@@ -158,6 +158,7 @@ import com.facebook.buck.shell.WorkerToolDescription;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.impl.SwiftPlatformsProviderFactory;
 import com.facebook.buck.toolchain.ToolchainProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -251,7 +252,7 @@ public class KnownBuildRuleTypes {
         appleCxxPlatformsProvider.getAppleCxxPlatforms();
 
     SwiftPlatformsProvider swiftPlatformsProvider =
-        SwiftPlatformsProvider.create(appleCxxPlatformsProvider);
+        SwiftPlatformsProviderFactory.create(appleCxxPlatformsProvider);
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
