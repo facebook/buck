@@ -1193,6 +1193,28 @@ public class ParserTest {
   }
 
   @Test
+  public void depsetCanBeUsedForSpecifyingDeps() throws Exception {
+    tempDir.newFolder("foo");
+    tempDir.newFolder("bar");
+
+    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    Files.write(
+        testFooBuckFile, "java_library(name = 'foo', visibility=['PUBLIC'])\n".getBytes(UTF_8));
+
+    Path testBarBuckFile = tempDir.newFile("bar/BUCK");
+    Files.write(
+        testBarBuckFile,
+        ("java_library(name = 'bar',\n" + "  deps = depset(['//foo:foo']))\n").getBytes(UTF_8));
+
+    // Fetch //bar:bar#src to put it in cache.
+    BuildTarget barTarget =
+        BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
+    Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
+
+    parser.buildTargetGraph(eventBus, cell, false, executorService, buildTargets);
+  }
+
+  @Test
   public void targetWithSourceFileChangesHash() throws Exception {
     tempDir.newFolder("foo");
 

@@ -9,6 +9,7 @@ import __future__
 import contextlib
 from pathlib import Path, PurePath
 from pywatchman import WatchmanError
+from .deterministic_set import DeterministicSet
 from .json_encoder import BuckJSONEncoder
 from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
@@ -474,6 +475,15 @@ def flatten_dicts(*args, **_):
     :return: a single dict containing the flattened list
     """
     return flatten_list_of_dicts(args)
+
+
+@provide_for_build
+def depset(elements, build_env=None):
+    """Creates an instance of sets with deterministic iteration order.
+    :param elements: the list of elements constituting the returned depset.
+    :rtype: DeterministicSet
+    """
+    return DeterministicSet(elements)
 
 
 GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40}) #@#\n$')
