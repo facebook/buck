@@ -54,7 +54,6 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements InitializableFromDisk<UnzipAar.BuildOutput> {
 
   private static final String AAR_UNZIP_PATH_FORMAT = "__unpack_%s__";
-  private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";
 
   @AddToRuleKey private final SourcePath aarFile;
   private final Path unpackDirectory;
@@ -176,11 +175,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToTextSymbolsDir)));
     steps.add(
         new ExtractFromAndroidManifestStep(
-            getAndroidManifest(),
-            getProjectFilesystem(),
-            buildableContext,
-            METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
-            pathToRDotJavaPackageFile));
+            getAndroidManifest(), getProjectFilesystem(), pathToRDotJavaPackageFile));
     steps.add(
         CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
 

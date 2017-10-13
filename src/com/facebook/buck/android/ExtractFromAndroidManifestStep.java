@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
@@ -28,21 +27,13 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
 
   private final Path manifest;
   private final ProjectFilesystem filesystem;
-  private final BuildableContext buildableContext;
-  private final String metadataKey;
   private final Path pathToRDotJavaPackageFile;
 
   public ExtractFromAndroidManifestStep(
-      Path manifest,
-      ProjectFilesystem filesystem,
-      BuildableContext buildableContext,
-      String metadataKey,
-      Path pathToRDotJavaPackageFile) {
+      Path manifest, ProjectFilesystem filesystem, Path pathToRDotJavaPackageFile) {
     super("extract_from_android_manifest");
     this.manifest = manifest;
     this.filesystem = filesystem;
-    this.buildableContext = buildableContext;
-    this.metadataKey = metadataKey;
     this.pathToRDotJavaPackageFile = pathToRDotJavaPackageFile;
   }
 
@@ -53,7 +44,6 @@ public class ExtractFromAndroidManifestStep extends AbstractExecutionStep {
         DefaultAndroidManifestReader.forPath(filesystem.resolve(manifest));
 
     String rDotJavaPackageFromAndroidManifest = androidManifestReader.getPackage();
-    buildableContext.addMetadata(metadataKey, rDotJavaPackageFromAndroidManifest);
     filesystem.writeContentsToPath(rDotJavaPackageFromAndroidManifest, pathToRDotJavaPackageFile);
     return StepExecutionResult.SUCCESS;
   }
