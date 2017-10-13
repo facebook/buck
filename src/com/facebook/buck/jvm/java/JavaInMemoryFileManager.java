@@ -51,6 +51,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   private static final Logger LOG = Logger.get(JavaInMemoryFileManager.class);
 
   private Path jarPath;
+  private final String jarPathUri;
   private StandardJavaFileManager delegate;
   private Set<String> directoryPaths;
   private Map<String, JarFileObject> fileForOutputPaths;
@@ -65,6 +66,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
     super(standardManager);
     this.delegate = standardManager;
     this.jarPath = jarPath;
+    this.jarPathUri = "jar:" + jarPath.toUri() + "!/";
     this.directoryPaths = new HashSet<>();
     this.fileForOutputPaths = new HashMap<>();
     this.removeClassesPredicate = removeClassesPredicate;
@@ -235,6 +237,6 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private URI getUriPath(String relativePath) {
-    return URI.create("jar:file:" + encodeURL(jarPath.toString()) + "!/" + encodeURL(relativePath));
+    return URI.create(jarPathUri + encodeURL(relativePath));
   }
 }
