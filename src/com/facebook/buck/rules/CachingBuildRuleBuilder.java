@@ -648,7 +648,6 @@ class CachingBuildRuleBuilder {
 
     // Do the actual upload.
     try {
-
       // Verify that the recorded path hashes are accurate.
       Optional<String> recordedPathHashes =
           buildInfoRecorder.getBuildMetadataFor(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);

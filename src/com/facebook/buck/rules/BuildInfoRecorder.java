@@ -17,24 +17,17 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactInfo;
-import com.facebook.buck.event.ArtifactCompressionEvent;
+import com.facebook.buck.artifact_cache.ArtifactUploader;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.file.BorrowablePath;
-import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.CloseableHolder;
-import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.zip.Zip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -48,7 +41,6 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -73,7 +65,7 @@ import javax.annotation.Nullable;
  * build by an {@link OnDiskBuildInfo}.
  */
 public class BuildInfoRecorder {
-
+  @SuppressWarnings("unused")
   private static final Logger LOG = Logger.get(BuildRuleResolver.class);
 
   @VisibleForTesting
@@ -290,70 +282,16 @@ public class BuildInfoRecorder {
       throw new BuckUncheckedExecutionException(
           e, "When creating getting recorded paths for %s.", buildTarget);
     }
+
     ImmutableMap<String, String> buildMetadata = getBuildMetadata();
-    final NamedTemporaryFile zip =
-        getTemporaryArtifactZip(
-            buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInZip);
-
-    // Store the artifact, including any additional metadata.
-    ListenableFuture<Void> storeFuture =
-        artifactCache.store(
-            ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
-            BorrowablePath.borrowablePath(zip.get()));
-    Futures.addCallback(
-        storeFuture,
-        new FutureCallback<Void>() {
-          @Override
-          public void onSuccess(Void result) {
-            onCompletion();
-          }
-
-          @Override
-          public void onFailure(Throwable t) {
-            onCompletion();
-            LOG.info(t, "Failed storing RuleKeys %s to the cache.", ruleKeys);
-            eventBus.post(
-                ConsoleEvent.severe(
-                    "Failed storing an artifact to the cache," + "see log for details."));
-          }
-
-          private void onCompletion() {
-            try {
-              zip.close();
-            } catch (IOException e) {
-              throw new BuckUncheckedExecutionException(
-                  e, "When deleting temporary zip %s.", zip.get());
-            }
-          }
-        });
-
-    return storeFuture;
-  }
-
-  private static NamedTemporaryFile getTemporaryArtifactZip(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      ImmutableSet<RuleKey> ruleKeys,
-      BuckEventBus eventBus,
-      SortedSet<Path> pathsToIncludeInZip) {
-    ArtifactCompressionEvent.Started started =
-        ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
-    eventBus.post(started);
-    try (CloseableHolder<NamedTemporaryFile> zip =
-        new CloseableHolder<>(
-            new NamedTemporaryFile(
-                "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip"))) {
-      Zip.create(projectFilesystem, pathsToIncludeInZip, zip.get().get());
-      return zip.release();
-    } catch (IOException e) {
-      throw new BuckUncheckedExecutionException(
-          e,
-          "When creating artifact zip for %s containing: \n %s.",
-          buildTarget,
-          Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip)));
-    } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
-    }
+    return ArtifactUploader.performUploadToArtifactCache(
+        ruleKeys,
+        artifactCache,
+        eventBus,
+        buildMetadata,
+        pathsToIncludeInZip,
+        buildTarget,
+        projectFilesystem);
   }
 
   /** @param pathToArtifact Relative path to the project root. */
