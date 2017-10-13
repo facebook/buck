@@ -28,9 +28,12 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.CloseableHolder;
+import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.Zip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -50,7 +53,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -275,43 +277,29 @@ public class BuildInfoRecorder {
       final ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
       final BuckEventBus eventBus) {
-
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
     if (!artifactCache.getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
 
-    ArtifactCompressionEvent.Started started =
-        ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
-    eventBus.post(started);
-
-    final Path zip;
-    SortedSet<Path> pathsToIncludeInZip = ImmutableSortedSet.of();
-    ImmutableMap<String, String> buildMetadata;
+    SortedSet<Path> pathsToIncludeInZip;
     try {
       pathsToIncludeInZip = getRecordedDirsAndFiles();
-      zip =
-          Files.createTempFile(
-              "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip");
-      buildMetadata = getBuildMetadata();
-      Zip.create(projectFilesystem, pathsToIncludeInZip, zip);
     } catch (IOException e) {
-      eventBus.post(
-          ConsoleEvent.info(
-              "Failed to create zip for %s containing:\n%s",
-              buildTarget, Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip))));
-      e.printStackTrace();
-      return Futures.immediateFuture(null);
-    } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
+      throw new BuckUncheckedExecutionException(
+          e, "When creating getting recorded paths for %s.", buildTarget);
     }
+    ImmutableMap<String, String> buildMetadata = getBuildMetadata();
+    final NamedTemporaryFile zip =
+        getTemporaryArtifactZip(
+            buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInZip);
 
     // Store the artifact, including any additional metadata.
     ListenableFuture<Void> storeFuture =
         artifactCache.store(
             ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
-            BorrowablePath.borrowablePath(zip));
+            BorrowablePath.borrowablePath(zip.get()));
     Futures.addCallback(
         storeFuture,
         new FutureCallback<Void>() {
@@ -331,14 +319,41 @@ public class BuildInfoRecorder {
 
           private void onCompletion() {
             try {
-              Files.deleteIfExists(zip);
+              zip.close();
             } catch (IOException e) {
-              throw new RuntimeException(e);
+              throw new BuckUncheckedExecutionException(
+                  e, "When deleting temporary zip %s.", zip.get());
             }
           }
         });
 
     return storeFuture;
+  }
+
+  private static NamedTemporaryFile getTemporaryArtifactZip(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ImmutableSet<RuleKey> ruleKeys,
+      BuckEventBus eventBus,
+      SortedSet<Path> pathsToIncludeInZip) {
+    ArtifactCompressionEvent.Started started =
+        ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
+    eventBus.post(started);
+    try (CloseableHolder<NamedTemporaryFile> zip =
+        new CloseableHolder<>(
+            new NamedTemporaryFile(
+                "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()), ".zip"))) {
+      Zip.create(projectFilesystem, pathsToIncludeInZip, zip.get().get());
+      return zip.release();
+    } catch (IOException e) {
+      throw new BuckUncheckedExecutionException(
+          e,
+          "When creating artifact zip for %s containing: \n %s.",
+          buildTarget,
+          Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInZip)));
+    } finally {
+      eventBus.post(ArtifactCompressionEvent.finished(started));
+    }
   }
 
   /** @param pathToArtifact Relative path to the project root. */

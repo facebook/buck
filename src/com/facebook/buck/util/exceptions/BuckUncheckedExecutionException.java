@@ -55,6 +55,10 @@ public class BuckUncheckedExecutionException extends RuntimeException
     this.context = context;
   }
 
+  public BuckUncheckedExecutionException(Throwable cause, String format, Object... args) {
+    this(cause, String.format(format, args));
+  }
+
   @Override
   public Optional<String> getContext() {
     return Optional.ofNullable(context);
