@@ -19,6 +19,9 @@ package com.facebook.buck.skylark.function;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.skylark.io.impl.SimpleGlobber;
+import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.skylark.packages.PackageFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
@@ -106,7 +109,10 @@ public class GlobTest {
     BuildFileAST buildFileAst =
         BuildFileAST.parseBuildFile(ParserInputSource.create(buildFile), eventHandler);
     Environment env = Environment.builder(mutability).setGlobals(BazelLibrary.GLOBALS).build();
-    env.setup("glob", Glob.create(root));
+    env.setupDynamic(
+        PackageFactory.PACKAGE_CONTEXT,
+        PackageContext.builder().setGlobber(SimpleGlobber.create(root)).build());
+    env.setup("glob", Glob.create());
     boolean exec = buildFileAst.exec(env, eventHandler);
     if (!exec) {
       Assert.fail("Build file evaluation must have succeeded");

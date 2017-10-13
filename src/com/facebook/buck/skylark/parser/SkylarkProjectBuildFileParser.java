@@ -29,6 +29,9 @@ import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.Glob;
+import com.facebook.buck.skylark.io.impl.SimpleGlobber;
+import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
@@ -202,8 +205,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ParseContext parseContext = new ParseContext();
     try (Mutability mutability = Mutability.create("parsing " + buildFile)) {
       Environment env =
-          createBuildFileEvaluationEnvironment(
-              buildFile, buildFilePath, buildFileAst, mutability, parseContext);
+          createBuildFileEvaluationEnvironment(buildFile, buildFileAst, mutability, parseContext);
       boolean exec = buildFileAst.exec(env, eventHandler);
       if (!exec) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -222,11 +224,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    *     functions like {@code glob} and native rules like {@code java_library}.
    */
   private Environment createBuildFileEvaluationEnvironment(
-      Path buildFile,
-      com.google.devtools.build.lib.vfs.Path buildFilePath,
-      BuildFileAST buildFileAst,
-      Mutability mutability,
-      ParseContext parseContext)
+      Path buildFile, BuildFileAST buildFileAst, Mutability mutability, ParseContext parseContext)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap<String, Environment.Extension> importMap =
         buildImportMap(buildFileAst.getImports(), parseContext);
@@ -239,7 +237,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     String basePath = getBasePath(buildFile);
     env.setupDynamic(PACKAGE_NAME_GLOBAL, basePath);
     env.setupDynamic(PARSE_CONTEXT, parseContext);
-    env.setup("glob", Glob.create(buildFilePath.getParentDirectory()));
+    env.setup("glob", Glob.create());
+    PackageContext packageContext =
+        PackageContext.builder()
+            .setGlobber(SimpleGlobber.create(fileSystem.getPath(buildFile.getParent().toString())))
+            .build();
+    env.setupDynamic(PackageFactory.PACKAGE_CONTEXT, packageContext);
     return env;
   }
 

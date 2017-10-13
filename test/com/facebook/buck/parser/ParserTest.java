@@ -2197,7 +2197,8 @@ public class ParserTest {
             .join(
                 ImmutableList.of(
                     "# BUILD FILE SYNTAX: SKYLARK",
-                    "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')"))
+                    "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')",
+                    "glob(['*.txt'])"))
             .getBytes(UTF_8));
 
     BuckConfig config =

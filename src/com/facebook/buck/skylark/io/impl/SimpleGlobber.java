@@ -14,8 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.skylark.function;
+package com.facebook.buck.skylark.io.impl;
 
+import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -32,7 +33,7 @@ import java.util.Set;
  *
  * <p>Since this is a simple implementation it does not support caching and other smarts.
  */
-public class SimpleGlobber {
+public class SimpleGlobber implements Globber {
 
   /** Path used as a root when resolving patterns. */
   private final Path basePath;
@@ -48,6 +49,7 @@ public class SimpleGlobber {
    * @return The set of paths resolved using include patterns minus paths excluded by exclude
    *     patterns.
    */
+  @Override
   public Set<String> run(
       Collection<String> include, Collection<String> exclude, Boolean excludeDirectories)
       throws IOException {
@@ -84,7 +86,7 @@ public class SimpleGlobber {
    *
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static SimpleGlobber create(Path basePath) {
+  public static Globber create(Path basePath) {
     return new SimpleGlobber(basePath);
   }
 }

@@ -16,17 +16,19 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.skylark.packages.PackageFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkSignature;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.GlobList;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkSignatureProcessor;
 import com.google.devtools.build.lib.syntax.Type;
-import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 
 /**
@@ -88,44 +90,42 @@ public class Glob {
       ),
     },
     documented = false,
+    useAst = true,
     useEnvironment = true
   )
-  private static final BuiltinFunction.Factory glob =
-      new BuiltinFunction.Factory(GLOB_FUNCTION_NAME) {
+  private static final BuiltinFunction glob =
+      new BuiltinFunction(GLOB_FUNCTION_NAME) {
         @SuppressWarnings("unused")
-        public BuiltinFunction create(SimpleGlobber globber) {
-          return new BuiltinFunction(GLOB_FUNCTION_NAME, this) {
-            public SkylarkList<String> invoke(
-                SkylarkList<String> includes,
-                SkylarkList<String> excludes,
-                Boolean excludeDirectories,
-                Environment env)
-                throws EvalException, IOException {
-              return SkylarkList.MutableList.copyOf(
-                  env,
-                  GlobList.captureResults(
-                      includes,
-                      excludes,
-                      globber
-                          .run(
-                              Type.STRING_LIST.convert(includes, "'glob' includes"),
-                              Type.STRING_LIST.convert(excludes, "'glob' excludes"),
-                              excludeDirectories)
-                          .stream()
-                          .sorted()
-                          .collect(MoreCollectors.toImmutableList())));
-            }
-          };
+        public SkylarkList<String> invoke(
+            SkylarkList<String> includes,
+            SkylarkList<String> excludes,
+            Boolean excludeDirectories,
+            FuncallExpression ast,
+            Environment env)
+            throws EvalException, IOException {
+          PackageContext packageContext = PackageFactory.getPackageContext(env, ast);
+          return SkylarkList.MutableList.copyOf(
+              env,
+              GlobList.captureResults(
+                  includes,
+                  excludes,
+                  packageContext
+                      .getGlobber()
+                      .run(
+                          Type.STRING_LIST.convert(includes, "'glob' includes"),
+                          Type.STRING_LIST.convert(excludes, "'glob' excludes"),
+                          excludeDirectories)
+                      .stream()
+                      .sorted()
+                      .collect(MoreCollectors.toImmutableList())));
         }
       };
 
   /**
    * Creates a built-in {@code glob} function that can resolve glob patterns under {@code basePath}.
-   *
-   * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
-  public static BuiltinFunction create(Path basePath) {
-    return glob.apply(SimpleGlobber.create(basePath));
+  public static BuiltinFunction create() {
+    return glob;
   }
 
   static {

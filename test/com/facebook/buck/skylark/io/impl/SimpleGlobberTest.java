@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.skylark.function;
+package com.facebook.buck.skylark.io.impl;
 
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.*;
 
+import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
@@ -30,13 +31,13 @@ import org.junit.Test;
 
 public class SimpleGlobberTest {
   private Path root;
-  private SimpleGlobber simpleGlobber;
+  private Globber globber;
 
   @Before
   public void setUp() {
     InMemoryFileSystem fileSystem = new InMemoryFileSystem();
     root = fileSystem.getRootDirectory();
-    simpleGlobber = SimpleGlobber.create(root);
+    globber = SimpleGlobber.create(root);
   }
 
   @Test
@@ -45,7 +46,7 @@ public class SimpleGlobberTest {
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     assertThat(
-        simpleGlobber.run(Collections.singleton("*.txt"), Collections.emptySet(), null),
+        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), null),
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
   }
 
@@ -55,7 +56,7 @@ public class SimpleGlobberTest {
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
     assertThat(
-        simpleGlobber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), null),
+        globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), null),
         equalTo(ImmutableSet.of("foo.txt")));
   }
 
@@ -63,7 +64,7 @@ public class SimpleGlobberTest {
   public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
     FileSystemUtils.createDirectoryAndParents(root.getChild("some_dir"));
     assertThat(
-        simpleGlobber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
+        globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("some_dir")));
   }
 
@@ -74,7 +75,7 @@ public class SimpleGlobberTest {
     FileSystemUtils.writeContentAsLatin1(
         buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
-        simpleGlobber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
+        globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
         equalTo(ImmutableSet.of()));
   }
 }
