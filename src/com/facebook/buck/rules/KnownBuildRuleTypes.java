@@ -58,6 +58,7 @@ import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.DownloadConfig;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -240,7 +241,7 @@ public class KnownBuildRuleTypes {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        AppleCxxPlatformsProvider.create(
+        AppleCxxPlatformsProviderFactory.create(
             config,
             filesystem,
             sdkEnvironment.getAppleSdkPaths(),

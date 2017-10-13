@@ -17,67 +17,17 @@
 package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.AppleCxxPlatforms;
-import com.facebook.buck.apple.AppleSdk;
-import com.facebook.buck.apple.AppleSdkPaths;
-import com.facebook.buck.apple.AppleToolchain;
-import com.facebook.buck.config.BuckConfig;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 public class AppleCxxPlatformsProvider {
 
   private final FlavorDomain<AppleCxxPlatform> appleCxxPlatforms;
 
-  AppleCxxPlatformsProvider(FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
+  public AppleCxxPlatformsProvider(FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     this.appleCxxPlatforms = appleCxxPlatforms;
   }
 
   public FlavorDomain<AppleCxxPlatform> getAppleCxxPlatforms() {
     return appleCxxPlatforms;
-  }
-
-  public static AppleCxxPlatformsProvider create(
-      BuckConfig config,
-      ProjectFilesystem filesystem,
-      Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths,
-      Optional<ImmutableMap<String, AppleToolchain>> appleToolchains)
-      throws IOException {
-    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
-    ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
-        AppleCxxPlatforms.buildAppleCxxPlatforms(
-            appleSdkPaths, appleToolchains, filesystem, config, swiftBuckConfig);
-    checkApplePlaforms(appleCxxPlatforms);
-    FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms =
-        FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
-    return new AppleCxxPlatformsProvider(platformFlavorsToAppleCxxPlatforms);
-  }
-
-  private static void checkApplePlaforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
-    Map<Flavor, AppleCxxPlatform> platformsMap = new HashMap<>();
-    for (AppleCxxPlatform platform : appleCxxPlatforms) {
-      Flavor flavor = platform.getFlavor();
-      if (platformsMap.containsKey(flavor)) {
-        AppleCxxPlatform otherPlatform = platformsMap.get(flavor);
-        throw new HumanReadableException(
-            "There are two conflicting SDKs providing the same platform \"%s\":\n"
-                + "- %s\n"
-                + "- %s\n\n"
-                + "Please try to remove one of them.",
-            flavor.getName(),
-            platform.getAppleSdkPaths().getSdkPath(),
-            otherPlatform.getAppleSdkPaths().getSdkPath());
-      }
-      platformsMap.put(flavor, platform);
-    }
   }
 }
