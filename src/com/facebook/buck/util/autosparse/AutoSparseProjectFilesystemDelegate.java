@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.versioncontrol.SparseSummary;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -54,8 +55,8 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
   }
 
   @Override
-  public String getDetailsForLogging() {
-    return String.format("AutoSparseProjectFilesystemDelegate{root=%s}", scRoot);
+  public ImmutableMap<String, ? extends Object> getDetailsForLogging() {
+    return ImmutableMap.of("filesystem", "autosparse", "filesystem.root", scRoot.toString());
   }
 
   @Override

@@ -38,6 +38,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -212,9 +213,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return projectRoot;
   }
 
-  /** @return details about the delegate suitable for writing to a log file. */
   @Override
-  public String getDelegateDetails() {
+  public ImmutableMap<String, ? extends Object> getDelegateDetails() {
     return delegate.getDetailsForLogging();
   }
 

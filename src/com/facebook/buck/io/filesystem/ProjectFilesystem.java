@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -48,8 +49,12 @@ public interface ProjectFilesystem {
 
   Path getRootPath();
 
-  /** @return details about the delegate suitable for writing to a log file. */
-  String getDelegateDetails();
+  /**
+   * @return details about the delegate suitable for writing to a logger. It is recommended that the
+   *     keys of this map are unique in namespace of the things a logger may want to log. Values
+   *     must be {@link String}, {@code int}, or {@code boolean}.
+   */
+  ImmutableMap<String, ? extends Object> getDelegateDetails();
 
   /**
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read

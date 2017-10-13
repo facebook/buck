@@ -407,9 +407,10 @@ public class ChromeTraceBuildListenerTest {
         "ProjectFilesystemDelegate",
         ChromeTraceEvent.Phase.METADATA,
         ImmutableMap.of(
-            "details",
-            String.format(
-                "DefaultProjectFilesystemDelegate{root=%s}", projectFilesystem.getRootPath())));
+            "filesystem",
+            "default",
+            "filesystem.root",
+            projectFilesystem.getRootPath().toString()));
 
     assertNextResult(
         resultListCopy,

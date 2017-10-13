@@ -180,8 +180,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private void addProjectFilesystemDelegateMetadataEvent(ProjectFilesystem projectFilesystem) {
     writeChromeTraceMetadataEvent(
-        "ProjectFilesystemDelegate",
-        ImmutableMap.of("details", projectFilesystem.getDelegateDetails()));
+        "ProjectFilesystemDelegate", projectFilesystem.getDelegateDetails());
   }
 
   @VisibleForTesting
