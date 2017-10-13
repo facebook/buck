@@ -46,8 +46,7 @@ class CollectDeviceSerials : TraceAnalysisVisitor<Map<String, Long>> {
     }
 
     override fun eventBegin(event: TraceEvent, state: TraceState) {
-        if (event.name == "adb_call install exopackage apk"
-                && event.ph == EventPhase.B) {
+        if (event.name == "adb_call install exopackage apk") {
             val serial = event.args["device_serial"].textValue()
             if (serial != null) {
                 serialCounts[serial] = 1 + serialCounts.getOrDefault(serial, 0)

@@ -43,7 +43,7 @@ data class TraceEvent(
 )
 
 /**
- * Current state of the trace.  Will reflect the event being processed.
+ * Current state of the trace.
  */
 data class TraceState(
         /**
@@ -72,6 +72,16 @@ interface TraceAnalysisVisitor<SummaryT> {
      * @param state  The state after incorporating the event.
      */
     fun eventBegin(event: TraceEvent, state: TraceState) {}
+
+    /**
+     * Process an end ("E") event.
+     *
+     * @param event  The event.
+     * @param state  The state before removing the corresponding begin event.
+     */
+    fun eventEnd(event: TraceEvent, state: TraceState) {}
+
+    fun eventMisc(event: TraceEvent, state: TraceState) {}
 
     /**
      * Finish analyzing a trace and return data to be processed by the final analysis.
@@ -239,6 +249,8 @@ private fun <SummaryT> processOneTraceStream(
     var lastTimestamp = 0L
     var order = 1L
 
+    val threadStacks = mutableMapOf<Int, MutableList<TraceEvent>>()
+
     while (true) {
         when (parser.nextToken()) {
             null -> {
@@ -274,16 +286,44 @@ private fun <SummaryT> processOneTraceStream(
                         "Event went back in time.  Try a bigger queue.\n" + nextEvent)
             }
             lastTimestamp = nextEvent.ts
-            processOneEvent(nextEvent.event, visitor)
+            processOneEvent(visitor, nextEvent.event, threadStacks)
         }
     }
 
     return visitor.traceComplete()
 }
 
-private fun processOneEvent(event: TraceEvent, visitor: TraceAnalysisVisitor<*>) {
-    // TODO: Be smart.
-    visitor.eventBegin(event, TraceState(mapOf()))
+private fun processOneEvent(
+        visitor: TraceAnalysisVisitor<*>,
+        event: TraceEvent,
+        threadStacks: MutableMap<Int, MutableList<TraceEvent>>) {
+    when (event.ph) {
+        EventPhase.B -> {
+            threadStacks
+                    .getOrPut(event.tid, { mutableListOf() })
+                    .add(event)
+            visitor.eventBegin(event, TraceState(threadStacks))
+        }
+        EventPhase.E -> {
+            val stack = threadStacks[event.tid]
+                    ?: throw IllegalStateException("Couldn't find stack for thread " + event.tid)
+            if (stack.isEmpty()) {
+                throw IllegalStateException("Empty stack for thread " + event.tid)
+            }
+            val topOfStack = stack.last()
+            if (topOfStack.name != event.name) {
+                throw IllegalStateException(
+                        "Event name mismatch on thread %d at time %d: %s != %s".format(
+                                event.tid, event.ts, topOfStack.name, event.name))
+            }
+            visitor.eventEnd(event, TraceState(threadStacks))
+            stack.removeAt(stack.lastIndex)
+        }
+        else -> {
+            visitor.eventMisc(event, TraceState(threadStacks))
+        }
+    }
+
 }
 
 private fun parseTraceEvent(node: JsonNode): TraceEvent {
