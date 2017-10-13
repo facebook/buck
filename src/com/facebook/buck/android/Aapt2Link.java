@@ -220,6 +220,7 @@ public class Aapt2Link extends AbstractBuildRule {
         builder.add("--no-auto-version");
       }
       builder.add("--auto-add-overlay");
+      builder.add("--no-xml-namespaces");
 
       ProjectFilesystem pf = getProjectFilesystem();
       builder.add("-o", pf.resolve(getResourceApkPath()).toString());
