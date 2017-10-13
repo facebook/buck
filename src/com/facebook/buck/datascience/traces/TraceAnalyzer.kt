@@ -5,10 +5,11 @@ import com.facebook.buck.util.concurrent.MostExecutors
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.google.common.io.Closer
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListeningExecutorService
 import com.google.common.util.concurrent.MoreExecutors
+import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.net.URL
@@ -123,6 +124,10 @@ fun main(args: Array<String>) {
             processThreadPool)
 }
 
+private data class QueuedTrace(
+        val name: String,
+        val stream: () -> InputStream)
+
 private fun <SummaryT> processTraces(
         args: List<String>,
         traceListFile: File,
@@ -130,20 +135,20 @@ private fun <SummaryT> processTraces(
         eventBufferDepth: Int,
         fetchThreadPool: ListeningExecutorService,
         processThreadPool: ListeningExecutorService) {
-    val blobQueue = ArrayBlockingQueue<ByteArray>(1)
+    val blobQueue = ArrayBlockingQueue<QueuedTrace>(1)
 
     val processFutures = traceListFile.readLines().map {
         val fetchFuture = fetchThreadPool.submit {
             System.err.println(it)
-            val bytes = openTrace(it)
-            blobQueue.put(bytes)
+            val lazyStream = openTrace(it)
+            blobQueue.put(QueuedTrace(it, lazyStream))
         }
         val processFuture = Futures.transform(
                 fetchFuture,
                 com.google.common.base.Function<Any, SummaryT> {
-                    val traceBytes = blobQueue.poll()
+                    val (name, lazyStream) = blobQueue.poll()
                     val visitor = visitorClass.newInstance()
-                    val summary = processOneTrace(args, traceBytes, visitor, eventBufferDepth)
+                    val summary = processOneTrace(args, name, lazyStream, visitor, eventBufferDepth)
                     summary
                 },
                 processThreadPool)
@@ -162,25 +167,30 @@ private fun <SummaryT> processTraces(
 
 }
 
-private fun openTrace(pathOrUrl: String): ByteArray {
-    Closer.create().use { closer ->
-        val inputStream =
-                if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
-                    val url = URL(pathOrUrl)
-                    val connection = url.openConnection()
-                    val rawStream = closer.register(connection.getInputStream())
-                    closer.register(maybeGunzip(rawStream, url.path))
-                } else {
-                    val rawStream = closer.register(File(pathOrUrl).inputStream())
-                    closer.register(maybeGunzip(rawStream, pathOrUrl))
-                }
-        return inputStream.readBytes()
+/**
+ * Open a path or URL, slurp the contents into memory, and return a lazy InputStream
+ * that will gunzip the contents if necessary (inferred from the path).
+ * The return value is lazy to ensure we don't create a GZIPInputStream
+ * (which allocates native resources) until we're in a position to close it.
+ */
+private fun openTrace(pathOrUrl: String): () -> InputStream {
+    val bytes: ByteArray
+    val path: String
+    if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+        val url = URL(pathOrUrl)
+        path = url.path
+        val connection = url.openConnection()
+        bytes = connection.getInputStream().use { it.readBytes() }
+    } else {
+        path = pathOrUrl
+        bytes = File(path).inputStream().use { it.readBytes() }
+    }
+    if (path.endsWith(".gz")) {
+        return { BufferedInputStream(GZIPInputStream(ByteArrayInputStream(bytes))) }
+    } else {
+        return { ByteArrayInputStream(bytes) }
     }
 }
-
-private fun maybeGunzip(rawStream: InputStream, path: String) =
-    if (path.endsWith(".gz")) GZIPInputStream(rawStream)
-    else rawStream
 
 /**
  * Wrapper for TraceEvent that ensures stable sorting.
@@ -193,12 +203,27 @@ private data class BufferedTraceEvent(
 
 private fun <SummaryT> processOneTrace(
         args: List<String>,
-        traceBytes: ByteArray,
+        name: String,
+        lazyStream: () -> InputStream,
+        visitor: TraceAnalysisVisitor<SummaryT>,
+        eventBufferDepth: Int): SummaryT {
+    try {
+        lazyStream().use { stream ->
+            return processOneTraceStream(args, stream, visitor, eventBufferDepth)
+        }
+    } catch (e: Exception) {
+        throw RuntimeException("Exception while processing " + name, e)
+    }
+}
+
+private fun <SummaryT> processOneTraceStream(
+        args: List<String>,
+        stream: InputStream,
         visitor: TraceAnalysisVisitor<SummaryT>,
         eventBufferDepth: Int): SummaryT {
     visitor.init(args)
 
-    val parser = ObjectMappers.createParser(traceBytes)
+    val parser = ObjectMappers.createParser(stream)
     if (parser.nextToken() != JsonToken.START_ARRAY) {
         throw IllegalStateException("Invalid token: " + parser.currentToken)
     }
