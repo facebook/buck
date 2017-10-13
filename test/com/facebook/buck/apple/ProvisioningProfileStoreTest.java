@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

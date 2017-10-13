@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.testutil.TestLogSink;
 import com.google.common.base.Charsets;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import org.junit.Test;
 
-public class ApplePlatformTypeTest {
+public class ApplePlatformTest {
   @Test
   public void definitions() {
     assertSame(AbstractApplePlatform.MACOSX.getType(), ApplePlatformType.MAC);

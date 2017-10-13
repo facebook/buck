@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.apple;
+package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.rules.AddToRuleKey;

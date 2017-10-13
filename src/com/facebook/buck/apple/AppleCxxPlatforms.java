@@ -21,6 +21,11 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
@@ -504,7 +509,7 @@ public class AppleCxxPlatforms {
       String platformName,
       String targetArchitectureName,
       String version,
-      AbstractAppleSdkPaths sdkPaths,
+      AppleSdkPaths sdkPaths,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder) {
     ImmutableList<String> swiftParams =

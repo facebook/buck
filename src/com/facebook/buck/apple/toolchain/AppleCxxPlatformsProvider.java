@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.model.FlavorDomain;
 
 public class AppleCxxPlatformsProvider {

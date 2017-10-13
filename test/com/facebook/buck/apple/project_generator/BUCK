@@ -143,6 +143,7 @@ standard_java_test(
         "//src/com/facebook/buck/apple:rules",
         "//src/com/facebook/buck/apple/clang:headermap",
         "//src/com/facebook/buck/apple/project_generator:project_generator",
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/charset:charset",

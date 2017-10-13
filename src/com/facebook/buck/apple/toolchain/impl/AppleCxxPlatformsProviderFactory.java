@@ -16,12 +16,12 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.AppleCxxPlatforms;
-import com.facebook.buck.apple.AppleSdk;
-import com.facebook.buck.apple.AppleSdkPaths;
-import com.facebook.buck.apple.AppleToolchain;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;

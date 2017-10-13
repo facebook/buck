@@ -44,6 +44,7 @@ java_immutables_library(
         "//test/com/facebook/buck/...",
     ],
     deps = [
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/io/file:file",
         "//src-gen:thrift",
         "//src/com/facebook/buck/cli/output:output",
