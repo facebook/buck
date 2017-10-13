@@ -120,7 +120,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // TODO(ttsugrii): replace suppliers with eager loading once Skylark parser is on by default
     this.buckRuleFunctionsSupplier = Suppliers.memoize(this::getBuckRuleFunctions)::get;
     this.nativeModuleSupplier =
-        Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get()))::get;
+        Suppliers.memoize(() -> new NativeModule(buckRuleFunctionsSupplier.get(), Glob.create()))
+            ::get;
     this.buckGlobalsSupplier = Suppliers.memoize(this::getBuckGlobals)::get;
   }
 
@@ -444,10 +445,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private static class NativeModule implements ClassObject, SkylarkValue {
     private final ImmutableMap<String, BuiltinFunction> buckRuleFunctionRegistry;
 
-    private NativeModule(ImmutableList<BuiltinFunction> buckRuleFunctions) {
+    private NativeModule(
+        ImmutableList<BuiltinFunction> buckRuleFunctions, BuiltinFunction... otherFunctions) {
       ImmutableMap.Builder<String, BuiltinFunction> registryBuilder = ImmutableMap.builder();
       for (BuiltinFunction buckRuleFunction : buckRuleFunctions) {
         registryBuilder.put(buckRuleFunction.getName(), buckRuleFunction);
+      }
+      for (BuiltinFunction builtinFunction : otherFunctions) {
+        registryBuilder.put(builtinFunction.getName(), builtinFunction);
       }
       buckRuleFunctionRegistry = registryBuilder.build();
     }

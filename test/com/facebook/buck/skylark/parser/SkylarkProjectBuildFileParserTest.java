@@ -209,6 +209,40 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void cannotUseGlobalGlobFunctionInsideOfExtension() throws Exception {
+    thrown.expect(BuildFileParseException.class);
+
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'guava_jar')\n" + "guava_jar(name='foo')", buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def guava_jar(name):\n  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=glob(['*.txt']))",
+        extensionFile);
+    getSingleRule(buildFile);
+  }
+
+  @Test
+  public void canUseNativeGlobFunctionInsideOfExtension() throws Exception {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    projectFilesystem.writeContentsToPath(
+        "load('//src/test:build_rules.bzl', 'guava_jar')\n" + "guava_jar(name='foo')", buildFile);
+    projectFilesystem.writeContentsToPath(
+        "def guava_jar(name):\n  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=native.glob(['*.txt']))",
+        extensionFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+    assertThat(rule.get("name"), equalTo("foo"));
+    assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
+    assertThat(
+        Type.STRING_LIST.convert(rule.get("licenses"), "license"), equalTo(ImmutableList.of()));
+  }
+
+  @Test
   public void canUseBuiltInListFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
