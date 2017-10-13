@@ -17,7 +17,6 @@
 package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.swift.SwiftPlatform;
 
 public class SwiftPlatformsProvider {
 

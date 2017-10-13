@@ -20,7 +20,7 @@ import com.facebook.buck.apple.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.google.common.collect.ImmutableMap;
 

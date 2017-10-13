@@ -21,7 +21,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;
 import java.util.Optional;

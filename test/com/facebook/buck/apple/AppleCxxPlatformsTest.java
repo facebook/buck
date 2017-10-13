@@ -62,7 +62,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
-import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestLogSink;

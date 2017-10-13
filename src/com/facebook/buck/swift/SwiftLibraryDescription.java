@@ -56,6 +56,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.RichStream;

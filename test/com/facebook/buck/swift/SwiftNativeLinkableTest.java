@@ -29,6 +29,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;

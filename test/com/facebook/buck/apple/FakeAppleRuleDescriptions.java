@@ -29,7 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.swift.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;

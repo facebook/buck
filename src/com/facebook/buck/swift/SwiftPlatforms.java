@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;

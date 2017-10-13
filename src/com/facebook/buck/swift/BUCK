@@ -1,5 +1,4 @@
 PLATFORM_SRCS = [
-    "AbstractSwiftPlatform.java",
     "SwiftPlatforms.java",
 ]
 
@@ -10,6 +9,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/rules:build_rule",
+        "//src/com/facebook/buck/swift/toolchain:toolchain",
     ],
 )
 
@@ -46,6 +46,7 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/swift/toolchain:toolchain",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
