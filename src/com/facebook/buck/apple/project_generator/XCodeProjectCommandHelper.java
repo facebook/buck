@@ -304,7 +304,8 @@ public class XCodeProjectCommandHelper {
             combinedProject,
             appleConfig.shouldUseHeaderMapsInXcodeProject(),
             appleConfig.shouldMergeHeaderMapsInXcodeProject(),
-            appleConfig.shouldGenerateHeaderSymlinkTreesOnly());
+            appleConfig.shouldGenerateHeaderSymlinkTreesOnly(),
+            appleConfig.shouldGenerateMissingUmbrellaHeaders());
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
 
@@ -495,7 +496,8 @@ public class XCodeProjectCommandHelper {
       boolean isProjectsCombined,
       boolean shouldUseHeaderMaps,
       boolean shouldMergeHeaderMaps,
-      boolean shouldGenerateHeaderSymlinkTreesOnly) {
+      boolean shouldGenerateHeaderSymlinkTreesOnly,
+      boolean shouldGenerateMissingUmbrellaHeaders) {
     ImmutableSet.Builder<ProjectGenerator.Option> optionsBuilder = ImmutableSet.builder();
     if (isReadonly) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_READ_ONLY_FILES);
@@ -519,6 +521,9 @@ public class XCodeProjectCommandHelper {
     }
     if (shouldGenerateHeaderSymlinkTreesOnly) {
       optionsBuilder.add(ProjectGenerator.Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
+    }
+    if (shouldGenerateMissingUmbrellaHeaders) {
+      optionsBuilder.add(ProjectGenerator.Option.GENERATE_MISSING_UMBRELLA_HEADER);
     }
     return optionsBuilder.build();
   }

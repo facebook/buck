@@ -229,6 +229,9 @@ public class ProjectGenerator {
 
     /** Generates only headers symlink trees. */
     GENERATE_HEADERS_SYMLINK_TREES_ONLY,
+
+    /** Generate an umbrella header for modular targets without one for use in a modulemap */
+    GENERATE_MISSING_UMBRELLA_HEADER,
   }
 
   /** Standard options for generating a separated project */
@@ -394,6 +397,10 @@ public class ProjectGenerator {
 
   private boolean shouldGenerateHeaderSymlinkTreesOnly() {
     return options.contains(Option.GENERATE_HEADERS_SYMLINK_TREES_ONLY);
+  }
+
+  private boolean shouldGenerateMissingUmbrellaHeaders() {
+    return options.contains(Option.GENERATE_MISSING_UMBRELLA_HEADER);
   }
 
   public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
@@ -1456,18 +1463,19 @@ public class ProjectGenerator {
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || isHeaderMapDisabled(),
-        !shouldMergeHeaderMaps());
+        !shouldMergeHeaderMaps(),
+        shouldGenerateMissingUmbrellaHeaders());
     if (isFocusedOnTarget) {
-      /**/
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
-          ImmutableMap.of(), // private interfaces don't have a modulemap
+          ImmutableMap.of(), // private interfaces never have a modulemap
           Optional.empty(),
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
           arg.getXcodePrivateHeadersSymlinks()
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
               || isHeaderMapDisabled(),
-          !isHeaderMapDisabled());
+          !isHeaderMapDisabled(),
+          shouldGenerateMissingUmbrellaHeaders());
     }
     if (shouldMergeHeaderMaps() && isMainProject) {
       createMergedHeaderMap();
@@ -1991,7 +1999,8 @@ public class ProjectGenerator {
       Optional<String> moduleName,
       Path headerSymlinkTreeRoot,
       boolean shouldCreateHeadersSymlinks,
-      boolean shouldCreateHeaderMap)
+      boolean shouldCreateHeaderMap,
+      boolean shouldGenerateUmbrellaHeaderIfMissing)
       throws IOException {
     if (!shouldCreateHeaderMap && !shouldCreateHeadersSymlinks) {
       return;
@@ -2066,17 +2075,8 @@ public class ProjectGenerator {
         projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
       }
       if (moduleName.isPresent() && resolvedContents.entrySet().size() > 0) {
-        ImmutableList<String> headerPaths =
-            resolvedContents
-                .keySet()
-                .stream()
-                .map(Path::getFileName)
-                .map(Path::toString)
-                .collect(MoreCollectors.toImmutableList());
-        if (!headerPaths.contains(moduleName.get() + ".h")) {
-          projectFilesystem.writeContentsToPath(
-              new UmbrellaHeader(moduleName.get(), headerPaths).render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve(moduleName.get() + ".h"));
+        if (shouldGenerateUmbrellaHeaderIfMissing) {
+          writeUmbrellaHeaderIfNeeded(moduleName.get(), headerSymlinkTreeRoot, resolvedContents);
         }
         boolean containsSwift = !nonSourcePaths.isEmpty();
         if (containsSwift) {
@@ -2108,6 +2108,25 @@ public class ProjectGenerator {
       }
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
+  }
+
+  private void writeUmbrellaHeaderIfNeeded(
+      String moduleName,
+      Path headerSymlinkTreeRoot,
+      ImmutableSortedMap<Path, Path> resolvedContents)
+      throws IOException {
+    ImmutableList<String> headerPaths =
+        resolvedContents
+            .keySet()
+            .stream()
+            .map(Path::getFileName)
+            .map(Path::toString)
+            .collect(MoreCollectors.toImmutableList());
+    if (!headerPaths.contains(moduleName + ".h")) {
+      projectFilesystem.writeContentsToPath(
+          new UmbrellaHeader(moduleName, headerPaths).render(),
+          headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h")));
+    }
   }
 
   private Path getHeaderMapRelativeSymlinkPathForEntry(

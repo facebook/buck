@@ -586,7 +586,9 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator =
-        createProjectGeneratorForCombinedProject(ImmutableSet.of(libNode), ImmutableSet.of());
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(libNode),
+            ImmutableSet.of(ProjectGenerator.Option.GENERATE_MISSING_UMBRELLA_HEADER));
 
     projectGenerator.createXcodeProjects();
     PBXProject project = projectGenerator.getGeneratedProject();
