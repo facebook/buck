@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 public class DefaultBuildableContext implements BuildableContext {
@@ -25,16 +24,6 @@ public class DefaultBuildableContext implements BuildableContext {
 
   public DefaultBuildableContext(BuildInfoRecorder recorder) {
     this.recorder = recorder;
-  }
-
-  @Override
-  public void addMetadata(String key, String value) {
-    recorder.addMetadata(key, value);
-  }
-
-  @Override
-  public void addMetadata(String key, ImmutableList<String> values) {
-    recorder.addMetadata(key, values);
   }
 
   @Override

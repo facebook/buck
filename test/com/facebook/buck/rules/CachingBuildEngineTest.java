@@ -1973,9 +1973,6 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              buildableContext.addMetadata(
-                  BuildInfo.MetadataKey.DEP_FILE,
-                  ImmutableList.of(fileToDepFileEntryString(input)));
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -2053,7 +2050,6 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              buildableContext.addMetadata(BuildInfo.MetadataKey.DEP_FILE, ImmutableList.of());
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -2144,9 +2140,6 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              buildableContext.addMetadata(
-                  BuildInfo.MetadataKey.DEP_FILE,
-                  ImmutableList.of(fileToDepFileEntryString(input)));
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -2234,9 +2227,6 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              buildableContext.addMetadata(
-                  BuildInfo.MetadataKey.DEP_FILE,
-                  ImmutableList.of(fileToDepFileEntryString(input)));
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
