@@ -62,7 +62,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
@@ -90,7 +89,6 @@ public class BuildInfoRecorder {
   private final ImmutableMap<String, String> artifactExtraData;
   private final Map<String, String> metadataToWrite;
   private final Map<String, String> buildMetadata;
-  private final AtomicBoolean warnedUserOfCacheStoreFailure;
 
   /** Every value in this set is a path relative to the project root. */
   private final Set<Path> pathsToOutputs;
@@ -120,7 +118,6 @@ public class BuildInfoRecorder {
     this.metadataToWrite = new LinkedHashMap<>();
     this.buildMetadata = new LinkedHashMap<>();
     this.pathsToOutputs = new HashSet<>();
-    this.warnedUserOfCacheStoreFailure = new AtomicBoolean(false);
   }
 
   private String toJson(Object value) {
@@ -327,11 +324,9 @@ public class BuildInfoRecorder {
           public void onFailure(Throwable t) {
             onCompletion();
             LOG.info(t, "Failed storing RuleKeys %s to the cache.", ruleKeys);
-            if (warnedUserOfCacheStoreFailure.compareAndSet(false, true)) {
-              eventBus.post(
-                  ConsoleEvent.severe(
-                      "Failed storing an artifact to the cache," + "see log for details."));
-            }
+            eventBus.post(
+                ConsoleEvent.severe(
+                    "Failed storing an artifact to the cache," + "see log for details."));
           }
 
           private void onCompletion() {
