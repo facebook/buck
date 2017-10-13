@@ -18,6 +18,7 @@ package com.facebook.buck.step.external;
 
 import com.facebook.buck.build_type.BuildType;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -69,10 +70,12 @@ public class BundledExternalProcessLauncher {
     BuildType buildType = BuildType.CURRENT_BUILD_TYPE.get();
     switch (buildType) {
       case LOCAL_ANT:
-        return builder.put("BUCK_CLASSPATH", getClassPathForAntBuild()).build();
+        return builder.put(BuckClasspath.ENV_VAR_NAME, getClassPathForAntBuild()).build();
       case UNKNOWN:
         return builder
-            .put("BUCK_CLASSPATH", getClasspathArgumentForUnknownBuild(EntryPoints.OOP_JAVAC))
+            .put(
+                BuckClasspath.ENV_VAR_NAME,
+                getClasspathArgumentForUnknownBuild(EntryPoints.OOP_JAVAC))
             .build();
       case RELEASE_PEX:
       case LOCAL_PEX:
@@ -124,18 +127,25 @@ public class BundledExternalProcessLauncher {
   private String getClassPathForAntBuild() {
     // In this case we do want System.getenv, to get at the buckd env variables rather than
     // at the env that was used when the buck command is invoked.
-    String classPath = System.getenv("BUCK_CLASSPATH");
-    Preconditions.checkState(
-        classPath != null,
-        "Un-set BUCK_CLASSPATH means that either it "
-            + " was not configured by the launcher or we're in the wrong build mode.");
+    String classPath;
+    try {
+      classPath = BuckClasspath.getBuckClasspathFromEnvVarOrThrow();
+    } catch (Exception e) {
+      throw new IllegalStateException(
+          "Un-set "
+              + BuckClasspath.ENV_VAR_NAME
+              + " means that either it "
+              + " was not configured by the launcher or we're in the wrong build mode.",
+          e);
+    }
     // We expect there to be at least a single entry for every 3rd party lib, plus entries for the
     // build outputs. If we get a classpath with a single entry, that's most likely the server
     // JAR from the PEX, which means the build modes got mixed up.
     Preconditions.checkState(
         classPath.split(File.pathSeparator).length > 1,
-        "A short BUCK_CLASSPATH [%s] means that either it "
+        "A short %s [%s] means that either it "
             + " was not configured by the launcher correctly or we're in the wrong build mode.",
+        BuckClasspath.ENV_VAR_NAME,
         classPath);
     return classPath;
   }

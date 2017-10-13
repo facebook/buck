@@ -101,6 +101,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/autosparse:autosparse",
         "//src/com/facebook/buck/util/autosparse:autosparse_config",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/env:env",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/network:network",

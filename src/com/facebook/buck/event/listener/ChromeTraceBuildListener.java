@@ -57,6 +57,7 @@ import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -872,10 +873,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       return;
     }
 
-    String buckClasspathEnvVarName = "BUCK_CLASSPATH";
-    String buckClasspath = System.getenv(buckClasspathEnvVarName);
+    String buckClasspath = BuckClasspath.getBuckClasspathFromEnvVarOrNull();
     if (Strings.isNullOrEmpty(buckClasspath)) {
-      LOG.error(buckClasspathEnvVarName + " env var is not set. Will not upload the trace file.");
+      LOG.error(
+          BuckClasspath.ENV_VAR_NAME + " env var is not set. Will not upload the trace file.");
       return;
     }
 
