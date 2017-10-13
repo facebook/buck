@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
@@ -319,15 +320,15 @@ public class Cell {
     if (parserConfig.isPolyglotParsingEnabled()) {
       return HybridProjectBuildFileParser.using(
           ImmutableMap.of(
-              HybridProjectBuildFileParser.Syntax.PYTHON_DSL,
+              Syntax.PYTHON_DSL,
               pythonDslProjectBuildFileParser,
-              HybridProjectBuildFileParser.Syntax.SKYLARK,
+              Syntax.SKYLARK,
               SkylarkProjectBuildFileParser.using(
                   buildFileParserOptions,
                   eventBus,
                   SkylarkFilesystem.using(filesystem),
                   typeCoercerFactory)),
-          HybridProjectBuildFileParser.Syntax.PYTHON_DSL);
+          Syntax.PYTHON_DSL);
     }
     return pythonDslProjectBuildFileParser;
   }

@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -26,7 +27,6 @@ import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
@@ -45,25 +45,6 @@ import javax.annotation.Nullable;
 public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
   @VisibleForTesting static String SYNTAX_MARKER_START = "# BUILD FILE SYNTAX: ";
-
-  public enum Syntax {
-    PYTHON_DSL,
-    SKYLARK,
-    ;
-
-    /**
-     * Converts a syntax name specified after {@value #SYNTAX_MARKER_START} in the first line of the
-     * build file.
-     */
-    public static Optional<Syntax> from(String syntaxName) {
-      for (Syntax syntax : values()) {
-        if (syntax.name().equals(syntaxName)) {
-          return Optional.of(syntax);
-        }
-      }
-      return Optional.empty();
-    }
-  }
 
   private ImmutableMap<Syntax, ProjectBuildFileParser> parsers;
   private final Syntax defaultSyntax;

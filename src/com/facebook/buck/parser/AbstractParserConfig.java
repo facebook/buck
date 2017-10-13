@@ -19,6 +19,7 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.WatchmanWatcher;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -247,8 +248,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   /**
    * @return boolean flag indicating whether support for parsing build files using non default
    *     syntax (currently Python DSL).
-   *     <p>For a list of supported syntax see {@link
-   *     com.facebook.buck.json.HybridProjectBuildFileParser.Syntax}.
+   *     <p>For a list of supported syntax see {@link Syntax}.
    */
   @Value.Lazy
   public boolean isPolyglotParsingEnabled() {
