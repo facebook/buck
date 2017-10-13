@@ -310,6 +310,7 @@ private fun processOneEvent(
             if (stack.isEmpty()) {
                 throw IllegalStateException("Empty stack for thread " + event.tid)
             }
+            prepareStackForEndEvent(stack, event)
             val topOfStack = stack.last()
             if (topOfStack.name != event.name) {
                 throw IllegalStateException(
@@ -324,6 +325,20 @@ private fun processOneEvent(
         }
     }
 
+}
+
+private fun prepareStackForEndEvent(stack: MutableList<TraceEvent>, event: TraceEvent) {
+    if (event.name == "javac_jar") {
+        // Events inside javac_jar aren't always closed on compile errors.
+        // Just silently remove them from the stack.
+        val idx = stack.indexOfLast { it.name == "javac_jar" }
+        if (idx > 0) {
+            // Found start event.  Remove everything after it.
+            while (idx < stack.lastIndex) {
+                stack.removeAt(stack.lastIndex)
+            }
+        }
+    }
 }
 
 private fun parseTraceEvent(node: JsonNode): TraceEvent {
