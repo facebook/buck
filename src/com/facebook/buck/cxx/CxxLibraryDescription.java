@@ -152,6 +152,7 @@ public class CxxLibraryDescription
   private final Flavor defaultCxxFlavor;
   private final InferBuckConfig inferBuckConfig;
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxLibraryDescription(
       CxxBuckConfig cxxBuckConfig,
@@ -162,6 +163,7 @@ public class CxxLibraryDescription
     this.defaultCxxFlavor = defaultCxxFlavor;
     this.inferBuckConfig = inferBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
   @Override
@@ -183,7 +185,8 @@ public class CxxLibraryDescription
         || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor())
         || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
         || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
-        || LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors);
+        || LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors)
+        || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
   /**

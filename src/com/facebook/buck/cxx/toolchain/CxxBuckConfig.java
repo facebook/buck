@@ -22,11 +22,13 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.InternalFlavor;
+import com.facebook.buck.model.UserFlavor;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -305,6 +307,15 @@ public class CxxBuckConfig {
   public boolean isDeprecatedPrebuiltCxxLibraryApiEnabled() {
     return delegate.getBooleanValue(
         cxxSection, "enable_deprecated_prebuilt_cxx_library_api", false);
+  }
+
+  /** @return the list of flavors that buck will consider valid when building the target graph. */
+  public ImmutableSet<Flavor> getDeclaredPlatforms() {
+    return delegate
+        .getListWithoutComments(cxxSection, "declared_platforms")
+        .stream()
+        .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Value.Immutable

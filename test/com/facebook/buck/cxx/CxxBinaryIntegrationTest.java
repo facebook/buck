@@ -1371,7 +1371,7 @@ public class CxxBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
 
-    //Build the given target and check that it succeeds.
+    // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
 
     String specsPathList =
@@ -2458,6 +2458,18 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:bin").assertSuccess();
     BuckBuildLog log = workspace.getBuildLog();
     log.assertTargetBuiltLocally("//:bin#binary");
+  }
+
+  /** Tests --config cxx.declared_platforms */
+  @Test
+  public void testDeclaredPlatforms() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "declared_platforms", tmp);
+    workspace.setUp();
+    workspace.setupCxxSandboxing(sandboxSources);
+    workspace
+        .runBuckCommand("query", "-c", "cxx.declared_platforms=my-favorite-platform", "//:simple")
+        .assertSuccess();
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, final PathMatcher matcher)
