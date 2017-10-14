@@ -105,7 +105,7 @@ public class DistBuildSlaveExecutor {
         break;
 
       case COORDINATOR:
-        runner = newCoordinatorMode(getFreePortForCoordinator());
+        runner = newCoordinatorMode(getFreePortForCoordinator(), false);
         break;
 
       case MINION:
@@ -118,7 +118,7 @@ public class DistBuildSlaveExecutor {
         int localCoordinatorPort = getFreePortForCoordinator();
         runner =
             new CoordinatorAndMinionModeRunner(
-                newCoordinatorMode(localCoordinatorPort),
+                newCoordinatorMode(localCoordinatorPort, true),
                 newMinionMode(localBuilder, LOCALHOST_ADDRESS, localCoordinatorPort));
         break;
 
@@ -136,7 +136,8 @@ public class DistBuildSlaveExecutor {
         coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId());
   }
 
-  private CoordinatorModeRunner newCoordinatorMode(int coordinatorPort) {
+  private CoordinatorModeRunner newCoordinatorMode(
+      int coordinatorPort, boolean isLocalMinionAlsoRunning) {
     BuildTargetsQueue queue =
         BuildTargetsQueue.newQueue(
             Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
@@ -147,7 +148,10 @@ public class DistBuildSlaveExecutor {
         "Minion queue name is missing to be able to run in Coordinator mode.");
     CoordinatorModeRunner.EventListener listener =
         new CoordinatorAndMinionInfoSetter(
-            args.getDistBuildService(), args.getStampedeId(), minionQueue.get());
+            args.getDistBuildService(),
+            args.getStampedeId(),
+            minionQueue.get(),
+            isLocalMinionAlsoRunning);
     return new CoordinatorModeRunner(
         coordinatorPort,
         queue,
@@ -387,7 +391,8 @@ public class DistBuildSlaveExecutor {
                       engineConfig.getBuildInputRuleKeyFileSizeLimit(),
                       new DefaultRuleKeyCache<>()),
                   distBuildConfig.getFileHashCacheMode());
-          //TODO(shivanker): Supply the target device, adb options, and target device options to work with Android.
+          // TODO(shivanker): Supply the target device, adb options, and target device options to
+          // work with Android.
           ExecutionContext executionContext =
               ExecutionContext.builder()
                   .setConsole(args.getConsole())

@@ -26,12 +26,17 @@ public class CoordinatorAndMinionInfoSetter implements CoordinatorModeRunner.Eve
   private final DistBuildService service;
   private final StampedeId stampedeId;
   private final String minionQueue;
+  private boolean islocalMinionAlsoRunning;
 
   public CoordinatorAndMinionInfoSetter(
-      DistBuildService service, StampedeId stampedeId, String minionQueue) {
+      DistBuildService service,
+      StampedeId stampedeId,
+      String minionQueue,
+      boolean islocalMinionAlsoRunning) {
     this.service = service;
     this.stampedeId = stampedeId;
     this.minionQueue = minionQueue;
+    this.islocalMinionAlsoRunning = islocalMinionAlsoRunning;
   }
 
   @Override
@@ -40,8 +45,16 @@ public class CoordinatorAndMinionInfoSetter implements CoordinatorModeRunner.Eve
     BuildJob buildJob = service.getCurrentBuildJobState(stampedeId);
     Preconditions.checkArgument(buildJob.isSetBuildModeInfo());
     BuildModeInfo buildModeInfo = buildJob.getBuildModeInfo();
-    if (buildModeInfo.isSetNumberOfMinions() && buildModeInfo.getNumberOfMinions() > 0) {
-      service.enqueueMinions(stampedeId, buildModeInfo.getNumberOfMinions(), minionQueue);
+    if (!buildModeInfo.isSetNumberOfMinions()) {
+      return;
+    }
+
+    int requiredNumberOfMinions =
+        islocalMinionAlsoRunning
+            ? buildModeInfo.getNumberOfMinions() - 1
+            : buildModeInfo.getNumberOfMinions();
+    if (requiredNumberOfMinions > 0) {
+      service.enqueueMinions(stampedeId, requiredNumberOfMinions, minionQueue);
     }
   }
 }

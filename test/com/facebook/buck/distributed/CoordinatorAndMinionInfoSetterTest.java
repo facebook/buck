@@ -27,19 +27,31 @@ import org.junit.Test;
 public class CoordinatorAndMinionInfoSetterTest {
 
   @Test
-  public void testCoordinatorEventListener() throws IOException {
+  public void testCoordinatorEventListenerWithoutLocalMinion() throws IOException {
+    runCoordinatorEventListenerTest(42, false, 42);
+  }
+
+  @Test
+  public void testCoordinatorEventListenerWithLocalMinion() throws IOException {
+    runCoordinatorEventListenerTest(42, true, 41);
+  }
+
+  private void runCoordinatorEventListenerTest(
+      int requestNumberOfMinions, boolean isLocalMinionAlsoRunning, int expectedNumberOfMinions)
+      throws IOException {
     DistBuildService service = EasyMock.createMock(DistBuildService.class);
     StampedeId stampedeId = new StampedeId().setId("topspin");
     String minionQueue = "super_minion_queue";
     CoordinatorAndMinionInfoSetter eventListener =
-        new CoordinatorAndMinionInfoSetter(service, stampedeId, minionQueue);
+        new CoordinatorAndMinionInfoSetter(
+            service, stampedeId, minionQueue, isLocalMinionAlsoRunning);
     Assert.assertNotNull(eventListener);
     int port = 33;
     String address = "hidden.but.cool.address";
     service.setCoordinator(EasyMock.eq(stampedeId), EasyMock.eq(port), EasyMock.eq(address));
     EasyMock.expectLastCall().once();
 
-    int numberOfMinions = 42;
+    int numberOfMinions = requestNumberOfMinions;
     BuildJob buildJob =
         new BuildJob().setBuildModeInfo(new BuildModeInfo().setNumberOfMinions(numberOfMinions));
     EasyMock.expect(service.getCurrentBuildJobState(EasyMock.eq(stampedeId)))
@@ -47,7 +59,7 @@ public class CoordinatorAndMinionInfoSetterTest {
         .once();
 
     service.enqueueMinions(
-        EasyMock.eq(stampedeId), EasyMock.eq(numberOfMinions), EasyMock.eq(minionQueue));
+        EasyMock.eq(stampedeId), EasyMock.eq(expectedNumberOfMinions), EasyMock.eq(minionQueue));
     EasyMock.expectLastCall().once();
 
     EasyMock.replay(service);
