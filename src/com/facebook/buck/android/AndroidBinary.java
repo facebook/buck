@@ -49,7 +49,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -403,31 +402,15 @@ public class AndroidBinary extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    Stream.Builder<Stream<BuildTarget>> deps = Stream.builder();
-    deps.add(RichStream.from(moduleVerification).map(BuildRule::getBuildTarget));
-
-    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
-        && enhancementResult.getCopyNativeLibraries().isPresent()) {
-      deps.add(
-          enhancementResult
-              .getCopyNativeLibraries()
-              .get()
-              .values()
-              .stream()
-              .map(BuildRule::getBuildTarget));
-    }
-    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      deps.add(
-          Optionals.toStream(enhancementResult.getPreDexMerge()).map(BuildRule::getBuildTarget));
-    }
-    if (ExopackageMode.enabledForResources(exopackageModes)) {
-      deps.add(
-          enhancementResult
-              .getExoResources()
-              .stream()
-              .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-              .map(BuildRule::getBuildTarget));
-    }
-    return deps.build().reduce(Stream.empty(), Stream::concat);
+    Stream.Builder<BuildTarget> deps = Stream.builder();
+    RichStream.from(moduleVerification).map(BuildRule::getBuildTarget).forEach(deps);
+    exopackageInfo.ifPresent(
+        info ->
+            ruleFinder
+                .filterBuildRuleInputs(info.getRequiredPaths()::iterator)
+                .stream()
+                .map(BuildRule::getBuildTarget)
+                .forEach(deps));
+    return deps.build();
   }
 }

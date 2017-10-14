@@ -21,13 +21,13 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @Value.Enclosing
 @BuckStyleImmutable
 abstract class AbstractExopackageInfo {
-
   @Value.Immutable
   interface AbstractDexInfo {
     @Value.Parameter
@@ -57,6 +57,28 @@ abstract class AbstractExopackageInfo {
   public abstract Optional<ExopackageInfo.NativeLibsInfo> getNativeLibsInfo();
 
   public abstract Optional<ExopackageInfo.ResourcesInfo> getResourcesInfo();
+
+  public Stream<SourcePath> getRequiredPaths() {
+    Stream.Builder<SourcePath> paths = Stream.builder();
+    getNativeLibsInfo()
+        .ifPresent(
+            info -> {
+              paths.add(info.getMetadata());
+              paths.add(info.getDirectory());
+            });
+    getDexInfo()
+        .ifPresent(
+            info -> {
+              paths.add(info.getMetadata());
+              paths.add(info.getDirectory());
+            });
+    getResourcesInfo()
+        .ifPresent(
+            info -> {
+              info.getResourcesPaths().forEach(paths);
+            });
+    return paths.build();
+  }
 
   @Value.Check
   protected void check() {
