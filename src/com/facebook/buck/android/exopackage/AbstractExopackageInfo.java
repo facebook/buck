@@ -49,7 +49,7 @@ abstract class AbstractExopackageInfo {
   @Value.Immutable
   interface AbstractResourcesInfo {
     @Value.Parameter
-    List<SourcePath> getResourcesPaths();
+    List<ExopackagePathAndHash> getResourcesPaths();
   }
 
   public abstract Optional<ExopackageInfo.DexInfo> getDexInfo();
@@ -74,9 +74,13 @@ abstract class AbstractExopackageInfo {
             });
     getResourcesInfo()
         .ifPresent(
-            info -> {
-              info.getResourcesPaths().forEach(paths);
-            });
+            info ->
+                info.getResourcesPaths()
+                    .forEach(
+                        pair -> {
+                          paths.add(pair.getPath());
+                          paths.add(pair.getHashPath());
+                        }));
     return paths.build();
   }
 

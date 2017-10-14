@@ -23,7 +23,6 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -57,17 +56,13 @@ public class ResourcesExoHelper {
     return resourcesInfo
         .getResourcesPaths()
         .stream()
-        .map(p -> projectFilesystem.relativize(pathResolver.getAbsolutePath(p)))
         .collect(
             MoreCollectors.toImmutableMap(
-                p -> {
-                  try {
-                    return projectFilesystem.computeSha1(p).getHash();
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                },
-                i -> i));
+                pathAndHash ->
+                    projectFilesystem
+                        .readFileIfItExists(pathResolver.getAbsolutePath(pathAndHash.getHashPath()))
+                        .get(),
+                i -> projectFilesystem.resolve(pathResolver.getAbsolutePath(i.getPath()))));
   }
 
   private String getResourceMetadataContents(ImmutableMap<String, Path> filesByHash) {

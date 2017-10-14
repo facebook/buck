@@ -117,6 +117,7 @@ RULES_SRCS = [
     "TrimUberRDotJava.java",
     "UnsortedAndroidResourceDeps.java",
     "UnzipAar.java",
+    "WriteFileHashCode.java",
     # This and the InstrumentationStep would make more sense in the steps
     # library, but are added here to avoid circular dependencies.
     "ApkInstallStep.java",
@@ -336,6 +337,7 @@ UTILS_SRCS = [
     "DefaultAndroidManifestReader.java",
     "HasInstallableApk.java",
     "exopackage/AbstractExopackageInfo.java",
+    "exopackage/AbstractExopackagePathAndHash.java",
     "exopackage/AndroidDevice.java",
     "exopackage/AndroidDevicesHelper.java",
     "exopackage/PackageInfo.java",

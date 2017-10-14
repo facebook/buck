@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.exopackage.ExopackageMode;
+import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -55,6 +56,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       InternalFlavor.of("generate_string_source_map");
   private static final Flavor MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR =
       InternalFlavor.of("merge_third_party_jar_resources");
+  private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
+      InternalFlavor.of("write_exo_resources_hash");
 
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
@@ -133,7 +136,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
     ImmutableList<SourcePath> getPrimaryApkAssetZips();
 
-    ImmutableList<SourcePath> getExoResources();
+    ImmutableList<ExopackagePathAndHash> getExoResources();
   }
 
   AndroidBinaryResourcesGraphEnhancementResult enhance(
@@ -218,6 +221,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     resultBuilder.setPackageStringAssets(packageStringAssets);
 
     SourcePath pathToRDotTxt;
+    final ImmutableList<ExopackagePathAndHash> exoResources;
     if (exopackageForResources) {
       MergeAssets mergeAssets =
           createMergeAssetsRule(packageableCollection.getAssetsDirectories(), Optional.empty());
@@ -233,9 +237,13 @@ class AndroidBinaryResourcesGraphEnhancer {
 
       pathToRDotTxt = splitResources.getPathToRDotTxt();
       resultBuilder.setPrimaryResourcesApkPath(splitResources.getPathToPrimaryResources());
-      resultBuilder.addExoResources(splitResources.getPathToExoResources());
-      resultBuilder.addExoResources(mergeAssets.getSourcePathToOutput());
-      resultBuilder.addExoResources(mergeThirdPartyJarResource.getSourcePathToOutput());
+
+      exoResources =
+          ImmutableList.of(
+              withFileHashCodeRule(splitResources.getPathToExoResources(), "exo_resources"),
+              withFileHashCodeRule(mergeAssets.getSourcePathToOutput(), "merged_assets"),
+              withFileHashCodeRule(
+                  mergeThirdPartyJarResource.getSourcePathToOutput(), "third_party_jar_resources"));
 
       ruleResolver.addToIndex(splitResources);
       ruleResolver.addToIndex(mergeAssets);
@@ -252,7 +260,9 @@ class AndroidBinaryResourcesGraphEnhancer {
         resultBuilder.addPrimaryApkAssetZips(
             packageStringAssets.get().getSourcePathToStringAssetsZip());
       }
+      exoResources = ImmutableList.of();
     }
+    resultBuilder.setExoResources(exoResources);
 
     Optional<GenerateRDotJava> generateRDotJava = Optional.empty();
     if (filteredResourcesProvider.hasResources()) {
@@ -277,6 +287,18 @@ class AndroidBinaryResourcesGraphEnhancer {
         .setRDotJavaDir(
             generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
         .build();
+  }
+
+  private ExopackagePathAndHash withFileHashCodeRule(SourcePath pathToFile, String name) {
+    WriteFileHashCode fileHashCode =
+        new WriteFileHashCode(
+            buildTarget.withAppendedFlavors(
+                WRITE_EXO_RESOURCES_HASH_FLAVOR, InternalFlavor.of(name)),
+            projectFilesystem,
+            ruleFinder,
+            pathToFile);
+    ruleResolver.addToIndex(fileHashCode);
+    return ExopackagePathAndHash.of(pathToFile, fileHashCode.getSourcePathToOutput());
   }
 
   private MergeThirdPartyJarResources createMergeThirdPartyJarResources(

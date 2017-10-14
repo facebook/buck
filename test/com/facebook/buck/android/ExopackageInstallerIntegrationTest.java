@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
+import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -536,11 +537,17 @@ public class ExopackageInstallerIntegrationTest {
       String expectedMetadata = "";
       String prefix = "";
       while (resourcesContents.hasNext()) {
-        Path resourcePath = resourcesDirectory.resolve("resources-" + n++ + ".apk");
+        String fileName = "resources-" + n++ + ".apk";
+        Path resourcePath = resourcesDirectory.resolve(fileName);
+        Path hashPath = resourcesDirectory.resolve(fileName + ".hash");
         String content = resourcesContents.next();
         writeFile(resourcePath, content);
-        resourcesInfoBuilder.addResourcesPaths(FakeSourcePath.of(filesystem, resourcePath));
         Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
+        writeFile(hashPath, resourceHash.getHash());
+        resourcesInfoBuilder.addResourcesPaths(
+            ExopackagePathAndHash.of(
+                FakeSourcePath.of(filesystem, resourcePath),
+                FakeSourcePath.of(filesystem, hashPath)));
         expectedMetadata += prefix + "resources " + resourceHash;
         prefix = "\n";
         builder.addExoFile("resources/" + resourceHash + ".apk", content);
