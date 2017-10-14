@@ -142,10 +142,7 @@ public class PythonDslProjectBuildFileParserTest {
       buildFileParser.initIfNeeded();
       buildFileParser.getAllRulesAndMetaRules(Paths.get("foo"), new AtomicLong());
     }
-    assertThat(
-        consoleEvents,
-        Matchers.contains(
-            Matchers.hasToString("Warning raised by BUCK file parser: Don't Panic!")));
+    assertThat(consoleEvents.get(1).getMessage(), Matchers.containsString("| Don't Panic!"));
   }
 
   @Test

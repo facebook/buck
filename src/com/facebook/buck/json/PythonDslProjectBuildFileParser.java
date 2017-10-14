@@ -60,10 +60,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
@@ -99,6 +102,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
   @Nullable private ProjectBuildFileParseEvents.Started projectBuildFileParseEventStarted;
+
+  private AtomicReference<Path> currentBuildFile = new AtomicReference<Path>();
 
   public PythonDslProjectBuildFileParser(
       final ProjectBuildFileParserOptions options,
@@ -222,13 +227,25 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
       InputStream stderr = buckPyProcess.getErrorStream();
 
+      AtomicInteger numberOfLines = new AtomicInteger(0);
+      AtomicReference<Path> lastPath = new AtomicReference<Path>();
       InputStreamConsumer stderrConsumer =
           new InputStreamConsumer(
               stderr,
               (InputStreamConsumer.Handler)
-                  line ->
+                  line -> {
+                    Path path = currentBuildFile.get();
+                    if (!Objects.equals(path, lastPath.get())) {
+                      numberOfLines.set(0);
+                      lastPath.set(path);
+                    }
+                    int count = numberOfLines.getAndIncrement();
+                    if (count == 0) {
                       buckEventBus.post(
-                          ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line)));
+                          ConsoleEvent.warning("WARNING: Output when parsing %s:", path));
+                    }
+                    buckEventBus.post(ConsoleEvent.warning("| %s", line));
+                  });
       stderrConsumerTerminationFuture = new FutureTask<>(stderrConsumer);
       stderrConsumerThread =
           Threads.namedThread(
@@ -383,6 +400,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           projectPrefix = projectWatch.getProjectPrefix().get();
         }
       }
+      currentBuildFile.set(buildFile);
       BuildFilePythonResult resultObject =
           performJsonRequest(
               ImmutableMap.of(
