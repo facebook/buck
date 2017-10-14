@@ -395,13 +395,7 @@ public class AndroidBinary extends AbstractBuildRule
     if (ExopackageMode.enabledForResources(exopackageModes)) {
       Preconditions.checkState(!enhancementResult.getExoResources().isEmpty());
       builder.setResourcesInfo(
-          ExopackageInfo.ResourcesInfo.of(
-              ImmutableList.<SourcePath>builder()
-                  .addAll(enhancementResult.getExoResources())
-                  .add(
-                      ExplicitBuildTargetSourcePath.of(
-                          getBuildTarget(), buildable.getMergedThirdPartyJarsPath()))
-                  .build()));
+          ExopackageInfo.ResourcesInfo.of(enhancementResult.getExoResources()));
       shouldInstall = true;
     } else {
       Preconditions.checkState(enhancementResult.getExoResources().isEmpty());

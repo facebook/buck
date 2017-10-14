@@ -20,7 +20,6 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -53,18 +52,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.zip.Deflater;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
   /**
@@ -255,11 +249,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .stream()
             .map(resolver::getAbsolutePath)
             .collect(MoreCollectors.toImmutableSet());
-
-    if (ExopackageMode.enabledForResources(exopackageModes)) {
-      steps.add(createMergedThirdPartyJarsStep(thirdPartyJars));
-      buildableContext.recordArtifact(getMergedThirdPartyJarsPath());
-    }
 
     steps.add(
         new ApkBuilderStep(
@@ -509,63 +498,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         CopyStep.DirectoryMode.CONTENTS_ONLY);
   }
 
-  private Step createMergedThirdPartyJarsStep(ImmutableSet<Path> thirdPartyJars) {
-    return new AbstractExecutionStep("merging_third_party_jar_resources") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context)
-          throws IOException, InterruptedException {
-        try (ResourcesZipBuilder builder =
-            new ResourcesZipBuilder(
-                getProjectFilesystem().resolve(getMergedThirdPartyJarsPath()))) {
-          for (Path jar : thirdPartyJars) {
-            try (ZipFile base = new ZipFile(jar.toFile())) {
-              for (ZipEntry inputEntry : Collections.list(base.entries())) {
-                if (inputEntry.isDirectory()) {
-                  continue;
-                }
-                String name = inputEntry.getName();
-                String ext = Files.getFileExtension(name);
-                String filename = Paths.get(name).getFileName().toString();
-                // Android's ApkBuilder filters out a lot of files from Java resources. Try to
-                // match its behavior.
-                // See
-                // https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
-                if (name.startsWith(".")
-                    || name.endsWith("~")
-                    || name.startsWith("META-INF")
-                    || "aidl".equalsIgnoreCase(ext)
-                    || "rs".equalsIgnoreCase(ext)
-                    || "rsh".equalsIgnoreCase(ext)
-                    || "d".equalsIgnoreCase(ext)
-                    || "java".equalsIgnoreCase(ext)
-                    || "scala".equalsIgnoreCase(ext)
-                    || "class".equalsIgnoreCase(ext)
-                    || "scc".equalsIgnoreCase(ext)
-                    || "swp".equalsIgnoreCase(ext)
-                    || "thumbs.db".equalsIgnoreCase(filename)
-                    || "picasa.ini".equalsIgnoreCase(filename)
-                    || "package.html".equalsIgnoreCase(filename)
-                    || "overview.html".equalsIgnoreCase(filename)) {
-                  continue;
-                }
-                try (InputStream inputStream = base.getInputStream(inputEntry)) {
-                  builder.addEntry(
-                      inputStream,
-                      inputEntry.getSize(),
-                      inputEntry.getCrc(),
-                      name,
-                      Deflater.NO_COMPRESSION,
-                      false);
-                }
-              }
-            }
-          }
-        }
-        return StepExecutionResult.SUCCESS;
-      }
-    };
-  }
-
   public ProjectFilesystem getProjectFilesystem() {
     return filesystem;
   }
@@ -583,10 +515,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private Path getPathForNativeLibsAsAssets() {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
-  }
-
-  Path getMergedThirdPartyJarsPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.java.resources");
   }
 
   /** The APK at this path will be signed, but not zipaligned. */

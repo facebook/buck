@@ -20,9 +20,13 @@ import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.RuleKeyScopedHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -39,6 +43,18 @@ public final class BuildableSupport {
     Builder builder = new Builder(ruleFinder);
     AlterRuleKeys.amendKey(builder, rule);
     return builder.build();
+  }
+
+  /**
+   * Creates a supplier to easily implement (and cache) BuildRule.getBuildDeps() via
+   * BuildableSupport.deriveDeps().
+   */
+  public static Supplier<SortedSet<BuildRule>> buildDepsSupplier(
+      BuildRule mergeThirdPartyJarResources, SourcePathRuleFinder ruleFinder) {
+    return MoreSuppliers.memoize(
+        () ->
+            deriveDeps(mergeThirdPartyJarResources, ruleFinder)
+                .collect(MoreCollectors.toImmutableSortedSet()));
   }
 
   private static class Builder extends AbstractRuleKeyBuilder<Stream<BuildRule>> {

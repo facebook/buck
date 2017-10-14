@@ -53,6 +53,8 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor SPLIT_RESOURCES_FLAVOR = InternalFlavor.of("split_resources");
   static final Flavor GENERATE_STRING_SOURCE_MAP_FLAVOR =
       InternalFlavor.of("generate_string_source_map");
+  private static final Flavor MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR =
+      InternalFlavor.of("merge_third_party_jar_resources");
 
   private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
@@ -222,14 +224,18 @@ class AndroidBinaryResourcesGraphEnhancer {
       SplitResources splitResources =
           createSplitResourcesRule(
               aaptOutputInfo.getPrimaryResourcesApkPath(), aaptOutputInfo.getPathToRDotTxt());
+      MergeThirdPartyJarResources mergeThirdPartyJarResource =
+          createMergeThirdPartyJarResources(packageableCollection.getPathsToThirdPartyJars());
 
       ruleResolver.addToIndex(mergeAssets);
       ruleResolver.addToIndex(splitResources);
+      ruleResolver.addToIndex(mergeThirdPartyJarResource);
 
       pathToRDotTxt = splitResources.getPathToRDotTxt();
       resultBuilder.setPrimaryResourcesApkPath(splitResources.getPathToPrimaryResources());
       resultBuilder.addExoResources(splitResources.getPathToExoResources());
       resultBuilder.addExoResources(mergeAssets.getSourcePathToOutput());
+      resultBuilder.addExoResources(mergeThirdPartyJarResource.getSourcePathToOutput());
 
       ruleResolver.addToIndex(splitResources);
       ruleResolver.addToIndex(mergeAssets);
@@ -271,6 +277,15 @@ class AndroidBinaryResourcesGraphEnhancer {
         .setRDotJavaDir(
             generateRDotJava.map(GenerateRDotJava::getSourcePathToGeneratedRDotJavaSrcFiles))
         .build();
+  }
+
+  private MergeThirdPartyJarResources createMergeThirdPartyJarResources(
+      ImmutableSet<SourcePath> pathsToThirdPartyJars) {
+    return new MergeThirdPartyJarResources(
+        buildTarget.withAppendedFlavors(MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR),
+        projectFilesystem,
+        ruleFinder,
+        pathsToThirdPartyJars);
   }
 
   private SplitResources createSplitResourcesRule(
