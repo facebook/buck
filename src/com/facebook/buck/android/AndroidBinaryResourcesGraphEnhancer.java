@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -199,7 +200,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             "exopackage_modes and resource_compression_mode for android_binary %s are "
                 + "incompatible. Either remove %s from exopackage_modes or disable storing strings "
                 + "as assets.",
-            buildTarget, AndroidBinary.ExopackageMode.RESOURCES);
+            buildTarget, ExopackageMode.RESOURCES);
       }
       packageStringAssets =
           Optional.of(

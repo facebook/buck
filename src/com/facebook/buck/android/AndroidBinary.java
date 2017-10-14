@@ -18,7 +18,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.TargetCpuType;
@@ -98,39 +100,6 @@ public class AndroidBinary extends AbstractBuildRule
     ;
   }
 
-  enum ExopackageMode {
-    SECONDARY_DEX(1),
-    NATIVE_LIBRARY(2),
-    RESOURCES(4),
-    ;
-
-    private final int code;
-
-    ExopackageMode(int code) {
-      this.code = code;
-    }
-
-    public static boolean enabledForSecondaryDexes(EnumSet<ExopackageMode> modes) {
-      return modes.contains(SECONDARY_DEX);
-    }
-
-    public static boolean enabledForNativeLibraries(EnumSet<ExopackageMode> modes) {
-      return modes.contains(NATIVE_LIBRARY);
-    }
-
-    public static boolean enabledForResources(EnumSet<ExopackageMode> modes) {
-      return modes.contains(RESOURCES);
-    }
-
-    public static int toBitmask(EnumSet<ExopackageMode> modes) {
-      int bitmask = 0;
-      for (ExopackageMode mode : modes) {
-        bitmask |= mode.code;
-      }
-      return bitmask;
-    }
-  }
-
   enum RelinkerMode {
     ENABLED,
     DISABLED,
@@ -195,7 +164,11 @@ public class AndroidBinary extends AbstractBuildRule
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
       boolean isCacheable,
-      Optional<BuildRule> moduleVerification) {
+      Optional<BuildRule> moduleVerification,
+      DexFilesInfo dexFilesInfo,
+      NativeFilesInfo nativeFilesInfo,
+      ResourceFilesInfo resourceFilesInfo,
+      ImmutableSortedSet<APKModule> apkModules) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -252,15 +225,16 @@ public class AndroidBinary extends AbstractBuildRule
                 .map(options -> enhancementResult.getAdditionalRedexInputs())
                 .orElse(ImmutableList.of()),
             exopackageModes,
-            enhancementResult,
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
             javaRuntimeLauncher,
             enhancementResult.getAndroidManifestPath(),
-            enhancementResult.getPrimaryResourcesApkPath(),
-            enhancementResult.getPrimaryApkAssetZips(),
-            resourceCompressionMode.isCompressResources());
+            resourceCompressionMode.isCompressResources(),
+            dexFilesInfo,
+            nativeFilesInfo,
+            resourceFilesInfo,
+            apkModules);
     params =
         params.withExtraDeps(
             () ->

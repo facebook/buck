@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
@@ -221,7 +222,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescriptionA
               buildTarget,
               projectFilesystem,
               AndroidBinary.PackageType.RELEASE,
-              EnumSet.noneOf(AndroidBinary.ExopackageMode.class),
+              EnumSet.noneOf(ExopackageMode.class),
               args.getBuildConfigValues(),
               Optional.empty(),
               resolver,

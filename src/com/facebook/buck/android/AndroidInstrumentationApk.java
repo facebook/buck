@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -49,7 +50,10 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
-      AndroidGraphEnhancementResult enhancementResult) {
+      AndroidGraphEnhancementResult enhancementResult,
+      DexFilesInfo dexFilesInfo,
+      NativeFilesInfo nativeFilesInfo,
+      ResourceFilesInfo resourceFilesInfo) {
     super(
         buildTarget,
         projectFilesystem,
@@ -77,7 +81,11 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getManifestEntries(),
         apkUnderTest.getJavaRuntimeLauncher(),
         true,
-        Optional.empty());
+        Optional.empty(),
+        dexFilesInfo,
+        nativeFilesInfo,
+        resourceFilesInfo,
+        ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()));
     this.apkUnderTest = apkUnderTest;
   }
 

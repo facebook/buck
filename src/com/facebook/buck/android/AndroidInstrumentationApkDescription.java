@@ -18,11 +18,11 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspathDeps;
 
-import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.TargetCpuType;
@@ -205,7 +205,8 @@ public class AndroidInstrumentationApkDescription
             rulesToExcludeFromDex);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
-
+    AndroidBinaryFilesInfo filesInfo =
+        new AndroidBinaryFilesInfo(enhancementResult, EnumSet.noneOf(ExopackageMode.class), false);
     return new AndroidInstrumentationApk(
         buildTarget,
         projectFilesystem,
@@ -213,7 +214,10 @@ public class AndroidInstrumentationApkDescription
         ruleFinder,
         apkUnderTest,
         rulesToExcludeFromDex,
-        enhancementResult);
+        enhancementResult,
+        filesInfo.getDexFilesInfo(),
+        filesInfo.getNativeFilesInfo(),
+        filesInfo.getResourceFilesInfo());
   }
 
   @BuckStyleImmutable

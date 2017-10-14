@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
@@ -49,9 +49,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -82,7 +80,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   static final String SMART_DEX_SECONDARY_DEX_SUBDIR =
       "assets/smart-dex-secondary-program-dex-jars";
 
-  @AddToRuleKey private final EnumSet<AndroidBinary.ExopackageMode> exopackageModes;
+  @AddToRuleKey private final EnumSet<ExopackageMode> exopackageModes;
 
   @AddToRuleKey private final SourcePath androidManifestPath;
 
@@ -125,88 +123,34 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePath keystorePropertiesPath,
       Optional<RedexOptions> redexOptions,
       ImmutableList<SourcePath> additionalRedexInputs,
-      EnumSet<AndroidBinary.ExopackageMode> exopackageModes,
-      AndroidGraphEnhancementResult enhancementResult,
+      EnumSet<ExopackageMode> exopackageModes,
       Optional<Integer> xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
-      SourcePath resourcesApkPath,
-      ImmutableList<SourcePath> primaryApkAssetsZips,
-      boolean isCompressResources) {
+      boolean isCompressResources,
+      DexFilesInfo dexFilesInfo,
+      NativeFilesInfo nativeFilesInfo,
+      ResourceFilesInfo resourceFilesInfo,
+      ImmutableSortedSet<APKModule> apkModules) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
-
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
     this.redexOptions = redexOptions;
     this.additionalRedexInputs = additionalRedexInputs;
     this.exopackageModes = exopackageModes;
     this.xzCompressionLevel = xzCompressionLevel;
-
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.androidManifestPath = androidManifestPath;
     this.isCompressResources = isCompressResources;
-    AndroidPackageableCollection packageableCollection =
-        enhancementResult.getPackageableCollection();
-
-    this.apkModules =
-        ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules());
-
-    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
-        enhancementResult.getCopyNativeLibraries();
-
-    boolean exopackageForNativeEnabled =
-        AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes);
-    Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
-    if (exopackageForNativeEnabled) {
-      nativeLibsDirs = Optional.empty();
-    } else {
-      nativeLibsDirs =
-          copyNativeLibraries.map(
-              cnl ->
-                  cnl.entrySet()
-                      .stream()
-                      .collect(
-                          MoreCollectors.toImmutableSortedMap(
-                              e -> e.getKey(), e -> e.getValue().getSourcePathToNativeLibsDir())));
-    }
-
-    Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs =
-        copyNativeLibraries.map(
-            cnl ->
-                cnl.entrySet()
-                    .stream()
-                    .filter(
-                        entry ->
-                            !exopackageForNativeEnabled
-                                || packageAssetLibraries
-                                || !entry.getKey().isRootModule())
-                    .collect(
-                        MoreCollectors.toImmutableSortedMap(
-                            e -> e.getKey(),
-                            e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
-
-    DexFilesInfo enhancementDexFilesInfo = enhancementResult.getDexFilesInfo();
-    if (AndroidBinary.ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      this.dexFilesInfo =
-          new DexFilesInfo(
-              enhancementDexFilesInfo.primaryDexPath,
-              ImmutableSortedSet.of(),
-              enhancementDexFilesInfo.proguardTextFilesPath);
-    } else {
-      this.dexFilesInfo = enhancementDexFilesInfo;
-    }
-    this.nativeFilesInfo = new NativeFilesInfo(nativeLibsDirs, nativeLibsAssetsDirs);
+    this.apkModules = apkModules;
+    this.dexFilesInfo = dexFilesInfo;
+    this.nativeFilesInfo = nativeFilesInfo;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
-
-    this.resourceFilesInfo =
-        new ResourceFilesInfo(
-            ImmutableSortedSet.copyOf(packageableCollection.getPathsToThirdPartyJars()),
-            resourcesApkPath,
-            primaryApkAssetsZips);
+    this.resourceFilesInfo = resourceFilesInfo;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -240,7 +184,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     for (final APKModule module : apkModules) {
       boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
-      if (!AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)
+      if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
           && nativeFilesInfo.nativeLibsDirs.isPresent()
           && nativeFilesInfo.nativeLibsDirs.get().containsKey(module)) {
         if (shouldPackageAssetLibraries) {
@@ -255,8 +199,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       }
 
       if (shouldPackageAssetLibraries) {
-        Preconditions.checkState(
-            !AndroidBinary.ExopackageMode.enabledForResources(exopackageModes));
+        Preconditions.checkState(!ExopackageMode.enabledForResources(exopackageModes));
         Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
         final Path libSubdirectory =
@@ -281,7 +224,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         .map(pathResolver::getRelativePath)
         .forEach(zipFiles::add);
 
-    if (AndroidBinary.ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
       // We need to include a few dummy native libraries with our application so that Android knows
       // to run it as 32-bit.  Android defaults to 64-bit when no libraries are provided at all,
       // causing us to fail to load our 32-bit exopackage native libraries later.
@@ -313,7 +256,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .map(resolver::getAbsolutePath)
             .collect(MoreCollectors.toImmutableSet());
 
-    if (AndroidBinary.ExopackageMode.enabledForResources(exopackageModes)) {
+    if (ExopackageMode.enabledForResources(exopackageModes)) {
       steps.add(createMergedThirdPartyJarsStep(thirdPartyJars));
       buildableContext.recordArtifact(getMergedThirdPartyJarsPath());
     }
@@ -585,7 +528,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 String filename = Paths.get(name).getFileName().toString();
                 // Android's ApkBuilder filters out a lot of files from Java resources. Try to
                 // match its behavior.
-                // See https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
+                // See
+                // https://android.googlesource.com/platform/sdk/+/jb-release/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java
                 if (name.startsWith(".")
                     || name.endsWith("~")
                     || name.startsWith("META-INF")

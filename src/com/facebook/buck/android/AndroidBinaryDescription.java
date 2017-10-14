@@ -18,13 +18,13 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACKAGE_STRING_ASSETS_FLAVOR;
 
-import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.AndroidBinary.RelinkerMode;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.TargetCpuType;
@@ -348,6 +348,9 @@ public class AndroidBinaryDescription
         moduleVerification = Optional.empty();
       }
 
+      AndroidBinaryFilesInfo filesInfo =
+          new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
+
       AndroidBinary androidBinary =
           new AndroidBinary(
               buildTarget,
@@ -375,7 +378,11 @@ public class AndroidBinaryDescription
               args.getManifestEntries(),
               javaOptions.getJavaRuntimeLauncher(),
               args.getIsCacheable(),
-              moduleVerification);
+              moduleVerification,
+              filesInfo.getDexFilesInfo(),
+              filesInfo.getNativeFilesInfo(),
+              filesInfo.getResourceFilesInfo(),
+              ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()));
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(
@@ -620,8 +627,8 @@ public class AndroidBinaryDescription
       return true;
     }
 
-    // Do not inspect this, getAllowedDuplicateResourcesTypes, or getBannedDuplicateResourceTypes directly, use
-    // getEffectiveBannedDuplicateResourceTypes.
+    // Do not inspect this, getAllowedDuplicateResourcesTypes, or getBannedDuplicateResourceTypes
+    // directly, use getEffectiveBannedDuplicateResourceTypes.
     // Ideally these should be private, but Arg-population doesn't allow that.
     //
     // If set to ALLOW_BY_DEFAULT, bannedDuplicateResourceTypes is used and setting
