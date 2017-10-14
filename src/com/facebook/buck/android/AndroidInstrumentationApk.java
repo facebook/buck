@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -53,7 +54,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       AndroidGraphEnhancementResult enhancementResult,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
-      ResourceFilesInfo resourceFilesInfo) {
+      ResourceFilesInfo resourceFilesInfo,
+      Optional<ExopackageInfo> exopackageInfo) {
     super(
         buildTarget,
         projectFilesystem,
@@ -85,7 +87,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         dexFilesInfo,
         nativeFilesInfo,
         resourceFilesInfo,
-        ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()));
+        ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()),
+        exopackageInfo);
     this.apkUnderTest = apkUnderTest;
   }
 

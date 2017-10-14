@@ -382,7 +382,8 @@ public class AndroidBinaryDescription
               filesInfo.getDexFilesInfo(),
               filesInfo.getNativeFilesInfo(),
               filesInfo.getResourceFilesInfo(),
-              ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()));
+              ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
+              filesInfo.getExopackageInfo());
       // The exo installer is always added to the index so that the action graph is the same
       // between build and install calls.
       new AndroidBinaryInstallGraphEnhancer(

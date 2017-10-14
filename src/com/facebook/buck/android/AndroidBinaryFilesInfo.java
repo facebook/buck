@@ -17,9 +17,11 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -94,5 +96,49 @@ public class AndroidBinaryFilesInfo {
             enhancementResult.getPackageableCollection().getPathsToThirdPartyJars()),
         enhancementResult.getPrimaryResourcesApkPath(),
         enhancementResult.getPrimaryApkAssetZips());
+  }
+
+  Optional<ExopackageInfo> getExopackageInfo() {
+    boolean shouldInstall = false;
+
+    ExopackageInfo.Builder builder = ExopackageInfo.builder();
+    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
+      PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
+      builder.setDexInfo(
+          ExopackageInfo.DexInfo.of(
+              preDexMerge.getMetadataTxtSourcePath(), preDexMerge.getDexDirectorySourcePath()));
+      shouldInstall = true;
+    }
+
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
+        && enhancementResult.getCopyNativeLibraries().isPresent()) {
+      CopyNativeLibraries copyNativeLibraries =
+          Preconditions.checkNotNull(
+              enhancementResult
+                  .getCopyNativeLibraries()
+                  .get()
+                  .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
+      builder.setNativeLibsInfo(
+          ExopackageInfo.NativeLibsInfo.of(
+              copyNativeLibraries.getSourcePathToMetadataTxt(),
+              copyNativeLibraries.getSourcePathToAllLibsDir()));
+      shouldInstall = true;
+    }
+
+    if (ExopackageMode.enabledForResources(exopackageModes)) {
+      Preconditions.checkState(!enhancementResult.getExoResources().isEmpty());
+      builder.setResourcesInfo(
+          ExopackageInfo.ResourcesInfo.of(enhancementResult.getExoResources()));
+      shouldInstall = true;
+    } else {
+      Preconditions.checkState(enhancementResult.getExoResources().isEmpty());
+    }
+
+    if (!shouldInstall) {
+      return Optional.empty();
+    }
+
+    ExopackageInfo exopackageInfo = builder.build();
+    return Optional.of(exopackageInfo);
   }
 }

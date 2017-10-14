@@ -84,7 +84,6 @@ public class AndroidBinary extends AbstractBuildRule
         HasInstallableApk,
         HasInstallHelpers {
   static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
-  private final Optional<BuildRule> moduleVerification;
 
   /**
    * This list of package types is taken from the set of targets that the default build.xml provides
@@ -133,6 +132,9 @@ public class AndroidBinary extends AbstractBuildRule
   private final Tool javaRuntimeLauncher;
   private final boolean isCacheable;
 
+  private final Optional<BuildRule> moduleVerification;
+  private final Optional<ExopackageInfo> exopackageInfo;
+
   private final BuildRuleParams buildRuleParams;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
@@ -168,7 +170,8 @@ public class AndroidBinary extends AbstractBuildRule
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
-      ImmutableSortedSet<APKModule> apkModules) {
+      ImmutableSortedSet<APKModule> apkModules,
+      Optional<ExopackageInfo> exopackageInfo) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -235,6 +238,8 @@ public class AndroidBinary extends AbstractBuildRule
             nativeFilesInfo,
             resourceFilesInfo,
             apkModules);
+    this.exopackageInfo = exopackageInfo;
+
     params =
         params.withExtraDeps(
             () ->
@@ -322,7 +327,7 @@ public class AndroidBinary extends AbstractBuildRule
     return ApkInfo.builder()
         .setApkPath(getSourcePathToOutput())
         .setManifestPath(getManifestPath())
-        .setExopackageInfo(getExopackageInfo())
+        .setExopackageInfo(exopackageInfo)
         .build();
   }
 
@@ -363,50 +368,6 @@ public class AndroidBinary extends AbstractBuildRule
 
   private SourcePath getManifestPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getManifestPath());
-  }
-
-  private Optional<ExopackageInfo> getExopackageInfo() {
-    boolean shouldInstall = false;
-
-    ExopackageInfo.Builder builder = ExopackageInfo.builder();
-    if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      PreDexMerge preDexMerge = enhancementResult.getPreDexMerge().get();
-      builder.setDexInfo(
-          ExopackageInfo.DexInfo.of(
-              preDexMerge.getMetadataTxtSourcePath(), preDexMerge.getDexDirectorySourcePath()));
-      shouldInstall = true;
-    }
-
-    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
-        && enhancementResult.getCopyNativeLibraries().isPresent()) {
-      CopyNativeLibraries copyNativeLibraries =
-          Preconditions.checkNotNull(
-              enhancementResult
-                  .getCopyNativeLibraries()
-                  .get()
-                  .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
-      builder.setNativeLibsInfo(
-          ExopackageInfo.NativeLibsInfo.of(
-              copyNativeLibraries.getSourcePathToMetadataTxt(),
-              copyNativeLibraries.getSourcePathToAllLibsDir()));
-      shouldInstall = true;
-    }
-
-    if (ExopackageMode.enabledForResources(exopackageModes)) {
-      Preconditions.checkState(!enhancementResult.getExoResources().isEmpty());
-      builder.setResourcesInfo(
-          ExopackageInfo.ResourcesInfo.of(enhancementResult.getExoResources()));
-      shouldInstall = true;
-    } else {
-      Preconditions.checkState(enhancementResult.getExoResources().isEmpty());
-    }
-
-    if (!shouldInstall) {
-      return Optional.empty();
-    }
-
-    ExopackageInfo exopackageInfo = builder.build();
-    return Optional.of(exopackageInfo);
   }
 
   public SortedSet<BuildRule> getClasspathDeps() {

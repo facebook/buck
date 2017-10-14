@@ -217,7 +217,8 @@ public class AndroidInstrumentationApkDescription
         enhancementResult,
         filesInfo.getDexFilesInfo(),
         filesInfo.getNativeFilesInfo(),
-        filesInfo.getResourceFilesInfo());
+        filesInfo.getResourceFilesInfo(),
+        filesInfo.getExopackageInfo());
   }
 
   @BuckStyleImmutable
