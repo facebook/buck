@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A factory for generating {@link RuleKey}s that only take into the account the path of a file and
@@ -39,6 +41,7 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
+  private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
   private final FileHashLoader fileHashLoader =
       new FileHashLoader() {
@@ -64,20 +67,23 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   public ContentAgnosticRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder) {
+      SourcePathRuleFinder ruleFinder,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
+    this.ruleKeyLogger = ruleKeyLogger;
   }
 
   private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
-    Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
+    Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
     ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.CONTENT_AGNOSTIC);
     return builder.build(RuleKey::new);
   }
 
   private RuleKey calculateAppendableKey(AddsToRuleKey appendable) {
-    Builder<HashCode> subKeyBuilder = new Builder<>(RuleKeyBuilder.createDefaultHasher());
+    Builder<HashCode> subKeyBuilder =
+        new Builder<>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
     AlterRuleKeys.amendKey(subKeyBuilder, appendable);
     return subKeyBuilder.build(RuleKey::new);
   }

@@ -24,6 +24,8 @@ import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
+import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.AddsToRuleKey;
@@ -43,6 +45,7 @@ import com.facebook.buck.rules.keys.hasher.ForwardingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
+import com.facebook.buck.rules.keys.hasher.ThriftRuleKeyHasher;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,6 +54,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -112,7 +116,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     return (DefaultRuleKeyScopedHasher<RULE_KEY>) this.scopedHasher;
   }
 
-  static RuleKeyHasher<HashCode> createDefaultHasher() {
+  static RuleKeyHasher<HashCode> createDefaultHasher(Optional<ThriftRuleKeyLogger> thriftLogger) {
     RuleKeyHasher<HashCode> hasher = new GuavaRuleKeyHasher(Hashing.sha1().newHasher());
     if (logger.isVerboseEnabled()) {
       hasher =
@@ -120,6 +124,17 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
             @Override
             protected void onHash(HashCode firstHash, String secondHash) {
               logger.verbose("RuleKey %s=%s", firstHash, secondHash);
+            }
+          };
+    }
+    if (thriftLogger.isPresent()) {
+      ThriftRuleKeyHasher thriftHasher = new ThriftRuleKeyHasher(thriftLogger.get());
+      hasher =
+          new ForwardingRuleKeyHasher<HashCode, FullRuleKey>(hasher, thriftHasher) {
+            @Override
+            protected void onHash(HashCode firstHash, FullRuleKey ruleKey) {
+              thriftHasher.setHashKey(firstHash);
+              thriftHasher.flushToLogger();
             }
           };
     }

@@ -28,6 +28,7 @@ import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
@@ -79,6 +80,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringWriter;
@@ -92,6 +94,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedMap;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -233,6 +236,13 @@ public class TargetsCommand extends AbstractCommand {
   )
   @SuppressFieldNotInitialized
   private Supplier<ImmutableSet<String>> outputAttributes;
+
+  @Nullable
+  @Option(
+    name = "--rulekeys-log-path",
+    usage = "If set, log a binary representation of rulekeys to this file."
+  )
+  private String ruleKeyLogPath = null;
 
   @Argument private List<String> arguments = new ArrayList<>();
 
@@ -878,6 +888,18 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /**
+   * Create a {@link ThriftRuleKeyLogger} depending on whether {@link TargetsCommand#ruleKeyLogPath}
+   * is set or not
+   */
+  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws FileNotFoundException {
+    if (ruleKeyLogPath == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(ThriftRuleKeyLogger.create(ruleKeyLogPath));
+    }
+  }
+
+  /**
    * Assumes at least one target is specified. Computes each of the specified targets, followed by
    * the rule key, output path, and/or target hash, depending on what flags are passed in.
    *
@@ -900,80 +922,88 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ActionGraph> actionGraph = Optional.empty();
     Optional<BuildRuleResolver> buildRuleResolver = Optional.empty();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
-    if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
-      ActionGraphAndResolver result =
-          params
-              .getActionGraphCache()
-              .getActionGraph(
-                  params.getBuckEventBus(),
-                  targetGraphAndTargetNodes.getFirst(),
-                  params.getBuckConfig());
-      actionGraph = Optional.of(result.getActionGraph());
-      buildRuleResolver = Optional.of(result.getResolver());
-      if (isShowRuleKey()) {
-        SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
-        ruleKeyFactory =
-            Optional.of(
-                new DefaultRuleKeyFactory(
-                    new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
-                    params.getFileHashCache(),
-                    DefaultSourcePathResolver.from(ruleFinder),
-                    ruleFinder));
-      }
-    }
 
-    for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-      ShowOptions.Builder showOptionsBuilder =
-          getShowOptionBuilder(showOptionBuilderMap, targetNode.getBuildTarget());
-      Preconditions.checkNotNull(showOptionsBuilder);
-      if (actionGraph.isPresent()) {
-        BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
+    try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
+      if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
+        ActionGraphAndResolver result =
+            params
+                .getActionGraphCache()
+                .getActionGraph(
+                    params.getBuckEventBus(),
+                    targetGraphAndTargetNodes.getFirst(),
+                    params.getBuckConfig());
+        actionGraph = Optional.of(result.getActionGraph());
+        buildRuleResolver = Optional.of(result.getResolver());
         if (isShowRuleKey()) {
-          showOptionsBuilder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
-          if (isShowTransitiveRuleKeys()) {
-            showTransitiveRuleKeys(rule, ruleKeyFactory.get(), showOptionBuilderMap);
+          SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
+          ruleKeyFactory =
+              Optional.of(
+                  new DefaultRuleKeyFactory(
+                      new RuleKeyFieldLoader(params.getBuckConfig().getKeySeed()),
+                      params.getFileHashCache(),
+                      DefaultSourcePathResolver.from(ruleFinder),
+                      ruleFinder,
+                      Optional.ofNullable(ruleKeyLogger)));
+        }
+      }
+
+      for (TargetNode<?, ?> targetNode : targetGraphAndTargetNodes.getSecond()) {
+        ShowOptions.Builder showOptionsBuilder =
+            getShowOptionBuilder(showOptionBuilderMap, targetNode.getBuildTarget());
+        Preconditions.checkNotNull(showOptionsBuilder);
+        if (actionGraph.isPresent()) {
+          BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
+          if (isShowRuleKey()) {
+            showOptionsBuilder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
+            if (isShowTransitiveRuleKeys()) {
+              showTransitiveRuleKeys(rule, ruleKeyFactory.get(), showOptionBuilderMap);
+            }
           }
         }
       }
-    }
 
-    for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
-      BuildTarget target = entry.getKey();
-      ShowOptions.Builder showOptionsBuilder = entry.getValue();
-      if (actionGraph.isPresent()) {
-        BuildRule rule = buildRuleResolver.get().requireRule(target);
-        showOptionsBuilder.setRuleType(rule.getType());
-        if (isShowOutput() || isShowFullOutput()) {
-          getUserFacingOutputPath(
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver.get())),
-                  rule,
-                  params.getBuckConfig().getBuckOutCompatLink())
-              .map(
-                  path ->
-                      isShowFullOutput() ? path : params.getCell().getFilesystem().relativize(path))
-              .ifPresent(path -> showOptionsBuilder.setOutputPath(path.toString()));
-          // If the output dir is requested, also calculate the generated src dir
-          if (rule instanceof JavaLibrary) {
-            ((JavaLibrary) rule)
-                .getGeneratedSourcePath()
+      for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
+        BuildTarget target = entry.getKey();
+        ShowOptions.Builder showOptionsBuilder = entry.getValue();
+        if (actionGraph.isPresent()) {
+          BuildRule rule = buildRuleResolver.get().requireRule(target);
+          showOptionsBuilder.setRuleType(rule.getType());
+          if (isShowOutput() || isShowFullOutput()) {
+            getUserFacingOutputPath(
+                    DefaultSourcePathResolver.from(
+                        new SourcePathRuleFinder(buildRuleResolver.get())),
+                    rule,
+                    params.getBuckConfig().getBuckOutCompatLink())
                 .map(
-                    path -> {
-                      final Path rootPath = params.getCell().getFilesystem().getRootPath();
-                      Path sameFsPath = rootPath.resolve(path.toString());
-                      Path returnPath = isShowFullOutput() ? path : rootPath.relativize(sameFsPath);
-                      return returnPath.toString();
-                    })
-                .ifPresent(showOptionsBuilder::setGeneratedSourcePath);
+                    path ->
+                        isShowFullOutput()
+                            ? path
+                            : params.getCell().getFilesystem().relativize(path))
+                .ifPresent(path -> showOptionsBuilder.setOutputPath(path.toString()));
+            // If the output dir is requested, also calculate the generated src dir
+            if (rule instanceof JavaLibrary) {
+              ((JavaLibrary) rule)
+                  .getGeneratedSourcePath()
+                  .map(
+                      path -> {
+                        final Path rootPath = params.getCell().getFilesystem().getRootPath();
+                        Path sameFsPath = rootPath.resolve(path.toString());
+                        Path returnPath =
+                            isShowFullOutput() ? path : rootPath.relativize(sameFsPath);
+                        return returnPath.toString();
+                      })
+                  .ifPresent(showOptionsBuilder::setGeneratedSourcePath);
+            }
           }
         }
       }
-    }
 
-    ImmutableMap.Builder<BuildTarget, ShowOptions> builder = new ImmutableMap.Builder<>();
-    for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
-      builder.put(entry.getKey(), entry.getValue().build());
+      ImmutableMap.Builder<BuildTarget, ShowOptions> builder = new ImmutableMap.Builder<>();
+      for (Entry<BuildTarget, ShowOptions.Builder> entry : showOptionBuilderMap.entrySet()) {
+        builder.put(entry.getKey(), entry.getValue().build());
+      }
+      return builder.build();
     }
-    return builder.build();
   }
 
   private void showTransitiveRuleKeys(

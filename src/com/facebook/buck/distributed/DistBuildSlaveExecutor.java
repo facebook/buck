@@ -226,7 +226,8 @@ public class DistBuildSlaveExecutor {
                 /* skipActionGraphCache */ false,
                 Preconditions.checkNotNull(targetGraph),
                 args.getCacheKeySeed(),
-                ActionGraphParallelizationMode.DISABLED);
+                ActionGraphParallelizationMode.DISABLED,
+                Optional.empty());
     tracker.stopTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     return actionGraphAndResolver;
   }

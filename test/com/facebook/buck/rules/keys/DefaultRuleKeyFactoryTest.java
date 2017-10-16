@@ -562,7 +562,8 @@ public class DefaultRuleKeyFactoryTest {
                         filesystem, FileHashCacheMode.DEFAULT))),
             pathResolver,
             ruleFinder,
-            noopRuleKeyCache);
+            noopRuleKeyCache,
+            Optional.empty());
 
     // Create a sample input.
     PathSourcePath input = FakeSourcePath.of(filesystem, "input");
@@ -618,7 +619,8 @@ public class DefaultRuleKeyFactoryTest {
                         filesystem, FileHashCacheMode.DEFAULT))),
             pathResolver,
             ruleFinder,
-            noopRuleKeyCache);
+            noopRuleKeyCache,
+            Optional.empty());
 
     // Create a sample input.
     PathSourcePath input = FakeSourcePath.of(filesystem, "input");

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.AddsToRuleKey;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
@@ -34,6 +35,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -46,18 +48,30 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final long inputSizeLimit;
+  private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
   private DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
-      long inputSizeLimit) {
+      long inputSizeLimit,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
+    this.ruleKeyLogger = ruleKeyLogger;
+  }
+
+  public DefaultDependencyFileRuleKeyFactory(
+      RuleKeyFieldLoader ruleKeyFieldLoader,
+      FileHashLoader hashLoader,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
+    this(ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE, ruleKeyLogger);
   }
 
   public DefaultDependencyFileRuleKeyFactory(
@@ -65,7 +79,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    this(ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
+    this(
+        ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE, Optional.empty());
   }
 
   @Override
@@ -94,7 +109,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
             depFileEntries,
             rule.getCoveredByDepFilePredicate(pathResolver),
             rule.getExistenceOfInterestPredicate(pathResolver),
-            RuleKeyBuilder.createDefaultHasher());
+            RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
     ruleKeyFieldLoader.setFields(builder, rule, keyType.toRuleKeyType());
     Result<RuleKey> result = builder.buildResult(RuleKey::new);
     return RuleKeyAndInputs.of(result.getRuleKey(), result.getSourcePaths());

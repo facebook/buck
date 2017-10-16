@@ -27,12 +27,14 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
@@ -44,6 +46,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.thrift.TException;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -717,5 +720,22 @@ public class TargetsCommandIntegrationTest {
     // edge test1 -> test2
     Pattern edgePattern = Pattern.compile("test1.+->.+test2");
     assertEquals(1, lines.stream().filter(p -> edgePattern.matcher(p).find()).count());
+  }
+
+  @Test
+  public void writesBinaryRuleKeysToDisk() throws IOException, TException {
+    Path logFile = tmp.newFile("out.bin");
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult runBuckResult =
+        workspace.runBuckBuild(
+            "--show-rulekey", "--rulekeys-log-path", logFile.toAbsolutePath().toString(), "//:bar");
+    runBuckResult.assertSuccess();
+
+    List<FullRuleKey> ruleKeys = ThriftRuleKeyDeserializer.readRuleKeys(logFile);
+    // Three rules, they could have any number of sub-rule keys and contributors
+    assertTrue(ruleKeys.size() >= 3);
+    assertTrue(ruleKeys.stream().anyMatch(ruleKey -> ruleKey.name.equals("//:bar")));
   }
 }

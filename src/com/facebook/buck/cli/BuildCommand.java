@@ -52,6 +52,7 @@ import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Pair;
@@ -110,6 +111,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -145,6 +147,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   private static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
+  private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
 
   private static final String BUCK_GIT_COMMIT_KEY = "buck.git_commit";
 
@@ -244,6 +247,13 @@ public class BuildCommand extends AbstractCommand {
     hidden = true
   )
   private String buckBinary = null;
+
+  @Nullable
+  @Option(
+    name = RULEKEY_LOG_PATH_LONG_ARG,
+    usage = "If set, log a binary representation of rulekeys to this file."
+  )
+  private String ruleKeyLogPath = null;
 
   @Argument private List<String> arguments = new ArrayList<>();
 
@@ -364,7 +374,7 @@ public class BuildCommand extends AbstractCommand {
 
     ActionAndTargetGraphs graphs = null;
     try {
-      graphs = buildCommand.createGraphs(params, executor);
+      graphs = buildCommand.createGraphs(params, executor, Optional.empty());
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       throw new RuntimeException(e);
@@ -438,7 +448,9 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private ActionAndTargetGraphs createGraphs(
-      CommandRunnerParams params, ListeningExecutorService executorService)
+      CommandRunnerParams params,
+      ListeningExecutorService executorService,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService);
@@ -456,7 +468,7 @@ public class BuildCommand extends AbstractCommand {
         getTargetGraphForLocalBuild(unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndResolver actionGraph =
-        createActionGraphAndResolver(params, targetGraphForLocalBuild);
+        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
     return new ActionAndTargetGraphs(unversionedTargetGraph, versionedTargetGraph, actionGraph);
   }
 
@@ -488,7 +500,9 @@ public class BuildCommand extends AbstractCommand {
       distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
 
-      graphs = createGraphs(params, commandThreadManager.getListeningExecutorService());
+      graphs =
+          createGraphs(
+              params, commandThreadManager.getListeningExecutorService(), Optional.empty());
 
       distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
@@ -524,17 +538,35 @@ public class BuildCommand extends AbstractCommand {
         }
       }
     } else {
-      graphs = createGraphs(params, commandThreadManager.getListeningExecutorService());
-      exitCode =
-          executeLocalBuild(
-              params,
-              graphs.actionGraph,
-              commandThreadManager.getWeightedListeningExecutorService());
+      try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
+        Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
+        graphs =
+            createGraphs(
+                params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
+        exitCode =
+            executeLocalBuild(
+                params,
+                graphs.actionGraph,
+                commandThreadManager.getWeightedListeningExecutorService(),
+                optionalRuleKeyLogger);
+      }
     }
     if (exitCode == 0) {
       exitCode = processSuccessfulBuild(params, graphs);
     }
     return exitCode;
+  }
+
+  /**
+   * Create a {@link ThriftRuleKeyLogger} depending on whether {@link BuildCommand#ruleKeyLogPath}
+   * is set or not
+   */
+  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws FileNotFoundException {
+    if (ruleKeyLogPath == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(ThriftRuleKeyLogger.create(ruleKeyLogPath));
+    }
   }
 
   private int processSuccessfulBuild(CommandRunnerParams params, ActionAndTargetGraphs graphs)
@@ -767,7 +799,8 @@ public class BuildCommand extends AbstractCommand {
         }
 
         distBuildClientStats.startTimer(PERFORM_LOCAL_BUILD);
-        int localBuildExitCode = executeLocalBuild(params, graphs.actionGraph, executorService);
+        int localBuildExitCode =
+            executeLocalBuild(params, graphs.actionGraph, executorService, Optional.empty());
         distBuildClientStats.stopTimer(PERFORM_LOCAL_BUILD);
         distBuildClientStats.setLocalBuildExitCode(localBuildExitCode);
         distBuildClientStats.setPerformedLocalBuild(true);
@@ -917,7 +950,9 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private ActionGraphAndResolver createActionGraphAndResolver(
-      CommandRunnerParams params, TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws ActionGraphCreationException {
     buildTargets = targetGraphAndBuildTargets.getBuildTargets();
     buildTargetsHaveBeenCalculated = true;
@@ -927,7 +962,8 @@ public class BuildCommand extends AbstractCommand {
             .getActionGraph(
                 params.getBuckEventBus(),
                 targetGraphAndBuildTargets.getTargetGraph(),
-                params.getBuckConfig());
+                params.getBuckConfig(),
+                ruleKeyLogger);
 
     // If the user specified an explicit build target, use that.
     if (justBuildTarget != null) {
@@ -953,7 +989,8 @@ public class BuildCommand extends AbstractCommand {
   protected int executeLocalBuild(
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver,
-      WeightedListeningExecutorService executor)
+      WeightedListeningExecutorService executor,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws IOException, InterruptedException {
 
     ArtifactCache artifactCache = params.getArtifactCacheFactory().newInstance(useDistributedBuild);
@@ -968,7 +1005,8 @@ public class BuildCommand extends AbstractCommand {
         artifactCache,
         new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
         params.getBuckConfig(),
-        buildTargets);
+        buildTargets,
+        ruleKeyLogger);
   }
 
   private int executeBuild(
@@ -978,7 +1016,8 @@ public class BuildCommand extends AbstractCommand {
       ArtifactCache artifactCache,
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       BuckConfig rootCellBuckConfig,
-      Iterable<BuildTarget> targetsToBuild)
+      Iterable<BuildTarget> targetsToBuild,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws IOException, InterruptedException {
     MetadataChecker.checkAndCleanIfNeeded(params.getCell());
     CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
@@ -1007,7 +1046,8 @@ public class BuildCommand extends AbstractCommand {
                     cachingBuildEngineDelegate.getFileHashCache(),
                     actionGraphAndResolver.getResolver(),
                     cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
-                    ruleKeyCacheScope.getCache()),
+                    ruleKeyCacheScope.getCache(),
+                    ruleKeyLogger),
                 rootCellBuckConfig.getFileHashCacheMode());
         Build build =
             createBuild(

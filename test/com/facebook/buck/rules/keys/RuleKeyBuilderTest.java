@@ -232,7 +232,7 @@ public class RuleKeyBuilderTest {
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher()) {
+        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {

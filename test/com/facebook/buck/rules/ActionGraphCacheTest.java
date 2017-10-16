@@ -45,6 +45,7 @@ import com.google.common.eventbus.Subscribe;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -308,7 +309,8 @@ public class ActionGraphCacheTest {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(ruleKeyFieldLoader, pathResolver, ruleFinder);
+        new ContentAgnosticRuleKeyFactory(
+            ruleKeyFieldLoader, pathResolver, ruleFinder, Optional.empty());
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 
