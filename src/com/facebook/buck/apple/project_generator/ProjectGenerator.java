@@ -1430,6 +1430,7 @@ public class ProjectGenerator {
           targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
         }
 
+        ImmutableList<String> testingOverlay = getExcludesForModulesUnderTests(targetNode);
         Iterable<String> otherSwiftFlags =
             Iterables.concat(
                 swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
@@ -1447,6 +1448,7 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .addAll(testingOverlay)
                 .build();
         Iterable<String> otherCxxFlags =
             ImmutableList.<String>builder()
@@ -1460,6 +1462,7 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .addAll(testingOverlay)
                 .build();
 
         Iterable<String> otherLdFlags =
@@ -1629,6 +1632,27 @@ public class ProjectGenerator {
                         },
                         stringExtension -> false))
         .orElse(false);
+  }
+
+  private ImmutableList<String> getExcludesForModulesUnderTests(
+      TargetNode<? extends CxxLibraryDescription.CommonArg, ?> targetNode) {
+    ImmutableList.Builder<String> testingOverlayBuilder = new ImmutableList.Builder<>();
+    visitRecursivePrivateHeaderSymlinkTreesForTests(
+        targetNode,
+        (nativeNode, headerVisibility) -> {
+          // If we are testing a modular apple_library, we expose it non-modular. This allows the
+          // testing target to see both the public and private interfaces of the tested target
+          // without triggering header errors related to modules. We hide the module definition by
+          // using a filesystem overlay that overrides the module.modulemap with an empty file.
+          if (isModularAppleLibrary(nativeNode)) {
+            testingOverlayBuilder.add("-ivfsoverlay");
+            Path vfsOverlay =
+                getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+                    getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
+            testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay.toString());
+          }
+        });
+    return testingOverlayBuilder.build();
   }
 
   private boolean isFrameworkProductType(ProductType productType) {
@@ -2239,6 +2263,22 @@ public class ProjectGenerator {
               new ModuleMap(moduleName.get(), ModuleMap.SwiftMode.NO_SWIFT).render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }
+        Path absoluteModuleRoot =
+            projectFilesystem
+                .getRootPath()
+                .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
+        VFSOverlay vfsOverlay =
+            new VFSOverlay(
+                ImmutableSortedMap.of(
+                    absoluteModuleRoot.resolve("module.modulemap"),
+                    absoluteModuleRoot.resolve("testing.modulemap")));
+
+        projectFilesystem.writeContentsToPath(
+            vfsOverlay.render(),
+            getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
+        projectFilesystem.writeContentsToPath(
+            "", // empty modulemap to allow non-modular imports for testing
+            headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("testing.modulemap"));
       }
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
@@ -2647,6 +2687,11 @@ public class ProjectGenerator {
 
   private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
     return headerSymlinkTreeRoot.resolve("objc-module-overlay.yaml");
+  }
+
+  private Path getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
+      Path headerSymlinkTreeRoot) {
+    return headerSymlinkTreeRoot.resolve("testing.yaml");
   }
 
   private Path getHeaderMapLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
