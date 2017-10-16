@@ -17,6 +17,7 @@ java_library(
         "//src/com/facebook/buck/intellij/...",
         "//test/...",
         "//third-party/java/aosp:tests",
+        "//tools/...",
     ],
     deps = [
         # Be very careful what is added here, and leave comments justifying

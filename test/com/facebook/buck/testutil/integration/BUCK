@@ -150,6 +150,7 @@ java_library(
     ),
     visibility = [
         "//test/...",
+        "//tools/...",
     ],
     deps = [
         "//src-gen:thrift",

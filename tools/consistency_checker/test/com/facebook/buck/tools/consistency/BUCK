@@ -1,0 +1,14 @@
+java_test(
+    name = "consistency",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/log/thrift:rule_key_logger",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+        "//third-party/java/thrift:libthrift",
+        "//tools/consistency_checker/src/com/facebook/buck/tools/consistency:consistency",
+    ],
+)

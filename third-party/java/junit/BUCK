@@ -11,6 +11,7 @@ prebuilt_jar(
         "//src/com/facebook/buck/testrunner:junit",
         "//test/...",
         "//third-party/java/aosp/...",
+        "//tools/...",
     ],
     deps = [
         "//third-party/java/hamcrest:hamcrest-junit",
