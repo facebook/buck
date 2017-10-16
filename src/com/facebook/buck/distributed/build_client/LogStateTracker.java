@@ -114,7 +114,7 @@ public class LogStateTracker {
       try {
         writeLogDirToDisk(logDir);
       } catch (IOException e) {
-        LOG.error(e, "Erorr while materializing log dir for runId [%s]", logDir.buildSlaveRunId);
+        LOG.error(e, "Error while materializing log dir for runId [%s]", logDir.buildSlaveRunId);
       }
     }
   }

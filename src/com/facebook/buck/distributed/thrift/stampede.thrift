@@ -302,8 +302,8 @@ struct MultiGetBuildSlaveLogDirRequest {
 
 # Returns zipped up log directories in the same order as the buildSlaveRunIds
 # that were specified in MultiGetBuildSlaveLogDirRequest. If a particular
-# buildSlaveRunId is missing, then an error will be thrown and no
-# response returned.
+# buildSlaveRunId is missing, then an 'error' is set in the individual LogDir
+# entry and no 'data' will be present in the same entry.
 struct MultiGetBuildSlaveLogDirResponse {
   1: optional list<LogDir> logDirs;
 }
