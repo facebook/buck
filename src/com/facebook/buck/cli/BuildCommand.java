@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -25,17 +25,17 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
+import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
-import com.facebook.buck.distributed.DistBuildClientExecutor;
 import com.facebook.buck.distributed.DistBuildClientStatsEvent;
-import com.facebook.buck.distributed.DistBuildClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildFileHashes;
-import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildPostBuildAnalysis;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
+import com.facebook.buck.distributed.build_client.BuildController;
+import com.facebook.buck.distributed.build_client.LogStateTracker;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
@@ -476,8 +476,8 @@ public class BuildCommand extends AbstractCommand {
     ActionAndTargetGraphs graphs = null;
     if (useDistributedBuild) {
       DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
-      DistBuildClientStatsTracker distBuildClientStatsTracker =
-          new DistBuildClientStatsTracker(distBuildConfig.getBuildLabel());
+      ClientStatsTracker distBuildClientStatsTracker =
+          new ClientStatsTracker(distBuildConfig.getBuildLabel());
 
       distBuildClientStatsTracker.startTimer(LOCAL_PREPARATION);
       distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
@@ -678,7 +678,7 @@ public class BuildCommand extends AbstractCommand {
       FileHashCache fileHashCache,
       BuildJobState jobState,
       DistBuildCellIndexer distBuildCellIndexer,
-      DistBuildClientStatsTracker distBuildClientStats)
+      ClientStatsTracker distBuildClientStats)
       throws IOException, InterruptedException {
     Preconditions.checkNotNull(distBuildClientEventListener);
 
@@ -705,17 +705,17 @@ public class BuildCommand extends AbstractCommand {
     params.getBuckEventBus().post(started);
 
     int distBuildExitCode = 1;
-    DistBuildClientExecutor.ExecutionResult distBuildResult;
+    BuildController.ExecutionResult distBuildResult;
     BuckVersion buckVersion = getBuckVersion();
     Preconditions.checkArgument(params.getInvocationInfo().isPresent());
 
-    DistBuildLogStateTracker distBuildLogStateTracker =
+    LogStateTracker distBuildLogStateTracker =
         DistBuildFactory.newDistBuildLogStateTracker(
             params.getInvocationInfo().get().getLogDirectoryPath(), filesystem);
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
       try {
-        DistBuildClientExecutor build =
-            new DistBuildClientExecutor(
+        BuildController build =
+            new BuildController(
                 jobState,
                 distBuildCellIndexer,
                 service,

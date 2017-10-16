@@ -16,7 +16,7 @@
 
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
 
 import com.facebook.buck.distributed.thrift.AppendBuildSlaveEventsRequest;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -141,7 +141,7 @@ public class DistBuildService implements Closeable {
   public void uploadTargetGraph(
       final BuildJobState buildJobState,
       final StampedeId stampedeId,
-      final DistBuildClientStatsTracker distBuildClientStats)
+      final ClientStatsTracker distBuildClientStats)
       throws IOException {
     distBuildClientStats.startTimer(UPLOAD_TARGET_GRAPH);
 
@@ -161,7 +161,7 @@ public class DistBuildService implements Closeable {
   public ListenableFuture<Void> uploadMissingFilesAsync(
       final Map<Integer, ProjectFilesystem> localFilesystemsByCell,
       final List<BuildJobStateFileHashes> fileHashes,
-      final DistBuildClientStatsTracker distBuildClientStats,
+      final ClientStatsTracker distBuildClientStats,
       final ListeningExecutorService executorService) {
     distBuildClientStats.startTimer(UPLOAD_MISSING_FILES);
     List<PathInfo> requiredFiles = new ArrayList<>();
@@ -437,7 +437,7 @@ public class DistBuildService implements Closeable {
   }
 
   public void setBuckVersion(
-      StampedeId id, BuckVersion buckVersion, DistBuildClientStatsTracker distBuildClientStats)
+      StampedeId id, BuckVersion buckVersion, ClientStatsTracker distBuildClientStats)
       throws IOException {
     distBuildClientStats.startTimer(SET_BUCK_VERSION);
     SetBuckVersionRequest setBuckVersionRequest = new SetBuckVersionRequest();
@@ -465,7 +465,7 @@ public class DistBuildService implements Closeable {
       final StampedeId id,
       final ProjectFilesystem filesystem,
       FileHashCache fileHashCache,
-      DistBuildClientStatsTracker distBuildClientStats,
+      ClientStatsTracker distBuildClientStats,
       ListeningExecutorService executorService) {
     distBuildClientStats.startTimer(UPLOAD_BUCK_DOT_FILES);
     ListenableFuture<List<Path>> pathsFuture =

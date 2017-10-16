@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_client;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -44,7 +44,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class DistBuildLogStateTrackerTest {
+public class LogStateTrackerTest {
   @Rule public TemporaryFolder projectDir = new TemporaryFolder();
 
   private static final String LOG_DIR = "logs";
@@ -99,7 +99,7 @@ public class DistBuildLogStateTrackerTest {
       "dist-build-slave-buildSlaveRunIdTwo/STDOUT.log";
 
   private Path logDir;
-  private DistBuildLogStateTracker distBuildLogStateTracker;
+  private LogStateTracker distBuildLogStateTracker;
 
   /*
    **********************************
@@ -113,7 +113,7 @@ public class DistBuildLogStateTrackerTest {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
     logDir = projectDir.getRoot().toPath().resolve(LOG_DIR);
-    distBuildLogStateTracker = new DistBuildLogStateTracker(logDir, projectFilesystem);
+    distBuildLogStateTracker = new LogStateTracker(logDir, projectFilesystem);
   }
 
   @Test

@@ -16,11 +16,11 @@
 
 package com.facebook.buck.distributed.testutil;
 
-import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FakeDistBuildSlaveTimingStatsTracker extends DistBuildSlaveTimingStatsTracker {
+public class FakeDistBuildSlaveTimingStatsTracker extends BuildSlaveTimingStatsTracker {
   private Map<SlaveEvents, Long> elapsedTimeMillis = new HashMap<>();
 
   public void setElapsedTimeMillis(SlaveEvents event, long elapsedTimeMillis) {

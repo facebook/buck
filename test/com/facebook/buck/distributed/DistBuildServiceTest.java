@@ -103,7 +103,7 @@ public class DistBuildServiceTest {
   private FrontendService frontendService;
   private DistBuildService distBuildService;
   private ListeningExecutorService executor;
-  private DistBuildClientStatsTracker distBuildClientStatsTracker;
+  private ClientStatsTracker distBuildClientStatsTracker;
   private static final String REPOSITORY = "repositoryOne";
   private static final String TENANT_ID = "tenantOne";
   private static final String BUILD_LABEL = "unit_test";
@@ -113,7 +113,7 @@ public class DistBuildServiceTest {
     frontendService = EasyMock.createStrictMock(FrontendService.class);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     distBuildService = new DistBuildService(frontendService);
-    distBuildClientStatsTracker = new DistBuildClientStatsTracker(BUILD_LABEL);
+    distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
   }
 
   @After

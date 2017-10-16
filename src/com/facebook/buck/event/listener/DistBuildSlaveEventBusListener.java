@@ -20,9 +20,9 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.distributed.BuildSlaveFinishedStatusEvent;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -91,7 +91,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
   private final HttpCacheUploadStats httpCacheUploadStats = new HttpCacheUploadStats();
 
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker;
-  private final DistBuildSlaveTimingStatsTracker slaveStatsTracker;
+  private final BuildSlaveTimingStatsTracker slaveStatsTracker;
   private final DistBuildMode distBuildMode;
 
   private volatile @Nullable DistBuildService distBuildService;
@@ -103,7 +103,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       BuildSlaveRunId buildSlaveRunId,
       DistBuildMode distBuildMode,
       Clock clock,
-      DistBuildSlaveTimingStatsTracker slaveStatsTracker,
+      BuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService networkScheduler) {
     this(
@@ -122,7 +122,7 @@ public class DistBuildSlaveEventBusListener implements BuckEventListener, Closea
       BuildSlaveRunId runId,
       DistBuildMode distBuildMode,
       Clock clock,
-      DistBuildSlaveTimingStatsTracker slaveStatsTracker,
+      BuildSlaveTimingStatsTracker slaveStatsTracker,
       FileMaterializationStatsTracker fileMaterializationStatsTracker,
       ScheduledExecutorService networkScheduler,
       long serverUpdatePeriodMillis) {

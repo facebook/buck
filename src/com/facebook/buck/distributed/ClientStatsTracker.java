@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
-import static com.facebook.buck.distributed.DistBuildClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -26,7 +26,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
 
-public class DistBuildClientStatsTracker {
+/** Tracks client side statistics. */
+public class ClientStatsTracker {
   public enum DistBuildClientStat {
     LOCAL_PREPARATION, // Measures everything that happens before starting distributed build
     LOCAL_GRAPH_CONSTRUCTION,
@@ -53,6 +54,7 @@ public class DistBuildClientStatsTracker {
     UPLOAD_TARGET_GRAPH,
     UPLOAD_BUCK_DOT_FILES,
     SET_BUCK_VERSION,
+    // TODO(ruibm): Understand why these are commented out and fix it.
     // POST_BUILD_ANALYSIS only happens if remote build was successful
     // PUBLISH_BUILD_SLAVE_FINISHED_STATS is optional
     // MATERIALIZE_SLAVE_LOGS is optional
@@ -83,7 +85,7 @@ public class DistBuildClientStatsTracker {
 
   private final String buildLabel;
 
-  public DistBuildClientStatsTracker(String buildLabel) {
+  public ClientStatsTracker(String buildLabel) {
     this.buildLabel = buildLabel;
   }
 

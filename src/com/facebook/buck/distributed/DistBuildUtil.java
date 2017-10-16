@@ -18,8 +18,10 @@ package com.facebook.buck.distributed;
 
 import static com.facebook.buck.util.BuckConstant.DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME;
 
+import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveConsoleEvent;
 import com.facebook.buck.distributed.thrift.ConsoleEventSeverity;
+import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.BuckConstant;
@@ -88,5 +90,15 @@ public class DistBuildUtil {
   public static Path getRemoteBuckLogPath(String runId, Path logDirectoryPath) {
     return getLogDirForRunId(runId, logDirectoryPath)
         .resolve(DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME);
+  }
+
+  /** Debug logging during a distributed build. */
+  public static void logDebugInfo(BuildJob job) {
+    if (job.isSetDebug() && job.getDebug().getLogBook().size() > 0) {
+      LOG.debug("Debug info: ");
+      for (LogRecord log : job.getDebug().getLogBook()) {
+        LOG.debug(DATE_FORMAT.format(new Date(log.getTimestampMillis())) + log.getName());
+      }
+    }
   }
 }

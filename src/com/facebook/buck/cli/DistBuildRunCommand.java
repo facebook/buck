@@ -21,11 +21,11 @@ import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
-import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker;
-import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.FileContentsProvider;
 import com.facebook.buck.distributed.FileMaterializationStatsTracker;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.StampedeId;
@@ -94,8 +94,7 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
   private final FileMaterializationStatsTracker fileMaterializationStatsTracker =
       new FileMaterializationStatsTracker();
 
-  private final DistBuildSlaveTimingStatsTracker timeStatsTracker =
-      new DistBuildSlaveTimingStatsTracker();
+  private final BuildSlaveTimingStatsTracker timeStatsTracker = new BuildSlaveTimingStatsTracker();
 
   @Override
   public boolean isReadOnly() {

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_client;
 
 import com.facebook.buck.distributed.thrift.BuildSlavePerStageTimingStats;
 import com.google.common.base.Preconditions;
@@ -23,7 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class DistBuildSlaveTimingStatsTracker {
+/** Keeps track of BuildSlave timing statistics. */
+public class BuildSlaveTimingStatsTracker {
 
   public enum SlaveEvents {
     DIST_BUILD_PREPARATION_TIME,

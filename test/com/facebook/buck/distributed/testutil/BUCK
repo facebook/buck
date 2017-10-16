@@ -8,6 +8,7 @@ java_library(
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/distributed:distributed",
+        "//src/com/facebook/buck/distributed/build_client:build_client",
         "//src/com/facebook/buck/io:io",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

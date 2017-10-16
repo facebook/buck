@@ -13,8 +13,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.distributed;
+package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.LogDir;
@@ -44,8 +45,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DistBuildLogStateTracker {
-  private static final Logger LOG = Logger.get(DistBuildLogStateTracker.class);
+/** Tracks the state of logs. */
+public class LogStateTracker {
+  private static final Logger LOG = Logger.get(LogStateTracker.class);
   private static final List<LogStreamType> SUPPORTED_STREAM_TYPES =
       ImmutableList.of(LogStreamType.STDOUT, LogStreamType.STDERR);
 
@@ -55,7 +57,7 @@ public class DistBuildLogStateTracker {
   private Set<String> createdLogDirRootsByRunId = new HashSet<>();
   private List<BuildSlaveRunId> runIdsWithLogDirs = new ArrayList<>();
 
-  public DistBuildLogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {
+  public LogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {
     this.logDirectoryPath = logDirectoryPath;
     this.filesystem = filesystem;
   }

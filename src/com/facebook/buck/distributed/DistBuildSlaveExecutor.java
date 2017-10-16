@@ -26,7 +26,8 @@ import com.facebook.buck.command.Build;
 import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
-import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker;
+import com.facebook.buck.distributed.build_client.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
@@ -206,8 +207,8 @@ public class DistBuildSlaveExecutor {
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver(
-      DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
+  private ActionGraphAndResolver createActionGraphAndResolver(BuildSlaveTimingStatsTracker tracker)
+      throws IOException, InterruptedException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
@@ -230,8 +231,9 @@ public class DistBuildSlaveExecutor {
     return actionGraphAndResolver;
   }
 
-  public CachingBuildEngineDelegate createBuildEngineDelegate(
-      DistBuildSlaveTimingStatsTracker tracker) throws IOException, InterruptedException {
+  /** Creates the delegate for the distributed build. */
+  public CachingBuildEngineDelegate createBuildEngineDelegate(BuildSlaveTimingStatsTracker tracker)
+      throws IOException, InterruptedException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }

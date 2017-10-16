@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildExecutorArgs;
-import com.facebook.buck.distributed.DistBuildLogStateTracker;
 import com.facebook.buck.distributed.DistBuildMode;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
@@ -29,6 +28,7 @@ import com.facebook.buck.distributed.FileMaterializationStatsTracker;
 import com.facebook.buck.distributed.FrontendService;
 import com.facebook.buck.distributed.MultiSourceContentsProvider;
 import com.facebook.buck.distributed.ServerContentsProvider;
+import com.facebook.buck.distributed.build_client.LogStateTracker;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -53,9 +53,9 @@ public abstract class DistBuildFactory {
     return new DistBuildService(newFrontendService(params));
   }
 
-  public static DistBuildLogStateTracker newDistBuildLogStateTracker(
+  public static LogStateTracker newDistBuildLogStateTracker(
       Path logDir, ProjectFilesystem fileSystem) {
-    return new DistBuildLogStateTracker(logDir, fileSystem);
+    return new LogStateTracker(logDir, fileSystem);
   }
 
   public static FrontendService newFrontendService(CommandRunnerParams params) {
@@ -121,7 +121,8 @@ public abstract class DistBuildFactory {
                 .setParser(params.getParser())
                 .setExecutorService(executorService)
                 .setActionGraphCache(params.getActionGraphCache())
-                //TODO(alisdair,shivanker): Change this to state.getRootCell().getBuckConfig().getKeySeed()
+                // TODO(alisdair,shivanker): Change this to
+                // state.getRootCell().getBuckConfig().getKeySeed()
                 .setCacheKeySeed(params.getBuckConfig().getKeySeed())
                 .setConsole(params.getConsole())
                 .setProvider(fileContentsProvider)

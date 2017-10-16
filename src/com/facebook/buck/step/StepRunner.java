@@ -22,7 +22,7 @@ import java.util.Optional;
 public interface StepRunner {
 
   /**
-   * Runs a BuildStep for a given BuildRule.
+   * Runs a BuildPhase for a given BuildRule.
    *
    * <p>Note that this method blocks until the specified command terminates.
    */
