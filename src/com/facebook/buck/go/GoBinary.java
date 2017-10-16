@@ -99,6 +99,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new GoLinkStep(
+            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             environment.build(),
             cxxLinkerCommand,

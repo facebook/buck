@@ -129,6 +129,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
         .add(
             // Return a single command that runs an .sh file with no arguments.
             new RunShTestAndRecordResultStep(
+                getBuildTarget(),
                 getProjectFilesystem(),
                 Arg.stringify(args, buildContext.getSourcePathResolver()),
                 Arg.stringify(env, buildContext.getSourcePathResolver()),

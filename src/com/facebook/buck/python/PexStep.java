@@ -18,6 +18,7 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ObjectMappers;
@@ -69,6 +70,7 @@ public class PexStep extends ShellStep {
   private final boolean zipSafe;
 
   public PexStep(
+      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
@@ -83,7 +85,7 @@ public class PexStep extends ShellStep {
       ImmutableSet<Path> prebuiltLibraries,
       ImmutableSet<String> preloadLibraries,
       boolean zipSafe) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
     this.environment = environment;

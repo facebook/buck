@@ -161,7 +161,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), uncompressedOutputDir)));
     steps.add(
-        new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
+        new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().resolve(scratchDir)) {
           @Override
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             return ImmutableList.of(

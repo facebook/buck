@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
@@ -43,6 +44,7 @@ public class NdkBuildStep extends ShellStep {
   private final Function<String, String> macroExpander;
 
   public NdkBuildStep(
+      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       Path root,
       Path makefile,
@@ -50,7 +52,7 @@ public class NdkBuildStep extends ShellStep {
       Path binDirectory,
       Iterable<String> flags,
       Function<String, String> macroExpander) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
     this.root = root;

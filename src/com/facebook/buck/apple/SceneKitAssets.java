@@ -86,7 +86,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
       if (copySceneKitAssets.isPresent()) {
         stepsBuilder.add(
-            new ShellStep(getProjectFilesystem().getRootPath()) {
+            new ShellStep(Optional.of(getBuildTarget()), getProjectFilesystem().getRootPath()) {
               @Override
               protected ImmutableList<String> getShellCommandInternal(
                   ExecutionContext executionContext) {

@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -52,6 +53,9 @@ public abstract class ShellStep implements Step {
   /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
 
+  /** Target using this shell step. */
+  Optional<BuildTarget> buildTarget;
+
   /**
    * If specified, working directory will be different from build cell root. This should be relative
    * to the build cell root.
@@ -73,7 +77,8 @@ public abstract class ShellStep implements Step {
   private long startTime = 0L;
   private long endTime = 0L;
 
-  protected ShellStep(Path workingDirectory) {
+  protected ShellStep(Optional<BuildTarget> buildTarget, Path workingDirectory) {
+    this.buildTarget = buildTarget;
     this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
     this.stdout = Optional.empty();
     this.stderr = Optional.empty();
@@ -297,5 +302,9 @@ public abstract class ShellStep implements Step {
   @SuppressWarnings("unused")
   protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
     return Optional.empty();
+  }
+
+  public Optional<BuildTarget> getBuildTarget() {
+    return buildTarget;
   }
 }

@@ -154,6 +154,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     } else {
       steps.add(
           new GoCompileStep(
+              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               compiler.getEnvironment(context.getSourcePathResolver()),
               compiler.getCommandPrefix(context.getSourcePathResolver()),
@@ -209,6 +210,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             asmOutputDir.resolve(asmSrc.getFileName().toString().replaceAll("\\.[sS]$", ".o"));
         steps.add(
             new GoAssembleStep(
+                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 assembler.getEnvironment(context.getSourcePathResolver()),
                 assembler.getCommandPrefix(context.getSourcePathResolver()),
@@ -226,6 +228,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
       steps.add(
           new GoPackStep(
+              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               packer.getEnvironment(context.getSourcePathResolver()),
               packer.getCommandPrefix(context.getSourcePathResolver()),

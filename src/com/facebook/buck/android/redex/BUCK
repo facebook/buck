@@ -13,6 +13,7 @@ java_library(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/model:model",
         "//src/com/facebook/buck/rules:build_rule",
         "//src/com/facebook/buck/rules:source_path",
         "//src/com/facebook/buck/rules/args:args",

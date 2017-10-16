@@ -156,7 +156,10 @@ class CxxInferAnalyze extends AbstractBuildRule {
             })
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(), getAnalyzeCommand(), ImmutableMap.of()))
+                getBuildTarget(),
+                getProjectFilesystem().getRootPath(),
+                getAnalyzeCommand(),
+                ImmutableMap.of()))
         .build();
   }
 

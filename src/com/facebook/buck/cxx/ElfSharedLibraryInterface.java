@@ -126,6 +126,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
                 context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())));
     steps.add(
         new ElfExtractSectionsStep(
+            getBuildTarget(),
             objcopy.getCommandPrefix(context.getSourcePathResolver()),
             getSections(),
             context.getSourcePathResolver().getFilesystem(input),
@@ -164,6 +165,7 @@ class ElfSharedLibraryInterface extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
     steps.add(
         ElfCompactSectionsStep.of(
+            getBuildTarget(),
             objcopy.getCommandPrefix(context.getSourcePathResolver()),
             getProjectFilesystem(),
             outputScratch,

@@ -131,6 +131,7 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
         context.getSourcePathResolver().getAllAbsolutePaths(assetCatalogDirs);
     stepsBuilder.add(
         new ActoolStep(
+            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             applePlatformName,
             targetSDKVersion,
@@ -240,8 +241,10 @@ public class AppleAssetCatalog extends AbstractBuildRuleWithDeclaredAndExtraDeps
             if (catalogPath.equals(existingCatalogPath)) {
               continue;
             } else {
-              // All asset catalogs (.xcassets directories) get merged into a single directory per apple bundle.
-              // Imagesets containing images with identical names can overwrite one another, this is especially
+              // All asset catalogs (.xcassets directories) get merged into a single directory per
+              // apple bundle.
+              // Imagesets containing images with identical names can overwrite one another, this is
+              // especially
               // problematic if two images share a name but are different
               errors.add(
                   String.format(

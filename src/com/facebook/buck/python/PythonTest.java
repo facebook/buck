@@ -141,6 +141,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     getPathToTestOutputDirectory())))
         .add(
             new PythonRunTestsStep(
+                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 getBuildTarget().getFullyQualifiedName(),
                 binary
@@ -205,7 +206,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return false;
   }
 
-  // A python test rule is actually just a {@link NoopBuildRuleWithDeclaredAndExtraDeps} which contains a references to
+  // A python test rule is actually just a {@link NoopBuildRuleWithDeclaredAndExtraDeps} which
+  // contains a references to
   // a {@link PythonBinary} rule, which is the actual test binary.  Therefore, we *need* this
   // rule around to run this test, so model this via the {@link HasRuntimeDeps} interface.
   @Override

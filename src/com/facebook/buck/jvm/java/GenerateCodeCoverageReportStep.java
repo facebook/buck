@@ -68,7 +68,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       String title,
       Optional<String> coverageIncludes,
       Optional<String> coverageExcludes) {
-    super(filesystem.getRootPath());
+    super(Optional.empty(), filesystem.getRootPath());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.filesystem = filesystem;
     this.sourceDirectories = ImmutableSet.copyOf(sourceDirectories);

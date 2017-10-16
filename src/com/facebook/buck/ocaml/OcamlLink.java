@@ -109,6 +109,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                         outputRelativePath.getParent())))
             .add(
                 OcamlLinkStep.create(
+                    getBuildTarget(),
                     getProjectFilesystem().getRootPath(),
                     cxxCompilerEnvironment,
                     cxxCompiler,
@@ -139,6 +140,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<String> ocamlInput = ocamlInputBuilder.build();
       steps.add(
           new OcamlNativePluginStep(
+              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               cxxCompilerEnvironment,
               cxxCompiler,

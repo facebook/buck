@@ -255,6 +255,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .build();
 
     return new JUnitStep(
+        getBuildTarget(),
         getProjectFilesystem(),
         nativeLibsEnvironment,
         testRuleTimeoutMs,
@@ -581,7 +582,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 return;
               }
 
-              // Make sure it is a .class file that corresponds to a top-level .class file and not an
+              // Make sure it is a .class file that corresponds to a top-level .class file and not
+              // an
               // inner class.
               if (!name.contains("$")) {
                 String fullyQualifiedNameWithDotClassSuffix = zipEntry.getName().replace('/', '.');

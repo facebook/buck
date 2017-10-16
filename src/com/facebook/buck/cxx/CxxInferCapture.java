@@ -126,7 +126,10 @@ class CxxInferCapture extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(new WriteArgFileStep(context.getSourcePathResolver(), inputRelativePath))
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(), frontendCommand, ImmutableMap.of()))
+                getBuildTarget(),
+                getProjectFilesystem().getRootPath(),
+                frontendCommand,
+                ImmutableMap.of()))
         .build();
   }
 

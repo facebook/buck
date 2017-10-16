@@ -154,6 +154,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(new WriteFileStep(getProjectFilesystem(), makefileContents, makefile, false));
     steps.add(
         new NdkBuildStep(
+            getBuildTarget(),
             getProjectFilesystem(),
             root,
             makefile,

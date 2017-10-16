@@ -49,6 +49,7 @@ import java.util.Set;
  */
 public class IntraDexReorderStep implements Step {
 
+  private final BuildTarget target;
   private final BuildContext context;
   private final ProjectFilesystem filesystem;
   private final Path reorderTool;
@@ -61,6 +62,7 @@ public class IntraDexReorderStep implements Step {
   private final String outputSubDir;
 
   IntraDexReorderStep(
+      BuildTarget target,
       BuildContext context,
       ProjectFilesystem filesystem,
       Path reorderTool,
@@ -71,6 +73,7 @@ public class IntraDexReorderStep implements Step {
       final Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
       String outputSubDir) {
+    this.target = target;
     this.context = context;
     this.filesystem = filesystem;
     this.reorderTool = reorderTool;
@@ -127,6 +130,7 @@ public class IntraDexReorderStep implements Step {
       // run reorder tool
       steps.add(
           new DefaultShellStep(
+              target,
               filesystem.getRootPath(),
               ImmutableList.of(
                   reorderTool.toString(),
@@ -148,6 +152,7 @@ public class IntraDexReorderStep implements Step {
       steps.add(CopyStep.forFile(filesystem, inputPrimaryDexPath, outputPrimaryDexPath));
       steps.add(
           new DefaultShellStep(
+              target,
               filesystem.getRootPath(),
               ImmutableList.of(
                   reorderTool.toString(),

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
@@ -75,8 +76,12 @@ public class DxStep extends ShellStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    */
-  public DxStep(ProjectFilesystem filesystem, Path outputDexFile, Iterable<Path> filesToDex) {
-    this(filesystem, outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
+  public DxStep(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Path outputDexFile,
+      Iterable<Path> filesToDex) {
+    this(target, filesystem, outputDexFile, filesToDex, EnumSet.noneOf(DxStep.Option.class));
   }
 
   /**
@@ -86,11 +91,12 @@ public class DxStep extends ShellStep {
    * @param options to pass to {@code dx}.
    */
   public DxStep(
+      BuildTarget target,
       ProjectFilesystem filesystem,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options) {
-    this(filesystem, outputDexFile, filesToDex, options, Optional.empty());
+    this(target, filesystem, outputDexFile, filesToDex, options, Optional.empty());
   }
 
   /**
@@ -101,12 +107,13 @@ public class DxStep extends ShellStep {
    * @param maxHeapSize The max heap size used for out of process dex.
    */
   public DxStep(
+      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
       Optional<String> maxHeapSize) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
     this.filesystem = filesystem;
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);

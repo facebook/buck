@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -44,6 +45,9 @@ public class WorkerShellStep implements Step {
   private Optional<WorkerJobParams> cmdExeParams;
   private WorkerProcessPoolFactory factory;
 
+  /** Target using this worker shell step. */
+  BuildTarget buildTarget;
+
   /**
    * Creates new shell step that uses worker process to delegate work. If platform-specific params
    * are present they are used in favor of universal params.
@@ -56,10 +60,12 @@ public class WorkerShellStep implements Step {
    *     cmd.exe (Windows shell).
    */
   public WorkerShellStep(
+      BuildTarget buildTarget,
       Optional<WorkerJobParams> cmdParams,
       Optional<WorkerJobParams> bashParams,
       Optional<WorkerJobParams> cmdExeParams,
       WorkerProcessPoolFactory factory) {
+    this.buildTarget = buildTarget;
     this.cmdParams = cmdParams;
     this.bashParams = bashParams;
     this.cmdExeParams = cmdExeParams;
@@ -177,5 +183,9 @@ public class WorkerShellStep implements Step {
                     getWorkerJobParamsToUse(context.getPlatform()).getWorkerProcessParams()))
             .transform(Escaper.SHELL_ESCAPER)
             .join(Joiner.on(' ')));
+  }
+
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 }

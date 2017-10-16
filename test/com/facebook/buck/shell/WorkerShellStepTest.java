@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -79,6 +80,7 @@ public class WorkerShellStepTest {
       @Nullable WorkerJobParams bashParams,
       @Nullable WorkerJobParams cmdExeParams) {
     return new WorkerShellStep(
+        BuildTargetFactory.newInstance("//dummy:target"),
         Optional.ofNullable(cmdParams),
         Optional.ofNullable(bashParams),
         Optional.ofNullable(cmdExeParams),
@@ -362,6 +364,7 @@ public class WorkerShellStepTest {
   public void testGetEnvironmentForProcess() {
     WorkerShellStep step =
         new WorkerShellStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             Optional.of(
                 createJobParams(
                     ImmutableList.of(), ImmutableMap.of("BAK", "chicken"), "$FOO $BAR $BAZ $BAK")),
@@ -415,6 +418,7 @@ public class WorkerShellStepTest {
     class WorkerShellStepWithFakeProcesses extends WorkerShellStep {
       WorkerShellStepWithFakeProcesses(WorkerJobParams jobParams) {
         super(
+            BuildTargetFactory.newInstance("//dummy:target"),
             Optional.ofNullable(jobParams),
             Optional.empty(),
             Optional.empty(),

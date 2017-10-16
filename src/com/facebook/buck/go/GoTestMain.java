@@ -72,6 +72,7 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
         new GoTestMainStep(
+            getBuildTarget(),
             getProjectFilesystem().getRootPath(),
             testMainGen.getEnvironment(context.getSourcePathResolver()),
             testMainGen.getCommandPrefix(context.getSourcePathResolver()),

@@ -24,6 +24,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -39,7 +40,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   private final ProjectFilesystem projectFilesystem;
   private final CommandString commandString;
-  private final BuildTarget target;
   private final LoadingCache<Platform, Path> scriptFilePath =
       CacheBuilder.newBuilder()
           .build(
@@ -56,12 +56,11 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem,
-      BuildTarget target,
+      BuildTarget buildTarget,
       CommandString commandString,
       Path workingDirectory) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.projectFilesystem = projectFilesystem;
-    this.target = target;
     this.commandString = commandString;
   }
 
@@ -142,7 +141,8 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private ExecutionArgsAndCommand getExecutionArgsAndCommand(Platform platform) {
-    return commandString.getCommandAndExecutionArgs(platform, target);
+    Preconditions.checkArgument(getBuildTarget().isPresent(), "buildTarget must not be empty");
+    return commandString.getCommandAndExecutionArgs(platform, getBuildTarget().get());
   }
 
   protected abstract void addEnvironmentVariables(
@@ -196,7 +196,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
     }
 
     public ExecutionArgsAndCommand getCommandAndExecutionArgs(
-        Platform platform, BuildTarget target) {
+        Platform platform, BuildTarget buildTarget) {
       // The priority sequence is
       //   "cmd.exe /c winCommand" (Windows Only)
       //   "/bin/bash -e -c shCommand" (Non-windows Only)
@@ -210,7 +210,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else {
           throw new HumanReadableException(
               "You must specify either cmd_exe or cmd for genrule %s.",
-              target.getFullyQualifiedName());
+              buildTarget.getFullyQualifiedName());
         }
         return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
       } else {
@@ -221,7 +221,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
         } else {
           throw new HumanReadableException(
               "You must specify either bash or cmd for genrule %s.",
-              target.getFullyQualifiedName());
+              buildTarget.getFullyQualifiedName());
         }
         return new ExecutionArgsAndCommand(ShellType.BASH, command);
       }

@@ -48,6 +48,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Rule to write the results of library merging to disk and run a user-supplied code generator on
@@ -94,7 +95,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(new WriteMapDataStep())
         .add(new WriteTargetsFileStep())
-        .add(new RunCodeGenStep(context.getSourcePathResolver()))
+        .add(new RunCodeGenStep(getBuildTarget(), context.getSourcePathResolver()))
         .build();
   }
 
@@ -185,8 +186,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   private class RunCodeGenStep extends ShellStep {
     private final SourcePathResolver pathResolver;
 
-    RunCodeGenStep(SourcePathResolver pathResolver) {
-      super(getProjectFilesystem().getRootPath());
+    RunCodeGenStep(BuildTarget buildTarget, SourcePathResolver pathResolver) {
+      super(Optional.of(buildTarget), getProjectFilesystem().getRootPath());
       this.pathResolver = pathResolver;
     }
 

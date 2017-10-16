@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -78,6 +79,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
     DxPseudoRule rule =
         new DxPseudoRule(
+            BuildTargetFactory.newInstance("//dummy:target"),
             FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
@@ -110,6 +112,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -153,6 +156,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
         filesystem,
@@ -196,6 +200,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -231,6 +236,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -270,6 +276,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
+        BuildTargetFactory.newInstance("//dummy:target"),
         new ImmutableList.Builder<>(),
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,

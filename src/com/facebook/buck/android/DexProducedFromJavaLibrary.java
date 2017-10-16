@@ -134,6 +134,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
       // merged into a final classes.dex that uses jumbo instructions.
       dx =
           new DxStep(
+              getBuildTarget(),
               getProjectFilesystem(),
               getPathToDex(),
               Collections.singleton(pathToOutputFile),

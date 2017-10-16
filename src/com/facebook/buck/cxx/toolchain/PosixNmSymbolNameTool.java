@@ -124,6 +124,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       // Run `nm` on the inputs.
       final ShellStep shellStep =
           new DefaultShellStep(
+              getBuildTarget(),
               getProjectFilesystem().getRootPath(),
               ImmutableList.<String>builder()
                   .addAll(nm.getCommandPrefix(context.getSourcePathResolver()))

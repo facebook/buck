@@ -65,6 +65,7 @@ public class JsUtil {
                             worker.getInstanceKey()))
                     : Optional.empty()));
     return new WorkerShellStep(
+        buildTarget,
         Optional.of(params),
         Optional.empty(),
         Optional.empty(),

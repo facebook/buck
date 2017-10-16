@@ -147,6 +147,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
     steps.addAll(
         Lists.newCopyOnWriteArrayList(
             addPostprocessClassesCommands(
+                target,
                 projectFilesystem,
                 postprocessClassesCommands,
                 compilerParameters.getOutputDirectory(),
@@ -190,6 +191,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
    */
   @VisibleForTesting
   static ImmutableList<Step> addPostprocessClassesCommands(
+      BuildTarget target,
       ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
       Path outputDirectory,
@@ -213,7 +215,7 @@ public abstract class CompileToJarStepFactory implements ConfiguredCompiler {
     for (final String postprocessClassesCommand : postprocessClassesCommands) {
       BashStep bashStep =
           new BashStep(
-              filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {
+              target, filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
               return envVars;

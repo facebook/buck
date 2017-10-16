@@ -572,6 +572,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
 
     // Run ProGuard on the classpath entries.
     ProGuardObfuscateStep.create(
+        getBuildTarget(),
         javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()),
         getProjectFilesystem(),
         proguardJarOverride.isPresent()
@@ -851,6 +852,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     }
     SmartDexingStep smartDexingCommand =
         new SmartDexingStep(
+            getBuildTarget(),
             buildContext,
             getProjectFilesystem(),
             selectedPrimaryDexPath,
@@ -868,6 +870,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     if (reorderClassesIntraDex) {
       IntraDexReorderStep intraDexReorderStep =
           new IntraDexReorderStep(
+              getBuildTarget(),
               buildContext,
               getProjectFilesystem(),
               resolver.getAbsolutePath(dexReorderToolFile.get()),

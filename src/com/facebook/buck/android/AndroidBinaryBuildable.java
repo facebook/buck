@@ -296,7 +296,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               redexedApk));
     }
 
-    steps.add(new ZipalignStep(getProjectFilesystem().getRootPath(), apkToAlign, apkPath));
+    steps.add(
+        new ZipalignStep(
+            getBuildTarget(), getProjectFilesystem().getRootPath(), apkToAlign, apkPath));
 
     buildableContext.recordArtifact(apkPath);
     return steps.build();
@@ -477,6 +479,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
                 context.getBuildCellRootPath(), getProjectFilesystem(), redexedApk.getParent())));
     ImmutableList<Step> redexSteps =
         ReDexStep.createSteps(
+            buildTarget,
             getProjectFilesystem(),
             resolver,
             redexOptions.get(),

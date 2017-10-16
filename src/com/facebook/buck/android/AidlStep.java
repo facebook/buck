@@ -27,26 +27,25 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Set;
 
 public class AidlStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
-  private final BuildTarget target;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
 
   public AidlStep(
       ProjectFilesystem filesystem,
-      BuildTarget target,
+      BuildTarget buildTarget,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
 
     this.filesystem = filesystem;
-    this.target = target;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
@@ -86,7 +85,8 @@ public class AidlStep extends ShellStep {
   private void verifyImportPaths(ProjectFilesystem filesystem, Set<String> importDirectoryPaths) {
     for (String path : importDirectoryPaths) {
       if (!filesystem.exists(Paths.get(path))) {
-        throw new HumanReadableException("%s: Cannot find import path: %s", target, path);
+        throw new HumanReadableException(
+            "%s: Cannot find import path: %s", getBuildTarget().get(), path);
       }
     }
   }

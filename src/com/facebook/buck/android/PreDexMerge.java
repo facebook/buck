@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
+
 /**
  * Buildable that is responsible for:
  *
@@ -205,7 +206,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       secondaryDexDirectories.add(
           ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.jarfilesDir));
     }
-    //always add additional dex stores and metadata as assets
+    // always add additional dex stores and metadata as assets
     secondaryDexDirectories.add(
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), paths.additionalJarfilesDir));
     return secondaryDexDirectories.build();
@@ -301,6 +302,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     Path primaryDexPath = getPrimaryDexPath();
     steps.add(
         new SmartDexingStep(
+            getBuildTarget(),
             context,
             getProjectFilesystem(),
             primaryDexPath,
@@ -409,7 +411,13 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     buildableContext.recordArtifact(primaryDexPath);
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
-    steps.add(new DxStep(getProjectFilesystem(), primaryDexPath, filesToDex, DX_MERGE_OPTIONS));
+    steps.add(
+        new DxStep(
+            getBuildTarget(),
+            getProjectFilesystem(),
+            primaryDexPath,
+            filesToDex,
+            DX_MERGE_OPTIONS));
   }
 
   public Path getMetadataTxtPath() {

@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
@@ -63,6 +64,7 @@ public class PexStepTest {
   public void testCommandLine() {
     PexStep step =
         new PexStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
@@ -91,6 +93,7 @@ public class PexStepTest {
   public void testCommandLineNoZipSafe() {
     PexStep step =
         new PexStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
@@ -116,6 +119,7 @@ public class PexStepTest {
   public void testCommandStdin() throws InterruptedException, IOException {
     PexStep step =
         new PexStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             PEX_COMMAND,
@@ -150,6 +154,7 @@ public class PexStepTest {
   public void testArgs() {
     PexStep step =
         new PexStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             new FakeProjectFilesystem(),
             PEX_ENVIRONMENT,
             ImmutableList.<String>builder().add("build").add("--some", "--args").build(),

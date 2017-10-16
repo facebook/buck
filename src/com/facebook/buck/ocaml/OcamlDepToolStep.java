@@ -16,6 +16,7 @@
 
 package com.facebook.buck.ocaml;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
@@ -27,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** This step runs ocamldep tool to compute dependencies among source files (*.mli and *.ml) */
@@ -38,12 +40,13 @@ public class OcamlDepToolStep extends ShellStep {
   private Tool ocamlDepTool;
 
   public OcamlDepToolStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       SourcePathResolver resolver,
       Tool ocamlDepTool,
       List<SourcePath> input,
       List<String> flags) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.resolver = resolver;
     this.ocamlDepTool = ocamlDepTool;
     this.flags = ImmutableList.copyOf(flags);

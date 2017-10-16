@@ -175,6 +175,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Run the bundler.
     ReactNativeBundleWorkerStep workerStep =
         new ReactNativeBundleWorkerStep(
+            getBuildTarget(),
             getProjectFilesystem(),
             tmpDir,
             jsPackager.getCommandPrefix(context.getSourcePathResolver()),
@@ -194,6 +195,7 @@ public class ReactNativeBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Run the package to get the used inputs.
     ReactNativeDepsWorkerStep depsWorkerStep =
         new ReactNativeDepsWorkerStep(
+            getBuildTarget(),
             getProjectFilesystem(),
             tmpDir,
             jsPackager.getCommandPrefix(context.getSourcePathResolver()),

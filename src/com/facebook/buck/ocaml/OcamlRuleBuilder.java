@@ -444,7 +444,8 @@ public class OcamlRuleBuilder {
             .build();
 
     Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
-    ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(baseDir, ocamlContext);
+    ImmutableMap<Path, ImmutableList<Path>> mlInput =
+        getMLInputWithDeps(compileBuildTarget, baseDir, ocamlContext);
 
     ImmutableList<SourcePath> cInput = getCInput(pathResolver, getInput(srcs));
 
@@ -509,9 +510,10 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
-      Path baseDir, OcamlBuildContext ocamlContext) {
+      BuildTarget target, Path baseDir, OcamlBuildContext ocamlContext) {
     OcamlDepToolStep depToolStep =
         new OcamlDepToolStep(
+            target,
             baseDir,
             ocamlContext.getSourcePathResolver(),
             ocamlContext.getOcamlDepTool().get(),

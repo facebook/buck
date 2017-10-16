@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.cli.VerbosityParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -72,7 +73,11 @@ public class DxStepTest extends EasyMockSupport {
 
       DxStep dx =
           new DxStep(
-              filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX, EnumSet.of(Option.NO_OPTIMIZE));
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.of(Option.NO_OPTIMIZE));
 
       String expected =
           String.format(
@@ -95,7 +100,12 @@ public class DxStepTest extends EasyMockSupport {
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx = new DxStep(filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx =
+          new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -120,6 +130,7 @@ public class DxStepTest extends EasyMockSupport {
 
       DxStep dx =
           new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
@@ -146,7 +157,12 @@ public class DxStepTest extends EasyMockSupport {
     try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx = new DxStep(filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx =
+          new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -174,7 +190,12 @@ public class DxStepTest extends EasyMockSupport {
     try (ExecutionContext context = createExecutionContext(10)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx = new DxStep(filesystem, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      DxStep dx =
+          new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
+              filesystem,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -205,6 +226,7 @@ public class DxStepTest extends EasyMockSupport {
 
       DxStep dx =
           new DxStep(
+              BuildTargetFactory.newInstance("//dummy:target"),
               filesystem,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,

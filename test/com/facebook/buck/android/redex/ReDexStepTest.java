@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.android.KeystoreProperties;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultSourcePathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SingleThreadedBuildRuleResolver;
@@ -70,6 +71,7 @@ public class ReDexStepTest {
 
     ReDexStep redex =
         new ReDexStep(
+            BuildTargetFactory.newInstance("//dummy:target"),
             workingDirectory,
             redexBinaryArgs,
             redexEnvironmentVariables,

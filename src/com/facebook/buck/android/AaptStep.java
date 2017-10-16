@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.sdklib.build.ApkBuilder;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -25,6 +26,7 @@ import com.facebook.buck.util.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Runs the Android Asset Packaging Tool ({@code aapt}), which creates an {@code .apk} file.
@@ -73,6 +75,7 @@ public class AaptStep extends ShellStep {
   private final ManifestEntries manifestEntries;
 
   public AaptStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       Path androidManifest,
       ImmutableList<Path> resDirectories,
@@ -83,7 +86,7 @@ public class AaptStep extends ShellStep {
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
-    super(workingDirectory);
+    super(Optional.of(buildTarget), workingDirectory);
     this.androidManifest = androidManifest;
     this.resDirectories = resDirectories;
     this.assetsDirectories = assetsDirectories;

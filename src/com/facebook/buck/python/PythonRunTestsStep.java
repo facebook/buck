@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -48,6 +49,7 @@ public class PythonRunTestsStep implements Step {
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
+  private final BuildTarget buildTarget;
 
   private final Consumer<Process> timeoutHandler =
       input -> {
@@ -57,6 +59,7 @@ public class PythonRunTestsStep implements Step {
   private boolean timedOut;
 
   public PythonRunTestsStep(
+      BuildTarget buildTarget,
       Path workingDirectory,
       String testName,
       ImmutableList<String> commandPrefix,
@@ -64,6 +67,7 @@ public class PythonRunTestsStep implements Step {
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
       Path resultsOutputPath) {
+    this.buildTarget = buildTarget;
     this.workingDirectory = workingDirectory;
     this.testName = testName;
     this.commandPrefix = commandPrefix;
@@ -178,7 +182,7 @@ public class PythonRunTestsStep implements Step {
   }
 
   private ShellStep getShellStepWithArgs(final String... args) {
-    return new ShellStep(workingDirectory) {
+    return new ShellStep(Optional.of(buildTarget), workingDirectory) {
       @Override
       public StepExecutionResult execute(ExecutionContext context)
           throws InterruptedException, IOException {

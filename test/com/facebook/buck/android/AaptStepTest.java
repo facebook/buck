@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
@@ -52,6 +53,7 @@ public class AaptStepTest {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     return new AaptStep(
+        BuildTargetFactory.newInstance("//dummy:target"),
         /* workingDirectory */ basePath,
         /* manifestDirectory */ basePath.resolve("AndroidManifest.xml"),
         /* resDirectories */ ImmutableList.of(),

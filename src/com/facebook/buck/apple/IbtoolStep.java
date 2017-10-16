@@ -17,12 +17,14 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link ShellStep} implementation which invokes Apple's {@code ibtool} utility to compile {@code
@@ -38,13 +40,14 @@ class IbtoolStep extends ShellStep {
   private final ImmutableList<String> additionalParams;
 
   public IbtoolStep(
+      BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       List<String> ibtoolCommand,
       List<String> additionalParams,
       Path input,
       Path output) {
-    super(filesystem.getRootPath());
+    super(Optional.of(buildTarget), filesystem.getRootPath());
     this.filesystem = filesystem;
     this.environment = environment;
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);

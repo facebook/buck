@@ -99,6 +99,7 @@ public class SplitResources extends AbstractBuildRule {
         .add(new SplitResourcesStep(context.getSourcePathResolver()))
         .add(
             new ZipalignStep(
+                getBuildTarget(),
                 getProjectFilesystem().getRootPath(),
                 getUnalignedExoPath(),
                 exoResourcesOutputPath))

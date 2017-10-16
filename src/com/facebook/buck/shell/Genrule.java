@@ -289,6 +289,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
+        getBuildTarget(),
         convertToWorkerJobParams(cmd),
         convertToWorkerJobParams(bash),
         convertToWorkerJobParams(cmdExe),
