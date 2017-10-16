@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildMode;
+import com.facebook.buck.distributed.DistBuildRunEvent;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildState;
@@ -108,6 +109,11 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    Optional<StampedeId> stampedeId = getStampedeIdOptional();
+    if (stampedeId.isPresent()) {
+      params.getBuckEventBus().post(new DistBuildRunEvent(stampedeId.get(), getBuildSlaveRunId()));
+    }
+
     timeStatsTracker.startTimer(SlaveEvents.TOTAL_RUNTIME);
     timeStatsTracker.startTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME);
     Console console = params.getConsole();
@@ -148,7 +154,6 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
         try (CommandThreadManager pool =
             new CommandThreadManager(
                 getClass().getName(), getConcurrencyLimit(state.getRootCell().getBuckConfig()))) {
-          Optional<StampedeId> stampedeId = getStampedeIdOptional();
           DistBuildConfig distBuildConfig = new DistBuildConfig(params.getBuckConfig());
 
           // Note that we cannot use the same pool of build threads for file materialization
@@ -272,18 +277,22 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
     }
   }
 
+  private BuildSlaveRunId getBuildSlaveRunId() {
+    BuildSlaveRunId buildSlaveRunId = new BuildSlaveRunId();
+    buildSlaveRunId.setId(
+        Preconditions.checkNotNull(
+            this.buildSlaveRunId, "This should have been already made sure by checkArgs()."));
+    return buildSlaveRunId;
+  }
+
   private void initEventListener(ScheduledExecutorService scheduledExecutorService) {
     if (slaveEventListener == null) {
       checkArgs();
-      BuildSlaveRunId runId = new BuildSlaveRunId();
-      runId.setId(
-          Preconditions.checkNotNull(
-              this.buildSlaveRunId, "This should have been already made sure by checkArgs()."));
 
       slaveEventListener =
           new DistBuildSlaveEventBusListener(
               getStampedeId(),
-              runId,
+              getBuildSlaveRunId(),
               Preconditions.checkNotNull(distBuildMode, "Dist build mode not set"),
               new DefaultClock(),
               timeStatsTracker,

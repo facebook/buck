@@ -19,6 +19,7 @@ import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
+import com.facebook.buck.distributed.DistBuildRunEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -94,6 +95,16 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
   public static String getBuildLogLine(BuildId buildId) {
     return "Build UUID: " + buildId.toString();
+  }
+
+  /** Print information regarding the current distributed build. */
+  @Subscribe
+  public void onDistbuildRunEvent(DistBuildRunEvent event) {
+    String line =
+        String.format(
+            "StampedeId=[%s] BuildSlaveRunId=[%s]",
+            event.getStampedeId().id, event.getBuildSlaveRunId().id);
+    printLines(ImmutableList.<String>builder().add(line));
   }
 
   @Override
