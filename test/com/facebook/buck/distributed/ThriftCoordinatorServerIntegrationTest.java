@@ -22,6 +22,7 @@ import com.facebook.buck.distributed.thrift.GetTargetsToBuildResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import java.io.IOException;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -50,7 +51,17 @@ public class ThriftCoordinatorServerIntegrationTest {
   public void testThriftServerWithDiamondGraph() throws IOException, NoSuchBuildTargetException {
     int port = findRandomOpenPortOnAllLocalInterfaces();
     BuildTargetsQueue diamondQueue = BuildTargetsQueueTest.createDiamondDependencyQueue();
-    try (ThriftCoordinatorServer server = createCoordinatorServer(port, diamondQueue);
+
+    ThriftCoordinatorServer.EventListener eventListener =
+        EasyMock.createMock(ThriftCoordinatorServer.EventListener.class);
+    eventListener.onThriftServerStarted(EasyMock.anyString(), EasyMock.eq(port));
+    EasyMock.expectLastCall().once();
+    eventListener.onThriftServerClosing(EasyMock.eq(0));
+    EasyMock.expectLastCall().once();
+    EasyMock.replay(eventListener);
+
+    try (ThriftCoordinatorServer server =
+            createCoordinatorServer(port, diamondQueue, eventListener);
         ThriftCoordinatorClient client =
             new ThriftCoordinatorClient("localhost", port, STAMPEDE_ID)) {
       server.start();
@@ -69,6 +80,8 @@ public class ThriftCoordinatorServerIntegrationTest {
           GetTargetsToBuildAction.BUILD_TARGETS, targetsToBuildResponse.getAction());
       Assert.assertEquals(2, targetsToBuildResponse.getBuildTargetsSize());
     }
+
+    EasyMock.verify(eventListener);
   }
 
   public static int findRandomOpenPortOnAllLocalInterfaces() throws IOException {
@@ -83,6 +96,14 @@ public class ThriftCoordinatorServerIntegrationTest {
 
   private static ThriftCoordinatorServer createCoordinatorServer(
       int port, BuildTargetsQueue queue) {
-    return new ThriftCoordinatorServer(port, queue, STAMPEDE_ID, MAX_BUILD_NODES_PER_MINION);
+    ThriftCoordinatorServer.EventListener eventListener =
+        EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
+    return createCoordinatorServer(port, queue, eventListener);
+  }
+
+  private static ThriftCoordinatorServer createCoordinatorServer(
+      int port, BuildTargetsQueue queue, ThriftCoordinatorServer.EventListener eventListener) {
+    return new ThriftCoordinatorServer(
+        port, queue, STAMPEDE_ID, MAX_BUILD_NODES_PER_MINION, eventListener);
   }
 }

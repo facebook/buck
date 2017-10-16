@@ -33,12 +33,14 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
       throws IOException, NoSuchBuildTargetException, InterruptedException {
 
     int port = ThriftCoordinatorServerIntegrationTest.findRandomOpenPortOnAllLocalInterfaces();
+    ThriftCoordinatorServer.EventListener eventListener =
+        EasyMock.createNiceMock(ThriftCoordinatorServer.EventListener.class);
     CoordinatorModeRunner coordinator =
         new CoordinatorModeRunner(
             port,
             BuildTargetsQueueTest.createDiamondDependencyQueue(),
             STAMPEDE_ID,
-            (address, port1) -> {},
+            eventListener,
             MAX_BUILD_NODES_PER_MINION);
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();

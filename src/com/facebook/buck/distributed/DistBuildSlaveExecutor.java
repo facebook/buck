@@ -28,7 +28,6 @@ import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -103,7 +102,12 @@ public class DistBuildSlaveExecutor {
       case REMOTE_BUILD:
         runner =
             new RemoteBuildModeRunner(
-                localBuilder, args.getState().getRemoteState().getTopLevelTargets());
+                localBuilder,
+                args.getState().getRemoteState().getTopLevelTargets(),
+                exitCode ->
+                    args.getDistBuildService()
+                        .setFinalBuildStatus(
+                            args.getStampedeId(), BuildStatusUtil.exitCodeToBuildStatus(exitCode)));
         break;
 
       case COORDINATOR:
@@ -136,13 +140,9 @@ public class DistBuildSlaveExecutor {
       LocalBuilder localBuilder, String coordinatorAddress, int coordinatorPort) {
 
     MinionModeRunner.BuildCompletionChecker checker =
-        new MinionModeRunner.BuildCompletionChecker() {
-          @Override
-          public boolean hasBuildFinished() throws IOException {
-            BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
-            return job.getStatus() == BuildStatus.FAILED
-                || job.getStatus() == BuildStatus.FINISHED_SUCCESSFULLY;
-          }
+        () -> {
+          BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
+          return BuildStatusUtil.isBuildComplete(job.getStatus());
         };
 
     return new MinionModeRunner(
@@ -159,8 +159,8 @@ public class DistBuildSlaveExecutor {
     Preconditions.checkArgument(
         minionQueue.isPresent(),
         "Minion queue name is missing to be able to run in Coordinator mode.");
-    CoordinatorModeRunner.EventListener listener =
-        new CoordinatorAndMinionInfoSetter(
+    CoordinatorEventListener listener =
+        new CoordinatorEventListener(
             args.getDistBuildService(),
             args.getStampedeId(),
             minionQueue.get(),

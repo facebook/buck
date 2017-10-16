@@ -42,9 +42,8 @@ public class CoordinatorAndMinionInfoSetterTest {
     DistBuildService service = EasyMock.createMock(DistBuildService.class);
     StampedeId stampedeId = new StampedeId().setId("topspin");
     String minionQueue = "super_minion_queue";
-    CoordinatorAndMinionInfoSetter eventListener =
-        new CoordinatorAndMinionInfoSetter(
-            service, stampedeId, minionQueue, isLocalMinionAlsoRunning);
+    CoordinatorEventListener eventListener =
+        new CoordinatorEventListener(service, stampedeId, minionQueue, isLocalMinionAlsoRunning);
     Assert.assertNotNull(eventListener);
     int port = 33;
     String address = "hidden.but.cool.address";

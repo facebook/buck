@@ -18,17 +18,31 @@ package com.facebook.buck.distributed;
 
 import java.io.IOException;
 
+/** Executes stampede in remote build mode. */
 public class RemoteBuildModeRunner implements DistBuildModeRunner {
+
+  /** Sets the final BuildStatus of the BuildJob. */
+  public interface FinalBuildStatusSetter {
+    void setFinalBuildStatus(int exitCode) throws IOException;
+  }
+
   private final LocalBuilder localBuilder;
   private final Iterable<String> topLevelTargetsToBuild;
+  private final FinalBuildStatusSetter setter;
 
-  public RemoteBuildModeRunner(LocalBuilder localBuilder, Iterable<String> topLevelTargetsToBuild) {
+  public RemoteBuildModeRunner(
+      LocalBuilder localBuilder,
+      Iterable<String> topLevelTargetsToBuild,
+      FinalBuildStatusSetter setter) {
     this.localBuilder = localBuilder;
     this.topLevelTargetsToBuild = topLevelTargetsToBuild;
+    this.setter = setter;
   }
 
   @Override
   public int runAndReturnExitCode() throws IOException, InterruptedException {
-    return localBuilder.buildLocallyAndReturnExitCode(topLevelTargetsToBuild);
+    int buildExitCode = localBuilder.buildLocallyAndReturnExitCode(topLevelTargetsToBuild);
+    setter.setFinalBuildStatus(buildExitCode);
+    return buildExitCode;
   }
 }

@@ -22,13 +22,14 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 
-public class CoordinatorAndMinionInfoSetter implements CoordinatorModeRunner.EventListener {
+/** Listener to events from the Coordinator. */
+public class CoordinatorEventListener implements ThriftCoordinatorServer.EventListener {
   private final DistBuildService service;
   private final StampedeId stampedeId;
   private final String minionQueue;
   private boolean islocalMinionAlsoRunning;
 
-  public CoordinatorAndMinionInfoSetter(
+  public CoordinatorEventListener(
       DistBuildService service,
       StampedeId stampedeId,
       String minionQueue,
@@ -56,5 +57,10 @@ public class CoordinatorAndMinionInfoSetter implements CoordinatorModeRunner.Eve
     if (requiredNumberOfMinions > 0) {
       service.enqueueMinions(stampedeId, requiredNumberOfMinions, minionQueue);
     }
+  }
+
+  @Override
+  public void onThriftServerClosing(int buildExitCode) throws IOException {
+    service.setFinalBuildStatus(stampedeId, BuildStatusUtil.exitCodeToBuildStatus(buildExitCode));
   }
 }

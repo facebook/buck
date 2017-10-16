@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -45,6 +46,13 @@ import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorServer implements Closeable {
 
+  /** Listen to ThriftCoordinatorServer events. */
+  public interface EventListener {
+    void onThriftServerStarted(String address, int port) throws IOException;
+
+    void onThriftServerClosing(int buildExitCode) throws IOException;
+  }
+
   private static final Logger LOG = Logger.get(ThriftCoordinatorServer.class);
 
   private static final long SHUTDOWN_PRE_WAIT_MILLIS = 100;
@@ -58,6 +66,7 @@ public class ThriftCoordinatorServer implements Closeable {
   private final Object lock;
   private final CompletableFuture<Integer> exitCodeFuture;
   private final StampedeId stampedeId;
+  private final ThriftCoordinatorServer.EventListener eventListener;
 
   // TODO(ruibm): minions should look at build job status if coordinator goes offline.
   private final Set<String> runningMinions = new HashSet<>();
@@ -68,7 +77,12 @@ public class ThriftCoordinatorServer implements Closeable {
   @Nullable private Thread serverThread;
 
   public ThriftCoordinatorServer(
-      int port, BuildTargetsQueue queue, StampedeId stampedeId, int maxBuildNodesPerMinion) {
+      int port,
+      BuildTargetsQueue queue,
+      StampedeId stampedeId,
+      int maxBuildNodesPerMinion,
+      ThriftCoordinatorServer.EventListener eventListener) {
+    this.eventListener = eventListener;
     this.stampedeId = stampedeId;
     this.lock = new Object();
     this.exitCodeFuture = new CompletableFuture<>();
@@ -93,10 +107,12 @@ public class ThriftCoordinatorServer implements Closeable {
       serverThread.start();
     }
 
+    eventListener.onThriftServerStarted(InetAddress.getLocalHost().getHostName(), port);
     return this;
   }
 
   public ThriftCoordinatorServer stop() throws IOException {
+    eventListener.onThriftServerClosing(exitCode);
     synchronized (lock) {
       try {
         // Give the Thrift server time to complete any remaining items

@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusRequest;
 import com.facebook.buck.distributed.thrift.CASContainsRequest;
 import com.facebook.buck.distributed.thrift.CreateBuildRequest;
@@ -59,6 +60,7 @@ import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusRequest;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
@@ -681,6 +683,18 @@ public class DistBuildService implements Closeable {
     Preconditions.checkState(response.getFetchRuleKeyLogsResponse().isSetRuleKeyLogs());
 
     return response.getFetchRuleKeyLogsResponse().getRuleKeyLogs();
+  }
+
+  /** Sets the final BuildStatus of the BuildJob. */
+  public void setFinalBuildStatus(StampedeId stampedeId, BuildStatus buildStatus)
+      throws IOException {
+    SetFinalBuildStatusRequest request =
+        new SetFinalBuildStatusRequest().setStampedeId(stampedeId).setBuildStatus(buildStatus);
+    FrontendRequest frontendRequest =
+        new FrontendRequest()
+            .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
+            .setSetFinalBuildStatusRequest(request);
+    makeRequestChecked(frontendRequest);
   }
 
   @Override

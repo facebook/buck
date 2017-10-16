@@ -33,6 +33,7 @@ import com.facebook.buck.distributed.thrift.BuildSlaveEventsRange;
 import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.BuildStatusResponse;
 import com.facebook.buck.distributed.thrift.CASContainsResponse;
 import com.facebook.buck.distributed.thrift.CreateBuildResponse;
@@ -54,6 +55,8 @@ import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.distributed.thrift.SequencedBuildSlaveEvent;
 import com.facebook.buck.distributed.thrift.SetCoordinatorRequest;
 import com.facebook.buck.distributed.thrift.SetCoordinatorResponse;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusRequest;
+import com.facebook.buck.distributed.thrift.SetFinalBuildStatusResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.distributed.thrift.StartBuildResponse;
 import com.facebook.buck.distributed.thrift.StoreBuildSlaveFinishedStatsRequest;
@@ -711,6 +714,30 @@ public class DistBuildServiceTest {
     Assert.assertEquals(stampedeId, minionsRequest.getStampedeId());
     Assert.assertEquals(minionCount, minionsRequest.getNumberOfMinions());
     Assert.assertEquals(minionQueueName, minionsRequest.getMinionQueue());
+    EasyMock.verify(frontendService);
+  }
+
+  @Test
+  public void testSetFinalBuildStatus() throws IOException {
+    Capture<FrontendRequest> request = EasyMock.newCapture();
+    FrontendResponse response =
+        new FrontendResponse()
+            .setWasSuccessful(true)
+            .setType(FrontendRequestType.SET_FINAL_BUILD_STATUS)
+            .setSetFinalBuildStatusResponse(new SetFinalBuildStatusResponse());
+    EasyMock.expect(frontendService.makeRequest(EasyMock.capture(request)))
+        .andReturn(response)
+        .once();
+    EasyMock.replay(frontendService);
+
+    StampedeId stampedeId = createStampedeId("coordinator has decided to set the final status");
+    BuildStatus finalStatus = BuildStatus.FINISHED_SUCCESSFULLY;
+    distBuildService.setFinalBuildStatus(stampedeId, finalStatus);
+    Assert.assertEquals(FrontendRequestType.SET_FINAL_BUILD_STATUS, request.getValue().getType());
+    SetFinalBuildStatusRequest setStatusRequest =
+        request.getValue().getSetFinalBuildStatusRequest();
+    Assert.assertEquals(stampedeId, setStatusRequest.getStampedeId());
+    Assert.assertEquals(finalStatus, setStatusRequest.getBuildStatus());
     EasyMock.verify(frontendService);
   }
 }

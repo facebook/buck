@@ -27,18 +27,14 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
   private final BuildTargetsQueue queue;
   private final int coordinatorPort;
   private final StampedeId stampedeId;
-  private final EventListener eventListener;
+  private final ThriftCoordinatorServer.EventListener eventListener;
   private final int maxBuildNodesPerMinion;
-
-  public interface EventListener {
-    void onThriftServerStarted(String address, int port) throws IOException;
-  }
 
   public CoordinatorModeRunner(
       int coordinatorPort,
       BuildTargetsQueue queue,
       StampedeId stampedeId,
-      EventListener eventListener,
+      ThriftCoordinatorServer.EventListener eventListener,
       int maxBuildNodesPerMinion) {
     this.stampedeId = stampedeId;
     Preconditions.checkArgument(
@@ -65,7 +61,8 @@ public class CoordinatorModeRunner implements DistBuildModeRunner {
 
     private AsyncCoordinatorRun(BuildTargetsQueue queue) throws IOException {
       this.server =
-          new ThriftCoordinatorServer(coordinatorPort, queue, stampedeId, maxBuildNodesPerMinion);
+          new ThriftCoordinatorServer(
+              coordinatorPort, queue, stampedeId, maxBuildNodesPerMinion, eventListener);
       this.server.start();
       eventListener.onThriftServerStarted(
           InetAddress.getLocalHost().getHostName(), coordinatorPort);
