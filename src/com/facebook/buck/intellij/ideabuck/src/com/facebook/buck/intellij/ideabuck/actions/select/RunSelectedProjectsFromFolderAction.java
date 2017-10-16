@@ -4,18 +4,20 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
+import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.intellij.ide.IdeView;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 
 /**
  * Action to generate projects from the project tool view.
  */
-public class RunSelectedProjectsAction extends AnAction {
+public class RunSelectedProjectsFromFolderAction extends AnAction {
 
   @Override
   public void actionPerformed(AnActionEvent anActionEvent) {
@@ -37,6 +39,12 @@ public class RunSelectedProjectsAction extends AnAction {
     }
 
     String directoryString = directory.getVirtualFile().getPath();
+
+    VirtualFile potentialBuckFile = BuckFileUtil.getBuckFile(directory.getVirtualFile());
+    if (potentialBuckFile != null) {
+      directoryString = potentialBuckFile.getParent().getPath();
+    }
+    
     String basepath = project.getBasePath();
     if (basepath == null) {
       return;
