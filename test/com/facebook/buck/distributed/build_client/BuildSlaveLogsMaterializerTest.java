@@ -16,10 +16,6 @@
 
 package com.facebook.buck.distributed.build_client;
 
-import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.LogDir;
@@ -35,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -45,6 +42,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class BuildSlaveLogsMaterializerTest {
 
+  private static final StampedeId STAMPEDE_ID = new StampedeId().setId("down the line");
   private static final BuildSlaveRunId RUN_ONE_ID =
       new BuildSlaveRunId().setId("buildSlaveRunIdOne");
   private static final BuildSlaveRunId RUN_TWO_ID =
@@ -125,7 +123,7 @@ public class BuildSlaveLogsMaterializerTest {
     List<LogDir> result = materializer.fetchBuildSlaveLogDirs(stampedeId, buildSlaveRunIdsToFetch);
     Assert.assertEquals(2, result.size());
 
-    verify(service);
+    EasyMock.verify(service);
   }
 
   @Test
@@ -144,30 +142,78 @@ public class BuildSlaveLogsMaterializerTest {
     materializer.materializeLogDirs(logDirs);
 
     Path runOneBuckOutDir = logDir.resolve(RUN_ONE_BUCK_OUT_DIR);
-    assertTrue(runOneBuckOutDir.toFile().exists());
-    assertTrue(runOneBuckOutDir.resolve(FILE_ONE_PATH).toFile().exists());
-    assertTrue(runOneBuckOutDir.resolve(FILE_TWO_PATH).toFile().exists());
+    Assert.assertTrue(runOneBuckOutDir.toFile().exists());
+    Assert.assertTrue(runOneBuckOutDir.resolve(FILE_ONE_PATH).toFile().exists());
+    Assert.assertTrue(runOneBuckOutDir.resolve(FILE_TWO_PATH).toFile().exists());
 
     String fileOneContents =
         new String(Files.readAllBytes(runOneBuckOutDir.resolve(FILE_ONE_PATH)));
-    assertThat(fileOneContents, Matchers.equalTo(FILE_ONE_CONTENTS));
+    Assert.assertThat(fileOneContents, Matchers.equalTo(FILE_ONE_CONTENTS));
 
     String fileTwoContents =
         new String(Files.readAllBytes(runOneBuckOutDir.resolve(FILE_TWO_PATH)));
-    assertThat(fileTwoContents, Matchers.equalTo(FILE_TWO_CONTENTS));
+    Assert.assertThat(fileTwoContents, Matchers.equalTo(FILE_TWO_CONTENTS));
 
     Path runTwoBuckOutDir = logDir.resolve(RUN_TWO_BUCK_OUT_DIR);
-    assertTrue(runTwoBuckOutDir.toFile().exists());
-    assertTrue(runTwoBuckOutDir.resolve(FILE_THREE_PATH).toFile().exists());
-    assertTrue(runTwoBuckOutDir.resolve(FILE_FOUR_PATH).toFile().exists());
+    Assert.assertTrue(runTwoBuckOutDir.toFile().exists());
+    Assert.assertTrue(runTwoBuckOutDir.resolve(FILE_THREE_PATH).toFile().exists());
+    Assert.assertTrue(runTwoBuckOutDir.resolve(FILE_FOUR_PATH).toFile().exists());
 
     String fileThreeContents =
         new String(Files.readAllBytes(runTwoBuckOutDir.resolve(FILE_THREE_PATH)));
-    assertThat(fileThreeContents, Matchers.equalTo(FILE_THREE_CONTENTS));
+    Assert.assertThat(fileThreeContents, Matchers.equalTo(FILE_THREE_CONTENTS));
 
     String fileFourContents =
         new String(Files.readAllBytes(runTwoBuckOutDir.resolve(FILE_FOUR_PATH)));
-    assertThat(fileFourContents, Matchers.equalTo(FILE_FOUR_CONTENTS));
+    Assert.assertThat(fileFourContents, Matchers.equalTo(FILE_FOUR_CONTENTS));
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void testFetchWithTimeoutFailsIfLogsNeverBecomeAvailable()
+      throws IOException, TimeoutException {
+    LogDir emptyLogDir = new LogDir();
+    emptyLogDir.setBuildSlaveRunId(RUN_TWO_ID);
+    emptyLogDir.setErrorMessage("things did not go well....");
+    List<LogDir> logDirs = ImmutableList.of(emptyLogDir);
+    MultiGetBuildSlaveLogDirResponse response = new MultiGetBuildSlaveLogDirResponse();
+    response.setLogDirs(logDirs);
+
+    List<BuildSlaveRunId> runIdsToFetch = Lists.newArrayList(RUN_TWO_ID);
+    EasyMock.expect(mockService.fetchBuildSlaveLogDir(STAMPEDE_ID, runIdsToFetch))
+        .andReturn(response)
+        .atLeastOnce();
+    EasyMock.replay(mockService);
+
+    BuildSlaveLogsMaterializer materializer =
+        new BuildSlaveLogsMaterializer(mockService, projectFilesystem, logDir);
+    try {
+      materializer.fetchAndMaterializeAllLogs(STAMPEDE_ID, runIdsToFetch, 100);
+    } finally {
+      EasyMock.verify(mockService);
+    }
+  }
+
+  @Test
+  public void testFetchWithTimeoutWorksIfLogsArePresent() throws IOException, TimeoutException {
+    LogDir logDirWitData = new LogDir();
+    logDirWitData.setBuildSlaveRunId(RUN_TWO_ID);
+    logDirWitData.setData(readTestData(RUN_TWO_BUCK_OUT_ZIP));
+    List<LogDir> logDirs = ImmutableList.of(logDirWitData);
+    MultiGetBuildSlaveLogDirResponse response = new MultiGetBuildSlaveLogDirResponse();
+    response.setLogDirs(logDirs);
+
+    List<BuildSlaveRunId> runIdsToFetch = Lists.newArrayList(RUN_TWO_ID);
+    EasyMock.expect(mockService.fetchBuildSlaveLogDir(STAMPEDE_ID, runIdsToFetch))
+        .andReturn(response)
+        .atLeastOnce();
+    EasyMock.replay(mockService);
+
+    BuildSlaveLogsMaterializer materializer =
+        new BuildSlaveLogsMaterializer(mockService, projectFilesystem, logDir);
+    materializer.fetchAndMaterializeAllLogs(STAMPEDE_ID, runIdsToFetch, 100);
+    EasyMock.verify(mockService);
+    Assert.assertTrue(
+        logDir.resolve(RUN_TWO_BUCK_OUT_DIR).resolve(FILE_THREE_PATH).toFile().exists());
   }
 
   private byte[] readTestData(String path) throws IOException {

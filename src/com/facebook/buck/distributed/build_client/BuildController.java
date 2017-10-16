@@ -57,6 +57,7 @@ public class BuildController {
       BuckVersion buckVersion,
       ClientStatsTracker distBuildClientStats,
       ScheduledExecutorService scheduler,
+      long maxTimeoutWaitingForLogsMillis,
       int statusPollIntervalMillis) {
     this.preBuildPhase =
         new PreBuildPhase(
@@ -73,7 +74,11 @@ public class BuildController {
             scheduler,
             statusPollIntervalMillis);
     this.postBuildPhase =
-        new PostBuildPhase(distBuildService, distBuildClientStats, distBuildLogStateTracker);
+        new PostBuildPhase(
+            distBuildService,
+            distBuildClientStats,
+            distBuildLogStateTracker,
+            maxTimeoutWaitingForLogsMillis);
   }
 
   public BuildController(
@@ -83,7 +88,8 @@ public class BuildController {
       LogStateTracker distBuildLogStateTracker,
       BuckVersion buckVersion,
       ClientStatsTracker distBuildClientStats,
-      ScheduledExecutorService scheduler) {
+      ScheduledExecutorService scheduler,
+      long maxTimeoutWaitingForLogsMillis) {
     this(
         buildJobState,
         distBuildCellIndexer,
@@ -92,6 +98,7 @@ public class BuildController {
         buckVersion,
         distBuildClientStats,
         scheduler,
+        maxTimeoutWaitingForLogsMillis,
         DEFAULT_STATUS_POLL_INTERVAL_MILLIS);
   }
 

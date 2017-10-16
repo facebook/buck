@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Phase after the build. */
@@ -50,14 +51,17 @@ public class PostBuildPhase {
   private final DistBuildService distBuildService;
   private final ClientStatsTracker distBuildClientStats;
   private final LogStateTracker distBuildLogStateTracker;
+  private final long maxTimeoutWaitingForLogsMillis;
 
   public PostBuildPhase(
       DistBuildService distBuildService,
       ClientStatsTracker distBuildClientStats,
-      LogStateTracker distBuildLogStateTracker) {
+      LogStateTracker distBuildLogStateTracker,
+      long maxTimeoutWaitingForLogsMillis) {
     this.distBuildService = distBuildService;
     this.distBuildClientStats = distBuildClientStats;
     this.distBuildLogStateTracker = distBuildLogStateTracker;
+    this.maxTimeoutWaitingForLogsMillis = maxTimeoutWaitingForLogsMillis;
   }
 
   /** Run all the local steps required after the build. */
@@ -104,8 +108,7 @@ public class PostBuildPhase {
         finalJob.getStatus().equals(BuildStatus.FINISHED_SUCCESSFULLY) ? 0 : 1);
   }
 
-  @VisibleForTesting
-  void materializeSlaveLogDirs(BuildJob job) {
+  private void materializeSlaveLogDirs(BuildJob job) {
     if (!job.isSetSlaveInfoByRunId() || job.getSlaveInfoByRunId().isEmpty()) {
       return;
     }
@@ -117,9 +120,19 @@ public class PostBuildPhase {
             .stream()
             .map(x -> x.getBuildSlaveRunId())
             .collect(Collectors.toList());
-    distBuildLogStateTracker
-        .getBuildSlaveLogsMaterializer()
-        .fetchAndMaterializeLogDirs(job.getStampedeId(), logsToFetchAndMaterialize);
+    BuildSlaveLogsMaterializer materializer =
+        distBuildLogStateTracker.getBuildSlaveLogsMaterializer();
+    if (maxTimeoutWaitingForLogsMillis > 0) {
+      try {
+        materializer.fetchAndMaterializeAllLogs(
+            job.getStampedeId(), logsToFetchAndMaterialize, maxTimeoutWaitingForLogsMillis);
+      } catch (TimeoutException e) {
+        // Fail the build as we were expecting all logs to be present.
+        throw new RuntimeException(e);
+      }
+    } else {
+      materializer.fetchAndMaterializeAvailableLogs(job.getStampedeId(), logsToFetchAndMaterialize);
+    }
     distBuildClientStats.stopTimer(MATERIALIZE_SLAVE_LOGS);
   }
 

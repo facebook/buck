@@ -101,6 +101,7 @@ public class BuildControllerTest {
             buckVersion,
             distBuildClientStatsTracker,
             scheduler,
+            0,
             1);
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());

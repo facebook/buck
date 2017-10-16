@@ -25,16 +25,23 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.zip.Unzip;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /** Materializes locally logs from remote BuildSlaves. */
 public class BuildSlaveLogsMaterializer {
   private static final Logger LOG = Logger.get(BuildSlaveLogsMaterializer.class);
+
+  private static final long POLLING_CADENCE_MILLIS = 250;
 
   private final DistBuildService service;
   private final ProjectFilesystem filesystem;
@@ -50,10 +57,50 @@ public class BuildSlaveLogsMaterializer {
   }
 
   /** Fetches and materializes all logs directories. */
-  public void fetchAndMaterializeLogDirs(
+  public void fetchAndMaterializeAllLogs(
+      StampedeId stampedeId,
+      List<BuildSlaveRunId> toMaterialize,
+      long maxTimeoutForLogsToBeAvailableMillis)
+      throws TimeoutException {
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    while (stopwatch.elapsed(TimeUnit.MILLISECONDS) <= maxTimeoutForLogsToBeAvailableMillis) {
+      toMaterialize = fetchAndMaterializeAvailableLogs(stampedeId, toMaterialize);
+      if (toMaterialize.isEmpty()) {
+        return;
+      }
+
+      // Back off not to hammer the servers.
+      try {
+        Thread.sleep(POLLING_CADENCE_MILLIS);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    throw new TimeoutException(
+        String.format(
+            "Failed to fetch the logs for BuildSlaveRunIds=[%s] and StampedeId=[%s] "
+                + "within [%d millis].",
+            Joiner.on(", ")
+                .join(toMaterialize.stream().map(x -> x.getId()).collect(Collectors.toList())),
+            stampedeId.getId(),
+            maxTimeoutForLogsToBeAvailableMillis));
+  }
+
+  /**
+   * @param stampedeId
+   * @param toMaterialize
+   * @return The list BuildSlaveRunIds that still not have their logs available to materialize.
+   */
+  public List<BuildSlaveRunId> fetchAndMaterializeAvailableLogs(
       StampedeId stampedeId, List<BuildSlaveRunId> toMaterialize) {
     List<LogDir> logDirs = fetchBuildSlaveLogDirs(stampedeId, toMaterialize);
     materializeLogDirs(logDirs);
+    return logDirs
+        .stream()
+        .filter(x -> x.isSetErrorMessage())
+        .map(x -> x.getBuildSlaveRunId())
+        .collect(Collectors.toList());
   }
 
   /** Fetches the logs directory of a BuildSlave. */
@@ -80,7 +127,7 @@ public class BuildSlaveLogsMaterializer {
   public void materializeLogDirs(List<LogDir> logDirs) {
     for (LogDir logDir : logDirs) {
       if (logDir.isSetErrorMessage()) {
-        LOG.error(
+        LOG.warn(
             "Failed to fetch log dir for runId [%s]. Error: %s",
             logDir.buildSlaveRunId, logDir.errorMessage);
         continue;

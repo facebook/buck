@@ -73,6 +73,11 @@ public class DistBuildConfig {
   private static final String MATERIALIZE_SOURCE_FILES_ON_DEMAND =
       "materialize_source_files_on_demand";
 
+  private static final String MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS =
+      "max_wait_for_remote_logs_to_be_available_millis";
+  private static final long DEFAULT_MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS =
+      TimeUnit.MINUTES.toMillis(5);
+
   @VisibleForTesting static final String SERVER_BUCKCONFIG_OVERRIDE = "server_buckconfig_override";
 
   private final SlbBuckConfig frontendConfig;
@@ -172,6 +177,12 @@ public class DistBuildConfig {
 
   public String getBuildLabel() {
     return buckConfig.getValue(STAMPEDE_SECTION, BUILD_LABEL).orElse(DEFAULT_BUILD_LABEL);
+  }
+
+  public long getMaxWaitForRemoteLogsToBeAvailableMillis() {
+    return buckConfig
+        .getLong(STAMPEDE_SECTION, MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS)
+        .orElse(DEFAULT_MAX_WAIT_FOR_REMOTE_LOGS_TO_BE_AVAILABLE_MILLIS);
   }
 
   /**

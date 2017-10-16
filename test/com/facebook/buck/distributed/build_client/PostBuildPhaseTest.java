@@ -72,7 +72,8 @@ public class PostBuildPhaseTest {
     buckVersion.setGitHash("thishashisamazing");
     distBuildClientStatsTracker = new ClientStatsTracker(BUILD_LABEL);
     postBuildPhase =
-        new PostBuildPhase(mockDistBuildService, distBuildClientStatsTracker, mockLogStateTracker);
+        new PostBuildPhase(
+            mockDistBuildService, distBuildClientStatsTracker, mockLogStateTracker, 0);
 
     directExecutor = MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService());
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
