@@ -18,16 +18,43 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.slb.ThriftException;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MinionModeRunnerIntegrationTest {
 
   private static final StampedeId STAMPEDE_ID = ThriftCoordinatorServerIntegrationTest.STAMPEDE_ID;
+
+  @Test(expected = ThriftException.class)
+  public void testMinionWithoutServerAndWithUnfinishedBuild()
+      throws IOException, InterruptedException {
+    MinionModeRunner.BuildCompletionChecker checker = () -> false;
+    LocalBuilderImpl localBuilder = new LocalBuilderImpl();
+    MinionModeRunner minion =
+        new MinionModeRunner("localhost", 42, localBuilder, STAMPEDE_ID, checker);
+
+    minion.runAndReturnExitCode();
+    Assert.fail("The previous line should've thrown an exception.");
+  }
+
+  @Test
+  public void testMinionWithoutServerAndWithFinishedBuild()
+      throws IOException, NoSuchBuildTargetException, InterruptedException {
+    MinionModeRunner.BuildCompletionChecker checker = () -> true;
+    LocalBuilderImpl localBuilder = new LocalBuilderImpl();
+    MinionModeRunner minion =
+        new MinionModeRunner("localhost", 42, localBuilder, STAMPEDE_ID, checker);
+
+    int exitCode = minion.runAndReturnExitCode();
+    // Server does not exit because the build has already been marked as finished.
+    Assert.assertEquals(0, exitCode);
+  }
 
   @Test
   public void testDiamondGraphRun()
@@ -36,7 +63,12 @@ public class MinionModeRunnerIntegrationTest {
       server.start();
       LocalBuilderImpl localBuilder = new LocalBuilderImpl();
       MinionModeRunner minion =
-          new MinionModeRunner("localhost", server.getPort(), localBuilder, STAMPEDE_ID);
+          new MinionModeRunner(
+              "localhost",
+              server.getPort(),
+              localBuilder,
+              STAMPEDE_ID,
+              EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class));
       int exitCode = minion.runAndReturnExitCode();
       Assert.assertEquals(0, exitCode);
       Assert.assertEquals(3, localBuilder.getCallArguments().size());

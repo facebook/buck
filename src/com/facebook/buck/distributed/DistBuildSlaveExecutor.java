@@ -27,6 +27,8 @@ import com.facebook.buck.config.ActionGraphParallelizationMode;
 import com.facebook.buck.config.BuckConfig;
 import com.facebook.buck.config.resources.ResourcesConfig;
 import com.facebook.buck.distributed.DistBuildSlaveTimingStatsTracker.SlaveEvents;
+import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -132,8 +134,19 @@ public class DistBuildSlaveExecutor {
 
   private MinionModeRunner newMinionMode(
       LocalBuilder localBuilder, String coordinatorAddress, int coordinatorPort) {
+
+    MinionModeRunner.BuildCompletionChecker checker =
+        new MinionModeRunner.BuildCompletionChecker() {
+          @Override
+          public boolean hasBuildFinished() throws IOException {
+            BuildJob job = args.getDistBuildService().getCurrentBuildJobState(args.getStampedeId());
+            return job.getStatus() == BuildStatus.FAILED
+                || job.getStatus() == BuildStatus.FINISHED_SUCCESSFULLY;
+          }
+        };
+
     return new MinionModeRunner(
-        coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId());
+        coordinatorAddress, coordinatorPort, localBuilder, args.getStampedeId(), checker);
   }
 
   private CoordinatorModeRunner newCoordinatorMode(

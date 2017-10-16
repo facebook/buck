@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import java.io.IOException;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,7 +42,13 @@ public class CoordinatorAndMinionModeRunnerIntegrationTest {
             MAX_BUILD_NODES_PER_MINION);
     MinionModeRunnerIntegrationTest.LocalBuilderImpl localBuilder =
         new MinionModeRunnerIntegrationTest.LocalBuilderImpl();
-    MinionModeRunner minion = new MinionModeRunner("localhost", port, localBuilder, STAMPEDE_ID);
+    MinionModeRunner minion =
+        new MinionModeRunner(
+            "localhost",
+            port,
+            localBuilder,
+            STAMPEDE_ID,
+            EasyMock.createNiceMock(MinionModeRunner.BuildCompletionChecker.class));
     CoordinatorAndMinionModeRunner jointRunner =
         new CoordinatorAndMinionModeRunner(coordinator, minion);
     int exitCode = jointRunner.runAndReturnExitCode();

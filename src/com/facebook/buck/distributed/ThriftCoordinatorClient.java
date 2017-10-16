@@ -25,10 +25,7 @@ import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftException;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import java.io.Closeable;
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -39,9 +36,6 @@ import org.apache.thrift.transport.TTransportException;
 
 public class ThriftCoordinatorClient implements Closeable {
   private static final Logger LOG = Logger.get(ThriftCoordinatorClient.class);
-
-  private static final int MAX_CONNECT_TIMEOUT_SECONDS = 30;
-  private static final int RETRY_TIMEOUT_SECONDS = 1;
 
   private final String remoteHost;
   private final int remotePort;
@@ -56,29 +50,14 @@ public class ThriftCoordinatorClient implements Closeable {
     this.stampedeId = stampedeId;
   }
 
-  public ThriftCoordinatorClient start() throws IOException {
+  /** Starts the thrift client. */
+  public ThriftCoordinatorClient start() throws ThriftException {
     transport = new TFramedTransport(new TSocket(remoteHost, remotePort));
 
-    Stopwatch stopwatch = Stopwatch.createStarted();
-    while (true) {
-      try {
-        transport.open();
-        break;
-      } catch (TTransportException e) {
-        if (stopwatch.elapsed(TimeUnit.SECONDS) > MAX_CONNECT_TIMEOUT_SECONDS) {
-          throw new IOException(
-              String.format(
-                  "Failed to connect. Coordinator is still not healthy after [%d] seconds.",
-                  MAX_CONNECT_TIMEOUT_SECONDS));
-        }
-
-        LOG.debug("Coordinator server currently not available. Retrying in a bit...");
-        try {
-          Thread.sleep(TimeUnit.SECONDS.toMillis(RETRY_TIMEOUT_SECONDS));
-        } catch (InterruptedException innerException) {
-          throw new RuntimeException(innerException);
-        }
-      }
+    try {
+      transport.open();
+    } catch (TTransportException e) {
+      throw new ThriftException(e);
     }
 
     TProtocol protocol = new TBinaryProtocol(transport);
@@ -94,7 +73,8 @@ public class ThriftCoordinatorClient implements Closeable {
     return this;
   }
 
-  public GetTargetsToBuildResponse getTargetsToBuild(String minionId) throws IOException {
+  /** Gets the next set of targets to build for a given Minion. */
+  public GetTargetsToBuildResponse getTargetsToBuild(String minionId) throws ThriftException {
     LOG.debug(String.format("Minion [%s] is requesting targets to build.", minionId));
     Preconditions.checkNotNull(client, "Client was not started.");
     GetTargetsToBuildRequest request =
@@ -108,7 +88,7 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   public FinishedBuildingResponse finishedBuilding(String minionId, int minionExitCode)
-      throws IOException {
+      throws ThriftException {
     LOG.debug(String.format("Minion [%s] is reporting that it finished building.", minionId));
     Preconditions.checkNotNull(client, "Client was not started.");
     FinishedBuildingRequest request =
@@ -125,7 +105,7 @@ public class ThriftCoordinatorClient implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() throws ThriftException {
     if (client != null) {
       stop();
     }
