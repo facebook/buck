@@ -450,6 +450,14 @@ struct EnqueueMinionsRequest {
 struct EnqueueMinionsResponse {
 }
 
+struct SetFinalBuildStatusRequest {
+  1: optional StampedeId stampedeId;
+  2: optional BuildStatus buildStatus;
+}
+
+struct SetFinalBuildStatusResponse {
+}
+
 ##############################################################################
 ## Top-Level Buck-Frontend HTTP body thrift Request/Response format
 ##############################################################################
@@ -481,6 +489,7 @@ enum FrontendRequestType {
   FETCH_BUILD_SLAVE_FINISHED_STATS = 24,
   SET_COORDINATOR = 25,
   ENQUEUE_MINIONS = 26,
+  SET_FINAL_BUILD_STATUS = 27
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -513,6 +522,7 @@ struct FrontendRequest {
     fetchBuildSlaveFinishedStatsRequest;
   25: optional SetCoordinatorRequest setCoordinatorRequest;
   26: optional EnqueueMinionsRequest enqueueMinionsRequest;
+  27: optional SetFinalBuildStatusRequest setFinalBuildStatusRequest;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
@@ -545,6 +555,7 @@ struct FrontendResponse {
     fetchBuildSlaveFinishedStatsResponse;
   29: optional SetCoordinatorResponse setCoordinatorResponse;
   30: optional EnqueueMinionsResponse enqueueMinionsResponse;
+  31: optional SetFinalBuildStatusResponse setFinalBuildStatusResponse;
 
   // [100-199] Values are reserved for the buck cache request types.
 }
