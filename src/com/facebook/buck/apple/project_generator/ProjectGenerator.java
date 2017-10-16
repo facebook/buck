@@ -1434,33 +1434,45 @@ public class ProjectGenerator {
             Iterables.concat(
                 swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
                 targetSpecificSwiftFlags.build());
+
         Iterable<String> otherCFlags =
-            Iterables.concat(
-                cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
-                convertStringWithMacros(
-                    targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getCompilerFlags()),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
+            ImmutableList.<String>builder()
+                .addAll(cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .build();
         Iterable<String> otherCxxFlags =
-            Iterables.concat(
-                cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
-                convertStringWithMacros(
-                    targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getCompilerFlags()),
-                convertStringWithMacros(
-                    targetNode, targetNode.getConstructorArg().getPreprocessorFlags()));
+            ImmutableList.<String>builder()
+                .addAll(cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .build();
+
         Iterable<String> otherLdFlags =
-            Iterables.concat(
-                appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of(),
-                convertStringWithMacros(
-                    targetNode,
-                    Iterables.concat(
-                        targetNode.getConstructorArg().getLinkerFlags(),
-                        collectRecursiveExportedLinkerFlags(targetNode))),
-                swiftDebugLinkerFlagsBuilder.build());
+            ImmutableList.<String>builder()
+                .addAll(appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of())
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode,
+                        Iterables.concat(
+                            targetNode.getConstructorArg().getLinkerFlags(),
+                            collectRecursiveExportedLinkerFlags(targetNode))))
+                .addAll(swiftDebugLinkerFlagsBuilder.build())
+                .build();
 
         appendConfigsBuilder
             .put(
