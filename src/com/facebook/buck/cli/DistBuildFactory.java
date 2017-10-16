@@ -54,8 +54,8 @@ public abstract class DistBuildFactory {
   }
 
   public static LogStateTracker newDistBuildLogStateTracker(
-      Path logDir, ProjectFilesystem fileSystem) {
-    return new LogStateTracker(logDir, fileSystem);
+      Path logDir, ProjectFilesystem fileSystem, DistBuildService service) {
+    return new LogStateTracker(logDir, fileSystem, service);
   }
 
   public static FrontendService newFrontendService(CommandRunnerParams params) {

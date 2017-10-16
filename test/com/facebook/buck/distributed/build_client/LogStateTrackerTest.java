@@ -19,9 +19,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
-import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.LogLineBatch;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogStreamType;
@@ -29,7 +29,6 @@ import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -38,6 +37,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,41 +49,8 @@ public class LogStateTrackerTest {
 
   private static final String LOG_DIR = "logs";
 
-  private static final String RUN_ONE_BUCK_OUT_DIR =
-      "dist-build-slave-buildSlaveRunIdOne/buck-out-log";
-  private static final String RUN_TWO_BUCK_OUT_DIR =
-      "dist-build-slave-buildSlaveRunIdTwo/buck-out-log";
-
   private static final String RUN_ONE_ID = "buildSlaveRunIdOne";
   private static final String RUN_TWO_ID = "buildSlaveRunIdTwo";
-
-  /*
-   **********************************
-   * File materialization test data
-   **********************************
-   */
-
-  // run_one_buck_out.zip contains the following files:
-  // file1: abc
-  // file2: def
-  private static final String RUN_ONE_BUCK_OUT_ZIP = "build_slave_logs/run_one_buck_out.zip";
-
-  // run_two_buck_out.zip contains the following files:
-  // file3: ghi
-  // file4: jkl
-  private static final String RUN_TWO_BUCK_OUT_ZIP = "build_slave_logs/run_two_buck_out.zip";
-
-  // Files contained inside RUN_ONE_BUCK_OUT_ZIP
-  private static final String FILE_ONE_PATH = "file1";
-  private static final String FILE_TWO_PATH = "file2";
-  private static final String FILE_ONE_CONTENTS = "abc\n";
-  private static final String FILE_TWO_CONTENTS = "def\n";
-
-  // Files contained inside RUN_TWO_BUCK_OUT_ZIP
-  private static final String FILE_THREE_PATH = "file3";
-  private static final String FILE_FOUR_PATH = "file4";
-  private static final String FILE_THREE_CONTENTS = "ghi\n";
-  private static final String FILE_FOUR_CONTENTS = "jkl\n";
 
   /*
    **********************************
@@ -112,8 +79,9 @@ public class LogStateTrackerTest {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(projectDir.getRoot().toPath());
+    DistBuildService service = EasyMock.createMock(DistBuildService.class);
     logDir = projectDir.getRoot().toPath().resolve(LOG_DIR);
-    distBuildLogStateTracker = new LogStateTracker(logDir, projectFilesystem);
+    distBuildLogStateTracker = new LogStateTracker(logDir, projectFilesystem, service);
   }
 
   @Test
@@ -389,67 +357,5 @@ public class LogStateTrackerTest {
           lineIndex.get(),
           Matchers.equalTo(logLines.size()));
     }
-  }
-
-  @Test
-  public void testMaterializesBuckOutDirForRuns() throws IOException {
-    BuildSlaveInfo runOneSlaveInfo = new BuildSlaveInfo();
-    BuildSlaveRunId runOneId = new BuildSlaveRunId();
-    runOneId.setId(RUN_ONE_ID);
-    runOneSlaveInfo.setBuildSlaveRunId(runOneId);
-    runOneSlaveInfo.setLogDirZipWritten(true);
-
-    BuildSlaveInfo runTwoSlaveInfo = new BuildSlaveInfo();
-    BuildSlaveRunId runTwoId = new BuildSlaveRunId();
-    runTwoId.setId(RUN_TWO_ID);
-    runTwoSlaveInfo.setBuildSlaveRunId(runTwoId);
-    runTwoSlaveInfo.setLogDirZipWritten(true);
-
-    List<BuildSlaveInfo> slaveInfos = ImmutableList.of(runOneSlaveInfo, runTwoSlaveInfo);
-    List<BuildSlaveRunId> buildSlaveRunIdsToMaterialize =
-        distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(slaveInfos);
-    assertThat(buildSlaveRunIdsToMaterialize.size(), Matchers.equalTo(2));
-    assertThat(buildSlaveRunIdsToMaterialize, Matchers.contains(runOneId, runTwoId));
-
-    LogDir logDirOne = new LogDir();
-    logDirOne.setBuildSlaveRunId(runOneId);
-    logDirOne.setData(readTestData(RUN_ONE_BUCK_OUT_ZIP));
-
-    LogDir logDirTwo = new LogDir();
-    logDirTwo.setBuildSlaveRunId(runTwoId);
-    logDirTwo.setData(readTestData(RUN_TWO_BUCK_OUT_ZIP));
-
-    List<LogDir> logDirs = ImmutableList.of(logDirOne, logDirTwo);
-    distBuildLogStateTracker.materializeLogDirs(logDirs);
-
-    Path runOneBuckOutDir = logDir.resolve(RUN_ONE_BUCK_OUT_DIR);
-    assertTrue(runOneBuckOutDir.toFile().exists());
-    assertTrue(runOneBuckOutDir.resolve(FILE_ONE_PATH).toFile().exists());
-    assertTrue(runOneBuckOutDir.resolve(FILE_TWO_PATH).toFile().exists());
-
-    String fileOneContents =
-        new String(Files.readAllBytes(runOneBuckOutDir.resolve(FILE_ONE_PATH)));
-    assertThat(fileOneContents, Matchers.equalTo(FILE_ONE_CONTENTS));
-
-    String fileTwoContents =
-        new String(Files.readAllBytes(runOneBuckOutDir.resolve(FILE_TWO_PATH)));
-    assertThat(fileTwoContents, Matchers.equalTo(FILE_TWO_CONTENTS));
-
-    Path runTwoBuckOutDir = logDir.resolve(RUN_TWO_BUCK_OUT_DIR);
-    assertTrue(runTwoBuckOutDir.toFile().exists());
-    assertTrue(runTwoBuckOutDir.resolve(FILE_THREE_PATH).toFile().exists());
-    assertTrue(runTwoBuckOutDir.resolve(FILE_FOUR_PATH).toFile().exists());
-
-    String fileThreeContents =
-        new String(Files.readAllBytes(runTwoBuckOutDir.resolve(FILE_THREE_PATH)));
-    assertThat(fileThreeContents, Matchers.equalTo(FILE_THREE_CONTENTS));
-
-    String fileFourContents =
-        new String(Files.readAllBytes(runTwoBuckOutDir.resolve(FILE_FOUR_PATH)));
-    assertThat(fileFourContents, Matchers.equalTo(FILE_FOUR_CONTENTS));
-  }
-
-  private byte[] readTestData(String path) throws IOException {
-    return Files.readAllBytes(TestDataHelper.getTestDataDirectory(getClass()).resolve(path));
   }
 }

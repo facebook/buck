@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.distributed.build_client;
 
+import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
-import com.facebook.buck.distributed.thrift.LogDir;
 import com.facebook.buck.distributed.thrift.LogLineBatch;
 import com.facebook.buck.distributed.thrift.LogLineBatchRequest;
 import com.facebook.buck.distributed.thrift.LogStreamType;
@@ -26,8 +26,6 @@ import com.facebook.buck.distributed.thrift.SlaveStream;
 import com.facebook.buck.distributed.thrift.StreamLogs;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.NamedTemporaryFile;
-import com.facebook.buck.util.zip.Unzip;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +33,6 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,15 +48,18 @@ public class LogStateTracker {
   private static final List<LogStreamType> SUPPORTED_STREAM_TYPES =
       ImmutableList.of(LogStreamType.STDOUT, LogStreamType.STDERR);
 
+  private final BuildSlaveLogsMaterializer materializer;
   private final Path logDirectoryPath;
   private final ProjectFilesystem filesystem;
+
   private Map<SlaveStream, SlaveStreamState> seenSlaveLogs = new HashMap<>();
   private Set<String> createdLogDirRootsByRunId = new HashSet<>();
-  private List<BuildSlaveRunId> runIdsWithLogDirs = new ArrayList<>();
 
-  public LogStateTracker(Path logDirectoryPath, ProjectFilesystem filesystem) {
+  public LogStateTracker(
+      Path logDirectoryPath, ProjectFilesystem filesystem, DistBuildService service) {
     this.logDirectoryPath = logDirectoryPath;
     this.filesystem = filesystem;
+    this.materializer = new BuildSlaveLogsMaterializer(service, filesystem, logDirectoryPath);
   }
 
   public List<LogLineBatchRequest> createRealtimeLogRequests(
@@ -87,40 +87,8 @@ public class LogStateTracker {
     }
   }
 
-  public List<BuildSlaveRunId> runIdsToMaterializeLogDirsFor(
-      Collection<BuildSlaveInfo> latestBuildSlaveInfos) {
-    List<BuildSlaveRunId> runIds = new ArrayList<>();
-    for (BuildSlaveInfo buildSlaveInfo : latestBuildSlaveInfos) {
-      if (!buildSlaveInfo.isSetLogDirZipWritten()) {
-        LOG.error("No log dir written for runId [%s]", buildSlaveInfo.buildSlaveRunId);
-        continue;
-      }
-
-      runIds.add(buildSlaveInfo.buildSlaveRunId);
-    }
-
-    return runIds;
-  }
-
-  public void materializeLogDirs(List<LogDir> logDirs) {
-    for (LogDir logDir : logDirs) {
-      if (logDir.isSetErrorMessage()) {
-        LOG.error(
-            "Failed to fetch log dir for runId [%s]. Error: %s",
-            logDir.buildSlaveRunId, logDir.errorMessage);
-        continue;
-      }
-
-      try {
-        writeLogDirToDisk(logDir);
-      } catch (IOException e) {
-        LOG.error(e, "Error while materializing log dir for runId [%s]", logDir.buildSlaveRunId);
-      }
-    }
-  }
-
-  public List<BuildSlaveRunId> getRunIdsWithLogDirs() {
-    return runIdsWithLogDirs;
+  public BuildSlaveLogsMaterializer getBuildSlaveLogsMaterializer() {
+    return materializer;
   }
 
   /*
@@ -261,12 +229,6 @@ public class LogStateTracker {
     return filePath;
   }
 
-  private Path getRemoteBuckLogPath(String runId) {
-    Path remoteBuckLogPath = DistBuildUtil.getRemoteBuckLogPath(runId, logDirectoryPath);
-    createLogDir(runId, remoteBuckLogPath.getParent());
-    return remoteBuckLogPath;
-  }
-
   /*
    *******************************
    *  Streaming log materialization
@@ -284,35 +246,6 @@ public class LogStateTracker {
       outputStream.flush();
     } catch (IOException e) {
       LOG.debug("Failed to write to %s", outputLogFilePath.toAbsolutePath(), e);
-    }
-  }
-
-  /*
-   *******************************
-   *  Log dir re-materialization
-   *******************************
-   */
-
-  private void writeLogDirToDisk(LogDir logDir) throws IOException {
-    if (logDir.data.array().length == 0) {
-      LOG.warn(
-          "Skipping materialiation of remote buck-out log dir for runId [%s]"
-              + " as content length was zero",
-          logDir.buildSlaveRunId);
-      return;
-    }
-
-    Path buckLogUnzipPath = getRemoteBuckLogPath(logDir.buildSlaveRunId.id);
-
-    try (NamedTemporaryFile zipFile = new NamedTemporaryFile("remoteBuckLog", "zip")) {
-      Files.write(zipFile.get(), logDir.data.array());
-      Unzip.extractZipFile(
-          zipFile.get(),
-          filesystem,
-          buckLogUnzipPath,
-          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-
-      runIdsWithLogDirs.add(logDir.buildSlaveRunId);
     }
   }
 

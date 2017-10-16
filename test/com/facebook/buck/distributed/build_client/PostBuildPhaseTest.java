@@ -32,11 +32,8 @@ import com.facebook.buck.distributed.thrift.BuildSlaveFinishedStats;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.LogDir;
-import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.BuckEventBus;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -107,42 +104,6 @@ public class PostBuildPhaseTest {
     job.putToSlaveInfoByRunId(buildSlaveRunId2.getId(), slaveInfo2);
 
     return job;
-  }
-
-  @Test
-  public void testMaterializingLogDirs() throws IOException {
-    final BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
-    List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getSlaveInfoByRunId()
-            .values()
-            .stream()
-            .map(BuildSlaveInfo::getBuildSlaveRunId)
-            .collect(Collectors.toList());
-
-    LogDir logDir0 = new LogDir();
-    logDir0.setBuildSlaveRunId(buildSlaveRunIds.get(0));
-    logDir0.setData("Here is some data.".getBytes());
-    LogDir logDir1 = new LogDir();
-    logDir1.setBuildSlaveRunId(buildSlaveRunIds.get(1));
-    logDir1.setData("Here is some more data.".getBytes());
-
-    MultiGetBuildSlaveLogDirResponse logDirResponse = new MultiGetBuildSlaveLogDirResponse();
-    logDirResponse.addToLogDirs(logDir0);
-    logDirResponse.addToLogDirs(logDir1);
-    expect(mockLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values()))
-        .andReturn(buildSlaveRunIds);
-    expect(mockDistBuildService.fetchBuildSlaveLogDir(stampedeId, buildSlaveRunIds))
-        .andReturn(logDirResponse);
-    mockLogStateTracker.materializeLogDirs(ImmutableList.of(logDir0, logDir1));
-    expectLastCall().once();
-
-    replay(mockLogStateTracker);
-    replay(mockDistBuildService);
-
-    postBuildPhase.materializeSlaveLogDirs(job);
-
-    verify(mockLogStateTracker);
-    verify(mockDistBuildService);
   }
 
   @Test

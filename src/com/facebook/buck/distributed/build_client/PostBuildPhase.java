@@ -29,7 +29,6 @@ import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
-import com.facebook.buck.distributed.thrift.MultiGetBuildSlaveLogDirResponse;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -42,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 /** Phase after the build. */
 public class PostBuildPhase {
@@ -106,29 +106,21 @@ public class PostBuildPhase {
 
   @VisibleForTesting
   void materializeSlaveLogDirs(BuildJob job) {
-    if (!job.isSetSlaveInfoByRunId()) {
-      return;
-    }
-
-    List<BuildSlaveRunId> runIds =
-        distBuildLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values());
-    if (runIds.size() == 0) {
+    if (!job.isSetSlaveInfoByRunId() || job.getSlaveInfoByRunId().isEmpty()) {
       return;
     }
 
     distBuildClientStats.startTimer(MATERIALIZE_SLAVE_LOGS);
-
-    try {
-      MultiGetBuildSlaveLogDirResponse logDirsResponse =
-          distBuildService.fetchBuildSlaveLogDir(job.stampedeId, runIds);
-      Preconditions.checkState(logDirsResponse.isSetLogDirs());
-
-      distBuildLogStateTracker.materializeLogDirs(logDirsResponse.getLogDirs());
-    } catch (IOException ex) {
-      LOG.error(ex, "Error fetching slave log directories from frontend.");
-    } finally {
-      distBuildClientStats.stopTimer(MATERIALIZE_SLAVE_LOGS);
-    }
+    List<BuildSlaveRunId> logsToFetchAndMaterialize =
+        job.getSlaveInfoByRunId()
+            .values()
+            .stream()
+            .map(x -> x.getBuildSlaveRunId())
+            .collect(Collectors.toList());
+    distBuildLogStateTracker
+        .getBuildSlaveLogsMaterializer()
+        .fetchAndMaterializeLogDirs(job.getStampedeId(), logsToFetchAndMaterialize);
+    distBuildClientStats.stopTimer(MATERIALIZE_SLAVE_LOGS);
   }
 
   @VisibleForTesting

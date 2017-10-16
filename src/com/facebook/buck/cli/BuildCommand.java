@@ -16,7 +16,11 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.*;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_GRAPH_CONSTRUCTION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.PERFORM_LOCAL_BUILD;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_BUILD_ANALYSIS;
+import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.POST_DISTRIBUTED_BUILD_LOCAL_STEPS;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -709,10 +713,10 @@ public class BuildCommand extends AbstractCommand {
     BuckVersion buckVersion = getBuckVersion();
     Preconditions.checkArgument(params.getInvocationInfo().isPresent());
 
-    LogStateTracker distBuildLogStateTracker =
-        DistBuildFactory.newDistBuildLogStateTracker(
-            params.getInvocationInfo().get().getLogDirectoryPath(), filesystem);
     try (DistBuildService service = DistBuildFactory.newDistBuildService(params)) {
+      LogStateTracker distBuildLogStateTracker =
+          DistBuildFactory.newDistBuildLogStateTracker(
+              params.getInvocationInfo().get().getLogDirectoryPath(), filesystem, service);
       try {
         BuildController build =
             new BuildController(
@@ -785,7 +789,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getInvocationInfo().get().getBuildId(),
                 distBuildResult.stampedeId,
                 filesystem.resolve(params.getInvocationInfo().get().getLogDirectoryPath()),
-                distBuildLogStateTracker.getRunIdsWithLogDirs(),
+                distBuildLogStateTracker.getBuildSlaveLogsMaterializer().getMaterializedRunIds(),
                 DistBuildCommand.class.getSimpleName().toLowerCase());
 
         Path analysisSummaryFile =

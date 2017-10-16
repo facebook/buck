@@ -18,6 +18,7 @@ package com.facebook.buck.distributed.build_client;
 
 import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientStat.LOCAL_PREPARATION;
 import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.isA;
@@ -248,6 +249,9 @@ public class BuildControllerTest {
 
     expect(mockLogStateTracker.createRealtimeLogRequests(job.getSlaveInfoByRunId().values()))
         .andReturn(ImmutableList.of());
+    expect(mockLogStateTracker.getBuildSlaveLogsMaterializer())
+        .andReturn(createNiceMock(BuildSlaveLogsMaterializer.class))
+        .once();
     expect(mockDistBuildService.fetchBuildSlaveStatus(stampedeId, buildSlaveRunId))
         .andReturn(Optional.of(slaveStatus));
     expect(mockDistBuildService.createBuildSlaveEventsQuery(stampedeId, buildSlaveRunId, 0))
@@ -258,9 +262,6 @@ public class BuildControllerTest {
         .andReturn(Optional.empty());
     mockEventBus.post(anyObject(ClientSideBuildSlaveFinishedStatsEvent.class));
     expectLastCall().times(1);
-
-    expect(mockLogStateTracker.runIdsToMaterializeLogDirsFor(job.getSlaveInfoByRunId().values()))
-        .andReturn(ImmutableList.of());
 
     replay(mockDistBuildService);
     replay(mockEventBus);
