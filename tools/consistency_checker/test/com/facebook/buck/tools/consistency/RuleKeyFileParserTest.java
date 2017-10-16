@@ -30,10 +30,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class RuleKeyFileParserTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private String logPath;
 
@@ -65,8 +68,11 @@ public class RuleKeyFileParserTest {
     Assert.assertEquals(ruleKey3, parsedFile.rules.get("key3").ruleKey);
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void throwsIfTargetNotFound() throws FileNotFoundException, ParseException {
+    expectedException.expectMessage("Could not find //:invalid_name in ");
+    expectedException.expect(ParseException.class);
+
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
       logger.write(ruleKey1);
@@ -76,8 +82,11 @@ public class RuleKeyFileParserTest {
     parser.parseFile(logPath, "//:invalid_name");
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void throwsOnBadLength() throws ParseException, IOException {
+    expectedException.expectMessage("Invalid length specified. Expected 1234 bytes, only got 4");
+    expectedException.expect(ParseException.class);
+
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
       logger.write(ruleKey1);
@@ -85,6 +94,7 @@ public class RuleKeyFileParserTest {
     try (DataOutputStream outputStream =
         new DataOutputStream(new FileOutputStream(logPath, true))) {
       outputStream.writeInt(1234);
+      outputStream.writeInt(0); // Add an extra 4 bytes
       outputStream.flush();
     }
 
@@ -92,8 +102,11 @@ public class RuleKeyFileParserTest {
     parser.parseFile(logPath, "//:name1");
   }
 
-  @Test(expected = ParseException.class)
+  @Test
   public void throwsOnDeserializationError() throws ParseException, IOException {
+    expectedException.expectMessage("Could not deserialize array of size 8");
+    expectedException.expect(ParseException.class);
+
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
       logger.write(ruleKey1);
