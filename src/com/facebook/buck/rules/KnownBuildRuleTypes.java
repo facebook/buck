@@ -40,22 +40,16 @@ import com.facebook.buck.android.toolchain.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.TargetCpuType;
 import com.facebook.buck.android.toolchain.impl.NdkCxxPlatformsProviderFactory;
-import com.facebook.buck.apple.AppleAssetCatalogDescription;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.ApplePackageDescription;
-import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CodeSignIdentityStore;
-import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.SceneKitAssetsDescription;
-import com.facebook.buck.apple.XcodePostbuildScriptDescription;
-import com.facebook.buck.apple.XcodePrebuildScriptDescription;
-import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
@@ -474,7 +468,6 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
     builder.register(new AndroidResourceDescription(config.isGrayscaleImageProcessingEnabled()));
     builder.register(new ApkGenruleDescription());
-    builder.register(new AppleAssetCatalogDescription());
     builder.register(
         new ApplePackageDescription(
             appleConfig, defaultCxxPlatform.getFlavor(), platformFlavorsToAppleCxxPlatforms));
@@ -489,7 +482,6 @@ public class KnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig);
     builder.register(appleBundleDescription);
-    builder.register(new AppleResourceDescription());
     builder.register(
         new AppleTestDescription(
             appleConfig,
@@ -502,7 +494,6 @@ public class KnownBuildRuleTypes {
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             defaultTestRuleTimeoutMs));
     builder.register(new CommandAliasDescription(Platform.detect()));
-    builder.register(new CoreDataModelDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
@@ -623,9 +614,6 @@ public class KnownBuildRuleTypes {
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
     builder.register(new WorkerToolDescription(config));
-    builder.register(new XcodePostbuildScriptDescription());
-    builder.register(new XcodePrebuildScriptDescription());
-    builder.register(new XcodeWorkspaceConfigDescription());
 
     List<DescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(DescriptionProvider.class);

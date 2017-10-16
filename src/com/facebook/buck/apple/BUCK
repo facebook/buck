@@ -1,4 +1,8 @@
-java_immutables_library(
+# BUILD FILE SYNTAX: SKYLARK
+
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins", "java_immutables_library")
+
+java_library_with_plugins(
     name = "apple",
     srcs = glob(
         ["*.java"],
