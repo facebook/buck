@@ -598,7 +598,8 @@ public class TestCommand extends BuildCommand {
                     params.getArtifactCacheFactory().newInstance(),
                     params.getConsole(),
                     params.getClock(),
-                    getExecutionContext())) {
+                    getExecutionContext(),
+                    isKeepGoing())) {
 
           // Build all of the test rules.
           int exitCode =
@@ -606,7 +607,6 @@ public class TestCommand extends BuildCommand {
                   RichStream.from(testRules)
                       .map(TestRule::getBuildTarget)
                       .collect(MoreCollectors.toImmutableList()),
-                  isKeepGoing(),
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));

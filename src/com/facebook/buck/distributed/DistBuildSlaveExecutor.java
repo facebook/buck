@@ -442,11 +442,11 @@ public class DistBuildSlaveExecutor {
                   args.getArtifactCache(),
                   distBuildConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
                   args.getClock(),
-                  executionContext)) {
+                  executionContext,
+                  KEEP_GOING)) {
 
         return build.executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
             fullyQualifiedNameToBuildTarget(targetToBuildStrings),
-            KEEP_GOING,
             args.getBuckEventBus(),
             args.getConsole(),
             Optional.empty());

@@ -141,11 +141,11 @@ public class FetchCommand extends BuildCommand {
                   params.getArtifactCacheFactory().newInstance(),
                   params.getConsole(),
                   params.getClock(),
-                  getExecutionContext())) {
+                  getExecutionContext(),
+                  isKeepGoing())) {
         exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,
-                isKeepGoing(),
                 params.getBuckEventBus(),
                 params.getConsole(),
                 getPathToBuildReport(params.getBuckConfig()));

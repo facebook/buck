@@ -331,7 +331,8 @@ public class BuildCommand extends AbstractCommand {
       ArtifactCache artifactCache,
       Console console,
       Clock clock,
-      ExecutionContext executionContext) {
+      ExecutionContext executionContext,
+      boolean isKeepGoing) {
     if (console.getVerbosity() == Verbosity.ALL) {
       console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
     }
@@ -342,7 +343,8 @@ public class BuildCommand extends AbstractCommand {
         artifactCache,
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
         clock,
-        executionContext);
+        executionContext,
+        isKeepGoing);
   }
 
   @Nullable private Build lastBuild;
@@ -1016,12 +1018,12 @@ public class BuildCommand extends AbstractCommand {
                 artifactCache,
                 params.getConsole(),
                 params.getClock(),
-                getExecutionContext())) {
+                getExecutionContext(),
+                isKeepGoing())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(
           FluentIterable.from(targetsToBuild)
               .append(getAdditionalTargetsToBuild(actionGraphAndResolver.getResolver())),
-          isKeepGoing(),
           params.getBuckEventBus(),
           params.getConsole(),
           getPathToBuildReport(rootCellBuckConfig));

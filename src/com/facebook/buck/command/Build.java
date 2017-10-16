@@ -86,6 +86,8 @@ public class Build implements Closeable {
   private final BuildEngine buildEngine;
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
+  private final BuildEngineBuildContext buildContext;
+  private boolean symlinksCreated = false;
 
   public Build(
       BuildRuleResolver ruleResolver,
@@ -94,7 +96,8 @@ public class Build implements Closeable {
       ArtifactCache artifactCache,
       JavaPackageFinder javaPackageFinder,
       Clock clock,
-      ExecutionContext executionContext) {
+      ExecutionContext executionContext,
+      boolean isKeepGoing) {
     this.ruleResolver = ruleResolver;
     this.rootCell = rootCell;
     this.executionContext = executionContext;
@@ -102,6 +105,28 @@ public class Build implements Closeable {
     this.buildEngine = buildEngine;
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
+    this.buildContext = createBuildContext(isKeepGoing);
+  }
+
+  private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
+    BuildId buildId = executionContext.getBuildId();
+    return BuildEngineBuildContext.builder()
+        .setBuildContext(
+            BuildContext.builder()
+                .setSourcePathResolver(
+                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
+                .setBuildCellRootPath(rootCell.getRoot())
+                .setJavaPackageFinder(javaPackageFinder)
+                .setEventBus(executionContext.getBuckEventBus())
+                .setAndroidPlatformTargetSupplier(
+                    executionContext.getAndroidPlatformTargetSupplier())
+                .build())
+        .setClock(clock)
+        .setArtifactCache(artifactCache)
+        .setBuildId(buildId)
+        .putAllEnvironment(executionContext.getEnvironment())
+        .setKeepGoing(isKeepGoing)
+        .build();
   }
 
   public BuildRuleResolver getRuleResolver() {
@@ -112,9 +137,9 @@ public class Build implements Closeable {
     return executionContext;
   }
 
+  // This method is thread-safe
   public int executeAndPrintFailuresToEventBus(
       Iterable<BuildTarget> targetsish,
-      boolean isKeepGoing,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport)
@@ -124,10 +149,10 @@ public class Build implements Closeable {
     ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
 
     try {
-      List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild, isKeepGoing);
+      List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
       exitCode =
           waitForBuildToFinishAndPrintFailuresToEventBus(
-              rulesToBuild, resultFutures, isKeepGoing, eventBus, console, pathToBuildReport);
+              rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
     } catch (Exception e) {
       reportExceptionToUser(eventBus, e);
       exitCode = 1;
@@ -136,9 +161,9 @@ public class Build implements Closeable {
     return exitCode;
   }
 
+  // This method is thread-safe
   public int executeAndPrintFailuresToEventBusThenWaitForUploadsToComplete(
       Iterable<BuildTarget> targetsish,
-      boolean isKeepGoing,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport)
@@ -148,10 +173,10 @@ public class Build implements Closeable {
     ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
 
     try {
-      List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild, isKeepGoing);
+      List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
       exitCode =
           waitForBuildToFinishAndPrintFailuresToEventBus(
-              rulesToBuild, resultFutures, isKeepGoing, eventBus, console, pathToBuildReport);
+              rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
 
       waitForAllUploadsToFinish(resultFutures);
     } catch (Exception e) {
@@ -167,7 +192,13 @@ public class Build implements Closeable {
    * the `project.buck_out_compat_link` setting to `true`, we symlink the original output path
    * (`buck-out/`) to this newly configured location for backwards compatibility.
    */
-  private void createConfiguredBuckOutSymlinks() throws IOException {
+  private synchronized void createConfiguredBuckOutSymlinks() throws IOException {
+    // Symlinks should only be created once, across all invocations of Build, otherwise
+    // there will be file system conflicts.
+    if (symlinksCreated) {
+      return;
+    }
+
     for (Cell cell : rootCell.getAllCells()) {
       BuckConfig buckConfig = cell.getBuckConfig();
       ProjectFilesystem filesystem = cell.getFilesystem();
@@ -190,6 +221,8 @@ public class Build implements Closeable {
         }
       }
     }
+
+    symlinksCreated = true;
   }
 
   private ImmutableList<BuildRule> getRulesToBuild(Iterable<? extends BuildTarget> targetish) {
@@ -271,29 +304,8 @@ public class Build implements Closeable {
         .build();
   }
 
-  private List<BuildEngineResult> initializeBuild(
-      ImmutableList<BuildRule> rulesToBuild, boolean isKeepGoing) throws IOException {
-
-    BuildId buildId = executionContext.getBuildId();
-    BuildEngineBuildContext buildContext =
-        BuildEngineBuildContext.builder()
-            .setBuildContext(
-                BuildContext.builder()
-                    .setSourcePathResolver(
-                        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver)))
-                    .setBuildCellRootPath(rootCell.getRoot())
-                    .setJavaPackageFinder(javaPackageFinder)
-                    .setEventBus(executionContext.getBuckEventBus())
-                    .setAndroidPlatformTargetSupplier(
-                        executionContext.getAndroidPlatformTargetSupplier())
-                    .build())
-            .setClock(clock)
-            .setArtifactCache(artifactCache)
-            .setBuildId(buildId)
-            .putAllEnvironment(executionContext.getEnvironment())
-            .setKeepGoing(isKeepGoing)
-            .build();
-
+  private List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
+      throws IOException {
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
 
@@ -306,10 +318,8 @@ public class Build implements Closeable {
     return resultFutures;
   }
 
-  private static BuildExecutionResult waitForBuildToFinish(
-      ImmutableList<BuildRule> rulesToBuild,
-      List<BuildEngineResult> resultFutures,
-      boolean isKeepGoing)
+  private BuildExecutionResult waitForBuildToFinish(
+      ImmutableList<BuildRule> rulesToBuild, List<BuildEngineResult> resultFutures)
       throws ExecutionException, InterruptedException {
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture =
@@ -318,7 +328,7 @@ public class Build implements Closeable {
     List<BuildResult> results;
     try {
       results = buildFuture.get();
-      if (!isKeepGoing) {
+      if (!buildContext.isKeepGoing()) {
         for (BuildResult result : results) {
           Throwable thrown = result.getFailure();
           if (thrown != null) {
@@ -346,7 +356,6 @@ public class Build implements Closeable {
 
   private int processBuildReportAndGenerateExitCode(
       BuildExecutionResult buildExecutionResult,
-      boolean isKeepGoing,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport)
@@ -357,7 +366,7 @@ public class Build implements Closeable {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
     BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
 
-    if (isKeepGoing) {
+    if (buildContext.isKeepGoing()) {
       String buildReportText = buildReport.generateForConsole(console);
       buildReportText =
           buildReportText.isEmpty()
@@ -394,7 +403,6 @@ public class Build implements Closeable {
   private int waitForBuildToFinishAndPrintFailuresToEventBus(
       ImmutableList<BuildRule> rulesToBuild,
       List<BuildEngineResult> resultFutures,
-      boolean isKeepGoing,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport) {
@@ -402,12 +410,11 @@ public class Build implements Closeable {
 
     try {
       // Can throw BuildExecutionException
-      BuildExecutionResult buildExecutionResult =
-          waitForBuildToFinish(rulesToBuild, resultFutures, isKeepGoing);
+      BuildExecutionResult buildExecutionResult = waitForBuildToFinish(rulesToBuild, resultFutures);
 
       exitCode =
           processBuildReportAndGenerateExitCode(
-              buildExecutionResult, isKeepGoing, eventBus, console, pathToBuildReport);
+              buildExecutionResult, eventBus, console, pathToBuildReport);
     } catch (Exception e) {
       if (e instanceof BuildExecutionException) {
         pathToBuildReport.ifPresent(
