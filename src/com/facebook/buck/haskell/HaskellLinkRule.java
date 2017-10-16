@@ -88,9 +88,11 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())))
         .add(
+            // The output path might be a folder, so delete it all
             RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutput())))
+                    BuildCellRelativePath.fromCellRelativePath(
+                        buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutput()))
+                .withRecursive(true))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
 
