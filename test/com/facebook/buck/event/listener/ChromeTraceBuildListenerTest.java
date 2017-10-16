@@ -145,7 +145,7 @@ public class ChromeTraceBuildListenerTest {
             tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
             new TypeReference<List<ChromeTraceEvent>>() {});
 
-    assertThat(originalResultList, Matchers.hasSize(4));
+    assertThat(originalResultList, Matchers.hasSize(6));
 
     ChromeTraceEvent testEvent = originalResultList.get(3);
     assertThat(testEvent.getName(), Matchers.equalTo(event.getEventName()));
@@ -417,6 +417,18 @@ public class ChromeTraceBuildListenerTest {
         "party",
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of("command_args", "arg1 arg2"));
+
+    assertNextResult(
+        resultListCopy,
+        "thread_name",
+        ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.of("name", Thread.currentThread().getName()));
+
+    assertNextResult(
+        resultListCopy,
+        "thread_sort_index",
+        ChromeTraceEvent.Phase.METADATA,
+        ImmutableMap.of("sort_index", (int) Thread.currentThread().getId()));
 
     assertNextResult(
         resultListCopy,

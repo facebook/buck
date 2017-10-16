@@ -23,6 +23,7 @@ import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.event.ChromeTraceEvent.Phase;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -74,12 +75,17 @@ import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.net.URI;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -115,6 +121,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final JsonGenerator jsonGenerator;
   private final Path logDirectoryPath;
   private final ChromeTraceBuckConfig config;
+  private final Set<Long> threadNamesRecorded = new HashSet<>();
 
   private final ExecutorService outputExecutor;
 
@@ -819,17 +826,61 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ChromeTraceEvent.Phase phase,
       ImmutableMap<String, ? extends Object> arguments,
       final BuckEvent event) {
+    long threadId = event.getThreadId();
+    long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(event.getNanoTime());
+    long threadTimestampInMicroseconds =
+        TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime());
+
     final ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
             category,
             name,
             phase,
             0,
-            event.getThreadId(),
-            TimeUnit.NANOSECONDS.toMicros(event.getNanoTime()),
-            TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime()),
+            threadId,
+            timestampInMicroseconds,
+            threadTimestampInMicroseconds,
             arguments);
     submitTraceEvent(chromeTraceEvent);
+    writeThreadNameIfNeeded(chromeTraceEvent);
+  }
+
+  void writeThreadNameIfNeeded(ChromeTraceEvent triggeringEvent) {
+    long threadId = triggeringEvent.getThreadId();
+    long timestampInMicroseconds = triggeringEvent.getMicroTime();
+    long threadTimestampInMicroseconds = triggeringEvent.getMicroThreadUserTime();
+
+    Long boxedThreadId = Long.valueOf(threadId);
+    if (!threadNamesRecorded.contains(boxedThreadId)) {
+      ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+      ThreadInfo threadInfo = threadMXBean.getThreadInfo(threadId);
+
+      submitTraceEvent(
+          new ChromeTraceEvent(
+              "buck",
+              "thread_name",
+              Phase.METADATA,
+              0,
+              threadId,
+              timestampInMicroseconds,
+              threadTimestampInMicroseconds,
+              ImmutableMap.of("name", threadInfo.getThreadName())));
+
+      // Force sort by thread ID so that the sort order is in creation order. This produces the
+      // most readable traces.
+      submitTraceEvent(
+          new ChromeTraceEvent(
+              "buck",
+              "thread_sort_index",
+              Phase.METADATA,
+              0,
+              threadId,
+              timestampInMicroseconds,
+              threadTimestampInMicroseconds,
+              ImmutableMap.of("sort_index", boxedThreadId)));
+
+      threadNamesRecorded.add(threadId);
+    }
   }
 
   @VisibleForTesting
