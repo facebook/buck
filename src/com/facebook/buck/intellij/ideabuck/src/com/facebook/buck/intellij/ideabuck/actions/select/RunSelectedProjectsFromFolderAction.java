@@ -1,9 +1,5 @@
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
-import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
-import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
-import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
-import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.intellij.ide.IdeView;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -26,7 +22,6 @@ public class RunSelectedProjectsFromFolderAction extends AnAction {
       return;
     }
 
-    BuckModule buckModule = project.getComponent(BuckModule.class);
     DataContext dataContext = anActionEvent.getDataContext();
     final IdeView view = LangDataKeys.IDE_VIEW.getData(dataContext);
     if (view == null) {
@@ -39,12 +34,11 @@ public class RunSelectedProjectsFromFolderAction extends AnAction {
     }
 
     String directoryString = directory.getVirtualFile().getPath();
-
     VirtualFile potentialBuckFile = BuckFileUtil.getBuckFile(directory.getVirtualFile());
     if (potentialBuckFile != null) {
       directoryString = potentialBuckFile.getParent().getPath();
     }
-    
+
     String basepath = project.getBasePath();
     if (basepath == null) {
       return;
@@ -52,17 +46,6 @@ public class RunSelectedProjectsFromFolderAction extends AnAction {
 
     String relative = directoryString.replace(basepath, "");
     String target = "/" + relative + "/...";
-
-    BuckBuildCommandHandler handler =
-        new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.PROJECT);
-    handler.command().addParameter(target);
-    handler.command().addParameter("--ide");
-    handler.command().addParameter("INTELLIJ");
-
-    BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
-    buildManager.setBuilding(project, true);
-    buckModule.attach(target);
-    buildManager.runBuckCommand(handler, "Running buck project on selected groups.");
-    buildManager.setBuilding(project, false);
+    SelectProjectUtils.generateTargetForProject(target, project);
   }
 }

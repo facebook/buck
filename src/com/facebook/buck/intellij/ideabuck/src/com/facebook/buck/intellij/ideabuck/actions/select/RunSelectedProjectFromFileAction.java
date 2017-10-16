@@ -1,10 +1,8 @@
 package com.facebook.buck.intellij.ideabuck.actions.select;
 
-import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
-import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.google.common.base.Function;
@@ -64,18 +62,7 @@ public class RunSelectedProjectFromFileAction extends DumbAwareAction {
                     return null;
                   }
                   String target = strings.get(0);
-                  BuckBuildCommandHandler handler =
-                      new BuckBuildCommandHandler(project, project.getBaseDir(), BuckCommand.PROJECT);
-                  handler.command().addParameter(target);
-                  handler.command().addParameter("--ide");
-                  handler.command().addParameter("INTELLIJ");
-
-                  BuckModule buckModule = project.getComponent(BuckModule.class);
-                  BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
-                  buildManager.setBuilding(project, true);
-                  buckModule.attach(target);
-                  buildManager.runBuckCommand(handler, "Running buck project for selected file.");
-                  buildManager.setBuilding(project, false);
+                  SelectProjectUtils.generateTargetForProject(target, project);
                   return null;
                 }
               });
